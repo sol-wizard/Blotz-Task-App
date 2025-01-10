@@ -15,7 +15,7 @@ import {
 import { useSession } from "next-auth/react";
 import { SidebarAuthButton } from "./components/side-auth-button";
 import { cn } from "@/lib/utils";
-
+import { Categories } from "./categories";
 const authenticatedItems = [
   { title: "Today", url: "today", icon: CalendarDays },
   { title: "Task List", url: "task-list", icon: Inbox },
@@ -60,6 +60,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <div className="mt-80 pl-6"><Categories /></div>
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
