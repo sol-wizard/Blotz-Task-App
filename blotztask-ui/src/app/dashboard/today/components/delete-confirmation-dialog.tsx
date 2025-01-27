@@ -1,13 +1,24 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-//TODO : Refactor to new dete dialog as per the design
-export function DeleteDialog({ isDialogOpen, setDialogOpen, onClose }) {
+export function DeleteDialog({ 
+  isDialogOpen, 
+  setDialogOpen, 
+  onClose,
+}: {
+  isDialogOpen: boolean;
+  setDialogOpen: (isOpen: boolean) => void;
+  onClose: () => void;
+}) {
+  
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+    <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+      console.log("Dialog visibility changed:", isOpen);
+      setDialogOpen(isOpen);
+    }}>
       <DialogContent className="sm:max-w-[370px] bg-white">
         <DialogHeader>
-          <DialogDescription>Are you sure you want to delete the Task?</DialogDescription>
+          <DialogDescription>  Are you sure you want to delete the Task?</DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex justify-between">
           <Button
@@ -21,13 +32,14 @@ export function DeleteDialog({ isDialogOpen, setDialogOpen, onClose }) {
             Cancel
           </Button>
           <Button
-            className="ml-2 w-full"
+            className="ml-2 w-full py-2 text-white bg-red-600 rounded-lg hover:bg-red-700"
             onClick={() => {
+              console.log("Task deleted");
               setDialogOpen(false);
               onClose();
             }}
           >
-            Yes
+            Delete
           </Button>
         </DialogFooter>
       </DialogContent>

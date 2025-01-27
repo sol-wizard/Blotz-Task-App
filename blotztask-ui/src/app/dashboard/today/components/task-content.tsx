@@ -7,6 +7,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import LabelGroup from '../shared/label-group';
 import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+// import { DeleteDialog } from "./delete-confirmation-dialog";
 
 export default function TaskContent({ task }: { task: TaskDetailDTO }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -52,12 +55,38 @@ export default function TaskContent({ task }: { task: TaskDetailDTO }) {
                 <button className="px-4" onClick={handleEditState}>
                   <Pencil className="text-primary" size={20} />
                 </button>
-                <button>
-                  <Trash2 className="text-primary" size={20} />
-                </button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button>                 
+                      <Trash2 className="text-primary" size={20} />
+                    </button>
+                  </DialogTrigger>
+                {/* You can put the dialog content into a separate component */}
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Delete This Task</DialogTitle>
+                    </DialogHeader>
+                    <p>Content go in here</p>
+                    <DialogFooter>
+                      <Button type="submit">Delete</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             )}
           </div>
+          {/* <DeleteDialog
+            isDialogOpen={isDialogOpen} 
+            setDialogOpen={(isOpen) => {
+            //console.log("Dialog visibility changed:", isOpen); 
+            setDialogOpen(isOpen);
+          }}
+          onClose={() => {
+            //console.log("Dialog closed, clearing selected task"); 
+            setDialogOpen(false);
+            setSelectedTask(null); 
+          }}
+          /> */}
 
           {isEditing && (
             <div className="flex flex-row inline-block justify-between mt-4 mb-2">
@@ -74,6 +103,7 @@ export default function TaskContent({ task }: { task: TaskDetailDTO }) {
                       <span className="text-xs">{format(new Date(task.dueDate), 'MM/dd')}</span>
                     </button>
                   </PopoverTrigger>
+
                   <PopoverContent onCloseAutoFocus={handleCalendarClose}>
                     <Calendar
                       classNames={{
@@ -94,7 +124,7 @@ export default function TaskContent({ task }: { task: TaskDetailDTO }) {
                       <Tag className="mr-1" size={16} />
                       <span className="text-xs">{task.label?.name || 'No label name'}</span>
                     </button>
-                  </PopoverTrigger>
+                  </PopoverTrigger>                
                   <PopoverContent onCloseAutoFocus={handleLabelClose} className="w-32">
                     <LabelGroup />
                   </PopoverContent>
