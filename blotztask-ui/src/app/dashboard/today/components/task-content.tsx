@@ -41,7 +41,6 @@ export default function TaskContent({
               onSubmit={form.handleSubmit((data) => {
                 onSubmit(data);
                 handleEditState(); 
-                console.log("call me")
               })}
               className="flex flex-col w-full bg-transparent px-6"
             >
