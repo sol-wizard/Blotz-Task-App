@@ -34,12 +34,10 @@ export default function Today() {
   };
 
   const handleCheckboxChange = async (taskId: number) => {
-    console.log('Completing task:', taskId);
     await completeTask(taskId);
   };
 
   const handleCompletedCheckboxChange = async (taskId: number) => {
-    console.log('Uncompleting task:', taskId);
     await completeTask(taskId);
   };
 
