@@ -30,7 +30,7 @@ export function LabelSelect({
   return (
     <FormField
       control={control}
-      name="label"
+      name="labelId"
       render={({ field }) => (
         <FormItem>
           <Select onValueChange={(value) => field.onChange(Number(value))}>

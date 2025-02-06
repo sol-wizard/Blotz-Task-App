@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fetchTaskItemsDueToday } from '@/services/taskService';
+import { addTaskItem, fetchTaskItemsDueToday } from '@/services/taskService';
 import { updateTaskStatus } from '@/services/taskService';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
@@ -9,6 +9,7 @@ import AddTaskCard from './components/add-task-card';
 import { CompletedTaskViewer } from './components/completed-task-viewer';
 import Divider from './components/divider';
 import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
+import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 
 export default function Today() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
@@ -50,9 +51,18 @@ export default function Today() {
     }
   };
 
-  const handleAddTask = (taskTitle) => {
-    console.log('Adding task:', taskTitle);
-    // Implement add task logic here , going to api to add task
+  const handleAddTask = async (newTaskData: AddTaskItemDTO) => {
+    console.log('Adding task:', newTaskData);
+    await submitNewTask(newTaskData);
+  };
+
+  const submitNewTask = async (newTaskData: AddTaskItemDTO) => {
+    try {
+      await addTaskItem(newTaskData);
+      await loadTasks();
+    } catch (error) {
+      console.error('Error adding new task:', error);
+    }
   };
 
   return (
