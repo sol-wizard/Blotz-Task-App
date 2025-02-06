@@ -15,14 +15,17 @@ export default function Today() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
   const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
   const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
+  const [reload, setReload] = useState(false);
 
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [reload]);
 
   const loadTasks = async () => {
     try {
+      setTasks([]);
       const data = await fetchTaskItemsDueToday();
+      console.log('Fetched tasks:', data);
       setTasks(data);
       // Filter tasks to only include those where isDone is false
       const notDoneTasks = data.filter((task) => !task.isDone);
@@ -54,11 +57,14 @@ export default function Today() {
   const handleAddTask = async (newTaskData: AddTaskItemDTO) => {
     console.log('Adding task:', newTaskData);
     await submitNewTask(newTaskData);
+    setReload((prev) => !prev);
   };
 
   const submitNewTask = async (newTaskData: AddTaskItemDTO) => {
     try {
+      console.log('Before adding task:', newTaskData);
       await addTaskItem(newTaskData);
+      console.log('Task added successfully! Now loading tasks...');
       await loadTasks();
     } catch (error) {
       console.error('Error adding new task:', error);
