@@ -70,7 +70,7 @@ namespace BlotzTask.Controllers
             {
                 throw new UnauthorizedAccessException("Could not find user id from Http Context");
             }
-            return Ok(await _taskService.AddTask(addtaskItem, userId));
+            return Ok(await _taskService.AddTaskAsync(addtaskItem, userId));
         }
 
         [HttpPut("{id}")]
