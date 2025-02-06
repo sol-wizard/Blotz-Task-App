@@ -40,7 +40,7 @@ const AddTaskForm = ({ onSubmit, datePickerRef, labelPickerRef, onCancel }) => {
       labelId: data.labelId ?? 0,
     };
     onSubmit(newTaskData);
-    console.log(data);
+    console.log(newTaskData);
   };
 
   return (
