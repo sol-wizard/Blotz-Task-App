@@ -6,6 +6,6 @@ export const taskFormSchema = z.object({
     .string()
     .min(10, 'Description must be at least 10 characters.')
     .max(200, 'Description cannot exceed 200 characters.'),
-  // dueDate: z.date(),
-  // label: z.string(),
+  date: z.date(),
+  labelId: z.number(),
 });

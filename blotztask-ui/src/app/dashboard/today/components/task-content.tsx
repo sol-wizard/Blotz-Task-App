@@ -13,6 +13,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
 import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import DeleteDialogContent from './delete-dialog-content';
+import { CalendarForm } from '../shared/calendar-form';
+import { LabelSelect } from '../shared/label-select';
 
 export default function TaskContent({
   task,
@@ -26,6 +28,8 @@ export default function TaskContent({
     defaultValues: {
       title: task.title,
       description: task.description,
+      date: task.dueDate,
+      labelId: task.label.id,
     },
   });
 
@@ -117,9 +121,8 @@ export default function TaskContent({
               {isEditing && (
                 <div className="flex flex-row inline-block justify-between mt-4 mb-2">
                   <div className="flex flex-row items-center">
-                    {/* Wait to be done in edit TaskCard React hook form */}
-                    {/* <CalendarForm task={task} />
-                  <LabelSelect /> */}
+                    <CalendarForm control={form.control} task={task} />
+                    <LabelSelect control={form.control} />
                   </div>
                   <div className="flex flex-row ">
                     <button
