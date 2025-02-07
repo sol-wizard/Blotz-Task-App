@@ -52,16 +52,12 @@ export default function Today() {
     }
   };
 
-  const handleAddTask = async (newTaskData: AddTaskItemDTO) => {
-    console.log('Adding task:', newTaskData);
-    await submitNewTask(newTaskData);
-    setReload((prev) => !prev);
-  };
-
-  const submitNewTask = async (taskDetails: AddTaskItemDTO) => {
+  const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
+    console.log('Adding task:', taskDetails);
     try {
       await addTaskItem(taskDetails);
       await loadTasks();
+      setReload((prev) => !prev);
     } catch (error) {
       console.error('Error adding new task:', error);
     }
