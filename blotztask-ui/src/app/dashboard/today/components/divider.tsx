@@ -1,5 +1,3 @@
-import SectionSeparator from './section-separator';
-
 interface DividerProps {
   text:string;
 }

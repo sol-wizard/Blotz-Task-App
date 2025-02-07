@@ -1,4 +1,3 @@
-import { H5 } from '@/components/ui/heading-with-anchor';
 import TaskCard from './task-card';
 
 export function CompletedTaskViewer({
