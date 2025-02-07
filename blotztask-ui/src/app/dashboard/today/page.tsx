@@ -23,9 +23,7 @@ export default function Today() {
 
   const loadTasks = async () => {
     try {
-      setTasks([]);
       const data = await fetchTaskItemsDueToday();
-      console.log('Fetched tasks:', data);
       setTasks(data);
       // Filter tasks to only include those where isDone is false
       const notDoneTasks = data.filter((task) => !task.isDone);
@@ -62,9 +60,7 @@ export default function Today() {
 
   const submitNewTask = async (taskDetails: AddTaskItemDTO) => {
     try {
-      console.log('Before adding task:', taskDetails);
       await addTaskItem(taskDetails);
-      console.log('Task added successfully! Now loading tasks...');
       await loadTasks();
     } catch (error) {
       console.error('Error adding new task:', error);
