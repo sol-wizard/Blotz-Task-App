@@ -33,14 +33,14 @@ const AddTaskForm = ({ onSubmit, datePickerRef, labelPickerRef, onCancel }) => {
   });
 
   const handleAddTask: SubmitHandler<FormField> = async (data) => {
-    const newTaskData: AddTaskItemDTO = {
+    const taskDetails: AddTaskItemDTO = {
       title: data.title,
       description: data.description ?? '',
       dueDate: data.date ? format(data.date, 'yyyy-MM-dd') : '',
       labelId: data.labelId ?? 0,
     };
-    onSubmit(newTaskData);
-    console.log(newTaskData);
+    onSubmit(taskDetails);
+    console.log(taskDetails);
   };
 
   return (

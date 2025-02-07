@@ -60,10 +60,10 @@ export default function Today() {
     setReload((prev) => !prev);
   };
 
-  const submitNewTask = async (newTaskData: AddTaskItemDTO) => {
+  const submitNewTask = async (taskDetails: AddTaskItemDTO) => {
     try {
-      console.log('Before adding task:', newTaskData);
-      await addTaskItem(newTaskData);
+      console.log('Before adding task:', taskDetails);
+      await addTaskItem(taskDetails);
       console.log('Task added successfully! Now loading tasks...');
       await loadTasks();
     } catch (error) {
