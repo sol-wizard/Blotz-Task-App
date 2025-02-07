@@ -21,16 +21,16 @@ export function LabelSelect({
   labelPickerRef?: React.RefObject<HTMLDivElement>;
 }) {
   const labels: LabelDTO[] = [
-    { id: 1, name: 'Personal', color: 'bg-amber-400' },
-    { id: 2, name: 'Academic', color: 'bg-rose-500' },
-    { id: 3, name: 'Others', color: 'bg-cyan-300' },
-    { id: 4, name: 'Work', color: 'bg-blue-700' },
+    { id: 7, name: 'Personal', color: 'bg-amber-400' },
+    { id: 8, name: 'Academic', color: 'bg-rose-500' },
+    { id: 9, name: 'Others', color: 'bg-cyan-300' },
+    { id: 6, name: 'Work', color: 'bg-blue-700' },
   ];
 
   return (
     <FormField
       control={control}
-      name="label"
+      name="labelId"
       render={({ field }) => (
         <FormItem>
           <Select onValueChange={(value) => field.onChange(Number(value))}>
