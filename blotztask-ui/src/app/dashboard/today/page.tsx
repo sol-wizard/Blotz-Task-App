@@ -15,11 +15,10 @@ export default function Today() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
   const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
   const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
-  const [reload, setReload] = useState(false);
 
   useEffect(() => {
     loadTasks();
-  }, [reload]);
+  }, []);
 
   const loadTasks = async () => {
     try {
@@ -57,7 +56,6 @@ export default function Today() {
     try {
       await addTaskItem(taskDetails);
       await loadTasks();
-      setReload((prev) => !prev);
     } catch (error) {
       console.error('Error adding new task:', error);
     }
