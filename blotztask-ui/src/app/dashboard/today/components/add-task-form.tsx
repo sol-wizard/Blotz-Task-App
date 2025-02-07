@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
+import { AddTaskItemDTO } from '@/model/add-task-item-dto';
+import { format } from 'date-fns';
 
 const taskSchema = z.object({
   title: z.string().min(1, {
@@ -14,7 +16,7 @@ const taskSchema = z.object({
   }),
   description: z.string().optional(),
   date: z.date().optional(),
-  label: z.number().optional(),
+  labelId: z.number().optional(),
 });
 
 type FormField = z.infer<typeof taskSchema>;
@@ -26,13 +28,18 @@ const AddTaskForm = ({ onSubmit, datePickerRef, labelPickerRef, onCancel }) => {
       title: '',
       description: '',
       date: null,
-      label: undefined,
+      labelId: undefined,
     },
   });
 
   const handleAddTask: SubmitHandler<FormField> = async (data) => {
-    onSubmit(data);
-    console.log(data);
+    const taskDetails: AddTaskItemDTO = {
+      title: data.title,
+      description: data.description ?? '',
+      dueDate: data.date ? format(data.date, 'yyyy-MM-dd') : '',
+      labelId: data.labelId ?? 0,
+    };
+    onSubmit(taskDetails);
   };
 
   return (

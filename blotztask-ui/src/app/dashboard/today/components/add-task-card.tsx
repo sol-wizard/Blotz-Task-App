@@ -25,8 +25,8 @@ const AddTaskCard = ({ onAddTask }) => {
           </div>
         ) : (
           <AddTaskForm
-            onSubmit={(taskTitle: string) => {
-              onAddTask(taskTitle);
+            onSubmit={(taskDetails) => {
+              onAddTask(taskDetails);
               setIsFormVisible(false);
             }}
             datePickerRef={datePickerRef}
