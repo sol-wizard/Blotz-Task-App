@@ -60,33 +60,48 @@ const SignUpPage = () => {
 
   return (
     <div className="h-full justify-center flex flex-col items-center">
-      <div className="flex flex-col gap-4 bg-white p-5 rounded-lg shadow-md w-96">
+      <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-96">
         <h1 className={styles.title}>User Sign Up</h1>
         {error && <AlertDestructive title="Error" description={error} />}
         <form onSubmit={handleSubmit}>
+          <div className="flex flex-row gap-4 w-full">
+            <div className={styles.input_group}>
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="First name"
+              />
+            </div>
+            <div className={styles.input_group}>
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Last name"
+              />
+            </div>
+          </div>
+          
           <div className={styles.input_group}>
-            <label className={styles.label}>Email:</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               className={styles.input}
-              placeholder="Enter your email"
+              placeholder="Email"
             />
           </div>
           <div className={styles.input_group}>
-            <label className={styles.label}>Password:</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               className={styles.input}
-              placeholder="Enter your password"
+              placeholder="Password"
             />
           </div>
-          <Button className="w-full" type="submit" disabled={loading}>
+          <Button className={styles.submitButton} type="submit" disabled={loading}>
             {loading ? <Spinner /> : 'Sign Up'}
           </Button>
         </form>
