@@ -12,8 +12,8 @@ public interface ITaskService
     public Task<TaskItemDTO> GetTaskByID(int Id);
     public Task<int> EditTask(int Id, EditTaskItemDTO editTaskItem);
     public Task<bool> DeleteTaskByID(int Id);
-    public Task<string> AddTask(AddTaskItemDTO addtaskItem, String userId);
-    public Task<int> CompleteTask(int id);
+    public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId);
+    public Task<TaskStatusResultDTO> TaskStatusUpdate(int id, bool? isDone = null);
     public Task<List<TaskItemDTO>> GetTaskByDate(DateOnly date, string userId);
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
 }
@@ -39,6 +39,8 @@ public class TaskService : ITaskService
                     Id = x.Id,
                     Title = x.Title,
                     Description = x.Description,
+                    DueDate = x.DueDate,
+                    IsDone = x.IsDone,
                     Label = new LabelDTO { Name = x.Label.Name, Color = x.Label.Color }        
                 })
                 .ToListAsync();
@@ -86,24 +88,40 @@ public class TaskService : ITaskService
         return true;
     }
 
-    public async Task<string> AddTask(AddTaskItemDTO addtaskItem, String userId)
+    public async Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId)
     {
-        var addtask = new TaskItem
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            Title = addtaskItem.Title,
-            Description = addtaskItem.Description,
-            DueDate = addtaskItem.DueDate,
-            LabelId = addtaskItem.LabelId,
-            UserId = userId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+            throw new UnauthorizedAccessException("User ID cannot be null or empty.");
+        }
 
-        _dbContext.TaskItems.Add(addtask);
-        await _dbContext.SaveChangesAsync();
+        try
+        {
+            var newTask = new TaskItem
+            {
+                Title = addTaskItem.Title,
+                Description = addTaskItem.Description,
+                DueDate = addTaskItem.DueDate,
+                LabelId = addTaskItem.LabelId,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
 
-        return addtaskItem.Title;
+            _dbContext.TaskItems.Add(newTask);
+            await _dbContext.SaveChangesAsync();
 
+            return new ResponseWrapper<string>(
+                newTask.Title,
+                "Task added successfully.",
+                true
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error adding task: {ex.Message}");
+            throw;
+        }
     }
 
     public async Task<int> EditTask(int id, EditTaskItemDTO editTaskItem)
@@ -126,21 +144,32 @@ public class TaskService : ITaskService
         return id;
     }
 
-    public async Task<int> CompleteTask(int taskId)
+    public async Task<TaskStatusResultDTO> TaskStatusUpdate(int taskId, bool? isDone=null)
     {
-        var task = await _dbContext.TaskItems.FindAsync(taskId);
+        try{
+            var task = await _dbContext.TaskItems.FindAsync(taskId);
 
-        if (task == null)
-        {
-            throw new NotFoundException($"Task with ID {taskId} was not found.");
+            if (task == null)
+            {
+                throw new NotFoundException($"Task with ID {taskId} was not found.");
+            }
+            
+            // If task.IsDone is null, set it to be false, otherwise, toggle the task.IsDone
+            task.IsDone = isDone ?? !task.IsDone;
+
+            task.UpdatedAt = DateTime.UtcNow;
+            _dbContext.TaskItems.Update(task);
+            await _dbContext.SaveChangesAsync();
+
+            return new TaskStatusResultDTO{
+                Id = task.Id,
+                UpdatedAt = task.UpdatedAt,
+                Message = task.IsDone ? "Task marked as completed." : "Task marked as incomplete."
+            };
+        }catch(Exception){
+            throw;
         }
-
-        task.IsDone = true;
-
-        _dbContext.TaskItems.Update(task);
-        await _dbContext.SaveChangesAsync();
-
-        return taskId;
+        
     }
 
     public async Task<List<TaskItemDTO>> GetTaskByDate(DateOnly date, string userId)
