@@ -69,6 +69,7 @@ const SignUpPage = () => {
             <div className={`${styles.input_group} w-1/2`}>
               <input
                 type="text"
+                required
                 className={`${styles.input} w-full`}
                 placeholder="First name"
               />
@@ -76,6 +77,7 @@ const SignUpPage = () => {
             <div className={`${styles.input_group} w-1/2`}>
               <input
                 type="text"
+                required
                 className={`${styles.input} w-full`}
                 placeholder="Last name"
               />
