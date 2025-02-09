@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import styles from '../signin/AuthForm.module.css'; // Import CSS styles
+import styles from './AuthForm.module.css';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertDestructive } from '@/components/ui/alert-destructive';
@@ -61,21 +61,22 @@ const SignUpPage = () => {
   return (
     <div className="h-full justify-center flex flex-col items-center">
       <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-96">
-        <h1 className={styles.title}>User Sign Up</h1>
+        <h1 className="text-2xl text-center font-medium text-blue-500">Create an account</h1>
+        <p className = "text-center text-gray-600 text-sm">Enter your email below to create your account</p>
         {error && <AlertDestructive title="Error" description={error} />}
         <form onSubmit={handleSubmit}>
           <div className="flex flex-row gap-4 w-full">
-            <div className={styles.input_group}>
+            <div className={`${styles.input_group} w-1/2`}>
               <input
                 type="text"
-                className={styles.input}
+                className={`${styles.input} w-full`}
                 placeholder="First name"
               />
             </div>
-            <div className={styles.input_group}>
+            <div className={`${styles.input_group} w-1/2`}>
               <input
                 type="text"
-                className={styles.input}
+                className={`${styles.input} w-full`}
                 placeholder="Last name"
               />
             </div>
