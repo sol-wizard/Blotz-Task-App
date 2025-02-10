@@ -6,5 +6,5 @@ export interface EditTaskItemDTO {
   title: string;
   isDone: boolean;
   labelId: number;
-  dueDate: Date;
+  dueDate: string;
 }

@@ -15,8 +15,8 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import DeleteDialogContent from './delete-dialog-content';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
-import { format } from 'date-fns';
 import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
+import { format } from 'date-fns';
 
 export default function TaskContent({
   task,
@@ -43,7 +43,7 @@ export default function TaskContent({
       description: data.description ?? '',
       isDone: task.isDone,
       labelId: data.labelId,
-      dueDate: new Date(data.date) ?? new Date(task.dueDate),
+      dueDate: format(new Date(data.date), 'yyyy-MM-dd'),
     };
     onSubmit(editTaskDetails);
   };
