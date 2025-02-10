@@ -36,7 +36,6 @@ export default function TaskContent({
   });
 
   const handleTaskSubmit: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
-    console.log('Submitting task data1:', data);
     const editTaskDetails: EditTaskItemDTO = {
       id: task.id,
       title: data.title ?? task.title,
