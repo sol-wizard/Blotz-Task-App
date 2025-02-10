@@ -13,7 +13,7 @@ const TaskCard = ({ task, handleCheckboxChange, handleTaskEdit }) => {
             className="h-6 w-6 mr-6 rounded-full border-2 border-black"
           />
         </div>
-        <TaskContent task={task} onSubmit={(data) => handleTaskEdit(data)} />
+        <TaskContent task={task} onSubmit={handleTaskEdit} />
       </div>
     </div>
   );

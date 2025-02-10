@@ -16,6 +16,7 @@ import DeleteDialogContent from './delete-dialog-content';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
 import { format } from 'date-fns';
+import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
 
 export default function TaskContent({
   task,
@@ -36,18 +37,15 @@ export default function TaskContent({
 
   const handleTaskSubmit: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
     console.log('Submitting task data1:', data);
-    const editTaskDetails: TaskDetailDTO = {
+    const editTaskDetails: EditTaskItemDTO = {
       id: task.id,
       title: data.title ?? task.title,
       description: data.description ?? '',
       isDone: task.isDone,
-      label: task.label,
-      dueDate: data.date ?? task.dueDate,
+      labelId: data.labelId,
+      dueDate: new Date(data.date) ?? new Date(task.dueDate),
     };
     onSubmit(editTaskDetails);
-    setTimeout(() => {
-      handleEditState();
-    }, 100);
   };
 
   const [isEditing, setIsEditing] = useState(false);

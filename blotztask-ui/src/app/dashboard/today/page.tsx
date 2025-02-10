@@ -52,6 +52,7 @@ export default function Today() {
   };
 
   const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
+    console.log('add task:', taskDetails);
     try {
       await addTaskItem(taskDetails);
       await loadTasks();
