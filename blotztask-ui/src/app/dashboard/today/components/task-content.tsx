@@ -5,7 +5,7 @@ import { useState } from 'react';
 import SectionSepreator from './section-separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from 'src/components/ui/task-card-input';
-import { useForm } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { taskFormSchema } from '../forms/task-form-schema';
 import { z } from 'zod';
@@ -15,6 +15,7 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import DeleteDialogContent from './delete-dialog-content';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
+import { format } from 'date-fns';
 
 export default function TaskContent({
   task,
@@ -33,6 +34,22 @@ export default function TaskContent({
     },
   });
 
+  const handleTaskSubmit: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
+    console.log('Submitting task data1:', data);
+    const editTaskDetails: TaskDetailDTO = {
+      id: task.id,
+      title: data.title ?? task.title,
+      description: data.description ?? '',
+      isDone: task.isDone,
+      label: task.label,
+      dueDate: data.date ?? task.dueDate,
+    };
+    onSubmit(editTaskDetails);
+    setTimeout(() => {
+      handleEditState();
+    }, 100);
+  };
+
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
 
@@ -43,7 +60,7 @@ export default function TaskContent({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
-              onSubmit(data);
+              handleTaskSubmit(data);
               handleEditState();
             })}
             className="flex flex-col w-full bg-transparent px-6"
@@ -131,7 +148,11 @@ export default function TaskContent({
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20">
+                    <button
+                      type="submit"
+                      className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20"
+                      onClick={() => console.log('Form errors:', form.formState.errors)}
+                    >
                       Save
                     </button>
                   </div>

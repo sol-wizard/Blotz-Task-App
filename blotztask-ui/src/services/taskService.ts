@@ -72,3 +72,23 @@ export const updateTaskStatus = async (taskId: number): Promise<string> => {
     return 'Error completing task.';
   }
 };
+
+export const editTask = async (taskEditForm: TaskDetailDTO): Promise<string> => {
+  try {
+    const result = await fetchWithAuth<string>(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/${taskEditForm.id}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(taskEditForm),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return result;
+  } catch (error) {
+    console.error('Error editing task:', error);
+    throw error;
+  }
+};
