@@ -134,12 +134,12 @@ public class TaskService : ITaskService
         }
 
         try{
-            {
-                task.Title = editTaskItem.Title;
-                task.Description = editTaskItem.Description;
-                task.UpdatedAt = DateTime.UtcNow;
-                task.LabelId = editTaskItem.LabelId;
-            }
+                       
+            task.Title = editTaskItem.Title;
+            task.Description = editTaskItem.Description;
+            task.UpdatedAt = DateTime.UtcNow;
+            task.LabelId = editTaskItem.LabelId;
+        
             
             _dbContext.TaskItems.Update(task);
             await _dbContext.SaveChangesAsync();

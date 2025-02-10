@@ -78,7 +78,7 @@ namespace BlotzTask.Controllers
         {
             var result = await _taskService.EditTaskAsync(id, editTaskItem);
 
-            return Ok($"Task {result} is successfully updated");
+            return Ok(result);
         }
 
         [HttpPut("task-completion-status/{id}")]
