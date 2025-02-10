@@ -29,7 +29,7 @@ export default function TaskContent({
     defaultValues: {
       title: task.title,
       description: task.description,
-      date: task.dueDate,
+      date: new Date(task.dueDate),
       labelId: task.label.id,
     },
   });
