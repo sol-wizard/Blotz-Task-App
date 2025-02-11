@@ -62,10 +62,10 @@ export default function Today() {
 
   return (
     <>
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-6">
         <TodayHeader tasks={tasks} />
-        <Divider text="To do" />
         <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
+        <Divider text="To do" />
         <div className="flex flex-col gap-6 w-full">
           {incompleteTasks.length > 0 ? (
             incompleteTasks.map((task) => (
