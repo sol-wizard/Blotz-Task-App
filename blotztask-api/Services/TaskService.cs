@@ -133,7 +133,8 @@ public class TaskService : ITaskService
             throw new NotFoundException($"Task with ID {id} not found.");
         }
 
-        try{
+        try
+        {
                        
             task.Title = editTaskItem.Title;
             task.Description = editTaskItem.Description;

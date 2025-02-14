@@ -1,5 +1,3 @@
-'use client';
-
 export interface EditTaskItemDTO {
   id: number;
   description: string;

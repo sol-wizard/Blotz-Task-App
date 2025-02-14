@@ -25,7 +25,6 @@ export default function Page() {
   };
 
   const handleTaskEdit = async (data) => {
-    console.log('Submitting task data2:', data);
     try {
       await editTask(data);
       await loadTasks();

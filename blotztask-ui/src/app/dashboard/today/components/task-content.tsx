@@ -35,7 +35,7 @@ export default function TaskContent({
     },
   });
 
-  const handleTaskSubmit: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
+  const updateTask: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
     const editTaskDetails: EditTaskItemDTO = {
       id: task.id,
       title: data.title ?? task.title,
@@ -57,7 +57,7 @@ export default function TaskContent({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
-              handleTaskSubmit(data);
+              updateTask(data);
               handleEditState();
             })}
             className="flex flex-col w-full bg-transparent px-6"
