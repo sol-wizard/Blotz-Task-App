@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import styles from '../signin/AuthForm.module.css'; // Import CSS styles
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -9,85 +8,68 @@ import { fetchWithErrorHandling } from '@/utils/http-client';
 import { BadRequestError } from '@/model/error/bad-request-error';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
 const SignUpPage = () => {
-  const router = useRouter(); // Initialize router
-  const [email, setEmail] = useState(''); // State for email input
-  const [password, setPassword] = useState(''); // State for password input
-  const [error, setError] = useState(null); // State for error message
-  const [loading, setLoading] = useState(false); // State for loading spinner
+  const router = useRouter();
+  const schema = z.object({
+    email: z.string().email({ message: 'Invalid email address' }),
+    password: z.string().min(9, { message: 'Password must be at least 9 characters' }),
+  });
 
-  const handleRegister = async () => {
-    setLoading(true);
-    setError(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(schema),
+  });
 
+  const onSubmit = async (data: { email: string; password: string }) => {
     try {
       await fetchWithErrorHandling(`${process.env.NEXT_PUBLIC_API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(data),
       });
-      handleSuccess();
+
+      router.push('/signin');
+      toast('Account registered', {
+        description: 'You can now login with the registered account',
+        duration: 3000,
+        position: 'top-center',
+      });
     } catch (error) {
-      handleError(error);
-    } finally {
-      setLoading(false);
+      if (error instanceof BadRequestError) {
+        toast.error('Error', {
+          description: error.details ? Object.values(error.details.errors).flat().join(' ') : error.message,
+        });
+      } else {
+        console.error('Unexpected error:', error);
+        toast.error('Unexpected error occurred. Please try again.');
+      }
     }
-  };
-
-  const handleError = (error: unknown) => {
-    if (error instanceof BadRequestError) {
-      setError(error.details ? Object.values(error.details.errors).flat().join(' ') : error.message);
-    } else {
-      console.error('Unexpected error during registration:', error);
-      setError('An unexpected error occurred. Please try again later.');
-    }
-  };
-
-  const handleSuccess = () => {
-    router.push('/signin');
-    toast('Account registered', {
-      description: 'You can now login with the registered account',
-      duration: 3000,
-      position: 'top-center',
-    });
-  };
-
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    handleRegister();
   };
 
   return (
     <div className="h-full justify-center flex flex-col items-center">
       <div className="flex flex-col gap-4 bg-white p-5 rounded-lg shadow-md w-96">
         <h1 className={styles.title}>User Sign Up</h1>
-        {error && <AlertDestructive title="Error" description={error} />}
-        <form onSubmit={handleSubmit}>
+        {errors.root && <AlertDestructive title="Error" description={errors.root.message} />}
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className={styles.input_group}>
             <label className={styles.label}>Email:</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className={styles.input}
-              placeholder="Enter your email"
-            />
+            <input type="email" {...register('email')} placeholder="Enter your email" />
           </div>
+
           <div className={styles.input_group}>
             <label className={styles.label}>Password:</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className={styles.input}
-              placeholder="Enter your password"
-            />
+            <input type="password" {...register('password')} placeholder="Enter your password" />
           </div>
-          <Button className="w-full" type="submit" disabled={loading}>
-            {loading ? <Spinner /> : 'Sign Up'}
+          <Button className="w-full" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <Spinner /> : 'Sign Up'}
           </Button>
         </form>
       </div>
