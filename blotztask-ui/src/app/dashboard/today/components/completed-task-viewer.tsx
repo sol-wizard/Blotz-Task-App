@@ -1,9 +1,6 @@
 import TaskCard from './task-card';
 
-export function CompletedTaskViewer({
-  completedTasks,
-  handleCompletedCheckboxChange,
-}) {
+export function CompletedTaskViewer({ completedTasks, handleCompletedCheckboxChange, handleTaskEdit }) {
   return (
     <div>
       <div className="grid gap-6 w-full">
@@ -14,6 +11,7 @@ export function CompletedTaskViewer({
                 key={task.id}
                 task={task}
                 handleCheckboxChange={handleCompletedCheckboxChange}
+                handleTaskEdit={handleTaskEdit}
               />
             ))}
           </div>
