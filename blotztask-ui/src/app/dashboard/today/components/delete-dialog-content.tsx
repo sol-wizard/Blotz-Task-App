@@ -1,7 +1,7 @@
-import React from "react";
+import React from 'react';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-const DeleteTaskDialog = () => {
+const DeleteTaskDialog = ({ onDelete, taskId }: { onDelete: (id: number) => void; taskId: number }) => {
   return (
     <DialogContent className="sm:max-w-[425px] bg-white rounded-lg shadow-lg p-6 z-50">
       <DialogHeader>
@@ -12,7 +12,11 @@ const DeleteTaskDialog = () => {
         <button type="button" className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100">
           Cancel
         </button>
-        <button type="button" className= "px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 ">
+        <button
+          type="button"
+          onClick={() => onDelete(taskId)}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 "
+        >
           Delete
         </button>
       </DialogFooter>
