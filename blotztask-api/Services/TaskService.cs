@@ -11,7 +11,7 @@ public interface ITaskService
     public Task<List<TaskItemDTO>> GetTodoItemsByUser(string userId);
     public Task<TaskItemDTO> GetTaskByID(int Id);
     public Task<ResponseWrapper<int>> EditTaskAsync(int Id, EditTaskItemDTO editTaskItem);
-    public Task<bool> DeleteTaskByID(int Id);
+    public Task<ResponseWrapper<int>> DeleteTaskByIDAsync(int Id);
     public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId);
     public Task<TaskStatusResultDTO> TaskStatusUpdate(int id, bool? isDone = null);
     public Task<List<TaskItemDTO>> GetTaskByDate(DateOnly date, string userId);
@@ -75,7 +75,7 @@ public class TaskService : ITaskService
         return result;
     }
 
-    public async Task<bool> DeleteTaskByID(int Id)
+    public async Task<ResponseWrapper<int>> DeleteTaskByIDAsync(int Id)
     {
         var taskItem = await _dbContext.TaskItems.FindAsync(Id);
         if (taskItem == null)
@@ -83,9 +83,23 @@ public class TaskService : ITaskService
             throw new NotFoundException($"Task with ID {Id} not found.");
         }
 
-        _dbContext.TaskItems.Remove(taskItem);
-        await _dbContext.SaveChangesAsync();
-        return true;
+        try
+        {
+            _dbContext.TaskItems.Remove(taskItem);
+            await _dbContext.SaveChangesAsync();
+            return new ResponseWrapper<int>(
+                    taskItem.Id,
+                    "Task deleted successfully.",
+                    true
+                );
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error deleting task: {ex.Message}");
+            throw;
+        }
+
+       
     }
 
     public async Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId)
