@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { addTaskItem, editTask, fetchTaskItemsDueToday } from '@/services/taskService';
+import { addTaskItem, deleteTask, editTask, fetchTaskItemsDueToday } from '@/services/taskService';
 import { updateTaskStatus } from '@/services/taskService';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
@@ -69,6 +69,15 @@ export default function Today() {
     }
   };
 
+  const handleTaskDelete = async (taskId: number) => {
+    try {
+      await deleteTask(taskId);
+      await loadTasks();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col gap-5">
@@ -83,6 +92,7 @@ export default function Today() {
                 task={task}
                 handleCheckboxChange={handleCheckboxChange}
                 handleTaskEdit={handleTaskEdit}
+                handleTaskDelete={handleTaskDelete}
               ></TaskCard>
             ))
           ) : (
@@ -94,6 +104,7 @@ export default function Today() {
           completedTasks={completedTasks}
           handleCompletedCheckboxChange={handleCompletedCheckboxChange}
           handleTaskEdit={handleTaskEdit}
+          handleTaskDelete={handleTaskDelete}
         />
       </div>
     </>
