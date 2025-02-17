@@ -76,9 +76,9 @@ namespace BlotzTask.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> EditTask(int id, [FromBody] EditTaskItemDTO editTaskItem)
         {
-            var result = await _taskService.EditTask(id, editTaskItem);
+            var result = await _taskService.EditTaskAsync(id, editTaskItem);
 
-            return Ok($"Task {result} is successfully updated");
+            return Ok(result);
         }
 
         [HttpPut("task-completion-status/{id}")]
