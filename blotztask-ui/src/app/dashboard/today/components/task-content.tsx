@@ -1,6 +1,6 @@
 import DueDateTag from './due-date-tag';
 import TaskSeparator from '../shared/task-separator';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { useState } from 'react';
 import SectionSepreator from './section-separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,7 +11,6 @@ import { taskFormSchema } from '../forms/task-form-schema';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
 import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
@@ -48,14 +47,6 @@ export default function TaskContent({
     };
     onSubmit(editTaskDetails);
   };
-
-  // const handleTaskDelete = async (taskId: number) => {
-  //   try {
-  //     await onDelete(taskId);
-  //   } catch (error) {
-  //     console.error('Failed to delete task:', error);
-  //   }
-  // };
 
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
@@ -130,14 +121,8 @@ export default function TaskContent({
                     <button className="px-4" onClick={handleEditState}>
                       <Pencil className="text-primary" size={20} />
                     </button>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button>
-                          <Trash2 className="text-primary" size={20} />
-                        </button>
-                      </DialogTrigger>
-                      <DeleteTaskDialog onDelete={onDelete} taskId={task.id} />
-                    </Dialog>
+
+                    <DeleteTaskDialog onDelete={onDelete} taskId={task.id} />
                   </div>
                 )}
               </div>
