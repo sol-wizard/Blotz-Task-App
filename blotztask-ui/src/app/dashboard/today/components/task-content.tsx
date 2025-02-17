@@ -1,6 +1,6 @@
 import DueDateTag from './due-date-tag';
 import TaskSeparator from '../shared/task-separator';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { useState } from 'react';
 import SectionSepreator from './section-separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,19 +11,20 @@ import { taskFormSchema } from '../forms/task-form-schema';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
-import DeleteDialogContent from './delete-dialog-content';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
 import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
 import { format } from 'date-fns';
+import DeleteTaskDialog from './delete-dialog-content';
 
 export default function TaskContent({
   task,
   onSubmit,
+  onDelete,
 }: {
   task: TaskDetailDTO;
   onSubmit: (data: z.infer<typeof taskFormSchema>) => void;
+  onDelete: (taskId: number) => void;
 }) {
   const form = useForm<z.infer<typeof taskFormSchema>>({
     resolver: zodResolver(taskFormSchema),
@@ -120,14 +121,8 @@ export default function TaskContent({
                     <button className="px-4" onClick={handleEditState}>
                       <Pencil className="text-primary" size={20} />
                     </button>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button>
-                          <Trash2 className="text-primary" size={20} />
-                        </button>
-                      </DialogTrigger>
-                      <DeleteDialogContent />
-                    </Dialog>
+
+                    <DeleteTaskDialog onDelete={onDelete} taskId={task.id} />
                   </div>
                 )}
               </div>

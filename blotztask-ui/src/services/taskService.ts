@@ -93,3 +93,19 @@ export const editTask = async (taskEditForm: EditTaskItemDTO): Promise<string> =
     throw error;
   }
 };
+
+export const deleteTask = async (taskId: number): Promise<string> => {
+  try {
+    const result = await fetchWithAuth<string>(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/${taskId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+
+    return result;
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    throw error;
+  }
+};
