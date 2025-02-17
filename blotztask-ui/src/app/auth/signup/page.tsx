@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import styles from '../signin/AuthForm.module.css'; // Import CSS styles
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertDestructive } from '@/components/ui/alert-destructive';
@@ -60,33 +59,55 @@ const SignUpPage = () => {
 
   return (
     <div className="h-full justify-center flex flex-col items-center">
-      <div className="flex flex-col gap-4 bg-white p-5 rounded-lg shadow-md w-96">
-        <h1 className={styles.title}>User Sign Up</h1>
+      <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-96">
+        <h1 className="text-2xl text-center font-medium text-blue-500">Create an account</h1>
+        <p className="text-center text-gray-600 text-sm">Enter your email below to create your account</p>
         {error && <AlertDestructive title="Error" description={error} />}
-        <form onSubmit={handleSubmit}>
-          <div className={styles.input_group}>
-            <label className={styles.label}>Email:</label>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-row gap-4 w-full">
+            <div className="w-1/2">
+              <input
+                type="text"
+                required
+                className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="First name"
+              />
+            </div>
+            <div className="w-1/2">
+              <input
+                type="text"
+                required
+                className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Last name"
+              />
+            </div>
+          </div>
+
+          <div>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className={styles.input}
-              placeholder="Enter your email"
+              className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Email"
             />
           </div>
-          <div className={styles.input_group}>
-            <label className={styles.label}>Password:</label>
+          <div>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className={styles.input}
-              placeholder="Enter your password"
+              className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Password"
             />
           </div>
-          <Button className="w-full" type="submit" disabled={loading}>
+          <Button
+            className="w-full py-2.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            type="submit"
+            disabled={loading}
+          >
             {loading ? <Spinner /> : 'Sign Up'}
           </Button>
         </form>
