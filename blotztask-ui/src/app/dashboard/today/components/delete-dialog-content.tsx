@@ -1,5 +1,6 @@
 import React from 'react';
 import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DialogClose } from '@radix-ui/react-dialog';
 
 const DeleteTaskDialog = ({ onDelete, taskId }: { onDelete: (id: number) => void; taskId: number }) => {
   return (
@@ -9,9 +10,11 @@ const DeleteTaskDialog = ({ onDelete, taskId }: { onDelete: (id: number) => void
       </DialogHeader>
       <p>A task will be permanently deleted.</p>
       <DialogFooter className="flex justify-between mt-4 gap-4">
-        <button type="button" className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100">
-          Cancel
-        </button>
+        <DialogClose asChild>
+          <button type="button" className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100">
+            Cancel
+          </button>
+        </DialogClose>
         <button
           type="button"
           onClick={() => onDelete(taskId)}
