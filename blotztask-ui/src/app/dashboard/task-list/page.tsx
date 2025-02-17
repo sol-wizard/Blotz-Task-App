@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { H1 } from '@/components/ui/heading-with-anchor';
-import { editTask, fetchAllTaskItems, updateTaskStatus } from '@/services/taskService';
+import { deleteTask, editTask, fetchAllTaskItems, updateTaskStatus } from '@/services/taskService';
 import { TaskListItemDTO } from '@/model/task-list-Item-dto';
 import { TaskList } from './components/task-list';
 
@@ -33,6 +33,15 @@ export default function Page() {
     }
   };
 
+  const handleTaskDelete = async (taskId: number) => {
+    try {
+      await deleteTask(taskId);
+      await loadTasks();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  };
+
   useEffect(() => {
     loadTasks();
   }, []);
@@ -43,7 +52,12 @@ export default function Page() {
         <H1>All Tasks</H1>
       </div>
 
-      <TaskList tasks={taskList} handleCheckboxChange={handleTaskToggle} handleTaskEdit={handleTaskEdit} />
+      <TaskList
+        tasks={taskList}
+        handleCheckboxChange={handleTaskToggle}
+        handleTaskEdit={handleTaskEdit}
+        handleTaskDelete={handleTaskDelete}
+      />
     </div>
   );
 }
