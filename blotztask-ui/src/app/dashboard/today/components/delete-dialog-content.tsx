@@ -11,6 +11,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const DeleteTaskDialog = ({ onDelete, taskId }: { onDelete: (id: number) => void; taskId: number }) => {
   return (
@@ -30,8 +31,18 @@ const DeleteTaskDialog = ({ onDelete, taskId }: { onDelete: (id: number) => void
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={() => onDelete(taskId)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 "
+            onClick={() => {
+              onDelete(taskId);
+              setTimeout(() => {
+                toast('Task deleted', {
+                  action: {
+                    label: 'Undo',
+                    onClick: () => console.log('Undo'),
+                  },
+                });
+              }, 100);
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
             Delete
           </AlertDialogAction>
