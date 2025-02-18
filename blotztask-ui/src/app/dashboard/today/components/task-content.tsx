@@ -131,7 +131,7 @@ export default function TaskContent({
                 <div className="flex flex-row inline-block justify-between mt-4 mb-2">
                   <div className="flex flex-row items-center">
                     <CalendarForm control={form.control} task={task} />
-                    <LabelSelect control={form.control} />
+                    <LabelSelect control={form.control} task={task} />
                   </div>
                   <div className="flex flex-row ">
                     <button
