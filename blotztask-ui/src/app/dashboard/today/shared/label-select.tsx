@@ -19,7 +19,7 @@ export function LabelSelect({
   control,
   labelPickerRef,
 }: {
-  task: TaskDetailDTO;
+  task?: TaskDetailDTO;
   control: Control;
   labelPickerRef?: React.RefObject<HTMLDivElement>;
 }) {
@@ -42,7 +42,7 @@ export function LabelSelect({
                 className={`flex flex-row w-30 items-center rounded-full px-3 py-1 text-xs`}
               >
                 <Tag className="mr-1" size={16} />
-                <SelectValue placeholder={task.label.name}>
+                <SelectValue placeholder={task?.label?.name || 'Select a label'}>
                   {labels.find((label) => label.id === field.value)?.name || 'Select Label'}
                 </SelectValue>
               </SelectLabelTrigger>
