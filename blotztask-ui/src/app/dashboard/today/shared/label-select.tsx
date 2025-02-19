@@ -12,6 +12,8 @@ import { Tag } from 'lucide-react';
 import { LabelDTO } from '@/model/label-dto';
 import { Control } from 'react-hook-form';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { fetchAllLabel } from '@/services/taskService';
+import { useEffect, useState } from 'react';
 
 export function LabelSelect({
   control,
@@ -20,12 +22,20 @@ export function LabelSelect({
   control: Control;
   labelPickerRef?: React.RefObject<HTMLDivElement>;
 }) {
-  const labels: LabelDTO[] = [
-    { labelId: 7, name: 'Personal', color: 'bg-amber-400' },
-    { labelId: 8, name: 'Academic', color: 'bg-rose-500' },
-    { labelId: 9, name: 'Others', color: 'bg-cyan-300' },
-    { labelId: 6, name: 'Work', color: 'bg-blue-700' },
-  ];
+  const [labels, setLabels] = useState<LabelDTO[]>([]);
+
+  const loadAllLabel = async () => {
+    try {
+      const labelData = await fetchAllLabel();
+      setLabels(labelData);
+    } catch (error) {
+      console.error('Error loading labels:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadAllLabel();
+  }, []);
 
   return (
     <FormField
@@ -34,7 +44,7 @@ export function LabelSelect({
       render={({ field }) => (
         <FormItem>
           <Select
-            value={labels.find((label) => label.labelId === field.value)?.name || 'Select Label'}
+            defaultValue={labels.find((label) => label.labelId === field.value)?.name || 'Select Label'}
             onValueChange={(value) => field.onChange(Number(value))}
           >
             <FormControl>
