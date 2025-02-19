@@ -32,7 +32,7 @@ export default function TaskContent({
       title: task.title,
       description: task.description,
       date: new Date(task.dueDate),
-      labelId: task.label.id,
+      labelId: task.label.labelId,
     },
   });
 
@@ -50,10 +50,6 @@ export default function TaskContent({
 
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
-
-  useEffect(() => {
-    console.log('task.label:', task.label);
-  }, []);
 
   return (
     <div className="flex flex-col w-full ">
