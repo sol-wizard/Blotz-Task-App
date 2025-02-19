@@ -215,7 +215,7 @@ public class TaskService : ITaskService
                     Description = task.Description,
                     DueDate = task.DueDate,
                     IsDone = task.IsDone,
-                    Label = new LabelDTO { Name = task.Label.Name, Color = task.Label.Color }
+                    Label = new LabelDTO { LabelId = task.Label.LabelId, Name = task.Label.Name, Color = task.Label.Color }
                 })
                 .ToListAsync();
         }
