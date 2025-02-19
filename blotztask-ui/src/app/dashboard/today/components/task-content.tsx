@@ -1,7 +1,7 @@
 import DueDateTag from './due-date-tag';
 import TaskSeparator from '../shared/task-separator';
 import { Pencil } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SectionSepreator from './section-separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from 'src/components/ui/task-card-input';
@@ -50,6 +50,10 @@ export default function TaskContent({
 
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
+
+  useEffect(() => {
+    console.log('task.label:', task.label);
+  }, []);
 
   return (
     <div className="flex flex-col w-full ">
@@ -131,7 +135,7 @@ export default function TaskContent({
                 <div className="flex flex-row inline-block justify-between mt-4 mb-2">
                   <div className="flex flex-row items-center">
                     <CalendarForm control={form.control} task={task} />
-                    <LabelSelect control={form.control} taskLabel={task.label.name} />
+                    <LabelSelect control={form.control} />
                   </div>
                   <div className="flex flex-row ">
                     <button

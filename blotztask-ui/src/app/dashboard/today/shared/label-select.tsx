@@ -14,11 +14,9 @@ import { Control } from 'react-hook-form';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 export function LabelSelect({
-  taskLabel,
   control,
   labelPickerRef,
 }: {
-  taskLabel?: string;
   control: Control;
   labelPickerRef?: React.RefObject<HTMLDivElement>;
 }) {
@@ -33,40 +31,43 @@ export function LabelSelect({
     <FormField
       control={control}
       name="labelId"
-      render={({ field }) => (
-        <FormItem>
-          <Select
-            value={taskLabel || 'Select Label'}
-            onValueChange={(value) => field.onChange(Number(value))}
-          >
-            <FormControl>
-              <SelectLabelTrigger
-                className={`flex flex-row w-30 items-center rounded-full px-3 py-1 text-xs`}
-              >
-                <Tag className="mr-1" size={16} />
-                <SelectValue>
-                  {labels.find((label) => label.id === field.value)?.name || taskLabel || 'Select Label'}
-                </SelectValue>
-              </SelectLabelTrigger>
-            </FormControl>
-            <SelectContent ref={labelPickerRef ?? undefined}>
-              <SelectGroup>
-                {labels.map((label) => (
-                  <LabelSelectItem
-                    key={label.id}
-                    value={label.id.toString()}
-                    className="flex flex-row items-center px-2 py-1"
-                  >
-                    <div className="flex flex-row">{label.name}</div>
-                  </LabelSelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+      render={({ field }) => {
+        console.log('field.value:', field.value);
+        return (
+          <FormItem>
+            <Select
+              value={labels.find((label) => label.id === field.value)?.name || 'Select Label'}
+              onValueChange={(value) => field.onChange(Number(value))}
+            >
+              <FormControl>
+                <SelectLabelTrigger
+                  className={`flex flex-row w-30 items-center rounded-full px-3 py-1 text-xs`}
+                >
+                  <Tag className="mr-1" size={16} />
+                  <SelectValue>
+                    {labels.find((label) => label.id === field.value)?.name || 'Select Label'}
+                  </SelectValue>
+                </SelectLabelTrigger>
+              </FormControl>
+              <SelectContent ref={labelPickerRef ?? undefined}>
+                <SelectGroup>
+                  {labels.map((label) => (
+                    <LabelSelectItem
+                      key={label.id}
+                      value={label.id.toString()}
+                      className="flex flex-row items-center px-2 py-1"
+                    >
+                      <div className="flex flex-row">{label.name}</div>
+                    </LabelSelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
 
-          <FormMessage />
-        </FormItem>
-      )}
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 }
