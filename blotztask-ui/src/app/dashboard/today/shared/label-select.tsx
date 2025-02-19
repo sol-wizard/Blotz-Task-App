@@ -36,14 +36,19 @@ export function LabelSelect({
       name="labelId"
       render={({ field }) => (
         <FormItem>
-          <Select onValueChange={(value) => field.onChange(Number(value))}>
+          <Select
+            value={task?.label?.name || 'Select Label'}
+            onValueChange={(value) => field.onChange(Number(value))}
+          >
             <FormControl>
               <SelectLabelTrigger
                 className={`flex flex-row w-30 items-center rounded-full px-3 py-1 text-xs`}
               >
                 <Tag className="mr-1" size={16} />
-                <SelectValue placeholder={task?.label?.name || 'Select a label'}>
-                  {labels.find((label) => label.id === field.value)?.name || 'Select Label'}
+                <SelectValue>
+                  {labels.find((label) => label.id === field.value)?.name ||
+                    task?.label?.name ||
+                    'Select Label'}
                 </SelectValue>
               </SelectLabelTrigger>
             </FormControl>
