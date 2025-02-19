@@ -12,14 +12,13 @@ import { Tag } from 'lucide-react';
 import { LabelDTO } from '@/model/label-dto';
 import { Control } from 'react-hook-form';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
 
 export function LabelSelect({
-  task,
+  taskLabel,
   control,
   labelPickerRef,
 }: {
-  task?: TaskDetailDTO;
+  taskLabel?: string;
   control: Control;
   labelPickerRef?: React.RefObject<HTMLDivElement>;
 }) {
@@ -37,7 +36,7 @@ export function LabelSelect({
       render={({ field }) => (
         <FormItem>
           <Select
-            value={task?.label?.name || 'Select Label'}
+            value={taskLabel || 'Select Label'}
             onValueChange={(value) => field.onChange(Number(value))}
           >
             <FormControl>
@@ -46,9 +45,7 @@ export function LabelSelect({
               >
                 <Tag className="mr-1" size={16} />
                 <SelectValue>
-                  {labels.find((label) => label.id === field.value)?.name ||
-                    task?.label?.name ||
-                    'Select Label'}
+                  {labels.find((label) => label.id === field.value)?.name || taskLabel || 'Select Label'}
                 </SelectValue>
               </SelectLabelTrigger>
             </FormControl>
