@@ -3,10 +3,25 @@ import { TaskListItemDTO } from '@/model/task-list-Item-dto';
 import { fetchWithAuth } from '@/utils/fetch-with-auth';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { EditTaskItemDTO } from '@/app/dashboard/task-list/models/edit-task-item-dto';
+import { LabelDTO } from '@/model/label-dto';
 
 export const fetchAllTaskItems = async (): Promise<TaskListItemDTO[]> => {
   const result = await fetchWithAuth<TaskListItemDTO[]>(
     `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/alltask`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  return result;
+};
+
+export const fetchAllLabel = async (): Promise<LabelDTO[]> => {
+  const result = await fetchWithAuth<LabelDTO[]>(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Label/alllabel`,
     {
       method: 'GET',
       headers: {
