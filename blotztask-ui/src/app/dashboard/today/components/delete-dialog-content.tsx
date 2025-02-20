@@ -37,12 +37,8 @@ const DeleteTaskDialog = ({ onDelete, taskId }: { onDelete: (id: number) => void
                 toast('Task deleted', {
                   classNames: {
                     toast: 'bg-blue-200',
-                    actionButton: 'text-blue-400 bg-transparent',
                   },
-                  action: {
-                    label: 'Undo',
-                    onClick: () => console.log('Undo'),
-                  },
+                  action: <button className="text-blue-500 bg-transparent">Undo</button>,
                 });
               }, 100);
             }}
