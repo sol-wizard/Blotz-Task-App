@@ -16,14 +16,12 @@ import { CompletedTaskViewer } from './components/completed-task-viewer';
 import Divider from './components/divider';
 import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
-import { format } from 'date-fns';
 import { TaskToRestoreDTO } from '@/model/task-to-restore-dto';
 
 export default function Today() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
   const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
   const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
-  const [deletedTask, restoreDeletedTask] = useState<TaskDetailDTO>();
   const deletedTaskRef = useRef<TaskDetailDTO>();
 
   useEffect(() => {
@@ -82,7 +80,7 @@ export default function Today() {
   const handleTaskDelete = async (taskId: number) => {
     try {
       const taskToDelete = tasks.find((task) => task.id === taskId);
-      restoreDeletedTask(taskToDelete);
+
       deletedTaskRef.current = taskToDelete;
       await deleteTask(taskId);
       await loadTasks();
@@ -102,7 +100,6 @@ export default function Today() {
       };
       await restoreTask(taskToRestore);
       await loadTasks();
-      console.log('Restoring task:', taskToRestore);
     } catch (error) {
       console.error('Error restoring deleted task:', error);
     }
