@@ -32,7 +32,7 @@ const DeleteTaskDialog = ({ onDelete, taskId }: { onDelete: (id: number) => void
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={() => {
-              // onDelete(taskId);
+              onDelete(taskId);
               setTimeout(() => {
                 toast('Task Deleted', {
                   classNames: {

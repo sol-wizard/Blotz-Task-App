@@ -19,20 +19,6 @@ export const fetchAllTaskItems = async (): Promise<TaskListItemDTO[]> => {
   return result;
 };
 
-export const fetchAllLabel = async (): Promise<LabelDTO[]> => {
-  const result = await fetchWithAuth<LabelDTO[]>(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Label/alllabel`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  return result;
-};
-
 export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
   //Converting today's date to ISO String format
   const date = new Date().toISOString().split('T')[0];
