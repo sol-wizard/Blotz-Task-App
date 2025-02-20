@@ -1,14 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useEffect } from 'react';
 import { H1 } from '@/components/ui/heading-with-anchor';
-import { deleteTask, editTask, fetchAllTaskItems, updateTaskStatus } from '@/services/taskService';
-import { TaskListItemDTO } from '@/model/task-list-Item-dto';
+import {
+  deleteTask,
+  editTask,
+  fetchAllTaskItems,
+  restoreTask,
+  updateTaskStatus,
+} from '@/services/taskService';
 import { TaskList } from './components/task-list';
+import { TaskDetailDTO } from './models/task-detail-dto';
+import { TaskToRestoreDTO } from '@/model/task-to-restore-dto';
 
 export default function Page() {
-  const [taskList, setTaskList] = useState<TaskListItemDTO[]>([]); // 改为 TaskDetailDTO
+  const [taskList, setTaskList] = useState<TaskDetailDTO[]>([]); // 改为 TaskDetailDTO
+  const deletedTaskRef = useRef<TaskDetailDTO>();
 
   const loadTasks = async () => {
     const data = await fetchAllTaskItems();
@@ -35,10 +43,30 @@ export default function Page() {
 
   const handleTaskDelete = async (taskId: number) => {
     try {
+      const taskToDelete = taskList.find((task) => task.id === taskId);
+      console.log('handleTaskDelete-taskToDelete:', taskToDelete);
+      deletedTaskRef.current = taskToDelete;
       await deleteTask(taskId);
       await loadTasks();
     } catch (error) {
       console.error('Error deleting task:', error);
+    }
+  };
+
+  const handleUndo = async () => {
+    try {
+      const taskToRestore: TaskToRestoreDTO = {
+        title: deletedTaskRef.current.title,
+        description: deletedTaskRef.current.description,
+        dueDate: deletedTaskRef.current.dueDate,
+        labelId: deletedTaskRef.current.label.labelId,
+        isDone: deletedTaskRef.current.isDone,
+      };
+      await restoreTask(taskToRestore);
+      await loadTasks();
+      console.log(taskToRestore);
+    } catch (error) {
+      console.error('Error restoring deleted task:', error);
     }
   };
 
@@ -57,6 +85,7 @@ export default function Page() {
         handleCheckboxChange={handleTaskToggle}
         handleTaskEdit={handleTaskEdit}
         handleTaskDelete={handleTaskDelete}
+        handleUndo={handleUndo}
       />
     </div>
   );
