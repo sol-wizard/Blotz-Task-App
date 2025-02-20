@@ -49,7 +49,13 @@ const DeleteTaskDialog = ({
                     title: 'text-gray-500',
                   },
                   action: (
-                    <button className="text-blue-500" onClick={() => handleUndo(task)}>
+                    <button
+                      className="text-blue-500"
+                      onClick={() => {
+                        handleUndo(task);
+                        toast.dismiss();
+                      }}
+                    >
                       Undo
                     </button>
                   ),
