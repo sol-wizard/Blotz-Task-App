@@ -154,6 +154,7 @@ public class TaskService : ITaskService
                 Description = restoreTaskItem.Description,
                 DueDate = restoreTaskItem.DueDate,
                 LabelId = restoreTaskItem.LabelId,
+                IsDone = restoreTaskItem.IsDone,
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow

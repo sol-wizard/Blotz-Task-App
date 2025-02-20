@@ -80,7 +80,6 @@ export default function Today() {
   const handleTaskDelete = async (taskId: number) => {
     try {
       const taskToDelete = tasks.find((task) => task.id === taskId);
-
       deletedTaskRef.current = taskToDelete;
       await deleteTask(taskId);
       await loadTasks();
@@ -133,6 +132,7 @@ export default function Today() {
           handleCompletedCheckboxChange={handleCompletedCheckboxChange}
           handleTaskEdit={handleTaskEdit}
           handleTaskDelete={handleTaskDelete}
+          handleUndo={handleUndo}
         />
       </div>
     </>

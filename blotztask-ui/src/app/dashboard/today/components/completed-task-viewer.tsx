@@ -5,6 +5,7 @@ export function CompletedTaskViewer({
   handleCompletedCheckboxChange,
   handleTaskEdit,
   handleTaskDelete,
+  handleUndo,
 }) {
   return (
     <div>
@@ -18,6 +19,7 @@ export function CompletedTaskViewer({
                 handleCheckboxChange={handleCompletedCheckboxChange}
                 handleTaskEdit={handleTaskEdit}
                 handleTaskDelete={handleTaskDelete}
+                handleUndo={handleUndo}
               />
             ))}
           </div>
