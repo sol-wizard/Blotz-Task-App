@@ -4,6 +4,6 @@ export interface TaskToRestoreDTO {
   description: string;
   title: string;
   isDone: boolean;
-  label: number;
+  labelId: number;
   dueDate: Date;
 }

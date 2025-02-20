@@ -83,7 +83,7 @@ export default function Today() {
     try {
       const taskToDelete = tasks.find((task) => task.id === taskId);
       restoreDeletedTask(taskToDelete);
-      deletedTaskRef.current = taskToDelete; // 直接更新 ref
+      deletedTaskRef.current = taskToDelete;
       await deleteTask(taskId);
       await loadTasks();
     } catch (error) {
@@ -97,12 +97,11 @@ export default function Today() {
         title: deletedTaskRef.current.title,
         description: deletedTaskRef.current.description,
         dueDate: deletedTaskRef.current.dueDate,
-        label: deletedTaskRef.current.label.labelId,
+        labelId: deletedTaskRef.current.label.labelId,
         isDone: deletedTaskRef.current.isDone,
       };
       await restoreTask(taskToRestore);
       await loadTasks();
-
       console.log('Restoring task:', taskToRestore);
     } catch (error) {
       console.error('Error restoring deleted task:', error);

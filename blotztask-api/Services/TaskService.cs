@@ -170,7 +170,7 @@ public class TaskService : ITaskService
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error adding task: {ex.Message}");
+            Console.Error.WriteLine($"Error restoring task: {ex.Message}");
             throw;
         }
     }
