@@ -16,14 +16,12 @@ import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
 
 const DeleteTaskDialog = ({
   onDelete,
-  taskId,
   handleUndo,
-  taskToRestore,
+  task,
 }: {
   onDelete: (id: number) => void;
-  taskId: number;
-  handleUndo: (taskToRestore: TaskDetailDTO) => void;
-  taskToRestore: TaskDetailDTO;
+  handleUndo: (task: TaskDetailDTO) => void;
+  task: TaskDetailDTO;
 }) => {
   return (
     <AlertDialog>
@@ -43,7 +41,7 @@ const DeleteTaskDialog = ({
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={() => {
-              onDelete(taskId);
+              onDelete(task.id);
               setTimeout(() => {
                 toast('Task Deleted', {
                   classNames: {
@@ -51,7 +49,7 @@ const DeleteTaskDialog = ({
                     title: 'text-gray-500',
                   },
                   action: (
-                    <button className="text-blue-500" onClick={() => handleUndo(taskToRestore)}>
+                    <button className="text-blue-500" onClick={() => handleUndo(task)}>
                       Undo
                     </button>
                   ),

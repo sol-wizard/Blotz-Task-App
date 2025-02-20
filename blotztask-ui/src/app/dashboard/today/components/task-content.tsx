@@ -124,12 +124,7 @@ export default function TaskContent({
                       <Pencil className="text-primary" size={20} />
                     </button>
 
-                    <DeleteTaskDialog
-                      onDelete={onDelete}
-                      taskId={task.id}
-                      handleUndo={handleUndo}
-                      taskToRestore={task}
-                    />
+                    <DeleteTaskDialog task={task} onDelete={onDelete} handleUndo={handleUndo} />
                   </div>
                 )}
               </div>
