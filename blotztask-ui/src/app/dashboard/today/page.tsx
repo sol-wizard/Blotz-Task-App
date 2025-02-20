@@ -1,7 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { addTaskItem, deleteTask, editTask, fetchTaskItemsDueToday } from '@/services/taskService';
+import { useEffect, useRef, useState } from 'react';
+import {
+  addTaskItem,
+  deleteTask,
+  editTask,
+  fetchTaskItemsDueToday,
+  restoreTask,
+} from '@/services/taskService';
 import { updateTaskStatus } from '@/services/taskService';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
@@ -10,12 +16,15 @@ import { CompletedTaskViewer } from './components/completed-task-viewer';
 import Divider from './components/divider';
 import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
+import { format } from 'date-fns';
+import { TaskToRestoreDTO } from '@/model/task-to-restore-dto';
 
 export default function Today() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
   const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
   const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
   const [deletedTask, restoreDeletedTask] = useState<TaskDetailDTO>();
+  const deletedTaskRef = useRef<TaskDetailDTO>();
 
   useEffect(() => {
     loadTasks();
@@ -74,7 +83,7 @@ export default function Today() {
     try {
       const taskToDelete = tasks.find((task) => task.id === taskId);
       restoreDeletedTask(taskToDelete);
-      console.log('taskToDelete:', taskToDelete);
+      deletedTaskRef.current = taskToDelete; // 直接更新 ref
       await deleteTask(taskId);
       await loadTasks();
     } catch (error) {
@@ -84,7 +93,17 @@ export default function Today() {
 
   const handleUndo = async () => {
     try {
-      console.log('Task restored:', deletedTask);
+      const taskToRestore: TaskToRestoreDTO = {
+        title: deletedTaskRef.current.title,
+        description: deletedTaskRef.current.description,
+        dueDate: deletedTaskRef.current.dueDate,
+        label: deletedTaskRef.current.label.labelId,
+        isDone: deletedTaskRef.current.isDone,
+      };
+      await restoreTask(taskToRestore);
+      await loadTasks();
+
+      console.log('Restoring task:', taskToRestore);
     } catch (error) {
       console.error('Error restoring deleted task:', error);
     }

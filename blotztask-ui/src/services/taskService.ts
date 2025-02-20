@@ -3,6 +3,7 @@ import { TaskListItemDTO } from '@/model/task-list-Item-dto';
 import { fetchWithAuth } from '@/utils/fetch-with-auth';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { EditTaskItemDTO } from '@/app/dashboard/task-list/models/edit-task-item-dto';
+import { TaskToRestoreDTO } from '@/model/task-to-restore-dto';
 
 export const fetchAllTaskItems = async (): Promise<TaskListItemDTO[]> => {
   const result = await fetchWithAuth<TaskListItemDTO[]>(
@@ -106,6 +107,26 @@ export const deleteTask = async (taskId: number): Promise<string> => {
     return result;
   } catch (error) {
     console.error('Error deleting task:', error);
+    throw error;
+  }
+};
+
+export const restoreTask = async (taskToRestore: TaskToRestoreDTO): Promise<TaskToRestoreDTO> => {
+  try {
+    const result = await fetchWithAuth<TaskToRestoreDTO>(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/restore`,
+      {
+        method: 'POST',
+        body: JSON.stringify(taskToRestore),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return result;
+  } catch (error) {
+    console.error('Error restoring task :', error);
     throw error;
   }
 };

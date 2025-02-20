@@ -71,7 +71,7 @@ const AddTaskForm = ({ onSubmit, datePickerRef, labelPickerRef, onCancel }) => {
             )}
           />
         </div>
-        <div className="flex flex-row inline-block justify-between mt-4 mb-2">
+        <div className="flex flex-row justify-between mt-4 mb-2">
           <div className="flex flex-row items-center">
             <CalendarForm control={form.control} datePickerRef={datePickerRef} />
             <LabelSelect control={form.control} labelPickerRef={labelPickerRef} />

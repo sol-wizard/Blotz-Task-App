@@ -13,6 +13,7 @@ public interface ITaskService
     public Task<ResponseWrapper<int>> EditTaskAsync(int Id, EditTaskItemDTO editTaskItem);
     public Task<ResponseWrapper<int>> DeleteTaskByIDAsync(int Id);
     public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId);
+    public Task<ResponseWrapper<string>> RestoreTaskAsync(RestoreTaskItemDTO restoreTaskItem, string userId);
     public Task<TaskStatusResultDTO> TaskStatusUpdate(int id, bool? isDone = null);
     public Task<List<TaskItemDTO>> GetTaskByDate(DateOnly date, string userId);
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
@@ -128,6 +129,42 @@ public class TaskService : ITaskService
             return new ResponseWrapper<string>(
                 newTask.Title,
                 "Task added successfully.",
+                true
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error adding task: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<ResponseWrapper<string>> RestoreTaskAsync(RestoreTaskItemDTO restoreTaskItem, string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new UnauthorizedAccessException("User ID cannot be null or empty.");
+        }
+
+        try
+        {
+            var newTask = new TaskItem
+            {
+                Title = restoreTaskItem.Title,
+                Description = restoreTaskItem.Description,
+                DueDate = restoreTaskItem.DueDate,
+                LabelId = restoreTaskItem.LabelId,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _dbContext.TaskItems.Add(newTask);
+            await _dbContext.SaveChangesAsync();
+
+            return new ResponseWrapper<string>(
+                newTask.Title,
+                "Task restored successfully.",
                 true
             );
         }
