@@ -32,13 +32,15 @@ const DeleteTaskDialog = ({ onDelete, taskId }: { onDelete: (id: number) => void
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={() => {
-              onDelete(taskId);
+              // onDelete(taskId);
               setTimeout(() => {
-                toast('Task deleted', {
+                toast('Task Deleted', {
                   classNames: {
-                    toast: 'bg-blue-200',
+                    toast: 'flex justify-between items-center bg-blue-100 w-64',
+                    title: 'text-gray-500',
                   },
-                  action: <button className="text-blue-500 bg-transparent">Undo</button>,
+                  action: <button className="text-blue-500">Undo</button>,
+                  position: 'bottom-left',
                 });
               }, 100);
             }}
