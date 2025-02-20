@@ -12,8 +12,19 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
 
-const DeleteTaskDialog = ({ onDelete, taskId }: { onDelete: (id: number) => void; taskId: number }) => {
+const DeleteTaskDialog = ({
+  onDelete,
+  taskId,
+  handleUndo,
+  taskToRestore,
+}: {
+  onDelete: (id: number) => void;
+  taskId: number;
+  handleUndo: (taskToRestore: TaskDetailDTO) => void;
+  taskToRestore: TaskDetailDTO;
+}) => {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -39,8 +50,13 @@ const DeleteTaskDialog = ({ onDelete, taskId }: { onDelete: (id: number) => void
                     toast: 'flex justify-between items-center bg-blue-100 w-64',
                     title: 'text-gray-500',
                   },
-                  action: <button className="text-blue-500">Undo</button>,
+                  action: (
+                    <button className="text-blue-500" onClick={() => handleUndo(taskToRestore)}>
+                      Undo
+                    </button>
+                  ),
                   position: 'bottom-left',
+                  duration: 4000,
                 });
               }, 100);
             }}

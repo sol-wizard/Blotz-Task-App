@@ -15,6 +15,7 @@ export default function Today() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
   const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
   const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
+  const [deletedTask, restoreDeletedTask] = useState<TaskDetailDTO>();
 
   useEffect(() => {
     loadTasks();
@@ -71,10 +72,21 @@ export default function Today() {
 
   const handleTaskDelete = async (taskId: number) => {
     try {
+      const taskToDelete = tasks.find((task) => task.id === taskId);
+      restoreDeletedTask(taskToDelete);
+      console.log('taskToDelete:', taskToDelete);
       await deleteTask(taskId);
       await loadTasks();
     } catch (error) {
       console.error('Error deleting task:', error);
+    }
+  };
+
+  const handleUndo = async () => {
+    try {
+      console.log('Task restored:', deletedTask);
+    } catch (error) {
+      console.error('Error restoring deleted task:', error);
     }
   };
 
@@ -93,6 +105,7 @@ export default function Today() {
                 handleCheckboxChange={handleCheckboxChange}
                 handleTaskEdit={handleTaskEdit}
                 handleTaskDelete={handleTaskDelete}
+                handleUndo={handleUndo}
               ></TaskCard>
             ))
           ) : (

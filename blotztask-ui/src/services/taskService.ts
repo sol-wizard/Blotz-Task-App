@@ -3,7 +3,6 @@ import { TaskListItemDTO } from '@/model/task-list-Item-dto';
 import { fetchWithAuth } from '@/utils/fetch-with-auth';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { EditTaskItemDTO } from '@/app/dashboard/task-list/models/edit-task-item-dto';
-import { LabelDTO } from '@/model/label-dto';
 
 export const fetchAllTaskItems = async (): Promise<TaskListItemDTO[]> => {
   const result = await fetchWithAuth<TaskListItemDTO[]>(
