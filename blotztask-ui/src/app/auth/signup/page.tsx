@@ -1,6 +1,6 @@
 'use client';
 
-import styles from '../signin/AuthForm.module.css';
+import styles from '../signin/AuthForm.module.css'; // Import CSS styles
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertDestructive } from '@/components/ui/alert-destructive';
@@ -78,67 +78,35 @@ const SignUpPage = () => {
 
   return (
     <div className="h-full justify-center flex flex-col items-center">
-      <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-96">
-        <h1 className="text-2xl text-center font-medium text-blue-500">Create an account</h1>
-        <p className="text-center text-gray-600 text-sm">Enter your email below to create your account</p>
+      <div className="flex flex-col gap-4 bg-white p-5 rounded-lg shadow-md w-96">
+        <h1 className={styles.title}>User Sign Up</h1>
         {errors.root && <AlertDestructive title="Error" description={errors.root?.message} />}
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <div className="flex flex-row gap-4 w-full">
-            <div className="w-1/2">
-              <input
-                type="text"
-                required
-                className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="First name"
-              />
-            </div>
-            <div className="w-1/2">
-              <input
-                type="text"
-                required
-                className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Last name"
-              />
-            </div>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="flex flex-col gap-1">
+            <label className="font-semibold">Email:</label>
+            <input
+              type="email"
+              {...register('email')}
+              className="border p-2 rounded-md"
+              placeholder="Enter your email"
+            />
+            {errors.email?.message && <p className="text-red-500 text-sm">{String(errors.email.message)}</p>}
           </div>
 
-          <div className="flex flex-col gap-4 bg-white p-5 rounded-lg shadow-md w-96">
-            <h1 className={styles.title}>User Sign Up</h1>
-            {errors.root && <AlertDestructive title="Error" description={errors.root?.message} />}
-
-            <div className="flex flex-col gap-1">
-              <label className="font-semibold">Email:</label>
-              <input
-                type="email"
-                placeholder="Email"
-                {...register('email')}
-                required
-                className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              {errors.email?.message && (
-                <p className="text-red-500 text-sm">{String(errors.email.message)}</p>
-              )}
-            </div>
-          </div>
           <div className="flex flex-col gap-1">
             <label className="font-semibold">Password:</label>
             <input
               type="password"
-              placeholder="Password"
               {...register('password')}
-              required
-              className={styles.input}
+              className="border p-2 rounded-md"
+              placeholder="Enter your password"
             />
             {errors.password?.message && (
               <p className="text-red-500 text-sm">{String(errors.password.message)}</p>
             )}
           </div>
 
-          <Button
-            className="w-full py-2.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            type="submit"
-            disabled={isSubmitting}
-          >
+          <Button className="w-full mt-4 text-white" type="submit" disabled={isSubmitting}>
             {isSubmitting ? <Spinner /> : 'Sign Up'}
           </Button>
         </form>
