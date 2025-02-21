@@ -88,7 +88,13 @@ export default function Today() {
           <div className="flex flex-col gap-6 w-full">
             {incompleteTasks.length > 0 ? (
               incompleteTasks.map((task) => (
-                <TaskCard key={task.id} task={task} handleCheckboxChange={handleCheckboxChange}></TaskCard>
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  handleCheckboxChange={handleCheckboxChange}
+                  handleTaskEdit={handleTaskEdit}
+                  handleTaskDelete={handleTaskDelete}
+                ></TaskCard>
               ))
             ) : (
               <p>No incomplete tasks for today!</p>
@@ -98,6 +104,8 @@ export default function Today() {
           <CompletedTaskViewer
             completedTasks={completedTasks}
             handleCompletedCheckboxChange={handleCompletedCheckboxChange}
+            handleTaskEdit={handleTaskEdit}
+            handleTaskDelete={handleTaskDelete}
           />
         </div>
       </div>

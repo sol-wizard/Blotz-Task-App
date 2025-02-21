@@ -79,11 +79,11 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async signIn({ user, account }) {
-      if (user?.access_token) {
-        account.access_token = user?.access_token as string;
+      if (user?.accessToken) {
+        account.accessToken = user?.accessToken as string;
       }
-      if (user?.refresh_token) {
-        account.refresh_token = user?.refresh_token as string;
+      if (user?.refreshToken) {
+        account.refreshToken = user?.refreshToken as string;
       }
 
       return true;
