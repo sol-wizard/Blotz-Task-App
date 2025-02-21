@@ -10,8 +10,8 @@ public interface ITaskService
 {
     public Task<List<TaskItemDTO>> GetTodoItemsByUser(string userId);
     public Task<TaskItemDTO> GetTaskByID(int Id);
-    public Task<int> EditTask(int Id, EditTaskItemDTO editTaskItem);
-    public Task<bool> DeleteTaskByID(int Id);
+    public Task<ResponseWrapper<int>> EditTaskAsync(int Id, EditTaskItemDTO editTaskItem);
+    public Task<ResponseWrapper<int>> DeleteTaskByIDAsync(int Id);
     public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId);
     public Task<TaskStatusResultDTO> TaskStatusUpdate(int id, bool? isDone = null);
     public Task<List<TaskItemDTO>> GetTaskByDate(DateOnly date, string userId);
@@ -75,7 +75,7 @@ public class TaskService : ITaskService
         return result;
     }
 
-    public async Task<bool> DeleteTaskByID(int Id)
+    public async Task<ResponseWrapper<int>> DeleteTaskByIDAsync(int Id)
     {
         var taskItem = await _dbContext.TaskItems.FindAsync(Id);
         if (taskItem == null)
@@ -83,9 +83,23 @@ public class TaskService : ITaskService
             throw new NotFoundException($"Task with ID {Id} not found.");
         }
 
-        _dbContext.TaskItems.Remove(taskItem);
-        await _dbContext.SaveChangesAsync();
-        return true;
+        try
+        {
+            _dbContext.TaskItems.Remove(taskItem);
+            await _dbContext.SaveChangesAsync();
+            return new ResponseWrapper<int>(
+                    taskItem.Id,
+                    "Task deleted successfully.",
+                    true
+                );
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error deleting task: {ex.Message}");
+            throw;
+        }
+
+       
     }
 
     public async Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId)
@@ -124,7 +138,7 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task<int> EditTask(int id, EditTaskItemDTO editTaskItem)
+    public async Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDTO editTaskItem)
     {
         var task = await _dbContext.TaskItems.FindAsync(id);
 
@@ -133,15 +147,31 @@ public class TaskService : ITaskService
             throw new NotFoundException($"Task with ID {id} not found.");
         }
 
-        task.Title = editTaskItem.Title;
-        task.Description = editTaskItem.Description;
-        task.UpdatedAt = DateTime.UtcNow;
-        task.LabelId = editTaskItem.LabelId;
+        try
+        {
+                       
+            task.Title = editTaskItem.Title;
+            task.Description = editTaskItem.Description;
+            task.UpdatedAt = DateTime.UtcNow;
+            task.LabelId = editTaskItem.LabelId;
+        
+            
+            _dbContext.TaskItems.Update(task);
+            await _dbContext.SaveChangesAsync();
 
-        _dbContext.TaskItems.Update(task);
-        await _dbContext.SaveChangesAsync();
+            return new ResponseWrapper<int>(
+                    task.Id,
+                    "Task edited successfully.",
+                    true
+                );
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error editing task: {ex.Message}");
+            throw;
+        }
 
-        return id;
+        
     }
 
     public async Task<TaskStatusResultDTO> TaskStatusUpdate(int taskId, bool? isDone=null)
@@ -185,7 +215,7 @@ public class TaskService : ITaskService
                     Description = task.Description,
                     DueDate = task.DueDate,
                     IsDone = task.IsDone,
-                    Label = new LabelDTO { Name = task.Label.Name, Color = task.Label.Color }
+                    Label = new LabelDTO { LabelId = task.Label.LabelId, Name = task.Label.Name, Color = task.Label.Color }
                 })
                 .ToListAsync();
         }

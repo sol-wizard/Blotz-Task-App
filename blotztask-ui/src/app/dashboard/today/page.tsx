@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { addTaskItem, fetchTaskItemsDueToday } from '@/services/taskService';
+import { addTaskItem, deleteTask, editTask, fetchTaskItemsDueToday } from '@/services/taskService';
 import { updateTaskStatus } from '@/services/taskService';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
@@ -60,6 +60,24 @@ export default function Today() {
     }
   };
 
+  const handleTaskEdit = async (data) => {
+    try {
+      await editTask(data);
+      await loadTasks();
+    } catch (error) {
+      console.error('Error editing task:', error);
+    }
+  };
+
+  const handleTaskDelete = async (taskId: number) => {
+    try {
+      await deleteTask(taskId);
+      await loadTasks();
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col gap-5">
@@ -69,7 +87,13 @@ export default function Today() {
         <div className="flex flex-col gap-6 w-full">
           {incompleteTasks.length > 0 ? (
             incompleteTasks.map((task) => (
-              <TaskCard key={task.id} task={task} handleCheckboxChange={handleCheckboxChange}></TaskCard>
+              <TaskCard
+                key={task.id}
+                task={task}
+                handleCheckboxChange={handleCheckboxChange}
+                handleTaskEdit={handleTaskEdit}
+                handleTaskDelete={handleTaskDelete}
+              ></TaskCard>
             ))
           ) : (
             <p>No incomplete tasks for today!</p>
@@ -79,6 +103,8 @@ export default function Today() {
         <CompletedTaskViewer
           completedTasks={completedTasks}
           handleCompletedCheckboxChange={handleCompletedCheckboxChange}
+          handleTaskEdit={handleTaskEdit}
+          handleTaskDelete={handleTaskDelete}
         />
       </div>
     </>

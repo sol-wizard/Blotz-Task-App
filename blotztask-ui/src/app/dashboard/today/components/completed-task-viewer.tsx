@@ -3,6 +3,8 @@ import TaskCard from './task-card';
 export function CompletedTaskViewer({
   completedTasks,
   handleCompletedCheckboxChange,
+  handleTaskEdit,
+  handleTaskDelete,
 }) {
   return (
     <div>
@@ -14,6 +16,8 @@ export function CompletedTaskViewer({
                 key={task.id}
                 task={task}
                 handleCheckboxChange={handleCompletedCheckboxChange}
+                handleTaskEdit={handleTaskEdit}
+                handleTaskDelete={handleTaskDelete}
               />
             ))}
           </div>

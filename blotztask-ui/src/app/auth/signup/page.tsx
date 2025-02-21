@@ -112,6 +112,7 @@ const SignUpPage = () => {
             {errors.email?.message && <p className="text-red-500 text-sm">{String(errors.email.message)}</p>}
           </div>
           <div>
+          <div>
             <input
               type="password"
               placeholder="Password"
