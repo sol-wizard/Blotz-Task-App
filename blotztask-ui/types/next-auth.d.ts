@@ -7,12 +7,12 @@ import NextAuth from 'next-auth';
 
 declare module 'next-auth' {
   interface User {
-    access_token?: string;
-    refresh_token?: string;
+    accessToken?: string;
+    refreshToken?: string;
   }
 
   interface Account {
-    access_token?: string;
-    refresh_token?: string;
+    accessToken?: string;
+    refreshToken?: string;
   }
 }

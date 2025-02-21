@@ -80,32 +80,34 @@ export default function Today() {
 
   return (
     <>
-      <div className="flex flex-col gap-5">
+      <div className="ml-5 flex flex-col gap-12">
         <TodayHeader tasks={tasks} />
-        <Divider text="To do" />
-        <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
-        <div className="flex flex-col gap-6 w-full">
-          {incompleteTasks.length > 0 ? (
-            incompleteTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                handleCheckboxChange={handleCheckboxChange}
-                handleTaskEdit={handleTaskEdit}
-                handleTaskDelete={handleTaskDelete}
-              ></TaskCard>
-            ))
-          ) : (
-            <p>No incomplete tasks for today!</p>
-          )}
+        <div className="flex flex-col gap-6">
+          <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
+          <Divider text="To do" />
+          <div className="flex flex-col gap-6 w-full">
+            {incompleteTasks.length > 0 ? (
+              incompleteTasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  handleCheckboxChange={handleCheckboxChange}
+                  handleTaskEdit={handleTaskEdit}
+                  handleTaskDelete={handleTaskDelete}
+                ></TaskCard>
+              ))
+            ) : (
+              <p>No incomplete tasks for today!</p>
+            )}
+          </div>
+          <Divider text="Done" />
+          <CompletedTaskViewer
+            completedTasks={completedTasks}
+            handleCompletedCheckboxChange={handleCompletedCheckboxChange}
+            handleTaskEdit={handleTaskEdit}
+            handleTaskDelete={handleTaskDelete}
+          />
         </div>
-        <Divider text="Done" />
-        <CompletedTaskViewer
-          completedTasks={completedTasks}
-          handleCompletedCheckboxChange={handleCompletedCheckboxChange}
-          handleTaskEdit={handleTaskEdit}
-          handleTaskDelete={handleTaskDelete}
-        />
       </div>
     </>
   );
