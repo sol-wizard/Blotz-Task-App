@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { addTaskItem, fetchTaskItemsDueToday } from '@/services/taskService';
+import { addTaskItem, deleteTask, editTask, fetchTaskItemsDueToday } from '@/services/taskService';
 import { updateTaskStatus } from '@/services/taskService';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
@@ -57,6 +57,24 @@ export default function Today() {
       await loadTasks();
     } catch (error) {
       console.error('Error adding new task:', error);
+    }
+  };
+
+  const handleTaskEdit = async (data) => {
+    try {
+      await editTask(data);
+      await loadTasks();
+    } catch (error) {
+      console.error('Error editing task:', error);
+    }
+  };
+
+  const handleTaskDelete = async (taskId: number) => {
+    try {
+      await deleteTask(taskId);
+      await loadTasks();
+    } catch (error) {
+      console.error('Error deleting task:', error);
     }
   };
 

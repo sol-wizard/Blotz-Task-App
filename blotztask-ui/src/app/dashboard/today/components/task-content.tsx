@@ -1,37 +1,52 @@
 import DueDateTag from './due-date-tag';
 import TaskSeparator from '../shared/task-separator';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { useState } from 'react';
 import SectionSepreator from './section-separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from 'src/components/ui/task-card-input';
-import { useForm } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { taskFormSchema } from '../forms/task-form-schema';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
-import DeleteDialogContent from './delete-dialog-content';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
+import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
+import { format } from 'date-fns';
+import DeleteTaskDialog from './delete-dialog-content';
 
 export default function TaskContent({
   task,
   onSubmit,
+  onDelete,
 }: {
   task: TaskDetailDTO;
   onSubmit: (data: z.infer<typeof taskFormSchema>) => void;
+  onDelete: (taskId: number) => void;
 }) {
   const form = useForm<z.infer<typeof taskFormSchema>>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       title: task.title,
       description: task.description,
-      date: task.dueDate,
-      labelId: task.label.id,
+      date: new Date(task.dueDate),
+      labelId: task.label.labelId,
     },
   });
+
+  const updateTask: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
+    const editTaskDetails: EditTaskItemDTO = {
+      id: task.id,
+      title: data.title ?? task.title,
+      description: data.description ?? '',
+      isDone: task.isDone,
+      labelId: data.labelId,
+      dueDate: format(new Date(data.date), 'yyyy-MM-dd'),
+    };
+    onSubmit(editTaskDetails);
+  };
 
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
@@ -43,7 +58,7 @@ export default function TaskContent({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
-              onSubmit(data);
+              updateTask(data);
               handleEditState();
             })}
             className="flex flex-col w-full bg-transparent px-6"
@@ -106,20 +121,14 @@ export default function TaskContent({
                     <button className="px-4" onClick={handleEditState}>
                       <Pencil className="text-primary" size={20} />
                     </button>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button>
-                          <Trash2 className="text-primary" size={20} />
-                        </button>
-                      </DialogTrigger>
-                      <DeleteDialogContent />
-                    </Dialog>
+
+                    <DeleteTaskDialog onDelete={onDelete} taskId={task.id} />
                   </div>
                 )}
               </div>
 
               {isEditing && (
-                <div className="flex flex-row inline-block justify-between mt-4 mb-2">
+                <div className="flex flex-row justify-between mt-4 mb-2">
                   <div className="flex flex-row items-center">
                     <CalendarForm control={form.control} task={task} />
                     <LabelSelect control={form.control} />
@@ -131,7 +140,11 @@ export default function TaskContent({
                     >
                       Cancel
                     </button>
-                    <button type="submit" className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20">
+                    <button
+                      type="submit"
+                      className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20"
+                      onClick={() => console.log('Form errors:', form.formState.errors)}
+                    >
                       Save
                     </button>
                   </div>
