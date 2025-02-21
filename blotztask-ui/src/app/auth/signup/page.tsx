@@ -4,7 +4,6 @@ import styles from '../signin/AuthForm.module.css'; // Import CSS styles
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertDestructive } from '@/components/ui/alert-destructive';
-import { fetchWithErrorHandling } from '@/utils/http-client';
 import { BadRequestError } from '@/model/error/bad-request-error';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -22,6 +21,7 @@ const SignUpPage = () => {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(schema),
@@ -29,25 +29,48 @@ const SignUpPage = () => {
 
   const onSubmit = async (data: { email: string; password: string }) => {
     try {
-      await fetchWithErrorHandling(`${process.env.NEXT_PUBLIC_API_BASE_URL}/register`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
-      router.push('/signin');
-      toast('Account registered', {
+      console.log('Register Response Status:', response);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.log('Register Error Data:', errorData);
+
+        const errorMessages = errorData.errors
+          ? Object.values(errorData.errors).flat().join('\n')
+          : errorData.message || 'Registration failed.';
+
+        throw new BadRequestError(errorMessages);
+      }
+
+      toast.success('Account registered', {
         description: 'You can now login with the registered account',
         duration: 3000,
         position: 'top-center',
       });
+
+      router.push('/signin');
     } catch (error) {
+      console.error('Registration failed:', error);
+
       if (error instanceof BadRequestError) {
+        setError('root', { message: error.message });
+
         toast.error('Error', {
-          description: error.details ? Object.values(error.details.errors).flat().join(' ') : error.message,
+          description: (
+            <span>
+              {error.message.split('\n').map((line, index) => (
+                <p key={index}>{line}</p>
+              ))}
+            </span>
+          ),
         });
       } else {
-        console.error('Unexpected error:', error);
         toast.error('Unexpected error occurred. Please try again.');
       }
     }
@@ -57,18 +80,33 @@ const SignUpPage = () => {
     <div className="h-full justify-center flex flex-col items-center">
       <div className="flex flex-col gap-4 bg-white p-5 rounded-lg shadow-md w-96">
         <h1 className={styles.title}>User Sign Up</h1>
-        {errors.root && <AlertDestructive title="Error" description={errors.root.message} />}
+        {errors.root && <AlertDestructive title="Error" description={errors.root?.message} />}
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className={styles.input_group}>
-            <label className={styles.label}>Email:</label>
-            <input type="email" {...register('email')} placeholder="Enter your email" />
+          <div className="flex flex-col gap-1">
+            <label className="font-semibold">Email:</label>
+            <input
+              type="email"
+              {...register('email')}
+              className="border p-2 rounded-md"
+              placeholder="Enter your email"
+            />
+            {errors.email?.message && <p className="text-red-500 text-sm">{String(errors.email.message)}</p>}
           </div>
 
-          <div className={styles.input_group}>
-            <label className={styles.label}>Password:</label>
-            <input type="password" {...register('password')} placeholder="Enter your password" />
+          <div className="flex flex-col gap-1">
+            <label className="font-semibold">Password:</label>
+            <input
+              type="password"
+              {...register('password')}
+              className="border p-2 rounded-md"
+              placeholder="Enter your password"
+            />
+            {errors.password?.message && (
+              <p className="text-red-500 text-sm">{String(errors.password.message)}</p>
+            )}
           </div>
-          <Button className="w-full" type="submit" disabled={isSubmitting}>
+
+          <Button className="w-full mt-4 text-white" type="submit" disabled={isSubmitting}>
             {isSubmitting ? <Spinner /> : 'Sign Up'}
           </Button>
         </form>
