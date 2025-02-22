@@ -19,7 +19,6 @@ import { cn } from '@/lib/utils';
 import { url } from 'inspector';
 
 const authenticatedItems = [
-  { title: 'New Task', icon: Plus },
   { title: 'All Tasks', url: 'today', icon: ListChecks },
   { title: 'Today', url: 'task-list', icon: ClipboardCheck },
 ];
@@ -46,12 +45,21 @@ export function AppSidebar() {
           <SidebarGroupLabel>Blotz Task App</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="/new-task" className="flex items-center gap-3 py-3 my-5 rounded-lg hover:bg-white">
+                    <Plus className={cn('bg-primary', 'text-white p-1 rounded')}/>
+                    <span className="text-primary text-lg">New Task</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <item.icon className={cn('bg-primary', 'text-white p-1 rounded')} />
-                      <span>{item.title}</span>
+                    <a href={item.url} className="flex hover:bg-white">
+                      <item.icon />
+                      <span className="pl-3">{item.title}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
