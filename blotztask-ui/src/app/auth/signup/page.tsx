@@ -1,60 +1,63 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { AlertDestructive } from '@/components/ui/alert-destructive';
-import { fetchWithErrorHandling } from '@/utils/http-client';
 import { BadRequestError } from '@/model/error/bad-request-error';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
 const SignUpPage = () => {
-  const router = useRouter(); // Initialize router
-  const [email, setEmail] = useState(''); // State for email input
-  const [password, setPassword] = useState(''); // State for password input
-  const [error, setError] = useState(null); // State for error message
-  const [loading, setLoading] = useState(false); // State for loading spinner
+  const router = useRouter();
+  const schema = z.object({
+    email: z.string().email({ message: 'Invalid email address' }),
+    password: z.string().min(9, { message: 'Password must be at least 9 characters' }),
+  });
 
-  const handleRegister = async () => {
-    setLoading(true);
-    setError(null);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(schema),
+  });
 
+  const onSubmit = async (data: { email: string; password: string }) => {
     try {
-      await fetchWithErrorHandling(`${process.env.NEXT_PUBLIC_API_BASE_URL}/register`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(data),
       });
-      handleSuccess();
+
+      if (!response.ok) {
+        const errorData = await response.json();
+
+        const errorMessages = errorData.errors
+          ? Object.values(errorData.errors).flat().join('\n')
+          : errorData.message || 'Registration failed.';
+
+        throw new BadRequestError(errorMessages);
+      }
+
+      toast.success('Account registered', {
+        description: 'You can now login with the registered account',
+        duration: 3000,
+        position: 'top-center',
+      });
+
+      router.push('/signin');
     } catch (error) {
-      handleError(error);
-    } finally {
-      setLoading(false);
+      if (error instanceof BadRequestError) {
+        setError('root', { message: error.message });
+      } else {
+        toast.error('Unexpected error occurred. Please try again.');
+      }
     }
-  };
-
-  const handleError = (error: unknown) => {
-    if (error instanceof BadRequestError) {
-      setError(error.details ? Object.values(error.details.errors).flat().join(' ') : error.message);
-    } else {
-      console.error('Unexpected error during registration:', error);
-      setError('An unexpected error occurred. Please try again later.');
-    }
-  };
-
-  const handleSuccess = () => {
-    router.push('/signin');
-    toast('Account registered', {
-      description: 'You can now login with the registered account',
-      duration: 3000,
-      position: 'top-center',
-    });
-  };
-
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    handleRegister();
   };
 
   return (
@@ -62,8 +65,8 @@ const SignUpPage = () => {
       <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-96">
         <h1 className="text-2xl text-center font-medium text-blue-500">Create an account</h1>
         <p className="text-center text-gray-600 text-sm">Enter your email below to create your account</p>
-        {error && <AlertDestructive title="Error" description={error} />}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {errors.root && <AlertDestructive title="Error" description={errors.root?.message} />}
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-row gap-4 w-full">
             <div className="w-1/2">
               <input
@@ -86,29 +89,31 @@ const SignUpPage = () => {
           <div>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              {...register('email')}
               required
               className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Email"
             />
+            {errors.email?.message && <p className="text-red-500 text-sm">{String(errors.email.message)}</p>}
           </div>
           <div>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              {...register('password')}
               required
               className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Password"
             />
+            {errors.password?.message && (
+              <p className="text-red-500 text-sm">{String(errors.password.message)}</p>
+            )}
           </div>
           <Button
             className="w-full py-2.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
           >
-            {loading ? <Spinner /> : 'Sign Up'}
+            {isSubmitting ? <Spinner /> : 'Sign Up'}
           </Button>
         </form>
       </div>
