@@ -35,10 +35,7 @@ export default function Today() {
   };
 
   const handleCheckboxChange = async (taskId: number) => {
-    await completeTask(taskId);
-  };
-
-  const handleCompletedCheckboxChange = async (taskId: number) => {
+    console.log('Task ID:', taskId);
     await completeTask(taskId);
   };
 
@@ -103,7 +100,7 @@ export default function Today() {
           <Divider text="Done" />
           <CompletedTaskViewer
             completedTasks={completedTasks}
-            handleCompletedCheckboxChange={handleCompletedCheckboxChange}
+            handleCompletedCheckboxChange={handleCheckboxChange}
             handleTaskEdit={handleTaskEdit}
             handleTaskDelete={handleTaskDelete}
           />
