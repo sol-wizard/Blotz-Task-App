@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarDays, Home, Inbox } from 'lucide-react';
+import { ListChecks, Home, Plus, ClipboardCheck } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -16,10 +16,12 @@ import { useSession } from 'next-auth/react';
 import { ProfileSectionButton } from './components/profile-section-button';
 import { Categories } from './categories';
 import { cn } from '@/lib/utils';
+import { url } from 'inspector';
 
 const authenticatedItems = [
-  { title: 'Today', url: 'today', icon: CalendarDays },
-  { title: 'Task List', url: 'task-list', icon: Inbox },
+  { title: 'New Task', icon: Plus },
+  { title: 'All Tasks', url: 'today', icon: ListChecks },
+  { title: 'Today', url: 'task-list', icon: ClipboardCheck },
 ];
 
 const guestItems = [{ title: 'Home', url: '/home', icon: Home }];
