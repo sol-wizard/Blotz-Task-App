@@ -34,8 +34,6 @@ const SignUpPage = () => {
         body: JSON.stringify(data),
       });
 
-      console.log('Register Response Status:', response);
-
       if (!response.ok) {
         const errorData = await response.json();
         console.log('Register Error Data:', errorData);
@@ -55,20 +53,8 @@ const SignUpPage = () => {
 
       router.push('/signin');
     } catch (error) {
-      console.error('Registration failed:', error);
-
       if (error instanceof BadRequestError) {
         setError('root', { message: error.message });
-
-        toast.error('Error', {
-          description: (
-            <span>
-              {error.message.split('\n').map((line, index) => (
-                <p key={index}>{line}</p>
-              ))}
-            </span>
-          ),
-        });
       } else {
         toast.error('Unexpected error occurred. Please try again.');
       }
