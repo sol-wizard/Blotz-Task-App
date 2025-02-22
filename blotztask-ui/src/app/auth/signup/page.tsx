@@ -36,7 +36,6 @@ const SignUpPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log('Register Error Data:', errorData);
 
         const errorMessages = errorData.errors
           ? Object.values(errorData.errors).flat().join('\n')
