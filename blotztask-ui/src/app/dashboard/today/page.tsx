@@ -15,6 +15,7 @@ export default function Today() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
   const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
   const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
+  const [loading, setLoading] = useState(false); 
 
   useEffect(() => {
     loadTasks();
@@ -34,48 +35,33 @@ export default function Today() {
     }
   };
 
+  /** Helper function to handle API action ensure consistent behaviour and avoid duplicate code */
+  const handleAction = async (action: () => Promise<unknown>) => {
+    setLoading(true);
+    try {
+      await action();
+      await loadTasks();
+    } catch (error) {
+      console.error('Error performing action:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCheckboxChange = async (taskId: number) => {
-    await completeTask(taskId);
+    handleAction(() => updateTaskStatus(taskId));
   };
-
-  const handleCompletedCheckboxChange = async (taskId: number) => {
-    await completeTask(taskId);
-  };
-
-  const completeTask = async (taskId: number) => {
-    try {
-      await updateTaskStatus(taskId);
-      await loadTasks();
-    } catch (error) {
-      console.error('Error updating task status:', error);
-    }
-  };
-
+  
   const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
-    try {
-      await addTaskItem(taskDetails);
-      await loadTasks();
-    } catch (error) {
-      console.error('Error adding new task:', error);
-    }
+    handleAction(() => addTaskItem(taskDetails));
   };
 
-  const handleTaskEdit = async (data) => {
-    try {
-      await editTask(data);
-      await loadTasks();
-    } catch (error) {
-      console.error('Error editing task:', error);
-    }
+  const handleTaskEdit = async (updatedTask) => {
+    handleAction(() => editTask(updatedTask));
   };
 
   const handleTaskDelete = async (taskId: number) => {
-    try {
-      await deleteTask(taskId);
-      await loadTasks();
-    } catch (error) {
-      console.error('Error deleting task:', error);
-    }
+    handleAction(() => deleteTask(taskId));
   };
 
   return (
@@ -83,30 +69,38 @@ export default function Today() {
       <div className="ml-5 flex flex-col gap-12">
         <TodayHeader tasks={tasks} />
         <div className="flex flex-col gap-6">
-          <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
-          <Divider text="To do" />
-          <div className="flex flex-col gap-6 w-full">
-            {incompleteTasks.length > 0 ? (
-              incompleteTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleTaskEdit}
-                  handleTaskDelete={handleTaskDelete}
-                ></TaskCard>
-              ))
-            ) : (
-              <p>No incomplete tasks for today!</p>
-            )}
-          </div>
-          <Divider text="Done" />
-          <CompletedTaskViewer
-            completedTasks={completedTasks}
-            handleCompletedCheckboxChange={handleCompletedCheckboxChange}
-            handleTaskEdit={handleTaskEdit}
-            handleTaskDelete={handleTaskDelete}
-          />
+          {loading ? (
+            <div className="flex justify-center items-center h-40">
+              <p className="text-lg font-semibold">Loading...</p>
+            </div>
+          ) : (
+            <>
+              <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
+              <Divider text="To do" />
+              <div className="flex flex-col gap-6 w-full">
+                {incompleteTasks.length > 0 ? (
+                  incompleteTasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      handleCheckboxChange={handleCheckboxChange}
+                      handleTaskEdit={handleTaskEdit}
+                      handleTaskDelete={handleTaskDelete}
+                    ></TaskCard>
+                  ))
+                ) : (
+                  <p>No incomplete tasks for today!</p>
+                )}
+              </div>
+              <Divider text="Done" />
+              <CompletedTaskViewer
+                completedTasks={completedTasks}
+                handleCompletedCheckboxChange={handleCheckboxChange}
+                handleTaskEdit={handleTaskEdit}
+                handleTaskDelete={handleTaskDelete}
+              />
+            </>
+          )}
         </div>
       </div>
     </>
