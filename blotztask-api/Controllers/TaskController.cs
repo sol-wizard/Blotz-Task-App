@@ -73,17 +73,7 @@ namespace BlotzTask.Controllers
             return Ok(await _taskService.AddTaskAsync(addtaskItem, userId));
         }
 
-        [HttpPost("restore")]
-        public async Task<IActionResult> RestoreTask([FromBody] RestoreTaskItemDTO restoreTaskItem)
-        {
-            var userId = HttpContext.Items["UserId"] as string;
-
-            if (userId == null)
-            {
-                throw new UnauthorizedAccessException("Could not find user id from Http Context");
-            }
-            return Ok(await _taskService.RestoreTaskAsync(restoreTaskItem, userId));
-        }
+        
 
 
 

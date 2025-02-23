@@ -109,23 +109,3 @@ export const deleteTask = async (taskId: number): Promise<string> => {
     throw error;
   }
 };
-
-export const restoreTask = async (taskToRestore: TaskToRestoreDTO): Promise<TaskToRestoreDTO> => {
-  try {
-    const result = await fetchWithAuth<TaskToRestoreDTO>(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/restore`,
-      {
-        method: 'POST',
-        body: JSON.stringify(taskToRestore),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    return result;
-  } catch (error) {
-    console.error('Error restoring task :', error);
-    throw error;
-  }
-};

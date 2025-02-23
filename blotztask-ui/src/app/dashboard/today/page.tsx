@@ -1,13 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import {
-  addTaskItem,
-  deleteTask,
-  editTask,
-  fetchTaskItemsDueToday,
-  restoreTask,
-} from '@/services/taskService';
+import { useEffect, useState } from 'react';
+import { addTaskItem, deleteTask, editTask, fetchTaskItemsDueToday } from '@/services/taskService';
 import { updateTaskStatus } from '@/services/taskService';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';

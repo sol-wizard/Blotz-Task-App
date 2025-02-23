@@ -3,16 +3,9 @@
 import { useRef, useState } from 'react';
 import { useEffect } from 'react';
 import { H1 } from '@/components/ui/heading-with-anchor';
-import {
-  deleteTask,
-  editTask,
-  fetchAllTaskItems,
-  restoreTask,
-  updateTaskStatus,
-} from '@/services/taskService';
+import { deleteTask, editTask, fetchAllTaskItems, updateTaskStatus } from '@/services/taskService';
 import { TaskList } from './components/task-list';
 import { TaskDetailDTO } from './models/task-detail-dto';
-import { TaskToRestoreDTO } from '@/model/task-to-restore-dto';
 
 export default function Page() {
   const [taskList, setTaskList] = useState<TaskDetailDTO[]>([]); // 改为 TaskDetailDTO
@@ -54,20 +47,7 @@ export default function Page() {
   };
 
   const handleUndo = async () => {
-    try {
-      const taskToRestore: TaskToRestoreDTO = {
-        title: deletedTaskRef.current.title,
-        description: deletedTaskRef.current.description,
-        dueDate: deletedTaskRef.current.dueDate,
-        labelId: deletedTaskRef.current.label.labelId,
-        isDone: deletedTaskRef.current.isDone,
-      };
-      await restoreTask(taskToRestore);
-      await loadTasks();
-      console.log(taskToRestore);
-    } catch (error) {
-      console.error('Error restoring deleted task:', error);
-    }
+    console.log('Restore deleted task!');
   };
 
   useEffect(() => {
