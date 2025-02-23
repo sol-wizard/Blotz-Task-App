@@ -71,7 +71,7 @@ export default function Today() {
   };
 
   const handleUndo = async () => {
-    console.log('Restore deleted Task');
+    console.log('Restore deleted task!');
   };
 
   return (
@@ -102,17 +102,6 @@ export default function Today() {
                 ) : (
                   <p>No incomplete tasks for today!</p>
                 )}
-              </div>
-              <div>
-                <Divider text="Done" />
-                <CompletedTaskViewer
-                  completedTasks={completedTasks}
-                  handleCompletedCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleTaskEdit}
-                  handleTaskDelete={handleTaskDelete}
-                  handleUndo={handleUndo}
-                ></CompletedTaskViewer>
-                : (<p>No incomplete tasks for today!</p>)
               </div>
               <Divider text="Done" />
               <CompletedTaskViewer
