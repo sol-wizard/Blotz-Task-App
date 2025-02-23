@@ -39,8 +39,8 @@ export function LabelSelect({
                 className={`flex flex-row w-30 items-center rounded-full px-3 py-1 text-xs`}
               >
                 <Tag className="mr-1" size={16} />
-                <SelectValue placeholder="Select Label">
-                  {labels.find((label) => label.id === field.value)?.name || 'Select Label'}
+                <SelectValue placeholder="Academic">
+                  {labels.find((label) => label.id === field.value)?.name || 'Academic'}
                 </SelectValue>
               </SelectLabelTrigger>
             </FormControl>
@@ -50,9 +50,14 @@ export function LabelSelect({
                   <LabelSelectItem
                     key={label.id}
                     value={label.id.toString()}
-                    className="flex flex-row items-center px-2 py-1"
-                  >
-                    <div className="flex flex-row">{label.name}</div>
+                    className="flex flex-row px-3 py-2 rounded-md before:content-none"
+                  >           
+                    <div className="flex flex-row items-center">
+                      <span className={`w-4 h-4 rounded-full ${label.color} mr-2 flex-shrink-0`} />
+
+                      <div className="flex-1">{label.name}</div>
+                  </div>
+                   
                   </LabelSelectItem>
                 ))}
               </SelectGroup>
