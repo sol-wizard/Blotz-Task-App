@@ -19,8 +19,8 @@ import { cn } from '@/lib/utils';
 import { url } from 'inspector';
 
 const authenticatedItems = [
-  { title: 'All Tasks', url: 'today', icon: ListChecks },
-  { title: 'Today', url: 'task-list', icon: ClipboardCheck },
+  { title: 'All Tasks', url: 'task-list', icon: ListChecks },
+  { title: 'Today', url: 'today', icon: ClipboardCheck },
 ];
 
 const guestItems = [{ title: 'Home', url: '/home', icon: Home }];
@@ -42,14 +42,16 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Blotz Task App</SidebarGroupLabel>
+          {/* <SidebarGroupLabel>Blotz Task App</SidebarGroupLabel> */}
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="mt-14">
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="/new-task" className="flex items-center gap-3 py-3 my-5 rounded-lg hover:bg-white">
-                    <Plus className={cn('bg-primary', 'text-white p-1 rounded')}/>
-                    <span className="text-primary text-lg">New Task</span>
+                  <a href="/new-task" className="flex items-center gap-3 py-3 px-4 my-5 w-full hover:bg-white">
+                    <div className={cn('bg-primary', 'text-white p-1 rounded-sm', 'inline-flex items-center justify-center')}>
+                      <Plus size={18} />
+                    </div>
+                      <span className="text-primary text-xl">New Task</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -57,9 +59,9 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url} className="flex hover:bg-white">
+                    <a href={item.url} className="flex items-center px-4 py-3 w-full hover:bg-white">
                       <item.icon />
-                      <span className="pl-3">{item.title}</span>
+                      <span className="pl-3 text-base">{item.title}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
