@@ -11,7 +11,6 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
 import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
 import showTaskDeletedToast from '../shared/show-task-deleted-toast';
 
