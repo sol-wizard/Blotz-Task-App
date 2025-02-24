@@ -39,8 +39,8 @@ export function LabelSelect({
 
   return (
     <FormField
-      control={control}
-      name="labelId"
+      control={control}  
+      name="labelId" 
       render={({ field }) => (
         <FormItem>
           <Select
@@ -62,7 +62,6 @@ export function LabelSelect({
             <SelectContent ref={labelPickerRef ?? undefined}>
               <SelectGroup>
                 {labels.map((label) => (
-<
                   <LabelSelectItem
                     key={label.id}
                     value={label.id.toString()}
@@ -81,7 +80,7 @@ export function LabelSelect({
             </SelectContent>
           </Select>
 
-          <FormMessage />
+          <FormMessage/>
         </FormItem>
       )}
     />
