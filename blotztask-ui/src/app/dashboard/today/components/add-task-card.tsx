@@ -15,13 +15,13 @@ const AddTaskCard = ({ onAddTask }) => {
 
   return (
     <div className="flex w-full items-center gap-4" ref={cardRef}>
-      <div className="w-6 h-6 border border-gray-400 rounded-full border-dashed"></div>
-      <div className="ml-3 w-1 bg-gray-400 rounded"></div>
+      <div className="w-6 h-6 border-2 border-gray-400 rounded-full border-dashed"></div>
+      <div className="ml-5 w-[0.2rem] h-10 bg-gray-400 rounded"></div>
       <div className="flex w-full items-center gap-2 cursor-pointer">
         {!isFormVisible ? (
           <div className="flex flex-row" onClick={() => setIsFormVisible(true)}>
-            <PlusIcon className="w-6 h-6 text-blue-400" />
-            <span className="text-blue-400 font-semibold text-lg">Add a task</span>
+            <PlusIcon className="ml-2 w-7 h-7 text-gray-400" />
+            <span className="ml-3 text-gray-400 font-semibold text-lg">Add a task</span>
           </div>
         ) : (
           <AddTaskForm
@@ -40,3 +40,4 @@ const AddTaskCard = ({ onAddTask }) => {
 };
 
 export default AddTaskCard;
+

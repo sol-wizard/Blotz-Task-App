@@ -76,9 +76,9 @@ namespace BlotzTask.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> EditTask(int id, [FromBody] EditTaskItemDTO editTaskItem)
         {
-            var result = await _taskService.EditTask(id, editTaskItem);
+            var result = await _taskService.EditTaskAsync(id, editTaskItem);
 
-            return Ok($"Task {result} is successfully updated");
+            return Ok(result);
         }
 
         [HttpPut("task-completion-status/{id}")]
@@ -107,16 +107,9 @@ namespace BlotzTask.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTaskByID(int id)
         {
-            var result = await _taskService.DeleteTaskByID(id);
+            var result = await _taskService.DeleteTaskByIDAsync(id);
 
-            if (result)
-            {
-                return Ok($"Task {id} is successfully deleted");
-            }
-            else
-            {
-                return NotFound($"Task {id} is not found");
-            }
+            return Ok(result);
         }
     }
 }
