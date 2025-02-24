@@ -50,7 +50,7 @@ export function LabelSelect({
                   <LabelSelectItem
                     key={label.id}
                     value={label.id.toString()}
-                    className="flex flex-row px-3 py-2 rounded-md before:content-none"
+                    className="flex flex-row px-3 py-2 rounded-md"
                   >           
                     <div className="flex flex-row items-center">
                       <span className={`w-4 h-4 rounded-full ${label.color} mr-2 flex-shrink-0`} />
