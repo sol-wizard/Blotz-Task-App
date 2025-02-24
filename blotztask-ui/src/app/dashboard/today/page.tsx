@@ -64,7 +64,7 @@ export default function Today() {
     handleAction(() => deleteTask(taskId));
   };
 
-  const handleUndo = async () => {
+  const handleTaskDeleteUndo = async () => {
     console.log('Restore deleted task!');
   };
 
@@ -90,7 +90,7 @@ export default function Today() {
                       handleCheckboxChange={handleCheckboxChange}
                       handleTaskEdit={handleTaskEdit}
                       handleTaskDelete={handleTaskDelete}
-                      handleUndo={handleUndo}
+                      handleTaskDeleteUndo={handleTaskDeleteUndo}
                     ></TaskCard>
                   ))
                 ) : (
@@ -103,7 +103,7 @@ export default function Today() {
                 handleCompletedCheckboxChange={handleCheckboxChange}
                 handleTaskEdit={handleTaskEdit}
                 handleTaskDelete={handleTaskDelete}
-                handleUndo={handleUndo}
+                handleTaskDeleteUndo={handleTaskDeleteUndo}
               />
             </>
           )}

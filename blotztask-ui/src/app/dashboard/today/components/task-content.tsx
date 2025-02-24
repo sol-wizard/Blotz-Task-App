@@ -21,12 +21,12 @@ export default function TaskContent({
   task,
   onSubmit,
   onDelete,
-  handleUndo,
+  handleTaskDeleteUndo,
 }: {
   task: TaskDetailDTO;
   onSubmit: (data: z.infer<typeof taskFormSchema>) => void;
   onDelete: (taskId: number) => void;
-  handleUndo: (task: TaskDetailDTO) => void;
+  handleTaskDeleteUndo: (task: TaskDetailDTO) => void;
 }) {
   const form = useForm<z.infer<typeof taskFormSchema>>({
     resolver: zodResolver(taskFormSchema),
@@ -124,7 +124,7 @@ export default function TaskContent({
                       <Pencil className="text-primary" size={20} />
                     </button>
 
-                    <DeleteTaskDialog task={task} onDelete={onDelete} handleUndo={handleUndo} />
+                    <DeleteTaskDialog task={task} onDelete={onDelete} handleUndo={handleTaskDeleteUndo} />
                   </div>
                 )}
               </div>

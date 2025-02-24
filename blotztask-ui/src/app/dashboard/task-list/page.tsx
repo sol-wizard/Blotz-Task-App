@@ -36,9 +36,6 @@ export default function Page() {
 
   const handleTaskDelete = async (taskId: number) => {
     try {
-      const taskToDelete = taskList.find((task) => task.id === taskId);
-      console.log('handleTaskDelete-taskToDelete:', taskToDelete);
-      deletedTaskRef.current = taskToDelete;
       await deleteTask(taskId);
       await loadTasks();
     } catch (error) {
@@ -46,7 +43,7 @@ export default function Page() {
     }
   };
 
-  const handleUndo = async () => {
+  const handleTaskDeleteUndo = async () => {
     console.log('Restore deleted task!');
   };
 
@@ -65,7 +62,7 @@ export default function Page() {
         handleCheckboxChange={handleTaskToggle}
         handleTaskEdit={handleTaskEdit}
         handleTaskDelete={handleTaskDelete}
-        handleUndo={handleUndo}
+        handleTaskDeleteUndo={handleTaskDeleteUndo}
       />
     </div>
   );

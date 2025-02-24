@@ -73,10 +73,6 @@ namespace BlotzTask.Controllers
             return Ok(await _taskService.AddTaskAsync(addtaskItem, userId));
         }
 
-        
-
-
-
         [HttpPut("{id}")]
         public async Task<IActionResult> EditTask(int id, [FromBody] EditTaskItemDTO editTaskItem)
         {
