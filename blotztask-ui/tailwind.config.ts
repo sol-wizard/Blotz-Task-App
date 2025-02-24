@@ -12,6 +12,45 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      animation: {
+        'mul-shd-spin': 'mulShdSpin 1.3s linear infinite',
+      },
+      keyframes: {
+        mulShdSpin: {
+          '0%, 100%': {
+            'box-shadow':
+              '0 -3em 0 0.2em #4380FD, 2em -2em 0 0em rgba(67,128,253, 0.2), 3em 0 0 -1em rgba(67,128,253, 0.2), 2em 2em 0 -1em rgba(67,128,253, 0.2), 0 3em 0 -1em rgba(67,128,253, 0.2), -2em 2em 0 -1em rgba(67,128,253, 0.2), -3em 0 0 -1em rgba(67,128,253, 0.5), -2em -2em 0 0 rgba(67,128,253, 0.7)',
+          },
+          '12.5%': {
+            'box-shadow':
+              '0 -3em 0 0 rgba(67,128,253, 0.7), 2em -2em 0 0.2em #4380FD, 3em 0 0 0 rgba(67,128,253, 0.2), 2em 2em 0 -1em rgba(67,128,253, 0.2), 0 3em 0 -1em rgba(67,128,253, 0.2), -2em 2em 0 -1em rgba(67,128,253, 0.2), -3em 0 0 -1em rgba(67,128,253, 0.2), -2em -2em 0 -1em rgba(67,128,253, 0.5)',
+          },
+          '25%': {
+            'box-shadow':
+              '0 -3em 0 -0.5em rgba(67,128,253, 0.5), 2em -2em 0 0 rgba(67,128,253, 0.7), 3em 0 0 0.2em #4380FD, 2em 2em 0 0 rgba(67,128,253, 0.2), 0 3em 0 -1em rgba(67,128,253, 0.2), -2em 2em 0 -1em rgba(67,128,253, 0.2), -3em 0 0 -1em rgba(67,128,253, 0.2), -2em -2em 0 -1em rgba(67,128,253, 0.2)',
+          },
+          '37.5%': {
+            'box-shadow':
+              '0 -3em 0 -1em rgba(67,128,253, 0.2), 2em -2em 0 -1em rgba(67,128,253, 0.5), 3em 0 0 0 rgba(67,128,253, 0.7), 2em 2em 0 0.2em #4380FD, 0 3em 0 0em rgba(67,128,253, 0.2), -2em 2em 0 -1em rgba(67,128,253, 0.2), -3em 0 0 -1em rgba(67,128,253, 0.2), -2em -2em 0 -1em rgba(67,128,253, 0.2)',
+          },
+          '50%': {
+            'box-shadow':
+              '0 -3em 0 -1em rgba(67,128,253, 0.2), 2em -2em 0 -1em rgba(67,128,253, 0.2), 3em 0 0 -1em rgba(67,128,253, 0.5), 2em 2em 0 0em rgba(67,128,253, 0.7), 0 3em 0 0.2em #4380FD, -2em 2em 0 0 rgba(67,128,253, 0.2), -3em 0 0 -1em rgba(67,128,253, 0.2), -2em -2em 0 -1em rgba(67,128,253, 0.2)',
+          },
+          '62.5%': {
+            'box-shadow':
+              '0 -3em 0 -1em rgba(67,128,253, 0.2), 2em -2em 0 -1em rgba(67,128,253, 0.2), 3em 0 0 -1em rgba(67,128,253, 0.2), 2em 2em 0 -1em rgba(67,128,253, 0.5), 0 3em 0 0 rgba(67,128,253, 0.7), -2em 2em 0 0.2em #4380FD, -3em 0 0 0 rgba(67,128,253, 0.2), -2em -2em 0 -1em rgba(67,128,253, 0.2)',
+          },
+          '75%': {
+            'box-shadow':
+              '0em -3em 0 -1em rgba(67,128,253, 0.2), 2em -2em 0 -1em rgba(67,128,253, 0.2), 3em 0 0 -1em rgba(67,128,253, 0.2), 2em 2em 0 -1em rgba(67,128,253, 0.2), 0 3em 0 -1em rgba(67,128,253, 0.5), -2em 2em 0 0 rgba(67,128,253, 0.7), -3em 0 0 0.2em #4380FD, -2em -2em 0 0 rgba(67,128,253, 0.2)',
+          },
+          '87.5%': {
+            'box-shadow':
+              '0em -3em 0 0 rgba(67,128,253, 0.2), 2em -2em 0 -1em rgba(67,128,253, 0.2), 3em 0 0 -1em rgba(67,128,253, 0.2), 2em 2em 0 -1em rgba(67,128,253, 0.2), 0 3em 0 -1em rgba(67,128,253, 0.2), -2em 2em 0 0 rgba(67,128,253, 0.5), -3em 0 0 0 rgba(67,128,253, 0.7), -2em -2em 0 0.2em #4380FD',
+          },
+        },
+      },
       fontFamily: {
         satoshi: ['Satoshi', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],
