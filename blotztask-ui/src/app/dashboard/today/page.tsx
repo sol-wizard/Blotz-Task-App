@@ -15,7 +15,7 @@ export default function Today() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
   const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
   const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadTasks();
@@ -51,7 +51,7 @@ export default function Today() {
   const handleCheckboxChange = async (taskId: number) => {
     handleAction(() => updateTaskStatus(taskId));
   };
-  
+
   const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
     handleAction(() => addTaskItem(taskDetails));
   };
@@ -67,14 +67,20 @@ export default function Today() {
   return (
     <>
       <div className="ml-5 flex flex-col gap-12">
-        <TodayHeader tasks={tasks} />
         <div className="flex flex-col gap-6">
           {loading ? (
-            <div className="flex justify-center items-center h-40">
-              <p className="text-lg font-semibold">Loading...</p>
+            <div className="flex justify-center items-center min-h-screen">
+              <div>
+                <div
+                  className="mb-12 ml-8 text-[10px] w-[1em] h-[1em] rounded-full animate-mul-shd-spin"
+                  style={{ textIndent: '-9999em', transform: 'translateZ(0)' }}
+                ></div>
+                <p className="font-semibold text-zinc-600">Loading...</p>
+              </div>
             </div>
           ) : (
             <>
+              <TodayHeader tasks={tasks} />
               <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
               <Divider text="To do" />
               <div className="flex flex-col gap-6 w-full">
