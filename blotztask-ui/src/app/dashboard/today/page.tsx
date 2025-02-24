@@ -10,6 +10,7 @@ import { CompletedTaskViewer } from './components/completed-task-viewer';
 import Divider from './components/divider';
 import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
+import LoadingSpinner from './shared/loading-spinner';
 
 export default function Today() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
@@ -69,15 +70,7 @@ export default function Today() {
       <div className="ml-5 flex flex-col gap-12">
         <div className="flex flex-col gap-6">
           {loading ? (
-            <div className="flex justify-center items-center min-h-screen">
-              <div>
-                <div
-                  className="mb-12 ml-8 text-[10px] w-[1em] h-[1em] rounded-full animate-mul-shd-spin"
-                  style={{ textIndent: '-9999em', transform: 'translateZ(0)' }}
-                ></div>
-                <p className="font-semibold text-zinc-600">Loading...</p>
-              </div>
-            </div>
+            <LoadingSpinner />
           ) : (
             <>
               <TodayHeader tasks={tasks} />
