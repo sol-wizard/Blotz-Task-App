@@ -44,7 +44,7 @@ export function AppSidebar() {
         <SidebarGroup>
           {/* <SidebarGroupLabel>Blotz Task App</SidebarGroupLabel> */}
           <SidebarGroupContent>
-            <SidebarMenu className="mt-14">
+            <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <a href="/new-task" className="flex items-center gap-3 py-3 px-4 my-5 w-full hover:bg-white">
