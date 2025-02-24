@@ -15,27 +15,15 @@ import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/f
 import { fetchAllLabel } from '@/services/taskService';
 import { useEffect, useState } from 'react';
 
-export function LabelSelect({
-  control,
-  labelPickerRef,
-}: {
-  control: Control;
-  labelPickerRef?: React.RefObject<HTMLDivElement>;
-}) {
-  const [labels, setLabels] = useState<LabelDTO[]>([]);
+export function LabelSelect({ control, labelPickerRef }: { control: Control; labelPickerRef?: React.RefObject<HTMLDivElement> }) {
+  
+  const labels: LabelDTO[] = [
+    { labelId: 7, name: "Personal", color: "bg-amber-400" },
+    { labelId: 8, name: "Academic", color: "bg-rose-500" },
+    { labelId: 9, name: "Others", color: "bg-cyan-300" },
+    { labelId: 6, name: "Work", color: "bg-blue-700" }
+  ];
 
-  const loadAllLabel = async () => {
-    try {
-      const labelData = await fetchAllLabel();
-      setLabels(labelData);
-    } catch (error) {
-      console.error('Error loading labels:', error);
-    }
-  };
-
-  useEffect(() => {
-    loadAllLabel();
-  }, []);
 
   return (
     <FormField
@@ -63,8 +51,8 @@ export function LabelSelect({
               <SelectGroup>
                 {labels.map((label) => (
                   <LabelSelectItem
-                    key={label.id}
-                    value={label.id.toString()}
+                    key={label.labelId}
+                    value={label.labelId.toString()}
                     className="flex flex-row px-3 py-2 rounded-md"
                   >           
                     <div className="flex flex-row items-center">
