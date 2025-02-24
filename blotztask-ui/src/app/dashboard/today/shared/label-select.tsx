@@ -12,8 +12,6 @@ import { Tag } from 'lucide-react';
 import { LabelDTO } from '@/model/label-dto';
 import { Control } from 'react-hook-form';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { fetchAllLabel } from '@/services/taskService';
-import { useEffect, useState } from 'react';
 
 export function LabelSelect({ control, labelPickerRef }: { control: Control; labelPickerRef?: React.RefObject<HTMLDivElement> }) {
   
