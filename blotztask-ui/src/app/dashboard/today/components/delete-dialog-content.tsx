@@ -13,6 +13,7 @@ import {
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
+import showTaskDeletedToast from '../shared/show-task-deleted-toast';
 
 const DeleteTaskDialog = ({
   onDelete,
@@ -42,27 +43,7 @@ const DeleteTaskDialog = ({
           <AlertDialogAction
             onClick={() => {
               onDelete(task.id);
-              setTimeout(() => {
-                toast('Task Deleted', {
-                  classNames: {
-                    toast: 'flex justify-between items-center bg-blue-100 w-64',
-                    title: 'text-gray-500',
-                  },
-                  action: (
-                    <button
-                      className="text-blue-500"
-                      onClick={() => {
-                        handleUndo(task);
-                        toast.dismiss();
-                      }}
-                    >
-                      Undo
-                    </button>
-                  ),
-                  position: 'bottom-left',
-                  duration: 4000,
-                });
-              }, 100);
+              showTaskDeletedToast({ handleUndo, task });
             }}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
