@@ -41,7 +41,7 @@ public class TaskService : ITaskService
                     Description = x.Description,
                     DueDate = x.DueDate,
                     IsDone = x.IsDone,
-                    Label = new LabelDTO { Name = x.Label.Name, Color = x.Label.Color }        
+                    Label = new LabelDTO { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color }        
                 })
                 .ToListAsync();
         }
@@ -137,6 +137,8 @@ public class TaskService : ITaskService
             throw;
         }
     }
+
+    
 
     public async Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDTO editTaskItem)
     {

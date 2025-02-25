@@ -11,8 +11,18 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Trash2 } from 'lucide-react';
+import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
+import showTaskDeletedToast from '../shared/show-task-deleted-toast';
 
-const DeleteTaskDialog = ({ onDelete, taskId }: { onDelete: (id: number) => void; taskId: number }) => {
+const DeleteTaskDialog = ({
+  onDelete,
+  handleUndo,
+  task,
+}: {
+  onDelete: (id: number) => void;
+  handleUndo: (task: TaskDetailDTO) => void;
+  task: TaskDetailDTO;
+}) => {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
@@ -30,8 +40,11 @@ const DeleteTaskDialog = ({ onDelete, taskId }: { onDelete: (id: number) => void
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
-            onClick={() => onDelete(taskId)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 "
+            onClick={() => {
+              onDelete(task.id);
+              showTaskDeletedToast({ handleUndo, task });
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
             Delete
           </AlertDialogAction>
