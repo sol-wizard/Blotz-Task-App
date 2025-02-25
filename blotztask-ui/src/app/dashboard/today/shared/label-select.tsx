@@ -12,8 +12,9 @@ import { Tag } from 'lucide-react';
 import { LabelDTO } from '@/model/label-dto';
 import { Control } from 'react-hook-form';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { fetchAllLabel } from '@/services/taskService';
+
 import { useEffect, useState } from 'react';
+import { fetchAllLabel } from '@/services/labelService';
 
 export function LabelSelect({
   control,
@@ -43,10 +44,7 @@ export function LabelSelect({
       name="labelId"
       render={({ field }) => (
         <FormItem>
-          <Select
-            value={field.value?.toString()}
-            onValueChange={(value) => field.onChange(Number(value))}
-          >
+          <Select value={field.value?.toString()} onValueChange={(value) => field.onChange(Number(value))}>
             <FormControl>
               <SelectLabelTrigger
                 className={`flex flex-row w-30 items-center rounded-full px-3 py-1 text-xs`}
@@ -58,14 +56,14 @@ export function LabelSelect({
             <SelectContent ref={labelPickerRef ?? undefined}>
               <SelectGroup>
                 {labels.map((label) => (
-                    <LabelSelectItem
-                      key={label.labelId}
-                      value={label.labelId.toString()}
-                      className="flex flex-row items-center px-2 py-1"
-                    >
-                      {label.name}
-                    </LabelSelectItem>
-                  ))}
+                  <LabelSelectItem
+                    key={label.labelId}
+                    value={label.labelId.toString()}
+                    className="flex flex-row items-center px-2 py-1"
+                  >
+                    {label.name}
+                  </LabelSelectItem>
+                ))}
               </SelectGroup>
             </SelectContent>
           </Select>
