@@ -1,6 +1,12 @@
 import TaskCard from '../../today/components/task-card';
 
-export function TaskList({ tasks, handleCheckboxChange, handleTaskEdit, handleTaskDelete }) {
+export function TaskList({
+  tasks,
+  handleCheckboxChange,
+  handleTaskEdit,
+  handleTaskDelete,
+  handleTaskDeleteUndo,
+}) {
   return (
     <div className="flex flex-col mt-10 w-full">
       {tasks.map((task) => (
@@ -10,6 +16,7 @@ export function TaskList({ tasks, handleCheckboxChange, handleTaskEdit, handleTa
             handleCheckboxChange={handleCheckboxChange}
             handleTaskEdit={handleTaskEdit}
             handleTaskDelete={handleTaskDelete}
+            handleTaskDeleteUndo={handleTaskDeleteUndo}
           ></TaskCard>
         </div>
       ))}

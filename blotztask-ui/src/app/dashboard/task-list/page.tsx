@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import { H1 } from '@/components/ui/heading-with-anchor';
 import { deleteTask, editTask, fetchAllTaskItems, updateTaskStatus } from '@/services/taskService';
-import { TaskListItemDTO } from '@/model/task-list-Item-dto';
 import { TaskList } from './components/task-list';
+import { TaskDetailDTO } from './models/task-detail-dto';
 
 export default function Page() {
-  const [taskList, setTaskList] = useState<TaskListItemDTO[]>([]); // 改为 TaskDetailDTO
+  const [taskList, setTaskList] = useState<TaskDetailDTO[]>([]); 
 
   const loadTasks = async () => {
     const data = await fetchAllTaskItems();
@@ -42,6 +42,10 @@ export default function Page() {
     }
   };
 
+  const handleTaskDeleteUndo = async () => {
+    console.log('Restore deleted task!');
+  };
+
   useEffect(() => {
     loadTasks();
   }, []);
@@ -57,6 +61,7 @@ export default function Page() {
         handleCheckboxChange={handleTaskToggle}
         handleTaskEdit={handleTaskEdit}
         handleTaskDelete={handleTaskDelete}
+        handleTaskDeleteUndo={handleTaskDeleteUndo}
       />
     </div>
   );
