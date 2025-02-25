@@ -22,6 +22,7 @@ export function LabelSelect({ control, labelPickerRef }: { control: Control; lab
   const loadAllLabel = async () => {
     try {
       const labelData = await fetchAllLabel();
+      //console.log("Fetched label", labelData);
       setLabels(labelData);
     } catch (error) {
       console.error('Error loading labels:', error);
@@ -30,7 +31,9 @@ export function LabelSelect({ control, labelPickerRef }: { control: Control; lab
 
   useEffect(() => {
     loadAllLabel();
-  }, []);
+    //console.log("Updated labels state:", labels);
+  }, [labels]);
+  
 
 
   return (
@@ -57,20 +60,24 @@ export function LabelSelect({ control, labelPickerRef }: { control: Control; lab
             </FormControl>
             <SelectContent ref={labelPickerRef ?? undefined}>
               <SelectGroup>
-                {labels.map((label) => (
+                {labels.map((label) => {
+                  //console.log("Label:", label);
+                  //console.log("Label Color:", label.color);
+                  //console.log("Label Data:", label);
+                  return(
                   <LabelSelectItem
                     key={label.labelId}
                     value={label.labelId.toString()}
                     className="flex flex-row px-3 py-2 rounded-md"
                   >           
                     <div className="flex flex-row items-center">
-                      <span className={`w-4 h-4 rounded-full ${label.color} mr-2 flex-shrink-0`} />
-
+                      <span className={`w-4 h-4 rounded-full mr-2 bg-[${label.color}]`} />
                       <div className="flex-1">{label.name}</div>
                   </div>
                    
                   </LabelSelectItem>
-                ))}
+                  );
+                })}
 
               </SelectGroup>
             </SelectContent>
