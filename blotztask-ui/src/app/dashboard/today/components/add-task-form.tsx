@@ -9,21 +9,13 @@ import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { format } from 'date-fns';
+import { taskFormSchema } from '../forms/task-form-schema';
 
-const taskSchema = z.object({
-  title: z.string().min(1, {
-    message: 'Title is required.',
-  }),
-  description: z.string().optional(),
-  date: z.date().optional(),
-  labelId: z.number().optional(),
-});
-
-type FormField = z.infer<typeof taskSchema>;
+type FormField = z.infer<typeof taskFormSchema>;
 
 const AddTaskForm = ({ onSubmit, datePickerRef, labelPickerRef, onCancel }) => {
   const form = useForm<FormField>({
-    resolver: zodResolver(taskSchema),
+    resolver: zodResolver(taskFormSchema),
     defaultValues: {
       title: '',
       description: '',
@@ -71,7 +63,7 @@ const AddTaskForm = ({ onSubmit, datePickerRef, labelPickerRef, onCancel }) => {
             )}
           />
         </div>
-        <div className="flex flex-row inline-block justify-between mt-4 mb-2">
+        <div className="flex flex-row justify-between mt-4 mb-2">
           <div className="flex flex-row items-center">
             <CalendarForm control={form.control} datePickerRef={datePickerRef} />
             <LabelSelect control={form.control} labelPickerRef={labelPickerRef} />
