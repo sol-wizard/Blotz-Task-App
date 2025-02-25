@@ -15,8 +15,13 @@ import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/f
 import { useEffect, useState } from 'react';
 import { fetchAllLabel } from '@/services/taskService';
 
-export function LabelSelect({ control, labelPickerRef }: { control: Control; labelPickerRef?: React.RefObject<HTMLDivElement> }) {
-  
+export function LabelSelect({
+  control,
+  labelPickerRef,
+}: {
+  control: Control;
+  labelPickerRef?: React.RefObject<HTMLDivElement>;
+}) {
   const [labels, setLabels] = useState<LabelDTO[]>([]);
 
   const loadAllLabel = async () => {
@@ -33,19 +38,14 @@ export function LabelSelect({ control, labelPickerRef }: { control: Control; lab
     loadAllLabel();
     //console.log("Updated labels state:", labels);
   }, [labels]);
-  
-
 
   return (
     <FormField
-      control={control}  
-      name="labelId" 
+      control={control}
+      name="labelId"
       render={({ field }) => (
         <FormItem>
-          <Select
-            value={field.value?.toString()}
-            onValueChange={(value) => field.onChange(Number(value))}
-          >
+          <Select value={field.value?.toString()} onValueChange={(value) => field.onChange(Number(value))}>
             <FormControl>
               <SelectLabelTrigger
                 className={`flex flex-row w-30 items-center rounded-full px-3 py-1 text-xs`}
@@ -55,35 +55,35 @@ export function LabelSelect({ control, labelPickerRef }: { control: Control; lab
                 <SelectValue placeholder="Academic">
                   {labels.find((label) => label.id === field.value)?.name || 'Academic'}
                 </SelectValue>
-
               </SelectLabelTrigger>
             </FormControl>
             <SelectContent ref={labelPickerRef ?? undefined}>
               <SelectGroup>
                 {labels.map((label) => {
                   //console.log("Label:", label);
-                  //console.log("Label Color:", label.color);
+                  console.log('Label Color:', label.color);
                   //console.log("Label Data:", label);
-                  return(
-                  <LabelSelectItem
-                    key={label.labelId}
-                    value={label.labelId.toString()}
-                    className="flex flex-row px-3 py-2 rounded-md"
-                  >           
-                    <div className="flex flex-row items-center">
-                      <span className={`w-4 h-4 rounded-full mr-2 bg-[${label.color}]`} />
-                      <div className="flex-1">{label.name}</div>
-                  </div>
-                   
-                  </LabelSelectItem>
+                  return (
+                    <LabelSelectItem
+                      key={label.labelId}
+                      value={label.labelId.toString()}
+                      className="flex flex-row px-3 py-2 rounded-md"
+                    >
+                      <div className="flex flex-row items-center">
+                        <span
+                          className={`w-4 h-4 rounded-full mr-2`}
+                          style={{ backgroundColor: label.color }}
+                        />
+                        <div className="flex-1">{label.name}</div>
+                      </div>
+                    </LabelSelectItem>
                   );
                 })}
-
               </SelectGroup>
             </SelectContent>
           </Select>
 
-          <FormMessage/>
+          <FormMessage />
         </FormItem>
       )}
     />
