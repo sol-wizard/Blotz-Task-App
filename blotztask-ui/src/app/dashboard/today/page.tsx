@@ -65,6 +65,10 @@ export default function Today() {
     handleAction(() => deleteTask(taskId));
   };
 
+  const handleTaskDeleteUndo = async () => {
+    console.log('Restore deleted task!');
+  };
+
   return (
     <>
       <div className="ml-5 flex flex-col gap-12">
@@ -85,6 +89,7 @@ export default function Today() {
                       handleCheckboxChange={handleCheckboxChange}
                       handleTaskEdit={handleTaskEdit}
                       handleTaskDelete={handleTaskDelete}
+                      handleTaskDeleteUndo={handleTaskDeleteUndo}
                     ></TaskCard>
                   ))
                 ) : (
@@ -97,6 +102,7 @@ export default function Today() {
                 handleCompletedCheckboxChange={handleCheckboxChange}
                 handleTaskEdit={handleTaskEdit}
                 handleTaskDelete={handleTaskDelete}
+                handleTaskDeleteUndo={handleTaskDeleteUndo}
               />
             </>
           )}
