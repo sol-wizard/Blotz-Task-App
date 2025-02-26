@@ -81,7 +81,9 @@ export default function TaskContent({
                     )}
                   />
                 ) : (
-                  <p className="font-bold">{task?.title}</p>
+                  <p className="font-bold" style={{ color: task.isDone ? '#BFC0C9' : '#000000' }}>
+                    {task?.title}
+                  </p>
                 )}
                 {!isEditing && <DueDateTag task={task} />}
               </div>
@@ -102,7 +104,7 @@ export default function TaskContent({
                       )}
                     />
                   ) : (
-                    <p>{task?.description}</p>
+                    <p style={{ color: task.isDone ? '#BFC0C9' : '#000000' }}>{task?.description}</p>
                   )}
                 </div>
 
