@@ -5,7 +5,7 @@ const TaskSeparator = ({ color, isDone }) => {
     <Separator
       orientation="vertical"
       decorative={true}
-      className="w-[4px]"
+      className="w-[4px] rounded-md"
       style={{ background: isDone ? '#BFC0C9' : color || '#9698A7' }}
     />
   );
