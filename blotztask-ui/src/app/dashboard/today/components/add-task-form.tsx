@@ -19,7 +19,7 @@ const AddTaskForm = ({ onSubmit, datePickerRef, labelPickerRef, onCancel }) => {
     defaultValues: {
       title: '',
       description: '',
-      date: null,
+      date: new Date(),
       labelId: undefined,
     },
   });
