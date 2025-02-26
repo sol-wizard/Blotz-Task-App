@@ -120,7 +120,7 @@ export default function TaskContent({
                   )}
                 </div>
 
-                {!isEditing && (
+                {!isEditing && !task.isDone && (
                   <div className="justify-end hidden ml-4 w-32 group-hover:flex">
                     <button className="px-4" onClick={handleEditState}>
                       <Pencil className="text-primary" size={20} />
