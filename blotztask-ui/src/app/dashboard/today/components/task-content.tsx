@@ -109,7 +109,7 @@ export default function TaskContent({
                 </div>
 
                 <div className="flex items-start ml-4 w-32 group-hover:hidden">
-                  {!isEditing && (
+                  {!isEditing && !task.isDone && (
                     <>
                       <div
                         className="h-4 w-4 rounded-full"
