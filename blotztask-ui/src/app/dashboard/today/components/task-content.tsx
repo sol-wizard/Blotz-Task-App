@@ -56,7 +56,7 @@ export default function TaskContent({
   return (
     <div className="flex flex-col w-full ">
       <div className="flex flex-row w-full bg-transparent group mb-2">
-        <TaskSeparator color={task.label.color} />
+        <TaskSeparator color={task.label.color} isDone={task.isDone} />
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
