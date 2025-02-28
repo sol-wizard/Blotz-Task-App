@@ -72,7 +72,6 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-lg font-semibold mb-2">Task Categories</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* Make changes right here */}
               <Categories />
             </SidebarMenu>
           </SidebarGroupContent>
