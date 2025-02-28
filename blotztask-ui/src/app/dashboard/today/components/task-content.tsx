@@ -56,7 +56,7 @@ export default function TaskContent({
   return (
     <div className="flex flex-col w-full ">
       <div className="flex flex-row w-full bg-transparent group mb-2">
-        <TaskSeparator color={task.label.color} />
+        <TaskSeparator color={task.label.color} isDone={task.isDone} />
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
@@ -81,7 +81,9 @@ export default function TaskContent({
                     )}
                   />
                 ) : (
-                  <p className="font-bold">{task?.title}</p>
+                  <p className="font-bold" style={{ color: task.isDone ? '#BFC0C9' : '#000000' }}>
+                    {task?.title}
+                  </p>
                 )}
                 {!isEditing && <DueDateTag task={task} />}
               </div>
@@ -102,12 +104,12 @@ export default function TaskContent({
                       )}
                     />
                   ) : (
-                    <p>{task?.description}</p>
+                    <p style={{ color: task.isDone ? '#BFC0C9' : '#000000' }}>{task?.description}</p>
                   )}
                 </div>
 
                 <div className="flex items-start ml-4 w-32 group-hover:hidden">
-                  {!isEditing && (
+                  {!isEditing && !task.isDone && (
                     <>
                       <div
                         className="h-4 w-4 rounded-full"
@@ -118,7 +120,7 @@ export default function TaskContent({
                   )}
                 </div>
 
-                {!isEditing && (
+                {!isEditing && !task.isDone && (
                   <div className="justify-end hidden ml-4 w-32 group-hover:flex">
                     <button className="px-4" onClick={handleEditState}>
                       <Pencil className="text-primary" size={20} />
