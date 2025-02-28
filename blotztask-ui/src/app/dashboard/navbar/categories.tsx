@@ -1,23 +1,40 @@
 import React from "react";
+import { useEffect, useState } from 'react';
+import { LabelDTO } from '@/model/label-dto';
+import { fetchAllLabel } from '@/services/labelService';
 
 export function Categories() {
-  const categories = [
-    { name: "Personal", color: "bg-yellow-500" },
-    { name: "Academic", color: "bg-cyan-500" },
-    { name: "Others", color: "bg-blue-500" },
-    { name: "Work", color: "bg-purple-500" },
-  ];
+  const [labels, setLabels] = useState<LabelDTO[]>([]);
+
+  const loadAllLabel = async () => {
+      try {
+        const labelData = await fetchAllLabel();
+        setLabels(labelData);
+      } catch (error) {
+        console.error('Error loading labels:', error);
+      }
+    };
+  
+    useEffect(() => {
+      loadAllLabel();
+    }, []);
+
+    useEffect(() => {
+      console.log(labels);
+      console.log(labels[0]?.color ? `bg-[${labels[0].color}]` : '');
+    }, [labels]);
 
   return (
     <div>
       <ul className="space-y-2">
-        {categories.map((category) => (
-          <li key={category.name} className="flex items-center space-x-2">
+        {labels.map((label) => (
+          <li key={label.name} className="flex items-center space-x-2">
             <span
-              className={`h-4 w-4 rounded-full ${category.color}`}
+              className={'h-4 w-4 rounded-full '}
+              style={{ backgroundColor: label.color }}
               aria-hidden="true"
             ></span>
-            <span className="text-gray-700">{category.name}</span>
+            <span className="text-gray-700">{label.name}</span>
           </li>
         ))}
       </ul>
