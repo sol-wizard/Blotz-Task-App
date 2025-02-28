@@ -14,8 +14,11 @@ import {
 } from '@/components/ui/sidebar';
 import { useSession } from 'next-auth/react';
 import { ProfileSectionButton } from './components/profile-section-button';
-import { Categories } from './categories';
+import { Categories } from './components/categories';
 import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
+import { LabelDTO } from '@/model/label-dto';
+import { fetchAllLabel } from '@/services/labelService';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -36,6 +39,22 @@ export function AppSidebar() {
 
   // Determine which items to show based on session status
   const items = status === 'loading' ? loadingItems : session ? authenticatedItems : guestItems;
+
+  // Hook to load all labels
+  const [labels, setLabels] = useState<LabelDTO[]>([]);
+
+  const loadAllLabel = async () => {
+      try {
+        const labelData = await fetchAllLabel();
+        setLabels(labelData);
+      } catch (error) {
+        console.error('Error loading labels:', error);
+      }
+    };
+  
+    useEffect(() => {
+      loadAllLabel();
+    }, []);
 
   return (
     <Sidebar>
@@ -72,7 +91,7 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-lg font-semibold mb-2">Task Categories</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <Categories />
+              <Categories labels={labels} />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
