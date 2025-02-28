@@ -72,6 +72,7 @@ const SignUpPage = () => {
             <div className="w-1/2">
               <Input
                 type="text"
+                required
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="First name"
               />
@@ -79,6 +80,7 @@ const SignUpPage = () => {
             <div className="w-1/2">
               <Input
                 type="text"
+                required
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Last name"
               />
