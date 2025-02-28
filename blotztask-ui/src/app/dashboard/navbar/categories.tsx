@@ -19,10 +19,6 @@ export function Categories() {
       loadAllLabel();
     }, []);
 
-    useEffect(() => {
-      console.log(labels);
-      console.log(labels[0]?.color ? `bg-[${labels[0].color}]` : '');
-    }, [labels]);
 
   return (
     <div>
