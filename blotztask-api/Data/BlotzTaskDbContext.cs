@@ -10,6 +10,7 @@ namespace BlotzTask.Data
 
         public DbSet<TaskItem> TaskItems { get; set; }
         public DbSet<Label> Labels { get; set; }
+        public DbSet<DeletedTaskItem> DeletedTaskItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
