@@ -2,11 +2,12 @@
 
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { Input } from '@/components/ui/input';
 import { AlertDestructive } from '@/components/ui/alert-destructive';
 import { BadRequestError } from '@/model/error/bad-request-error';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
@@ -18,7 +19,7 @@ const SignUpPage = () => {
   });
 
   const {
-    register,
+    control,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting },
@@ -50,7 +51,7 @@ const SignUpPage = () => {
         position: 'top-center',
       });
 
-      router.push('/signin');
+      router.push('/auth/signin');
     } catch (error) {
       if (error instanceof BadRequestError) {
         setError('root', { message: error.message });
@@ -69,7 +70,7 @@ const SignUpPage = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-row gap-4 w-full">
             <div className="w-1/2">
-              <input
+              <Input
                 type="text"
                 required
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -77,7 +78,7 @@ const SignUpPage = () => {
               />
             </div>
             <div className="w-1/2">
-              <input
+              <Input
                 type="text"
                 required
                 className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -87,22 +88,34 @@ const SignUpPage = () => {
           </div>
 
           <div>
-            <input
-              type="email"
-              placeholder="Email"
-              {...register('email')}
-              required
-              className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <Controller
+              name="email"
+              control={control}
+              rules={{ required: 'Email is required' }}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  type="email"
+                  placeholder="Email"
+                  className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              )}
             />
             {errors.email?.message && <p className="text-red-500 text-sm">{String(errors.email.message)}</p>}
           </div>
           <div>
-            <input
-              type="password"
-              placeholder="Password"
-              {...register('password')}
-              required
-              className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <Controller
+              name="password"
+              control={control}
+              rules={{ required: 'Password is required' }}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  type="password"
+                  placeholder="Password"
+                  className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              )}
             />
             {errors.password?.message && (
               <p className="text-red-500 text-sm">{String(errors.password.message)}</p>
