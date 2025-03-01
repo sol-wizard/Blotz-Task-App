@@ -51,7 +51,7 @@ const SignUpPage = () => {
         position: 'top-center',
       });
 
-      router.push('/signin');
+      router.push('/auth/signin');
     } catch (error) {
       if (error instanceof BadRequestError) {
         setError('root', { message: error.message });
