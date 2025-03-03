@@ -53,7 +53,13 @@ export function CalendarForm({
               align="start"
               onCloseAutoFocus={handleCalendarClose}
             >
-              <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+              <Calendar
+                mode="single"
+                selected={field.value}
+                onSelect={field.onChange}
+                initialFocus
+                month={task?.dueDate ? new Date(task.dueDate) : new Date()}
+              />
             </PopoverContent>
           </Popover>
         </FormItem>
