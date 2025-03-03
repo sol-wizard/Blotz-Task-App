@@ -12,12 +12,7 @@ export default function Page() {
 
   const loadTasks = async () => {
     const data = await fetchAllTaskItems();
-    const sortedData = data.sort((a, b) => {
-      const dateA = a.dueDate ? new Date(a.dueDate).getTime() : 0;
-      const dateB = b.dueDate ? new Date(b.dueDate).getTime() : 0;
-      return dateA - dateB;
-    });
-    setTaskList(sortedData);
+    setTaskList(data);
   };
 
   const handleTaskToggle = async (taskId: number) => {
