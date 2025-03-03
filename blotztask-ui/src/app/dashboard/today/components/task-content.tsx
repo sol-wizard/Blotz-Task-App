@@ -47,7 +47,6 @@ export default function TaskContent({
       labelId: data.labelId,
       dueDate: format(new Date(data.date), 'yyyy-MM-dd'),
     };
-    console.log(editTaskDetails);
     onSubmit(editTaskDetails);
   };
 

@@ -60,7 +60,6 @@ export default function Today() {
 
   const handleTaskEdit = async (updatedTask: EditTaskItemDTO) => {
     handleAction(() => editTask(updatedTask));
-    console.log('page-updatedTask:', updatedTask);
   };
 
   const handleTaskDelete = async (taskId: number) => {

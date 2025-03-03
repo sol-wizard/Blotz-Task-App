@@ -8,11 +8,16 @@ import { TaskList } from './components/task-list';
 import { TaskDetailDTO } from './models/task-detail-dto';
 
 export default function Page() {
-  const [taskList, setTaskList] = useState<TaskDetailDTO[]>([]); 
+  const [taskList, setTaskList] = useState<TaskDetailDTO[]>([]);
 
   const loadTasks = async () => {
     const data = await fetchAllTaskItems();
-    setTaskList(data);
+    const sortedData = data.sort((a, b) => {
+      const dateA = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+      const dateB = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+      return dateA - dateB;
+    });
+    setTaskList(sortedData);
   };
 
   const handleTaskToggle = async (taskId: number) => {
