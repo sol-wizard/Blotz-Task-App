@@ -1,14 +1,15 @@
-const LoadingSpinner = () => {
+import { cn } from '@/lib/utils';
+
+const LoadingSpinner = ({ variant, className }: { variant?: string; className?: string }) => {
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div>
-        <div
-          className="mb-12 ml-8 text-[10px] w-[1em] h-[1em] rounded-full animate-mul-shd-spin"
-          style={{ textIndent: '-9999em', transform: 'translateZ(0)' }}
-        ></div>
-        <p className="font-semibold text-zinc-600">Loading...</p>
-      </div>
-    </div>
+    <div
+      className={cn(
+        'mb-12 ml-8 text-[10px] w-[1em] h-[1em] rounded-full',
+        variant === 'blue' ? 'animate-mul-shd-spin' : 'animate-mul-shd-spin-white',
+        className
+      )}
+      style={{ textIndent: '-9999em', transform: 'translateZ(0)' }}
+    ></div>
   );
 };
 
