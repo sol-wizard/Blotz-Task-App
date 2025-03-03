@@ -74,7 +74,7 @@ export default function Today() {
     <>
       <div className="ml-5 flex flex-col gap-12">
         <div className="flex flex-col gap-6">
-          {!loading ? (
+          {loading ? (
             <div className="flex justify-center items-center min-h-screen">
               <div>
                 <LoadingSpinner variant="blue" className="mb-12 ml-8 text-[10px]" />
