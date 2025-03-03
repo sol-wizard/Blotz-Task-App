@@ -74,7 +74,12 @@ export default function Today() {
       <div className="ml-5 flex flex-col gap-12">
         <div className="flex flex-col gap-6">
           {loading ? (
-            <LoadingSpinner />
+            <div className="flex justify-center items-center min-h-screen">
+              <div>
+                <LoadingSpinner variant="blue" />
+                <p className="font-semibold text-zinc-600">Loading...</p>
+              </div>
+            </div>
           ) : (
             <>
               <TodayHeader tasks={tasks} />
