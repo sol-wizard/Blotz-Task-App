@@ -8,7 +8,7 @@ import { TaskList } from './components/task-list';
 import { TaskDetailDTO } from './models/task-detail-dto';
 
 export default function Page() {
-  const [taskList, setTaskList] = useState<TaskDetailDTO[]>([]); 
+  const [taskList, setTaskList] = useState<TaskDetailDTO[]>([]);
 
   const loadTasks = async () => {
     const data = await fetchAllTaskItems();
