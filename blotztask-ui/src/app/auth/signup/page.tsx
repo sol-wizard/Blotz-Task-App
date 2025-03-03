@@ -126,7 +126,6 @@ const SignUpPage = () => {
             type="submit"
             disabled={isSubmitting}
           >
-            {/* <LoadingSpinner className="text-[4px] mx-10" variant="white" /> */}
             {isSubmitting ? <LoadingSpinner className="text-[4px] mx-10" variant="white" /> : 'Sign Up'}
           </Button>
         </form>
