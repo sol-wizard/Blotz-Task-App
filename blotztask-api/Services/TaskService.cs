@@ -82,9 +82,22 @@ public class TaskService : ITaskService
         {
             throw new NotFoundException($"Task with ID {Id} not found.");
         }
-
+        var deletedTask = new DeletedTaskItem
+        {
+            Id = taskItem.Id,
+            Title = taskItem.Title,
+            Description = taskItem.Description,
+            DueDate = taskItem.DueDate,
+            IsDone = taskItem.IsDone,
+            CreatedAt = taskItem.CreatedAt,
+            UpdatedAt = taskItem.UpdatedAt,
+            DeletedAt = DateTime.UtcNow, // Track when it was deleted
+            UserId = taskItem.UserId,
+            LabelId = taskItem.LabelId
+        };
         try
         {
+            _dbContext.DeletedTaskItems.Add(deletedTask);
             _dbContext.TaskItems.Remove(taskItem);
             await _dbContext.SaveChangesAsync();
             return new ResponseWrapper<int>(
