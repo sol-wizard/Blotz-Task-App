@@ -111,5 +111,16 @@ namespace BlotzTask.Controllers
 
             return Ok(result);
         }
+
+        [HttpPost("{id}/undo-delete")]
+        public async Task<IActionResult> RestoreFromTrash(int id) 
+        {
+            var result = await _taskService.RestoreFromTrashAsync(id);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
     }
 }

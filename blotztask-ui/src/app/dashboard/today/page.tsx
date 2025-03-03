@@ -1,7 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { addTaskItem, deleteTask, editTask, fetchTaskItemsDueToday } from '@/services/taskService';
+import {
+  addTaskItem,
+  deleteTask,
+  editTask,
+  fetchTaskItemsDueToday,
+  undoDeleteTask,
+} from '@/services/taskService';
 import { updateTaskStatus } from '@/services/taskService';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
@@ -66,8 +72,8 @@ export default function Today() {
     handleAction(() => deleteTask(taskId));
   };
 
-  const handleTaskDeleteUndo = async () => {
-    console.log('Restore deleted task!');
+  const handleTaskDeleteUndo = async (taskId: number) => {
+    handleAction(() => undoDeleteTask(taskId));
   };
 
   return (
