@@ -72,8 +72,7 @@ const LoginPage = () => {
           </div>
           {errors.password && <div className="text-warn mb-3">{errors.password.message}</div>}
           <Button className={styles.submitButton} type="submit" disabled={isSubmitting}>
-            <LoadingSpinner className="text-[4px] mt-11 mx-10" variant="white" />
-            {/* {isSubmitting ? <LoadingSpinner className="text-[4px]"  /> : 'Log in'} */}
+            {isSubmitting ? <LoadingSpinner className="text-[4px] mt-11 mx-10" variant="white" /> : 'Log in'}
           </Button>
         </form>
       </div>
