@@ -8,7 +8,7 @@ import { AlertDestructive } from '@/components/ui/alert-destructive';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import LoadingSpinner from '@/app/dashboard/today/shared/loading-spinner';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 
 type LoginFormField = z.infer<typeof loginFormSchema>;
 
@@ -72,7 +72,7 @@ const LoginPage = () => {
           </div>
           {errors.password && <div className="text-warn mb-3">{errors.password.message}</div>}
           <Button className={styles.submitButton} type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <LoadingSpinner className="text-[4px] mt-11 mx-10" variant="white" /> : 'Log in'}
+            {isSubmitting ? <LoadingSpinner className="text-[4px] mx-10" variant="white" /> : 'Log in'}
           </Button>
         </form>
       </div>
