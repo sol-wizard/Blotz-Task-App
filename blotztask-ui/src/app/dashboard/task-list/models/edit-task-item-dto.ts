@@ -1,8 +1,8 @@
 export interface EditTaskItemDTO {
   id: number;
-  description: string;
   title: string;
+  description: string;
+  dueDate: string;
   isDone: boolean;
   labelId: number;
-  dueDate: string;
 }

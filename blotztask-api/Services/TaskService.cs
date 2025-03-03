@@ -154,6 +154,7 @@ public class TaskService : ITaskService
                        
             task.Title = editTaskItem.Title;
             task.Description = editTaskItem.Description;
+            task.DueDate = editTaskItem.DueDate;
             task.UpdatedAt = DateTime.UtcNow;
             task.LabelId = editTaskItem.LabelId;
         
