@@ -5,7 +5,7 @@ const showTaskDeletedToast = ({
   handleUndo,
   task,
 }: {
-  handleUndo: (task: TaskDetailDTO) => void;
+  handleUndo: (taskId: number) => void;
   task: TaskDetailDTO;
 }) => {
   setTimeout(() => {
@@ -18,7 +18,7 @@ const showTaskDeletedToast = ({
         <button
           className="text-blue-500"
           onClick={() => {
-            handleUndo(task);
+            handleUndo(task.id);
             toast.dismiss();
           }}
         >
