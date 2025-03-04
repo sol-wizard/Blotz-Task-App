@@ -108,3 +108,18 @@ export const deleteTask = async (taskId: number): Promise<string> => {
     throw error;
   }
 };
+
+export const undoDeleteTask = async (taskId: number) => {
+  try {
+    const result = await fetchWithAuth(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/${taskId}/undo-delete`,
+      {
+        method: 'POST',
+      }
+    );
+    return result;
+  } catch (error) {
+    console.error('Error undoing delete:', error);
+    return { success: false, message: error.message };
+  }
+};

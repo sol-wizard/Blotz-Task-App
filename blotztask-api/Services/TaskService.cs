@@ -16,6 +16,7 @@ public interface ITaskService
     public Task<TaskStatusResultDTO> TaskStatusUpdate(int id, bool? isDone = null);
     public Task<List<TaskItemDTO>> GetTaskByDate(DateOnly date, string userId);
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
+    public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
 }
 
 public class TaskService : ITaskService
@@ -277,6 +278,43 @@ public class TaskService : ITaskService
         {
             throw;
         }
+    }
+    public async Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id) {
+        var deletedTask = await _dbContext.DeletedTaskItems.FindAsync(id);
+        if (deletedTask == null) {
+            throw new NotFoundException($"Deleted task with ID {id} not found.");
+        }
+        var restoredTask = new TaskItem
+        {
+            Title = deletedTask.Title,
+            Description = deletedTask.Description,
+            DueDate = deletedTask.DueDate,
+            IsDone = deletedTask.IsDone,
+            CreatedAt = deletedTask.CreatedAt,
+            UpdatedAt = DateTime.UtcNow,
+            UserId = deletedTask.UserId,
+            LabelId = deletedTask.LabelId
+        };
+        try {
+            _dbContext.TaskItems.Add(restoredTask);
+            _dbContext.DeletedTaskItems.Remove(deletedTask);
+            await _dbContext.SaveChangesAsync();
+            return new ResponseWrapper<int>(
+                deletedTask.Id,
+                "Task recovered successfully.",
+                true
+            );
+            
+        } catch (Exception ex)
+        {
+            var innerExceptionMessage = ex.InnerException != null ? ex.InnerException.Message : "No inner exception.";
+            return new ResponseWrapper<int>(
+                0,
+                $"Failed to recover task. Error: {ex.Message}. Inner Exception: {innerExceptionMessage}",
+                false
+            );
+        }
+
     }
 }
 
