@@ -1,7 +1,6 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { AlertDestructive } from '@/components/ui/alert-destructive';
 import { BadRequestError } from '@/model/error/bad-request-error';
@@ -10,6 +9,7 @@ import { toast } from 'sonner';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 
 const SignUpPage = () => {
   const router = useRouter();
@@ -126,7 +126,7 @@ const SignUpPage = () => {
             type="submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? <Spinner /> : 'Sign Up'}
+            {isSubmitting ? <LoadingSpinner className="text-[4px] mx-10" variant="white" /> : 'Sign Up'}
           </Button>
         </form>
       </div>

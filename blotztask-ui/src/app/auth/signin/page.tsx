@@ -4,11 +4,11 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import styles from './AuthForm.module.css';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { AlertDestructive } from '@/components/ui/alert-destructive';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 
 type LoginFormField = z.infer<typeof loginFormSchema>;
 
@@ -54,17 +54,12 @@ const LoginPage = () => {
   return (
     <div className="h-full justify-center flex flex-col items-center">
       <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-96">
-      <h1 className="text-2xl text-center font-medium text-blue-500">Welcome to Blotz</h1> 
-      <p className = "text-center text-gray-600 text-sm" > Enter your email and password to start </p>
+        <h1 className="text-2xl text-center font-medium text-blue-500">Welcome to Blotz</h1>
+        <p className="text-center text-gray-600 text-sm"> Enter your email and password to start </p>
         {errors.root && <AlertDestructive title="Error" description={errors.root.message} />}
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className={styles.input_group}>
-            <input
-              type="email"
-              {...register('email')}
-              className={styles.input}
-              placeholder="Email"
-            />
+            <input type="email" {...register('email')} className={styles.input} placeholder="Email" />
           </div>
           {errors.email && <div className="text-warn mb-3">{errors.email.message}</div>}
           <div className={styles.input_group}>
@@ -77,7 +72,7 @@ const LoginPage = () => {
           </div>
           {errors.password && <div className="text-warn mb-3">{errors.password.message}</div>}
           <Button className={styles.submitButton} type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <Spinner /> : 'Log in'}
+            {isSubmitting ? <LoadingSpinner className="text-[4px] mx-10" variant="white" /> : 'Log in'}
           </Button>
         </form>
       </div>
