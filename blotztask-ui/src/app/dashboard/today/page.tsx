@@ -10,7 +10,7 @@ import { CompletedTaskViewer } from './components/completed-task-viewer';
 import Divider from './components/divider';
 import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
-import LoadingSpinner from './shared/loading-spinner';
+import LoadingSpinner from '../../../components/ui/loading-spinner';
 import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
 
 export default function Today() {
@@ -75,7 +75,12 @@ export default function Today() {
       <div className="ml-5 flex flex-col gap-12">
         <div className="flex flex-col gap-6">
           {loading ? (
-            <LoadingSpinner />
+            <div className="flex justify-center items-center min-h-screen">
+              <div>
+                <LoadingSpinner variant="blue" className="mb-12 ml-8 text-[10px]" />
+                <p className="font-semibold text-zinc-600">Loading...</p>
+              </div>
+            </div>
           ) : (
             <>
               <TodayHeader tasks={tasks} />
