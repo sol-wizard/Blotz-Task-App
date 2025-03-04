@@ -20,7 +20,7 @@ const DeleteTaskDialog = ({
   task,
 }: {
   onDelete: (id: number) => void;
-  handleUndo: (task: TaskDetailDTO) => void;
+  handleUndo: (taskId: number) => void;
   task: TaskDetailDTO;
 }) => {
   return (
