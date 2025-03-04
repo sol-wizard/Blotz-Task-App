@@ -297,7 +297,6 @@ public class TaskService : ITaskService
         };
         try {
             _dbContext.TaskItems.Add(restoredTask);
-            await _dbContext.SaveChangesAsync(); // make sure task is added successfully before delete it from trash table
             _dbContext.DeletedTaskItems.Remove(deletedTask);
             await _dbContext.SaveChangesAsync();
             return new ResponseWrapper<int>(
