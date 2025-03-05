@@ -3,5 +3,7 @@
 namespace BlotzTask.Data.Entities;
 public class User : IdentityUser
 {
-    public ICollection<TaskItem> TaskItems { get; set; }
+  public string FirstName { get; set; }
+  public string LastName { get; set; }
+  public ICollection<TaskItem> TaskItems { get; set; }
 }
