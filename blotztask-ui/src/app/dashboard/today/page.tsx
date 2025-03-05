@@ -18,16 +18,18 @@ import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto'
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
+import { useDialog } from '../navbar/components/add-task-dialog';
 
 export default function Today() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
   const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
   const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
   const [loading, setLoading] = useState(false);
+  const { taskAdded } = useDialog();
 
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [taskAdded]);
 
   const loadTasks = async () => {
     try {
