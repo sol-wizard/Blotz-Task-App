@@ -67,7 +67,7 @@ export function AppSidebar() {
             {/* <SidebarGroupLabel>Blotz Task App</SidebarGroupLabel> */}
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem className="mt-5">
+                <SidebarMenuItem className="my-5">
                   <SidebarMenuButton onClick={openDialog}>
                     <div className="flex items-center gap-4 py-10 px-4 w-full hover:bg-white">
                       <div
@@ -87,7 +87,7 @@ export function AppSidebar() {
                 {items.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <a href={item.url} className="flex items-center px-4 py-3 w-full hover:bg-white">
+                      <a href={item.url} className="flex items-center ml-2 px-4 py-3 w-full hover:bg-white">
                         <item.icon />
                         <span className="pl-3 text-base">{item.title}</span>
                       </a>
