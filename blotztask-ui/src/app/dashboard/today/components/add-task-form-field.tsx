@@ -4,7 +4,15 @@ import { LabelSelect } from '../shared/label-select';
 import { Input } from '@/components/ui/task-card-input';
 import { Textarea } from '@/components/ui/textarea';
 
-const AddTaskFormField = ({ form, datePickerRef, labelPickerRef }) => {
+const AddTaskFormField = ({
+  form,
+  datePickerRef,
+  labelPickerRef,
+}: {
+  form;
+  datePickerRef?: React.RefObject<HTMLDivElement>;
+  labelPickerRef?: React.RefObject<HTMLDivElement>;
+}) => {
   return (
     <div className="flex flex-col w-full">
       <FormField
