@@ -12,8 +12,9 @@ import { Tag } from 'lucide-react';
 import { LabelDTO } from '@/model/label-dto';
 import { Control } from 'react-hook-form';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+
 import { useEffect, useState } from 'react';
-import { fetchAllLabel } from '@/services/taskService';
+import { fetchAllLabel } from '@/services/labelService';
 
 export function LabelSelect({
   control,
@@ -60,9 +61,6 @@ export function LabelSelect({
             <SelectContent ref={labelPickerRef ?? undefined}>
               <SelectGroup>
                 {labels.map((label) => {
-                  //console.log("Label:", label);
-                  console.log('Label Color:', label.color);
-                  //console.log("Label Data:", label);
                   return (
                     <LabelSelectItem
                       key={label.labelId}

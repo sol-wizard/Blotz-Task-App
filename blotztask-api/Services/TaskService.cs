@@ -16,6 +16,7 @@ public interface ITaskService
     public Task<TaskStatusResultDTO> TaskStatusUpdate(int id, bool? isDone = null);
     public Task<List<TaskItemDTO>> GetTaskByDate(DateOnly date, string userId);
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
+    public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
 }
 
 public class TaskService : ITaskService
@@ -41,7 +42,7 @@ public class TaskService : ITaskService
                     Description = x.Description,
                     DueDate = x.DueDate,
                     IsDone = x.IsDone,
-                    Label = new LabelDTO { Name = x.Label.Name, Color = x.Label.Color }        
+                    Label = new LabelDTO { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color }        
                 })
                 .ToListAsync();
         }
@@ -82,9 +83,22 @@ public class TaskService : ITaskService
         {
             throw new NotFoundException($"Task with ID {Id} not found.");
         }
-
+        var deletedTask = new DeletedTaskItem
+        {
+            Id = taskItem.Id,
+            Title = taskItem.Title,
+            Description = taskItem.Description,
+            DueDate = taskItem.DueDate,
+            IsDone = taskItem.IsDone,
+            CreatedAt = taskItem.CreatedAt,
+            UpdatedAt = taskItem.UpdatedAt,
+            DeletedAt = DateTime.UtcNow, // Track when it was deleted
+            UserId = taskItem.UserId,
+            LabelId = taskItem.LabelId
+        };
         try
         {
+            _dbContext.DeletedTaskItems.Add(deletedTask);
             _dbContext.TaskItems.Remove(taskItem);
             await _dbContext.SaveChangesAsync();
             return new ResponseWrapper<int>(
@@ -138,6 +152,8 @@ public class TaskService : ITaskService
         }
     }
 
+    
+
     public async Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDTO editTaskItem)
     {
         var task = await _dbContext.TaskItems.FindAsync(id);
@@ -152,6 +168,7 @@ public class TaskService : ITaskService
                        
             task.Title = editTaskItem.Title;
             task.Description = editTaskItem.Description;
+            task.DueDate = editTaskItem.DueDate;
             task.UpdatedAt = DateTime.UtcNow;
             task.LabelId = editTaskItem.LabelId;
         
@@ -261,6 +278,43 @@ public class TaskService : ITaskService
         {
             throw;
         }
+    }
+    public async Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id) {
+        var deletedTask = await _dbContext.DeletedTaskItems.FindAsync(id);
+        if (deletedTask == null) {
+            throw new NotFoundException($"Deleted task with ID {id} not found.");
+        }
+        var restoredTask = new TaskItem
+        {
+            Title = deletedTask.Title,
+            Description = deletedTask.Description,
+            DueDate = deletedTask.DueDate,
+            IsDone = deletedTask.IsDone,
+            CreatedAt = deletedTask.CreatedAt,
+            UpdatedAt = DateTime.UtcNow,
+            UserId = deletedTask.UserId,
+            LabelId = deletedTask.LabelId
+        };
+        try {
+            _dbContext.TaskItems.Add(restoredTask);
+            _dbContext.DeletedTaskItems.Remove(deletedTask);
+            await _dbContext.SaveChangesAsync();
+            return new ResponseWrapper<int>(
+                deletedTask.Id,
+                "Task recovered successfully.",
+                true
+            );
+            
+        } catch (Exception ex)
+        {
+            var innerExceptionMessage = ex.InnerException != null ? ex.InnerException.Message : "No inner exception.";
+            return new ResponseWrapper<int>(
+                0,
+                $"Failed to recover task. Error: {ex.Message}. Inner Exception: {innerExceptionMessage}",
+                false
+            );
+        }
+
     }
 }
 

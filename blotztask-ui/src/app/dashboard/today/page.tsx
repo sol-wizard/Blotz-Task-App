@@ -1,7 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { addTaskItem, deleteTask, editTask, fetchTaskItemsDueToday } from '@/services/taskService';
+import {
+  addTaskItem,
+  deleteTask,
+  editTask,
+  fetchTaskItemsDueToday,
+  undoDeleteTask,
+} from '@/services/taskService';
 import { updateTaskStatus } from '@/services/taskService';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
@@ -10,12 +16,14 @@ import { CompletedTaskViewer } from './components/completed-task-viewer';
 import Divider from './components/divider';
 import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
+import LoadingSpinner from '../../../components/ui/loading-spinner';
+import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
 
 export default function Today() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
   const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
   const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadTasks();
@@ -51,12 +59,12 @@ export default function Today() {
   const handleCheckboxChange = async (taskId: number) => {
     handleAction(() => updateTaskStatus(taskId));
   };
-  
+
   const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
     handleAction(() => addTaskItem(taskDetails));
   };
 
-  const handleTaskEdit = async (updatedTask) => {
+  const handleTaskEdit = async (updatedTask: EditTaskItemDTO) => {
     handleAction(() => editTask(updatedTask));
   };
 
@@ -64,17 +72,24 @@ export default function Today() {
     handleAction(() => deleteTask(taskId));
   };
 
+  const handleTaskDeleteUndo = async (taskId: number) => {
+    handleAction(() => undoDeleteTask(taskId));
+  };
+
   return (
     <>
       <div className="ml-5 flex flex-col gap-12">
-        <TodayHeader tasks={tasks} />
         <div className="flex flex-col gap-6">
           {loading ? (
-            <div className="flex justify-center items-center h-40">
-              <p className="text-lg font-semibold">Loading...</p>
+            <div className="flex justify-center items-center min-h-screen">
+              <div>
+                <LoadingSpinner variant="blue" className="mb-12 ml-8 text-[10px]" />
+                <p className="font-semibold text-zinc-600">Loading...</p>
+              </div>
             </div>
           ) : (
             <>
+              <TodayHeader tasks={tasks} />
               <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
               <Divider text="To do" />
               <div className="flex flex-col gap-6 w-full">
@@ -86,6 +101,7 @@ export default function Today() {
                       handleCheckboxChange={handleCheckboxChange}
                       handleTaskEdit={handleTaskEdit}
                       handleTaskDelete={handleTaskDelete}
+                      handleTaskDeleteUndo={handleTaskDeleteUndo}
                     ></TaskCard>
                   ))
                 ) : (
@@ -98,6 +114,7 @@ export default function Today() {
                 handleCompletedCheckboxChange={handleCheckboxChange}
                 handleTaskEdit={handleTaskEdit}
                 handleTaskDelete={handleTaskDelete}
+                handleTaskDeleteUndo={handleTaskDeleteUndo}
               />
             </>
           )}
