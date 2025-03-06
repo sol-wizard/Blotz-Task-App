@@ -10,8 +10,6 @@ const DialogContext = createContext({ openDialog: () => {}, taskAdded: false });
 
 export function DialogProvider({ children }) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const datePickerRef = useRef<HTMLDivElement>(null);
-  const labelPickerRef = useRef<HTMLDivElement>(null);
   const [taskAdded, setTaskAdded] = useState(false);
 
   const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
@@ -42,8 +40,6 @@ export function DialogProvider({ children }) {
               handleAddTask(newTaskData);
               wait().then(() => setDialogOpen(false));
             }}
-            datePickerRef={datePickerRef}
-            labelPickerRef={labelPickerRef}
             onCancel={() => setDialogOpen(false)}
           />
         </AlertDialogContent>
