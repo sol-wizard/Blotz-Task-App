@@ -20,7 +20,7 @@ import LoadingSpinner from '../../../components/ui/loading-spinner';
 import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
 
 export default function Today() {
-  const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
+  const [todayTasks, setTodayTasks] = useState<TaskDetailDTO[]>([]);
   const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
   const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,7 @@ export default function Today() {
   const loadTasks = async () => {
     try {
       const data = await fetchTaskItemsDueToday();
-      setTasks(data);
+      setTodayTasks(data);
       // Filter tasks to only include those where isDone is false
       const notDoneTasks = data.filter((task) => !task.isDone);
       setIncompleteTasks(notDoneTasks);
@@ -89,7 +89,7 @@ export default function Today() {
             </div>
           ) : (
             <>
-              <TodayHeader tasks={tasks} />
+              <TodayHeader tasks={todayTasks} />
               <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
               <Divider text="To do" />
               <div className="flex flex-col gap-6 w-full">
