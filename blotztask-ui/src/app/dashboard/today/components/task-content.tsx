@@ -104,7 +104,10 @@ export default function TaskContent({
                       )}
                     />
                   ) : (
-                    <p style={{ color: task.isDone ? '#BFC0C9' : '#000000' }} className="w-96 break-words">
+                    <p
+                      style={{ color: task.isDone ? '#BFC0C9' : '#000000' }}
+                      className="w-[500px] break-words"
+                    >
                       {task?.description}
                     </p>
                   )}

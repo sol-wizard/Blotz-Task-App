@@ -36,7 +36,7 @@ export function DialogProvider({ children }) {
       }}
     >
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-2xl">
           <GlobalAddTaskForm
             onSubmit={(newTaskData) => {
               handleAddTask(newTaskData);
