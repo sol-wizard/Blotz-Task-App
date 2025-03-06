@@ -116,7 +116,7 @@ const SignUpPage = () => {
                 <Input
                   {...field}
                   type="email"
-                  placeholder="lastName"
+                  placeholder="email"
                   className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               )}
