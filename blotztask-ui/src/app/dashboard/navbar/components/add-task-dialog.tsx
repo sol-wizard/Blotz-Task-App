@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, createContext, useContext, useRef } from 'react';
+import { useState, createContext, useContext } from 'react';
 import { AlertDialog, AlertDialogContent } from '@/components/ui/alert-dialog';
 import GlobalAddTaskForm from './global-add-task-form';
 import { addTaskItem } from '@/services/taskService';
