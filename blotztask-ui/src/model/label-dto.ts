@@ -1,5 +1,5 @@
 export interface LabelDTO {
-  labelId: number;
+  labelId?: number;
   name: string;
   color: string;
 }
