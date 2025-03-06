@@ -8,7 +8,6 @@ import { format } from 'date-fns';
 import { taskFormSchema } from '../../today/forms/task-form-schema';
 import AddTaskFormField from '../../today/components/add-task-form-field';
 import { Separator } from '@/components/ui/separator';
-import { TrendingUp } from 'lucide-react';
 import TaskSeparator from '../../today/shared/task-separator';
 
 type FormField = z.infer<typeof taskFormSchema>;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AppSidebar } from './navbar/side-nav';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
