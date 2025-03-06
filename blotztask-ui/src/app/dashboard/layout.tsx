@@ -2,12 +2,12 @@ import React from 'react';
 import { AppSidebar } from './navbar/side-nav';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
-import { DialogProvider } from './navbar/components/add-task-dialog';
+// import { DialogProvider } from './navbar/components/add-task-dialog';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex h-screen">
-      <DialogProvider>
+      {/* <DialogProvider> */}
         <SidebarProvider>
           <AppSidebar />
           <div className="flex-1 flex flex-col">
@@ -16,7 +16,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             <main className="container mx-auto px-6 py-4 flex-1">{children}</main>
           </div>
         </SidebarProvider>
-      </DialogProvider>
+      {/* </DialogProvider> */}
     </div>
   );
 };

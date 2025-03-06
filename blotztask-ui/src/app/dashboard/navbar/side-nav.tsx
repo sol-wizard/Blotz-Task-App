@@ -19,7 +19,8 @@ import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
 import { fetchAllLabel } from '@/services/labelService';
-import { useDialog } from './components/add-task-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -53,7 +54,7 @@ export function AppSidebar() {
     }
   };
 
-  const { openDialog } = useDialog();
+  // const { openDialog } = useDialog();
 
   useEffect(() => {
     loadAllLabel();
@@ -64,24 +65,41 @@ export function AppSidebar() {
       <Sidebar>
         <SidebarContent>
           <SidebarGroup>
-            {/* <SidebarGroupLabel>Blotz Task App</SidebarGroupLabel> */}
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem className="my-5">
-                  <SidebarMenuButton onClick={openDialog}>
-                    <div className="flex items-center gap-4 py-10 px-4 w-full hover:bg-white">
-                      <div
-                        className={cn(
-                          'bg-primary',
-                          'text-white p-1 rounded-sm',
-                          'inline-flex items-center justify-center'
-                        )}
-                      >
-                        <Plus size={18} />
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <SidebarMenuButton>
+                        <div className="flex items-center gap-4 py-10 px-4 w-full hover:bg-white">
+                          <div
+                            className={cn(
+                              'bg-primary',
+                              'text-white p-1 rounded-sm',
+                              'inline-flex items-center justify-center'
+                            )}
+                          >
+                            <Plus size={18} />
+                          </div>
+                          <span className="text-primary text-xl">New Task</span>
+                        </div>
+                      </SidebarMenuButton>                      
+                      </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Edit profile</DialogTitle>
+                        <DialogDescription>
+                          Make changes to your profile here.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <p>test</p>
                       </div>
-                      <span className="text-primary text-xl">New Task</span>
-                    </div>
-                  </SidebarMenuButton>
+                      <DialogFooter>
+                        <Button type="submit">Save changes</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </SidebarMenuItem>
 
                 {items.map((item) => (
