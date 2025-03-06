@@ -28,7 +28,6 @@ export function LabelSelect({
   const loadAllLabel = async () => {
     try {
       const labelData = await fetchAllLabel();
-      //console.log("Fetched label", labelData);
       setLabels(labelData);
     } catch (error) {
       console.error('Error loading labels:', error);
@@ -37,8 +36,7 @@ export function LabelSelect({
 
   useEffect(() => {
     loadAllLabel();
-    //console.log("Updated labels state:", labels);
-  }, [labels]);
+  }, []);
 
   return (
     <FormField
@@ -53,9 +51,7 @@ export function LabelSelect({
               >
                 <Tag className="mr-1" size={16} />
 
-                <SelectValue placeholder="Academic">
-                  {labels.find((label) => label.id === field.value)?.name || 'Academic'}
-                </SelectValue>
+                <SelectValue placeholder="Select Label"/>
               </SelectLabelTrigger>
             </FormControl>
             <SelectContent ref={labelPickerRef ?? undefined}>
