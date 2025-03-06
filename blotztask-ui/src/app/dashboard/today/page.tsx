@@ -33,11 +33,8 @@ export default function Today() {
     try {
       const data = await fetchTaskItemsDueToday();
       setTodayTasks(data);
-      // Filter tasks to only include those where isDone is false
-      const notDoneTasks = data.filter((task) => !task.isDone);
-      setIncompleteTasks(notDoneTasks);
-      const doneTask = data.filter((task) => task.isDone);
-      setCompletedTasks(doneTask);
+      setIncompleteTasks(data.filter(task => !task.isDone));
+      setCompletedTasks(data.filter(task => task.isDone));
     } catch (error) {
       console.error('Error loading tasks:', error);
     }
