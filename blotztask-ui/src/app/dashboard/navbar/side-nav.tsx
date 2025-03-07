@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
 import { fetchAllLabel } from '@/services/labelService';
+import { useTaskStore } from '../store/task-store';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -71,6 +72,14 @@ export function AppSidebar() {
                     </div>
                       <span className="text-primary text-xl">New Task</span>
                   </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <button onClick={() => useTaskStore.getState().loadTasks()}>
+                    hello
+                  </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               

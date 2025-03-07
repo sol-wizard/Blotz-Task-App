@@ -5,7 +5,6 @@ import {
   addTaskItem,
   deleteTask,
   editTask,
-  fetchTaskItemsDueToday,
   undoDeleteTask,
 } from '@/services/taskService';
 import { updateTaskStatus } from '@/services/taskService';
@@ -14,31 +13,33 @@ import TaskCard from './components/task-card';
 import AddTaskCard from './components/add-task-card';
 import { CompletedTaskViewer } from './components/completed-task-viewer';
 import Divider from './components/divider';
-import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
+import { useTaskStore } from '../store/task-store';
 
 export default function Today() {
-  const [todayTasks, setTodayTasks] = useState<TaskDetailDTO[]>([]);
-  const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
-  const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
+  // const [todayTasks, setTodayTasks] = useState<TaskDetailDTO[]>([]);
+  // const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
+  // const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
   const [loading, setLoading] = useState(false);
+  const { todayTasks, incompleteTasks, completedTasks, loadTasks } = useTaskStore();
+
 
   useEffect(() => {
     loadTasks();
   }, []);
 
-  const loadTasks = async () => {
-    try {
-      const data = await fetchTaskItemsDueToday();
-      setTodayTasks(data);
-      setIncompleteTasks(data.filter(task => !task.isDone));
-      setCompletedTasks(data.filter(task => task.isDone));
-    } catch (error) {
-      console.error('Error loading tasks:', error);
-    }
-  };
+  // const loadTasks = async () => {
+  //   try {
+  //     const data = await fetchTaskItemsDueToday();
+  //     setTodayTasks(data);
+  //     setIncompleteTasks(data.filter(task => !task.isDone));
+  //     setCompletedTasks(data.filter(task => task.isDone));
+  //   } catch (error) {
+  //     console.error('Error loading tasks:', error);
+  //   }
+  // };
 
   /** Helper function to handle API action ensure consistent behaviour and avoid duplicate code */
   const handleAction = async (action: () => Promise<unknown>) => {
