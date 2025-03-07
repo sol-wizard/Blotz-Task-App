@@ -25,7 +25,6 @@ export default function Today() {
   // const [loading, setLoading] = useState(false);
   const { todayTasks, incompleteTasks, completedTasks, loading, loadTasks, setLoading } = useTaskStore();
 
-
   useEffect(() => {
     loadTasks();
   }, []);
