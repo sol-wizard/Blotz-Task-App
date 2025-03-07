@@ -15,12 +15,10 @@ import {
 import { useSession } from 'next-auth/react';
 import { ProfileSectionButton } from './components/profile-section-button';
 import { Categories } from './components/categories';
-import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
 import { fetchAllLabel } from '@/services/labelService';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import AddTaskDialog from './components/add-task-dialog';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -68,38 +66,7 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem className="my-5">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <SidebarMenuButton>
-                        <div className="flex items-center gap-4 py-10 px-4 w-full hover:bg-white">
-                          <div
-                            className={cn(
-                              'bg-primary',
-                              'text-white p-1 rounded-sm',
-                              'inline-flex items-center justify-center'
-                            )}
-                          >
-                            <Plus size={18} />
-                          </div>
-                          <span className="text-primary text-xl">New Task</span>
-                        </div>
-                      </SidebarMenuButton>                      
-                      </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>Edit profile</DialogTitle>
-                        <DialogDescription>
-                          Make changes to your profile here.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <p>test</p>
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit">Save changes</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                  <AddTaskDialog />
                 </SidebarMenuItem>
 
                 {items.map((item) => (
