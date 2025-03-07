@@ -7,14 +7,20 @@ type TaskStore = {
   incompleteTasks: TaskDetailDTO[];
   completedTasks: TaskDetailDTO[];
   loadTasks: () => Promise<void>;
+  loading: boolean;
+  setLoading: (value: boolean) => void;
 };
 
 export const useTaskStore = create<TaskStore>((set) => ({
   todayTasks: [],
   incompleteTasks: [],
   completedTasks: [],
+  loading: false,
+
+  setLoading: (value) => set({ loading: value }),
 
   loadTasks: async () => {
+    set({ loading: true });
     try {
       const data = await fetchTaskItemsDueToday();
       set({
@@ -24,6 +30,8 @@ export const useTaskStore = create<TaskStore>((set) => ({
       });
     } catch (error) {
       console.error('Error loading tasks:', error);
+    } finally {
+      set({ loading: false });
     }
   },
 }));

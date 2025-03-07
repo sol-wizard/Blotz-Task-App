@@ -20,6 +20,7 @@ import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
 import { fetchAllLabel } from '@/services/labelService';
 import { useTaskStore } from '../store/task-store';
+import { Button } from '@/components/ui/button';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -32,6 +33,7 @@ const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
+  const { loading } = useTaskStore();
 
   const handleSignOut = (e) => {
     e.preventDefault();
@@ -64,6 +66,25 @@ export function AppSidebar() {
           {/* <SidebarGroupLabel>Blotz Task App</SidebarGroupLabel> */}
           <SidebarGroupContent>
             <SidebarMenu>
+
+            <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Button
+                    onClick={() => useTaskStore.getState().loadTasks()}
+                    disabled={loading}
+                    variant="outline"
+                  >
+                    {loading ? (
+                      <>
+                        <span className="mr-2 animate-spin">⏳</span> Loading...
+                      </>
+                    ) : (
+                      "Reload Tasks"
+                    )}
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <a href="/new-task" className="flex items-center gap-3 py-3 px-4 my-5 w-full hover:bg-white">
@@ -72,14 +93,6 @@ export function AppSidebar() {
                     </div>
                       <span className="text-primary text-xl">New Task</span>
                   </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <button onClick={() => useTaskStore.getState().loadTasks()}>
-                    hello
-                  </button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               
@@ -93,6 +106,7 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

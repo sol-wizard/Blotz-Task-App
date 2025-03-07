@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
   addTaskItem,
   deleteTask,
@@ -22,8 +22,8 @@ export default function Today() {
   // const [todayTasks, setTodayTasks] = useState<TaskDetailDTO[]>([]);
   // const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
   // const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { todayTasks, incompleteTasks, completedTasks, loadTasks } = useTaskStore();
+  // const [loading, setLoading] = useState(false);
+  const { todayTasks, incompleteTasks, completedTasks, loading, loadTasks, setLoading } = useTaskStore();
 
 
   useEffect(() => {
