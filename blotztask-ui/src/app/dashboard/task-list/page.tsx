@@ -3,7 +3,13 @@
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { H1 } from '@/components/ui/heading-with-anchor';
-import { deleteTask, editTask, fetchAllTaskItems, updateTaskStatus } from '@/services/taskService';
+import {
+  deleteTask,
+  editTask,
+  fetchAllTaskItems,
+  undoDeleteTask,
+  updateTaskStatus,
+} from '@/services/taskService';
 import { TaskList } from './components/task-list';
 import { TaskDetailDTO } from './models/task-detail-dto';
 
@@ -42,8 +48,13 @@ export default function Page() {
     }
   };
 
-  const handleTaskDeleteUndo = async () => {
-    console.log('Restore deleted task!');
+  const handleTaskDeleteUndo = async (taskId: number) => {
+    try {
+      await undoDeleteTask(taskId);
+      await loadTasks();
+    } catch (error) {
+      console.error('Error restoring task:', error);
+    }
   };
 
   useEffect(() => {
