@@ -1,6 +1,6 @@
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { CalendarForm } from '../shared/calendar-form';
-import { LabelSelect } from '../shared/label-select';
+import { CalendarForm } from './calendar-form';
+import { LabelSelect } from './label-select';
 import { Input } from '@/components/ui/task-card-input';
 import { Textarea } from '@/components/ui/textarea';
 

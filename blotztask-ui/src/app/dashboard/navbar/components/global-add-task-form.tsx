@@ -6,7 +6,7 @@ import { Form } from '@/components/ui/form';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { format } from 'date-fns';
 import { taskFormSchema } from '../../today/forms/task-form-schema';
-import AddTaskFormField from '../../today/components/add-task-form-field';
+import AddTaskFormField from '../../today/shared/add-task-form';
 import { Separator } from '@/components/ui/separator';
 import TaskSeparator from '../../today/shared/task-separator';
 

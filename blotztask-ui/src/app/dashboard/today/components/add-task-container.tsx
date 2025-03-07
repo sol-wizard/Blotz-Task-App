@@ -6,7 +6,7 @@ import { Form, FormField } from '@/components/ui/form';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { format } from 'date-fns';
 import { taskFormSchema } from '../forms/task-form-schema';
-import AddTaskFormField from './add-task-form-field';
+import AddTaskFormField from '../shared/add-task-form';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
