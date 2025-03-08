@@ -20,7 +20,7 @@ import LoadingSpinner from '../../../components/ui/loading-spinner';
 import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
 
 export default function Today() {
-  const [tasks, setTasks] = useState<TaskDetailDTO[]>([]); // Store all tasks here
+  const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
   const [incompleteTasks, setIncompleteTasks] = useState<TaskDetailDTO[]>([]);
   const [completedTasks, setCompletedTasks] = useState<TaskDetailDTO[]>([]);
   const [loading, setLoading] = useState(false);

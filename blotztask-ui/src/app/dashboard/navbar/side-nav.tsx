@@ -1,6 +1,6 @@
 'use client';
 
-import { ListChecks, Home, Plus, ClipboardCheck } from 'lucide-react';
+import { ListChecks, Home, ClipboardCheck, Plus } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -15,10 +15,13 @@ import {
 import { useSession } from 'next-auth/react';
 import { ProfileSectionButton } from './components/profile-section-button';
 import { Categories } from './components/categories';
-import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
 import { fetchAllLabel } from '@/services/labelService';
+import AddTaskDialog from './components/add-task-dialog';
+import { AddTaskItemDTO } from '@/model/add-task-item-dto';
+import { addTaskItem } from '@/services/taskService';
+import { cn } from '@/lib/utils';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -44,63 +47,80 @@ export function AppSidebar() {
   const [labels, setLabels] = useState<LabelDTO[]>([]);
 
   const loadAllLabel = async () => {
-      try {
-        const labelData = await fetchAllLabel();
-        setLabels(labelData);
-      } catch (error) {
-        console.error('Error loading labels:', error);
-      }
-    };
-  
-    useEffect(() => {
-      loadAllLabel();
-    }, []);
+    try {
+      const labelData = await fetchAllLabel();
+      setLabels(labelData);
+    } catch (error) {
+      console.error('Error loading labels:', error);
+    }
+  };
+
+  const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
+    try {
+      await addTaskItem(taskDetails);
+    } catch (error) {
+      console.error('Error performing action:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadAllLabel();
+  }, []);
 
   return (
-    <Sidebar>
-      <SidebarContent>
-        <SidebarGroup>
-          {/* <SidebarGroupLabel>Blotz Task App</SidebarGroupLabel> */}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/new-task" className="flex items-center gap-3 py-3 px-4 my-5 w-full hover:bg-white">
-                    <div className={cn('bg-primary', 'text-white p-1 rounded-sm', 'inline-flex items-center justify-center')}>
-                      <Plus size={18} />
-                    </div>
-                      <span className="text-primary text-xl">New Task</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url} className="flex items-center px-4 py-3 w-full hover:bg-white">
-                      <item.icon />
-                      <span className="pl-3 text-base">{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
+    <>
+      <Sidebar>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem className="my-5">
+                  <AddTaskDialog handleAddTask={handleAddTask}>
+                    <SidebarMenuButton>
+                      <div className="flex items-center gap-4 py-10 px-4 w-full hover:bg-white">
+                        <div
+                          className={cn(
+                            'bg-primary',
+                            'text-white p-1 rounded-sm',
+                            'inline-flex items-center justify-center'
+                          )}
+                        >
+                          <Plus size={18} />
+                        </div>
+                        <span className="text-primary text-xl">New Task</span>
+                      </div>
+                    </SidebarMenuButton>
+                  </AddTaskDialog>
                 </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-lg font-semibold mb-2">Task Categories</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <Categories labels={labels} />
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          <ProfileSectionButton session={session} onSignOut={handleSignOut} />
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+
+                {items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <a href={item.url} className="flex items-center ml-2 px-4 py-3 w-full hover:bg-white">
+                        <item.icon />
+                        <span className="pl-3 text-base">{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-lg font-semibold mb-2">Task Categories</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <Categories labels={labels} />
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarMenu>
+            <ProfileSectionButton session={session} onSignOut={handleSignOut} />
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
+    </>
   );
 }

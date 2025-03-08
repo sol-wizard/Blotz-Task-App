@@ -49,7 +49,7 @@ export function CalendarForm({
             </PopoverTrigger>
             <PopoverContent
               ref={datePickerRef ?? undefined}
-              className="w-auto p-0"
+              className="w-auto p-0 pointer-events-auto"
               align="start"
               onCloseAutoFocus={handleCalendarClose}
             >
