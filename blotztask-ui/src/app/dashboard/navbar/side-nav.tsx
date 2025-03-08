@@ -19,6 +19,8 @@ import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
 import { fetchAllLabel } from '@/services/labelService';
+import { useTodayTaskStore } from '../store/today-task-store';
+import { Button } from '@/components/ui/button';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -31,6 +33,10 @@ const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
+  const { todayTasksIsLoading, loadTasks} = useTodayTaskStore((state) => ({
+    todayTasksIsLoading: state.todayTasksIsLoading,
+    loadTasks: state.loadTasks,
+  }));
 
   const handleSignOut = (e) => {
     e.preventDefault();
@@ -63,6 +69,25 @@ export function AppSidebar() {
           {/* <SidebarGroupLabel>Blotz Task App</SidebarGroupLabel> */}
           <SidebarGroupContent>
             <SidebarMenu>
+
+            <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Button
+                    onClick={() => loadTasks()}
+                    disabled={todayTasksIsLoading}
+                    variant="outline"
+                  >
+                    {todayTasksIsLoading ? (
+                      <>
+                        <span className="mr-2 animate-spin">⏳</span> Loading...
+                      </>
+                    ) : (
+                      "Reload Tasks"
+                    )}
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <a href="/new-task" className="flex items-center gap-3 py-3 px-4 my-5 w-full hover:bg-white">
@@ -84,6 +109,7 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
