@@ -33,7 +33,10 @@ const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
-  const { todayTasksIsLoading, loadTasks} = useTodayTaskStore();
+  const { todayTasksIsLoading, loadTasks} = useTodayTaskStore((state) => ({
+    todayTasksIsLoading: state.todayTasksIsLoading,
+    loadTasks: state.loadTasks,
+  }));
 
   const handleSignOut = (e) => {
     e.preventDefault();
