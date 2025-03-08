@@ -33,7 +33,6 @@ const GlobalAddTaskForm = ({ onSubmit }) => {
       labelId: data.labelId ?? 0,
     };
     onSubmit(taskDetails);
-    console.log('handleAddTask: ', taskDetails);
   };
 
   return (

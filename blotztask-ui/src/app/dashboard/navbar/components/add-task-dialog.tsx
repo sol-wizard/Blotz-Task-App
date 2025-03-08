@@ -4,9 +4,6 @@ import { useState } from 'react';
 
 const AddTaskDialog = ({ handleAddTask, children }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  const wait = () => new Promise((resolve) => setTimeout(resolve, 100));
-
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -14,7 +11,7 @@ const AddTaskDialog = ({ handleAddTask, children }) => {
         <GlobalAddTaskForm
           onSubmit={(newTaskData) => {
             handleAddTask(newTaskData);
-            wait().then(() => setDialogOpen(false));
+            setDialogOpen(false);
           }}
         />
       </DialogContent>
