@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
 import { fetchAllLabel } from '@/services/labelService';
-import { useTaskStore } from '../store/task-store';
+import { useTodayTaskStore } from '../store/today-task-store';
 import { Button } from '@/components/ui/button';
 
 const authenticatedItems = [
@@ -33,7 +33,7 @@ const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
-  const { loading } = useTaskStore();
+  const { loading } = useTodayTaskStore();
 
   const handleSignOut = (e) => {
     e.preventDefault();
@@ -70,7 +70,7 @@ export function AppSidebar() {
             <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Button
-                    onClick={() => useTaskStore.getState().loadTasks()}
+                    onClick={() => useTodayTaskStore.getState().loadTasks()}
                     disabled={loading}
                     variant="outline"
                   >

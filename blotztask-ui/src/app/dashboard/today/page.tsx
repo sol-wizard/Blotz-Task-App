@@ -16,10 +16,10 @@ import Divider from './components/divider';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
-import { useTaskStore } from '../store/task-store';
+import { useTodayTaskStore } from '../store/today-task-store';
 
 export default function Today() {
-  const { todayTasks, incompleteTasks, completedTasks, loading, loadTasks, setLoading } = useTaskStore();
+  const { todayTasks, incompleteTodayTasks, completedTodayTasks, loading, loadTasks, setLoading } = useTodayTaskStore();
 
   useEffect(() => {
     loadTasks();
@@ -75,8 +75,8 @@ export default function Today() {
               <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
               <Divider text="To do" />
               <div className="flex flex-col gap-6 w-full">
-                {incompleteTasks.length > 0 ? (
-                  incompleteTasks.map((task) => (
+                {incompleteTodayTasks.length > 0 ? (
+                  incompleteTodayTasks.map((task) => (
                     <TaskCard
                       key={task.id}
                       task={task}
@@ -92,7 +92,7 @@ export default function Today() {
               </div>
               <Divider text="Done" />
               <CompletedTaskViewer
-                completedTasks={completedTasks}
+                completedTasks={completedTodayTasks}
                 handleCompletedCheckboxChange={handleCheckboxChange}
                 handleTaskEdit={handleTaskEdit}
                 handleTaskDelete={handleTaskDelete}
