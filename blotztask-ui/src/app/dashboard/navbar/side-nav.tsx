@@ -19,6 +19,8 @@ import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
 import { fetchAllLabel } from '@/services/labelService';
 import AddTaskDialog from './components/add-task-dialog';
+import { AddTaskItemDTO } from '@/model/add-task-item-dto';
+import { addTaskItem } from '@/services/taskService';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -52,7 +54,13 @@ export function AppSidebar() {
     }
   };
 
-  // const { openDialog } = useDialog();
+  const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
+    try {
+      await addTaskItem(taskDetails);
+    } catch (error) {
+      console.error('Error performing action:', error);
+    }
+  };
 
   useEffect(() => {
     loadAllLabel();
@@ -66,7 +74,7 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem className="my-5">
-                  <AddTaskDialog />
+                  <AddTaskDialog handleAddTask={handleAddTask} />
                 </SidebarMenuItem>
 
                 {items.map((item) => (

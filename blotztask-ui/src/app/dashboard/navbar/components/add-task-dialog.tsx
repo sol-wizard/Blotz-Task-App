@@ -1,22 +1,12 @@
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { SidebarMenuButton } from '@/components/ui/sidebar';
 import GlobalAddTaskForm from './global-add-task-form';
-import { AddTaskItemDTO } from '@/model/add-task-item-dto';
-import { addTaskItem } from '@/services/taskService';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 
-const AddTaskDialog = () => {
+const AddTaskDialog = ({ handleAddTask }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
-    try {
-      await addTaskItem(taskDetails);
-    } catch (error) {
-      console.error('Error performing action:', error);
-    }
-  };
 
   const wait = () => new Promise((resolve) => setTimeout(resolve, 100));
 
