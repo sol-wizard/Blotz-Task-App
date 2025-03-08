@@ -49,7 +49,7 @@ namespace BlotzTask.Controllers
         }
 
         [HttpGet("due-date/{date}")]
-        public async Task<IActionResult> GetTaskByDate(DateOnly date)
+        public async Task<IActionResult> GetTaskByDate(DateTimeOffset date)
         {
             var userId = HttpContext.Items["UserId"] as string;
 

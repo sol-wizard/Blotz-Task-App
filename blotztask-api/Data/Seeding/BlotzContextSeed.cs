@@ -75,8 +75,8 @@ public static class BlotzContextSeed
 
     private static async Task SeedTasksForTodayAsync(BlotzTaskDbContext context, User user)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        bool hasTasksForToday = await context.TaskItems.AnyAsync(t => t.DueDate == today);
+        var today = DateTimeOffset.UtcNow.Date;
+        bool hasTasksForToday = await context.TaskItems.AnyAsync(t => t.DueDate.Date == today);
 
         if (hasTasksForToday)
         {

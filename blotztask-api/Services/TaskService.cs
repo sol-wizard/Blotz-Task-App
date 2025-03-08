@@ -14,7 +14,7 @@ public interface ITaskService
     public Task<ResponseWrapper<int>> DeleteTaskByIDAsync(int Id);
     public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId);
     public Task<TaskStatusResultDTO> TaskStatusUpdate(int id, bool? isDone = null);
-    public Task<List<TaskItemDTO>> GetTaskByDate(DateOnly date, string userId);
+    public Task<List<TaskItemDTO>> GetTaskByDate(DateTimeOffset date, string userId);
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
 }
@@ -219,7 +219,7 @@ public class TaskService : ITaskService
         
     }
 
-    public async Task<List<TaskItemDTO>> GetTaskByDate(DateOnly date, string userId)
+    public async Task<List<TaskItemDTO>> GetTaskByDate(DateTimeOffset date, string userId)
     {
         try
         {
