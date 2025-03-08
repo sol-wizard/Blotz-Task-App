@@ -44,7 +44,6 @@ const AddTaskDialog = () => {
             handleAddTask(newTaskData);
             wait().then(() => setDialogOpen(false));
           }}
-          onCancel={() => setDialogOpen(false)}
         />
       </DialogContent>
     </Dialog>

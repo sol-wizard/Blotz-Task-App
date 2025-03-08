@@ -9,10 +9,12 @@ import { taskFormSchema } from '../../today/forms/task-form-schema';
 import AddTaskFormField from '../../today/shared/add-task-form';
 import { Separator } from '@/components/ui/separator';
 import TaskSeparator from '../../today/shared/task-separator';
+import { DialogClose } from '@radix-ui/react-dialog';
+import { DialogFooter } from '@/components/ui/dialog';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
-const GlobalAddTaskForm = ({ onSubmit, onCancel }) => {
+const GlobalAddTaskForm = ({ onSubmit }) => {
   const form = useForm<FormField>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -45,16 +47,19 @@ const GlobalAddTaskForm = ({ onSubmit, onCancel }) => {
         <Separator className="bg-indigo-200" />
         <div className="flex flex-row justify-end mt-4">
           <div className="flex flex-row h-8 ml-4">
-            <button
-              className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20"
-              type="button"
-              onClick={onCancel}
-            >
-              Cancel
-            </button>
-            <button type="submit" className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20">
-              Save
-            </button>
+            <DialogClose asChild>
+              <button
+                className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20"
+                type="button"
+              >
+                Cancel
+              </button>
+            </DialogClose>
+            <DialogFooter>
+              <button type="submit" className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20">
+                Save
+              </button>
+            </DialogFooter>
           </div>
         </div>
       </form>

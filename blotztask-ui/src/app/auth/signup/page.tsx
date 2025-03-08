@@ -37,8 +37,6 @@ const SignUpPage = () => {
         body: JSON.stringify(data),
       });
 
-      console.log(data);
-
       if (!response.ok) {
         const errorData = await response.json();
 
