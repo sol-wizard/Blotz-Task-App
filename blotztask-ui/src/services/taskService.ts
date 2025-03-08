@@ -19,7 +19,7 @@ export const fetchAllTaskItems = async (): Promise<TaskDetailDTO[]> => {
 
 export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
   const now = new Date();
-  const localDate = now.toISOString().split('T')[0];
+  const localDate = now.toLocaleDateString('en-CA');
   const timeOffset = formatTimezoneOffset(-now.getTimezoneOffset());
 
   function formatTimezoneOffset(offsetMinutes) {
