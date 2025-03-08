@@ -6,11 +6,11 @@ import { Form, FormField } from '@/components/ui/form';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { format } from 'date-fns';
 import { taskFormSchema } from '../forms/task-form-schema';
-import AddTaskFormField from '../shared/add-task-form';
+import AddTaskForm from '../shared/add-task-form';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
-const AddTaskForm = ({ onSubmit, datePickerRef, labelPickerRef, onCancel }) => {
+const AddTaskContainer = ({ onSubmit, datePickerRef, labelPickerRef, onCancel }) => {
   const form = useForm<FormField>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -35,7 +35,7 @@ const AddTaskForm = ({ onSubmit, datePickerRef, labelPickerRef, onCancel }) => {
     <Form {...form}>
       <form className="flex flex-col w-full space-y-2" onSubmit={form.handleSubmit(handleAddTask)}>
         <div className="flex flex-row justify-between items-center">
-          <AddTaskFormField form={form} datePickerRef={datePickerRef} labelPickerRef={labelPickerRef} />
+          <AddTaskForm form={form} datePickerRef={datePickerRef} labelPickerRef={labelPickerRef} />
           <div className="flex flex-row h-8 ml-4 mt-20">
             <button
               className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20"
@@ -54,4 +54,4 @@ const AddTaskForm = ({ onSubmit, datePickerRef, labelPickerRef, onCancel }) => {
   );
 };
 
-export default AddTaskForm;
+export default AddTaskContainer;
