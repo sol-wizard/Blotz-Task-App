@@ -1,6 +1,6 @@
 'use client';
 
-import { ListChecks, Home, Plus, ClipboardCheck } from 'lucide-react';
+import { ListChecks, Home, ClipboardCheck } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
