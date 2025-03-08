@@ -7,7 +7,7 @@ type TodayTaskStore = {
   incompleteTodayTasks: TaskDetailDTO[];
   completedTodayTasks: TaskDetailDTO[];
   loadTasks: () => Promise<void>;
-  loading: boolean;
+  todayTasksIsLoading: boolean;
   setLoading: (value: boolean) => void;
 };
 
@@ -15,12 +15,12 @@ export const useTodayTaskStore = create<TodayTaskStore>((set) => ({
   todayTasks: [],
   incompleteTodayTasks: [],
   completedTodayTasks: [],
-  loading: false,
+  todayTasksIsLoading: false,
 
-  setLoading: (value) => set({ loading: value }),
+  setLoading: (value) => set({ todayTasksIsLoading: value }),
 
   loadTasks: async () => {
-    set({ loading: true });
+    set({ todayTasksIsLoading: true });
     try {
       const data = await fetchTaskItemsDueToday();
       set({
@@ -31,7 +31,7 @@ export const useTodayTaskStore = create<TodayTaskStore>((set) => ({
     } catch (error) {
       console.error('Error loading tasks:', error);
     } finally {
-      set({ loading: false });
+      set({ todayTasksIsLoading: false });
     }
   },
 }));

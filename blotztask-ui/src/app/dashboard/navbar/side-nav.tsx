@@ -33,7 +33,7 @@ const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
-  const { loading, loadTasks} = useTodayTaskStore();
+  const { todayTasksIsLoading, loadTasks} = useTodayTaskStore();
 
   const handleSignOut = (e) => {
     e.preventDefault();
@@ -71,10 +71,10 @@ export function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <Button
                     onClick={() => loadTasks()}
-                    disabled={loading}
+                    disabled={todayTasksIsLoading}
                     variant="outline"
                   >
-                    {loading ? (
+                    {todayTasksIsLoading ? (
                       <>
                         <span className="mr-2 animate-spin">⏳</span> Loading...
                       </>

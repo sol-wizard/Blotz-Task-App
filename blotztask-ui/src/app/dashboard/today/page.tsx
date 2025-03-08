@@ -19,7 +19,7 @@ import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
 import { useTodayTaskStore } from '../store/today-task-store';
 
 export default function Today() {
-  const { todayTasks, incompleteTodayTasks, completedTodayTasks, loading, loadTasks, setLoading } = useTodayTaskStore();
+  const { todayTasks, incompleteTodayTasks, completedTodayTasks, todayTasksIsLoading, loadTasks, setLoading } = useTodayTaskStore();
 
   useEffect(() => {
     loadTasks();
@@ -62,7 +62,7 @@ export default function Today() {
     <>
       <div className="ml-5 flex flex-col gap-12">
         <div className="flex flex-col gap-6">
-          {loading ? (
+          {todayTasksIsLoading ? (
             <div className="flex justify-center items-center min-h-screen">
               <div>
                 <LoadingSpinner variant="blue" className="mb-12 ml-8 text-[10px]" />
