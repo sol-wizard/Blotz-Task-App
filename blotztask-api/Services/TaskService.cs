@@ -125,11 +125,12 @@ public class TaskService : ITaskService
 
         try
         {
+            DateTimeOffset dueDateUtc = addTaskItem.DueDate.ToUniversalTime();
             var newTask = new TaskItem
             {
                 Title = addTaskItem.Title,
                 Description = addTaskItem.Description,
-                DueDate = addTaskItem.DueDate,
+                DueDate = dueDateUtc,
                 LabelId = addTaskItem.LabelId,
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
