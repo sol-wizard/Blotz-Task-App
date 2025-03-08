@@ -1,6 +1,6 @@
 'use client';
 
-import { ListChecks, Home, ClipboardCheck } from 'lucide-react';
+import { ListChecks, Home, ClipboardCheck, Plus } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +21,7 @@ import { fetchAllLabel } from '@/services/labelService';
 import AddTaskDialog from './components/add-task-dialog';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { addTaskItem } from '@/services/taskService';
+import { cn } from '@/lib/utils';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -74,7 +75,22 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem className="my-5">
-                  <AddTaskDialog handleAddTask={handleAddTask} />
+                  <AddTaskDialog handleAddTask={handleAddTask}>
+                    <SidebarMenuButton>
+                      <div className="flex items-center gap-4 py-10 px-4 w-full hover:bg-white">
+                        <div
+                          className={cn(
+                            'bg-primary',
+                            'text-white p-1 rounded-sm',
+                            'inline-flex items-center justify-center'
+                          )}
+                        >
+                          <Plus size={18} />
+                        </div>
+                        <span className="text-primary text-xl">New Task</span>
+                      </div>
+                    </SidebarMenuButton>
+                  </AddTaskDialog>
                 </SidebarMenuItem>
 
                 {items.map((item) => (

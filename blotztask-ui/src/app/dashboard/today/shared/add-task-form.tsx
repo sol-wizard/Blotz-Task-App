@@ -4,7 +4,7 @@ import { LabelSelect } from './label-select';
 import { Input } from '@/components/ui/task-card-input';
 import { Textarea } from '@/components/ui/textarea';
 
-const AddTaskFormField = ({
+const AddTaskForm = ({
   form,
   datePickerRef,
   labelPickerRef,
@@ -49,4 +49,4 @@ const AddTaskFormField = ({
   );
 };
 
-export default AddTaskFormField;
+export default AddTaskForm;

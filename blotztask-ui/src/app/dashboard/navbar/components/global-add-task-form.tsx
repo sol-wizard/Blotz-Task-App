@@ -6,7 +6,7 @@ import { Form } from '@/components/ui/form';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { format } from 'date-fns';
 import { taskFormSchema } from '../../today/forms/task-form-schema';
-import AddTaskFormField from '../../today/shared/add-task-form';
+import AddTaskForm from '../../today/shared/add-task-form';
 import { Separator } from '@/components/ui/separator';
 import TaskSeparator from '../../today/shared/task-separator';
 import { DialogClose } from '@radix-ui/react-dialog';
@@ -42,7 +42,7 @@ const GlobalAddTaskForm = ({ onSubmit }) => {
         <div className="flex flex-row justify-center mb-3">
           <div className="w-6 h-6 mt-8 mr-4 border-2 border-gray-400 rounded-full border-dashed"></div>
           <TaskSeparator color="#c7d2fe" className="mx-4" />
-          <AddTaskFormField form={form} />
+          <AddTaskForm form={form} />
         </div>
         <Separator className="bg-indigo-200" />
         <div className="flex flex-row justify-end mt-4">
