@@ -48,8 +48,8 @@ namespace BlotzTask.Controllers
             return Ok(await _taskService.GetTaskByID(id));
         }
 
-        [HttpGet("due-date/{date}")]
-        public async Task<IActionResult> GetTaskByDate(DateTimeOffset date)
+        [HttpGet("due-date")]
+        public async Task<IActionResult> GetTaskByDate([FromQuery] string date, [FromQuery] string offset)
         {
             var userId = HttpContext.Items["UserId"] as string;
 
@@ -58,7 +58,18 @@ namespace BlotzTask.Controllers
                 throw new UnauthorizedAccessException("Could not find user id from Http Context");
             }
 
-            return Ok(await _taskService.GetTaskByDate(date, userId));
+            if (!DateTime.TryParse(date, out DateTime localDate))
+            {
+                return BadRequest("Invalid date format");
+            }
+
+            if (!TimeSpan.TryParse(offset, out TimeSpan timeOffset))
+            {
+                return BadRequest("Invalid offset format");
+            }
+
+            var tasks = await _taskService.GetTaskByDate(localDate, timeOffset, userId);
+            return Ok(tasks);
         }
 
         [HttpPost]
