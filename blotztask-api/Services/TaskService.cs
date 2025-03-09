@@ -130,7 +130,7 @@ public class TaskService : ITaskService
             {
                 Title = addTaskItem.Title,
                 Description = addTaskItem.Description,
-                DueDate = dueDateUtc,
+                DueDate = addTaskItem.DueDate.ToUniversalTime(),
                 LabelId = addTaskItem.LabelId,
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
