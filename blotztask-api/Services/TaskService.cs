@@ -14,7 +14,7 @@ public interface ITaskService
     public Task<ResponseWrapper<int>> DeleteTaskByIDAsync(int Id);
     public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId);
     public Task<TaskStatusResultDTO> TaskStatusUpdate(int id, bool? isDone = null);
-    public Task<List<TaskItemDTO>> GetTaskByDate(DateTime localDate, TimeSpan offset, string userId);
+    public Task<List<TaskItemDTO>> GetTaskByDate(DateTime startDateUTC, DateTime endDateUTC, string userId);
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
 }
@@ -219,21 +219,19 @@ public class TaskService : ITaskService
         
     }
 
-    public async Task<List<TaskItemDTO>> GetTaskByDate(DateTime localDate, TimeSpan offset, string userId)
+    public async Task<List<TaskItemDTO>> GetTaskByDate(DateTime startDateUTC, DateTime endDateUTC, string userId)
     {
-        var localDayStart = new DateTimeOffset(localDate, offset).UtcDateTime;  // Local 00:00:00 - UTC
-        var localDayEnd = localDayStart.AddDays(1); // Local 23:59:59 - UTC
         try
         {
             return await _dbContext.TaskItems
                 .Where(task => task.UserId == userId)
-                .Where(task => task.DueDate >= localDayStart && task.DueDate < localDayEnd)
+                .Where(task => task.DueDate >= startDateUTC && task.DueDate < endDateUTC)
                 .Select(task => new TaskItemDTO
                 {
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
-                    DueDate = localDate,
+                    DueDate = task.DueDate,
                     IsDone = task.IsDone,
                     Label = new LabelDTO 
                     { 

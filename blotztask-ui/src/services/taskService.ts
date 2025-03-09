@@ -19,18 +19,17 @@ export const fetchAllTaskItems = async (): Promise<TaskDetailDTO[]> => {
 
 export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
   const now = new Date();
-  const localDate = now.toLocaleDateString('en-CA');
-  const timeOffset = formatTimezoneOffset(-now.getTimezoneOffset());
 
-  function formatTimezoneOffset(offsetMinutes) {
-    const sign = offsetMinutes >= 0 ? '+' : '-';
-    const hours = String(Math.floor(Math.abs(offsetMinutes) / 60)).padStart(2, '0');
-    const minutes = String(Math.abs(offsetMinutes) % 60).padStart(2, '0');
-    return `${sign}${hours}:${minutes}`;
-  }
+  const localStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+  const localEndDate = new Date(localStartDate);
+  localEndDate.setDate(localEndDate.getDate() + 1);
+
+  const startDateUTC = localStartDate.toISOString();
+  const endDateUTC = localEndDate.toISOString();
 
   const result = await fetchWithAuth<TaskDetailDTO[]>(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/due-date?date=${encodeURIComponent(localDate)}&offset=${timeOffset}`,
+    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/due-date?startDateUTC=${encodeURIComponent(startDateUTC)}&endDateUTC=${encodeURIComponent(endDateUTC)}`,
     {
       method: 'GET',
       headers: {

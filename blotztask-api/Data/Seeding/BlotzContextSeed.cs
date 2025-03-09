@@ -85,6 +85,12 @@ public static class BlotzContextSeed
         bool hasTasksForToday = await context.TaskItems
             .AnyAsync(t => t.DueDate >= localDayStartUtc && t.DueDate < localDayEndUtc);
 
+        if (hasTasksForToday)
+        {
+            Console.WriteLine("Tasks for today's date already exist. No seeding necessary.");
+            return;
+        }
+        
         var labelWork = await context.Labels.FirstOrDefaultAsync(l => l.Name == nameof(LabelType.Work));
         var labelPersonal = await context.Labels.FirstOrDefaultAsync(l => l.Name == nameof(LabelType.Personal));
 
