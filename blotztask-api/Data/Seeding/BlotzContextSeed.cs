@@ -75,8 +75,10 @@ public static class BlotzContextSeed
 
     private static async Task SeedTasksForTodayAsync(BlotzTaskDbContext context, User user)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        bool hasTasksForToday = await context.TaskItems.AnyAsync(t => t.DueDate == today);
+        DateTime utcToday = DateTime.UtcNow.Date;
+        DateTime utcTomorrow = utcToday.AddDays(1);
+        bool hasTasksForToday = await context.TaskItems
+            .AnyAsync(t => t.DueDate >= utcToday && t.DueDate < utcTomorrow);
 
         if (hasTasksForToday)
         {
@@ -98,7 +100,7 @@ public static class BlotzContextSeed
             {
                 Title = "Initial Task 1",
                 Description = "Description for Task 1",
-                DueDate = today,
+                DueDate = utcToday,
                 IsDone = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
@@ -109,7 +111,7 @@ public static class BlotzContextSeed
             {
                 Title = "Initial Task 2",
                 Description = "Description for Task 2",
-                DueDate = today,
+                DueDate = utcToday,
                 IsDone = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
