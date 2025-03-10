@@ -18,6 +18,8 @@ import { Categories } from './components/categories';
 import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
 import { fetchAllLabel } from '@/services/labelService';
+import { useTodayTaskStore } from '../store/today-task-store';
+import { Button } from '@/components/ui/button';
 import AddTaskDialog from './components/add-task-dialog';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { addTaskItem } from '@/services/taskService';
@@ -34,6 +36,10 @@ const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
+  const { todayTasksIsLoading, loadTasks } = useTodayTaskStore((state) => ({
+    todayTasksIsLoading: state.todayTasksIsLoading,
+    loadTasks: state.loadTasks,
+  }));
 
   const handleSignOut = (e) => {
     e.preventDefault();
@@ -68,59 +74,73 @@ export function AppSidebar() {
   }, []);
 
   return (
-    <>
-      <Sidebar>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem className="my-5">
-                  <AddTaskDialog handleAddTask={handleAddTask}>
-                    <SidebarMenuButton>
-                      <div className="flex items-center gap-4 py-10 px-4 w-full hover:bg-white">
-                        <div
-                          className={cn(
-                            'bg-primary',
-                            'text-white p-1 rounded-sm',
-                            'inline-flex items-center justify-center'
-                          )}
-                        >
-                          <Plus size={18} />
-                        </div>
-                        <span className="text-primary text-xl">New Task</span>
-                      </div>
-                    </SidebarMenuButton>
-                  </AddTaskDialog>
-                </SidebarMenuItem>
+    <Sidebar>
+      <SidebarContent>
+        <SidebarGroup>
+          {/* <SidebarGroupLabel>Blotz Task App</SidebarGroupLabel> */}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Button onClick={() => loadTasks()} disabled={todayTasksIsLoading} variant="outline">
+                    {todayTasksIsLoading ? (
+                      <>
+                        <span className="mr-2 animate-spin">⏳</span> Loading...
+                      </>
+                    ) : (
+                      'Reload Tasks'
+                    )}
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
 
-                {items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <a href={item.url} className="flex items-center ml-2 px-4 py-3 w-full hover:bg-white">
-                        <item.icon />
-                        <span className="pl-3 text-base">{item.title}</span>
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-lg font-semibold mb-2">Task Categories</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <Categories labels={labels} />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter>
-          <SidebarMenu>
-            <ProfileSectionButton session={session} onSignOut={handleSignOut} />
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-    </>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a
+                    href="/new-task"
+                    className="flex items-center gap-3 py-3 px-4 my-5 w-full hover:bg-white"
+                  >
+                    <div
+                      className={cn(
+                        'bg-primary',
+                        'text-white p-1 rounded-sm',
+                        'inline-flex items-center justify-center'
+                      )}
+                    >
+                      <Plus size={18} />
+                    </div>
+                    <span className="text-primary text-xl">New Task</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {items.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <a href={item.url} className="flex items-center px-4 py-3 w-full hover:bg-white">
+                      <item.icon />
+                      <span className="pl-3 text-base">{item.title}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-lg font-semibold mb-2">Task Categories</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <Categories labels={labels} />
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <ProfileSectionButton session={session} onSignOut={handleSignOut} />
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

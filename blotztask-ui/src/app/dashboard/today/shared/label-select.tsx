@@ -50,20 +50,29 @@ export function LabelSelect({
                 className={`flex flex-row w-30 items-center rounded-full px-3 py-1 text-xs`}
               >
                 <Tag className="mr-1" size={16} />
-                <SelectValue placeholder="Select Label" />
+
+                <SelectValue placeholder="Select Label"/>
               </SelectLabelTrigger>
             </FormControl>
             <SelectContent ref={labelPickerRef ?? undefined}>
               <SelectGroup>
-                {labels.map((label) => (
-                  <LabelSelectItem
-                    key={label.labelId}
-                    value={label.labelId.toString()}
-                    className="flex flex-row items-center px-2 py-1"
-                  >
-                    {label.name}
-                  </LabelSelectItem>
-                ))}
+                {labels.map((label) => {
+                  return (
+                    <LabelSelectItem
+                      key={label.labelId}
+                      value={label.labelId.toString()}
+                      className="flex flex-row px-3 py-2 rounded-md"
+                    >
+                      <div className="flex flex-row items-center">
+                        <span
+                          className={`w-4 h-4 rounded-full mr-2`}
+                          style={{ backgroundColor: label.color }}
+                        />
+                        <div className="flex-1">{label.name}</div>
+                      </div>
+                    </LabelSelectItem>
+                  );
+                })}
               </SelectGroup>
             </SelectContent>
           </Select>
