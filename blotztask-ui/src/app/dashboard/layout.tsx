@@ -11,7 +11,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           <SidebarTrigger />
 
           <main className="container mx-auto px-6 py-4 flex-1">{children}</main>
-          <main className="container mx-auto px-6 py-4 flex-1">{children}</main>
         </div>
       </SidebarProvider>
     </div>
