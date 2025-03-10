@@ -33,7 +33,6 @@ const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
-  const loadTasks = useTodayTaskStore((state) => state.loadTasks);
   const handleAddTask = useTodayTaskStore((state) => state.handleAddTask);
 
   const handleSignOut = (e) => {
@@ -66,7 +65,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
+              <SidebarMenuItem className="my-5 ml-5">
                 <AddTaskDialog handleAddTask={handleAddTask}>
                   <SidebarMenuButton>
                     <div
