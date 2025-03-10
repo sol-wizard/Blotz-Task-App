@@ -9,7 +9,7 @@ namespace BlotzTask.Models
     {
         public string Title { get; set; }
         public string Description { get; set; }
-        public DateOnly DueDate { get; set; }
+        public DateTimeOffset DueDate { get; set; }
         public int LabelId { get; set; }
     }
 }

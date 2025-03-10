@@ -8,7 +8,6 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
-import { format } from 'date-fns';
 import { taskFormSchema } from '../forms/task-form-schema';
 
 type FormField = z.infer<typeof taskFormSchema>;
@@ -28,7 +27,7 @@ const AddTaskForm = ({ onSubmit, datePickerRef, labelPickerRef, onCancel }) => {
     const taskDetails: AddTaskItemDTO = {
       title: data.title,
       description: data.description ?? '',
-      dueDate: data.date ? format(data.date, 'yyyy-MM-dd') : '',
+      dueDate: data.date.toLocaleString(),
       labelId: data.labelId ?? 0,
     };
     onSubmit(taskDetails);
