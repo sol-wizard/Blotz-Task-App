@@ -39,14 +39,11 @@ export const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
   },
 
   taskAction: async (action: () => Promise<unknown>) => {
-    set({ todayTasksIsLoading: true });
     try {
       await action();
       await get().loadTasks();
     } catch (error) {
       console.error('Error performing action:', error);
-    } finally {
-      set({ todayTasksIsLoading: false });
     }
   },
 
