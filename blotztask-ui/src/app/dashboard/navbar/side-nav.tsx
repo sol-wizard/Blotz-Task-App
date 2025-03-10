@@ -19,8 +19,6 @@ import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
 import { fetchAllLabel } from '@/services/labelService';
 import { useTodayTaskStore } from '../store/today-task-store';
-import { AddTaskItemDTO } from '@/model/add-task-item-dto';
-import { addTaskItem } from '@/services/taskService';
 import { cn } from '@/lib/utils';
 import AddTaskDialog from './components/add-task-dialog';
 
@@ -36,6 +34,7 @@ const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 export function AppSidebar() {
   const { data: session, status } = useSession();
   const loadTasks = useTodayTaskStore((state) => state.loadTasks);
+  const handleAddTask = useTodayTaskStore((state) => state.handleAddTask);
 
   const handleSignOut = (e) => {
     e.preventDefault();
@@ -57,14 +56,6 @@ export function AppSidebar() {
     }
   };
 
-  const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
-    try {
-      await addTaskItem(taskDetails);
-    } catch (error) {
-      console.error('Error performing action:', error);
-    }
-  };
-
   useEffect(() => {
     loadAllLabel();
   }, []);
@@ -76,7 +67,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <AddTaskDialog handleAddTask={handleAddTask} loadTasks={loadTasks}>
+                <AddTaskDialog handleAddTask={handleAddTask}>
                   <SidebarMenuButton>
                     <div
                       className={cn(
