@@ -14,6 +14,8 @@ import LoadingSpinner from '@/components/ui/loading-spinner';
 const SignUpPage = () => {
   const router = useRouter();
   const schema = z.object({
+    firstName: z.string(),
+    lastName: z.string(),
     email: z.string().email({ message: 'Invalid email address' }),
     password: z.string().min(9, { message: 'Password must be at least 9 characters' }),
   });
@@ -27,7 +29,7 @@ const SignUpPage = () => {
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = async (data: { email: string; password: string }) => {
+  const onSubmit = async (data: { firstName: string; lastName: string; email: string; password: string }) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/register`, {
         method: 'POST',
@@ -70,19 +72,35 @@ const SignUpPage = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-row gap-4 w-full">
             <div className="w-1/2">
-              <Input
-                type="text"
-                required
-                className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="First name"
+              <Controller
+                name="firstName"
+                control={control}
+                rules={{ required: 'First name is required' }}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="text"
+                    required
+                    className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="First name"
+                  />
+                )}
               />
             </div>
             <div className="w-1/2">
-              <Input
-                type="text"
-                required
-                className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Last name"
+              <Controller
+                name="lastName"
+                control={control}
+                rules={{ required: 'Last name is required' }}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    type="text"
+                    required
+                    className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Last name"
+                  />
+                )}
               />
             </div>
           </div>

@@ -5,15 +5,14 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex h-screen">
-       <SidebarProvider> 
+      <SidebarProvider>
         <AppSidebar />
         <div className="flex-1 flex flex-col">
           <SidebarTrigger />
-          <main className="container mx-auto px-6 py-4 flex-1">
-            {children}
-          </main>
+
+          <main className="container mx-auto px-6 py-4 flex-1">{children}</main>
         </div>
-      </SidebarProvider> 
+      </SidebarProvider>
     </div>
   );
 };
