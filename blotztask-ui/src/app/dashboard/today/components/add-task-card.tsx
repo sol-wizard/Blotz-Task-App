@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import AddTaskForm from './add-task-form';
+import AddTaskContainer from './add-task-container';
 import { PlusIcon } from '@radix-ui/react-icons';
 import useClickOutside from '@/utils/use-multiple-click-away';
 
@@ -24,7 +24,7 @@ const AddTaskCard = ({ onAddTask }) => {
             <span className="ml-3 text-gray-400 font-semibold text-lg">Add a task</span>
           </div>
         ) : (
-          <AddTaskForm
+          <AddTaskContainer
             onSubmit={(taskDetails) => {
               onAddTask(taskDetails);
               setIsFormVisible(false);
@@ -40,4 +40,3 @@ const AddTaskCard = ({ onAddTask }) => {
 };
 
 export default AddTaskCard;
-
