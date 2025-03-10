@@ -1,12 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import {
-  addTaskItem,
-  deleteTask,
-  editTask,
-  undoDeleteTask,
-} from '@/services/taskService';
+import { addTaskItem, deleteTask, editTask, undoDeleteTask } from '@/services/taskService';
 import { updateTaskStatus } from '@/services/taskService';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
@@ -19,7 +14,14 @@ import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
 import { useTodayTaskStore } from '../store/today-task-store';
 
 export default function Today() {
-  const { todayTasks, incompleteTodayTasks, completedTodayTasks, todayTasksIsLoading, loadTasks, setLoading } = useTodayTaskStore();
+  const {
+    todayTasks,
+    incompleteTodayTasks,
+    completedTodayTasks,
+    todayTasksIsLoading,
+    loadTasks,
+    setLoading,
+  } = useTodayTaskStore();
 
   useEffect(() => {
     loadTasks();
