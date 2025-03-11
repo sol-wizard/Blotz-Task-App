@@ -35,13 +35,6 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
 
 export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<TaskDetailDTO> => {
   try {
-    const dueDateUTC = new Date(addTaskForm.dueDate).toISOString();
-
-    const updatedTaskForm = {
-      ...addTaskForm,
-      dueDate: dueDateUTC,
-    };
-
     const result = await fetchWithAuth<TaskDetailDTO>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,
       {
