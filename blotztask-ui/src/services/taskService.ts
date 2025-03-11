@@ -39,15 +39,13 @@ export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<TaskDeta
       `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,
       {
         method: 'POST',
-body: JSON.stringify({
-          ...addTaskForm,
-          dueDate: new Date(addTaskForm.dueDate).toISOString(), // Direct conversion
-        }),```
-```suggestion
-        body: JSON.stringify(updatedTaskForm),
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          ...addTaskForm,
+          dueDate: new Date(addTaskForm.dueDate).toISOString(), // Direct conversion
+        }),
       }
     );
 
