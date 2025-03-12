@@ -30,7 +30,7 @@ const SearchBar = () => {
       className={`rounded-xl mt-4 max-h-60 border ${query ? 'border-gray-300' : 'border-transparent'}`}
       ref={commandRef}
     >
-      <CommandInput placeholder="Search a task..." onValueChange={(value) => setQuery(value)} />
+      <CommandInput placeholder="Search a task..." value={query} onValueChange={(value) => setQuery(value)} />
       <CommandList>
         {query.length > 1 && <CommandEmpty className="mx-20 my-5">No result found.</CommandEmpty>}
 
