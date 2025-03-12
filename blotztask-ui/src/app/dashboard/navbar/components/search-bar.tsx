@@ -1,6 +1,6 @@
 import { Command, CommandInput } from '@/components/ui/command';
 import useClickOutside from '@/utils/use-multiple-click-away';
-import { CommandEmpty, CommandGroup, CommandItem, CommandList } from 'cmdk';
+import { CommandEmpty, CommandItem, CommandList } from 'cmdk';
 import { useRef, useState } from 'react';
 const mockTasks = [
   { id: 1, title: 'Complete Assignment 1', isDone: true },
@@ -36,11 +36,12 @@ const SearchBar = () => {
 
         {filteredTasks &&
           filteredTasks.map((tasks) => (
-            <CommandGroup>
-              <CommandItem className="pl-5 py-3 text-gray-600 hover:bg-blue-500 hover:text-white rounded-lg">
-                {tasks.title}
-              </CommandItem>
-            </CommandGroup>
+            <CommandItem
+              key={tasks.id}
+              className="pl-5 py-3 text-gray-600 hover:bg-blue-500 hover:text-white rounded-lg"
+            >
+              {tasks.title}
+            </CommandItem>
           ))}
       </CommandList>
     </Command>
