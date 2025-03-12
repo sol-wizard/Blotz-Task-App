@@ -1,4 +1,4 @@
-import { Command, CommandInput, CommandSeparator } from '@/components/ui/command';
+import { Command, CommandInput } from '@/components/ui/command';
 import useClickOutside from '@/utils/use-multiple-click-away';
 import { CommandEmpty, CommandGroup, CommandItem, CommandList } from 'cmdk';
 import { useRef, useState } from 'react';
