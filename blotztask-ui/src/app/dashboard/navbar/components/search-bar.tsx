@@ -1,6 +1,7 @@
 import { Command, CommandInput, CommandSeparator } from '@/components/ui/command';
+import useClickOutside from '@/utils/use-multiple-click-away';
 import { CommandEmpty, CommandGroup, CommandItem, CommandList } from 'cmdk';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 const mockTasks = [
   { id: 1, title: 'Complete Assignment 1', isDone: true },
   { id: 2, title: 'Review Lecture Notes', isDone: false },
@@ -18,9 +19,17 @@ const filterTasks = (query) => {
 const SearchBar = () => {
   const [query, setQuery] = useState('');
   const filteredTasks = filterTasks(query);
+  const commandRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside([commandRef], () => {
+    setQuery('');
+  });
 
   return (
-    <Command className="rounded-lg border shadow-md mt-4">
+    <Command
+      className={`rounded-xl mt-4 max-h-60 border ${query ? 'border-gray-300' : 'border-transparent'}`}
+      ref={commandRef}
+    >
       <CommandInput placeholder="Search a task..." onValueChange={(value) => setQuery(value)} />
       <CommandList>
         {query.length > 1 && <CommandEmpty className="mx-20 my-5">No result found.</CommandEmpty>}
