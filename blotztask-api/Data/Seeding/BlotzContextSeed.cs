@@ -75,15 +75,22 @@ public static class BlotzContextSeed
 
     private static async Task SeedTasksForTodayAsync(BlotzTaskDbContext context, User user)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        bool hasTasksForToday = await context.TaskItems.AnyAsync(t => t.DueDate == today);
+        TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
+
+        DateTimeOffset localDayStart = new DateTimeOffset(DateTime.Now.Date, localTimeZone.GetUtcOffset(DateTime.Now));
+
+        DateTimeOffset localDayStartUtc = localDayStart.ToUniversalTime();
+        DateTimeOffset localDayEndUtc = localDayStartUtc.AddDays(1);
+
+        bool hasTasksForToday = await context.TaskItems
+            .AnyAsync(t => t.DueDate >= localDayStartUtc && t.DueDate < localDayEndUtc);
 
         if (hasTasksForToday)
         {
             Console.WriteLine("Tasks for today's date already exist. No seeding necessary.");
             return;
         }
-
+        
         var labelWork = await context.Labels.FirstOrDefaultAsync(l => l.Name == nameof(LabelType.Work));
         var labelPersonal = await context.Labels.FirstOrDefaultAsync(l => l.Name == nameof(LabelType.Personal));
 
@@ -98,7 +105,7 @@ public static class BlotzContextSeed
             {
                 Title = "Initial Task 1",
                 Description = "Description for Task 1",
-                DueDate = today,
+                DueDate = localDayStartUtc,
                 IsDone = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
@@ -109,7 +116,7 @@ public static class BlotzContextSeed
             {
                 Title = "Initial Task 2",
                 Description = "Description for Task 2",
-                DueDate = today,
+                DueDate = localDayStartUtc,
                 IsDone = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
