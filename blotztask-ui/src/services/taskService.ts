@@ -18,11 +18,10 @@ export const fetchAllTaskItems = async (): Promise<TaskDetailDTO[]> => {
 };
 
 export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
-  //Converting today's date to ISO String format
-  const date = new Date().toISOString().split('T')[0];
+  const startDateUTC = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
   const result = await fetchWithAuth<TaskDetailDTO[]>(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/due-date/${date}`,
+    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/due-date?startDateUTC=${encodeURIComponent(startDateUTC)}`,
     {
       method: 'GET',
       headers: {
@@ -40,10 +39,13 @@ export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<TaskDeta
       `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,
       {
         method: 'POST',
-        body: JSON.stringify(addTaskForm),
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          ...addTaskForm,
+          dueDate: new Date(addTaskForm.dueDate).toISOString(), // Direct conversion
+        }),
       }
     );
 

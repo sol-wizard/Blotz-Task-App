@@ -14,7 +14,6 @@ import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
 import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
-import { format } from 'date-fns';
 import DeleteTaskDialog from './delete-dialog-content';
 
 export default function TaskContent({
@@ -45,7 +44,7 @@ export default function TaskContent({
       description: data.description ?? '',
       isDone: task.isDone,
       labelId: data.labelId,
-      dueDate: format(new Date(data.date), 'yyyy-MM-dd'),
+      dueDate: task.dueDate.toLocaleString(),
     };
     onSubmit(editTaskDetails);
   };

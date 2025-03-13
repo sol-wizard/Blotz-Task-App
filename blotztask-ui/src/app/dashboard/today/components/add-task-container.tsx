@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormField } from '@/components/ui/form';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
-import { format } from 'date-fns';
 import { taskFormSchema } from '../forms/task-form-schema';
 import AddTaskForm from '../shared/add-task-form';
 
@@ -25,7 +24,7 @@ const AddTaskContainer = ({ onSubmit, datePickerRef, labelPickerRef, onCancel })
     const taskDetails: AddTaskItemDTO = {
       title: data.title,
       description: data.description ?? '',
-      dueDate: data.date ? format(data.date, 'yyyy-MM-dd') : '',
+      dueDate: data.date.toLocaleString(),
       labelId: data.labelId ?? 0,
     };
     onSubmit(taskDetails);
