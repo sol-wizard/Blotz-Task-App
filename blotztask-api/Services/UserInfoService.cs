@@ -8,6 +8,8 @@ namespace BlotzTask.Services;
 public interface IUserInfoService
 {
     public Task<UserInfoDTO> GetCurrentUserInfoAsync(string userId);
+
+    public Task<IdentityResult> RegisterUserAsync(RegisterRequestDTO request);
 }
 
 public class UserInfoService : IUserInfoService
@@ -47,6 +49,22 @@ public class UserInfoService : IUserInfoService
             throw;
         }
     }
+    public async Task<IdentityResult> RegisterUserAsync(RegisterRequestDTO request)
+    {
+        // Identity framework requires username to contain only letters and digits
+        string generatedUsername = $"{request.FirstName}{request.LastName}";
 
+        var user = new User
+        {
+            UserName = generatedUsername,
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName
+        };
+
+        var result = await _userManager.CreateAsync(user, request.Password);
+
+        return result.Succeeded ? IdentityResult.Success : IdentityResult.Failed(result.Errors.ToArray());
+    }
 }
 
