@@ -38,4 +38,22 @@ public class UserInfoController : ControllerBase
         }
         
     }
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Register([FromBody] RegisterRequestDTO request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        
+        var result = await _userInfoService.RegisterUserAsync(request);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(result.Errors);
+        }
+
+        return Ok(new { message = "User registered successfully." });
+    }
 }
