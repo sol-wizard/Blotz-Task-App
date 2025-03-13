@@ -1,6 +1,6 @@
 namespace BlotzTask.Models
 {
-    public class RegisterRequest
+    public class RegisterRequestDTO
     {
     public string FirstName { get; set; }
     public string LastName { get; set; }
