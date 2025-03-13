@@ -31,7 +31,7 @@ const SignUpPage = () => {
 
   const onSubmit = async (data: { firstName: string; lastName: string; email: string; password: string }) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/register`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/userinfo/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
