@@ -127,9 +127,10 @@ export default function TaskContent({
                 {!isEditing && !task.isDone && (
                   <div className="justify-end hidden ml-4 w-32 group-hover:flex">
                     <button className="px-4" onClick={handleEditState}>
-                      <Pencil className="text-primary" size={20} />
+                      {/* Make changes right here, this is the edit button */}
+                      <Pencil className="text-primary hover:bg-[#DEE6FF]" size={20} />
                     </button>
-
+                    {/* This is the delete button */}
                     <DeleteTaskDialog
                       task={task}
                       onDelete={onDelete}
