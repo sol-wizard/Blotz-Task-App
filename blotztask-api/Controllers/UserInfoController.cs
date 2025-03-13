@@ -40,7 +40,7 @@ public class UserInfoController : ControllerBase
     }
     [HttpPost("register")]
     [AllowAnonymous]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    public async Task<IActionResult> Register([FromBody] RegisterRequestDTO request)
     {
         if (!ModelState.IsValid)
         {

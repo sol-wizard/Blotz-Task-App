@@ -9,7 +9,7 @@ public interface IUserInfoService
 {
     public Task<UserInfoDTO> GetCurrentUserInfoAsync(string userId);
 
-    public Task<IdentityResult> RegisterUserAsync(RegisterRequest request);
+    public Task<IdentityResult> RegisterUserAsync(RegisterRequestDTO request);
 }
 
 public class UserInfoService : IUserInfoService
@@ -49,7 +49,7 @@ public class UserInfoService : IUserInfoService
             throw;
         }
     }
-    public async Task<IdentityResult> RegisterUserAsync(RegisterRequest request)
+    public async Task<IdentityResult> RegisterUserAsync(RegisterRequestDTO request)
     {
         // Identity framework requires username to contain only letters and digits
         string generatedUsername = $"{request.FirstName}{request.LastName}";
