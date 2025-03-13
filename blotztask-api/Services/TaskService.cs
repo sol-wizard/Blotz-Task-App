@@ -14,7 +14,7 @@ public interface ITaskService
     public Task<ResponseWrapper<int>> DeleteTaskByIDAsync(int Id);
     public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId);
     public Task<TaskStatusResultDTO> TaskStatusUpdate(int id, bool? isDone = null);
-    public Task<List<TaskItemDTO>> GetTaskByDate(DateOnly date, string userId);
+    public Task<List<TaskItemDTO>> GetTaskByDate(DateTime startDateUTC, DateTime endDateUTC, string userId);
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
 }
@@ -219,12 +219,13 @@ public class TaskService : ITaskService
         
     }
 
-    public async Task<List<TaskItemDTO>> GetTaskByDate(DateOnly date, string userId)
+    public async Task<List<TaskItemDTO>> GetTaskByDate(DateTime startDateUTC, DateTime endDateUTC, string userId)
     {
         try
         {
             return await _dbContext.TaskItems
-                .Where(task => task.DueDate == date && task.UserId == userId)
+                .Where(task => task.UserId == userId)
+                .Where(task => task.DueDate >= startDateUTC && task.DueDate < endDateUTC)
                 .Select(task => new TaskItemDTO
                 {
                     Id = task.Id,
@@ -232,7 +233,12 @@ public class TaskService : ITaskService
                     Description = task.Description,
                     DueDate = task.DueDate,
                     IsDone = task.IsDone,
-                    Label = new LabelDTO { LabelId = task.Label.LabelId, Name = task.Label.Name, Color = task.Label.Color }
+                    Label = new LabelDTO 
+                    { 
+                        LabelId = task.Label.LabelId, 
+                        Name = task.Label.Name, 
+                        Color = task.Label.Color 
+                    }
                 })
                 .ToListAsync();
         }
