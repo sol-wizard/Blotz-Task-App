@@ -26,8 +26,8 @@ const DeleteTaskDialog = ({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <button>
-          <Trash2 className="text-primary hover:bg-[#DEE6FF]" size={20} />
+        <button className="p-0.5 hover:bg-[#DEE6FF] rounded-md">
+          <Trash2 className="text-primary" size={20} />
         </button>
       </AlertDialogTrigger>
       <AlertDialogContent>
