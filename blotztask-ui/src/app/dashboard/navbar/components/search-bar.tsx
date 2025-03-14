@@ -2,6 +2,7 @@ import { Command, CommandInput } from '@/components/ui/command';
 import useClickOutside from '@/utils/use-multiple-click-away';
 import { CommandEmpty, CommandItem, CommandList } from 'cmdk';
 import { useRef, useState } from 'react';
+import { useSearchTaskStore } from '../../store/search-task-store';
 const mockTasks = [
   { id: 1, title: 'Complete Assignment 1', isDone: true },
   { id: 2, title: 'Review Lecture Notes', isDone: false },
@@ -17,7 +18,7 @@ const filterTasks = (query) => {
 };
 
 const SearchBar = () => {
-  const [query, setQuery] = useState('');
+  const { query, setQuery } = useSearchTaskStore();
   const filteredTasks = filterTasks(query);
   const commandRef = useRef<HTMLDivElement>(null);
 
@@ -30,7 +31,7 @@ const SearchBar = () => {
       className={`rounded-xl mt-4 max-h-60 border ${query ? 'border-gray-300' : 'border-transparent'}`}
       ref={commandRef}
     >
-      <CommandInput placeholder="Search a task..." value={query} onValueChange={(value) => setQuery(value)} />
+      <CommandInput placeholder="Search a task..." value={query} onValueChange={setQuery} />
       <CommandList>
         {query.length > 1 && <CommandEmpty className="mx-20 my-5">No result found.</CommandEmpty>}
 
