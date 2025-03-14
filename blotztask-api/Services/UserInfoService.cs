@@ -51,12 +51,10 @@ public class UserInfoService : IUserInfoService
     }
     public async Task<IdentityResult> RegisterUserAsync(RegisterRequestDTO request)
     {
-        // Identity framework requires username to contain only letters and digits
-        string generatedUsername = $"{request.FirstName}{request.LastName}";
 
         var user = new User
         {
-            UserName = generatedUsername,
+            UserName = request.Email,
             Email = request.Email,
             FirstName = request.FirstName,
             LastName = request.LastName
