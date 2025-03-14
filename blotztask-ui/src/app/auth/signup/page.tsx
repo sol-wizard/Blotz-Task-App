@@ -40,8 +40,8 @@ const SignUpPage = () => {
       if (!response.ok) {
         const errorData = await response.json();
 
-        const errorMessages = errorData.errors
-          ? Object.values(errorData.errors).flat().join('\n')
+        const errorMessages = Array.isArray(errorData)
+          ? errorData.map((error) => error.description).join('\n')
           : errorData.message || 'Registration failed.';
 
         throw new BadRequestError(errorMessages);
