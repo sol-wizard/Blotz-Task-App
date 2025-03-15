@@ -36,6 +36,8 @@ public static class BlotzContextSeed
     {
         var defaultUser = new User
         {
+            FirstName = "Blotz",
+            LastName = "Test",
             UserName = "blotztest1@gmail.com",
             Email = "blotztest1@gmail.com",
             EmailConfirmed = true,
