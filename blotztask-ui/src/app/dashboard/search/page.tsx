@@ -44,7 +44,7 @@ export default function Page() {
         </div>
       ))}
 
-      {!filteredTasks && <p>No matching task found</p>}
+      {filteredTasks.length === 0 && <p>No matching task found</p>}
     </div>
   );
 }
