@@ -21,6 +21,8 @@ import { fetchAllLabel } from '@/services/labelService';
 import { useTodayTaskStore } from '../store/today-task-store';
 import { cn } from '@/lib/utils';
 import AddTaskDialog from './components/add-task-dialog';
+import SearchBar from './components/search-bar';
+import Link from 'next/dist/client/link';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -64,8 +66,14 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem className="my-5 ml-5">
+            <SidebarMenu className="relative">
+              <SidebarMenuItem className="absolute z-10 w-full">
+                <Link href="search">
+                  <SearchBar />
+                </Link>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem className="mt-[80px] mb-5 ml-5">
                 <AddTaskDialog handleAddTask={handleAddTask}>
                   <SidebarMenuButton>
                     <div
