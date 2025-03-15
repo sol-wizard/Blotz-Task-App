@@ -33,14 +33,18 @@ export default function Page() {
     <div ref={ref} className="min-h-screen">
       <SearchTitle />
       {filteredTasks.map((task) => (
-        <TaskCard
-          task={task}
-          handleCheckboxChange={handleCheckboxChange}
-          handleTaskDelete={handleTaskDelete}
-          handleTaskDeleteUndo={handleTaskDeleteUndo}
-          handleTaskEdit={handleTaskEdit}
-        ></TaskCard>
+        <div key={task.id}>
+          <TaskCard
+            task={task}
+            handleCheckboxChange={handleCheckboxChange}
+            handleTaskDelete={handleTaskDelete}
+            handleTaskDeleteUndo={handleTaskDeleteUndo}
+            handleTaskEdit={handleTaskEdit}
+          ></TaskCard>
+        </div>
       ))}
+
+      {!filteredTasks && <p>No matching task found</p>}
     </div>
   );
 }
