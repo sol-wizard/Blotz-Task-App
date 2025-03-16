@@ -14,8 +14,6 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using Swashbuckle.AspNetCore.Filters;
-using Azure;
-using Azure.AI.Inference;
 
 var builder = WebApplication.CreateBuilder(args);
 
