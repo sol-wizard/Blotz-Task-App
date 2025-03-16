@@ -147,10 +147,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
 app.UseCors("AllowSpecificOrigin");
 app.UseAuthorization();
 
+//TODO : Temporary disable authorization for testing open AI endpoint
 app.MapSwagger();
 app.MapControllers();
 
