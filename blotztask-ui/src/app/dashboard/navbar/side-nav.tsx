@@ -22,7 +22,6 @@ import { useTodayTaskStore } from '../store/today-task-store';
 import { cn } from '@/lib/utils';
 import AddTaskDialog from './components/add-task-dialog';
 import SearchBar from './components/search-bar';
-import Link from 'next/dist/client/link';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
