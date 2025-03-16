@@ -67,13 +67,13 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="relative">
-              <SidebarMenuItem className="absolute z-10 w-full">
+              <SidebarMenuItem className="w-full">
                 <Link href="search">
                   <SearchBar />
                 </Link>
               </SidebarMenuItem>
 
-              <SidebarMenuItem className="mt-[80px] mb-5 ml-5">
+              <SidebarMenuItem>
                 <AddTaskDialog handleAddTask={handleAddTask}>
                   <SidebarMenuButton>
                     <div
@@ -93,7 +93,7 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url} className="flex items-center ml-2 px-4 py-3 w-full hover:bg-white">
+                    <a href={item.url} className="flex items-center px-3 py-3 w-full hover:bg-white">
                       <item.icon />
                       <span className="pl-3 text-base">{item.title}</span>
                     </a>
