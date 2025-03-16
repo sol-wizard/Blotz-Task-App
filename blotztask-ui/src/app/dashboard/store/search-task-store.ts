@@ -7,14 +7,12 @@ type SearchTaskStore = {
   mockTasks: TaskDetailDTO[];
   filterTasks: () => TaskDetailDTO[];
   filteredTasks: TaskDetailDTO[];
-  searchPageRef: React.RefObject<HTMLDivElement> | null;
   selectTasks: (taskId: number) => void;
 };
 
 export const useSearchTaskStore = create<SearchTaskStore>((set, get) => ({
   query: '',
   setQuery: (query) => set({ query }),
-  searchPageRef: null,
   filteredTasks: [],
 
   mockTasks: [

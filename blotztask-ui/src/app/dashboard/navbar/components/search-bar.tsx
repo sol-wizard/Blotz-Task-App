@@ -1,22 +1,13 @@
 import { Command, CommandInput } from '@/components/ui/command';
-import useClickOutside from '@/utils/use-multiple-click-away';
 import { CommandEmpty, CommandItem, CommandList } from 'cmdk';
-import { useRef } from 'react';
 import { useSearchTaskStore } from '../../store/search-task-store';
 
 const SearchBar = () => {
-  const { query, setQuery, filteredTasks, searchPageRef, filterTasks, selectTasks } = useSearchTaskStore();
-
-  const commandRef = useRef<HTMLDivElement>(null);
-
-  useClickOutside([commandRef, searchPageRef], () => {
-    setQuery('');
-  });
+  const { query, setQuery, filteredTasks, filterTasks, selectTasks } = useSearchTaskStore();
 
   return (
     <Command
       className={`rounded-xl mt-4 max-h-60 border ${query ? 'border-gray-300' : 'border-transparent'}`}
-      ref={commandRef}
     >
       <CommandInput
         placeholder="Search a task..."

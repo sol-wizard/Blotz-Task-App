@@ -1,13 +1,9 @@
 'use client';
 import SearchTitle from './components/search-title';
 import { useSearchTaskStore } from '../store/search-task-store';
-import { useEffect, useRef } from 'react';
 import TaskCard from '../today/components/task-card';
 
 export default function Page() {
-  const ref = useRef<HTMLDivElement>(null);
-  const setStore = useSearchTaskStore.setState;
-
   const { filteredTasks } = useSearchTaskStore();
 
   const handleCheckboxChange = () => {
@@ -25,12 +21,8 @@ export default function Page() {
     console.log('Task edited successfully!');
   };
 
-  useEffect(() => {
-    setStore({ searchPageRef: ref });
-  }, [setStore]);
-
   return (
-    <div ref={ref} className="min-h-screen">
+    <div className="min-h-screen">
       <SearchTitle />
       {filteredTasks.map((task) => (
         <div key={task.id}>
