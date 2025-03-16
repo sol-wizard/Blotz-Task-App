@@ -4,7 +4,7 @@ import { useSearchTaskStore } from '../store/search-task-store';
 import TaskCard from '../today/components/task-card';
 
 export default function Page() {
-  const { filteredTasks } = useSearchTaskStore();
+  const { query, filteredTasks } = useSearchTaskStore();
 
   const handleCheckboxChange = () => {
     console.log('Checkbox changed!');
@@ -24,19 +24,20 @@ export default function Page() {
   return (
     <div className="min-h-screen">
       <SearchTitle />
-      {filteredTasks.map((task) => (
-        <div key={task.id}>
-          <TaskCard
-            task={task}
-            handleCheckboxChange={handleCheckboxChange}
-            handleTaskDelete={handleTaskDelete}
-            handleTaskDeleteUndo={handleTaskDeleteUndo}
-            handleTaskEdit={handleTaskEdit}
-          ></TaskCard>
-        </div>
-      ))}
+      {query.length > 0 &&
+        filteredTasks.map((task) => (
+          <div key={task.id}>
+            <TaskCard
+              task={task}
+              handleCheckboxChange={handleCheckboxChange}
+              handleTaskDelete={handleTaskDelete}
+              handleTaskDeleteUndo={handleTaskDeleteUndo}
+              handleTaskEdit={handleTaskEdit}
+            ></TaskCard>
+          </div>
+        ))}
 
-      {filteredTasks.length === 0 && <p>No matching task found</p>}
+      {(filteredTasks.length === 0 || query.length === 0) && <p>No matching task found</p>}
     </div>
   );
 }
