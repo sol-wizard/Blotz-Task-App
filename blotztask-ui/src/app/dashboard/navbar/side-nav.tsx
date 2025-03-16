@@ -68,9 +68,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="relative">
               <SidebarMenuItem className="w-full">
-                <Link href="search">
-                  <SearchBar />
-                </Link>
+                <SearchBar />
               </SidebarMenuItem>
 
               <SidebarMenuItem>

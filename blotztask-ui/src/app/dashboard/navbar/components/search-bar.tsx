@@ -1,9 +1,18 @@
 import { Command, CommandInput } from '@/components/ui/command';
 import { CommandEmpty, CommandItem, CommandList } from 'cmdk';
 import { useSearchTaskStore } from '../../store/search-task-store';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 const SearchBar = () => {
   const { query, setQuery, filteredTasks, filterTasks, selectTasks } = useSearchTaskStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (query.length > 0) {
+      router.push('/dashboard/search');
+    }
+  }, [query]);
 
   return (
     <Command
