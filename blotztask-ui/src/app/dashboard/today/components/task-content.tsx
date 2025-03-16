@@ -14,7 +14,6 @@ import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
 import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
-import { format } from 'date-fns';
 import DeleteTaskDialog from './delete-dialog-content';
 
 export default function TaskContent({
@@ -45,7 +44,7 @@ export default function TaskContent({
       description: data.description ?? '',
       isDone: task.isDone,
       labelId: data.labelId,
-      dueDate: format(new Date(data.date), 'yyyy-MM-dd'),
+      dueDate: task.dueDate.toLocaleString(),
     };
     onSubmit(editTaskDetails);
   };
@@ -127,10 +126,9 @@ export default function TaskContent({
 
                 {!isEditing && !task.isDone && (
                   <div className="justify-end hidden ml-4 w-32 group-hover:flex">
-                    <button className="px-4" onClick={handleEditState}>
+                    <button className="mx-2.5 p-0.5 hover:bg-[#DEE6FF] rounded-md" onClick={handleEditState}>
                       <Pencil className="text-primary" size={20} />
                     </button>
-
                     <DeleteTaskDialog
                       task={task}
                       onDelete={onDelete}

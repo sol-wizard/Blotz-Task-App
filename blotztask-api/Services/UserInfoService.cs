@@ -8,6 +8,8 @@ namespace BlotzTask.Services;
 public interface IUserInfoService
 {
     public Task<UserInfoDTO> GetCurrentUserInfoAsync(string userId);
+
+    public Task<IdentityResult> RegisterUserAsync(RegisterRequestDTO request);
 }
 
 public class UserInfoService : IUserInfoService
@@ -47,6 +49,20 @@ public class UserInfoService : IUserInfoService
             throw;
         }
     }
+    public async Task<IdentityResult> RegisterUserAsync(RegisterRequestDTO request)
+    {
 
+        var user = new User
+        {
+            UserName = request.Email,
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName
+        };
+
+        var result = await _userManager.CreateAsync(user, request.Password);
+
+        return result.Succeeded ? IdentityResult.Success : IdentityResult.Failed(result.Errors.ToArray());
+    }
 }
 

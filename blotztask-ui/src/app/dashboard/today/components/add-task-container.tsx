@@ -4,7 +4,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormField } from '@/components/ui/form';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
-import { format } from 'date-fns';
 import { taskFormSchema } from '../forms/task-form-schema';
 import AddTaskForm from '../shared/add-task-form';
 
@@ -25,7 +24,7 @@ const AddTaskContainer = ({ onSubmit, datePickerRef, labelPickerRef, onCancel })
     const taskDetails: AddTaskItemDTO = {
       title: data.title,
       description: data.description ?? '',
-      dueDate: data.date ? format(data.date, 'yyyy-MM-dd') : '',
+      dueDate: data.date.toLocaleString(),
       labelId: data.labelId ?? 0,
     };
     onSubmit(taskDetails);
@@ -38,13 +37,13 @@ const AddTaskContainer = ({ onSubmit, datePickerRef, labelPickerRef, onCancel })
           <AddTaskForm form={form} datePickerRef={datePickerRef} labelPickerRef={labelPickerRef} />
           <div className="flex flex-row h-8 ml-4 mt-20">
             <button
-              className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20"
+              className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20 hover:bg-gray-100"
               type="button"
               onClick={onCancel}
             >
               Cancel
             </button>
-            <button type="submit" className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20">
+            <button type="submit" className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20 hover:bg-blue-600">
               Save
             </button>
           </div>

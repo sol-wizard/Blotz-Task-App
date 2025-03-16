@@ -31,7 +31,7 @@ const SignUpPage = () => {
 
   const onSubmit = async (data: { firstName: string; lastName: string; email: string; password: string }) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/register`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/userinfo/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -40,8 +40,8 @@ const SignUpPage = () => {
       if (!response.ok) {
         const errorData = await response.json();
 
-        const errorMessages = errorData.errors
-          ? Object.values(errorData.errors).flat().join('\n')
+        const errorMessages = Array.isArray(errorData)
+          ? errorData.map((error) => error.description).join('\n')
           : errorData.message || 'Registration failed.';
 
         throw new BadRequestError(errorMessages);
