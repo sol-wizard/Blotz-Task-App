@@ -36,7 +36,7 @@ export const useSearchTaskStore = create<SearchTaskStore>((set, get) => ({
     },
     {
       id: 3,
-      title: 'Gym workout',
+      title: 'Compz project report',
       description: 'Leg day at the gym',
       isDone: true,
       label: { labelId: 4, name: 'Health', color: '#33FF57' },
