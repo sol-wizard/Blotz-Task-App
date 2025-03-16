@@ -45,7 +45,6 @@ builder.Services.AddIdentityCore<User>()
 builder.Services.AddScoped<IUserInfoService, UserInfoService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ILabelService, LabelService>();
-builder.Services.AddSingleton<AzureOpenAIService>();
 
 builder.Services.AddIdentityApiEndpoints<User>()
     .AddRoles<IdentityRole>()
@@ -80,8 +79,13 @@ if (builder.Environment.IsProduction())
     builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultKeyVaultSecretManager());
 
     var client = new SecretClient(new Uri(keyVaultEndpoint), new DefaultAzureCredential());
+    
+    builder.Services.AddSingleton(client);
+
     builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(client.GetSecret("db-string-connection").Value.Value.ToString()));
 }
+
+builder.Services.AddSingleton<AzureOpenAIService>();
 
 builder.Services.AddOpenTelemetry().UseAzureMonitor(options => {
     var connectionString = builder.Configuration.GetSection("ApplicationInsights:ConnectionString").Value;
