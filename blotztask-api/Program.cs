@@ -8,14 +8,14 @@ using BlotzTask.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Azure.KeyVault;
-using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using Swashbuckle.AspNetCore.Filters;
+using Azure;
+using Azure.AI.Inference;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,7 +45,7 @@ builder.Services.AddIdentityCore<User>()
 builder.Services.AddScoped<IUserInfoService, UserInfoService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ILabelService, LabelService>();
-
+builder.Services.AddSingleton<AzureOpenAIService>();
 
 builder.Services.AddIdentityApiEndpoints<User>()
     .AddRoles<IdentityRole>()
@@ -149,7 +149,7 @@ app.UseHttpsRedirection();
 app.UseCors("AllowSpecificOrigin");
 app.UseAuthorization();
 
-app.MapSwagger().RequireAuthorization();
-app.MapControllers().RequireAuthorization();
+app.MapSwagger();
+app.MapControllers();
 
 app.Run();
