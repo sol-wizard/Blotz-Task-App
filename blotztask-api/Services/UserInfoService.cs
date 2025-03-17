@@ -40,6 +40,8 @@ public class UserInfoService : IUserInfoService
             {   
                 // Username and Email can be empty in database.
                 Username = user.UserName?? string.Empty,
+                Firstname = user.FirstName ?? string.Empty,
+                Lastname = user.LastName ?? string.Empty,
                 Email = user.Email?? string.Empty,
                 Message = "Successfully get current user info"
             };
