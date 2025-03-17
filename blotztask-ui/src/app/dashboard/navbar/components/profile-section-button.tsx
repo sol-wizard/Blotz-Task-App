@@ -12,7 +12,7 @@ export function ProfileSectionButton({ session, onSignOut }) {
   const loadUserInfo = async () => {
     const result = await fetchCurrentUserInfo();
     setUserInfo({
-      name: result.data.username,
+      name: `${result.data.firstname} ${result.data.lastname}`,
       email: result.data.email,
       avatar: '../../../assets/images/profileImage.png',
     });
