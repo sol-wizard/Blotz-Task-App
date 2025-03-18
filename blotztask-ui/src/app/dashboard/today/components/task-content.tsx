@@ -15,6 +15,8 @@ import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
 import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
 import DeleteTaskDialog from './delete-dialog-content';
+import { TimeInput } from '../shared/time-input';
+import moment from 'moment';
 
 export default function TaskContent({
   task,
@@ -34,6 +36,7 @@ export default function TaskContent({
       description: task.description,
       date: new Date(task.dueDate),
       labelId: task.label.labelId,
+      time: null,
     },
   });
 
@@ -143,6 +146,7 @@ export default function TaskContent({
                   <div className="flex flex-row items-center">
                     <CalendarForm control={form.control} task={task} />
                     <LabelSelect control={form.control} />
+                    <TimeInput control={form.control} />
                   </div>
                   <div className="flex flex-row ">
                     <button
