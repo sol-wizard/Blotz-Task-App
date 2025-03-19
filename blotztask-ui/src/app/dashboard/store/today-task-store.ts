@@ -26,13 +26,12 @@ export const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
     set({ todayTasksIsLoading: true });
     try {
       const data = await fetchTaskItemsDueToday();
-      console.log('Fetched data:', data);
+
       set({
         todayTasks: data,
         incompleteTodayTasks: data.filter((task) => !task.isDone),
         completedTodayTasks: data.filter((task) => task.isDone),
       });
-      console.log('incompleteTodayTasks', get().incompleteTodayTasks);
     } catch (error) {
       console.error('Error loading tasks:', error);
     } finally {

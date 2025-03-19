@@ -35,7 +35,7 @@ export default function TaskContent({
       description: task.description,
       date: new Date(task.dueDate),
       labelId: task.label.labelId,
-      time: null,
+      time: undefined,
     },
   });
 
@@ -145,7 +145,7 @@ export default function TaskContent({
                   <div className="flex flex-row items-center">
                     <CalendarForm control={form.control} task={task} />
                     <LabelSelect control={form.control} />
-                    <TimePicker />
+                    <TimePicker control={form.control} />
                   </div>
                   <div className="flex flex-row ">
                     <button
