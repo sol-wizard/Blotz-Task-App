@@ -21,6 +21,7 @@ import { fetchAllLabel } from '@/services/labelService';
 import { useTodayTaskStore } from '../store/today-task-store';
 import { cn } from '@/lib/utils';
 import AddTaskDialog from './components/add-task-dialog';
+import SearchBar from './components/search-bar';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -64,8 +65,12 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem className="my-5 ml-5">
+            <SidebarMenu className="relative">
+              <SidebarMenuItem className="w-full">
+                <SearchBar />
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
                 <AddTaskDialog handleAddTask={handleAddTask}>
                   <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100">
                     <div
@@ -85,7 +90,9 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
+
                     <a href={item.url} className="flex items-center ml-2 px-4 py-3 w-full hover:bg-blue-100">
+
                       <item.icon />
                       <span className="pl-3 text-base">{item.title}</span>
                     </a>
