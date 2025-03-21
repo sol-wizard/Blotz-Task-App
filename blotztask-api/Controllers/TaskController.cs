@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BlotzTask.Models;
 using BlotzTask.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -123,6 +124,13 @@ namespace BlotzTask.Controllers
                 return BadRequest(result);
             }
             return Ok(result);
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchTasks([FromQuery, Required] string query)
+        {
+            var tasks = await _taskService.SearchTasksAsync(query);
+            return Ok(tasks);
         }
     }
 }
