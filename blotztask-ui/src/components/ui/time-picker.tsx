@@ -64,7 +64,7 @@ export default function TimePicker({ control }: { control: Control }) {
                           setTempValue(time);
                           setOpen(false);
                         }}
-                        className="font-normal"
+                        className="font-normal text-xs m-0"
                       >
                         {time}
                       </CommandItem>
