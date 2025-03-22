@@ -26,6 +26,7 @@ export const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
     set({ todayTasksIsLoading: true });
     try {
       const data = await fetchTaskItemsDueToday();
+
       set({
         todayTasks: data,
         incompleteTodayTasks: data.filter((task) => !task.isDone),
