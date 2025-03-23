@@ -1,6 +1,6 @@
 'use client';
 
-import { ListChecks, Home, ClipboardCheck, Plus } from 'lucide-react';
+import { ListChecks, Home, ClipboardCheck, Plus, CalendarCheck } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -26,6 +26,7 @@ import SearchBar from './components/search-bar';
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
   { title: 'Today', url: 'today', icon: ClipboardCheck },
+  { title: 'Schedule', url: 'schedule', icon: CalendarCheck },
 ];
 
 const guestItems = [{ title: 'Home', url: '/home', icon: Home }];
