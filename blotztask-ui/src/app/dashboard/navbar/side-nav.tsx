@@ -103,7 +103,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="text-lg font-semibold mb-2">Task Categories</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className='px-2'>
               <Categories labels={labels} />
             </SidebarMenu>
           </SidebarGroupContent>
