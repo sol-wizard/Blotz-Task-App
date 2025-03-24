@@ -2,6 +2,7 @@
 import SearchTitle from './components/search-title';
 import { useSearchTaskStore } from '../store/search-task-store';
 import TaskCard from '../today/components/task-card';
+import { Frown } from 'lucide-react';
 
 export default function Page() {
   const { query, filteredTasks } = useSearchTaskStore();
@@ -37,7 +38,12 @@ export default function Page() {
           </div>
         ))}
 
-      {(filteredTasks.length === 0 || query.length === 0) && <p>No matching task found</p>}
+      {(filteredTasks.length === 0 || query.length === 0) && 
+      <div>
+      <Frown/>
+        <p>No matching task found</p>
+        </div>
+        }
     </div>
   );
 }
