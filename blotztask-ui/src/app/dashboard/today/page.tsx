@@ -21,6 +21,8 @@ export default function Today() {
     todayTasksIsLoading,
     loadTasks,
     setLoading,
+    handleCheckboxChange,
+    handleAddTask,
   } = useTodayTaskStore();
 
   useEffect(() => {
@@ -38,14 +40,6 @@ export default function Today() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCheckboxChange = async (taskId: number) => {
-    handleAction(() => updateTaskStatus(taskId));
-  };
-
-  const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
-    handleAction(() => addTaskItem(taskDetails));
   };
 
   const handleTaskEdit = async (updatedTask: EditTaskItemDTO) => {
