@@ -28,16 +28,14 @@ export default function Page() {
         filteredTasks
           .filter((task) => task !== null && task !== undefined)
           .map((task) => (
-            <div>
-              <TaskCard
-                key={task.id}
-                task={task}
-                handleCheckboxChange={handleCheckboxChange}
-                handleTaskDelete={handleTaskDelete}
-                handleTaskDeleteUndo={handleTaskDeleteUndo}
-                handleTaskEdit={handleTaskEdit}
-              ></TaskCard>
-            </div>
+            <TaskCard
+              key={task.id}
+              task={task}
+              handleCheckboxChange={handleCheckboxChange}
+              handleTaskDelete={handleTaskDelete}
+              handleTaskDeleteUndo={handleTaskDeleteUndo}
+              handleTaskEdit={handleTaskEdit}
+            ></TaskCard>
           ))}
 
       {(filteredTasks.length === 0 || query.length === 0) && <p>No matching task found</p>}
