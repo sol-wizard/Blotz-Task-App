@@ -23,8 +23,6 @@ export const useScheduleTaskStore = create<ScheduleTaskStore>((set, get) => ({
     const data = await fetchAllTaskItems();
     const today = startOfDay(new Date());
     const tomorrow = addDays(today, 1);
-    console.log('Today is:', today);
-    console.log('Tomorrow is:', tomorrow);
     set({ allTasks: data.filter((task) => !task.isDone) });
     const { allTasks } = get();
     set({ todayTasks: allTasks.filter((task) => isSameDay(new Date(task.dueDate), today)) });
