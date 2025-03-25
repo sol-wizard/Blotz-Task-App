@@ -15,12 +15,7 @@ const SearchBar = () => {
       router.push('/dashboard/search');
     } else {
       const prev = localStorage.getItem('previousPage');
-      if (prev) {
-        router.push(prev);
-        localStorage.removeItem('previousPage');
-      } else {
-        router.push('/dashboard');
-      }
+      router.push(prev);
       localStorage.removeItem('previousPage');
     }
   }, [query]);
