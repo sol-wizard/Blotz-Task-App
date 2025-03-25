@@ -4,6 +4,7 @@ import { useScheduleTaskStore } from '../store/schedule-task-store';
 import AddTaskCard from '../today/components/add-task-card';
 import ScheduleHeader from './components/schedule-header';
 import TaskCard from '../today/components/task-card';
+import { format } from 'date-fns';
 
 export default function Schedule() {
   const { todayTasks, tomorrowTasks, weekTasks, monthTasks, loadAllTasks } = useScheduleTaskStore();
@@ -38,7 +39,7 @@ export default function Schedule() {
       <div>
         {todayTasks.length !== 0 && (
           <div>
-            <p>Today</p>
+            <p className="my-5">Today</p>
 
             {todayTasks.map((task) => {
               return (
@@ -59,7 +60,7 @@ export default function Schedule() {
       <div>
         {tomorrowTasks.length !== 0 && (
           <div>
-            <p>Tomorrow</p>
+            <p className="my-5">Tomorrow</p>
 
             {tomorrowTasks.map((task) => {
               return (
@@ -80,7 +81,7 @@ export default function Schedule() {
       <div>
         {weekTasks.length !== 0 && (
           <div>
-            <p>This Week</p>
+            <p className="my-5">This Week</p>
 
             {weekTasks.map((task) => {
               return (
@@ -101,7 +102,7 @@ export default function Schedule() {
       <div>
         {monthTasks.length !== 0 && (
           <div>
-            <p>This month</p>
+            <p className="my-5">{format(new Date(), 'MMMM')}</p>
 
             {monthTasks.map((task) => {
               return (
