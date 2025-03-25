@@ -1,4 +1,4 @@
-import { fetchAllTaskItems, fetchTaskItemsDueToday } from '@/services/taskService';
+import { fetchAllTaskItems } from '@/services/taskService';
 import { TaskDetailDTO } from '../task-list/models/task-detail-dto';
 import { create } from 'zustand';
 import { addDays, isSameDay, isThisMonth, isThisWeek, startOfDay } from 'date-fns';
