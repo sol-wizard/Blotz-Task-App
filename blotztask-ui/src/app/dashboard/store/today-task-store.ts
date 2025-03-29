@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
-import { addTaskItem, fetchTaskItemsDueToday } from '@/services/taskService';
+import { addTaskItem, fetchTaskItemsDueToday, updateTaskStatus } from '@/services/taskService';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 
 type TodayTaskStore = {
@@ -12,6 +12,7 @@ type TodayTaskStore = {
   setLoading: (value: boolean) => void;
   taskAction: (action: () => Promise<unknown>) => void;
   handleAddTask: (taskDetails: AddTaskItemDTO) => void;
+  handleCheckboxChange: (taskId: number) => void;
 };
 
 export const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
@@ -50,5 +51,10 @@ export const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
   handleAddTask: async (taskDetails: AddTaskItemDTO) => {
     const taskAction = get().taskAction;
     await taskAction(() => addTaskItem(taskDetails));
+  },
+
+  handleCheckboxChange: async (taskId: number) => {
+    const taskAction = get().taskAction;
+    await taskAction(() => updateTaskStatus(taskId));
   },
 }));

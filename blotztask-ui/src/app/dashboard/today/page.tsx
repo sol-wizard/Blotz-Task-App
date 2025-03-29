@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-import { addTaskItem, deleteTask, editTask, undoDeleteTask } from '@/services/taskService';
-import { updateTaskStatus } from '@/services/taskService';
+import { deleteTask, editTask, undoDeleteTask } from '@/services/taskService';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
 import AddTaskCard from './components/add-task-card';
 import { CompletedTaskViewer } from './components/completed-task-viewer';
 import Divider from './components/divider';
-import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
 import { useTodayTaskStore } from '../store/today-task-store';
@@ -21,6 +19,8 @@ export default function Today() {
     todayTasksIsLoading,
     loadTasks,
     setLoading,
+    handleCheckboxChange,
+    handleAddTask,
   } = useTodayTaskStore();
 
   useEffect(() => {
@@ -38,14 +38,6 @@ export default function Today() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCheckboxChange = async (taskId: number) => {
-    handleAction(() => updateTaskStatus(taskId));
-  };
-
-  const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
-    handleAction(() => addTaskItem(taskDetails));
   };
 
   const handleTaskEdit = async (updatedTask: EditTaskItemDTO) => {
