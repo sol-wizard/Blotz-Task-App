@@ -47,7 +47,6 @@ export default function TaskContent({
       dueDate: data.date.toISOString(),
     };
     onSubmit(editTaskDetails);
-    console.log('updateTask duedate:', editTaskDetails.dueDate);
   };
 
   const [isEditing, setIsEditing] = useState(false);
