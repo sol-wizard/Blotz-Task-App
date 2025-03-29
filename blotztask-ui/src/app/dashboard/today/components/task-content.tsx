@@ -44,7 +44,7 @@ export default function TaskContent({
       description: data.description ?? '',
       isDone: task.isDone,
       labelId: data.labelId,
-      dueDate: task.dueDate.toLocaleString(),
+      dueDate: data.date.toISOString(),
     };
     onSubmit(editTaskDetails);
   };
@@ -151,11 +151,7 @@ export default function TaskContent({
                     >
                       Cancel
                     </button>
-                    <button
-                      type="submit"
-                      className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20"
-                      onClick={() => console.log('Form errors:', form.formState.errors)}
-                    >
+                    <button type="submit" className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20">
                       Save
                     </button>
                   </div>
