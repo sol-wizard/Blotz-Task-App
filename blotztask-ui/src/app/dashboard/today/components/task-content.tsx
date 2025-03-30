@@ -96,7 +96,11 @@ export default function TaskContent({
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Textarea placeholder={task?.description} {...field}></Textarea>
+                            <Textarea
+                              placeholder={task?.description}
+                              {...field}
+                              className="w-full"
+                            ></Textarea>
                           </FormControl>
                           <FormMessage>{form.formState.errors.description?.message}</FormMessage>
                         </FormItem>
