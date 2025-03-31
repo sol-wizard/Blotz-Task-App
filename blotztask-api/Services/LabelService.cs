@@ -15,14 +15,18 @@ public interface ILabelService
 public class LabelService : ILabelService
 {
     private readonly BlotzTaskDbContext _dbContext;
-
-    public LabelService(BlotzTaskDbContext dbContext)
+    private readonly ILogger<LabelService> _logger;
+    public LabelService(
+        BlotzTaskDbContext dbContext,
+        ILogger<LabelService> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     public async Task<List<LabelDTO>> GetAllLabelsAsync()
     {
+        _logger.LogInformation("{Method} started", nameof(GetAllLabelsAsync));
         try
         {
             return await _dbContext.Labels
