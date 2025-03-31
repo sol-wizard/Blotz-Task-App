@@ -10,7 +10,7 @@ type ScheduleTaskStore = {
   loadAllTasks: () => Promise<void>;
 };
 
-export const useScheduleTaskStore = create<ScheduleTaskStore>((set, get) => ({
+export const useScheduleTaskStore = create<ScheduleTaskStore>((set) => ({
   allTasks: [],
   todayTasks: [],
   tomorrowTasks: [],
