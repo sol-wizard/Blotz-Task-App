@@ -18,10 +18,10 @@ import { Categories } from './components/categories';
 import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
 import { fetchAllLabel } from '@/services/labelService';
-import { useTodayTaskStore } from '../store/today-task-store';
 import { cn } from '@/lib/utils';
 import AddTaskDialog from './components/add-task-dialog';
 import SearchBar from './components/search-bar';
+import { useTodayTaskActions } from '../store/today-store/today-task-store';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -35,7 +35,7 @@ const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
-  const handleAddTask = useTodayTaskStore((state) => state.handleAddTask);
+  const { handleAddTask }= useTodayTaskActions();
 
   const handleSignOut = (e) => {
     e.preventDefault();
