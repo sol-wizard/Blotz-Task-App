@@ -28,7 +28,6 @@ export default function Page() {
         filteredTasks.map((task) => (
           <div key={task.id}>
             <TaskCard
-              key={task.id}
               task={task}
               handleCheckboxChange={handleCheckboxChange}
               handleTaskDelete={handleTaskDelete}

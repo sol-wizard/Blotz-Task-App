@@ -84,7 +84,6 @@ export const useSearchTaskStore = create<SearchTaskStore>((set, get) => ({
 
   filterTasks: () => {
     const { mockTasks, query } = get();
-
     if (query.length > 1) {
       const filteredTasks = mockTasks.filter((task) =>
         task.title.toLowerCase().includes(query.toLowerCase())
