@@ -125,3 +125,17 @@ export const undoDeleteTask = async (taskId: number) => {
     return { success: false, message: error.message };
   }
 };
+
+export const fetchSearchedTasks = async (query: string): Promise<TaskDetailDTO[]> => {
+  const result = await fetchWithAuth<TaskDetailDTO[]>(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/search?query=${encodeURIComponent(query)}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  return result;
+};
