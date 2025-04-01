@@ -24,10 +24,9 @@ export default function Page() {
   return (
     <div className="min-h-screen">
       <SearchTitle />
-      {query.length > 1 &&
-        filteredTasks
-          .filter((task) => task !== null && task !== undefined)
-          .map((task) => (
+      {query.length > 0 &&
+        filteredTasks.map((task) => (
+          <div key={task.id}>
             <TaskCard
               key={task.id}
               task={task}
@@ -36,7 +35,8 @@ export default function Page() {
               handleTaskDeleteUndo={handleTaskDeleteUndo}
               handleTaskEdit={handleTaskEdit}
             ></TaskCard>
-          ))}
+          </div>
+        ))}
 
       {(filteredTasks.length === 0 || query.length === 0) && <p>No matching task found</p>}
     </div>
