@@ -11,32 +11,27 @@ import Divider from './components/divider';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
-import { useTodayTaskStore } from '../store/today-task-store';
+import { useCompletedTodayTasks, useIncompleteTodayTasks, useTodayTaskActions, useTodayTasks, useTodayTasksIsLoading } from '../store/today-store/today-task-store';
 
 export default function Today() {
-  const {
-    todayTasks,
-    incompleteTodayTasks,
-    completedTodayTasks,
-    todayTasksIsLoading,
-    loadTasks,
-    setLoading,
-  } = useTodayTaskStore();
+  const todayTasks = useTodayTasks();
+  const incompleteTodayTasks = useIncompleteTodayTasks();
+  const completedTodayTasks = useCompletedTodayTasks();
+  const todayTasksIsLoading = useTodayTasksIsLoading();
 
+  const { loadTasks } = useTodayTaskActions();
+  
   useEffect(() => {
     loadTasks();
   }, []);
 
   /** Helper function to handle API action ensure consistent behaviour and avoid duplicate code */
   const handleAction = async (action: () => Promise<unknown>) => {
-    setLoading(true);
     try {
       await action();
       await loadTasks();
     } catch (error) {
       console.error('Error performing action:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
