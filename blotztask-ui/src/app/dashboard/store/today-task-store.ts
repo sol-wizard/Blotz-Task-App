@@ -14,7 +14,7 @@ type TodayTaskStore = {
   handleAddTask: (taskDetails: AddTaskItemDTO) => void;
 };
 
-export const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
+const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
   todayTasks: [],
   incompleteTodayTasks: [],
   completedTodayTasks: [],
@@ -52,3 +52,12 @@ export const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
     await taskAction(() => addTaskItem(taskDetails));
   },
 }));
+
+export const useTodayTasks = () => useTodayTaskStore((state) => state.todayTasks);
+export const useIncompleteTodayTasks = () => useTodayTaskStore((state) => state.incompleteTodayTasks);
+export const useCompletedTodayTasks = () => useTodayTaskStore((state) => state.completedTodayTasks);
+export const useTodayTasksIsLoading = () => useTodayTaskStore((state) => state.todayTasksIsLoading);
+export const useLoadTasks = () => useTodayTaskStore((state) => state.loadTasks);
+export const useSetLoading = () => useTodayTaskStore((state) => state.setLoading);
+export const useTaskAction = () => useTodayTaskStore((state) => state.taskAction);
+export const useHandleAddTask = () => useTodayTaskStore((state) => state.handleAddTask);
