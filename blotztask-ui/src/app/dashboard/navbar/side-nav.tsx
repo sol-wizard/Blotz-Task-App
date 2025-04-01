@@ -21,7 +21,7 @@ import { fetchAllLabel } from '@/services/labelService';
 import { cn } from '@/lib/utils';
 import AddTaskDialog from './components/add-task-dialog';
 import SearchBar from './components/search-bar';
-import { useTodayTaskActions } from '../store/today-task-store';
+import { useTodayTaskActions } from '../store/today-store/today-task-store';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },

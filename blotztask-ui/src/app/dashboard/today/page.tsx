@@ -11,7 +11,7 @@ import Divider from './components/divider';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
-import { useCompletedTodayTasks, useIncompleteTodayTasks, useTodayTaskActions, useTodayTasks, useTodayTasksIsLoading } from '../store/today-task-store';
+import { useCompletedTodayTasks, useIncompleteTodayTasks, useTodayTaskActions, useTodayTasks, useTodayTasksIsLoading } from '../store/today-store/today-task-store';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
