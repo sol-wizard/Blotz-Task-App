@@ -1,5 +1,4 @@
 // A helpfer function to perform an action and then refresh the tasks (so we don't have to repeat the code in multiple places) DRY
-// taskUtils.ts
 export const performTaskAndRefresh = async (
   action: () => Promise<unknown>,
   reloadTasks: () => Promise<unknown>,
