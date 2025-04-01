@@ -329,6 +329,7 @@ public class TaskService : ITaskService
         return await _dbContext.TaskItems
             .Where(t => EF.Functions.Like(t.Title, $"%{query}%") || EF.Functions.Like(t.Description, $"%{query}%"))
             .ToListAsync();
+        
     }
 }
 
