@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { deleteTask, editTask, undoDeleteTask } from '@/services/taskService';
+import { addTaskItem, deleteTask, editTask, undoDeleteTask, updateTaskStatus } from '@/services/taskService';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
 import AddTaskCard from './components/add-task-card';
@@ -9,19 +9,22 @@ import { CompletedTaskViewer } from './components/completed-task-viewer';
 import Divider from './components/divider';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
-import { useTodayTaskStore } from '../store/today-task-store';
+import {
+  useCompletedTodayTasks,
+  useIncompleteTodayTasks,
+  useTodayTaskActions,
+  useTodayTasks,
+  useTodayTasksIsLoading,
+} from '../store/today-store/today-task-store';
+import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 
 export default function Today() {
-  const {
-    todayTasks,
-    incompleteTodayTasks,
-    completedTodayTasks,
-    todayTasksIsLoading,
-    loadTasks,
-    setLoading,
-    handleCheckboxChange,
-    handleAddTask,
-  } = useTodayTaskStore();
+  const todayTasks = useTodayTasks();
+  const incompleteTodayTasks = useIncompleteTodayTasks();
+  const completedTodayTasks = useCompletedTodayTasks();
+  const todayTasksIsLoading = useTodayTasksIsLoading();
+
+  const { loadTasks } = useTodayTaskActions();
 
   useEffect(() => {
     loadTasks();
@@ -29,15 +32,15 @@ export default function Today() {
 
   /** Helper function to handle API action ensure consistent behaviour and avoid duplicate code */
   const handleAction = async (action: () => Promise<unknown>) => {
-    setLoading(true);
     try {
       await action();
       await loadTasks();
     } catch (error) {
       console.error('Error performing action:', error);
-    } finally {
-      setLoading(false);
     }
+  };
+  const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
+    handleAction(() => addTaskItem(taskDetails));
   };
 
   const handleTaskEdit = async (updatedTask: EditTaskItemDTO) => {
@@ -50,6 +53,10 @@ export default function Today() {
 
   const handleTaskDeleteUndo = async (taskId: number) => {
     handleAction(() => undoDeleteTask(taskId));
+  };
+
+  const handleCheckboxChange = async (taskId: number) => {
+    handleAction(() => updateTaskStatus(taskId));
   };
 
   return (
