@@ -1,17 +1,22 @@
 'use client';
 
 import { useEffect } from 'react';
-import { addTaskItem, deleteTask, editTask, undoDeleteTask } from '@/services/taskService';
-import { updateTaskStatus } from '@/services/taskService';
+import { addTaskItem, deleteTask, editTask, undoDeleteTask, updateTaskStatus } from '@/services/taskService';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
 import AddTaskCard from './components/add-task-card';
 import { CompletedTaskViewer } from './components/completed-task-viewer';
 import Divider from './components/divider';
-import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
-import { useCompletedTodayTasks, useIncompleteTodayTasks, useTodayTaskActions, useTodayTasks, useTodayTasksIsLoading } from '../store/today-store/today-task-store';
+import {
+  useCompletedTodayTasks,
+  useIncompleteTodayTasks,
+  useTodayTaskActions,
+  useTodayTasks,
+  useTodayTasksIsLoading,
+} from '../store/today-store/today-task-store';
+import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
@@ -20,7 +25,7 @@ export default function Today() {
   const todayTasksIsLoading = useTodayTasksIsLoading();
 
   const { loadTasks } = useTodayTaskActions();
-  
+
   useEffect(() => {
     loadTasks();
   }, []);
@@ -34,11 +39,6 @@ export default function Today() {
       console.error('Error performing action:', error);
     }
   };
-
-  const handleCheckboxChange = async (taskId: number) => {
-    handleAction(() => updateTaskStatus(taskId));
-  };
-
   const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
     handleAction(() => addTaskItem(taskDetails));
   };
@@ -53,6 +53,10 @@ export default function Today() {
 
   const handleTaskDeleteUndo = async (taskId: number) => {
     handleAction(() => undoDeleteTask(taskId));
+  };
+
+  const handleCheckboxChange = async (taskId: number) => {
+    handleAction(() => updateTaskStatus(taskId));
   };
 
   return (

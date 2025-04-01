@@ -17,7 +17,7 @@ public interface ITaskService
     public Task<List<TaskItemDTO>> GetTaskByDate(DateTime startDateUTC, DateTime endDateUTC, string userId);
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
-    public Task<List<TaskItem>> SearchTasksAsync(string query);
+    public Task<List<TaskItemDTO>> SearchTasksAsync(string query);
 }
 
 public class TaskService : ITaskService
@@ -324,12 +324,29 @@ public class TaskService : ITaskService
 
     }
 
-    public async Task<List<TaskItem>> SearchTasksAsync(string query)
-    {
-        return await _dbContext.TaskItems
-            .Where(t => EF.Functions.Like(t.Title, $"%{query}%") || EF.Functions.Like(t.Description, $"%{query}%"))
+    public async Task<List<TaskItemDTO>> SearchTasksAsync(string query)
+    {   
+        try {
+            return await _dbContext.TaskItems
+            .Where(task => EF.Functions.Like(task.Title, $"%{query}%") || EF.Functions.Like(task.Description, $"%{query}%"))
+            .Select(task => new TaskItemDTO{
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                DueDate = task.DueDate,
+                IsDone = task.IsDone,
+                Label = new LabelDTO 
+                { 
+                    LabelId = task.Label.LabelId, 
+                    Name = task.Label.Name, 
+                    Color = task.Label.Color 
+                }
+            })
             .ToListAsync();
-        
+        } catch (Exception ex)
+        {
+            throw new Exception($"Unhandled exception: {ex.Message}");
+        }
     }
 }
 

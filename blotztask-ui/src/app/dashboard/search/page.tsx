@@ -24,7 +24,7 @@ export default function Page() {
   return (
     <div className="min-h-screen">
       <SearchTitle />
-      {query.length > 0 &&
+      {query.length > 1 &&
         filteredTasks.map((task) => (
           <div key={task.id}>
             <TaskCard
