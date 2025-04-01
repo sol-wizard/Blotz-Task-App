@@ -7,11 +7,13 @@ type TodayTaskStore = {
   todayTasks: TaskDetailDTO[];
   incompleteTodayTasks: TaskDetailDTO[];
   completedTodayTasks: TaskDetailDTO[];
-  loadTasks: () => Promise<void>;
   todayTasksIsLoading: boolean;
-  setLoading: (value: boolean) => void;
-  taskAction: (action: () => Promise<unknown>) => void;
-  handleAddTask: (taskDetails: AddTaskItemDTO) => void;
+  actions : {
+    loadTasks: () => Promise<void>;
+    setLoading: (value: boolean) => void;
+    taskAction: (action: () => Promise<unknown>) => void;
+    handleAddTask: (taskDetails: AddTaskItemDTO) => void;
+  }
 };
 
 const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
@@ -19,45 +21,43 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
   incompleteTodayTasks: [],
   completedTodayTasks: [],
   todayTasksIsLoading: false,
+  actions: {
+    setLoading: (value) => set({ todayTasksIsLoading: value }),
 
-  setLoading: (value) => set({ todayTasksIsLoading: value }),
+    loadTasks: async () => {
+      set({ todayTasksIsLoading: true });
+      try {
+        const data = await fetchTaskItemsDueToday();
+        set({
+          todayTasks: data,
+          incompleteTodayTasks: data.filter((task) => !task.isDone),
+          completedTodayTasks: data.filter((task) => task.isDone),
+        });
+      } catch (error) {
+        console.error('Error loading tasks:', error);
+      } finally {
+        set({ todayTasksIsLoading: false });
+      }
+    },
 
-  loadTasks: async () => {
-    set({ todayTasksIsLoading: true });
-    try {
-      const data = await fetchTaskItemsDueToday();
-      set({
-        todayTasks: data,
-        incompleteTodayTasks: data.filter((task) => !task.isDone),
-        completedTodayTasks: data.filter((task) => task.isDone),
-      });
-    } catch (error) {
-      console.error('Error loading tasks:', error);
-    } finally {
-      set({ todayTasksIsLoading: false });
-    }
-  },
+    taskAction: async (action: () => Promise<unknown>) => {
+      try {
+        await action();
+        await get().actions.loadTasks();
+      } catch (error) {
+        console.error('Error performing action:', error);
+      }
+    },
 
-  taskAction: async (action: () => Promise<unknown>) => {
-    try {
-      await action();
-      await get().loadTasks();
-    } catch (error) {
-      console.error('Error performing action:', error);
-    }
-  },
-
-  handleAddTask: async (taskDetails: AddTaskItemDTO) => {
-    const taskAction = get().taskAction;
-    await taskAction(() => addTaskItem(taskDetails));
-  },
+    handleAddTask: async (taskDetails: AddTaskItemDTO) => {
+      const taskAction = get().actions.taskAction;
+      await taskAction(() => addTaskItem(taskDetails));
+    },
+  }
 }));
 
 export const useTodayTasks = () => useTodayTaskStore((state) => state.todayTasks);
 export const useIncompleteTodayTasks = () => useTodayTaskStore((state) => state.incompleteTodayTasks);
 export const useCompletedTodayTasks = () => useTodayTaskStore((state) => state.completedTodayTasks);
 export const useTodayTasksIsLoading = () => useTodayTaskStore((state) => state.todayTasksIsLoading);
-export const useLoadTasks = () => useTodayTaskStore((state) => state.loadTasks);
-export const useSetLoading = () => useTodayTaskStore((state) => state.setLoading);
-export const useTaskAction = () => useTodayTaskStore((state) => state.taskAction);
-export const useHandleAddTask = () => useTodayTaskStore((state) => state.handleAddTask);
+export const useTodayTaskActions = () => useTodayTaskStore((state) => state.actions);
