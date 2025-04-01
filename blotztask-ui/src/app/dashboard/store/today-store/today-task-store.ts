@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
 import { addTaskItem, fetchTaskItemsDueToday } from '@/services/taskService';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
+import { performTaskAndRefresh } from './util';
 
 type TodayTaskStore = {
   todayTasks: TaskDetailDTO[];
@@ -11,7 +12,6 @@ type TodayTaskStore = {
   actions : {
     loadTasks: () => Promise<void>;
     setLoading: (value: boolean) => void;
-    taskAction: (action: () => Promise<unknown>) => void;
     handleAddTask: (taskDetails: AddTaskItemDTO) => void;
   }
 };
@@ -25,7 +25,6 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
     setLoading: (value) => set({ todayTasksIsLoading: value }),
 
     loadTasks: async () => {
-      set({ todayTasksIsLoading: true });
       try {
         const data = await fetchTaskItemsDueToday();
         set({
@@ -35,23 +34,13 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
         });
       } catch (error) {
         console.error('Error loading tasks:', error);
-      } finally {
-        set({ todayTasksIsLoading: false });
       }
     },
-
-    taskAction: async (action: () => Promise<unknown>) => {
-      try {
-        await action();
-        await get().actions.loadTasks();
-      } catch (error) {
-        console.error('Error performing action:', error);
-      }
-    },
-
+    
     handleAddTask: async (taskDetails: AddTaskItemDTO) => {
-      const taskAction = get().actions.taskAction;
-      await taskAction(() => addTaskItem(taskDetails));
+      const { loadTasks, setLoading } = get().actions;
+
+      await performTaskAndRefresh(() => addTaskItem(taskDetails), loadTasks, setLoading);
     },
   }
 }));
