@@ -20,7 +20,6 @@ export default function Today() {
     completedTodayTasks,
     todayTasksIsLoading,
     loadTasks,
-    setLoading,
   } = useTodayTaskStore();
 
   useEffect(() => {
@@ -29,14 +28,11 @@ export default function Today() {
 
   /** Helper function to handle API action ensure consistent behaviour and avoid duplicate code */
   const handleAction = async (action: () => Promise<unknown>) => {
-    setLoading(true);
     try {
       await action();
       await loadTasks();
     } catch (error) {
       console.error('Error performing action:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
