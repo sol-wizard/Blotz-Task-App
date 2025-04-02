@@ -7,7 +7,7 @@ type ScheduleTaskStore = {
   tomorrowTasks: TaskDetailDTO[];
   weekTasks: TaskDetailDTO[];
   monthTasks: TaskDetailDTO[];
-  loadAllTasks: () => Promise<void>;
+  loadScheduleTasks: () => Promise<void>;
 };
 
 export const useScheduleTaskStore = create<ScheduleTaskStore>((set) => ({
@@ -17,7 +17,7 @@ export const useScheduleTaskStore = create<ScheduleTaskStore>((set) => ({
   weekTasks: [],
   monthTasks: [],
 
-  loadAllTasks: async () => {
+  loadScheduleTasks: async () => {
     const mockTaskList: TaskDetailDTO[] = [
       {
         id: 1,
