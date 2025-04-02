@@ -23,6 +23,7 @@ import AddTaskDialog from './components/add-task-dialog';
 import SearchBar from './components/search-bar';
 import { useTodayTaskActions } from '../store/today-store/today-task-store';
 import { addTaskItem } from '@/services/taskService';
+import { useScheduleTaskActions } from '../store/schedule-task-store';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -37,6 +38,7 @@ const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 export function AppSidebar() {
   const { data: session, status } = useSession();
   const { loadTodayTasks }= useTodayTaskActions();
+  const { loadScheduleTasks } = useScheduleTaskActions();
 
   const handleSignOut = (e) => {
     e.preventDefault();
@@ -61,6 +63,7 @@ export function AppSidebar() {
   const handleAddTask = async (taskDetails) => {
     await addTaskItem(taskDetails);
     loadTodayTasks();
+    loadScheduleTasks();
   }
 
   useEffect(() => {
