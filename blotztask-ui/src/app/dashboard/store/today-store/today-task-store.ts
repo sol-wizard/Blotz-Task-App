@@ -10,7 +10,7 @@ type TodayTaskStore = {
   completedTodayTasks: TaskDetailDTO[];
   todayTasksIsLoading: boolean;
   actions : {
-    loadTasks: () => Promise<void>;
+    loadTodayTasks: () => Promise<void>;
     setLoading: (value: boolean) => void;
     handleAddTask: (taskDetails: AddTaskItemDTO) => void;
   }
@@ -24,21 +24,26 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
   actions: {
     setLoading: (value) => set({ todayTasksIsLoading: value }),
 
-    loadTasks: async () => {
-      try {
-        const data = await fetchTaskItemsDueToday();
+    loadTodayTasks: async () => {
+      const { setLoading } = get().actions;
+    
+      const data = await performTaskAndRefresh(
+        () => fetchTaskItemsDueToday(),
+        async () => {}, // no-op reload since it's already loading
+        setLoading
+      );
+    
+      if (data) {
         set({
           todayTasks: data,
           incompleteTodayTasks: data.filter((task) => !task.isDone),
           completedTodayTasks: data.filter((task) => task.isDone),
         });
-      } catch (error) {
-        console.error('Error loading tasks:', error);
       }
     },
     
     handleAddTask: async (taskDetails: AddTaskItemDTO) => {
-      const { loadTasks, setLoading } = get().actions;
+      const { loadTodayTasks: loadTasks, setLoading } = get().actions;
 
       await performTaskAndRefresh(() => addTaskItem(taskDetails), loadTasks, setLoading);
     },
