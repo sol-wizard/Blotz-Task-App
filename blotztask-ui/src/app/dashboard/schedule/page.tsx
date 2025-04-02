@@ -7,10 +7,11 @@ import TaskCard from '../today/components/task-card';
 import { format } from 'date-fns';
 
 export default function Schedule() {
-  const { todayTasks, tomorrowTasks, weekTasks, monthTasks, loadAllTasks } = useScheduleTaskStore();
-
+  const { todayTasks, tomorrowTasks, weekTasks, monthTasks } = useScheduleTaskStore();
+  const { loadScheduleTasks } = useScheduleTaskStore((state) => state.actions);
+  
   useEffect(() => {
-    loadAllTasks();
+    loadScheduleTasks();
   }, []);
 
   const handleAddTask = (task) => {
