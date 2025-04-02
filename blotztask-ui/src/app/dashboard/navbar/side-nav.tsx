@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import AddTaskDialog from './components/add-task-dialog';
 import SearchBar from './components/search-bar';
 import { useTodayTaskActions } from '../store/today-store/today-task-store';
+import { addTaskItem } from '@/services/taskService';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -35,7 +36,7 @@ const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
-  const { handleAddTask }= useTodayTaskActions();
+  const { loadTodayTasks }= useTodayTaskActions();
 
   const handleSignOut = (e) => {
     e.preventDefault();
@@ -56,6 +57,11 @@ export function AppSidebar() {
       console.error('Error loading labels:', error);
     }
   };
+
+  const handleAddTask = async (taskDetails) => {
+    await addTaskItem(taskDetails);
+    loadTodayTasks();
+  }
 
   useEffect(() => {
     loadAllLabel();
