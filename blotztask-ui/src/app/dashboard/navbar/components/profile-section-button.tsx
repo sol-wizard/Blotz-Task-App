@@ -8,6 +8,7 @@ import { fetchCurrentUserInfo } from '@/services/userInfoService';
 
 export function ProfileSectionButton({ session, onSignOut }) {
   const [userInfo, setUserInfo] = useState<User>();
+  const [aiEnabled, setAiEnabled] = useState(false);
 
   const loadUserInfo = async () => {
     const result = await fetchCurrentUserInfo();
@@ -25,7 +26,13 @@ export function ProfileSectionButton({ session, onSignOut }) {
   return (
     <SidebarMenuItem>
       {session ? (
-        userInfo && <NavUser user={userInfo} onSignOut={onSignOut} />
+        userInfo && 
+        <NavUser 
+         user={userInfo} 
+         onSignOut={onSignOut} 
+         enableAI={aiEnabled}
+         onToggleAI ={setAiEnabled}
+        />
       ) : (
         <SidebarMenuButton asChild className="bg-primary text-white">
           <a href="/signin">
