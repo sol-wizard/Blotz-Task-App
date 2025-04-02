@@ -24,7 +24,7 @@ export default function Today() {
   const completedTodayTasks = useCompletedTodayTasks();
   const todayTasksIsLoading = useTodayTasksIsLoading();
 
-  const { loadTasks } = useTodayTaskActions();
+  const { loadTodayTasks: loadTasks } = useTodayTaskActions();
 
   useEffect(() => {
     loadTasks();
