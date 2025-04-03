@@ -1,12 +1,20 @@
-import { ExtractedTask } from "@/model/extracted-task-dto";
+import { ExtractedTask } from '@/model/extracted-task-dto';
+import { fetchWithAuth } from '@/utils/fetch-with-auth';
+
+interface PromptRequest {
+  prompt: string;
+}
 
 export async function generateAiTask(prompt: string): Promise<ExtractedTask> {
-  // Simulate network delay
-  await new Promise((res) => setTimeout(res, 1000));
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/AzureAi/generate`;
 
-  // Return mock task based on prompt
-  return {
-    title: `Generated Task from: "${prompt}"`,
-    dueDate: '2025-04-10', // or null if you want to test that case
-  };
+  const result = await fetchWithAuth<{ response: ExtractedTask }>(url, {
+    method: 'POST',
+    body: JSON.stringify({ prompt } satisfies PromptRequest),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return result.response;
 }

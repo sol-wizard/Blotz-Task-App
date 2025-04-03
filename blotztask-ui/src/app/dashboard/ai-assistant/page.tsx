@@ -42,7 +42,7 @@ export default function AiAssistant() {
 
       {/* Prompt Input */}
       <div className="flex flex-col gap-2">
-        <Label htmlFor="prompt">Task Description</Label>
+        <Label htmlFor="prompt">Prompt to generate Task</Label>
         <Input
           id="prompt"
           placeholder="e.g. Remind me to submit the report by Friday"
@@ -70,7 +70,7 @@ export default function AiAssistant() {
         <Card className="p-4 shadow-md space-y-2">
           <h2 className="text-lg font-semibold text-zinc-800">{result.title}</h2>
           <p className="text-sm text-zinc-600">
-            <strong>Due Date:</strong> {result.dueDate ?? 'None'}
+            <strong>Due Date:</strong> {result.due_date ?? 'None'}
           </p>
           <Button size="sm" className="mt-2 w-fit">
             Save Task

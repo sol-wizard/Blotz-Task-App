@@ -1,4 +1,4 @@
 export interface ExtractedTask {
     title: string;
-    dueDate: string | null;
+    due_date: string | null;
   }
