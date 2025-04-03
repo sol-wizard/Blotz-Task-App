@@ -15,20 +15,19 @@ import { mapExtractedTaskToAddTaskDTO } from './util/map-extracted-to-add-task';
 export default function AiAssistant() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ExtractedTask | null>(null);
-  const [adding, setSaving] = useState(false);
+  const [extractedTask, setExtractedTask] = useState<ExtractedTask | null>(null);
+  const [adding, setAdding] = useState(false);
   const [addSuccess, setSaveSuccess] = useState(false);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
-    // Clear previous result
-    setResult(null);
+    setExtractedTask(null);
     setLoading(true);
 
     try {
       const task = await generateAiTask(prompt);
-      setResult(task);
+      setExtractedTask(task);
     } catch (error) {
       console.error('Failed to generate task:', error);
     } finally {
@@ -37,20 +36,20 @@ export default function AiAssistant() {
   };
 
   const handleAddTask = async () => {
-    if (!result) return;
+    if (!extractedTask) return;
   
-    setSaving(true);
+    setAdding(true);
     setSaveSuccess(false);
   
     try {
-      const tasktoAdd = mapExtractedTaskToAddTaskDTO(result);
+      const tasktoAdd = mapExtractedTaskToAddTaskDTO(extractedTask);
 
       await addTaskItem(tasktoAdd);
       setSaveSuccess(true);
     } catch (error) {
       console.error('Failed to save task:', error);
     } finally {
-      setSaving(false);
+      setAdding(false);
     }
   };
 
@@ -84,15 +83,15 @@ export default function AiAssistant() {
         </div>
       )}
 
-      {!loading && result && (
+      {!loading && extractedTask && (
         <Card
           className={`p-4 shadow-md space-y-2 border-2 rounded-xl transition-all ${
             addSuccess ? 'border-green-400 bg-green-50' : 'border-zinc-200'
           }`}
         >
-          <h2 className="text-lg font-semibold text-zinc-800">{result.title}</h2>
+          <h2 className="text-lg font-semibold text-zinc-800">{extractedTask.title}</h2>
           <p className="text-sm text-zinc-600">
-            <strong>Due Date:</strong> {result.due_date ?? 'None'}
+            <strong>Due Date:</strong> {extractedTask.due_date ?? 'None'}
           </p>
 
           <Button
@@ -118,7 +117,7 @@ export default function AiAssistant() {
         </Card>
       )}
 
-      {!loading && !result && (
+      {!loading && !extractedTask && (
         <p className="text-zinc-400 text-sm italic">No task generated yet.</p>
       )}
     </div>
