@@ -110,7 +110,7 @@ export function AppSidebar() {
               { aiEnabled && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <a href="/ai-assistant" className="flex items-center px-3 py-3 w-full hover:bg-white">
+                    <a href="ai-assistant" className="flex items-center px-3 py-3 w-full hover:bg-white">
                       <Bot className="text-indigo-600" size={18} />
                       <span className="pl-3 text-base text-indigo-700 font-medium">AI Assistant ✨</span>
                     </a>
