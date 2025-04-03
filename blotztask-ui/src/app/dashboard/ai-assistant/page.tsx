@@ -25,6 +25,7 @@ export default function AiAssistant() {
     if (!prompt.trim()) return;
 
     setExtractedTask(null);
+    setSaveSuccess(false);
     setLoading(true);
 
     try {
@@ -41,7 +42,6 @@ export default function AiAssistant() {
     if (!extractedTask) return;
   
     setAdding(true);
-    setSaveSuccess(false);
   
     try {
       const tasktoAdd = mapExtractedTaskToAddTaskDTO(extractedTask);
