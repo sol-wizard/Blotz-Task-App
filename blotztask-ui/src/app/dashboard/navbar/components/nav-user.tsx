@@ -21,11 +21,11 @@ export interface User {
 interface NavUserProps {
     user: User;
     onSignOut: () => void; 
-    enableAI?: boolean;
+    aiEnabled?: boolean;
     onToggleAI?: (enabled: boolean) => void;
 } 
   
-export function NavUser({ user, onSignOut, enableAI = false, onToggleAI }: NavUserProps) {
+export function NavUser({ user, onSignOut, aiEnabled = false, onToggleAI }: NavUserProps) {
   return (
     <>
       <DropdownMenu>
@@ -78,7 +78,7 @@ export function NavUser({ user, onSignOut, enableAI = false, onToggleAI }: NavUs
                 <span className="text-xs text-muted-foreground">Enable task extraction</span>
               </div>
               <Switch
-                checked={enableAI}
+                checked={aiEnabled}
                 onCheckedChange={onToggleAI}
                 aria-label="Toggle AI Assistant"
               />

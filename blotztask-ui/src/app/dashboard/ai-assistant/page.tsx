@@ -33,14 +33,13 @@ export default function AiAssistant() {
   };
 
   return (
-    <div className="ml-5 flex flex-col gap-12 mt-8 max-w-3xl">
-      {/* Heading */}
+    <div className="ml-5 flex flex-col gap-12 mt-8 w-3/4">
+
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold text-zinc-800">AI Task Assistant 🤖</h1>
         <p className="text-zinc-500 text-sm">Describe what you want to do and I’ll turn it into a task.</p>
       </div>
 
-      {/* Prompt Input */}
       <div className="flex flex-col gap-2">
         <Label htmlFor="prompt">Prompt to generate Task</Label>
         <Input
