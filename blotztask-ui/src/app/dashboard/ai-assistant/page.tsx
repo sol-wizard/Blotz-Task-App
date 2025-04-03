@@ -54,10 +54,8 @@ export default function AiAssistant() {
         </Button>
       </div>
 
-      {/* Result Divider */}
       <Divider text="Generated Task" />
 
-      {/* Loading indicator */}
       {loading && (
         <div className="flex items-center gap-2 text-sm text-zinc-500">
           <LoadingSpinner variant="blue" className="text-xs" />
@@ -65,7 +63,6 @@ export default function AiAssistant() {
         </div>
       )}
 
-      {/* Generated Task Card */}
       {!loading && result && (
         <Card className="p-4 shadow-md space-y-2">
           <h2 className="text-lg font-semibold text-zinc-800">{result.title}</h2>
