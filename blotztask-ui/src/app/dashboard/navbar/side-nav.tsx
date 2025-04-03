@@ -1,6 +1,6 @@
 'use client';
 
-import { ListChecks, Home, ClipboardCheck, Plus, CalendarCheck } from 'lucide-react';
+import { ListChecks, Home, ClipboardCheck, Plus, CalendarCheck, Bot } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -95,6 +95,15 @@ export function AppSidebar() {
                     <span className="text-primary text-xl">New Task</span>
                   </SidebarMenuButton>
                 </AddTaskDialog>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="ai-assistant" className="flex items-center px-3 py-3 w-full hover:bg-white">
+                    <Bot className="text-indigo-600" size={18} />
+                    <span className="pl-3 text-base text-indigo-700 font-medium">AI Assistant ✨</span>
+                  </a>
+                </SidebarMenuButton>
               </SidebarMenuItem>
 
               {items.map((item) => (
