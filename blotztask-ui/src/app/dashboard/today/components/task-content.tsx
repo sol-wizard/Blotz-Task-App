@@ -2,7 +2,6 @@ import DueDateTag from './due-date-tag';
 import TaskSeparator from '../shared/task-separator';
 import { Pencil } from 'lucide-react';
 import { useState } from 'react';
-import SectionSepreator from './section-separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from 'src/components/ui/task-card-input';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -168,7 +167,6 @@ export default function TaskContent({
           </form>
         </Form>
       </div>
-      <SectionSepreator />
     </div>
   );
 }
