@@ -6,7 +6,7 @@ import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavUser, User } from './nav-user';
 import { fetchCurrentUserInfo } from '@/services/userInfoService';
 
-export function ProfileSectionButton({ session, onSignOut }) {
+export function ProfileSectionButton({ session, onSignOut, aiEnabled, setAiEnabled }) {
   const [userInfo, setUserInfo] = useState<User>();
 
   const loadUserInfo = async () => {
@@ -25,7 +25,13 @@ export function ProfileSectionButton({ session, onSignOut }) {
   return (
     <SidebarMenuItem>
       {session ? (
-        userInfo && <NavUser user={userInfo} onSignOut={onSignOut} />
+        userInfo && 
+        <NavUser 
+         user={userInfo} 
+         onSignOut={onSignOut} 
+         aiEnabled={aiEnabled}
+         onToggleAI ={setAiEnabled}
+        />
       ) : (
         <SidebarMenuButton asChild className="bg-primary text-white">
           <a href="/signin">
