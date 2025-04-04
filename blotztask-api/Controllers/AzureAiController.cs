@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class AzureAiController : ControllerBase

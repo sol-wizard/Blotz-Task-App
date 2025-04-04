@@ -150,8 +150,7 @@ app.UseHttpsRedirection();
 app.UseCors("AllowSpecificOrigin");
 app.UseAuthorization();
 
-//TODO : Temporary disable authorization for testing open AI endpoint
-app.MapSwagger();
-app.MapControllers();
+app.MapSwagger().RequireAuthorization();
+app.MapControllers().RequireAuthorization();
 
 app.Run();
