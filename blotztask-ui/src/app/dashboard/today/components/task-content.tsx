@@ -40,8 +40,6 @@ export default function TaskContent({
     },
   });
 
-  console.log('task.dueDate ', task.dueDate);
-
   const updateTask: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
     let dateTime: string;
     if (data.time) {
@@ -60,7 +58,6 @@ export default function TaskContent({
       dueDate: dateTime,
     };
     onSubmit(editTaskDetails);
-    console.log('editTaskData: ', editTaskDetails);
   };
 
   const [isEditing, setIsEditing] = useState(false);
@@ -161,7 +158,7 @@ export default function TaskContent({
                   <div className="flex flex-row items-center">
                     <CalendarForm control={form.control} task={task} />
                     <LabelSelect control={form.control} />
-                    <TimePicker control={form.control} />
+                    <TimePicker control={form.control} task={task} />
                   </div>
                   <div className="flex flex-row ">
                     <button

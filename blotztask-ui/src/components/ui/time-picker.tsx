@@ -6,13 +6,12 @@ import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Clock } from 'lucide-react';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Control } from 'react-hook-form';
-import { z } from 'zod';
-import { format, parseISO } from 'date-fns';
+import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
+import { format } from 'date-fns';
 
 const times = ['9:00 AM', '12:00 PM', '3:00 PM', '6:00 PM', '9:00 PM', '12:00 AM'];
-const timeSchema = z.string().regex(/^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/, 'Invalid time format');
 
-export default function TimePicker({ control }: { control: Control }) {
+export default function TimePicker({ task, control }: { task?: TaskDetailDTO; control: Control }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -20,7 +19,6 @@ export default function TimePicker({ control }: { control: Control }) {
       control={control}
       name="time"
       render={({ field }) => {
-        console.log('field.value: ', field.value);
         return (
           <FormItem>
             <Popover open={open} onOpenChange={setOpen}>
@@ -36,7 +34,7 @@ export default function TimePicker({ control }: { control: Control }) {
                     <div className="ml-1">
                       <input
                         className="bg-transparent border-none outline-none p-0 w-14"
-                        value={field.value}
+                        value={field.value ? field.value : format(new Date(task.dueDate), 'h:mm a')}
                         onChange={field.onChange}
                       />
                     </div>
