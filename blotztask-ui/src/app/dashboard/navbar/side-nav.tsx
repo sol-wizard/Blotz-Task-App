@@ -92,7 +92,7 @@ export function AppSidebar() {
 
               <SidebarMenuItem>
                 <AddTaskDialog handleAddTask={handleAddTask}>
-                  <SidebarMenuButton>
+                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100">
                     <div
                       className={cn(
                         'bg-primary',
@@ -121,7 +121,9 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url} className="flex items-center px-3 py-3 w-full hover:bg-white">
+
+                    <a href={item.url} className="flex items-center ml-2 px-4 py-3 w-full hover:bg-blue-100">
+
                       <item.icon />
                       <span className="pl-3 text-base">{item.title}</span>
                     </a>
