@@ -6,12 +6,12 @@ import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Clock } from 'lucide-react';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Control } from 'react-hook-form';
-import { z } from 'zod';
+import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
+import { format } from 'date-fns';
 
 const times = ['9:00 AM', '12:00 PM', '3:00 PM', '6:00 PM', '9:00 PM', '12:00 AM'];
-const timeSchema = z.string().regex(/^(0?[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$/, 'Invalid time format');
 
-export default function TimePicker({ control }: { control: Control }) {
+export default function TimePicker({ task, control }: { task?: TaskDetailDTO; control: Control }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -19,8 +19,6 @@ export default function TimePicker({ control }: { control: Control }) {
       control={control}
       name="time"
       render={({ field }) => {
-        const [tempValue, setTempValue] = useState(field.value || '');
-
         return (
           <FormItem>
             <Popover open={open} onOpenChange={setOpen}>
@@ -32,23 +30,14 @@ export default function TimePicker({ control }: { control: Control }) {
                             ${open ? 'bg-primary text-white' : 'bg-gray-300 text-neutral-700'}`}
                   >
                     <Clock className="mr-1" size={16} />
-                    {field.value === undefined && <p>Time</p>}
-                    {field.value !== undefined && (
-                      <div className="ml-1">
-                        <input
-                          className="bg-transparent border-none outline-none p-0 w-14"
-                          value={tempValue}
-                          onChange={(e) => setTempValue(e.target.value)}
-                          onBlur={() => {
-                            if (timeSchema.safeParse(tempValue).success) {
-                              field.onChange(tempValue);
-                            } else {
-                              setTempValue(field.value);
-                            }
-                          }}
-                        />
-                      </div>
-                    )}
+
+                    <div className="ml-1">
+                      <input
+                        className="bg-transparent border-none outline-none p-0 w-14"
+                        value={field.value ? field.value : format(new Date(task.dueDate), 'h:mm a')}
+                        onChange={field.onChange}
+                      />
+                    </div>
                   </div>
                 </PopoverTrigger>
               </FormControl>
@@ -61,7 +50,6 @@ export default function TimePicker({ control }: { control: Control }) {
                         key={time}
                         onSelect={() => {
                           field.onChange(time);
-                          setTempValue(time);
                           setOpen(false);
                         }}
                         className="font-normal text-xs m-0"

@@ -15,6 +15,7 @@ import { LabelSelect } from '../shared/label-select';
 import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
 import DeleteTaskDialog from './delete-dialog-content';
 import TimePicker from '@/components/ui/time-picker';
+import { format, parse, setHours, setMinutes } from 'date-fns';
 
 export default function TaskContent({
   task,
@@ -34,21 +35,41 @@ export default function TaskContent({
       description: task.description,
       date: new Date(task.dueDate),
       labelId: task.label.labelId,
-      time: undefined,
+      time: format(new Date(task.dueDate), 'h:mm a'),
     },
   });
 
   const updateTask: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
+    let dateTime: string;
+    if (data.time) {
+      const parsedTime = parse(data.time, 'h:mm a', new Date());
+      dateTime = setMinutes(
+        setHours(data.date, parsedTime.getHours()),
+        parsedTime.getMinutes()
+      ).toISOString();
+    }
     const editTaskDetails: EditTaskItemDTO = {
       id: task.id,
       title: data.title ?? task.title,
       description: data.description ?? '',
       isDone: task.isDone,
       labelId: data.labelId,
-      dueDate: data.date.toISOString(),
+      dueDate: dateTime,
     };
     onSubmit(editTaskDetails);
   };
+
+  // useEffect(() => {
+  //   if (task) {
+  //     form.reset({
+  //       title: task.title,
+  //       description: task.description,
+  //       date: new Date(task.dueDate),
+  //       labelId: task.label.labelId,
+  //       time: format(new Date(task.dueDate), 'h:mm a'),
+  //     });
+  //   }
+  // }, [task]);
 
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
@@ -148,7 +169,7 @@ export default function TaskContent({
                   <div className="flex flex-row items-center">
                     <CalendarForm control={form.control} task={task} />
                     <LabelSelect control={form.control} />
-                    <TimePicker control={form.control} />
+                    <TimePicker control={form.control} task={task} />
                   </div>
                   <div className="flex flex-row ">
                     <button
