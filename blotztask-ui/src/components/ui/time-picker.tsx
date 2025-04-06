@@ -22,8 +22,8 @@ export default function TimePicker({ task, control }: { task?: TaskDetailDTO; co
         return (
           <FormItem>
             <Popover open={open} onOpenChange={setOpen}>
-              <FormControl>
-                <PopoverTrigger asChild>
+              <PopoverTrigger asChild>
+                <FormControl>
                   <div
                     className={`flex flex-row text-xs font-normal ml-4
                             items-center rounded-full px-3 py-1 h-[1.625rem] 
@@ -34,13 +34,13 @@ export default function TimePicker({ task, control }: { task?: TaskDetailDTO; co
                     <div className="ml-1">
                       <input
                         className="bg-transparent border-none outline-none p-0 w-14"
-                        value={field.value ? field.value : format(new Date(task.dueDate), 'h:mm a')}
+                        value={field.value}
                         onChange={field.onChange}
                       />
                     </div>
                   </div>
-                </PopoverTrigger>
-              </FormControl>
+                </FormControl>
+              </PopoverTrigger>
 
               <PopoverContent className="w-24 p-0">
                 <Command>

@@ -40,6 +40,8 @@ export default function TaskContent({
     },
   });
 
+  console.log('default: ', new Date(task.dueDate), 'h:mm a');
+
   const updateTask: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
     let dateTime: string;
     if (data.time) {

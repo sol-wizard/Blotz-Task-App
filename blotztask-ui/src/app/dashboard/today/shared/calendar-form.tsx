@@ -38,13 +38,7 @@ export function CalendarForm({
                     onClick={() => setShowCalendar((prev) => !prev)}
                   >
                     <CalendarDays className="mr-1" size={16} />
-                    {field.value ? (
-                      format(field.value, 'MM/dd')
-                    ) : task ? (
-                      <span className="text-xs">{format(new Date(task.dueDate), 'MM/dd')}</span>
-                    ) : (
-                      <span>{format(new Date(), 'MM/dd')}</span>
-                    )}
+                    {field.value ? format(field.value, 'MM/dd') : <span>{format(new Date(), 'MM/dd')}</span>}
                   </button>
                 </FormControl>
               </PopoverTrigger>
