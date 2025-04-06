@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import TaskSeparator from '../../today/shared/task-separator';
 import { DialogClose } from '@radix-ui/react-dialog';
 import { DialogFooter } from '@/components/ui/dialog';
+import { parse, setHours, setMinutes } from 'date-fns';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
@@ -21,15 +22,23 @@ const GlobalAddTaskForm = ({ onSubmit }) => {
       description: '',
       date: new Date(),
       labelId: undefined,
-      time: ''
+      time: '12:00 AM',
     },
   });
 
   const handleAddTask: SubmitHandler<FormField> = async (data) => {
+    let dateTime: string;
+    if (data.time) {
+      const parsedTime = parse(data.time, 'h:mm a', new Date());
+      dateTime = setMinutes(
+        setHours(data.date, parsedTime.getHours()),
+        parsedTime.getMinutes()
+      ).toISOString();
+    }
     const taskDetails: AddTaskItemDTO = {
       title: data.title,
       description: data.description ?? '',
-      dueDate: data.date.toLocaleString(),
+      dueDate: dateTime,
       labelId: data.labelId ?? 0,
     };
     onSubmit(taskDetails);

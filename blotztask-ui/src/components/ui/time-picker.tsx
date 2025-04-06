@@ -6,7 +6,6 @@ import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Clock } from 'lucide-react';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Control } from 'react-hook-form';
-import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
 
 const times = ['9:00 AM', '12:00 PM', '3:00 PM', '6:00 PM', '9:00 PM', '12:00 AM'];
 
@@ -47,7 +46,7 @@ export default function TimePicker({
                 </FormControl>
               </PopoverTrigger>
 
-              <PopoverContent className="w-24 p-0" ref={timePickerRef ?? undefined}>
+              <PopoverContent className="w-24 p-0 pointer-events-auto" ref={timePickerRef ?? undefined}>
                 <Command>
                   <CommandGroup>
                     {times.map((time) => (
