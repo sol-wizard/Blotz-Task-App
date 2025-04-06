@@ -191,7 +191,6 @@ export default function TaskContent({
           </form>
         </Form>
       </div>
-      <SectionSepreator />
     </div>
   );
 }
