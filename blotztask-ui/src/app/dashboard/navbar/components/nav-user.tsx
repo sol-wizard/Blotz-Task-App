@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenuButton } from '@/components/ui/sidebar';
+import { Switch } from '@/components/ui/switch';
 import { ChevronsUpDown, LogOut, Settings } from 'lucide-react';
 
 export interface User {
@@ -20,9 +21,11 @@ export interface User {
 interface NavUserProps {
     user: User;
     onSignOut: () => void; 
+    aiEnabled?: boolean;
+    onToggleAI?: (enabled: boolean) => void;
 } 
   
-export function NavUser({ user, onSignOut }: NavUserProps) {
+export function NavUser({ user, onSignOut, aiEnabled = false, onToggleAI }: NavUserProps) {
   return (
     <>
       <DropdownMenu>
@@ -67,6 +70,21 @@ export function NavUser({ user, onSignOut }: NavUserProps) {
               Settings
             </DropdownMenuItem>
           </DropdownMenuGroup>
+
+          <DropdownMenuGroup>
+            <div className="flex items-center justify-between px-3 py-2">
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">AI Assistant</span>
+                <span className="text-xs text-muted-foreground">Enable task extraction</span>
+              </div>
+              <Switch
+                checked={aiEnabled}
+                onCheckedChange={onToggleAI}
+                aria-label="Toggle AI Assistant"
+              />
+            </div>
+          </DropdownMenuGroup>
+
           <DropdownMenuSeparator />
           <DropdownMenuItem  onClick={onSignOut}>
             <LogOut />
