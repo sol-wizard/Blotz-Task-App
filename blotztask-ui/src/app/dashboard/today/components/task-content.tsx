@@ -62,18 +62,6 @@ export default function TaskContent({
     onSubmit(editTaskDetails);
   };
 
-  // useEffect(() => {
-  //   if (task) {
-  //     form.reset({
-  //       title: task.title,
-  //       description: task.description,
-  //       date: new Date(task.dueDate),
-  //       labelId: task.label.labelId,
-  //       time: format(new Date(task.dueDate), 'h:mm a'),
-  //     });
-  //   }
-  // }, [task]);
-
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
 
@@ -172,7 +160,7 @@ export default function TaskContent({
                   <div className="flex flex-row items-center">
                     <CalendarForm control={form.control} task={task} />
                     <LabelSelect control={form.control} />
-                    <TimePicker control={form.control} task={task} />
+                    <TimePicker control={form.control} />
                   </div>
                   <div className="flex flex-row ">
                     <button

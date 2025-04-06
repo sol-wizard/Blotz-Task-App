@@ -7,11 +7,16 @@ import { Clock } from 'lucide-react';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Control } from 'react-hook-form';
 import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
-import { format } from 'date-fns';
 
 const times = ['9:00 AM', '12:00 PM', '3:00 PM', '6:00 PM', '9:00 PM', '12:00 AM'];
 
-export default function TimePicker({ task, control }: { task?: TaskDetailDTO; control: Control }) {
+export default function TimePicker({
+  control,
+  timePickerRef,
+}: {
+  control: Control;
+  timePickerRef?: React.RefObject<HTMLDivElement>;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -34,7 +39,7 @@ export default function TimePicker({ task, control }: { task?: TaskDetailDTO; co
                     <div className="ml-1">
                       <input
                         className="bg-transparent border-none outline-none p-0 w-14"
-                        value={field.value}
+                        value={field.value || '12:00 AM'}
                         onChange={field.onChange}
                       />
                     </div>
@@ -42,7 +47,7 @@ export default function TimePicker({ task, control }: { task?: TaskDetailDTO; co
                 </FormControl>
               </PopoverTrigger>
 
-              <PopoverContent className="w-24 p-0">
+              <PopoverContent className="w-24 p-0" ref={timePickerRef ?? undefined}>
                 <Command>
                   <CommandGroup>
                     {times.map((time) => (
