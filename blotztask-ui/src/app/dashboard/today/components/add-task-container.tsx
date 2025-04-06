@@ -22,6 +22,7 @@ const AddTaskContainer = ({ onSubmit, datePickerRef, labelPickerRef, timePickerR
     },
   });
 
+  // I will move all the duplicate handleAddTask functions to store in another pbi
   const handleAddTask: SubmitHandler<FormField> = async (data) => {
     let dateTime: string;
     if (data.time) {
