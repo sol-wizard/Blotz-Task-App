@@ -1,7 +1,7 @@
 import DueDateTag from './due-date-tag';
 import TaskSeparator from '../shared/task-separator';
 import { Pencil } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SectionSepreator from './section-separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from 'src/components/ui/task-card-input';
@@ -64,6 +64,18 @@ export default function TaskContent({
 
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
+
+  useEffect(() => {
+    if (task) {
+      form.reset({
+        title: task.title,
+        description: task.description,
+        date: new Date(task.dueDate),
+        labelId: task.label.labelId,
+        time: format(new Date(task.dueDate), 'h:mm a'),
+      });
+    }
+  }, [task]);
 
   return (
     <div className="flex flex-col w-full ">
