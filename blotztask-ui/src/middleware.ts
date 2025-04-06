@@ -35,5 +35,8 @@ async function withAuth(req) {
 
 // match all pages
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|assets|favicon.ico).*)'],
+  matcher: [
+    // Protect all routes except for these
+    '/((?!_next|api|auth|assets|favicon.ico).*)',
+  ],
 };
