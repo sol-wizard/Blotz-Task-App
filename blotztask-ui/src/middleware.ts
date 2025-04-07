@@ -13,20 +13,21 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-// config path no need to check auth
-const excludeAuthPath = ['/auth', '/auth/signin', '/auth/signup'];
-
 // customize auth redirect strategy
 async function withAuth(req) {
-  const { pathname } = req.nextUrl;
+  const pathname = req.nextUrl.pathname.replace(/\/$/, '');
+  // config path no need to check auth
+  const excludeAuthPath = ['/auth', '/auth/signin', '/auth/signup'];
 
-  if (excludeAuthPath.includes(pathname)) {
+  if (excludeAuthPath.some(path => pathname.startsWith(path))) {
     return NextResponse.next();
   }
 
   const token = await getToken({ req });
   if (!token) {
-    return NextResponse.redirect(new URL('auth/signin', req.url));
+    const signinUrl = new URL('/auth/signin', req.url);
+    signinUrl.searchParams.set('callbackUrl', req.nextUrl.pathname);
+    return NextResponse.redirect(signinUrl);
   }
 
   return NextResponse.next();
@@ -34,5 +35,8 @@ async function withAuth(req) {
 
 // match all pages
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|assets|favicon.ico).*)'],
+  matcher: [
+    // Protect all routes except for these
+    '/((?!_next|api|auth|assets|favicon.ico).*)',
+  ],
 };
