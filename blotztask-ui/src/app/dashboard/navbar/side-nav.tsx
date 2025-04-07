@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 import AddTaskDialog from './components/add-task-dialog';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
+import SearchBar from './components/search-bar';
 const authenticatedItems = [
   { title: 'All Tasks', url: '/dashboard/task-list', icon: ListChecks },
   { title: 'Today', url: '/dashboard/today', icon: ClipboardCheck },
