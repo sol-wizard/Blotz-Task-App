@@ -95,7 +95,6 @@ export function AppSidebar() {
 
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-<<<<<<< HEAD
                 <SidebarMenuButton
                   className={cn(
                     'flex items-center ml-2 px-4 py-3 w-full rounded-md',
@@ -113,17 +112,6 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               
-=======
-                  <SidebarMenuButton asChild>
-
-                    <a href={item.url} className="flex items-center ml-2 px-4 py-3 w-full hover:bg-blue-100">
-
-                      <item.icon />
-                      <span className="pl-3 text-base">{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
->>>>>>> f80f633d7a7a2c79394f3acaa8a42f228e0e95e5
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
