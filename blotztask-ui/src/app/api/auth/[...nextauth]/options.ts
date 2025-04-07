@@ -88,12 +88,25 @@ export const authOptions: NextAuthOptions = {
 
       return true;
     },
-    async jwt({ token }) {
+    async jwt({ token, user }) {
+      if (user) {
+        const u = user as unknown as {
+          accessToken: string;
+          refreshToken: string;
+          expiresIn: number;
+        };
+    
+        token.accessToken = u.accessToken;
+        token.refreshToken = u.refreshToken;
+        token.expiresAt = Date.now() + (u.expiresIn ?? 3600) * 1000;
+      }
+          
       return token;
     },
+  
     async session({ session }) {
       return session;
-    },
+    }
   },
   session: {
     strategy: 'jwt',
