@@ -30,6 +30,14 @@ async function withAuth(req) {
     return NextResponse.redirect(signinUrl);
   }
 
+  // If token expired → redirect
+  if (token.expiresAt && Date.now() > (token.expiresAt as number)) {
+    console.warn('[Middleware] Token expired');
+    const signinUrl = new URL('/auth/signin', req.url);
+    signinUrl.searchParams.set('callbackUrl', req.nextUrl.pathname);
+    return NextResponse.redirect(signinUrl);
+  }
+
   return NextResponse.next();
 }
 
