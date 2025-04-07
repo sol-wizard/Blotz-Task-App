@@ -21,10 +21,12 @@ import { fetchAllLabel } from '@/services/labelService';
 import { useTodayTaskStore } from '../store/today-task-store';
 import { cn } from '@/lib/utils';
 import AddTaskDialog from './components/add-task-dialog';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const authenticatedItems = [
-  { title: 'All Tasks', url: 'task-list', icon: ListChecks },
-  { title: 'Today', url: 'today', icon: ClipboardCheck },
+  { title: 'All Tasks', url: '/dashboard/task-list', icon: ListChecks },
+  { title: 'Today', url: '/dashboard/today', icon: ClipboardCheck },
 ];
 
 const guestItems = [{ title: 'Home', url: '/home', icon: Home }];
@@ -34,6 +36,7 @@ const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 export function AppSidebar() {
   const { data: session, status } = useSession();
   const handleAddTask = useTodayTaskStore((state) => state.handleAddTask);
+  const pathname = usePathname();
 
   const handleSignOut = (e) => {
     e.preventDefault();
@@ -84,13 +87,23 @@ export function AppSidebar() {
 
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url} className="flex items-center ml-2 px-4 py-3 w-full hover:bg-blue-100">
-                      <item.icon />
-                      <span className="pl-3 text-base">{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <SidebarMenuButton
+                  className={cn(
+                    'flex items-center ml-2 px-4 py-3 w-full rounded-md',
+                    pathname === item.url 
+                      ?'bg-blue-100 text-primary hover:bg-blue-200'
+                      : 'hover:bg-blue-200'
+
+                  )}
+                  asChild
+                >
+                  <Link href={item.url}>
+                    <item.icon className="w-5 h-5" />
+                    <span className="pl-3 text-base">{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
