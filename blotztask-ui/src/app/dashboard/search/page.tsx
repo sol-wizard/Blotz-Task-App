@@ -40,15 +40,9 @@ export default function Page() {
 
       {(filteredTasks.length === 0 || query.length === 0) && 
       
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: 'calc(100vh - 80px)' 
-      }}>
+      <div className="flex flex-col justify-center items-center h-[calc(100vh-80px)]">
         <Frown color="lightgray" size={58}/>
-        <p style={{ fontSize: "25px", fontWeight:"bold" }}>No matching task found</p>
+        <p className="text-[25] font-bold">No matching task found</p>
         <p>Try to search another keyword</p>
       </div>
         }
