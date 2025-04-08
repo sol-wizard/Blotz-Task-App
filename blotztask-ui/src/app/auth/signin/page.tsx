@@ -16,7 +16,7 @@ const loginFormSchema = z.object({
   email: z.string().email(),
   password: z.string().min(9),
 });
-
+//TODO: Convert all inline styles to use tailwind classes , we should use the form component from the UI library (shadcn). refer to the other pages
 const LoginPage = () => {
   const {
     register,

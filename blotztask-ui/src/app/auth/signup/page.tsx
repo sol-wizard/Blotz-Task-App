@@ -29,6 +29,7 @@ const SignUpPage = () => {
     resolver: zodResolver(schema),
   });
 
+  //TODO : Move this logic to a service 
   const onSubmit = async (data: { firstName: string; lastName: string; email: string; password: string }) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/userinfo/register`, {

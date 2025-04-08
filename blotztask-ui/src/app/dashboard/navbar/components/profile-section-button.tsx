@@ -14,7 +14,7 @@ export function ProfileSectionButton({ session, onSignOut, aiEnabled, setAiEnabl
     setUserInfo({
       name: `${result.data.firstname} ${result.data.lastname}`,
       email: result.data.email,
-      avatar: '../../../assets/images/profileImage.png',
+      avatar: '../../../assets/images/blotz-logo.png',
     });
   };
 
