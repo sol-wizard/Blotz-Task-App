@@ -383,7 +383,7 @@ public class TaskService : ITaskService
             scheduleSortTasksDTO.todayTasks = tasks.Where(t => t.DueDate.Date == now.Date).ToList();
             scheduleSortTasksDTO.tomorrowTasks = tasks.Where(t => t.DueDate.Date == now.AddDays(1).Date).ToList();
 
-            DateTime startOfWeek = now.Date.AddDays(-((int)now.DayOfWeek + 6) % 7); 
+            DateTime startOfWeek = now.Date.AddDays(-(int)now.DayOfWeek); 
             DateTime endOfWeek = startOfWeek.AddDays(6);
             DateTime startOfMonth = new DateTime(now.Year, now.Month, 1);
             DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
