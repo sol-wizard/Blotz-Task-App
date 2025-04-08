@@ -31,6 +31,7 @@ namespace BlotzTask.Controllers
         }
 
         [HttpGet("monthly-stats/{year}-{month}")]
+        [Obsolete("This endpoint is deprecated and will be removed later.")]
         public async Task<IActionResult> GetMonthlyStats(int year, int month)
         {
             var userId = HttpContext.Items["UserId"] as string;
@@ -44,7 +45,7 @@ namespace BlotzTask.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetTaskByID(int id)
+        public async Task<IActionResult> GetTaskById(int id)
         {
             return Ok(await _taskService.GetTaskByID(id));
         }
