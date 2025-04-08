@@ -7,6 +7,9 @@ public class ExtractedTask
     [JsonPropertyName("title")]
     public string Title { get; set; }
 
+    [JsonPropertyName("description")]
+    public string Description { get; set; } = "";
+
     [JsonPropertyName("due_date")]
     public string? DueDate { get; set; }
     
