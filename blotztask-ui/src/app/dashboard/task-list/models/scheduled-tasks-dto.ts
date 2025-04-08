@@ -1,6 +1,6 @@
 import { TaskDetailDTO } from "./task-detail-dto";
 
-export interface ScheduleSortTasksDTO {
+export interface ScheduledTasksDTO {
   todayTasks: TaskDetailDTO[]; 
   tomorrowTasks: TaskDetailDTO[]; 
   weekTasks: TaskDetailDTO[]; 

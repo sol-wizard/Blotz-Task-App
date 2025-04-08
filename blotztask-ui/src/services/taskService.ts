@@ -2,7 +2,7 @@ import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto'
 import { fetchWithAuth } from '@/utils/fetch-with-auth';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { EditTaskItemDTO } from '@/app/dashboard/task-list/models/edit-task-item-dto';
-import { ScheduleSortTasksDTO } from '@/app/dashboard/task-list/models/schedule-sort-tasks-dto';
+import { ScheduledTasksDTO } from '@/app/dashboard/task-list/models/scheduled-tasks-dto';
 
 export const fetchAllTaskItems = async (): Promise<TaskDetailDTO[]> => {
   const result = await fetchWithAuth<TaskDetailDTO[]>(
@@ -127,11 +127,11 @@ export const undoDeleteTask = async (taskId: number) => {
   }
 };
 
-export const fetchScheduleTasks = async (): Promise<ScheduleSortTasksDTO> => {
+export const fetchScheduleTasks = async (): Promise<ScheduledTasksDTO> => {
   try {
-    const startDateUTC = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
-    const result = await fetchWithAuth<ScheduleSortTasksDTO>(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/scheduled-tasks?startDateUTC=${encodeURIComponent(startDateUTC)}`,
+    const todayDate = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
+    const result = await fetchWithAuth<ScheduledTasksDTO>(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/scheduled-tasks?todayDate=${encodeURIComponent(todayDate)}`,
       {
         method: 'GET',
         headers: {

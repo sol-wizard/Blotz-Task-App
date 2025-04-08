@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace BlotzTask.Models
 {
-    public class ScheduleSortTasksDTO
+    public class ScheduledTasksDTO
     {
         
         public List<TaskItemDTO> todayTasks { get; set; }

@@ -18,7 +18,7 @@ public interface ITaskService
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
     public Task<List<TaskItemDTO>> SearchTasksAsync(string query);
-    public Task<ScheduleSortTasksDTO> GetScheduledTasks(DateTime startDateUTC, string userId);
+    public Task<ScheduledTasksDTO> GetScheduledTasks(DateTime todayDate, string userId);
 }
 
 public class TaskService : ITaskService
@@ -350,12 +350,11 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task<ScheduleSortTasksDTO> GetScheduledTasks(DateTime startDateUTC, string userId)
+    public async Task<ScheduledTasksDTO> GetScheduledTasks(DateTime todayDate, string userId)
     {
         try {
-            var scheduleSortTasksDTO = new ScheduleSortTasksDTO();
-
-            DateTime now = startDateUTC;
+            
+            DateTime now = todayDate;
 
             var tasks = await _dbContext.TaskItems
             .Where(t => t.DueDate != null && t.DueDate.Month == now.Month)
@@ -377,27 +376,10 @@ public class TaskService : ITaskService
 
             if (tasks is null)
             {
-                return new ScheduleSortTasksDTO();
+                return new ScheduledTasksDTO();
             }
 
-            scheduleSortTasksDTO.todayTasks = tasks.Where(t => t.DueDate.Date == now.Date).ToList();
-            scheduleSortTasksDTO.tomorrowTasks = tasks.Where(t => t.DueDate.Date == now.AddDays(1).Date).ToList();
-
-            DateTime startOfWeek = now.Date.AddDays(-(int)now.DayOfWeek); 
-            DateTime endOfWeek = startOfWeek.AddDays(6);
-
-            scheduleSortTasksDTO.weekTasks = tasks
-                .Where(t => t.DueDate.Date >= startOfWeek && 
-                            t.DueDate.Date <= endOfWeek &&
-                            t.DueDate.Date != now.Date &&
-                            t.DueDate.Date != now.AddDays(1).Date)
-                .ToList();
-
-            scheduleSortTasksDTO.monthTasks = tasks
-                .Where(t => !(t.DueDate.Date >= startOfWeek && t.DueDate.Date <= endOfWeek))
-                .ToList();
-                
-            return scheduleSortTasksDTO;
+            return GroupTasksBySchedule(tasks, now);
 
         } catch (Exception ex)
         {
@@ -405,5 +387,29 @@ public class TaskService : ITaskService
         }
     }
 
+    private ScheduledTasksDTO GroupTasksBySchedule(List<TaskItemDTO> tasks, DateTime now)
+    {
+
+        var scheduledTasksDTO = new ScheduledTasksDTO();
+
+        scheduledTasksDTO.todayTasks = tasks.Where(t => t.DueDate.Date == now.Date).ToList();
+        scheduledTasksDTO.tomorrowTasks = tasks.Where(t => t.DueDate.Date == now.AddDays(1).Date).ToList();
+
+        DateTime startOfWeek = now.Date.AddDays(-(int)now.DayOfWeek); 
+        DateTime endOfWeek = startOfWeek.AddDays(6);
+
+        scheduledTasksDTO.weekTasks = tasks
+            .Where(t => t.DueDate.Date >= startOfWeek && 
+                        t.DueDate.Date <= endOfWeek &&
+                        t.DueDate.Date != now.Date &&
+                        t.DueDate.Date != now.AddDays(1).Date)
+            .ToList();
+
+        scheduledTasksDTO.monthTasks = tasks
+            .Where(t => !(t.DueDate.Date >= startOfWeek && t.DueDate.Date <= endOfWeek))
+            .ToList();
+            
+        return scheduledTasksDTO;
+    }
 }
 
