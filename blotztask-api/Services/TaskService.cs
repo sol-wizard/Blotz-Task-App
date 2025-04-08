@@ -18,6 +18,7 @@ public interface ITaskService
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
     public Task<List<TaskItemDTO>> SearchTasksAsync(string query);
+    public Task<ScheduleSortTasksDTO> GetScheduleSortTasksAsync(DateTime startDateUTC, string userId);
 }
 
 public class TaskService : ITaskService
@@ -348,5 +349,66 @@ public class TaskService : ITaskService
             throw new Exception($"Unhandled exception: {ex.Message}");
         }
     }
+
+    public async Task<ScheduleSortTasksDTO> GetScheduleSortTasksAsync(DateTime startDateUTC, string userId)
+    {
+        try {
+            var scheduleSortTasksDTO = new ScheduleSortTasksDTO();
+
+            DateTime now = startDateUTC;
+
+            var tasks = await _dbContext.TaskItems
+            .Where(t => t.DueDate != null && t.DueDate.Month == now.Month)
+            .Select(task => new TaskItemDTO{
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                DueDate = task.DueDate,
+                IsDone = task.IsDone,
+                Label = new LabelDTO 
+                { 
+                    LabelId = task.Label.LabelId, 
+                    Name = task.Label.Name, 
+                    Color = task.Label.Color 
+                }
+            })
+            .OrderBy(t => t.DueDate)
+            .ToListAsync();
+
+            if (tasks is null)
+            {
+                return new ScheduleSortTasksDTO();
+            }
+
+            scheduleSortTasksDTO.todayTasks = tasks.Where(t => t.DueDate.Date == now.Date).ToList();
+            scheduleSortTasksDTO.tomorrowTasks = tasks.Where(t => t.DueDate.Date == now.AddDays(1).Date).ToList();
+
+            DateTime startOfWeek = now.Date.AddDays(-((int)now.DayOfWeek + 6) % 7); 
+            DateTime endOfWeek = startOfWeek.AddDays(6);
+            DateTime startOfMonth = new DateTime(now.Year, now.Month, 1);
+            DateTime endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+            scheduleSortTasksDTO.weekTasks = tasks
+                .Where(t => t.DueDate.Date >= startOfWeek && 
+                            t.DueDate.Date <= endOfWeek &&
+                            t.DueDate.Date != now.Date &&
+                            t.DueDate.Date != now.AddDays(1).Date)
+                .ToList();
+
+
+            scheduleSortTasksDTO.monthTasks = tasks
+                .Where(t => t.DueDate.Date >= startOfMonth && 
+                            t.DueDate.Date <= endOfMonth &&
+                            !(t.DueDate.Date >= startOfWeek && t.DueDate.Date <= endOfWeek))
+                .ToList();
+                
+            return scheduleSortTasksDTO;
+
+        } catch (Exception ex)
+        {
+            throw new Exception($"Unhandled exception: {ex.Message}");
+        }
+    }
+
 }
 
