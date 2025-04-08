@@ -17,6 +17,7 @@ import {
   useTodayTasksIsLoading,
 } from '../store/today-store/today-task-store';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
+import SectionSeparator from './components/section-separator';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
@@ -74,24 +75,30 @@ export default function Today() {
             <>
               <TodayHeader tasks={todayTasks} />
               <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
-              <Divider text="To do" />
+              <Divider text="To Do" />
+              <SectionSeparator />
+              {/* //TODO: make this into a component as per below completed task viewer section */}
               <div className="flex flex-col gap-6 w-full">
                 {incompleteTodayTasks.length > 0 ? (
                   incompleteTodayTasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      handleCheckboxChange={handleCheckboxChange}
-                      handleTaskEdit={handleTaskEdit}
-                      handleTaskDelete={handleTaskDelete}
-                      handleTaskDeleteUndo={handleTaskDeleteUndo}
-                    ></TaskCard>
+                    <>
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        handleCheckboxChange={handleCheckboxChange}
+                        handleTaskEdit={handleTaskEdit}
+                        handleTaskDelete={handleTaskDelete}
+                        handleTaskDeleteUndo={handleTaskDeleteUndo}
+                      ></TaskCard>
+                      <SectionSeparator />
+                    </>
                   ))
                 ) : (
                   <p>No incomplete tasks for today!</p>
                 )}
               </div>
               <Divider text="Done" />
+              <SectionSeparator />
               <CompletedTaskViewer
                 completedTasks={completedTodayTasks}
                 handleCompletedCheckboxChange={handleCheckboxChange}
