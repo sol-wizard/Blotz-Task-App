@@ -131,7 +131,7 @@ export const fetchScheduleTasks = async (): Promise<ScheduleSortTasksDTO> => {
   try {
     const startDateUTC = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
     const result = await fetchWithAuth<ScheduleSortTasksDTO>(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/schedule-alltask?startDateUTC=${encodeURIComponent(startDateUTC)}`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/scheduled-tasks?startDateUTC=${encodeURIComponent(startDateUTC)}`,
       {
         method: 'GET',
         headers: {

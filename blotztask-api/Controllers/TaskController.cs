@@ -133,8 +133,8 @@ namespace BlotzTask.Controllers
             return Ok(tasks);
         }
 
-        [HttpGet("schedule-alltask")]
-        public async Task<IActionResult> GetScheduleSortTasks([FromQuery] DateTime startDateUTC)
+        [HttpGet("scheduled-tasks")]
+        public async Task<IActionResult> GetScheduleSortTasks([FromQuery, Required] DateTime startDateUTC)
         {
             var userId = HttpContext.Items["UserId"] as string;
 
@@ -143,7 +143,7 @@ namespace BlotzTask.Controllers
                 throw new UnauthorizedAccessException("Could not find user id from Http Context");
             }
             
-            return Ok(await _taskService.GetScheduleSortTasksAsync(startDateUTC, userId));
+            return Ok(await _taskService.GetScheduledTasks(startDateUTC, userId));
         }
     }
 }
