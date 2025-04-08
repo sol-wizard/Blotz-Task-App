@@ -37,8 +37,9 @@ export default function TimePicker({
 
                     <div className="ml-1">
                       <input
-                        className="bg-transparent border-none outline-none p-0 w-14"
-                        value={field.value || '12:00 AM'}
+                        className="bg-transparent border-none outline-none placeholder:text-neutral-700 p-0 w-14"
+                        value={field.value}
+                        placeholder="Add Time"
                         onChange={field.onChange}
                       />
                     </div>
