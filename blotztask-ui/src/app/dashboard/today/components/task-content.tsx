@@ -15,7 +15,7 @@ import { LabelSelect } from '../shared/label-select';
 import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
 import DeleteTaskDialog from './delete-dialog-content';
 import TimePicker from '@/components/ui/time-picker';
-import { format, parse, setHours, setMinutes } from 'date-fns';
+import { format, parse, set } from 'date-fns';
 
 export default function TaskContent({
   task,
@@ -39,17 +39,20 @@ export default function TaskContent({
     },
   });
 
-  console.log('default: ', new Date(task.dueDate), 'h:mm a');
-
   const updateTask: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
     let dateTime: string;
+
+    // Combine date and time, because backend storing the combined date and time
     if (data.time) {
       const parsedTime = parse(data.time, 'h:mm a', new Date());
-      dateTime = setMinutes(
-        setHours(data.date, parsedTime.getHours()),
-        parsedTime.getMinutes()
-      ).toISOString();
+    
+      const hours = parsedTime.getHours();
+      const minutes = parsedTime.getMinutes();
+    
+      const dateWithTime = set(data.date, { hours, minutes });
+      dateTime = dateWithTime.toISOString();
     }
+
     const editTaskDetails: EditTaskItemDTO = {
       id: task.id,
       title: data.title ?? task.title,
