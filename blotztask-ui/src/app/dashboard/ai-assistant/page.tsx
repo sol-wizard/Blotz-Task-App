@@ -40,9 +40,9 @@ export default function AiAssistant() {
 
   const handleAddTask = async () => {
     if (!extractedTask) return;
-  
+
     setAdding(true);
-  
+
     try {
       const tasktoAdd = mapExtractedTaskToAddTaskDTO(extractedTask);
 
@@ -57,7 +57,6 @@ export default function AiAssistant() {
 
   return (
     <div className="ml-5 flex flex-col gap-6 mt-8 w-3/4">
-
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold text-zinc-800">AI Task Assistant 🤖</h1>
         <p className="text-zinc-500 text-sm">Describe what you want to do and I’ll turn it into a task.</p>
@@ -101,6 +100,9 @@ export default function AiAssistant() {
             >
               <h2 className="text-lg font-semibold text-zinc-800">{extractedTask.title}</h2>
               <p className="text-sm text-zinc-600">
+                <strong>Description:</strong> {extractedTask.description ?? 'None'}
+              </p>
+              <p className="text-sm text-zinc-600">
                 <strong>Due Date:</strong> {extractedTask.due_date ?? 'None'}
               </p>
 
@@ -121,9 +123,7 @@ export default function AiAssistant() {
         </>
       )}
 
-      {!loading && !extractedTask && (
-        <p className="text-zinc-400 text-sm italic">No task generated yet.</p>
-      )}
+      {!loading && !extractedTask && <p className="text-zinc-400 text-sm italic">No task generated yet.</p>}
     </div>
   );
 }
