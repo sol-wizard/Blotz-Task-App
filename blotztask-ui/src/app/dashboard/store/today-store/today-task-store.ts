@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
-import { addTaskItem, fetchTaskItemsDueToday } from '@/services/taskService';
+import { addTaskItem, fetchTaskItemsDueToday } from '@/services/task-service';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { performTaskAndRefresh } from './util';
 

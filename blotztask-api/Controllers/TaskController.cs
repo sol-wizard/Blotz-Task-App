@@ -31,6 +31,7 @@ namespace BlotzTask.Controllers
         }
 
         [HttpGet("monthly-stats/{year}-{month}")]
+        [Obsolete("This endpoint is deprecated and will be removed later.")]
         public async Task<IActionResult> GetMonthlyStats(int year, int month)
         {
             var userId = HttpContext.Items["UserId"] as string;
@@ -44,11 +45,12 @@ namespace BlotzTask.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetTaskByID(int id)
+        public async Task<IActionResult> GetTaskById(int id)
         {
             return Ok(await _taskService.GetTaskByID(id));
         }
-
+        
+        //TODO: change the route "due-date" to "by-date"
         [HttpGet("due-date")]
         public async Task<IActionResult> GetTaskByDate([FromQuery] DateTime startDateUTC)
         {
@@ -59,8 +61,8 @@ namespace BlotzTask.Controllers
                 throw new UnauthorizedAccessException("Could not find user id from Http Context");
             }
             
-            DateTime endDateUTC = startDateUTC.AddDays(1);
-            return Ok(await _taskService.GetTaskByDate(startDateUTC, endDateUTC, userId));
+            DateTime endDateUtc = startDateUTC.AddDays(1);
+            return Ok(await _taskService.GetTaskByDate(startDateUTC, endDateUtc, userId));
         }
 
 
@@ -88,27 +90,19 @@ namespace BlotzTask.Controllers
         public async Task<IActionResult> TaskStatusUpdate(int id)
         {
 
-            try{
-                var taskStatusResultDTO = await _taskService.TaskStatusUpdate(id);
+            var taskStatusResultDto = await _taskService.TaskStatusUpdate(id);
 
-                if (taskStatusResultDTO == null)
-                {
-                    throw new InvalidOperationException($"Task status update failed: no valid data returned for task ID {id}.");
-                }
-                
-
-                var message = taskStatusResultDTO.Message;
-                return Ok(new ResponseWrapper<int>(id, message, true));
-            }catch(Exception){
-                throw;
+            if (taskStatusResultDto == null)
+            {
+                throw new InvalidOperationException($"Task status update failed: no valid data returned for task ID {id}.");
             }
-
-
+            var message = taskStatusResultDto.Message;
+            return Ok(new ResponseWrapper<int>(id, message, true));
         }
 
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTaskByID(int id)
+        public async Task<IActionResult> DeleteTaskById(int id)
         {
             var result = await _taskService.DeleteTaskByIDAsync(id);
 
