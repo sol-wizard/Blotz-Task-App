@@ -79,14 +79,17 @@ export default function Today() {
               <div className="flex flex-col gap-6 w-full">
                 {incompleteTodayTasks.length > 0 ? (
                   incompleteTodayTasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      handleCheckboxChange={handleCheckboxChange}
-                      handleTaskEdit={(data) => handleTaskEdit(data, task)}
-                      handleTaskDelete={handleTaskDelete}
-                      handleTaskDeleteUndo={handleTaskDeleteUndo}
-                    ></TaskCard>
+                    <>
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        handleCheckboxChange={handleCheckboxChange}
+                        handleTaskEdit={(data) => handleTaskEdit(data, task)}
+                        handleTaskDelete={handleTaskDelete}
+                        handleTaskDeleteUndo={handleTaskDeleteUndo}
+                      ></TaskCard>
+                      <SectionSeparator />
+                    </>
                   ))
                 ) : (
                   <p>No incomplete tasks for today!</p>
