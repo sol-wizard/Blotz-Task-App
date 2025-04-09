@@ -39,7 +39,7 @@ export default function Today() {
       console.error('Error performing action:', error);
     }
   };
-  const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
+  const handleAddTask = async (taskDetails) => {
     handleAction(() => addTaskItem(taskDetails));
   };
 

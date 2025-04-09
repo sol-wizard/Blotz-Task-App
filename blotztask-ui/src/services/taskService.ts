@@ -2,6 +2,7 @@ import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto'
 import { fetchWithAuth } from '@/utils/fetch-with-auth';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { EditTaskItemDTO } from '@/app/dashboard/task-list/models/edit-task-item-dto';
+import { parse, set } from 'date-fns';
 
 export const fetchAllTaskItems = async (): Promise<TaskDetailDTO[]> => {
   const result = await fetchWithAuth<TaskDetailDTO[]>(
@@ -33,7 +34,21 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
   return result;
 };
 
-export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<TaskDetailDTO> => {
+export const addTaskItem = async (taskDetails): Promise<TaskDetailDTO> => {
+  let dateTime: string;
+  if (taskDetails.time != '') {
+    const parsedTime = parse(taskDetails.time, 'h:mm a', new Date());
+    const hours = parsedTime.getHours();
+    const minutes = parsedTime.getMinutes();
+    const dateWithTime = set(taskDetails.date, { hours, minutes });
+    dateTime = dateWithTime.toISOString();
+  }
+  const addTaskForm: AddTaskItemDTO = {
+    title: taskDetails.title,
+    description: taskDetails.description ?? '',
+    dueDate: dateTime,
+    labelId: taskDetails.labelId ?? 0,
+  };
   try {
     const result = await fetchWithAuth<TaskDetailDTO>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,

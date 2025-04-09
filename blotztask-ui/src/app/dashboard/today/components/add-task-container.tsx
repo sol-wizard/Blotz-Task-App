@@ -6,7 +6,7 @@ import { Form, FormField } from '@/components/ui/form';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { taskFormSchema } from '../forms/task-form-schema';
 import AddTaskForm from '../shared/add-task-form';
-import { parse, setHours, setMinutes } from 'date-fns';
+import { parse, set } from 'date-fns';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
@@ -23,21 +23,7 @@ const AddTaskContainer = ({ onSubmit, onCancel }) => {
   });
 
   // I will move all the duplicate handleAddTask functions to store in another pbi
-  const handleAddTask: SubmitHandler<FormField> = async (data) => {
-    let dateTime: string;
-    if (data.time) {
-      const parsedTime = parse(data.time, 'h:mm a', new Date());
-      dateTime = setMinutes(
-        setHours(data.date, parsedTime.getHours()),
-        parsedTime.getMinutes()
-      ).toISOString();
-    }
-    const taskDetails: AddTaskItemDTO = {
-      title: data.title,
-      description: data.description ?? '',
-      dueDate: dateTime,
-      labelId: data.labelId ?? 0,
-    };
+  const handleAddTask: SubmitHandler<FormField> = async (taskDetails) => {
     onSubmit(taskDetails);
   };
 
