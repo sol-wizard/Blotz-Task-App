@@ -3,14 +3,12 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
-import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { taskFormSchema } from '../../today/forms/task-form-schema';
 import AddTaskForm from '../../today/shared/add-task-form';
 import { Separator } from '@/components/ui/separator';
 import TaskSeparator from '../../today/shared/task-separator';
 import { DialogClose } from '@radix-ui/react-dialog';
 import { DialogFooter } from '@/components/ui/dialog';
-import { parse, setHours, setMinutes } from 'date-fns';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
