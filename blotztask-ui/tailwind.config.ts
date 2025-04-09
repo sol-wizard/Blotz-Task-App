@@ -97,6 +97,7 @@ const config: Config = {
         'default-text': 'var(--color-text)',
         secondary: '#278291',
         warn: '#F42F67',
+        //TODO: Do we still need this ?
         'monthly-stats-personal-label': '#fffcc4',
         'monthly-stats-acadedmic-label': '#a0e4e4',
         'monthly-stats-others-label': '#98bcfc',

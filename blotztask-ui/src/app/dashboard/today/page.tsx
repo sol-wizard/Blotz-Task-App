@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { addTaskItem, deleteTask, editTask, undoDeleteTask, updateTaskStatus } from '@/services/taskService';
+import { addTaskItem, deleteTask, editTask, undoDeleteTask, updateTaskStatus } from '@/services/task-service';
 import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
 import AddTaskCard from './components/add-task-card';
@@ -15,6 +15,7 @@ import {
   useTodayTasks,
   useTodayTasksIsLoading,
 } from '../store/today-store/today-task-store';
+import SectionSeparator from './components/section-separator';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
@@ -72,7 +73,9 @@ export default function Today() {
             <>
               <TodayHeader tasks={todayTasks} />
               <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
-              <Divider text="To do" />
+              <Divider text="To Do" />
+              <SectionSeparator />
+              {/* //TODO: make this into a component as per below completed task viewer section */}
               <div className="flex flex-col gap-6 w-full">
                 {incompleteTodayTasks.length > 0 ? (
                   incompleteTodayTasks.map((task) => (
@@ -90,6 +93,7 @@ export default function Today() {
                 )}
               </div>
               <Divider text="Done" />
+              <SectionSeparator />
               <CompletedTaskViewer
                 completedTasks={completedTodayTasks}
                 handleCompletedCheckboxChange={handleCheckboxChange}

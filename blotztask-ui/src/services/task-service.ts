@@ -2,6 +2,7 @@ import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto'
 import { fetchWithAuth } from '@/utils/fetch-with-auth';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { EditTaskItemDTO } from '@/app/dashboard/task-list/models/edit-task-item-dto';
+import { ScheduledTasksDTO } from '@/app/dashboard/task-list/models/scheduled-tasks-dto';
 import { parse, set } from 'date-fns';
 
 export const fetchAllTaskItems = async (): Promise<TaskDetailDTO[]> => {
@@ -162,6 +163,25 @@ export const undoDeleteTask = async (taskId: number) => {
   } catch (error) {
     console.error('Error undoing delete:', error);
     return { success: false, message: error.message };
+  }
+};
+
+export const fetchScheduleTasks = async (): Promise<ScheduledTasksDTO> => {
+  try {
+    const todayDate = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
+    const result = await fetchWithAuth<ScheduledTasksDTO>(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/scheduled-tasks?todayDate=${encodeURIComponent(todayDate)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return result;
+  } catch (error) {
+    console.error('Error deleting task:', error);
+    throw error;
   }
 };
 

@@ -18,6 +18,7 @@ public interface ITaskService
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
     public Task<List<TaskItemDTO>> SearchTasksAsync(string query);
+    public Task<ScheduledTasksDTO> GetScheduledTasks(DateTime todayDate, string userId);
 }
 
 public class TaskService : ITaskService
@@ -347,6 +348,84 @@ public class TaskService : ITaskService
         {
             throw new Exception($"Unhandled exception: {ex.Message}");
         }
+    }
+
+    public async Task<ScheduledTasksDTO> GetScheduledTasks(DateTime todayDate, string userId)
+    {
+        try {
+            
+            DateTime now = todayDate;
+
+            var tasks = await _dbContext.TaskItems
+            .Where(t => t.DueDate != null && t.DueDate.Month == now.Month)
+            .Select(task => new TaskItemDTO{
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                DueDate = task.DueDate,
+                IsDone = task.IsDone,
+                Label = new LabelDTO 
+                { 
+                    LabelId = task.Label.LabelId, 
+                    Name = task.Label.Name, 
+                    Color = task.Label.Color 
+                }
+            })
+            .OrderBy(t => t.DueDate)
+            .ToListAsync();
+
+            if (tasks is null)
+            {
+                return new ScheduledTasksDTO();
+            }
+
+            return GroupTasksBySchedule(tasks, now);
+
+        } catch (Exception ex)
+        {
+            throw new Exception($"Unhandled exception: {ex.Message}");
+        }
+    }
+
+    private ScheduledTasksDTO GroupTasksBySchedule(List<TaskItemDTO> tasks, DateTime now)
+    {
+
+        var today = now.Date;
+        var tomorrow = today.AddDays(1);
+        var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
+        var endOfWeek = startOfWeek.AddDays(6);
+
+        var scheduledTasksDTO = new ScheduledTasksDTO
+        {
+            todayTasks = new List<TaskItemDTO>(),
+            tomorrowTasks = new List<TaskItemDTO>(),
+            weekTasks = new List<TaskItemDTO>(),
+            monthTasks = new List<TaskItemDTO>()
+        };
+
+        foreach (var task in tasks)
+        {
+            var dueDate = task.DueDate.Date;
+
+            if (dueDate == today)
+            {
+                scheduledTasksDTO.todayTasks.Add(task);
+            }
+            else if (dueDate == tomorrow)
+            {
+                scheduledTasksDTO.tomorrowTasks.Add(task);
+            }
+            else if (dueDate >= startOfWeek && dueDate <= endOfWeek)
+            {
+                scheduledTasksDTO.weekTasks.Add(task);
+            }
+            else
+            {
+                scheduledTasksDTO.monthTasks.Add(task);
+            }
+        }
+
+        return scheduledTasksDTO;
     }
 }
 
