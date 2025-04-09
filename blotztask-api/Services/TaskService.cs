@@ -32,27 +32,19 @@ public class TaskService : ITaskService
 
     public async Task<List<TaskItemDTO>> GetTodoItemsByUser(string userId)
     {
-        try
-        {
-            return await _dbContext.TaskItems
-                .Where(x => x.UserId == userId)
-                .Include(x => x.Label)
-                .Select(x => new TaskItemDTO
-                {
-                    Id = x.Id,
-                    Title = x.Title,
-                    Description = x.Description,
-                    DueDate = x.DueDate,
-                    IsDone = x.IsDone,
-                    Label = new LabelDTO { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color }        
-                })
-                .ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            //TODO: Add some error log throw 
-            throw;
-        }
+        return await _dbContext.TaskItems
+            .Where(x => x.UserId == userId)
+            .Include(x => x.Label)
+            .Select(x => new TaskItemDTO
+            {
+                Id = x.Id,
+                Title = x.Title,
+                Description = x.Description,
+                DueDate = x.DueDate,
+                IsDone = x.IsDone,
+                Label = new LabelDTO { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color }        
+            })
+            .ToListAsync();
     }
     public async Task<TaskItemDTO> GetTaskByID(int Id)
     {
@@ -114,8 +106,6 @@ public class TaskService : ITaskService
             Console.Error.WriteLine($"Error deleting task: {ex.Message}");
             throw;
         }
-
-       
     }
 
     public async Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId)
