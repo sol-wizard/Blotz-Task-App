@@ -9,8 +9,9 @@ namespace BlotzTask.Models
         public List<TaskItemDTO> todayTasks { get; set; }
         public List<TaskItemDTO> tomorrowTasks { get; set; }
         public List<TaskItemDTO> weekTasks { get; set; }
+        public List<TaskItemDTO> monthTasks { get; set; }
 
-        public Dictionary<int, List<TaskItemDTO>> monthTasks { get; set; }
+        public Dictionary<int, List<TaskItemDTO>> groupByMonthTasks { get; set; }
     }
 
 

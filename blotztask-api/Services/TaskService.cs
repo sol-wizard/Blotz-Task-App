@@ -401,7 +401,8 @@ public class TaskService : ITaskService
             todayTasks = new List<TaskItemDTO>(),
             tomorrowTasks = new List<TaskItemDTO>(),
             weekTasks = new List<TaskItemDTO>(),
-            monthTasks = new Dictionary<int, List<TaskItemDTO>>()
+            monthTasks = new List<TaskItemDTO>(),
+            groupByMonthTasks = new Dictionary<int, List<TaskItemDTO>>()
         };
 
         foreach (var task in tasks)
@@ -425,8 +426,8 @@ public class TaskService : ITaskService
             }
             else
             {
-                scheduledTasksDTO.monthTasks.TryAdd(dueDate.Month, new List<TaskItemDTO>());
-                scheduledTasksDTO.monthTasks[dueDate.Month].Add(task);
+                scheduledTasksDTO.groupByMonthTasks.TryAdd(dueDate.Month, new List<TaskItemDTO>());
+                scheduledTasksDTO.groupByMonthTasks[dueDate.Month].Add(task);
             }
         }
 

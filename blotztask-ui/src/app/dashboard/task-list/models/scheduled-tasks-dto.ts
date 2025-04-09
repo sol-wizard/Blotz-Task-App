@@ -5,5 +5,6 @@ export interface ScheduledTasksDTO {
   todayTasks: TaskDetailDTO[]; 
   tomorrowTasks: TaskDetailDTO[]; 
   weekTasks: TaskDetailDTO[]; 
-  monthTasks: Record<number, TaskDetailDTO[]>; 
+  monthsTasks: TaskDetailDTO[];
+  groupByMonthTasks: Record<number, TaskDetailDTO[]>; 
 }
