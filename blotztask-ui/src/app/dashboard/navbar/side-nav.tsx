@@ -17,12 +17,12 @@ import { ProfileSectionButton } from './components/profile-section-button';
 import { Categories } from './components/categories';
 import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
-import { fetchAllLabel } from '@/services/labelService';
+import { fetchAllLabel } from '@/services/label-service';
 import { cn } from '@/lib/utils';
 import AddTaskDialog from './components/add-task-dialog';
 import SearchBar from './components/search-bar';
 import { useTodayTaskActions } from '../store/today-store/today-task-store';
-import { addTaskItem } from '@/services/taskService';
+import { addTaskItem } from '@/services/task-service';
 import { useScheduleTaskActions } from '../store/schedule-task-store';
 
 const authenticatedItems = [
