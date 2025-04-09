@@ -126,5 +126,18 @@ namespace BlotzTask.Controllers
             var tasks = await _taskService.SearchTasksAsync(query);
             return Ok(tasks);
         }
+
+        [HttpGet("scheduled-tasks")]
+        public async Task<IActionResult> GetScheduleSortTasks([FromQuery, Required] DateTime todayDate)
+        {
+            var userId = HttpContext.Items["UserId"] as string;
+
+            if (userId == null)
+            {
+                throw new UnauthorizedAccessException("Could not find user id from Http Context");
+            }
+            
+            return Ok(await _taskService.GetScheduledTasks(todayDate, userId));
+        }
     }
 }
