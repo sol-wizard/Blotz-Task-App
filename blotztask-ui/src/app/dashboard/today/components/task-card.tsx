@@ -1,7 +1,6 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import React from 'react';
 import TaskContent from './task-content';
-import SectionSepreator from './section-separator';
 
 const TaskCard = ({ task, handleCheckboxChange, handleTaskEdit, handleTaskDelete, handleTaskDeleteUndo }) => {
   return (
@@ -21,7 +20,6 @@ const TaskCard = ({ task, handleCheckboxChange, handleTaskEdit, handleTaskDelete
           handleTaskDeleteUndo={handleTaskDeleteUndo}
         />
       </div>
-      <SectionSepreator />
     </div>
   );
 };
