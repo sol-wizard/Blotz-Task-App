@@ -29,7 +29,7 @@ export default function Today() {
 
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [loadTasks]);
 
   /** Helper function to handle API action ensure consistent behaviour and avoid duplicate code */
   const handleAction = async (action: () => Promise<unknown>) => {
@@ -75,37 +75,72 @@ export default function Today() {
             <>
               <TodayHeader tasks={todayTasks} />
               <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
-              <Divider text="To Do" />
-              <SectionSeparator />
-              {/* //TODO: make this into a component as per below completed task viewer section */}
-              <div className="flex flex-col gap-6 w-full">
-                {incompleteTodayTasks.length > 0 ? (
-                  incompleteTodayTasks.map((task) => (
-                    <>
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        handleCheckboxChange={handleCheckboxChange}
-                        handleTaskEdit={handleTaskEdit}
-                        handleTaskDelete={handleTaskDelete}
-                        handleTaskDeleteUndo={handleTaskDeleteUndo}
-                      ></TaskCard>
+              
+              <div className="flex justify-center items-center">
+                {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (
+                  <div className='flex flex-col gap-6 w-full'>
+                      <Divider text="To Do" />
                       <SectionSeparator />
-                    </>
-                  ))
+                      {incompleteTodayTasks.length > 0 ? (
+                        incompleteTodayTasks.map((task) => (
+                          <>
+                            <TaskCard
+                              key={task.id}
+                              task={task}
+                              handleCheckboxChange={handleCheckboxChange}
+                              handleTaskEdit={handleTaskEdit}
+                              handleTaskDelete={handleTaskDelete}
+                              handleTaskDeleteUndo={handleTaskDeleteUndo}
+                            ></TaskCard>
+                            <SectionSeparator />
+                          </>
+                        ))
+                      ) : (
+                        <p>No incomplete tasks for today!</p>
+                      )}
+                    <Divider text="Done" />
+                    <SectionSeparator />
+                    <CompletedTaskViewer
+                      completedTasks={completedTodayTasks}
+                      handleCompletedCheckboxChange={handleCheckboxChange}
+                      handleTaskEdit={handleTaskEdit}
+                      handleTaskDelete={handleTaskDelete}
+                      handleTaskDeleteUndo={handleTaskDeleteUndo}
+                    />
+                  </div>
                 ) : (
-                  <p>No incomplete tasks for today!</p>
+                  <div className='flex flex-col gap-6 w-full'>
+                      <Divider text="To Do" />
+                      <SectionSeparator />
+                      {incompleteTodayTasks.length > 0 ? (
+                        incompleteTodayTasks.map((task) => (
+                          <>
+                            <TaskCard
+                              key={task.id}
+                              task={task}
+                              handleCheckboxChange={handleCheckboxChange}
+                              handleTaskEdit={handleTaskEdit}
+                              handleTaskDelete={handleTaskDelete}
+                              handleTaskDeleteUndo={handleTaskDeleteUndo}
+                            ></TaskCard>
+                            <SectionSeparator />
+                          </>
+                        ))
+                      ) : (
+                        <p>No incomplete tasks for today!</p>
+                      )}
+                    <Divider text="Done" />
+                    <SectionSeparator />
+                    <CompletedTaskViewer
+                      completedTasks={completedTodayTasks}
+                      handleCompletedCheckboxChange={handleCheckboxChange}
+                      handleTaskEdit={handleTaskEdit}
+                      handleTaskDelete={handleTaskDelete}
+                      handleTaskDeleteUndo={handleTaskDeleteUndo}
+                    />
+                  </div>
                 )}
               </div>
-              <Divider text="Done" />
-              <SectionSeparator />
-              <CompletedTaskViewer
-                completedTasks={completedTodayTasks}
-                handleCompletedCheckboxChange={handleCheckboxChange}
-                handleTaskEdit={handleTaskEdit}
-                handleTaskDelete={handleTaskDelete}
-                handleTaskDeleteUndo={handleTaskDeleteUndo}
-              />
             </>
           )}
         </div>
