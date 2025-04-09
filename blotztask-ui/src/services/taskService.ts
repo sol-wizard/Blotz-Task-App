@@ -36,12 +36,15 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
 
 export const addTaskItem = async (taskDetails): Promise<TaskDetailDTO> => {
   let dateTime: string;
-  if (taskDetails.time != '') {
+  if (taskDetails.time) {
     const parsedTime = parse(taskDetails.time, 'h:mm a', new Date());
     const hours = parsedTime.getHours();
     const minutes = parsedTime.getMinutes();
     const dateWithTime = set(taskDetails.date, { hours, minutes });
     dateTime = dateWithTime.toISOString();
+  } else {
+    dateTime = taskDetails.date.toISOString();
+    console.log('dateTime: ', dateTime);
   }
   const addTaskForm: AddTaskItemDTO = {
     title: taskDetails.title,

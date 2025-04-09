@@ -3,10 +3,8 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormField } from '@/components/ui/form';
-import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { taskFormSchema } from '../forms/task-form-schema';
 import AddTaskForm from '../shared/add-task-form';
-import { parse, set } from 'date-fns';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
@@ -18,7 +16,7 @@ const AddTaskContainer = ({ onSubmit, onCancel }) => {
       description: '',
       date: new Date(),
       labelId: undefined,
-      time: '',
+      time: undefined,
     },
   });
 
