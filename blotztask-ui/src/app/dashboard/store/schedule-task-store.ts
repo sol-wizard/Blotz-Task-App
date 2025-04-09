@@ -7,8 +7,7 @@ type ScheduleTaskStore = {
   todayTasks: TaskDetailDTO[];
   tomorrowTasks: TaskDetailDTO[];
   weekTasks: TaskDetailDTO[];
-  monthTasks: TaskDetailDTO[];
-  groupByMonthTasks: Record<number, TaskDetailDTO[]>;
+  monthTasks: Record<number, TaskDetailDTO[]>;
   actions: {
     loadScheduleTasks: () => Promise<void>;
   }
@@ -19,8 +18,7 @@ export const useScheduleTaskStore = create<ScheduleTaskStore>((set) => ({
   todayTasks: [],
   tomorrowTasks: [],
   weekTasks: [],
-  monthTasks: [],
-  groupByMonthTasks: {},
+  monthTasks: {},
   actions: {
     loadScheduleTasks: async () => {
 
@@ -30,7 +28,7 @@ export const useScheduleTaskStore = create<ScheduleTaskStore>((set) => ({
         set({ todayTasks: scheduleTaskStore.todayTasks });
         set({ tomorrowTasks: scheduleTaskStore.tomorrowTasks });
         set({ weekTasks: scheduleTaskStore.weekTasks });
-        set({ groupByMonthTasks: scheduleTaskStore.groupByMonthTasks});
+        set({ monthTasks: scheduleTaskStore.monthTasks});
       } catch (error) {
         console.log('Error schedule tasks: ', error);
       }

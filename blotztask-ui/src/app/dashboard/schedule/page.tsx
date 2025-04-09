@@ -7,7 +7,7 @@ import TaskCard from '../today/components/task-card';
 import { format } from 'date-fns';
 
 export default function Schedule() {
-  const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks, groupByMonthTasks} = useScheduleTaskStore();
+  const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks} = useScheduleTaskStore();
   const { loadScheduleTasks } = useScheduleTaskStore((state) => state.actions);
   
   useEffect(() => {
@@ -125,10 +125,10 @@ export default function Schedule() {
 
 
       <div>
-        {Object.keys(groupByMonthTasks).length !== 0 && (
+        {Object.keys(monthTasks).length !== 0 && (
           <div>
-            {Object.entries(groupByMonthTasks).map(([month, tasks]) => (
-              <div>
+            {Object.entries(monthTasks).map(([month, tasks]) => (
+              <div key={month}>
                 <p className="my-5">{new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString('en-US', { month: 'long' })}</p>
     
                 {tasks.map((task) => {
