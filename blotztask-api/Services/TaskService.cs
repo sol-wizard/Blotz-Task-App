@@ -390,25 +390,41 @@ public class TaskService : ITaskService
     private ScheduledTasksDTO GroupTasksBySchedule(List<TaskItemDTO> tasks, DateTime now)
     {
 
-        var scheduledTasksDTO = new ScheduledTasksDTO();
+        var today = now.Date;
+        var tomorrow = today.AddDays(1);
+        var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
+        var endOfWeek = startOfWeek.AddDays(6);
 
-        scheduledTasksDTO.todayTasks = tasks.Where(t => t.DueDate.Date == now.Date).ToList();
-        scheduledTasksDTO.tomorrowTasks = tasks.Where(t => t.DueDate.Date == now.AddDays(1).Date).ToList();
+        var scheduledTasksDTO = new ScheduledTasksDTO
+        {
+            todayTasks = new List<TaskItemDTO>(),
+            tomorrowTasks = new List<TaskItemDTO>(),
+            weekTasks = new List<TaskItemDTO>(),
+            monthTasks = new List<TaskItemDTO>()
+        };
 
-        DateTime startOfWeek = now.Date.AddDays(-(int)now.DayOfWeek); 
-        DateTime endOfWeek = startOfWeek.AddDays(6);
+        foreach (var task in tasks)
+        {
+            var dueDate = task.DueDate.Date;
 
-        scheduledTasksDTO.weekTasks = tasks
-            .Where(t => t.DueDate.Date >= startOfWeek && 
-                        t.DueDate.Date <= endOfWeek &&
-                        t.DueDate.Date != now.Date &&
-                        t.DueDate.Date != now.AddDays(1).Date)
-            .ToList();
+            if (dueDate == today)
+            {
+                scheduledTasksDTO.todayTasks.Add(task);
+            }
+            else if (dueDate == tomorrow)
+            {
+                scheduledTasksDTO.tomorrowTasks.Add(task);
+            }
+            else if (dueDate >= startOfWeek && dueDate <= endOfWeek)
+            {
+                scheduledTasksDTO.weekTasks.Add(task);
+            }
+            else
+            {
+                scheduledTasksDTO.monthTasks.Add(task);
+            }
+        }
 
-        scheduledTasksDTO.monthTasks = tasks
-            .Where(t => !(t.DueDate.Date >= startOfWeek && t.DueDate.Date <= endOfWeek))
-            .ToList();
-            
         return scheduledTasksDTO;
     }
 }
