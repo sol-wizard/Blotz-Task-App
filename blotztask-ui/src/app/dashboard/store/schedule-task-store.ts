@@ -1,6 +1,6 @@
 import { TaskDetailDTO } from '../task-list/models/task-detail-dto';
 import { create } from 'zustand';
-import { fetchScheduleTasks } from '@/services/taskService';
+import { fetchScheduleTasks } from '@/services/task-service';
 
 type ScheduleTaskStore = {
   allTasks: TaskDetailDTO[];
