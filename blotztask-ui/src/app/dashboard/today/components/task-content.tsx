@@ -4,7 +4,7 @@ import { Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from 'src/components/ui/task-card-input';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { taskFormSchema } from '../forms/task-form-schema';
 import { z } from 'zod';
@@ -12,10 +12,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
-import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
 import DeleteTaskDialog from './delete-dialog-content';
 import TimePicker from '@/components/ui/time-picker';
-import { format, parse, set } from 'date-fns';
+import { format } from 'date-fns';
 
 export default function TaskContent({
   task,
@@ -39,31 +38,6 @@ export default function TaskContent({
     },
   });
 
-  const updateTask: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
-    let dateTime: string;
-
-    // Combine date and time, because backend storing the combined date and time
-    if (data.time) {
-      const parsedTime = parse(data.time, 'h:mm a', new Date());
-    
-      const hours = parsedTime.getHours();
-      const minutes = parsedTime.getMinutes();
-    
-      const dateWithTime = set(data.date, { hours, minutes });
-      dateTime = dateWithTime.toISOString();
-    }
-
-    const editTaskDetails: EditTaskItemDTO = {
-      id: task.id,
-      title: data.title ?? task.title,
-      description: data.description ?? '',
-      isDone: task.isDone,
-      labelId: data.labelId,
-      dueDate: dateTime,
-    };
-    onSubmit(editTaskDetails);
-  };
-
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
 
@@ -86,7 +60,7 @@ export default function TaskContent({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
-              updateTask(data);
+              onSubmit(data);
               handleEditState();
             })}
             className="flex flex-col w-full bg-transparent px-6"

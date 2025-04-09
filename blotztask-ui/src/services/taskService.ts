@@ -44,7 +44,6 @@ export const addTaskItem = async (taskDetails): Promise<TaskDetailDTO> => {
     dateTime = dateWithTime.toISOString();
   } else {
     dateTime = taskDetails.date.toISOString();
-    console.log('dateTime: ', dateTime);
   }
   const addTaskForm: AddTaskItemDTO = {
     title: taskDetails.title,
@@ -93,13 +92,35 @@ export const updateTaskStatus = async (taskId: number): Promise<string> => {
   }
 };
 
-export const editTask = async (taskEditForm: EditTaskItemDTO): Promise<string> => {
+export const editTask = async (taskEditForm, task: TaskDetailDTO): Promise<string> => {
+  let dateTime: string;
+  if (taskEditForm.time) {
+    const parsedTime = parse(taskEditForm.time, 'h:mm a', new Date());
+
+    const hours = parsedTime.getHours();
+    const minutes = parsedTime.getMinutes();
+
+    const dateWithTime = set(taskEditForm.date, { hours, minutes });
+    dateTime = dateWithTime.toISOString();
+  } else {
+    dateTime = taskEditForm.date.toISOString();
+  }
+
+  const taskEditDetails: EditTaskItemDTO = {
+    id: task.id,
+    title: taskEditForm.title ?? task.title,
+    description: taskEditForm.description ?? '',
+    isDone: task.isDone,
+    labelId: taskEditForm.labelId,
+    dueDate: dateTime,
+  };
+
   try {
     const result = await fetchWithAuth<string>(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/${taskEditForm.id}`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/${taskEditDetails.id}`,
       {
         method: 'PUT',
-        body: JSON.stringify(taskEditForm),
+        body: JSON.stringify(taskEditDetails),
         headers: {
           'Content-Type': 'application/json',
         },

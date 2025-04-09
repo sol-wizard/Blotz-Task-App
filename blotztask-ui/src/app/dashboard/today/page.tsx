@@ -8,7 +8,6 @@ import AddTaskCard from './components/add-task-card';
 import { CompletedTaskViewer } from './components/completed-task-viewer';
 import Divider from './components/divider';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
-import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
 import {
   useCompletedTodayTasks,
   useIncompleteTodayTasks,
@@ -16,7 +15,6 @@ import {
   useTodayTasks,
   useTodayTasksIsLoading,
 } from '../store/today-store/today-task-store';
-import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
@@ -43,8 +41,8 @@ export default function Today() {
     handleAction(() => addTaskItem(taskDetails));
   };
 
-  const handleTaskEdit = async (updatedTask: EditTaskItemDTO) => {
-    handleAction(() => editTask(updatedTask));
+  const handleTaskEdit = async (updatedTask, task) => {
+    handleAction(() => editTask(updatedTask, task));
   };
 
   const handleTaskDelete = async (taskId: number) => {
@@ -82,7 +80,7 @@ export default function Today() {
                       key={task.id}
                       task={task}
                       handleCheckboxChange={handleCheckboxChange}
-                      handleTaskEdit={handleTaskEdit}
+                      handleTaskEdit={(data) => handleTaskEdit(data, task)}
                       handleTaskDelete={handleTaskDelete}
                       handleTaskDeleteUndo={handleTaskDeleteUndo}
                     ></TaskCard>
