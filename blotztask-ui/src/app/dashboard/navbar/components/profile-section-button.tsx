@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavUser, User } from './nav-user';
-import { fetchCurrentUserInfo } from '@/services/userInfoService';
+import { fetchCurrentUserInfo } from '@/services/user-service';
 
 export function ProfileSectionButton({ session, onSignOut, aiEnabled, setAiEnabled }) {
   const [userInfo, setUserInfo] = useState<User>();
@@ -14,7 +14,7 @@ export function ProfileSectionButton({ session, onSignOut, aiEnabled, setAiEnabl
     setUserInfo({
       name: `${result.data.firstname} ${result.data.lastname}`,
       email: result.data.email,
-      avatar: '../../../assets/images/profileImage.png',
+      avatar: '../../../assets/images/blotz-logo.png',
     });
   };
 

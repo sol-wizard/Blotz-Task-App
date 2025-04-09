@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { TaskDetailDTO } from '../task-list/models/task-detail-dto';
-import { fetchSearchedTasks } from '@/services/taskService';
+import { fetchSearchedTasks } from '@/services/task-service';
 
 type SearchTaskStore = {
   query: string;
