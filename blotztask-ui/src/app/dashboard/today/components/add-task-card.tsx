@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import AddTaskContainer from './add-task-container';
 import { PlusIcon } from '@radix-ui/react-icons';
 
