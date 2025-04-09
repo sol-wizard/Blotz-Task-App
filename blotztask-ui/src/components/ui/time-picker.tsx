@@ -9,13 +9,7 @@ import { Control } from 'react-hook-form';
 
 const times = ['9:00 AM', '12:00 PM', '3:00 PM', '6:00 PM', '9:00 PM', '12:00 AM'];
 
-export default function TimePicker({
-  control,
-  timePickerRef,
-}: {
-  control: Control;
-  timePickerRef?: React.RefObject<HTMLDivElement>;
-}) {
+export default function TimePicker({ control }: { control: Control }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -47,7 +41,7 @@ export default function TimePicker({
                 </FormControl>
               </PopoverTrigger>
 
-              <PopoverContent className="w-24 p-0 pointer-events-auto" ref={timePickerRef ?? undefined}>
+              <PopoverContent className="w-24 p-0 pointer-events-auto">
                 <Command>
                   <CommandGroup>
                     {times.map((time) => (
