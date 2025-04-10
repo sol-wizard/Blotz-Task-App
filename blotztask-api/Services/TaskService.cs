@@ -357,7 +357,7 @@ public class TaskService : ITaskService
             DateTime now = todayDate;
 
             var tasks = await _dbContext.TaskItems
-            .Where(t => t.DueDate != null && t.DueDate.Month == now.Month)
+            .Where(t => t.DueDate != null && t.DueDate.Year == now.Year && ((t.DueDate < now && !t.IsDone) || t.DueDate >= now))
             .Select(task => new TaskItemDTO{
                 Id = task.Id,
                 Title = task.Title,
@@ -397,17 +397,21 @@ public class TaskService : ITaskService
 
         var scheduledTasksDTO = new ScheduledTasksDTO
         {
+            overdueTasks = new List<TaskItemDTO>(),
             todayTasks = new List<TaskItemDTO>(),
             tomorrowTasks = new List<TaskItemDTO>(),
             weekTasks = new List<TaskItemDTO>(),
-            monthTasks = new List<TaskItemDTO>()
+            monthTasks = new Dictionary<int, List<TaskItemDTO>>()
         };
 
         foreach (var task in tasks)
         {
             var dueDate = task.DueDate.Date;
-
-            if (dueDate == today)
+            if (dueDate < today && !task.IsDone)
+            {
+                scheduledTasksDTO.overdueTasks.Add(task);
+            }
+            else if (dueDate == today)
             {
                 scheduledTasksDTO.todayTasks.Add(task);
             }
@@ -421,7 +425,8 @@ public class TaskService : ITaskService
             }
             else
             {
-                scheduledTasksDTO.monthTasks.Add(task);
+                scheduledTasksDTO.monthTasks.TryAdd(dueDate.Month, new List<TaskItemDTO>());
+                scheduledTasksDTO.monthTasks[dueDate.Month].Add(task);
             }
         }
 
