@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavUser, User } from './nav-user';
-import { fetchCurrentUserInfo } from '@/services/userInfoService';
+import { fetchCurrentUserInfo } from '@/services/user-service';
 
-export function ProfileSectionButton({ session, onSignOut }) {
+export function ProfileSectionButton({ session, onSignOut, aiEnabled, setAiEnabled }) {
   const [userInfo, setUserInfo] = useState<User>();
 
   const loadUserInfo = async () => {
@@ -14,7 +14,7 @@ export function ProfileSectionButton({ session, onSignOut }) {
     setUserInfo({
       name: `${result.data.firstname} ${result.data.lastname}`,
       email: result.data.email,
-      avatar: '../../../assets/images/profileImage.png',
+      avatar: '../../../assets/images/blotz-logo.png',
     });
   };
 
@@ -25,7 +25,13 @@ export function ProfileSectionButton({ session, onSignOut }) {
   return (
     <SidebarMenuItem>
       {session ? (
-        userInfo && <NavUser user={userInfo} onSignOut={onSignOut} />
+        userInfo && 
+        <NavUser 
+         user={userInfo} 
+         onSignOut={onSignOut} 
+         aiEnabled={aiEnabled}
+         onToggleAI ={setAiEnabled}
+        />
       ) : (
         <SidebarMenuButton asChild className="bg-primary text-white">
           <a href="/signin">

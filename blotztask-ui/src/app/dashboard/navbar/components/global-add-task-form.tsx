@@ -21,6 +21,7 @@ const GlobalAddTaskForm = ({ onSubmit }) => {
       description: '',
       date: new Date(),
       labelId: undefined,
+      time: ''
     },
   });
 
