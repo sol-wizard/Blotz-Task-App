@@ -4,10 +4,9 @@ import { useScheduleTaskStore } from '../store/schedule-task-store';
 import AddTaskCard from '../today/components/add-task-card';
 import ScheduleHeader from './components/schedule-header';
 import TaskCard from '../today/components/task-card';
-import { format } from 'date-fns';
 
 export default function Schedule() {
-  const { todayTasks, tomorrowTasks, weekTasks, monthTasks } = useScheduleTaskStore();
+  const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks} = useScheduleTaskStore();
   const { loadScheduleTasks } = useScheduleTaskStore((state) => state.actions);
   
   useEffect(() => {
@@ -36,7 +35,30 @@ export default function Schedule() {
   return (
     <div>
       <ScheduleHeader />
+      <p className="my-5"/>
       <AddTaskCard onAddTask={handleAddTask} />
+      <p className="my-5"/>
+      <div>
+        {overdueTasks.length !== 0 && (
+          <div>
+            <p className="my-5">Overdue</p>
+
+            {overdueTasks.map((task) => {
+              return (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  handleCheckboxChange={handleCheckboxChange}
+                  handleTaskEdit={handleTaskEdit}
+                  handleTaskDelete={handleTaskDelete}
+                  handleTaskDeleteUndo={handleTaskDeleteUndo}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       <div>
         {todayTasks.length !== 0 && (
           <div>
@@ -100,26 +122,32 @@ export default function Schedule() {
         )}
       </div>
 
-      <div>
-        {monthTasks.length !== 0 && (
-          <div>
-            <p className="my-5">{format(new Date(), 'MMMM')}</p>
 
-            {monthTasks.map((task) => {
-              return (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleTaskEdit}
-                  handleTaskDelete={handleTaskDelete}
-                  handleTaskDeleteUndo={handleTaskDeleteUndo}
-                />
-              );
-            })}
+      <div>
+        {Object.keys(monthTasks).length !== 0 && (
+          <div>
+            {Object.entries(monthTasks).map(([month, tasks]) => (
+              <div key={month}>
+                <p className="my-5">{new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString('en-US', { month: 'long' })}</p>
+    
+                {tasks.map((task) => {
+                  return (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      handleCheckboxChange={handleCheckboxChange}
+                      handleTaskEdit={handleTaskEdit}
+                      handleTaskDelete={handleTaskDelete}
+                      handleTaskDeleteUndo={handleTaskDeleteUndo}
+                    />
+                  );
+                })}
+              </div>
+            ))}
           </div>
         )}
       </div>
+
     </div>
   );
 }
