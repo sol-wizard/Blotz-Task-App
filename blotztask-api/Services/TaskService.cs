@@ -357,7 +357,7 @@ public class TaskService : ITaskService
             DateTime now = todayDate;
 
             var tasks = await _dbContext.TaskItems
-            .Where(t => t.DueDate != null && t.DueDate.Year == now.Year && ((t.DueDate < now && !t.IsDone) || t.DueDate >= now))
+            .Where(t => t.UserId == userId && t.DueDate != null && t.DueDate.Year == now.Year && ((t.DueDate < now && !t.IsDone) || t.DueDate >= now))
             .Select(task => new TaskItemDTO{
                 Id = task.Id,
                 Title = task.Title,
