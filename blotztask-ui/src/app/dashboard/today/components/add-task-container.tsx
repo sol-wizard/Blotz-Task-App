@@ -17,6 +17,7 @@ const AddTaskContainer = ({ onSubmit, datePickerRef, labelPickerRef, onCancel })
       description: '',
       date: new Date(),
       labelId: undefined,
+      time: '',
     },
   });
 
