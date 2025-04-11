@@ -43,8 +43,9 @@ public class AzureOpenAIService
     {
         var messages = new List<ChatMessage>
         {
-            new SystemChatMessage(@"
-            You are a task extraction assistant. Always call the `extract_task` function with structured data. Never return plain text.
+            new SystemChatMessage($@"
+            You are a task extraction assistant. Today's date is {DateTime.UtcNow:yyyy-MM-dd}. 
+            Always call the `extract_task` function with structured data. Never return plain text.
 
             Extract:
             - `title`: A clear task title.
