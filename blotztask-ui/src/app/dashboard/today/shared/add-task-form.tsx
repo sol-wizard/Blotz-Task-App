@@ -3,16 +3,9 @@ import { CalendarForm } from './calendar-form';
 import { LabelSelect } from './label-select';
 import { Input } from '@/components/ui/task-card-input';
 import { Textarea } from '@/components/ui/textarea';
+import TimePicker from '@/components/ui/time-picker';
 
-const AddTaskForm = ({
-  form,
-  datePickerRef,
-  labelPickerRef,
-}: {
-  form;
-  datePickerRef?: React.RefObject<HTMLDivElement>;
-  labelPickerRef?: React.RefObject<HTMLDivElement>;
-}) => {
+const AddTaskForm = ({ form }: { form }) => {
   return (
     <div className="flex flex-col w-full">
       <FormField
@@ -41,8 +34,9 @@ const AddTaskForm = ({
       />
       <div className="flex flex-row space-x-4 items-center flex-1">
         <div className="flex flex-row items-center">
-          <CalendarForm control={form.control} datePickerRef={datePickerRef} />
-          <LabelSelect control={form.control} labelPickerRef={labelPickerRef} />
+          <CalendarForm control={form.control} />
+          <LabelSelect control={form.control} />
+          <TimePicker control={form.control} />
         </div>
       </div>
     </div>

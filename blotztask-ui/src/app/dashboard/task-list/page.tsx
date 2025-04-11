@@ -30,9 +30,9 @@ export default function Page() {
     }
   };
 
-  const handleTaskEdit = async (data) => {
+  const handleTaskEdit = async (data, task) => {
     try {
-      await editTask(data);
+      await editTask(data, task);
       await loadTasks();
     } catch (error) {
       console.error('Error editing task:', error);

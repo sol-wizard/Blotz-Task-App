@@ -3,6 +3,7 @@ import { fetchWithAuth } from '@/utils/fetch-with-auth';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { EditTaskItemDTO } from '@/app/dashboard/task-list/models/edit-task-item-dto';
 import { ScheduledTasksDTO } from '@/app/dashboard/task-list/models/scheduled-tasks-dto';
+import { parse, set } from 'date-fns';
 
 export const fetchAllTaskItems = async (): Promise<TaskDetailDTO[]> => {
   const result = await fetchWithAuth<TaskDetailDTO[]>(
@@ -34,7 +35,23 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
   return result;
 };
 
-export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<TaskDetailDTO> => {
+export const addTaskItem = async (taskDetails): Promise<TaskDetailDTO> => {
+  let dateTime: string;
+  if (taskDetails.time) {
+    const parsedTime = parse(taskDetails.time, 'h:mm a', new Date());
+    const hours = parsedTime.getHours();
+    const minutes = parsedTime.getMinutes();
+    const dateWithTime = set(taskDetails.date, { hours, minutes });
+    dateTime = dateWithTime.toISOString();
+  } else {
+    dateTime = taskDetails.date.toISOString();
+  }
+  const addTaskForm: AddTaskItemDTO = {
+    title: taskDetails.title,
+    description: taskDetails.description ?? '',
+    dueDate: dateTime,
+    labelId: taskDetails.labelId ?? 0,
+  };
   try {
     const result = await fetchWithAuth<TaskDetailDTO>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,
@@ -76,13 +93,35 @@ export const updateTaskStatus = async (taskId: number): Promise<string> => {
   }
 };
 
-export const editTask = async (taskEditForm: EditTaskItemDTO): Promise<string> => {
+export const editTask = async (taskEditForm, task: TaskDetailDTO): Promise<string> => {
+  let dateTime: string;
+  if (taskEditForm.time) {
+    const parsedTime = parse(taskEditForm.time, 'h:mm a', new Date());
+
+    const hours = parsedTime.getHours();
+    const minutes = parsedTime.getMinutes();
+
+    const dateWithTime = set(taskEditForm.date, { hours, minutes });
+    dateTime = dateWithTime.toISOString();
+  } else {
+    dateTime = taskEditForm.date.toISOString();
+  }
+
+  const taskEditDetails: EditTaskItemDTO = {
+    id: task.id,
+    title: taskEditForm.title ?? task.title,
+    description: taskEditForm.description ?? '',
+    isDone: task.isDone,
+    labelId: taskEditForm.labelId,
+    dueDate: dateTime,
+  };
+
   try {
     const result = await fetchWithAuth<string>(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/${taskEditForm.id}`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/${taskEditDetails.id}`,
       {
         method: 'PUT',
-        body: JSON.stringify(taskEditForm),
+        body: JSON.stringify(taskEditDetails),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -143,7 +182,7 @@ export const fetchScheduleTasks = async (): Promise<ScheduledTasksDTO> => {
   } catch (error) {
     console.error('Error deleting task:', error);
     throw error;
-  } 
+  }
 };
 
 export const fetchSearchedTasks = async (query: string): Promise<TaskDetailDTO[]> => {

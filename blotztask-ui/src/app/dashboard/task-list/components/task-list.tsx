@@ -1,3 +1,4 @@
+import SectionSeparator from '../../today/components/section-separator';
 import TaskCard from '../../today/components/task-card';
 
 export function TaskList({
@@ -14,10 +15,11 @@ export function TaskList({
           <TaskCard
             task={task}
             handleCheckboxChange={handleCheckboxChange}
-            handleTaskEdit={handleTaskEdit}
+            handleTaskEdit={(data) => handleTaskEdit(data, task)}
             handleTaskDelete={handleTaskDelete}
             handleTaskDeleteUndo={handleTaskDeleteUndo}
           ></TaskCard>
+          <SectionSeparator />
         </div>
       ))}
     </div>

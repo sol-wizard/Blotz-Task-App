@@ -1,10 +1,10 @@
 import DueDateTag from './due-date-tag';
 import TaskSeparator from '../shared/task-separator';
 import { Pencil } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from 'src/components/ui/task-card-input';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { taskFormSchema } from '../forms/task-form-schema';
 import { z } from 'zod';
@@ -12,9 +12,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
-import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
 import DeleteTaskDialog from './delete-dialog-content';
 import TimePicker from '@/components/ui/time-picker';
+import { format } from 'date-fns';
 
 export default function TaskContent({
   task,
@@ -34,24 +34,24 @@ export default function TaskContent({
       description: task.description,
       date: new Date(task.dueDate),
       labelId: task.label.labelId,
-      time: undefined,
+      time: format(new Date(task.dueDate), 'h:mm a'),
     },
   });
 
-  const updateTask: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
-    const editTaskDetails: EditTaskItemDTO = {
-      id: task.id,
-      title: data.title ?? task.title,
-      description: data.description ?? '',
-      isDone: task.isDone,
-      labelId: data.labelId,
-      dueDate: data.date.toISOString(),
-    };
-    onSubmit(editTaskDetails);
-  };
-
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
+
+  useEffect(() => {
+    if (task) {
+      form.reset({
+        title: task.title,
+        description: task.description,
+        date: new Date(task.dueDate),
+        labelId: task.label.labelId,
+        time: format(new Date(task.dueDate), 'h:mm a'),
+      });
+    }
+  }, [task]);
 
   return (
     <div className="flex flex-col w-full ">
@@ -60,7 +60,7 @@ export default function TaskContent({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
-              updateTask(data);
+              onSubmit(data);
               handleEditState();
             })}
             className="flex flex-col w-full bg-transparent px-6"

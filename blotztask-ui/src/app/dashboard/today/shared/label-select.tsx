@@ -16,13 +16,7 @@ import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/f
 import { useEffect, useState } from 'react';
 import { fetchAllLabel } from '@/services/label-service';
 
-export function LabelSelect({
-  control,
-  labelPickerRef,
-}: {
-  control: Control;
-  labelPickerRef?: React.RefObject<HTMLDivElement>;
-}) {
+export function LabelSelect({ control }: { control: Control }) {
   const [labels, setLabels] = useState<LabelDTO[]>([]);
 
   const loadAllLabel = async () => {
@@ -51,10 +45,10 @@ export function LabelSelect({
               >
                 <Tag className="mr-1" size={16} />
 
-                <SelectValue placeholder="Select Label"/>
+                <SelectValue placeholder="Select Label" />
               </SelectLabelTrigger>
             </FormControl>
-            <SelectContent ref={labelPickerRef ?? undefined}>
+            <SelectContent>
               <SelectGroup>
                 {labels.map((label) => {
                   return (
