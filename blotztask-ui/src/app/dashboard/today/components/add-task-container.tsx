@@ -6,6 +6,7 @@ import { Form, FormField } from '@/components/ui/form';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { taskFormSchema } from '../forms/task-form-schema';
 import AddTaskForm from '../shared/add-task-form';
+import { format } from 'date-fns';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
@@ -25,7 +26,7 @@ const AddTaskContainer = ({ onSubmit, datePickerRef, labelPickerRef, onCancel })
     const taskDetails: AddTaskItemDTO = {
       title: data.title,
       description: data.description ?? '',
-      dueDate: data.date.toLocaleString(),
+      dueDate: format(data.date, 'yyyy-MM-dd'),
       labelId: data.labelId ?? 0,
     };
     onSubmit(taskDetails);

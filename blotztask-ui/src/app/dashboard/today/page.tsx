@@ -18,6 +18,8 @@ import {
 } from '../store/today-store/today-task-store';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import SectionSeparator from './components/section-separator';
+import Image from 'next/image';
+import H3 from '@/components/ui/heading-with-anchor';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
@@ -29,7 +31,7 @@ export default function Today() {
 
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [loadTasks]);
 
   /** Helper function to handle API action ensure consistent behaviour and avoid duplicate code */
   const handleAction = async (action: () => Promise<unknown>) => {
@@ -61,55 +63,70 @@ export default function Today() {
   };
 
   return (
-    <>
-      <div className="ml-5 flex flex-col gap-12">
-        <div className="flex flex-col gap-6">
-          {todayTasksIsLoading ? (
-            <div className="flex justify-center items-center min-h-screen">
-              <div>
-                <LoadingSpinner variant="blue" className="mb-12 ml-8 text-[10px]" />
-                <p className="font-semibold text-zinc-600">Loading...</p>
-              </div>
+    <div className="ml-5 flex flex-col gap-12 h-full">
+      <div className="flex flex-col gap-6 h-full">
+        {todayTasksIsLoading ? (
+          <div className="flex justify-center items-center min-h-screen">
+            <div>
+              <LoadingSpinner variant="blue" className="mb-12 ml-8 text-[10px]" />
+              <p className="font-semibold text-zinc-600">Loading...</p>
             </div>
-          ) : (
-            <>
-              <TodayHeader tasks={todayTasks} />
-              <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
-              <Divider text="To Do" />
-              <SectionSeparator />
-              {/* //TODO: make this into a component as per below completed task viewer section */}
-              <div className="flex flex-col gap-6 w-full">
-                {incompleteTodayTasks.length > 0 ? (
-                  incompleteTodayTasks.map((task) => (
-                    <>
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        handleCheckboxChange={handleCheckboxChange}
-                        handleTaskEdit={handleTaskEdit}
-                        handleTaskDelete={handleTaskDelete}
-                        handleTaskDeleteUndo={handleTaskDeleteUndo}
-                      ></TaskCard>
-                      <SectionSeparator />
-                    </>
-                  ))
-                ) : (
-                  <p>No incomplete tasks for today!</p>
-                )}
-              </div>
-              <Divider text="Done" />
-              <SectionSeparator />
-              <CompletedTaskViewer
-                completedTasks={completedTodayTasks}
-                handleCompletedCheckboxChange={handleCheckboxChange}
-                handleTaskEdit={handleTaskEdit}
-                handleTaskDelete={handleTaskDelete}
-                handleTaskDeleteUndo={handleTaskDeleteUndo}
-              />
-            </>
-          )}
-        </div>
+          </div>
+        ) : (
+          <>
+            <TodayHeader tasks={todayTasks} />
+            <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
+            
+            <div className="flex items-start h-full">
+              {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (
+                <div className='flex flex-col gap-6 w-full'>
+                    <Divider text="To Do" />
+                    <SectionSeparator />
+                    {incompleteTodayTasks.length > 0 ? (
+                      incompleteTodayTasks.map((task) => (
+                        <>
+                          <TaskCard
+                            key={task.id}
+                            task={task}
+                            handleCheckboxChange={handleCheckboxChange}
+                            handleTaskEdit={handleTaskEdit}
+                            handleTaskDelete={handleTaskDelete}
+                            handleTaskDeleteUndo={handleTaskDeleteUndo}
+                          ></TaskCard>
+                          <SectionSeparator />
+                        </>
+                      ))
+                    ) : (
+                      <p>No incomplete tasks for today!</p>
+                    )}
+                  <Divider text="Done" />
+                  <SectionSeparator />
+                  <CompletedTaskViewer
+                    completedTasks={completedTodayTasks}
+                    handleCompletedCheckboxChange={handleCheckboxChange}
+                    handleTaskEdit={handleTaskEdit}
+                    handleTaskDelete={handleTaskDelete}
+                    handleTaskDeleteUndo={handleTaskDeleteUndo}
+                  />
+                </div>
+              ) : (
+                <div className="relative w-full h-[80%] flex flex-col items-center justify-center gap-3">
+                  <div className='relative w-full h-[6rem]'>
+                    <Image 
+                      src='/assets/images/no-task-placeholder.png' 
+                      alt="A placeholder image when there's no task for today"
+                      fill
+                      className='object-contain'
+                    />
+                  </div>
+                  <H3>Currently No Task</H3>
+                  <span className='text-gray-400 font-medium'>Click the "+" button to add a task</span>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
-    </>
+    </div>
   );
 }
