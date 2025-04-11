@@ -2,7 +2,6 @@ import DueDateTag from './due-date-tag';
 import TaskSeparator from '../shared/task-separator';
 import { Pencil } from 'lucide-react';
 import { useState } from 'react';
-import SectionSepreator from './section-separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from 'src/components/ui/task-card-input';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -15,6 +14,7 @@ import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
 import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
 import DeleteTaskDialog from './delete-dialog-content';
+import TimePicker from '@/components/ui/time-picker';
 
 export default function TaskContent({
   task,
@@ -34,6 +34,7 @@ export default function TaskContent({
       description: task.description,
       date: new Date(task.dueDate),
       labelId: task.label.labelId,
+      time: undefined,
     },
   });
 
@@ -44,7 +45,7 @@ export default function TaskContent({
       description: data.description ?? '',
       isDone: task.isDone,
       labelId: data.labelId,
-      dueDate: task.dueDate.toLocaleString(),
+      dueDate: data.date.toISOString(),
     };
     onSubmit(editTaskDetails);
   };
@@ -96,7 +97,11 @@ export default function TaskContent({
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Textarea placeholder={task?.description} {...field}></Textarea>
+                            <Textarea
+                              placeholder={task?.description}
+                              {...field}
+                              className="w-full"
+                            ></Textarea>
                           </FormControl>
                           <FormMessage>{form.formState.errors.description?.message}</FormMessage>
                         </FormItem>
@@ -143,6 +148,7 @@ export default function TaskContent({
                   <div className="flex flex-row items-center">
                     <CalendarForm control={form.control} task={task} />
                     <LabelSelect control={form.control} />
+                    <TimePicker control={form.control} />
                   </div>
                   <div className="flex flex-row ">
                     <button
@@ -151,11 +157,7 @@ export default function TaskContent({
                     >
                       Cancel
                     </button>
-                    <button
-                      type="submit"
-                      className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20"
-                      onClick={() => console.log('Form errors:', form.formState.errors)}
-                    >
+                    <button type="submit" className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20">
                       Save
                     </button>
                   </div>
@@ -165,7 +167,6 @@ export default function TaskContent({
           </form>
         </Form>
       </div>
-      <SectionSepreator />
     </div>
   );
 }

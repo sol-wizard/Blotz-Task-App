@@ -1,6 +1,6 @@
 'use client';
 
-import { ListChecks, Home, ClipboardCheck, Plus } from 'lucide-react';
+import { ListChecks, Home, ClipboardCheck, Plus, CalendarCheck, Bot } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -17,27 +17,28 @@ import { ProfileSectionButton } from './components/profile-section-button';
 import { Categories } from './components/categories';
 import { useEffect, useState } from 'react';
 import { LabelDTO } from '@/model/label-dto';
-import { fetchAllLabel } from '@/services/labelService';
-import { useTodayTaskStore } from '../store/today-task-store';
+import { fetchAllLabel } from '@/services/label-service';
 import { cn } from '@/lib/utils';
 import AddTaskDialog from './components/add-task-dialog';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SearchBar from './components/search-bar';
+import { useTodayTaskActions } from '../store/today-store/today-task-store';
+
 const authenticatedItems = [
   { title: 'All Tasks', url: '/dashboard/task-list', icon: ListChecks },
   { title: 'Today', url: '/dashboard/today', icon: ClipboardCheck },
 ];
 
 const guestItems = [{ title: 'Home', url: '/home', icon: Home }];
-
 const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
+const FEATURE_FLAG_KEY = 'aiEnabled';
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
-  const handleAddTask = useTodayTaskStore((state) => state.handleAddTask);
+  const { handleAddTask } = useTodayTaskActions();
   const pathname = usePathname();
-
+  const [aiEnabled, setAiEnabled] = useState(false);
   const handleSignOut = (e) => {
     e.preventDefault();
     window.location.href = '/api/auth/signout';
@@ -46,7 +47,6 @@ export function AppSidebar() {
   // Determine which items to show based on session status
   const items = status === 'loading' ? loadingItems : session ? authenticatedItems : guestItems;
 
-  // Hook to load all labels
   const [labels, setLabels] = useState<LabelDTO[]>([]);
 
   const loadAllLabel = async () => {
@@ -60,7 +60,16 @@ export function AppSidebar() {
 
   useEffect(() => {
     loadAllLabel();
+    const flag = localStorage.getItem(FEATURE_FLAG_KEY);
+    if (flag !== null) {
+      setAiEnabled(flag === 'true');
+    }
   }, []);
+  
+  const toggleAiFeature = (value) => {
+    setAiEnabled(value);
+    localStorage.setItem(FEATURE_FLAG_KEY, value.toString());
+  };
 
   return (
     <Sidebar>
@@ -88,6 +97,17 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </AddTaskDialog>
               </SidebarMenuItem>
+
+              { aiEnabled && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a href="ai-assistant" className="flex items-center px-3 py-3 w-full hover:bg-white">
+                      <Bot className="text-indigo-600" size={18} />
+                      <span className="pl-3 text-base text-indigo-700 font-medium">AI Assistant ✨</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
@@ -123,7 +143,12 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <ProfileSectionButton session={session} onSignOut={handleSignOut} />
+          <ProfileSectionButton 
+            session={session} 
+            onSignOut={handleSignOut} 
+            aiEnabled={aiEnabled}
+            setAiEnabled={toggleAiFeature}
+            />
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

@@ -13,6 +13,7 @@ export default function AuthButton() {
   const buttonLink = isLoginPage ? "/auth/signup" : "/auth/signin";
 
   return (
+    //TODO: try remove absolute position and use flexbox
     <Link
       href={buttonLink}
       className={cn(
