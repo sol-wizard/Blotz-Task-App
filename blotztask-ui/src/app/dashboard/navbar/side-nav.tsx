@@ -26,8 +26,9 @@ import SearchBar from './components/search-bar';
 import { useTodayTaskActions } from '../store/today-store/today-task-store';
 
 const authenticatedItems = [
-  { title: 'All Tasks', url: '/dashboard/task-list', icon: ListChecks },
-  { title: 'Today', url: '/dashboard/today', icon: ClipboardCheck },
+  { title: 'All Tasks', url: 'task-list', icon: ListChecks },
+  { title: 'Today', url: 'today', icon: ClipboardCheck },
+  { title: 'Schedule', url: 'schedule', icon: CalendarCheck },
 ];
 
 const guestItems = [{ title: 'Home', url: '/home', icon: Home }];
