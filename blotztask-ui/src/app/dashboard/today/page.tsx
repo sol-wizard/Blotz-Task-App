@@ -19,7 +19,7 @@ import {
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import SectionSeparator from './components/section-separator';
 import Image from 'next/image';
-import H3 from '@/components/ui/heading-with-anchor';
+import {H3} from '@/components/ui/heading-with-anchor';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
