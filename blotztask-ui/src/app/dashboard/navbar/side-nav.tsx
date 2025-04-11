@@ -25,8 +25,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SearchBar from './components/search-bar';
 const authenticatedItems = [
-  { title: 'All Tasks', url: '/dashboard/task-list', icon: ListChecks },
-  { title: 'Today', url: '/dashboard/today', icon: ClipboardCheck },
+  { title: 'All Tasks', url: 'task-list', icon: ListChecks },
+  { title: 'Today', url: 'today', icon: ClipboardCheck },
 ];
 
 const guestItems = [{ title: 'Home', url: '/home', icon: Home }];
@@ -91,23 +91,21 @@ export function AppSidebar() {
 
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  className={cn(
-                    'flex items-center ml-2 px-4 py-3 w-full rounded-md',
-                    pathname === item.url 
-                      ?'bg-blue-100 text-primary hover:bg-blue-200'
-                      : 'hover:bg-blue-200'
-
-                  )}
-                  asChild
-                >
-                  <Link href={item.url}>
-                    <item.icon className="w-5 h-5" />
-                    <span className="pl-3 text-base">{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              
+                  <SidebarMenuButton
+                    className={cn(
+                      'flex items-center ml-2 px-4 py-3 w-full rounded-md',
+                      pathname === item.url
+                        ? 'bg-blue-100 text-primary hover:bg-blue-200'
+                        : 'hover:bg-blue-200'
+                    )}
+                    asChild
+                  >
+                    <Link href={item.url}>
+                      <item.icon className="w-5 h-5" />
+                      <span className="pl-3 text-base">{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
