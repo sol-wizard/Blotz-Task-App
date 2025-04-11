@@ -9,7 +9,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         <AppSidebar />
         <div className="flex-1 flex flex-col">
           <SidebarTrigger />
-          
+
           <main className="container mx-auto px-6 py-4 flex-1">{children}</main>
         </div>
       </SidebarProvider>
