@@ -17,6 +17,8 @@ public interface ITaskService
     public Task<List<TaskItemDTO>> GetTaskByDate(DateTime startDateUTC, DateTime endDateUTC, string userId);
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
+    public Task<List<TaskItemDTO>> SearchTasksAsync(string query);
+    public Task<ScheduledTasksDTO> GetScheduledTasks(DateTime todayDate, string userId);
 }
 
 public class TaskService : ITaskService
@@ -321,6 +323,114 @@ public class TaskService : ITaskService
             );
         }
 
+    }
+
+    public async Task<List<TaskItemDTO>> SearchTasksAsync(string query)
+    {   
+        try {
+            return await _dbContext.TaskItems
+            .Where(task => EF.Functions.Like(task.Title, $"%{query}%") || EF.Functions.Like(task.Description, $"%{query}%"))
+            .Select(task => new TaskItemDTO{
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                DueDate = task.DueDate,
+                IsDone = task.IsDone,
+                Label = new LabelDTO 
+                { 
+                    LabelId = task.Label.LabelId, 
+                    Name = task.Label.Name, 
+                    Color = task.Label.Color 
+                }
+            })
+            .ToListAsync();
+        } catch (Exception ex)
+        {
+            throw new Exception($"Unhandled exception: {ex.Message}");
+        }
+    }
+
+    public async Task<ScheduledTasksDTO> GetScheduledTasks(DateTime todayDate, string userId)
+    {
+        try {
+            
+            DateTime now = todayDate;
+
+            var tasks = await _dbContext.TaskItems
+            .Where(t => t.UserId == userId && t.DueDate != null && t.DueDate.Year == now.Year && ((t.DueDate < now && !t.IsDone) || t.DueDate >= now))
+            .Select(task => new TaskItemDTO{
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                DueDate = task.DueDate,
+                IsDone = task.IsDone,
+                Label = new LabelDTO 
+                { 
+                    LabelId = task.Label.LabelId, 
+                    Name = task.Label.Name, 
+                    Color = task.Label.Color 
+                }
+            })
+            .OrderBy(t => t.DueDate)
+            .ToListAsync();
+
+            if (tasks is null)
+            {
+                return new ScheduledTasksDTO();
+            }
+
+            return GroupTasksBySchedule(tasks, now);
+
+        } catch (Exception ex)
+        {
+            throw new Exception($"Unhandled exception: {ex.Message}");
+        }
+    }
+
+    private ScheduledTasksDTO GroupTasksBySchedule(List<TaskItemDTO> tasks, DateTime now)
+    {
+
+        var today = now.Date;
+        var tomorrow = today.AddDays(1);
+        var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
+        var endOfWeek = startOfWeek.AddDays(6);
+
+        var scheduledTasksDTO = new ScheduledTasksDTO
+        {
+            overdueTasks = new List<TaskItemDTO>(),
+            todayTasks = new List<TaskItemDTO>(),
+            tomorrowTasks = new List<TaskItemDTO>(),
+            weekTasks = new List<TaskItemDTO>(),
+            monthTasks = new Dictionary<int, List<TaskItemDTO>>()
+        };
+
+        foreach (var task in tasks)
+        {
+            var dueDate = task.DueDate.Date;
+            if (dueDate < today && !task.IsDone)
+            {
+                scheduledTasksDTO.overdueTasks.Add(task);
+            }
+            else if (dueDate == today)
+            {
+                scheduledTasksDTO.todayTasks.Add(task);
+            }
+            else if (dueDate == tomorrow)
+            {
+                scheduledTasksDTO.tomorrowTasks.Add(task);
+            }
+            else if (dueDate >= startOfWeek && dueDate <= endOfWeek)
+            {
+                scheduledTasksDTO.weekTasks.Add(task);
+            }
+            else
+            {
+                scheduledTasksDTO.monthTasks.TryAdd(dueDate.Month, new List<TaskItemDTO>());
+                scheduledTasksDTO.monthTasks[dueDate.Month].Add(task);
+            }
+        }
+
+        return scheduledTasksDTO;
     }
 }
 

@@ -44,15 +44,26 @@ public class AzureOpenAIService
         var messages = new List<ChatMessage>
         {
             new SystemChatMessage(@"
-            You are a task extraction assistant. You must always call the `extract_task` function with structured data. Do not return plain text. 
+            You are a task extraction assistant. Always call the `extract_task` function with structured data. Never return plain text.
 
-            If a due date is not provided, explicitly set `due_date` to `null`.
+            Extract:
+            - `title`: A clear task title.
+            - `description`: A clear task description.
+            - `due_date`: A YYYY-MM-DD date, or null if not found.
+            - `message`: A helpful message to the user.
+            - `isValidTask`: Set to true if the input clearly describes a task. Set to false if the input is vague or unclear.
 
-            You must call `extract_task` like this:
-            {
-              'title': '<Extracted Task Title>',
-              'due_date': '<YYYY-MM-DD>' or null
-            }
+            Guidelines:
+            - It's perfectly fine if a due date is missing. Just set `due_date` to null and include a message that you think is makesense
+
+            - When generating the description, summarize the user's input concisely without adding new information. Do not make assumptions or fabricate details. If the input lacks enough detail for a clear description, copy the input or leave the description brief.
+
+            - Only set `isValidTask` to false if the input is clearly not a task or lacks any actionable meaning.
+            
+            - Keep the message consistent with `isValidTask`: if false, the message should ask the user to rephrase. If true, the message should confirm or guide.
+
+            Always return all 4 fields: `title`, `due_date`, `message`, and `isValidTask`.
+
             "),
             new UserChatMessage(prompt)
         };
@@ -66,9 +77,16 @@ public class AzureOpenAIService
                 properties = new
                 {
                     title = new { type = "string", description = "Title of the task extracted from the user's input." },
-                    due_date = new { type = "string", format = "date", description = "Due date of the task in YYYY-MM-DD format." }
+                    description = new { type = "string", description = "Description of the task extracted from or generated based on user's input."},
+                    due_date = new { type = "string", format = "date", description = "Due date of the task in YYYY-MM-DD format." },
+                    message = new { type = "string", description = "Optional message from the AI to the user. Leave null if not needed." },
+                    isValidTask = new
+                    {
+                        type = "boolean",
+                        description = "True if the input was understood as a task, false if it was unclear or vague."
+                    }
                 },
-                required = new[] { "title" }
+                required = new[] { "title", "description", "due_date", "message", "isValidTask" }
             })
         );
 
