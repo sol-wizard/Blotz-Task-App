@@ -115,7 +115,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     className={cn(
                       'flex items-center ml-2 px-4 py-3 w-full rounded-md',
-                      pathname === item.url
+                      pathname === `/dashboard/${item.url}`
                         ? 'bg-blue-100 text-primary hover:bg-blue-200'
                         : 'hover:bg-blue-200'
                     )}
