@@ -26,9 +26,9 @@ import SearchBar from './components/search-bar';
 import { useTodayTaskActions } from '../store/today-store/today-task-store';
 
 const authenticatedItems = [
-  { title: 'All Tasks', url: '/dashboard/task-list', icon: ListChecks },
-  { title: 'Today', url: '/dashboard/today', icon: ClipboardCheck },
-  { title: 'Schedule', url: '/dashboard/schedule', icon: CalendarCheck },
+  { title: 'All Tasks', url: 'task-list', icon: ListChecks },
+  { title: 'Today', url: 'today', icon: ClipboardCheck },
+  { title: 'Schedule', url: 'schedule', icon: CalendarCheck },
 ];
 
 const guestItems = [{ title: 'Home', url: '/home', icon: Home }];
@@ -66,7 +66,7 @@ export function AppSidebar() {
       setAiEnabled(flag === 'true');
     }
   }, []);
-  
+
   const toggleAiFeature = (value) => {
     setAiEnabled(value);
     localStorage.setItem(FEATURE_FLAG_KEY, value.toString());
@@ -99,7 +99,7 @@ export function AppSidebar() {
                 </AddTaskDialog>
               </SidebarMenuItem>
 
-              { aiEnabled && (
+              {aiEnabled && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <a href="ai-assistant" className="flex items-center px-3 py-3 w-full hover:bg-white">
@@ -112,23 +112,21 @@ export function AppSidebar() {
 
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  className={cn(
-                    'flex items-center ml-2 px-4 py-3 w-full rounded-md',
-                    pathname === item.url 
-                      ?'bg-blue-100 text-primary hover:bg-blue-200'
-                      : 'hover:bg-blue-200'
-
-                  )}
-                  asChild
-                >
-                  <Link href={item.url}>
-                    <item.icon className="w-5 h-5" />
-                    <span className="pl-3 text-base">{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              
+                  <SidebarMenuButton
+                    className={cn(
+                      'flex items-center ml-2 px-4 py-3 w-full rounded-md',
+                      pathname === item.url
+                        ? 'bg-blue-100 text-primary hover:bg-blue-200'
+                        : 'hover:bg-blue-200'
+                    )}
+                    asChild
+                  >
+                    <Link href={item.url}>
+                      <item.icon className="w-5 h-5" />
+                      <span className="pl-3 text-base">{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -144,12 +142,12 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <ProfileSectionButton 
-            session={session} 
-            onSignOut={handleSignOut} 
+          <ProfileSectionButton
+            session={session}
+            onSignOut={handleSignOut}
             aiEnabled={aiEnabled}
             setAiEnabled={toggleAiFeature}
-            />
+          />
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
