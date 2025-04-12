@@ -120,7 +120,7 @@ export default function Today() {
                     />
                   </div>
                   <H3>Currently No Task</H3>
-                  <span className='text-gray-400 font-medium'>Click the "+" button to add a task</span>
+                  <span className='text-gray-400 font-medium'>Click the &quot;+&quot; button to add a task</span>
                 </div>
               )}
             </div>
