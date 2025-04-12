@@ -18,7 +18,7 @@ public interface ITaskService
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
     public Task<List<TaskItemDTO>> SearchTasksAsync(string query);
-    public Task<ScheduledTasksDTO> GetScheduledTasks(DateTime todayDate, string userId);
+    public Task<ScheduledTasksDTO> GetScheduledTasks(string timeZone, DateTime todayDate, string userId);
 }
 
 public class TaskService : ITaskService
@@ -322,7 +322,6 @@ public class TaskService : ITaskService
                 false
             );
         }
-
     }
 
     public async Task<List<TaskItemDTO>> SearchTasksAsync(string query)
@@ -350,49 +349,63 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task<ScheduledTasksDTO> GetScheduledTasks(DateTime todayDate, string userId)
+    public async Task<ScheduledTasksDTO> GetScheduledTasks(string timeZone, DateTime todayDate, string userId)
     {
         try {
-            
-            DateTime now = todayDate;
-
-            var tasks = await _dbContext.TaskItems
-            .Where(t => t.UserId == userId && t.DueDate != null && t.DueDate.Year == now.Year && ((t.DueDate < now && !t.IsDone) || t.DueDate >= now))
-            .Select(task => new TaskItemDTO{
-                Id = task.Id,
-                Title = task.Title,
-                Description = task.Description,
-                DueDate = task.DueDate,
-                IsDone = task.IsDone,
-                Label = new LabelDTO 
-                { 
-                    LabelId = task.Label.LabelId, 
-                    Name = task.Label.Name, 
-                    Color = task.Label.Color 
-                }
-            })
-            .OrderBy(t => t.DueDate)
-            .ToListAsync();
-
+            TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZone); 
+            var tasks = await QueryCurrentYearTasks(timeZoneInfo, todayDate, userId);
+           
             if (tasks is null)
             {
                 return new ScheduledTasksDTO();
             }
 
-            return GroupTasksBySchedule(tasks, now);
+            return GroupTasksBySchedule(timeZoneInfo, tasks, todayDate);
 
         } catch (Exception ex)
         {
             throw new Exception($"Unhandled exception: {ex.Message}");
         }
     }
-
-    private ScheduledTasksDTO GroupTasksBySchedule(List<TaskItemDTO> tasks, DateTime now)
+    
+    private async Task<List<TaskItemDTO>> QueryCurrentYearTasks(TimeZoneInfo timeZoneInfo, DateTime todayDate, string userId)
     {
+        
+        DateTime now = todayDate;
+        DateTime nowLocal = TimeZoneInfo.ConvertTimeFromUtc(now, timeZoneInfo);
 
-        var today = now.Date;
+        DateTime startOfYearLocal = new DateTime(nowLocal.Year, 1, 1, 0, 0, 0);
+        DateTime endOfYearLocal = new DateTime(nowLocal.Year, 12, 31, 23, 59, 59);
+
+        DateTime startOfYearUtc = TimeZoneInfo.ConvertTimeToUtc(startOfYearLocal, timeZoneInfo);
+        DateTime endOfYearUtc = TimeZoneInfo.ConvertTimeToUtc(endOfYearLocal, timeZoneInfo);
+
+        return await _dbContext.TaskItems
+        .Where(t => t.UserId == userId && t.DueDate != null 
+            && t.DueDate >= startOfYearUtc && t.DueDate <= endOfYearUtc 
+            && ((t.DueDate < now && !t.IsDone) || t.DueDate >= now))
+        .Select(task => new TaskItemDTO{
+            Id = task.Id,
+            Title = task.Title,
+            Description = task.Description,
+            DueDate = task.DueDate,
+            IsDone = task.IsDone,
+            Label = new LabelDTO 
+            { 
+                LabelId = task.Label.LabelId, 
+                Name = task.Label.Name, 
+                Color = task.Label.Color 
+            }
+        })
+        .OrderBy(t => t.DueDate)
+        .ToListAsync();
+    }
+
+    private ScheduledTasksDTO GroupTasksBySchedule(TimeZoneInfo timeZoneInfo, List<TaskItemDTO> tasks, DateTime now)
+    {
+        var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(now, DateTimeKind.Utc), timeZoneInfo);
         var tomorrow = today.AddDays(1);
-        var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
+        var startOfWeek = today.AddDays(-((int)today.DayOfWeek + 6) % 7);
         var endOfWeek = startOfWeek.AddDays(6);
 
         var scheduledTasksDTO = new ScheduledTasksDTO
@@ -405,28 +418,29 @@ public class TaskService : ITaskService
         };
 
         foreach (var task in tasks)
-        {
-            var dueDate = task.DueDate.Date;
-            if (dueDate < today && !task.IsDone)
+       {
+            DateTime localDueDate = TimeZoneInfo.ConvertTime(task.DueDate, timeZoneInfo).Date;
+            
+            if (localDueDate < today && !task.IsDone)
             {
                 scheduledTasksDTO.overdueTasks.Add(task);
             }
-            else if (dueDate == today)
+            else if (localDueDate == today)
             {
                 scheduledTasksDTO.todayTasks.Add(task);
             }
-            else if (dueDate == tomorrow)
+            else if (localDueDate == tomorrow)
             {
                 scheduledTasksDTO.tomorrowTasks.Add(task);
             }
-            else if (dueDate >= startOfWeek && dueDate <= endOfWeek)
+            else if (localDueDate >= startOfWeek && localDueDate <= endOfWeek)
             {
                 scheduledTasksDTO.weekTasks.Add(task);
             }
             else
             {
-                scheduledTasksDTO.monthTasks.TryAdd(dueDate.Month, new List<TaskItemDTO>());
-                scheduledTasksDTO.monthTasks[dueDate.Month].Add(task);
+                scheduledTasksDTO.monthTasks.TryAdd(localDueDate.Month, new List<TaskItemDTO>());
+                scheduledTasksDTO.monthTasks[localDueDate.Month].Add(task);
             }
         }
 
