@@ -353,8 +353,35 @@ public class TaskService : ITaskService
     {
         try {
             TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZone); 
-            var tasks = await QueryCurrentYearTasks(timeZoneInfo, todayDate, userId);
-           
+            DateTime now = todayDate;
+            DateTime nowLocal = TimeZoneInfo.ConvertTimeFromUtc(now, timeZoneInfo);
+
+            DateTime startOfYearLocal = new DateTime(nowLocal.Year, 1, 1, 0, 0, 0);
+            DateTime endOfYearLocal = new DateTime(nowLocal.Year, 12, 31, 23, 59, 59);
+
+            DateTime startOfYearUtc = TimeZoneInfo.ConvertTimeToUtc(startOfYearLocal, timeZoneInfo);
+            DateTime endOfYearUtc = TimeZoneInfo.ConvertTimeToUtc(endOfYearLocal, timeZoneInfo);
+
+            var tasks = await _dbContext.TaskItems
+                .Where(t => t.UserId == userId && t.DueDate != null 
+                    && t.DueDate >= startOfYearUtc && t.DueDate <= endOfYearUtc 
+                    && ((t.DueDate < now && !t.IsDone) || t.DueDate >= now))
+                .Select(task => new TaskItemDTO{
+                    Id = task.Id,
+                    Title = task.Title,
+                    Description = task.Description,
+                    DueDate = task.DueDate,
+                    IsDone = task.IsDone,
+                    Label = new LabelDTO 
+                    { 
+                        LabelId = task.Label.LabelId, 
+                        Name = task.Label.Name, 
+                        Color = task.Label.Color 
+                    }
+                })
+                .OrderBy(t => t.DueDate)
+                .ToListAsync();
+                
             if (tasks is null)
             {
                 return new ScheduledTasksDTO();
@@ -362,44 +389,12 @@ public class TaskService : ITaskService
 
             return GroupTasksBySchedule(timeZoneInfo, tasks, todayDate);
 
-        } catch (Exception ex)
-        {
-            throw new Exception($"Unhandled exception: {ex.Message}");
-        }
-    }
-    
-    private async Task<List<TaskItemDTO>> QueryCurrentYearTasks(TimeZoneInfo timeZoneInfo, DateTime todayDate, string userId)
-    {
-        
-        DateTime now = todayDate;
-        DateTime nowLocal = TimeZoneInfo.ConvertTimeFromUtc(now, timeZoneInfo);
-
-        DateTime startOfYearLocal = new DateTime(nowLocal.Year, 1, 1, 0, 0, 0);
-        DateTime endOfYearLocal = new DateTime(nowLocal.Year, 12, 31, 23, 59, 59);
-
-        DateTime startOfYearUtc = TimeZoneInfo.ConvertTimeToUtc(startOfYearLocal, timeZoneInfo);
-        DateTime endOfYearUtc = TimeZoneInfo.ConvertTimeToUtc(endOfYearLocal, timeZoneInfo);
-
-        return await _dbContext.TaskItems
-        .Where(t => t.UserId == userId && t.DueDate != null 
-            && t.DueDate >= startOfYearUtc && t.DueDate <= endOfYearUtc 
-            && ((t.DueDate < now && !t.IsDone) || t.DueDate >= now))
-        .Select(task => new TaskItemDTO{
-            Id = task.Id,
-            Title = task.Title,
-            Description = task.Description,
-            DueDate = task.DueDate,
-            IsDone = task.IsDone,
-            Label = new LabelDTO 
-            { 
-                LabelId = task.Label.LabelId, 
-                Name = task.Label.Name, 
-                Color = task.Label.Color 
+            } catch (Exception ex)
+            {
+                throw new Exception($"Unhandled exception: {ex.Message}");
             }
-        })
-        .OrderBy(t => t.DueDate)
-        .ToListAsync();
-    }
+        }
+        
 
     private ScheduledTasksDTO GroupTasksBySchedule(TimeZoneInfo timeZoneInfo, List<TaskItemDTO> tasks, DateTime now)
     {
