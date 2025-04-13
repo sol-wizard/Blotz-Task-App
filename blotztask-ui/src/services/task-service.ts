@@ -93,7 +93,9 @@ export const updateTaskStatus = async (taskId: number): Promise<string> => {
   }
 };
 
+// to do: remove any
 export const editTask = async (taskEditForm, task: TaskDetailDTO): Promise<string> => {
+  // to do: use a same function as util
   let dateTime: string;
   if (taskEditForm.time) {
     const parsedTime = parse(taskEditForm.time, 'h:mm a', new Date());

@@ -29,6 +29,7 @@ export default function TaskContent({
 }) {
   const form = useForm<z.infer<typeof taskFormSchema>>({
     resolver: zodResolver(taskFormSchema),
+    // to do: default should be empty, empty string
     defaultValues: {
       title: task.title,
       description: task.description,
@@ -37,7 +38,7 @@ export default function TaskContent({
       time: format(new Date(task.dueDate), 'h:mm a'),
     },
   });
-
+  // to do: add ref back
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
 
@@ -63,6 +64,7 @@ export default function TaskContent({
               onSubmit(data);
               handleEditState();
             })}
+            // to do: handleSubmit: mapping, prepare DTO pass to service, then pass data to api in service
             className="flex flex-col w-full bg-transparent px-6"
           >
             <div className="flex flex-col w-full bg-transparent px-6">

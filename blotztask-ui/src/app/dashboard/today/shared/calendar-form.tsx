@@ -9,7 +9,15 @@ import { useState } from 'react';
 import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
 import { Control } from 'react-hook-form';
 
-export function CalendarForm({ task, control }: { task?: TaskDetailDTO; control: Control }) {
+export function CalendarForm({
+  task,
+  datePickerRef,
+  control,
+}: {
+  task?: TaskDetailDTO;
+  datePickerRef?: React.RefObject<HTMLDivElement>;
+  control: Control;
+}) {
   const [showCalendar, setShowCalendar] = useState(false);
   const handleCalendarClose = () => setShowCalendar(false);
 
@@ -35,6 +43,7 @@ export function CalendarForm({ task, control }: { task?: TaskDetailDTO; control:
                 </FormControl>
               </PopoverTrigger>
               <PopoverContent
+                ref={datePickerRef ?? undefined}
                 className="w-auto p-0 pointer-events-auto"
                 align="start"
                 onCloseAutoFocus={handleCalendarClose}

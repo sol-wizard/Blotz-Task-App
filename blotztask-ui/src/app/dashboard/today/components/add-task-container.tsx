@@ -8,7 +8,7 @@ import AddTaskForm from '../shared/add-task-form';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
-const AddTaskContainer = ({ onSubmit, onCancel }) => {
+const AddTaskContainer = ({ onSubmit, datePickerRef, labelPickerRef, timePickerRef, onCancel }) => {
   const form = useForm<FormField>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -29,7 +29,12 @@ const AddTaskContainer = ({ onSubmit, onCancel }) => {
     <Form {...form}>
       <form className="flex flex-col w-full space-y-2" onSubmit={form.handleSubmit(handleAddTask)}>
         <div className="flex flex-row justify-between items-center">
-          <AddTaskForm form={form} />
+          <AddTaskForm
+            form={form}
+            datePickerRef={datePickerRef}
+            labelPickerRef={labelPickerRef}
+            timePickerRef={timePickerRef}
+          />
           <div className="flex flex-row h-8 ml-4 mt-20">
             <button
               className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20 hover:bg-gray-100"
