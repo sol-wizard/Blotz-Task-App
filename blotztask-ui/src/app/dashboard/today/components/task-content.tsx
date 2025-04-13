@@ -29,13 +29,12 @@ export default function TaskContent({
 }) {
   const form = useForm<z.infer<typeof taskFormSchema>>({
     resolver: zodResolver(taskFormSchema),
-    // to do: default should be empty, empty string
     defaultValues: {
-      title: task.title,
-      description: task.description,
-      date: new Date(task.dueDate),
-      labelId: task.label.labelId,
-      time: format(new Date(task.dueDate), 'h:mm a'),
+      title: '',
+      description: '',
+      date: new Date(),
+      labelId: undefined,
+      time: undefined,
     },
   });
   // to do: add ref back
