@@ -20,10 +20,10 @@ import { LabelDTO } from '@/model/label-dto';
 import { fetchAllLabel } from '@/services/label-service';
 import { cn } from '@/lib/utils';
 import AddTaskDialog from './components/add-task-dialog';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import SearchBar from './components/search-bar';
 import { useTodayTaskActions } from '../store/today-store/today-task-store';
-import { addTaskItem } from '@/services/task-service';
-import { useScheduleTaskActions } from '../store/schedule-task-store';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -37,11 +37,9 @@ const FEATURE_FLAG_KEY = 'aiEnabled';
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
-  const { loadTodayTasks }= useTodayTaskActions();
-  const { loadScheduleTasks } = useScheduleTaskActions();
-
-  const [aiEnabled, setAiEnabled] = useState<boolean>(undefined);
-
+  const { handleAddTask } = useTodayTaskActions();
+  const pathname = usePathname();
+  const [aiEnabled, setAiEnabled] = useState(false);
   const handleSignOut = (e) => {
     e.preventDefault();
     window.location.href = '/api/auth/signout';
@@ -61,12 +59,6 @@ export function AppSidebar() {
     }
   };
 
-  const handleAddTask = async (taskDetails) => {
-    await addTaskItem(taskDetails);
-    loadTodayTasks();
-    loadScheduleTasks();
-  }
-
   useEffect(() => {
     loadAllLabel();
     const flag = localStorage.getItem(FEATURE_FLAG_KEY);
@@ -74,7 +66,7 @@ export function AppSidebar() {
       setAiEnabled(flag === 'true');
     }
   }, []);
-  
+
   const toggleAiFeature = (value) => {
     setAiEnabled(value);
     localStorage.setItem(FEATURE_FLAG_KEY, value.toString());
@@ -92,7 +84,7 @@ export function AppSidebar() {
 
               <SidebarMenuItem>
                 <AddTaskDialog handleAddTask={handleAddTask}>
-                  <SidebarMenuButton>
+                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100">
                     <div
                       className={cn(
                         'bg-primary',
@@ -107,7 +99,7 @@ export function AppSidebar() {
                 </AddTaskDialog>
               </SidebarMenuItem>
 
-              { aiEnabled && (
+              {aiEnabled && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <a href="ai-assistant" className="flex items-center px-3 py-3 w-full hover:bg-white">
@@ -120,11 +112,19 @@ export function AppSidebar() {
 
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url} className="flex items-center px-3 py-3 w-full hover:bg-white">
-                      <item.icon />
+                  <SidebarMenuButton
+                    className={cn(
+                      'flex items-center ml-2 px-4 py-3 w-full rounded-md',
+                      pathname === `/dashboard/${item.url}`
+                        ? 'bg-blue-100 text-primary hover:bg-blue-200'
+                        : 'hover:bg-blue-200'
+                    )}
+                    asChild
+                  >
+                    <Link href={item.url}>
+                      <item.icon className="w-5 h-5" />
                       <span className="pl-3 text-base">{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -142,12 +142,12 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <ProfileSectionButton 
-            session={session} 
-            onSignOut={handleSignOut} 
+          <ProfileSectionButton
+            session={session}
+            onSignOut={handleSignOut}
             aiEnabled={aiEnabled}
             setAiEnabled={toggleAiFeature}
-            />
+          />
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
