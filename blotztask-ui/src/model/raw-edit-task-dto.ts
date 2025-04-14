@@ -1,5 +1,3 @@
-'use client';
-
 export interface RawEditTaskDTO {
   id: number;
   title: string;

@@ -1,5 +1,3 @@
-'use client';
-
 export interface RawAddTaskDTO {
   title: string;
   description: string;
