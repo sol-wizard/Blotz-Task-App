@@ -41,7 +41,7 @@ export const mapRawEditTaskDTOtoAddTaskItemDTO = (taskEditForm: RawEditTaskDTO):
   const taskEditDetails: EditTaskItemDTO = {
     id: taskEditForm.id,
     title: taskEditForm.title,
-    description: taskEditForm.description ?? '',
+    description: taskEditForm.description,
     isDone: taskEditForm.isDone,
     labelId: taskEditForm.labelId,
     dueDate: dateTime,
