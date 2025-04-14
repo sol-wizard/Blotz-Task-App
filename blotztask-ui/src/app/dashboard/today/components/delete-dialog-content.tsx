@@ -11,7 +11,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Trash2 } from 'lucide-react';
-import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
+import { TaskDetailDTO } from '../../../../model/task-detail-dto';
 import showTaskDeletedToast from '../shared/show-task-deleted-toast';
 
 const DeleteTaskDialog = ({

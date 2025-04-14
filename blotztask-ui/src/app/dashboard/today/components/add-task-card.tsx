@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import AddTaskContainer from './add-task-container';
 import { PlusIcon } from '@radix-ui/react-icons';
 import useClickOutside from '@/utils/use-multiple-click-away';
@@ -8,8 +8,9 @@ const AddTaskCard = ({ onAddTask }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const datePickerRef = useRef<HTMLDivElement>(null);
   const labelPickerRef = useRef<HTMLDivElement>(null);
+  const timePickerRef = useRef<HTMLDivElement>(null);
 
-  useClickOutside([cardRef, datePickerRef, labelPickerRef], () => {
+  useClickOutside([cardRef, datePickerRef, labelPickerRef, timePickerRef], () => {
     setIsFormVisible(false);
   });
 
@@ -29,9 +30,10 @@ const AddTaskCard = ({ onAddTask }) => {
               onAddTask(taskDetails);
               setIsFormVisible(false);
             }}
+            onCancel={() => setIsFormVisible(false)}
             datePickerRef={datePickerRef}
             labelPickerRef={labelPickerRef}
-            onCancel={() => setIsFormVisible(false)}
+            timePickerRef={timePickerRef}
           />
         )}
       </div>
