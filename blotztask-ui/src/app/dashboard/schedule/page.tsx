@@ -1,16 +1,15 @@
 'use client';
 import { useEffect } from 'react';
-import { useScheduleTaskStore } from '../../store/schedule-task-store';
+import { useScheduleTaskActions, useScheduleTaskStore } from '../../store/schedule-task-store';
 import AddTaskCard from '../today/components/add-task-card';
 import ScheduleHeader from './components/schedule-header';
 import TaskCard from '../today/components/task-card';
-import { useTodayTaskActions } from '@/app/store/today-store/today-task-store';
 
 export default function Schedule() {
   const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks } = useScheduleTaskStore();
   const { loadScheduleTasks } = useScheduleTaskStore((state) => state.actions);
   const { handleAddTask, handleEditTask, handleDeleteTask, handleTaskDeleteUndo, handleCheckboxChange } =
-    useTodayTaskActions();
+    useScheduleTaskActions();
 
   useEffect(() => {
     loadScheduleTasks();
