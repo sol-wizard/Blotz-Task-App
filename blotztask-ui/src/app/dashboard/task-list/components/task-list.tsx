@@ -1,3 +1,4 @@
+import SectionSeparator from '../../today/components/section-separator';
 import TaskCard from '../../today/components/task-card';
 
 export function TaskList({
@@ -18,6 +19,7 @@ export function TaskList({
             handleTaskDelete={handleTaskDelete}
             handleTaskDeleteUndo={handleTaskDeleteUndo}
           ></TaskCard>
+          <SectionSeparator />
         </div>
       ))}
     </div>

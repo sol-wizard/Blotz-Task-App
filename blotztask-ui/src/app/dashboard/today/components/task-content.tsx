@@ -1,20 +1,21 @@
 import DueDateTag from './due-date-tag';
 import TaskSeparator from '../shared/task-separator';
 import { Pencil } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from 'src/components/ui/task-card-input';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { taskFormSchema } from '../forms/task-form-schema';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
+import { TaskDetailDTO } from '../../../../model/task-detail-dto';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
-import { EditTaskItemDTO } from '../../task-list/models/edit-task-item-dto';
 import DeleteTaskDialog from './delete-dialog-content';
 import TimePicker from '@/components/ui/time-picker';
+import { format } from 'date-fns';
+import { RawEditTaskDTO } from '../../../../model/raw-edit-task-dto';
 
 export default function TaskContent({
   task,
@@ -23,35 +24,48 @@ export default function TaskContent({
   handleTaskDeleteUndo,
 }: {
   task: TaskDetailDTO;
-  onSubmit: (data: z.infer<typeof taskFormSchema>) => void;
+  onSubmit: (taskContent: RawEditTaskDTO) => void;
   onDelete: (taskId: number) => void;
   handleTaskDeleteUndo: (taskId: number) => void;
 }) {
   const form = useForm<z.infer<typeof taskFormSchema>>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
-      title: task.title,
-      description: task.description,
-      date: new Date(task.dueDate),
-      labelId: task.label.labelId,
+      title: '',
+      description: '',
+      date: new Date(),
+      labelId: undefined,
       time: undefined,
     },
   });
 
-  const updateTask: SubmitHandler<z.infer<typeof taskFormSchema>> = async (data) => {
-    const editTaskDetails: EditTaskItemDTO = {
+  const [isEditing, setIsEditing] = useState(false);
+  const handleEditState = () => setIsEditing(!isEditing);
+
+  const handleFormSubmit = (data, task: TaskDetailDTO) => {
+    const taskContent: RawEditTaskDTO = {
       id: task.id,
       title: data.title ?? task.title,
       description: data.description ?? '',
       isDone: task.isDone,
       labelId: data.labelId,
-      dueDate: data.date.toISOString(),
+      date: data.date,
+      time: data.time,
     };
-    onSubmit(editTaskDetails);
+    onSubmit(taskContent);
   };
 
-  const [isEditing, setIsEditing] = useState(false);
-  const handleEditState = () => setIsEditing(!isEditing);
+  useEffect(() => {
+    if (task) {
+      form.reset({
+        title: task.title,
+        description: task.description,
+        date: new Date(task.dueDate),
+        labelId: task.label.labelId,
+        time: format(new Date(task.dueDate), 'h:mm a'),
+      });
+    }
+  }, [task]);
 
   return (
     <div className="flex flex-col w-full ">
@@ -60,7 +74,7 @@ export default function TaskContent({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
-              updateTask(data);
+              handleFormSubmit(data, task);
               handleEditState();
             })}
             className="flex flex-col w-full bg-transparent px-6"
