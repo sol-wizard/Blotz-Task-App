@@ -16,6 +16,8 @@ import {
   useTodayTasksIsLoading,
 } from '../store/today-store/today-task-store';
 import SectionSeparator from './components/section-separator';
+import { RawAddTaskDTO } from '../task-list/models/raw-add-task-dto';
+import { RawEditTaskDTO } from '../task-list/models/raw-edit-task-dto';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
@@ -38,11 +40,11 @@ export default function Today() {
       console.error('Error performing action:', error);
     }
   };
-  const handleAddTask = async (taskDetails) => {
+  const handleAddTask = async (taskDetails: RawAddTaskDTO) => {
     handleAction(() => addTaskItem(taskDetails));
   };
 
-  const handleTaskEdit = async (updatedTask) => {
+  const handleTaskEdit = async (updatedTask: RawEditTaskDTO) => {
     handleAction(() => editTask(updatedTask));
   };
 
