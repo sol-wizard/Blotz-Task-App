@@ -1,5 +1,5 @@
 import { Command, CommandInput } from '@/components/ui/command';
-import { useSearchTaskStore } from '../../store/search-task-store';
+import { useSearchTaskStore } from '../../../store/search-task-store';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 

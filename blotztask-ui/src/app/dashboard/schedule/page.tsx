@@ -1,14 +1,14 @@
 'use client';
 import { useEffect } from 'react';
-import { useScheduleTaskStore } from '../store/schedule-task-store';
+import { useScheduleTaskStore } from '../../store/schedule-task-store';
 import AddTaskCard from '../today/components/add-task-card';
 import ScheduleHeader from './components/schedule-header';
 import TaskCard from '../today/components/task-card';
 
 export default function Schedule() {
-  const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks} = useScheduleTaskStore();
+  const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks } = useScheduleTaskStore();
   const { loadScheduleTasks } = useScheduleTaskStore((state) => state.actions);
-  
+
   useEffect(() => {
     loadScheduleTasks();
   }, []);
@@ -35,9 +35,9 @@ export default function Schedule() {
   return (
     <div>
       <ScheduleHeader />
-      <p className="my-5"/>
+      <p className="my-5" />
       <AddTaskCard onAddTask={handleAddTask} />
-      <p className="my-5"/>
+      <p className="my-5" />
       <div>
         {overdueTasks.length !== 0 && (
           <div>
@@ -122,14 +122,17 @@ export default function Schedule() {
         )}
       </div>
 
-
       <div>
         {Object.keys(monthTasks).length !== 0 && (
           <div>
             {Object.entries(monthTasks).map(([month, tasks]) => (
               <div key={month}>
-                <p className="my-5">{new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString('en-US', { month: 'long' })}</p>
-    
+                <p className="my-5">
+                  {new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString('en-US', {
+                    month: 'long',
+                  })}
+                </p>
+
                 {tasks.map((task) => {
                   return (
                     <TaskCard
@@ -147,7 +150,6 @@ export default function Schedule() {
           </div>
         )}
       </div>
-
     </div>
   );
 }

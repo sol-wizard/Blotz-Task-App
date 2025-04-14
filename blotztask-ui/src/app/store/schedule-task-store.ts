@@ -1,4 +1,4 @@
-import { TaskDetailDTO } from '../../../model/task-detail-dto';
+import { TaskDetailDTO } from '../../model/task-detail-dto';
 import { create } from 'zustand';
 import { fetchScheduleTasks } from '@/services/task-service';
 

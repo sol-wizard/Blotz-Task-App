@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { addTaskItem, fetchTaskItemsDueToday } from '@/services/task-service';
 import { performTaskAndRefresh } from './util';
-import { RawAddTaskDTO } from '../../../../model/raw-add-task-dto';
+import { RawAddTaskDTO } from '../../../model/raw-add-task-dto';
 
 type TodayTaskStore = {
   todayTasks: TaskDetailDTO[];

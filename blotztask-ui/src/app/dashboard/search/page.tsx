@@ -1,6 +1,6 @@
 'use client';
 import SearchTitle from './components/search-title';
-import { useSearchTaskStore } from '../store/search-task-store';
+import { useSearchTaskStore } from '../../store/search-task-store';
 import TaskCard from '../today/components/task-card';
 
 export default function Page() {
