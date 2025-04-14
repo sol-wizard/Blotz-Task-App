@@ -18,8 +18,7 @@ import {
 } from '../store/today-store/today-task-store';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import SectionSeparator from './components/section-separator';
-import Image from 'next/image';
-import {H3} from '@/components/ui/heading-with-anchor';
+import DisplayNoTask from './components/display-no-task';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
@@ -79,7 +78,7 @@ export default function Today() {
             
             <div className="flex items-start h-full">
               {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (
-                <div className='flex flex-col gap-6 w-full'>
+                <div className="flex flex-col gap-6 w-full">
                     <Divider text="To Do" />
                     <SectionSeparator />
                     {incompleteTodayTasks.length > 0 ? (
@@ -99,29 +98,22 @@ export default function Today() {
                     ) : (
                       <p>No incomplete tasks for today!</p>
                     )}
-                  <Divider text="Done" />
-                  <SectionSeparator />
-                  <CompletedTaskViewer
-                    completedTasks={completedTodayTasks}
-                    handleCompletedCheckboxChange={handleCheckboxChange}
-                    handleTaskEdit={handleTaskEdit}
-                    handleTaskDelete={handleTaskDelete}
-                    handleTaskDeleteUndo={handleTaskDeleteUndo}
-                  />
+                  {completedTodayTasks.length > 0 &&
+                    <>
+                      <Divider text="Done" />
+                      <SectionSeparator />
+                      <CompletedTaskViewer
+                        completedTasks={completedTodayTasks}
+                        handleCompletedCheckboxChange={handleCheckboxChange}
+                        handleTaskEdit={handleTaskEdit}
+                        handleTaskDelete={handleTaskDelete}
+                        handleTaskDeleteUndo={handleTaskDeleteUndo}
+                      />
+                    </>
+                  }
                 </div>
               ) : (
-                <div className="relative w-full h-[80%] flex flex-col items-center justify-center gap-3">
-                  <div className='relative w-full h-[6rem]'>
-                    <Image 
-                      src='/assets/images/no-task-placeholder.png' 
-                      alt="A placeholder image when there's no task for today"
-                      fill
-                      className='object-contain'
-                    />
-                  </div>
-                  <H3>Currently No Task</H3>
-                  <span className='text-gray-400 font-medium'>Click the &quot;+&quot; button to add a task</span>
-                </div>
+                <DisplayNoTask/>
               )}
             </div>
           </>
