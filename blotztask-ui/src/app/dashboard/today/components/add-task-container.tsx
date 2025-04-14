@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormField } from '@/components/ui/form';
 import { taskFormSchema } from '../forms/task-form-schema';
 import AddTaskForm from '../shared/add-task-form';
+import { useTodayTaskActions } from '@/app/store/today-store/today-task-store';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
@@ -19,11 +20,7 @@ const AddTaskContainer = ({ onSubmit, datePickerRef, labelPickerRef, timePickerR
       time: undefined,
     },
   });
-
-  // I will move all the duplicate handleAddTask functions to store in another pbi
-  const handleAddTask: SubmitHandler<FormField> = async (taskDetails) => {
-    onSubmit(taskDetails);
-  };
+  const { handleAddTask } = useTodayTaskActions();
 
   return (
     <Form {...form}>

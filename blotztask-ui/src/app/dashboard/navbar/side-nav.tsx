@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SearchBar from './components/search-bar';
 import { useTodayTaskActions } from '../../store/today-store/today-task-store';
+import { useScheduleTaskActions, useScheduleTaskStore } from '@/app/store/schedule-task-store';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -38,6 +39,7 @@ const FEATURE_FLAG_KEY = 'aiEnabled';
 export function AppSidebar() {
   const { data: session, status } = useSession();
   const { handleAddTask } = useTodayTaskActions();
+  const { loadScheduleTasks } = useScheduleTaskActions();
   const pathname = usePathname();
   const [aiEnabled, setAiEnabled] = useState(false);
   const handleSignOut = (e) => {
@@ -83,7 +85,12 @@ export function AppSidebar() {
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <AddTaskDialog handleAddTask={handleAddTask}>
+                <AddTaskDialog
+                  handleAddTask={(data) => {
+                    handleAddTask(data);
+                    loadScheduleTasks();
+                  }}
+                >
                   <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100">
                     <div
                       className={cn(

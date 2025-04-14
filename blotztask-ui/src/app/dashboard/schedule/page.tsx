@@ -4,33 +4,17 @@ import { useScheduleTaskStore } from '../../store/schedule-task-store';
 import AddTaskCard from '../today/components/add-task-card';
 import ScheduleHeader from './components/schedule-header';
 import TaskCard from '../today/components/task-card';
+import { useTodayTaskActions } from '@/app/store/today-store/today-task-store';
 
 export default function Schedule() {
   const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks } = useScheduleTaskStore();
   const { loadScheduleTasks } = useScheduleTaskStore((state) => state.actions);
+  const { handleAddTask, handleEditTask, handleDeleteTask, handleTaskDeleteUndo, handleCheckboxChange } =
+    useTodayTaskActions();
 
   useEffect(() => {
     loadScheduleTasks();
   }, []);
-
-  const handleAddTask = (task) => {
-    console.log('Task added successfully!', task);
-  };
-
-  const handleCheckboxChange = () => {
-    console.log('Checkbox changed!');
-  };
-
-  const handleTaskDelete = () => {
-    console.log('Task deleted successfully!');
-  };
-
-  const handleTaskDeleteUndo = () => {
-    console.log('Deleted task restored!');
-  };
-  const handleTaskEdit = () => {
-    console.log('Task edited successfully!');
-  };
 
   return (
     <div>
@@ -49,8 +33,8 @@ export default function Schedule() {
                   key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleTaskEdit}
-                  handleTaskDelete={handleTaskDelete}
+                  handleTaskEdit={handleEditTask}
+                  handleTaskDelete={handleDeleteTask}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
               );
@@ -70,8 +54,8 @@ export default function Schedule() {
                   key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleTaskEdit}
-                  handleTaskDelete={handleTaskDelete}
+                  handleTaskEdit={handleEditTask}
+                  handleTaskDelete={handleDeleteTask}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
               );
@@ -91,8 +75,8 @@ export default function Schedule() {
                   key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleTaskEdit}
-                  handleTaskDelete={handleTaskDelete}
+                  handleTaskEdit={handleEditTask}
+                  handleTaskDelete={handleDeleteTask}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
               );
@@ -112,8 +96,8 @@ export default function Schedule() {
                   key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleTaskEdit}
-                  handleTaskDelete={handleTaskDelete}
+                  handleTaskEdit={handleEditTask}
+                  handleTaskDelete={handleDeleteTask}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
               );
@@ -139,8 +123,8 @@ export default function Schedule() {
                       key={task.id}
                       task={task}
                       handleCheckboxChange={handleCheckboxChange}
-                      handleTaskEdit={handleTaskEdit}
-                      handleTaskDelete={handleTaskDelete}
+                      handleTaskEdit={handleEditTask}
+                      handleTaskDelete={handleDeleteTask}
                       handleTaskDeleteUndo={handleTaskDeleteUndo}
                     />
                   );
