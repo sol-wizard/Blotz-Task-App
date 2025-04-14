@@ -41,7 +41,8 @@ export default function TaskContent({
 
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
-  const mapDatatoRawEditTaskDTO = (data, task: TaskDetailDTO): RawEditTaskDTO => {
+
+  const handleFormSubmit = (data, task: TaskDetailDTO) => {
     const taskContent: RawEditTaskDTO = {
       id: task.id,
       title: data.title ?? task.title,
@@ -51,12 +52,6 @@ export default function TaskContent({
       date: data.date,
       time: data.time,
     };
-
-    return taskContent;
-  };
-
-  const handleFormSubmit = (data, task: TaskDetailDTO) => {
-    const taskContent: RawEditTaskDTO = mapDatatoRawEditTaskDTO(data, task);
     onSubmit(taskContent);
   };
 
