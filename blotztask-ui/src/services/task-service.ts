@@ -4,6 +4,7 @@ import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { EditTaskItemDTO } from '@/app/dashboard/task-list/models/edit-task-item-dto';
 import { ScheduledTasksDTO } from '@/app/dashboard/task-list/models/scheduled-tasks-dto';
 import { parse, set } from 'date-fns';
+import { RawEditTaskDTO } from '@/app/dashboard/task-list/models/raw-edit-task-dto';
 
 export const fetchAllTaskItems = async (): Promise<TaskDetailDTO[]> => {
   const result = await fetchWithAuth<TaskDetailDTO[]>(
@@ -94,7 +95,7 @@ export const updateTaskStatus = async (taskId: number): Promise<string> => {
 };
 
 // to do: remove any
-export const editTask = async (taskEditForm, task: TaskDetailDTO): Promise<string> => {
+export const editTask = async (taskEditForm: RawEditTaskDTO): Promise<string> => {
   // to do: use a same function as util
   let dateTime: string;
   if (taskEditForm.time) {
@@ -110,10 +111,10 @@ export const editTask = async (taskEditForm, task: TaskDetailDTO): Promise<strin
   }
 
   const taskEditDetails: EditTaskItemDTO = {
-    id: task.id,
-    title: taskEditForm.title ?? task.title,
+    id: taskEditForm.id,
+    title: taskEditForm.title,
     description: taskEditForm.description ?? '',
-    isDone: task.isDone,
+    isDone: taskEditForm.isDone,
     labelId: taskEditForm.labelId,
     dueDate: dateTime,
   };

@@ -15,6 +15,7 @@ import { LabelSelect } from '../shared/label-select';
 import DeleteTaskDialog from './delete-dialog-content';
 import TimePicker from '@/components/ui/time-picker';
 import { format } from 'date-fns';
+import { RawEditTaskDTO } from '../../task-list/models/raw-edit-task-dto';
 
 export default function TaskContent({
   task,
@@ -23,7 +24,7 @@ export default function TaskContent({
   handleTaskDeleteUndo,
 }: {
   task: TaskDetailDTO;
-  onSubmit: (data: z.infer<typeof taskFormSchema>) => void;
+  onSubmit: (taskContent: RawEditTaskDTO) => void;
   onDelete: (taskId: number) => void;
   handleTaskDeleteUndo: (taskId: number) => void;
 }) {
@@ -37,9 +38,27 @@ export default function TaskContent({
       time: undefined,
     },
   });
-  // to do: add ref back
+
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
+  const mapEditedTasktoTaskContentDTO = (data, task: TaskDetailDTO): RawEditTaskDTO => {
+    const taskContent: RawEditTaskDTO = {
+      id: task.id,
+      title: data.title ?? task.title,
+      description: data.description ?? '',
+      isDone: task.isDone,
+      labelId: data.labelId,
+      date: data.date,
+      time: data.time,
+    };
+
+    return taskContent;
+  };
+
+  const handleFormSubmit = (data, task: TaskDetailDTO) => {
+    const taskContent: RawEditTaskDTO = mapEditedTasktoTaskContentDTO(data, task);
+    onSubmit(taskContent);
+  };
 
   useEffect(() => {
     if (task) {
@@ -60,7 +79,7 @@ export default function TaskContent({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
-              onSubmit(data);
+              handleFormSubmit(data, task);
               handleEditState();
             })}
             // to do: handleSubmit: mapping, prepare DTO pass to service, then pass data to api in service

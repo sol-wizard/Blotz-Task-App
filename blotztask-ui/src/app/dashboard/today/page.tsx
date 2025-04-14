@@ -42,8 +42,8 @@ export default function Today() {
     handleAction(() => addTaskItem(taskDetails));
   };
 
-  const handleTaskEdit = async (updatedTask, task) => {
-    handleAction(() => editTask(updatedTask, task));
+  const handleTaskEdit = async (updatedTask) => {
+    handleAction(() => editTask(updatedTask));
   };
 
   const handleTaskDelete = async (taskId: number) => {
@@ -84,7 +84,7 @@ export default function Today() {
                         key={task.id}
                         task={task}
                         handleCheckboxChange={handleCheckboxChange}
-                        handleTaskEdit={(data) => handleTaskEdit(data, task)}
+                        handleTaskEdit={handleTaskEdit}
                         handleTaskDelete={handleTaskDelete}
                         handleTaskDeleteUndo={handleTaskDeleteUndo}
                       ></TaskCard>
