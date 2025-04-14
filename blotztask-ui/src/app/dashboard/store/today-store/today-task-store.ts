@@ -1,19 +1,19 @@
 import { create } from 'zustand';
-import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { addTaskItem, fetchTaskItemsDueToday } from '@/services/task-service';
-import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { performTaskAndRefresh } from './util';
+import { RawAddTaskDTO } from '../../../../model/raw-add-task-dto';
 
 type TodayTaskStore = {
   todayTasks: TaskDetailDTO[];
   incompleteTodayTasks: TaskDetailDTO[];
   completedTodayTasks: TaskDetailDTO[];
   todayTasksIsLoading: boolean;
-  actions : {
+  actions: {
     loadTodayTasks: () => Promise<void>;
     setLoading: (value: boolean) => void;
-    handleAddTask: (taskDetails: AddTaskItemDTO) => void;
-  }
+    handleAddTask: (taskDetails: RawAddTaskDTO) => void;
+  };
 };
 
 const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
@@ -26,13 +26,13 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
 
     loadTodayTasks: async () => {
       const { setLoading } = get().actions;
-    
+
       const data = await performTaskAndRefresh(
         () => fetchTaskItemsDueToday(),
         async () => {}, // no-op reload since it's already loading
         setLoading
       );
-    
+
       if (data) {
         set({
           todayTasks: data,
@@ -41,13 +41,13 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
         });
       }
     },
-    
-    handleAddTask: async (taskDetails: AddTaskItemDTO) => {
+
+    handleAddTask: async (taskDetails: RawAddTaskDTO) => {
       const { loadTodayTasks: loadTasks, setLoading } = get().actions;
 
       await performTaskAndRefresh(() => addTaskItem(taskDetails), loadTasks, setLoading);
     },
-  }
+  },
 }));
 
 export const useTodayTasks = () => useTodayTaskStore((state) => state.todayTasks);
@@ -55,4 +55,3 @@ export const useIncompleteTodayTasks = () => useTodayTaskStore((state) => state.
 export const useCompletedTodayTasks = () => useTodayTaskStore((state) => state.completedTodayTasks);
 export const useTodayTasksIsLoading = () => useTodayTaskStore((state) => state.todayTasksIsLoading);
 export const useTodayTaskActions = () => useTodayTaskStore((state) => state.actions);
-
