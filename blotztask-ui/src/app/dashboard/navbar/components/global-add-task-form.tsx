@@ -3,7 +3,6 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
-import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { taskFormSchema } from '../../today/forms/task-form-schema';
 import AddTaskForm from '../../today/shared/add-task-form';
 import { Separator } from '@/components/ui/separator';
@@ -21,17 +20,12 @@ const GlobalAddTaskForm = ({ onSubmit }) => {
       description: '',
       date: new Date(),
       labelId: undefined,
-      time: ''
+      time: '',
     },
   });
 
-  const handleAddTask: SubmitHandler<FormField> = async (data) => {
-    const taskDetails: AddTaskItemDTO = {
-      title: data.title,
-      description: data.description ?? '',
-      dueDate: data.date.toLocaleString(),
-      labelId: data.labelId ?? 0,
-    };
+  // I will move all the duplicate handleAddTask functions to store in another pbi
+  const handleAddTask: SubmitHandler<FormField> = async (taskDetails) => {
     onSubmit(taskDetails);
   };
 

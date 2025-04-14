@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
+import { TaskDetailDTO } from '../../../../model/task-detail-dto';
 
 const showTaskDeletedToast = ({
   handleUndo,
