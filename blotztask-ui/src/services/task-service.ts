@@ -1,9 +1,7 @@
 import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
 import { fetchWithAuth } from '@/utils/fetch-with-auth';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
-import { EditTaskItemDTO } from '@/app/dashboard/task-list/models/edit-task-item-dto';
 import { ScheduledTasksDTO } from '@/app/dashboard/task-list/models/scheduled-tasks-dto';
-import { parse, set } from 'date-fns';
 import { RawEditTaskDTO } from '@/app/dashboard/task-list/models/raw-edit-task-dto';
 import { mapRawAddTaskDTOtoAddTaskItemDTO, mapRawEditTaskDTOtoAddTaskItemDTO } from './util/util';
 import { RawAddTaskDTO } from '@/app/dashboard/task-list/models/raw-add-task-dto';
