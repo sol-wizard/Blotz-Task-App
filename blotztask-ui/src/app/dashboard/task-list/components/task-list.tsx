@@ -15,7 +15,7 @@ export function TaskList({
           <TaskCard
             task={task}
             handleCheckboxChange={handleCheckboxChange}
-            handleTaskEdit={(data) => handleTaskEdit(data, task)}
+            handleTaskEdit={handleTaskEdit}
             handleTaskDelete={handleTaskDelete}
             handleTaskDeleteUndo={handleTaskDeleteUndo}
           ></TaskCard>
