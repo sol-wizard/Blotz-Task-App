@@ -391,7 +391,8 @@ public class TaskService : ITaskService
 
             } catch (Exception ex)
             {
-                throw new Exception($"Unhandled exception: {ex.Message}");
+                Console.Error.WriteLine($"Error get scheduled tasks: {ex.Message}");
+                throw;
             }
         }
         
