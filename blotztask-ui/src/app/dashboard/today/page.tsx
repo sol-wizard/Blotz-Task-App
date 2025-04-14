@@ -8,7 +8,6 @@ import AddTaskCard from './components/add-task-card';
 import { CompletedTaskViewer } from './components/completed-task-viewer';
 import Divider from './components/divider';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
-import { EditTaskItemDTO } from '../task-list/models/edit-task-item-dto';
 import {
   useCompletedTodayTasks,
   useIncompleteTodayTasks,
@@ -16,8 +15,9 @@ import {
   useTodayTasks,
   useTodayTasksIsLoading,
 } from '../store/today-store/today-task-store';
-import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import SectionSeparator from './components/section-separator';
+import { RawAddTaskDTO } from '../../../model/raw-add-task-dto';
+import { RawEditTaskDTO } from '../../../model/raw-edit-task-dto';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
@@ -40,11 +40,11 @@ export default function Today() {
       console.error('Error performing action:', error);
     }
   };
-  const handleAddTask = async (taskDetails: AddTaskItemDTO) => {
+  const handleAddTask = async (taskDetails: RawAddTaskDTO) => {
     handleAction(() => addTaskItem(taskDetails));
   };
 
-  const handleTaskEdit = async (updatedTask: EditTaskItemDTO) => {
+  const handleTaskEdit = async (updatedTask: RawEditTaskDTO) => {
     handleAction(() => editTask(updatedTask));
   };
 
