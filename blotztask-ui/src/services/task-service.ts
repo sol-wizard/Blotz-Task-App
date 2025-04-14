@@ -37,7 +37,7 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
 };
 
 export const addTaskItem = async (taskDetails: RawAddTaskDTO): Promise<TaskDetailDTO> => {
-  const addTaskForm: AddTaskItemDTO = mapRawAddTaskDTOtoAddTaskItemDTO(taskDetails);
+  const addTaskForm = mapRawAddTaskDTOtoAddTaskItemDTO(taskDetails);
   try {
     const result = await fetchWithAuth<TaskDetailDTO>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,

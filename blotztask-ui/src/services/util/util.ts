@@ -19,7 +19,7 @@ export const mapRawAddTaskDTOtoAddTaskItemDTO = (taskDetails: RawAddTaskDTO): Ad
     title: taskDetails.title,
     description: taskDetails.description ?? '',
     dueDate: dateTime,
-    labelId: taskDetails.labelId ?? 0,
+    labelId: taskDetails.labelId ?? 6,
   };
   return addTaskForm;
 };
