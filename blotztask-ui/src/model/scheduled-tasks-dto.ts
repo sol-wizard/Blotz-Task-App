@@ -1,4 +1,4 @@
-import { TaskDetailDTO } from '../../../../model/task-detail-dto';
+import { TaskDetailDTO } from './task-detail-dto';
 
 export interface ScheduledTasksDTO {
   overdueTasks: TaskDetailDTO[];
