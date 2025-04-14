@@ -16,8 +16,8 @@ import {
   useTodayTasksIsLoading,
 } from '../store/today-store/today-task-store';
 import SectionSeparator from './components/section-separator';
-import { RawAddTaskDTO } from '../task-list/models/raw-add-task-dto';
-import { RawEditTaskDTO } from '../task-list/models/raw-edit-task-dto';
+import { RawAddTaskDTO } from '../../../model/raw-add-task-dto';
+import { RawEditTaskDTO } from '../../../model/raw-edit-task-dto';
 
 export default function Today() {
   const todayTasks = useTodayTasks();

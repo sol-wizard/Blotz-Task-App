@@ -9,13 +9,13 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { taskFormSchema } from '../forms/task-form-schema';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { TaskDetailDTO } from '../../task-list/models/task-detail-dto';
+import { TaskDetailDTO } from '../../../../model/task-detail-dto';
 import { CalendarForm } from '../shared/calendar-form';
 import { LabelSelect } from '../shared/label-select';
 import DeleteTaskDialog from './delete-dialog-content';
 import TimePicker from '@/components/ui/time-picker';
 import { format } from 'date-fns';
-import { RawEditTaskDTO } from '../../task-list/models/raw-edit-task-dto';
+import { RawEditTaskDTO } from '../../../../model/raw-edit-task-dto';
 
 export default function TaskContent({
   task,

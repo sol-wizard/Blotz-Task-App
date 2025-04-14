@@ -1,6 +1,6 @@
-import { EditTaskItemDTO } from '@/app/dashboard/task-list/models/edit-task-item-dto';
-import { RawAddTaskDTO } from '@/app/dashboard/task-list/models/raw-add-task-dto';
-import { RawEditTaskDTO } from '@/app/dashboard/task-list/models/raw-edit-task-dto';
+import { EditTaskItemDTO } from '@/model/edit-task-item-dto';
+import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
+import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { parse, set } from 'date-fns';
 

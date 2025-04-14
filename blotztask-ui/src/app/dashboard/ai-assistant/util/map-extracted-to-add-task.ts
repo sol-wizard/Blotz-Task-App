@@ -1,5 +1,5 @@
 import { ExtractedTask } from '@/model/extracted-task-dto';
-import { RawAddTaskDTO } from '@/app/dashboard/task-list/models/raw-add-task-dto';
+import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
 
 export function mapExtractedTaskToAddTaskDTO(task: ExtractedTask): RawAddTaskDTO {
   return {
