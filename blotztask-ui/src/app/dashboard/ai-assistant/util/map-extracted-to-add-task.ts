@@ -1,4 +1,3 @@
-import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import { RawAddTaskDTO } from '@/app/dashboard/task-list/models/raw-add-task-dto';
 
