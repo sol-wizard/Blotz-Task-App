@@ -5,6 +5,8 @@ import { EditTaskItemDTO } from '@/app/dashboard/task-list/models/edit-task-item
 import { ScheduledTasksDTO } from '@/app/dashboard/task-list/models/scheduled-tasks-dto';
 import { parse, set } from 'date-fns';
 import { RawEditTaskDTO } from '@/app/dashboard/task-list/models/raw-edit-task-dto';
+import { mapRawAddTaskDTOtoAddTaskItemDTO, mapRawEditTaskDTOtoAddTaskItemDTO } from './util/util';
+import { RawAddTaskDTO } from '@/app/dashboard/task-list/models/raw-add-task-dto';
 
 export const fetchAllTaskItems = async (): Promise<TaskDetailDTO[]> => {
   const result = await fetchWithAuth<TaskDetailDTO[]>(
@@ -36,23 +38,8 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
   return result;
 };
 
-export const addTaskItem = async (taskDetails): Promise<TaskDetailDTO> => {
-  let dateTime: string;
-  if (taskDetails.time) {
-    const parsedTime = parse(taskDetails.time, 'h:mm a', new Date());
-    const hours = parsedTime.getHours();
-    const minutes = parsedTime.getMinutes();
-    const dateWithTime = set(taskDetails.date, { hours, minutes });
-    dateTime = dateWithTime.toISOString();
-  } else {
-    dateTime = taskDetails.date.toISOString();
-  }
-  const addTaskForm: AddTaskItemDTO = {
-    title: taskDetails.title,
-    description: taskDetails.description ?? '',
-    dueDate: dateTime,
-    labelId: taskDetails.labelId ?? 0,
-  };
+export const addTaskItem = async (taskDetails: RawAddTaskDTO): Promise<TaskDetailDTO> => {
+  const addTaskForm: AddTaskItemDTO = mapRawAddTaskDTOtoAddTaskItemDTO(taskDetails);
   try {
     const result = await fetchWithAuth<TaskDetailDTO>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,
@@ -94,30 +81,8 @@ export const updateTaskStatus = async (taskId: number): Promise<string> => {
   }
 };
 
-// to do: remove any
 export const editTask = async (taskEditForm: RawEditTaskDTO): Promise<string> => {
-  // to do: use a same function as util
-  let dateTime: string;
-  if (taskEditForm.time) {
-    const parsedTime = parse(taskEditForm.time, 'h:mm a', new Date());
-
-    const hours = parsedTime.getHours();
-    const minutes = parsedTime.getMinutes();
-
-    const dateWithTime = set(taskEditForm.date, { hours, minutes });
-    dateTime = dateWithTime.toISOString();
-  } else {
-    dateTime = taskEditForm.date.toISOString();
-  }
-
-  const taskEditDetails: EditTaskItemDTO = {
-    id: taskEditForm.id,
-    title: taskEditForm.title,
-    description: taskEditForm.description ?? '',
-    isDone: taskEditForm.isDone,
-    labelId: taskEditForm.labelId,
-    dueDate: dateTime,
-  };
+  const taskEditDetails = mapRawEditTaskDTOtoAddTaskItemDTO(taskEditForm);
 
   try {
     const result = await fetchWithAuth<string>(

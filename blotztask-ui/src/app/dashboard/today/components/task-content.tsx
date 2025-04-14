@@ -41,7 +41,7 @@ export default function TaskContent({
 
   const [isEditing, setIsEditing] = useState(false);
   const handleEditState = () => setIsEditing(!isEditing);
-  const mapEditedTasktoTaskContentDTO = (data, task: TaskDetailDTO): RawEditTaskDTO => {
+  const mapDatatoRawEditTaskDTO = (data, task: TaskDetailDTO): RawEditTaskDTO => {
     const taskContent: RawEditTaskDTO = {
       id: task.id,
       title: data.title ?? task.title,
@@ -56,7 +56,7 @@ export default function TaskContent({
   };
 
   const handleFormSubmit = (data, task: TaskDetailDTO) => {
-    const taskContent: RawEditTaskDTO = mapEditedTasktoTaskContentDTO(data, task);
+    const taskContent: RawEditTaskDTO = mapDatatoRawEditTaskDTO(data, task);
     onSubmit(taskContent);
   };
 
@@ -82,7 +82,6 @@ export default function TaskContent({
               handleFormSubmit(data, task);
               handleEditState();
             })}
-            // to do: handleSubmit: mapping, prepare DTO pass to service, then pass data to api in service
             className="flex flex-col w-full bg-transparent px-6"
           >
             <div className="flex flex-col w-full bg-transparent px-6">
