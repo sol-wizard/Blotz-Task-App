@@ -5,24 +5,11 @@ import { SidebarMenuButton } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 
-const AddTaskDialog = ({ handleAddTask }) => {
+const AddTaskDialog = ({ handleAddTask, children }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger>
-        <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100">
-          <div
-            className={cn(
-              'bg-primary',
-              'text-white p-1 rounded-sm',
-              'inline-flex items-center justify-center'
-            )}
-          >
-            <Plus size={18} />
-          </div>
-          <span className="text-primary text-xl">New Task</span>
-        </SidebarMenuButton>
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-2xl">
         <GlobalAddTaskForm
           handleSubmit={(value) => {
