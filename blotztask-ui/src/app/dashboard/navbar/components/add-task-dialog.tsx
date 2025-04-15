@@ -1,17 +1,32 @@
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import GlobalAddTaskForm from './global-add-task-form';
 import { useState } from 'react';
+import { SidebarMenuButton } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
+import { Plus } from 'lucide-react';
 
-//TODO : Check with Nicole why we need to pass the trigger as child, why not just implement the button here
-const AddTaskDialog = ({ handleAddTask, children }) => {
+const AddTaskDialog = ({ handleAddTask }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger>
+        <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100">
+          <div
+            className={cn(
+              'bg-primary',
+              'text-white p-1 rounded-sm',
+              'inline-flex items-center justify-center'
+            )}
+          >
+            <Plus size={18} />
+          </div>
+          <span className="text-primary text-xl">New Task</span>
+        </SidebarMenuButton>
+      </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <GlobalAddTaskForm
-          onSubmit={(newTaskData) => {
-            handleAddTask(newTaskData);
+          handleSubmit={(value) => {
+            handleAddTask(value);
             setDialogOpen(false);
           }}
         />

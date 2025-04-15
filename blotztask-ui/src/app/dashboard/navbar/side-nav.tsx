@@ -90,20 +90,7 @@ export function AppSidebar() {
                     handleAddTask(data);
                     loadScheduleTasks();
                   }}
-                >
-                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100">
-                    <div
-                      className={cn(
-                        'bg-primary',
-                        'text-white p-1 rounded-sm',
-                        'inline-flex items-center justify-center'
-                      )}
-                    >
-                      <Plus size={18} />
-                    </div>
-                    <span className="text-primary text-xl">New Task</span>
-                  </SidebarMenuButton>
-                </AddTaskDialog>
+                ></AddTaskDialog>
               </SidebarMenuItem>
 
               {aiEnabled && (

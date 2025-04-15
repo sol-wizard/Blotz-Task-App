@@ -9,11 +9,10 @@ import { Separator } from '@/components/ui/separator';
 import TaskSeparator from '../../today/shared/task-separator';
 import { DialogClose } from '@radix-ui/react-dialog';
 import { DialogFooter } from '@/components/ui/dialog';
-import { useTodayTaskActions } from '@/app/store/today-store/today-task-store';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
-const GlobalAddTaskForm = ({ onSubmit }) => {
+const GlobalAddTaskForm = ({ handleSubmit }) => {
   const form = useForm<FormField>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -25,11 +24,9 @@ const GlobalAddTaskForm = ({ onSubmit }) => {
     },
   });
 
-  const { handleAddTask } = useTodayTaskActions();
-
   return (
     <Form {...form}>
-      <form className="flex flex-col space-y-2" onSubmit={form.handleSubmit(handleAddTask)}>
+      <form className="flex flex-col space-y-2" onSubmit={form.handleSubmit(handleSubmit)}>
         <div className="flex flex-row justify-center mb-3">
           <div className="w-6 h-6 mt-8 mr-4 border-2 border-gray-400 rounded-full border-dashed"></div>
           <TaskSeparator color="#c7d2fe" className="mx-4" />
