@@ -1,10 +1,13 @@
 import { Command, CommandInput } from '@/components/ui/command';
-import { useSearchTaskStore } from '../../../store/search-task-store';
+import { useQuery, useSearchTaskActions, useSetQuery } from '../../../store/search-task-store';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 const SearchBar = () => {
-  const { query, setQuery, filterTasks } = useSearchTaskStore();
+  const { loadSearchTasks } = useSearchTaskActions();
+  const query = useQuery();
+  const setQuery = useSetQuery();
+
   const router = useRouter();
 
   useEffect(() => {
@@ -31,7 +34,7 @@ const SearchBar = () => {
         value={query}
         onValueChange={(value) => {
           setQuery(value);
-          filterTasks();
+          loadSearchTasks();
         }}
       />
     </Command>
