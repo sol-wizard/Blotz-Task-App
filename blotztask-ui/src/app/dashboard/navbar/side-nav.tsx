@@ -24,7 +24,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SearchBar from './components/search-bar';
 import { useTodayTaskActions } from '../../store/today-store/today-task-store';
-import { useScheduleTaskActions, useScheduleTaskStore } from '@/app/store/schedule-task-store';
+import { useScheduleTaskActions } from '@/app/store/schedule-task-store';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },

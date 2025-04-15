@@ -1,5 +1,5 @@
 import React from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormField } from '@/components/ui/form';
@@ -9,7 +9,7 @@ import { useTodayTaskActions } from '@/app/store/today-store/today-task-store';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
-const AddTaskContainer = ({ onSubmit, datePickerRef, labelPickerRef, timePickerRef, onCancel }) => {
+const AddTaskContainer = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel }) => {
   const form = useForm<FormField>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {

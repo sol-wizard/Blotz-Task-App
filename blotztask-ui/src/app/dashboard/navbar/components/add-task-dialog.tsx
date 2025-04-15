@@ -1,9 +1,6 @@
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import GlobalAddTaskForm from './global-add-task-form';
 import { useState } from 'react';
-import { SidebarMenuButton } from '@/components/ui/sidebar';
-import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
 
 const AddTaskDialog = ({ handleAddTask, children }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
