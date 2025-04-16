@@ -15,6 +15,7 @@ import {
   useTodayTasksIsLoading,
 } from '../../store/today-store/today-task-store';
 import SectionSeparator from './components/section-separator';
+import DisplayNoTask from './components/display-no-task';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
@@ -33,58 +34,66 @@ export default function Today() {
 
   useEffect(() => {
     loadTodayTasks();
-  }, []);
+  }, [loadTodayTasks]);
 
   return (
-    <>
-      <div className="ml-5 flex flex-col gap-12">
-        <div className="flex flex-col gap-6">
-          {todayTasksIsLoading ? (
-            <div className="flex justify-center items-center min-h-screen">
-              <div>
-                <LoadingSpinner variant="blue" className="mb-12 ml-8 text-[10px]" />
-                <p className="font-semibold text-zinc-600">Loading...</p>
-              </div>
+    <div className="ml-5 flex flex-col gap-12 h-full">
+      <div className="flex flex-col gap-6 h-full">
+        {todayTasksIsLoading ? (
+          <div className="flex justify-center items-center min-h-screen">
+            <div>
+              <LoadingSpinner variant="blue" className="mb-12 ml-8 text-[10px]" />
+              <p className="font-semibold text-zinc-600">Loading...</p>
             </div>
-          ) : (
-            <>
-              <TodayHeader tasks={todayTasks} />
-              <AddTaskCard onAddTask={handleAddTask} />
-              <Divider text="To Do" />
-              <SectionSeparator />
-              {/* //TODO: make this into a component as per below completed task viewer section */}
-              <div className="flex flex-col gap-6 w-full">
-                {incompleteTodayTasks.length > 0 ? (
-                  incompleteTodayTasks.map((task) => (
+          </div>
+        ) : (
+          <>
+            <TodayHeader tasks={todayTasks} />
+            <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
+
+            <div className="flex items-start h-full">
+              {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (
+                <div className="flex flex-col gap-6 w-full">
+                  <Divider text="To Do" />
+                  <SectionSeparator />
+                  {incompleteTodayTasks.length > 0 ? (
+                    incompleteTodayTasks.map((task) => (
+                      <>
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          handleCheckboxChange={handleCheckboxChange}
+                          handleTaskEdit={handleEditTask}
+                          handleTaskDelete={handleDeleteTask}
+                          handleTaskDeleteUndo={handleTaskDeleteUndo}
+                        ></TaskCard>
+                        <SectionSeparator />
+                      </>
+                    ))
+                  ) : (
+                    <p>No incomplete tasks for today!</p>
+                  )}
+                  {completedTodayTasks.length > 0 && (
                     <>
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        handleCheckboxChange={handleCheckboxChange}
+                      <Divider text="Done" />
+                      <SectionSeparator />
+                      <CompletedTaskViewer
+                        completedTasks={completedTodayTasks}
+                        handleCompletedCheckboxChange={handleCheckboxChange}
                         handleTaskEdit={handleEditTask}
                         handleTaskDelete={handleDeleteTask}
                         handleTaskDeleteUndo={handleTaskDeleteUndo}
-                      ></TaskCard>
-                      <SectionSeparator />
+                      />
                     </>
-                  ))
-                ) : (
-                  <p>No incomplete tasks for today!</p>
-                )}
-              </div>
-              <Divider text="Done" />
-              <SectionSeparator />
-              <CompletedTaskViewer
-                completedTasks={completedTodayTasks}
-                handleCompletedCheckboxChange={handleCheckboxChange}
-                handleTaskEdit={handleEditTask}
-                handleTaskDelete={handleDeleteTask}
-                handleTaskDeleteUndo={handleTaskDeleteUndo}
-              />
-            </>
-          )}
-        </div>
+                  )}
+                </div>
+              ) : (
+                <DisplayNoTask />
+              )}
+            </div>
+          </>
+        )}
       </div>
-    </>
+    </div>
   );
 }
