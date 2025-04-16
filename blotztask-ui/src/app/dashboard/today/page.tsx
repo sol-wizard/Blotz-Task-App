@@ -49,7 +49,7 @@ export default function Today() {
           ) : (
             <>
               <TodayHeader tasks={todayTasks} />
-              <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
+              <AddTaskCard onAddTask={handleAddTask} />
               <Divider text="To Do" />
               <SectionSeparator />
               {/* //TODO: make this into a component as per below completed task viewer section */}

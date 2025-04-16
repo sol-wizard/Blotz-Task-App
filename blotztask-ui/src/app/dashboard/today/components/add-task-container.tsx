@@ -9,7 +9,7 @@ import { useTodayTaskActions } from '@/app/store/today-store/today-task-store';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
-const AddTaskContainer = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel }) => {
+const AddTaskContainer = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, onSubmit }) => {
   const form = useForm<FormField>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -20,11 +20,10 @@ const AddTaskContainer = ({ datePickerRef, labelPickerRef, timePickerRef, onCanc
       time: undefined,
     },
   });
-  const { handleAddTask } = useTodayTaskActions();
 
   return (
     <Form {...form}>
-      <form className="flex flex-col w-full space-y-2" onSubmit={form.handleSubmit(handleAddTask)}>
+      <form className="flex flex-col w-full space-y-2" onSubmit={form.handleSubmit(onSubmit)}>
         <div className="flex flex-row justify-between items-center">
           <AddTaskForm
             form={form}
