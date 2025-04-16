@@ -37,6 +37,7 @@ public class TaskService : ITaskService
             return await _dbContext.TaskItems
                 .Where(x => x.UserId == userId)
                 .Include(x => x.Label)
+                .OrderBy(x => x.DueDate)
                 .Select(x => new TaskItemDTO
                 {
                     Id = x.Id,
