@@ -13,7 +13,7 @@ import {
   useTodayTaskActions,
   useTodayTasks,
   useTodayTasksIsLoading,
-} from '../../store/today-store/today-task-store';
+} from '../../store/today-task-store';
 import SectionSeparator from './components/section-separator';
 import DisplayNoTask from './components/display-no-task';
 

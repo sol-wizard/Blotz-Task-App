@@ -8,8 +8,8 @@ import {
   undoDeleteTask,
   updateTaskStatus,
 } from '@/services/task-service';
-import { performTaskAndRefresh } from './util';
-import { RawAddTaskDTO } from '../../../model/raw-add-task-dto';
+import { performTaskAndRefresh } from './shared/util';
+import { RawAddTaskDTO } from '../../model/raw-add-task-dto';
 import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
 
 type TodayTaskStore = {

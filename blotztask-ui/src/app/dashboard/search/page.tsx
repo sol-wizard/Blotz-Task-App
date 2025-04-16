@@ -1,10 +1,10 @@
 'use client';
 import SearchTitle from './components/search-title';
-import { useFilteredTasks, useQuery, useSearchTaskActions } from '../../store/search-task-store';
+import { useFilteredTasks, useSearchQuery, useSearchTaskActions } from '../../store/search-task-store';
 import TaskCard from '../today/components/task-card';
 
 export default function Page() {
-  const query = useQuery();
+  const query = useSearchQuery();
   const filteredTasks = useFilteredTasks();
   const { handleEditTask, handleCheckboxChange, handleDeleteTask, handleTaskDeleteUndo } =
     useSearchTaskActions();

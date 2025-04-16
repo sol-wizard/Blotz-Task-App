@@ -8,16 +8,16 @@ import {
   updateTaskStatus,
 } from '@/services/task-service';
 import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
-import { performTaskAndRefresh } from './today-store/util';
+import { performTaskAndRefresh } from './shared/util';
 
 type SearchTaskStore = {
-  filterTasks: () => Promise<void>;
   filteredTasks: TaskDetailDTO[];
   searchTaskIsLoading: boolean;
   query: string;
-  setQuery: (query: string) => void;
 
   actions: {
+    setQuery: (query: string) => void;
+    filterTasks: () => Promise<void>;
     loadSearchTasks: () => Promise<void>;
     setLoading: (value: boolean) => void;
     handleEditTask: (updatedTask: RawEditTaskDTO) => void;
@@ -29,30 +29,31 @@ type SearchTaskStore = {
 
 const useSearchTaskStore = create<SearchTaskStore>((set, get) => ({
   query: '',
-  setQuery: (query) => set({ query }),
 
   filteredTasks: [],
-
-  filterTasks: async () => {
-    const { query } = get();
-    if (query.length > 1) {
-      try {
-        const searchedResults = await fetchSearchedTasks(query);
-        set({ filteredTasks: searchedResults });
-      } catch (error) {
-        console.log('Error searching tasks: ', error);
-      }
-    }
-  },
 
   searchTaskIsLoading: false,
 
   actions: {
+    setQuery: (query) => set({ query }),
+
+    filterTasks: async () => {
+      const { query } = get();
+      if (query.length > 1) {
+        try {
+          const searchedResults = await fetchSearchedTasks(query);
+          set({ filteredTasks: searchedResults });
+        } catch (error) {
+          console.log('Error searching tasks: ', error);
+        }
+      }
+    },
+
     setLoading: (value) => set({ searchTaskIsLoading: value }),
 
     loadSearchTasks: async () => {
       const { setLoading } = get().actions;
-      const { filterTasks } = get();
+      const { filterTasks } = get().actions;
       await performTaskAndRefresh(
         () => filterTasks(),
         async () => {}, // no-op reload since it's already loading
@@ -82,7 +83,6 @@ const useSearchTaskStore = create<SearchTaskStore>((set, get) => ({
   },
 }));
 
-export const useSetQuery = () => useSearchTaskStore((state) => state.setQuery);
-export const useQuery = () => useSearchTaskStore((state) => state.query);
+export const useSearchQuery = () => useSearchTaskStore((state) => state.query);
 export const useFilteredTasks = () => useSearchTaskStore((state) => state.filteredTasks);
 export const useSearchTaskActions = () => useSearchTaskStore((state) => state.actions);

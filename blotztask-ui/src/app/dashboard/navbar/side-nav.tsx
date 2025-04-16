@@ -23,8 +23,9 @@ import AddTaskDialog from './components/add-task-dialog';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SearchBar from './components/search-bar';
-import { useTodayTaskActions } from '../../store/today-store/today-task-store';
+import { useTodayTaskActions } from '../../store/today-task-store';
 import { useScheduleTaskActions } from '@/app/store/schedule-task-store';
+import { useSearchQuery, useSearchTaskActions } from '@/app/store/search-task-store';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -74,6 +75,14 @@ export function AppSidebar() {
     localStorage.setItem(FEATURE_FLAG_KEY, value.toString());
   };
 
+  const { loadSearchTasks, setQuery } = useSearchTaskActions();
+  const query = useSearchQuery();
+
+  const submitGlobalTask = (data) => {
+    handleAddTask(data);
+    loadScheduleTasks();
+  };
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -81,16 +90,11 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="relative">
               <SidebarMenuItem className="w-full">
-                <SearchBar />
+                <SearchBar query={query} loadSearchTasks={loadSearchTasks} setQuery={setQuery} />
               </SidebarMenuItem>
 
               <SidebarMenuItem>
-                <AddTaskDialog
-                  handleAddTask={(data) => {
-                    handleAddTask(data);
-                    loadScheduleTasks();
-                  }}
-                >
+                <AddTaskDialog submitGlobalTask={submitGlobalTask}>
                   <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100">
                     <div
                       className={cn(
