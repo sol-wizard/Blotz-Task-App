@@ -133,9 +133,11 @@ export const undoDeleteTask = async (taskId: number) => {
 
 export const fetchScheduleTasks = async (): Promise<ScheduledTasksDTO> => {
   try {
+
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone; 
     const todayDate = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
     const result = await fetchWithAuth<ScheduledTasksDTO>(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/scheduled-tasks?todayDate=${encodeURIComponent(todayDate)}`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/scheduled-tasks?timeZone=${encodeURIComponent(timeZone)}&todayDate=${encodeURIComponent(todayDate)}`,
       {
         method: 'GET',
         headers: {
