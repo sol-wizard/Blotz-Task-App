@@ -28,7 +28,8 @@ const GlobalAddTaskForm = ({ handleSubmit }) => {
     <Form {...form}>
       <form className="flex flex-col space-y-2" onSubmit={form.handleSubmit(handleSubmit)}>
         <div className="flex flex-row justify-center mb-3">
-          <div className="w-6 h-6 mt-8 mr-4 border-2 border-gray-400 rounded-full border-dashed"></div>
+    
+          <div className="w-6 h-6 mt-8 mr-4 border-2 border-gray-400 rounded-full border-dashed"/>
           <TaskSeparator color="#c7d2fe" className="mx-4" />
           <AddTaskForm form={form} />
         </div>
