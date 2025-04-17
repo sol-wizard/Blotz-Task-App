@@ -77,7 +77,7 @@ public class TaskService : ITaskService
         };
 
         return result;
-    }
+    } 
 
     public async Task<ResponseWrapper<int>> DeleteTaskByIDAsync(int Id)
     {
@@ -400,9 +400,14 @@ public class TaskService : ITaskService
 
     private ScheduledTasksDTO GroupTasksBySchedule(TimeZoneInfo timeZoneInfo, List<TaskItemDTO> tasks, DateTime now)
     {
-        var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(now, DateTimeKind.Utc), timeZoneInfo);
-        var tomorrow = today.AddDays(1);
-        var startOfWeek = today.AddDays(-((int)today.DayOfWeek + 6) % 7);
+        var startOfToday = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(now, DateTimeKind.Utc), timeZoneInfo);
+
+        var endOfToday = startOfToday.AddDays(1);
+
+        var startOfTomorrow = startOfToday.AddDays(1);
+        var endOfTomorrow = startOfToday.AddDays(2);
+
+        var startOfWeek = startOfToday.AddDays(-((int)startOfToday.DayOfWeek + 6) % 7);
         var endOfWeek = startOfWeek.AddDays(6);
 
         var scheduledTasksDTO = new ScheduledTasksDTO
@@ -418,15 +423,15 @@ public class TaskService : ITaskService
        {
             DateTime localDueDate = TimeZoneInfo.ConvertTime(task.DueDate, timeZoneInfo).Date;
             
-            if (localDueDate < today && !task.IsDone)
+            if (localDueDate < startOfToday && !task.IsDone)
             {
                 scheduledTasksDTO.overdueTasks.Add(task);
             }
-            else if (localDueDate == today)
+            else if (localDueDate >= startOfToday && localDueDate < endOfToday)
             {
                 scheduledTasksDTO.todayTasks.Add(task);
             }
-            else if (localDueDate == tomorrow)
+            else if (localDueDate >= startOfTomorrow && localDueDate < endOfTomorrow)
             {
                 scheduledTasksDTO.tomorrowTasks.Add(task);
             }
