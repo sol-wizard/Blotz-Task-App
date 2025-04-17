@@ -3,6 +3,7 @@ using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Security.KeyVault.Secrets;
 using BlotzTask.Data;
 using BlotzTask.Data.Entities;
+using BlotzTask.extension;
 using BlotzTask.Models.Validators;
 using BlotzTask.Services;
 using FluentValidation;
@@ -70,20 +71,23 @@ if (builder.Environment.IsDevelopment())
     builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(databaseConnectionString));
 }
 
+SecretClient? secretClient = null;
 if (builder.Environment.IsProduction())
 {
     var keyVaultEndpoint = builder.Configuration.GetSection("KeyVault").GetValue<string>("VaultURI");
     
     builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultKeyVaultSecretManager());
 
-    var client = new SecretClient(new Uri(keyVaultEndpoint), new DefaultAzureCredential());
+    secretClient = new SecretClient(new Uri(keyVaultEndpoint), new DefaultAzureCredential());
     
-    builder.Services.AddSingleton(client);
+    builder.Services.AddSingleton(secretClient);
 
-    builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(client.GetSecret("db-string-connection").Value.Value.ToString()));
+    builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(secretClient.GetSecret("db-string-connection").Value.Value.ToString()));
 }
 
-builder.Services.AddSingleton<AzureOpenAIService>();
+builder.Services.AddScoped<AzureOpenAIService>();
+
+builder.Services.AddAzureOpenAI(builder.Configuration, secretClient);
 
 builder.Services.AddOpenTelemetry().UseAzureMonitor(options => {
     var connectionString = builder.Configuration.GetSection("ApplicationInsights:ConnectionString").Value;

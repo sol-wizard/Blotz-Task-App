@@ -37,6 +37,9 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
 
 export const addTaskItem = async (taskDetails: RawAddTaskDTO): Promise<TaskDetailDTO> => {
   const addTaskForm = mapRawAddTaskDTOtoAddTaskItemDTO(taskDetails);
+  const localDate = new Date(addTaskForm.dueDate); 
+  localDate.setHours(0, 0, 0, 0); 
+  const utcDate = localDate.toISOString();
   try {
     const result = await fetchWithAuth<TaskDetailDTO>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,
@@ -47,7 +50,7 @@ export const addTaskItem = async (taskDetails: RawAddTaskDTO): Promise<TaskDetai
         },
         body: JSON.stringify({
           ...addTaskForm,
-          dueDate: new Date(addTaskForm.dueDate).toISOString(), // Direct conversion
+          dueDate: utcDate, // Direct conversion
         }),
       }
     );
