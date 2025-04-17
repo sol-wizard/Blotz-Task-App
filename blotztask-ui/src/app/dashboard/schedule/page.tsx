@@ -4,6 +4,7 @@ import { useScheduleTaskStore } from '../store/schedule-task-store';
 import AddTaskCard from '../today/components/add-task-card';
 import ScheduleHeader from './components/schedule-header';
 import TaskCard from '../today/components/task-card';
+import SectionSeparator from './components/section-separator';
 
 export default function Schedule() {
   const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks} = useScheduleTaskStore();
@@ -42,17 +43,19 @@ export default function Schedule() {
         {overdueTasks.length !== 0 && (
           <div>
             <p className="my-5">Overdue</p>
-
+            <SectionSeparator />
             {overdueTasks.map((task) => {
               return (
+                <div key={task.id}>
                 <TaskCard
-                  key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
                   handleTaskEdit={handleTaskEdit}
                   handleTaskDelete={handleTaskDelete}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
+                <SectionSeparator />
+                </div>
               );
             })}
           </div>
@@ -63,17 +66,19 @@ export default function Schedule() {
         {todayTasks.length !== 0 && (
           <div>
             <p className="my-5">Today</p>
-
+            <SectionSeparator />
             {todayTasks.map((task) => {
               return (
+                <div key={task.id}>
                 <TaskCard
-                  key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
                   handleTaskEdit={handleTaskEdit}
                   handleTaskDelete={handleTaskDelete}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
+                <SectionSeparator />
+                </div>
               );
             })}
           </div>
@@ -84,17 +89,19 @@ export default function Schedule() {
         {tomorrowTasks.length !== 0 && (
           <div>
             <p className="my-5">Tomorrow</p>
-
+            <SectionSeparator />
             {tomorrowTasks.map((task) => {
               return (
+                <div key={task.id}>
                 <TaskCard
-                  key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
                   handleTaskEdit={handleTaskEdit}
                   handleTaskDelete={handleTaskDelete}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
+                <SectionSeparator />
+                </div>
               );
             })}
           </div>
@@ -105,17 +112,19 @@ export default function Schedule() {
         {weekTasks.length !== 0 && (
           <div>
             <p className="my-5">This Week</p>
-
+            <SectionSeparator />
             {weekTasks.map((task) => {
               return (
+                <div key={task.id}>
                 <TaskCard
-                  key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
                   handleTaskEdit={handleTaskEdit}
                   handleTaskDelete={handleTaskDelete}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
+                <SectionSeparator />
+                </div>
               );
             })}
           </div>
@@ -129,17 +138,19 @@ export default function Schedule() {
             {Object.entries(monthTasks).map(([month, tasks]) => (
               <div key={month}>
                 <p className="my-5">{new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString('en-US', { month: 'long' })}</p>
-    
+                <SectionSeparator />
                 {tasks.map((task) => {
                   return (
+                    <div key={task.id}>
                     <TaskCard
-                      key={task.id}
                       task={task}
                       handleCheckboxChange={handleCheckboxChange}
                       handleTaskEdit={handleTaskEdit}
                       handleTaskDelete={handleTaskDelete}
                       handleTaskDeleteUndo={handleTaskDeleteUndo}
                     />
+                    <SectionSeparator />
+                    </div>
                   );
                 })}
               </div>
