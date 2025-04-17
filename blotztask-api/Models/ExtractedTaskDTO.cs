@@ -15,5 +15,5 @@ public class ExtractedTaskDTO
     
     public bool IsValidTask { get; set; }
 
-    public int LabelId { get; set; }
+    public LabelDTO Label { get; set; }
 }

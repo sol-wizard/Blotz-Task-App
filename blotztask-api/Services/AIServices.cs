@@ -131,7 +131,7 @@ public class AzureOpenAIService
             DueDate = extractedTask.DueDate,
             Message = extractedTask.Message,
             IsValidTask = extractedTask.IsValidTask,
-            LabelId = labels.FirstOrDefault(x => x.Name == extractedTask.label).LabelId
+            Label = labels.FirstOrDefault(x => x.Name == extractedTask.label)
         };
     }
 }
