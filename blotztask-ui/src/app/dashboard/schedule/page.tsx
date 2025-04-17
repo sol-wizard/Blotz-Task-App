@@ -131,7 +131,7 @@ export default function Schedule() {
       <div>
         {Object.keys(monthTasks).length !== 0 && (
           <div>
-            <SecondHeader2 text={"This month"} />    {/*How to get current month? */}
+            <SecondHeader2 text={"This month"} /> 
             {Object.entries(monthTasks).map(([month, tasks]) => (
               <div key={month}>
                 <p className="my-5">{new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString('en-US', { month: 'long' })}</p>
