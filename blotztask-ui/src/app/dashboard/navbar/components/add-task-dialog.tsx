@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import GlobalAddTaskForm from './global-add-task-form';
 import { useState } from 'react';
 
-const AddTaskDialog = ({ handleAddTask, children }) => {
+const AddTaskDialog = ({ submitGlobalTask, children }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -10,7 +10,7 @@ const AddTaskDialog = ({ handleAddTask, children }) => {
       <DialogContent className="max-w-2xl">
         <GlobalAddTaskForm
           handleSubmit={(value) => {
-            handleAddTask(value);
+            submitGlobalTask(value);
             setDialogOpen(false);
           }}
         />

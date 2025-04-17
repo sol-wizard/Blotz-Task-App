@@ -1,8 +1,8 @@
 'use client';
-import { useQuery } from '../../../store/search-task-store';
+import { useSearchQuery } from '../../../store/search-task-store';
 
 const SearchTitle = () => {
-  const query = useQuery();
+  const query = useSearchQuery();
 
   return <>{query.length > 1 ? <p>Searching for &quot;{query}&quot;</p> : <p>Searching for ...</p>}</>;
 };

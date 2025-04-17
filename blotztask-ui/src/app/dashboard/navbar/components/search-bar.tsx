@@ -1,13 +1,8 @@
 import { Command, CommandInput } from '@/components/ui/command';
-import { useQuery, useSearchTaskActions, useSetQuery } from '../../../store/search-task-store';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-const SearchBar = () => {
-  const { loadSearchTasks } = useSearchTaskActions();
-  const query = useQuery();
-  const setQuery = useSetQuery();
-
+const SearchBar = ({ query, loadSearchTasks, setQuery }) => {
   const router = useRouter();
 
   useEffect(() => {
