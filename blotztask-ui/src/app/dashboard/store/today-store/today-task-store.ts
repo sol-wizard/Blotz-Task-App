@@ -4,6 +4,35 @@ import { addTaskItem, fetchTaskItemsDueToday } from '@/services/task-service';
 import { performTaskAndRefresh } from './util';
 import { RawAddTaskDTO } from '../../../../model/raw-add-task-dto';
 
+// Mock overdue tasks for demonstration since backend is not ready
+const mockOverdueTasks: TaskDetailDTO[] = [
+  {
+    id: -1,
+    title: "Overdue Task 1",
+    description: "This task is overdue",
+    isDone: false,
+    label: {
+      labelId: 1,
+      name: "Work",
+      color: "#FF4444"
+    },
+    dueDate: new Date(new Date().setDate(new Date().getDate() - 2)) // 2 days ago
+  },
+  {
+    id: -2,
+    title: "Overdue Task 2",
+    description: "Another overdue task",
+    isDone: false,
+    label: {
+      labelId: 2,
+      name: "Personal",
+      color: "#4444FF"
+    },
+    dueDate: new Date(new Date().setHours(new Date().getHours() - 5)) // 5 hours ago
+  }
+];
+
+
 type TodayTaskStore = {
   todayTasks: TaskDetailDTO[];
   incompleteTodayTasks: TaskDetailDTO[];
@@ -34,10 +63,12 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
       );
 
       if (data) {
+        // Append mockOverdueTasks to the fetched data
+        const allTasks = [...mockOverdueTasks, ...data];
         set({
-          todayTasks: data,
-          incompleteTodayTasks: data.filter((task) => !task.isDone),
-          completedTodayTasks: data.filter((task) => task.isDone),
+          todayTasks: allTasks,
+          incompleteTodayTasks: allTasks.filter((task) => !task.isDone),
+          completedTodayTasks: allTasks.filter((task) => task.isDone),
         });
       }
     },
