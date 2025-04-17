@@ -107,6 +107,15 @@ export default function AiAssistant() {
               <p className="text-sm text-zinc-600">
                 <strong>Due Date:</strong> {extractedTask.due_date ?? 'None'}
               </p>
+              <p className="text-sm text-zinc-600 flex items-center">
+                <span
+                  className="h-4 w-4 rounded-full"
+                  style={{ backgroundColor: extractedTask.label.color || 'green' }}
+                ></span>
+                <span className="ml-2 font-bold">
+                  {extractedTask.label.name || 'Others'}
+                </span>
+              </p>
 
               <Button
                 size="sm"
