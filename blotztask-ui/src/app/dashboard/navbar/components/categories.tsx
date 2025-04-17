@@ -11,7 +11,7 @@ export function Categories({ labels }) {
     <div>
       <ul className="space-y-2">
         {labels.map((label: LabelDTO) => {
-          const labelUrl = `/dashboard/labels/${label.name}`;
+          const labelUrl = `/dashboard/labels/${label.name.toLowerCase()}`;
           const isActive = pathname === labelUrl;
 
           return (
