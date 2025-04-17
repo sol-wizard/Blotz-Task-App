@@ -86,7 +86,7 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddAzureOpenAI();
 
-builder.Services.AddScoped<AzureOpenAIService>();
+builder.Services.AddScoped<TaskGenerationAIService>();
 
 
 builder.Services.AddOpenTelemetry().UseAzureMonitor(options => {

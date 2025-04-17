@@ -3,12 +3,12 @@ using BlotzTask.Models;
 using BlotzTask.Services;
 using OpenAI.Chat;
 
-public class AzureOpenAIService
+public class TaskGenerationAIService
 {
     private readonly ChatClient _chatClient;
     private readonly ILabelService _labelService;
     
-    public AzureOpenAIService(
+    public TaskGenerationAIService(
         ILabelService labelService,
         ChatClient chatClient)
     {
@@ -101,7 +101,7 @@ public class AzureOpenAIService
                     if (extractedTask != null)
                     {
                         Console.WriteLine($"Extracted Task: Title={extractedTask.Title}, DueDate={extractedTask.DueDate}");
-                        return handleExtractedTask(extractedTask, labels, labelNames);;
+                        return handleExtractedTask(extractedTask, labels, labelNames);
                     }
 
                 }
