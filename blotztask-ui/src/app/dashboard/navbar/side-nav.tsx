@@ -11,6 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { useSession } from 'next-auth/react';
 import { ProfileSectionButton } from './components/profile-section-button';
@@ -134,8 +135,9 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-lg font-semibold mb-2">Task Categories</SidebarGroupLabel>
+        <SidebarGroup className='mt-[100px]'>
+          <SidebarGroupLabel className="text-lg font-semibold mb-2 ml-2 px-4 text-primary">My Tasks</SidebarGroupLabel>
+          <SidebarSeparator className="mb-2 bg-primary" />
           <SidebarGroupContent>
             <SidebarMenu>
               <Categories labels={labels} />
