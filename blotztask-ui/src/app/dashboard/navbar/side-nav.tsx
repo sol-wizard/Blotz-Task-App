@@ -23,7 +23,7 @@ import AddTaskDialog from './components/add-task-dialog';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SearchBar from './components/search-bar';
-import { useTodayTaskActions, useTodayTasks } from '../../store/today-task-store';
+import { useTodayTaskActions } from '../../store/today-task-store';
 import { useScheduleTaskActions } from '@/app/store/schedule-task-store';
 import { useSearchQuery, useSearchTaskActions } from '@/app/store/search-task-store';
 import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
