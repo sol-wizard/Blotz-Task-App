@@ -125,7 +125,7 @@ export function AppSidebar() {
                     )}
                     asChild
                   >
-                    <Link href={item.url}>
+                    <Link href={`/dashboard/${item.url}`}>
                       <item.icon />
                       <span className="pl-3 text-base">{item.title}</span>
                     </Link>
