@@ -4,6 +4,8 @@ import { useScheduleTaskStore } from '../store/schedule-task-store';
 import AddTaskCard from '../today/components/add-task-card';
 import ScheduleHeader from './components/schedule-header';
 import TaskCard from '../today/components/task-card';
+import SecondHeader2 from './components/secondheader2';
+import SecondHeader1 from './components/secondheader1';
 
 export default function Schedule() {
   const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks} = useScheduleTaskStore();
@@ -62,6 +64,7 @@ export default function Schedule() {
       <div>
         {todayTasks.length !== 0 && (
           <div>
+            <SecondHeader1 text={"Today"}/>
             <p className="my-5">Today</p>
 
             {todayTasks.map((task) => {
@@ -83,6 +86,7 @@ export default function Schedule() {
       <div>
         {tomorrowTasks.length !== 0 && (
           <div>
+            <SecondHeader2 text={"Tomorrow"} />
             <p className="my-5">Tomorrow</p>
 
             {tomorrowTasks.map((task) => {
@@ -104,6 +108,7 @@ export default function Schedule() {
       <div>
         {weekTasks.length !== 0 && (
           <div>
+            <SecondHeader2 text={"This week"} />
             <p className="my-5">This Week</p>
 
             {weekTasks.map((task) => {
@@ -126,6 +131,7 @@ export default function Schedule() {
       <div>
         {Object.keys(monthTasks).length !== 0 && (
           <div>
+            <SecondHeader2 text={"This month"} /> 
             {Object.entries(monthTasks).map(([month, tasks]) => (
               <div key={month}>
                 <p className="my-5">{new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString('en-US', { month: 'long' })}</p>
