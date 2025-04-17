@@ -1,7 +1,4 @@
 using System.Text.Json;
-using Azure;
-using Azure.AI.OpenAI;
-using Azure.Security.KeyVault.Secrets;
 using BlotzTask.Models;
 using BlotzTask.Services;
 using OpenAI.Chat;

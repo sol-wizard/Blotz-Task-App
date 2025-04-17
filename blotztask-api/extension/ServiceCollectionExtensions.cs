@@ -3,62 +3,40 @@ namespace BlotzTask.extension;
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.Security.KeyVault.Secrets;
+using OpenAI.Chat;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddAzureOpenAI(this IServiceCollection services, IConfiguration configuration, SecretClient? secretClient = null)
-    {
-        
-        var endpoint = configuration["AzureOpenAI:Endpoint"];
-
-       
-        string? apiKey;
-        if (secretClient == null)
+        public static IServiceCollection AddAzureOpenAI(this IServiceCollection services)
         {
-            throw new ArgumentNullException(nameof(secretClient), "SecretClient is null. Please provide a valid SecretClient.");
-        }
-        apiKey = configuration["AzureOpenAI:ApiKey"];
-        if (string.IsNullOrWhiteSpace(apiKey))
-        {
-            throw new ArgumentException("apiKey is missing! Please check appsettings.json.");
-        }
-
-        if (string.IsNullOrWhiteSpace(endpoint))
-        {
-            throw new ArgumentException("Endpoint is missing! Please check appsettings.json.");
-        }
-        var deploymentId = configuration["AzureOpenAI:DeploymentId"];
-
-
- 
-
-        if (secretClient != null) // If in production get from keyvault
-        {
-            var apiKeySecret = secretClient.GetSecret("azureopenai-apikey");
-            apiKey = apiKeySecret.Value.Value;
-            if (string.IsNullOrWhiteSpace(apiKey))
+            services.AddSingleton<ChatClient>(sp =>
             {
-                throw new ArgumentException("API Key is missing! Please check appsettings.json.");
-            }
+                var config = sp.GetRequiredService<IConfiguration>();
+                var secretClient = sp.GetService<SecretClient>(); 
+
+                var endpoint = config["AzureOpenAI:Endpoint"];
+                var deploymentId = config["AzureOpenAI:DeploymentId"];
+                string? apiKey;
+
+                if (secretClient != null)
+                {
+                    apiKey = secretClient.GetSecret("azureopenai-apikey").Value.Value;
+                }
+                else
+                {
+                    apiKey = config["AzureOpenAI:ApiKey"];
+                }
+
+                if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
+                {
+                    throw new ArgumentException("Endpoint or API Key is missing!");
+                }
+
+                var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
+                return client.GetChatClient(deploymentId);
+            });
+
+            return services;
         }
-
-        else // If in Development, get key from appsettings.json
-        {
-            apiKey = configuration["AzureOpenAI:ApiKey"];
-        }
-        
-        if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
-        {
-            throw new ArgumentException("Endpoint or API Key is missing! Please check appsettings.json.");
-        }
-        
-        var azureClient = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
-
-        var chatClient = azureClient.GetChatClient(deploymentId);
-
-        services.AddSingleton(chatClient);
-
-        return services;
-    }
 
 }

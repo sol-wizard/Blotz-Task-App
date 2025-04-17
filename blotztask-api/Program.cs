@@ -71,21 +71,20 @@ if (builder.Environment.IsDevelopment())
     builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(databaseConnectionString));
 }
 
-SecretClient? secretClient = null;
 if (builder.Environment.IsProduction())
 {
     var keyVaultEndpoint = builder.Configuration.GetSection("KeyVault").GetValue<string>("VaultURI");
     
     builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultKeyVaultSecretManager());
 
-    secretClient = new SecretClient(new Uri(keyVaultEndpoint), new DefaultAzureCredential());
+    var secretClient = new SecretClient(new Uri(keyVaultEndpoint), new DefaultAzureCredential());
     
     builder.Services.AddSingleton(secretClient);
 
     builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(secretClient.GetSecret("db-string-connection").Value.Value.ToString()));
 }
 
-builder.Services.AddAzureOpenAI(builder.Configuration, secretClient);
+builder.Services.AddAzureOpenAI();
 
 builder.Services.AddScoped<AzureOpenAIService>();
 
