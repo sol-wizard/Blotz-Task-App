@@ -38,6 +38,7 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
 export const addTaskItem = async (taskDetails: RawAddTaskDTO): Promise<TaskDetailDTO> => {
   const addTaskForm = mapRawAddTaskDTOtoAddTaskItemDTO(taskDetails);
   const localDate = new Date(addTaskForm.dueDate); 
+  //TODO: Current reset all time to 0, due to the team still investigating how to handle the time zone
   localDate.setHours(0, 0, 0, 0); 
   const utcDate = localDate.toISOString();
   try {
