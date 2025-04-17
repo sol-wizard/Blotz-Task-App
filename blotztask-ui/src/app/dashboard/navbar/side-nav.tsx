@@ -23,9 +23,11 @@ import AddTaskDialog from './components/add-task-dialog';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SearchBar from './components/search-bar';
-import { useTodayTaskActions } from '../../store/today-task-store';
+import { useTodayTaskActions, useTodayTasks } from '../../store/today-task-store';
 import { useScheduleTaskActions } from '@/app/store/schedule-task-store';
 import { useSearchQuery, useSearchTaskActions } from '@/app/store/search-task-store';
+import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
+import { addTaskItem } from '@/services/task-service';
 
 const authenticatedItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
@@ -39,8 +41,8 @@ const FEATURE_FLAG_KEY = 'aiEnabled';
 
 export function AppSidebar() {
   const { data: session, status } = useSession();
-  const { handleAddTask } = useTodayTaskActions();
   const { loadScheduleTasks } = useScheduleTaskActions();
+  const { loadTodayTasks } = useTodayTaskActions();
   const pathname = usePathname();
   const [aiEnabled, setAiEnabled] = useState(false);
   const handleSignOut = (e) => {
@@ -78,9 +80,14 @@ export function AppSidebar() {
   const { loadSearchTasks, setQuery } = useSearchTaskActions();
   const query = useSearchQuery();
 
-  const submitGlobalTask = (data) => {
-    handleAddTask(data);
-    loadScheduleTasks();
+  const submitGlobalTask = async (data: RawAddTaskDTO) => {
+    try {
+      await addTaskItem(data);
+      loadTodayTasks();
+      loadScheduleTasks();
+    } catch (error) {
+      console.error('Error adding action:', error);
+    }
   };
 
   return (
