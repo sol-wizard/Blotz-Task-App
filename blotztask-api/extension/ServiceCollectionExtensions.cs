@@ -10,12 +10,27 @@ public static class ServiceCollectionExtensions
     {
         
         var endpoint = configuration["AzureOpenAI:Endpoint"];
+
+       
+        string? apiKey;
+        if (secretClient == null)
+        {
+            throw new ArgumentNullException(nameof(secretClient), "SecretClient is null. Please provide a valid SecretClient.");
+        }
+        apiKey = configuration["AzureOpenAI:ApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            throw new ArgumentException("apiKey is missing! Please check appsettings.json.");
+        }
+
         if (string.IsNullOrWhiteSpace(endpoint))
         {
             throw new ArgumentException("Endpoint is missing! Please check appsettings.json.");
         }
         var deploymentId = configuration["AzureOpenAI:DeploymentId"];
-        string? apiKey;
+
+
+ 
 
         if (secretClient != null) // If in production get from keyvault
         {
@@ -26,6 +41,7 @@ public static class ServiceCollectionExtensions
                 throw new ArgumentException("API Key is missing! Please check appsettings.json.");
             }
         }
+
         else // If in Development, get key from appsettings.json
         {
             apiKey = configuration["AzureOpenAI:ApiKey"];
