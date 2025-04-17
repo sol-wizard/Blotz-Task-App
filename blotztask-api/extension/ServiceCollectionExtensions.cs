@@ -8,7 +8,12 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddAzureOpenAI(this IServiceCollection services, IConfiguration configuration, SecretClient? secretClient = null)
     {
+        
         var endpoint = configuration["AzureOpenAI:Endpoint"];
+        if (string.IsNullOrWhiteSpace(endpoint))
+        {
+            throw new ArgumentException("Endpoint is missing! Please check appsettings.json.");
+        }
         var deploymentId = configuration["AzureOpenAI:DeploymentId"];
         string? apiKey;
 
@@ -16,12 +21,15 @@ public static class ServiceCollectionExtensions
         {
             var apiKeySecret = secretClient.GetSecret("azureopenai-apikey");
             apiKey = apiKeySecret.Value.Value;
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new ArgumentException("API Key is missing! Please check appsettings.json.");
+            }
         }
         else // If in Development, get key from appsettings.json
         {
             apiKey = configuration["AzureOpenAI:ApiKey"];
         }
-
         
         if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
         {
