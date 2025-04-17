@@ -9,9 +9,9 @@ import {
   fetchAllTaskItems,
   undoDeleteTask,
   updateTaskStatus,
-} from '@/services/taskService';
+} from '@/services/task-service';
 import { TaskList } from './components/task-list';
-import { TaskDetailDTO } from './models/task-detail-dto';
+import { TaskDetailDTO } from '../../../model/task-detail-dto';
 
 export default function Page() {
   const [taskList, setTaskList] = useState<TaskDetailDTO[]>([]);

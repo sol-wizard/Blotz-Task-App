@@ -1,3 +1,4 @@
+import SectionSeparator from './section-separator';
 import TaskCard from './task-card';
 
 export function CompletedTaskViewer({
@@ -8,11 +9,11 @@ export function CompletedTaskViewer({
   handleTaskDeleteUndo,
 }) {
   return (
-    <div>
-      <div className="grid gap-6 w-full">
-        {completedTasks.length > 0 ? (
-          <div className="grid gap-6 w-full">
-            {completedTasks.map((task) => (
+    <div className="grid gap-6 w-full">
+      {completedTasks.length > 0 ? (
+        <div className="grid gap-6 w-full">
+          {completedTasks.map((task) => (
+            <>
               <TaskCard
                 key={task.id}
                 task={task}
@@ -21,12 +22,13 @@ export function CompletedTaskViewer({
                 handleTaskDelete={handleTaskDelete}
                 handleTaskDeleteUndo={handleTaskDeleteUndo}
               />
-            ))}
-          </div>
-        ) : (
-          <p>No completed tasks for today!</p>
-        )}
-      </div>
+              <SectionSeparator />
+            </>
+          ))}
+        </div>
+      ) : (
+        <p>No completed tasks for today!</p>
+      )}
     </div>
   );
 }

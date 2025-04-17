@@ -14,7 +14,7 @@ import { Control } from 'react-hook-form';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 
 import { useEffect, useState } from 'react';
-import { fetchAllLabel } from '@/services/labelService';
+import { fetchAllLabel } from '@/services/label-service';
 
 export function LabelSelect({
   control,
@@ -51,7 +51,7 @@ export function LabelSelect({
               >
                 <Tag className="mr-1" size={16} />
 
-                <SelectValue placeholder="Select Label"/>
+                <SelectValue placeholder="Select Label" />
               </SelectLabelTrigger>
             </FormControl>
             <SelectContent ref={labelPickerRef ?? undefined}>
