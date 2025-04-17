@@ -1,46 +1,26 @@
 using System.Text.Json;
-using Azure;
-using Azure.AI.OpenAI;
-using Azure.Security.KeyVault.Secrets;
 using BlotzTask.Models;
+using BlotzTask.Services;
 using OpenAI.Chat;
 
-public class AzureOpenAIService
+public class TaskGenerationAIService
 {
     private readonly ChatClient _chatClient;
-    private readonly string _deploymentId;
+    private readonly ILabelService _labelService;
     
-    public AzureOpenAIService(
-        IConfiguration configuration, 
-        SecretClient? secretClient = null)
+    public TaskGenerationAIService(
+        ILabelService labelService,
+        ChatClient chatClient)
     {
-        var endpoint = configuration["AzureOpenAI:Endpoint"];
-        _deploymentId = configuration["AzureOpenAI:DeploymentId"];
-        string? apiKey;
-
-        if (secretClient != null) // If in production get from keyvault
-        {
-            var apiKeySecret = secretClient.GetSecret("azureopenai-apikey");
-            apiKey = apiKeySecret.Value.Value;
-        }
-        else // If in Development, get key from appsettings.json
-        {
-            apiKey = configuration["AzureOpenAI:ApiKey"];
-        }
-
-        
-        if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
-        {
-            throw new ArgumentException("Endpoint or API Key is missing! Please check appsettings.json.");
-        }
-        
-        var azureClient = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
-
-        _chatClient = azureClient.GetChatClient(_deploymentId);
+        _chatClient = chatClient;
+        _labelService = labelService;
     }
 
-    public async Task<ExtractedTask?> GenerateResponseAsync(string prompt)
+    public async Task<ExtractedTaskDTO?> GenerateResponseAsync(string prompt)
     {
+        List<LabelDTO> labels = await _labelService.GetAllLabelsAsync();
+        var labelNames = labels.Select(label => label.Name).ToHashSet();
+
         var messages = new List<ChatMessage>
         {
             new SystemChatMessage($@"
@@ -52,6 +32,7 @@ public class AzureOpenAIService
             - `description`: A clear task description.
             - `due_date`: A YYYY-MM-DD date, or null if not found.
             - `message`: A helpful message to the user.
+            - `label`: A category label for the task.
             - `isValidTask`: Set to true if the input clearly describes a task. Set to false if the input is vague or unclear.
 
             Guidelines:
@@ -81,13 +62,14 @@ public class AzureOpenAIService
                     description = new { type = "string", description = "Description of the task extracted from or generated based on user's input."},
                     due_date = new { type = "string", format = "date", description = "Due date of the task in YYYY-MM-DD format." },
                     message = new { type = "string", description = "Optional message from the AI to the user. Leave null if not needed." },
+                    label = new { type = "string", description = $@"Category label for the task, which must correspond to one of the {string.Join(", ", labelNames)}." },
                     isValidTask = new
                     {
                         type = "boolean",
                         description = "True if the input was understood as a task, false if it was unclear or vague."
                     }
                 },
-                required = new[] { "title", "description", "due_date", "message", "isValidTask" }
+                required = new[] { "title", "description", "due_date", "message", "label", "isValidTask" }
             })
         );
 
@@ -119,8 +101,9 @@ public class AzureOpenAIService
                     if (extractedTask != null)
                     {
                         Console.WriteLine($"Extracted Task: Title={extractedTask.Title}, DueDate={extractedTask.DueDate}");
-                        return extractedTask;
+                        return handleExtractedTask(extractedTask, labels, labelNames);
                     }
+
                 }
             }
 
@@ -132,5 +115,23 @@ public class AzureOpenAIService
             Console.WriteLine($"An error occurred: {ex.Message}");
             return null;
         }
+    }
+
+    private ExtractedTaskDTO handleExtractedTask(ExtractedTask? extractedTask, List<LabelDTO> labels, HashSet<string> labelNames)
+    {
+        if (!labelNames.Contains(extractedTask.label))
+        {
+            extractedTask.label = "Others";
+        }
+
+        return new ExtractedTaskDTO
+        {
+            Title = extractedTask.Title,
+            Description = extractedTask.Description,
+            DueDate = extractedTask.DueDate,
+            Message = extractedTask.Message,
+            IsValidTask = extractedTask.IsValidTask,
+            Label = labels.FirstOrDefault(x => x.Name == extractedTask.label)
+        };
     }
 }
