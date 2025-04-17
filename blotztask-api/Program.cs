@@ -85,9 +85,10 @@ if (builder.Environment.IsProduction())
     builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(secretClient.GetSecret("db-string-connection").Value.Value.ToString()));
 }
 
+builder.Services.AddAzureOpenAI(builder.Configuration, secretClient);
+
 builder.Services.AddScoped<AzureOpenAIService>();
 
-builder.Services.AddAzureOpenAI(builder.Configuration, secretClient);
 
 builder.Services.AddOpenTelemetry().UseAzureMonitor(options => {
     var connectionString = builder.Configuration.GetSection("ApplicationInsights:ConnectionString").Value;
