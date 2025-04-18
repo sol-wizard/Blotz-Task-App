@@ -34,4 +34,16 @@
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="src\BlotzTask.Application\obj\BlotzTask.Application.csproj.nuget.dgspec.json" />
+    <_ContentIncludedByDefault Remove="src\BlotzTask.Application\obj\project.assets.json" />
+    <_ContentIncludedByDefault Remove="src\BlotzTask.Application\obj\project.packagespec.json" />
+    <_ContentIncludedByDefault Remove="src\BlotzTask.Domain\obj\BlotzTask.Domain.csproj.nuget.dgspec.json" />
+    <_ContentIncludedByDefault Remove="src\BlotzTask.Domain\obj\project.assets.json" />
+    <_ContentIncludedByDefault Remove="src\BlotzTask.Domain\obj\project.packagespec.json" />
+    <_ContentIncludedByDefault Remove="src\BlotzTask.Infrastructure\obj\BlotzTask.Infrastructure.csproj.nuget.dgspec.json" />
+    <_ContentIncludedByDefault Remove="src\BlotzTask.Infrastructure\obj\project.assets.json" />
+    <_ContentIncludedByDefault Remove="src\BlotzTask.Infrastructure\obj\project.packagespec.json" />
+  </ItemGroup>
+
 </Project>
