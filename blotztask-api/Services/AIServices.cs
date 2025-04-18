@@ -28,10 +28,18 @@ public class TaskGenerationAIService
         
         messages.Insert(0, new SystemChatMessage($@"
             You are a task extraction assistant. Today's date is {DateTime.UtcNow:yyyy-MM-dd}. 
-            Please extract **all** tasks from the user input below and return a single JSON object with a `tasks` array:
+            Please extract **all** tasks from the user input below and return a single JSON object with a `tasks` array.
             Always call the `extract_tasks` function with structured data. Never return plain text.
 
             Extract:
+            - `title`: A clear task title.
+            - `description`: A clear task description.
+            - `due_date`: A YYYY-MM-DD date, or null if not found.
+            - `message`: A helpful message to the user.
+            - `label`: A category label for the task.
+            - `isValidTask`: Set to true if the input clearly describes a task. Set to false if the input is vague or unclear.
+
+            In the structure of: 
             {{
                 ""tasks"": [
                 {{
@@ -76,12 +84,19 @@ public class TaskGenerationAIService
                                 type = "object",
                                 properties = new
                                 {
-                                    title = new { type = "string", description = "The task title." },
-                                    description = new { type = "string", description = "A detailed description of the task." },
-                                    due_date = new { type = "string", format = "date", description = "Due date in YYYY-MM-DD format, or null if not specified." },
-                                    label = new { type = "string", description = "Category label for the task (must match one of the known labels)." },
-                                    isValidTask = new { type = "boolean", description = "True if this is a valid task, false otherwise." },
-                                    message = new { type = "string", description = "Optional message for the user (confirmation or guidance)." }
+                                    properties = new
+                                    {
+                                        title = new { type = "string", description = "Title of the task extracted from the user's input." },
+                                        description = new { type = "string", description = "Description of the task extracted from or generated based on user's input."},
+                                        due_date = new { type = "string", format = "date", description = "Due date of the task in YYYY-MM-DD format." },
+                                        message = new { type = "string", description = "Optional message from the AI to the user. Leave null if not needed." },
+                                        label = new { type = "string", description = $@"Category label for the task, which must correspond to one of the {string.Join(", ", labelNames)}." },
+                                        isValidTask = new
+                                        {
+                                            type = "boolean",
+                                            description = "True if the input was understood as a task, false if it was unclear or vague."
+                                        }
+                                    },
                                 },
                                 required = new[] { "title", "description", "due_date", "label", "isValidTask", "message" }
                             }
@@ -98,10 +113,7 @@ public class TaskGenerationAIService
 
         try
         {
-            var response = await _chatClient.CompleteChatAsync(messages, options);
-
-            // Unwrap to get the ChatCompletion
-            ChatCompletion completion = response.Value;
+            ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, options);
 
             // ✅ Log the full response to check what Azure OpenAI is returning
             Console.WriteLine("Full AI Response:");
