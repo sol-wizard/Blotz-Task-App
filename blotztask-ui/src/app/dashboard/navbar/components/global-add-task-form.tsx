@@ -1,5 +1,5 @@
 import React from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
@@ -12,7 +12,7 @@ import { DialogFooter } from '@/components/ui/dialog';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
-const GlobalAddTaskForm = ({ onSubmit }) => {
+const GlobalAddTaskForm = ({ handleSubmit }) => {
   const form = useForm<FormField>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -24,16 +24,12 @@ const GlobalAddTaskForm = ({ onSubmit }) => {
     },
   });
 
-  // I will move all the duplicate handleAddTask functions to store in another pbi
-  const handleAddTask: SubmitHandler<FormField> = async (taskDetails) => {
-    onSubmit(taskDetails);
-  };
-
   return (
     <Form {...form}>
-      <form className="flex flex-col space-y-2" onSubmit={form.handleSubmit(handleAddTask)}>
+      <form className="flex flex-col space-y-2" onSubmit={form.handleSubmit(handleSubmit)}>
         <div className="flex flex-row justify-center mb-3">
-          <div className="w-6 h-6 mt-8 mr-4 border-2 border-gray-400 rounded-full border-dashed"></div>
+    
+          <div className="w-6 h-6 mt-8 mr-4 border-2 border-gray-400 rounded-full border-dashed"/>
           <TaskSeparator color="#c7d2fe" className="mx-4" />
           <AddTaskForm form={form} />
         </div>
