@@ -108,6 +108,7 @@ export function AppSidebar() {
                       className={cn(
                         'bg-primary',
                         'text-white rounded-sm',
+                        'text-white rounded-sm',
                         'inline-flex items-center justify-center'
                       )}
                     >
@@ -126,7 +127,13 @@ export function AppSidebar() {
                       className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
                     >
                       <Bot className="text-indigo-600" />
+                    <Link
+                      href="ai-assistant"
+                      className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
+                    >
+                      <Bot className="text-indigo-600" />
                       <span className="pl-3 text-base text-indigo-700 font-medium">AI Assistant ✨</span>
+                    </Link>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
