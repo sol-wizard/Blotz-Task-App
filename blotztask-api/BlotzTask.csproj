@@ -34,4 +34,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Application\" />
+    <Folder Include="Domain\" />
+    <Folder Include="Infrastructure\AzureOpenAI\" />
+  </ItemGroup>
+
 </Project>
