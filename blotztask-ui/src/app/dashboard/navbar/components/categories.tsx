@@ -3,6 +3,8 @@ import { LabelDTO } from '@/model/label-dto';
 import React from 'react';
 
 export function Categories({ labels }) {
+  const pathname = usePathname();
+
   return (
     <div>
       <ul>
