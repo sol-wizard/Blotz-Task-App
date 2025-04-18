@@ -1,5 +1,5 @@
 import React from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormField } from '@/components/ui/form';
@@ -8,7 +8,7 @@ import AddTaskForm from '../shared/add-task-form';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
-const AddTaskContainer = ({ onSubmit, datePickerRef, labelPickerRef, timePickerRef, onCancel }) => {
+const AddTaskContainer = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, onSubmit }) => {
   const form = useForm<FormField>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -20,14 +20,9 @@ const AddTaskContainer = ({ onSubmit, datePickerRef, labelPickerRef, timePickerR
     },
   });
 
-  // I will move all the duplicate handleAddTask functions to store in another pbi
-  const handleAddTask: SubmitHandler<FormField> = async (taskDetails) => {
-    onSubmit(taskDetails);
-  };
-
   return (
     <Form {...form}>
-      <form className="flex flex-col w-full space-y-2" onSubmit={form.handleSubmit(handleAddTask)}>
+      <form className="flex flex-col w-full space-y-2" onSubmit={form.handleSubmit(onSubmit)}>
         <div className="flex flex-row justify-between items-center">
           <AddTaskForm
             form={form}

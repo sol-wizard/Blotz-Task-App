@@ -1,6 +1,6 @@
 'use client';
 import { useEffect } from 'react';
-import { useScheduleTaskStore } from '../store/schedule-task-store';
+import { useScheduleTaskActions, useScheduleTaskStore } from '../../store/schedule-task-store';
 import AddTaskCard from '../today/components/add-task-card';
 import ScheduleHeader from './components/schedule-header';
 import TaskCard from '../today/components/task-card';
@@ -8,38 +8,21 @@ import SecondHeader2 from './components/secondheader2';
 import SecondHeader1 from './components/secondheader1';
 
 export default function Schedule() {
-  const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks} = useScheduleTaskStore();
+  const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks } = useScheduleTaskStore();
   const { loadScheduleTasks } = useScheduleTaskStore((state) => state.actions);
-  
+  const { handleAddTask, handleEditTask, handleDeleteTask, handleTaskDeleteUndo, handleCheckboxChange } =
+    useScheduleTaskActions();
+
   useEffect(() => {
     loadScheduleTasks();
   }, []);
 
-  const handleAddTask = (task) => {
-    console.log('Task added successfully!', task);
-  };
-
-  const handleCheckboxChange = () => {
-    console.log('Checkbox changed!');
-  };
-
-  const handleTaskDelete = () => {
-    console.log('Task deleted successfully!');
-  };
-
-  const handleTaskDeleteUndo = () => {
-    console.log('Deleted task restored!');
-  };
-  const handleTaskEdit = () => {
-    console.log('Task edited successfully!');
-  };
-
   return (
     <div>
       <ScheduleHeader />
-      <p className="my-5"/>
+      <p className="my-5" />
       <AddTaskCard onAddTask={handleAddTask} />
-      <p className="my-5"/>
+      <p className="my-5" />
       <div>
         {overdueTasks.length !== 0 && (
           <div>
@@ -51,8 +34,8 @@ export default function Schedule() {
                   key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleTaskEdit}
-                  handleTaskDelete={handleTaskDelete}
+                  handleTaskEdit={handleEditTask}
+                  handleTaskDelete={handleDeleteTask}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
               );
@@ -73,8 +56,8 @@ export default function Schedule() {
                   key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleTaskEdit}
-                  handleTaskDelete={handleTaskDelete}
+                  handleTaskEdit={handleEditTask}
+                  handleTaskDelete={handleDeleteTask}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
               );
@@ -95,8 +78,8 @@ export default function Schedule() {
                   key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleTaskEdit}
-                  handleTaskDelete={handleTaskDelete}
+                  handleTaskEdit={handleEditTask}
+                  handleTaskDelete={handleDeleteTask}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
               );
@@ -117,8 +100,8 @@ export default function Schedule() {
                   key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleTaskEdit}
-                  handleTaskDelete={handleTaskDelete}
+                  handleTaskEdit={handleEditTask}
+                  handleTaskDelete={handleDeleteTask}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
               );
@@ -127,23 +110,26 @@ export default function Schedule() {
         )}
       </div>
 
-
       <div>
         {Object.keys(monthTasks).length !== 0 && (
           <div>
             <SecondHeader2 text={"This month"} /> 
             {Object.entries(monthTasks).map(([month, tasks]) => (
               <div key={month}>
-                <p className="my-5">{new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString('en-US', { month: 'long' })}</p>
-    
+                <p className="my-5">
+                  {new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString('en-US', {
+                    month: 'long',
+                  })}
+                </p>
+
                 {tasks.map((task) => {
                   return (
                     <TaskCard
                       key={task.id}
                       task={task}
                       handleCheckboxChange={handleCheckboxChange}
-                      handleTaskEdit={handleTaskEdit}
-                      handleTaskDelete={handleTaskDelete}
+                      handleTaskEdit={handleEditTask}
+                      handleTaskDelete={handleDeleteTask}
                       handleTaskDeleteUndo={handleTaskDeleteUndo}
                     />
                   );
@@ -153,7 +139,6 @@ export default function Schedule() {
           </div>
         )}
       </div>
-
     </div>
   );
 }
