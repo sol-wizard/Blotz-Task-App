@@ -11,6 +11,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { useSession } from 'next-auth/react';
 import { ProfileSectionButton } from './components/profile-section-button';
@@ -102,17 +103,17 @@ export function AppSidebar() {
 
               <SidebarMenuItem>
                 <AddTaskDialog submitGlobalTask={submitGlobalTask}>
-                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100">
+                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 ml-2 rounded-md hover:bg-blue-100 ">
                     <div
                       className={cn(
                         'bg-primary',
-                        'text-white p-1 rounded-sm',
+                        'text-white rounded-sm',
                         'inline-flex items-center justify-center'
                       )}
                     >
-                      <Plus size={18} />
+                      <Plus size={16} />
                     </div>
-                    <span className="text-primary text-xl">New Task</span>
+                    <span className="pl-3 text-primary text-xl">New Task</span>
                   </SidebarMenuButton>
                 </AddTaskDialog>
               </SidebarMenuItem>
@@ -120,10 +121,13 @@ export function AppSidebar() {
               {aiEnabled && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <a href="ai-assistant" className="flex items-center px-3 py-3 w-full hover:bg-white">
-                      <Bot className="text-indigo-600" size={18} />
+                    <Link
+                      href="ai-assistant"
+                      className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
+                    >
+                      <Bot className="text-indigo-600" />
                       <span className="pl-3 text-base text-indigo-700 font-medium">AI Assistant ✨</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
@@ -139,8 +143,8 @@ export function AppSidebar() {
                     )}
                     asChild
                   >
-                    <Link href={item.url}>
-                      <item.icon className="w-5 h-5" />
+                    <Link href={`/dashboard/${item.url}`}>
+                      <item.icon />
                       <span className="pl-3 text-base">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -149,8 +153,9 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-lg font-semibold mb-2">Task Categories</SidebarGroupLabel>
+        <SidebarGroup className='mt-20'>
+          <SidebarGroupLabel className="text-lg font-semibold mb-2 ml-2 px-4 text-primary">My Tasks</SidebarGroupLabel>
+          <SidebarSeparator className="mb-2 bg-primary" />
           <SidebarGroupContent>
             <SidebarMenu>
               <Categories labels={labels} />
