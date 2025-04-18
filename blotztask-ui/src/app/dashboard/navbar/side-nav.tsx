@@ -113,9 +113,7 @@ export function AppSidebar() {
                       )}
                     >
                       <Plus size={16} />
-                      <Plus size={16} />
                     </div>
-                    <span className="pl-3 text-primary text-xl">New Task</span>
                     <span className="pl-3 text-primary text-xl">New Task</span>
                   </SidebarMenuButton>
                 </AddTaskDialog>
@@ -152,8 +150,6 @@ export function AppSidebar() {
                     )}
                     asChild
                   >
-                    <Link href={`/dashboard/${item.url}`}>
-                      <item.icon />
                     <Link href={`/dashboard/${item.url}`}>
                       <item.icon />
                       <span className="pl-3 text-base">{item.title}</span>
