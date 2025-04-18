@@ -464,12 +464,12 @@ public class TaskService : ITaskService
         return scheduledTasksDTO;
     }
 
-    public async Task<List<TaskItemDTO>> GetDueTasksAsync(DateTime dueBefore, string userId)
+    public async Task<List<TaskItemDTO>> GetDueTasksAsync(string userId)
     {   
         try
         {
             return await _dbContext.TaskItems
-                .Where(t => t.UserId == userId && t.DueDate <= dueBefore)
+                .Where(t => t.UserId == userId && t.DueDate <= DateTime.UtcNow)
                 .Include(t => t.Label)
                 .OrderBy(t => t.DueDate)
                 .Select(t => new TaskItemDTO
