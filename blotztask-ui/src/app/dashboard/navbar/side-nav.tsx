@@ -103,7 +103,7 @@ export function AppSidebar() {
 
               <SidebarMenuItem>
                 <AddTaskDialog submitGlobalTask={submitGlobalTask}>
-                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100">
+                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 ml-2 rounded-md hover:bg-blue-100 ">
                     <div
                       className={cn(
                         'bg-primary',
