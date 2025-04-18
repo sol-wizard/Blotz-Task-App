@@ -42,6 +42,9 @@ export function AppSidebar() {
   const { loadTodayTasks } = useTodayTaskActions();
   const pathname = usePathname();
   const [aiEnabled, setAiEnabled] = useState(false);
+  const { loadSearchTasks, setQuery } = useSearchTaskActions();
+  const query = useSearchQuery();
+  
   const handleSignOut = (e) => {
     e.preventDefault();
     window.location.href = '/api/auth/signout';
@@ -70,9 +73,6 @@ export function AppSidebar() {
     setAiEnabled(value);
     localStorage.setItem(FEATURE_FLAG_KEY, value.toString());
   };
-
-  const { loadSearchTasks, setQuery } = useSearchTaskActions();
-  const query = useSearchQuery();
 
   const submitGlobalTask = async (data: RawAddTaskDTO) => {
     try {
