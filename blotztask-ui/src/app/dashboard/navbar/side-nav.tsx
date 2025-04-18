@@ -153,7 +153,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarGroup className='mt-[100px]'>
+        <SidebarGroup className='mt-20'>
           <SidebarGroupLabel className="text-lg font-semibold mb-2 ml-2 px-4 text-primary">My Tasks</SidebarGroupLabel>
           <SidebarSeparator className="mb-2 bg-primary" />
           <SidebarGroupContent>
