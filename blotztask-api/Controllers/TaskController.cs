@@ -141,7 +141,7 @@ namespace BlotzTask.Controllers
         }
 
         [HttpGet("due-tasks")]
-        public async Task<IActionResult> GetDueTasks([FromQuery] DateTime dueBefore)
+        public async Task<IActionResult> GetDueTasks()
         {
             var userId = HttpContext.Items["UserId"] as string;
 
