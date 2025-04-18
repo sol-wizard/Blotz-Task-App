@@ -42,10 +42,12 @@ const mockOverdueTasks: TaskDetailDTO[] = [
 
 type TodayTaskStore = {
   todayTasks: TaskDetailDTO[];
+  overdueTasks: TaskDetailDTO[];
   incompleteTodayTasks: TaskDetailDTO[];
   completedTodayTasks: TaskDetailDTO[];
   todayTasksIsLoading: boolean;
   actions: {
+    loadOverdueTasks: () => Promise<void>;
     loadTodayTasks: () => Promise<void>;
     setLoading: (value: boolean) => void;
     handleAddTask: (taskDetails: RawAddTaskDTO) => void;
@@ -58,6 +60,7 @@ type TodayTaskStore = {
 
 const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
   todayTasks: [],
+  overdueTasks: [],
   incompleteTodayTasks: [],
   completedTodayTasks: [],
   todayTasksIsLoading: false,
@@ -81,6 +84,19 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
           incompleteTodayTasks: allTasks.filter((task) => !task.isDone),
           completedTodayTasks: allTasks.filter((task) => task.isDone),
         });
+      }
+    },
+
+    loadOverdueTasks: async () => {
+      const { setLoading } = get().actions;
+      setLoading(true);
+      try {
+        // Simulate fetching overdue tasks
+        set({ overdueTasks: mockOverdueTasks });
+      } catch (error) {
+        console.error('Failed to load overdue tasks:', error);
+      } finally {
+        setLoading(false);
       }
     },
 

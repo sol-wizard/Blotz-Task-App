@@ -5,7 +5,7 @@ import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
 import AddTaskCard from './components/add-task-card';
 import { CompletedTaskViewer } from './components/completed-task-viewer';
-import Divider from './components/divider';
+import SectionHeading from './components/divider';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import {
   useCompletedTodayTasks,
@@ -54,7 +54,7 @@ export default function Today() {
             <div className="flex items-start h-full">
               {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (
                 <div className="flex flex-col gap-6 w-full">
-                  <Divider text="To Do" />
+                  <SectionHeading text="To Do" />
                   <SectionSeparator />
                   {incompleteTodayTasks.length > 0 ? (
                     incompleteTodayTasks.map((task) => (
@@ -75,7 +75,7 @@ export default function Today() {
                   )}
                   {completedTodayTasks.length > 0 && (
                     <>
-                      <Divider text="Done" />
+                      <SectionHeading text="Done" />
                       <SectionSeparator />
                       <CompletedTaskViewer
                         completedTasks={completedTodayTasks}

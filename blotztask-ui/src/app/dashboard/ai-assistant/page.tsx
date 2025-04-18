@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import LoadingSpinner from '@/components/ui/loading-spinner';
-import Divider from '../today/components/divider';
+import SectionHeading from '../today/components/divider';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import { generateAiTask } from '@/services/ai-service';
 import { addTaskItem } from '@/services/task-service';
@@ -77,7 +77,7 @@ export default function AiAssistant() {
         </Button>
       </div>
 
-      <Divider text="Generated Task" />
+      <SectionHeading text="Generated Task" />
 
       {loading && (
         <div className="flex items-center gap-2 text-sm text-zinc-500">

@@ -2,7 +2,7 @@ interface DividerProps {
   text:string;
 }
 //TODO: rename this component to something more meaningful
-const Divider = ({text}:DividerProps) => {
+const SectionHeading = ({text}:DividerProps) => {
   return (
 
   <div className="flex items-center space-x-7">
@@ -13,4 +13,4 @@ const Divider = ({text}:DividerProps) => {
   );
 };
 
-export default Divider;
+export default SectionHeading;
