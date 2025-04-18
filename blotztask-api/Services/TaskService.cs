@@ -45,7 +45,7 @@ public class TaskService : ITaskService
                     Description = x.Description,
                     DueDate = x.DueDate,
                     IsDone = x.IsDone,
-                    Label = new LabelDTO { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color }        
+                    Label = new LabelDTO { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color }
                 })
                 .ToListAsync();
         }
@@ -77,7 +77,7 @@ public class TaskService : ITaskService
         };
 
         return result;
-    } 
+    }
 
     public async Task<ResponseWrapper<int>> DeleteTaskByIDAsync(int Id)
     {
@@ -116,7 +116,7 @@ public class TaskService : ITaskService
             throw;
         }
 
-       
+
     }
 
     public async Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId)
@@ -155,7 +155,7 @@ public class TaskService : ITaskService
         }
     }
 
-    
+
 
     public async Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDTO editTaskItem)
     {
@@ -168,14 +168,14 @@ public class TaskService : ITaskService
 
         try
         {
-                       
+
             task.Title = editTaskItem.Title;
             task.Description = editTaskItem.Description;
             task.DueDate = editTaskItem.DueDate;
             task.UpdatedAt = DateTime.UtcNow;
             task.LabelId = editTaskItem.LabelId;
-        
-            
+
+
             _dbContext.TaskItems.Update(task);
             await _dbContext.SaveChangesAsync();
 
@@ -191,19 +191,20 @@ public class TaskService : ITaskService
             throw;
         }
 
-        
+
     }
 
-    public async Task<TaskStatusResultDTO> TaskStatusUpdate(int taskId, bool? isDone=null)
+    public async Task<TaskStatusResultDTO> TaskStatusUpdate(int taskId, bool? isDone = null)
     {
-        try{
+        try
+        {
             var task = await _dbContext.TaskItems.FindAsync(taskId);
 
             if (task == null)
             {
                 throw new NotFoundException($"Task with ID {taskId} was not found.");
             }
-            
+
             // If task.IsDone is null, set it to be false, otherwise, toggle the task.IsDone
             task.IsDone = isDone ?? !task.IsDone;
 
@@ -211,15 +212,18 @@ public class TaskService : ITaskService
             _dbContext.TaskItems.Update(task);
             await _dbContext.SaveChangesAsync();
 
-            return new TaskStatusResultDTO{
+            return new TaskStatusResultDTO
+            {
                 Id = task.Id,
                 UpdatedAt = task.UpdatedAt,
                 Message = task.IsDone ? "Task marked as completed." : "Task marked as incomplete."
             };
-        }catch(Exception){
+        }
+        catch (Exception)
+        {
             throw;
         }
-        
+
     }
 
     public async Task<List<TaskItemDTO>> GetTaskByDate(DateTime startDateUTC, DateTime endDateUTC, string userId)
@@ -236,11 +240,11 @@ public class TaskService : ITaskService
                     Description = task.Description,
                     DueDate = task.DueDate,
                     IsDone = task.IsDone,
-                    Label = new LabelDTO 
-                    { 
-                        LabelId = task.Label.LabelId, 
-                        Name = task.Label.Name, 
-                        Color = task.Label.Color 
+                    Label = new LabelDTO
+                    {
+                        LabelId = task.Label.LabelId,
+                        Name = task.Label.Name,
+                        Color = task.Label.Color
                     }
                 })
                 .ToListAsync();
@@ -280,7 +284,7 @@ public class TaskService : ITaskService
                     result.Tasks.Uncompleted.Add(task.Label, task.Count);
                 }
             }
- 
+
             return result;
         }
         catch (Exception ex)
@@ -288,9 +292,11 @@ public class TaskService : ITaskService
             throw;
         }
     }
-    public async Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id) {
+    public async Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id)
+    {
         var deletedTask = await _dbContext.DeletedTaskItems.FindAsync(id);
-        if (deletedTask == null) {
+        if (deletedTask == null)
+        {
             throw new NotFoundException($"Deleted task with ID {id} not found.");
         }
         var restoredTask = new TaskItem
@@ -304,7 +310,8 @@ public class TaskService : ITaskService
             UserId = deletedTask.UserId,
             LabelId = deletedTask.LabelId
         };
-        try {
+        try
+        {
             _dbContext.TaskItems.Add(restoredTask);
             _dbContext.DeletedTaskItems.Remove(deletedTask);
             await _dbContext.SaveChangesAsync();
@@ -313,8 +320,9 @@ public class TaskService : ITaskService
                 "Task recovered successfully.",
                 true
             );
-            
-        } catch (Exception ex)
+
+        }
+        catch (Exception ex)
         {
             var innerExceptionMessage = ex.InnerException != null ? ex.InnerException.Message : "No inner exception.";
             return new ResponseWrapper<int>(
@@ -326,25 +334,28 @@ public class TaskService : ITaskService
     }
 
     public async Task<List<TaskItemDTO>> SearchTasksAsync(string query)
-    {   
-        try {
+    {
+        try
+        {
             return await _dbContext.TaskItems
             .Where(task => EF.Functions.Like(task.Title, $"%{query}%") || EF.Functions.Like(task.Description, $"%{query}%"))
-            .Select(task => new TaskItemDTO{
+            .Select(task => new TaskItemDTO
+            {
                 Id = task.Id,
                 Title = task.Title,
                 Description = task.Description,
                 DueDate = task.DueDate,
                 IsDone = task.IsDone,
-                Label = new LabelDTO 
-                { 
-                    LabelId = task.Label.LabelId, 
-                    Name = task.Label.Name, 
-                    Color = task.Label.Color 
+                Label = new LabelDTO
+                {
+                    LabelId = task.Label.LabelId,
+                    Name = task.Label.Name,
+                    Color = task.Label.Color
                 }
             })
             .ToListAsync();
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             throw new Exception($"Unhandled exception: {ex.Message}");
         }
@@ -352,8 +363,9 @@ public class TaskService : ITaskService
 
     public async Task<ScheduledTasksDTO> GetScheduledTasks(string timeZone, DateTime todayDate, string userId)
     {
-        try {
-            TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZone); 
+        try
+        {
+            TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZone);
             DateTime now = todayDate;
             DateTime nowLocal = TimeZoneInfo.ConvertTimeFromUtc(now, timeZoneInfo);
 
@@ -364,25 +376,26 @@ public class TaskService : ITaskService
             DateTime endOfYearUtc = TimeZoneInfo.ConvertTimeToUtc(endOfYearLocal, timeZoneInfo);
 
             var tasks = await _dbContext.TaskItems
-                .Where(t => t.UserId == userId && t.DueDate != null 
-                    && t.DueDate >= startOfYearUtc && t.DueDate <= endOfYearUtc 
+                .Where(t => t.UserId == userId && t.DueDate != null
+                    && t.DueDate >= startOfYearUtc && t.DueDate <= endOfYearUtc
                     && ((t.DueDate < now && !t.IsDone) || t.DueDate >= now))
-                .Select(task => new TaskItemDTO{
+                .Select(task => new TaskItemDTO
+                {
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
                     DueDate = task.DueDate,
                     IsDone = task.IsDone,
-                    Label = new LabelDTO 
-                    { 
-                        LabelId = task.Label.LabelId, 
-                        Name = task.Label.Name, 
-                        Color = task.Label.Color 
+                    Label = new LabelDTO
+                    {
+                        LabelId = task.Label.LabelId,
+                        Name = task.Label.Name,
+                        Color = task.Label.Color
                     }
                 })
                 .OrderBy(t => t.DueDate)
                 .ToListAsync();
-                
+
             if (tasks is null)
             {
                 return new ScheduledTasksDTO();
@@ -390,13 +403,14 @@ public class TaskService : ITaskService
 
             return GroupTasksBySchedule(timeZoneInfo, tasks, todayDate);
 
-            } catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error get scheduled tasks: {ex.Message}");
-                throw;
-            }
         }
-        
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error get scheduled tasks: {ex.Message}");
+            throw;
+        }
+    }
+
 
     private ScheduledTasksDTO GroupTasksBySchedule(TimeZoneInfo timeZoneInfo, List<TaskItemDTO> tasks, DateTime now)
     {
@@ -420,9 +434,9 @@ public class TaskService : ITaskService
         };
 
         foreach (var task in tasks)
-       {
+        {
             DateTime localDueDate = TimeZoneInfo.ConvertTime(task.DueDate, timeZoneInfo).Date;
-            
+
             if (localDueDate < startOfToday && !task.IsDone)
             {
                 scheduledTasksDTO.overdueTasks.Add(task);
@@ -448,5 +462,29 @@ public class TaskService : ITaskService
 
         return scheduledTasksDTO;
     }
+
+    public async Task<List<TaskItemDTO>> GetDueTasksAsync(DateTime dueBefore, string userId)
+    {
+        return await _dbContext.TaskItems
+            .Where(t => t.UserId == userId && t.DueDate <= dueBefore)
+            .Include(t => t.Label)
+            .OrderBy(t => t.DueDate)
+            .Select(t => new TaskItemDTO
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                DueDate = t.DueDate,
+                IsDone = t.IsDone,
+                Label = new LabelDTO
+                {
+                    LabelId = t.Label.LabelId,
+                    Name = t.Label.Name,
+                    Color = t.Label.Color
+                }
+            })
+            .ToListAsync();
+    }
+
 }
 

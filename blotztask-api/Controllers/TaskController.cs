@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using BlotzTask.Models;
 using BlotzTask.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -138,6 +139,15 @@ namespace BlotzTask.Controllers
             }
             
             return Ok(await _taskService.GetScheduledTasks(timeZone, todayDate, userId));
+        }
+
+        [HttpGet("due")]
+        public async Task<IActionResult> GetDueTasks([FromQuery] DateTime dueBefore)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var tasks = await _taskService.GetDueTasksAsync(dueBefore.ToUniversalTime(), userId);
+
+            return Ok(tasks);
         }
     }
 }
