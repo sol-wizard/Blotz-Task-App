@@ -144,7 +144,7 @@ namespace BlotzTask.Controllers
         public async Task<IActionResult> GetDueTasks()
         {
             var userId = HttpContext.Items["UserId"] as string;
-            Console.WriteLine(userId);
+
             if (userId == null)
             {
                 throw new UnauthorizedAccessException("Could not find user id from Http Context");
