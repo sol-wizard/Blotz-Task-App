@@ -19,7 +19,7 @@ public interface ITaskService
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
     public Task<List<TaskItemDTO>> SearchTasksAsync(string query);
     public Task<ScheduledTasksDTO> GetScheduledTasks(string timeZone, DateTime todayDate, string userId);
-    public Task<List<TaskItemDTO>> GetDueTasksAsync(DateTime dueBeforeUtc, string userId);
+    public Task<List<TaskItemDTO>> GetDueTasksAsync(string userId);
 }
 
 public class TaskService : ITaskService
