@@ -77,12 +77,10 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
       );
 
       if (data) {
-        // Append mockOverdueTasks to the fetched data
-        const allTasks = [...mockOverdueTasks, ...data];
         set({
-          todayTasks: allTasks,
-          incompleteTodayTasks: allTasks.filter((task) => !task.isDone),
-          completedTodayTasks: allTasks.filter((task) => task.isDone),
+          todayTasks: data,
+          incompleteTodayTasks: data.filter((task) => !task.isDone),
+          completedTodayTasks: data.filter((task) => task.isDone),
         });
       }
     },

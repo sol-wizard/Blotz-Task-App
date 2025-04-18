@@ -101,7 +101,7 @@ export default function TaskContent({
                     {task?.title}
                   </p>
                 )}
-                {!isEditing && <DueDateTag task={task} isOverdue={isOverdue} />}
+                {!isEditing && ( <DueDateTag task={task}  isOverdue={isOverdue}/> )}
               </div>
 
               <div className="flex w-full text-base text-gray-500 mt-2">
