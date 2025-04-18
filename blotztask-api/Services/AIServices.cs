@@ -62,8 +62,11 @@ public class TaskGenerationAIService
             - Only set `isValidTask` to false if the input is clearly not a task or lacks any actionable meaning.
             
             - Keep the message consistent with `isValidTask`: if false, the message should ask the user to rephrase. If true, the message should confirm or guide.
+            - You should split user input into multiple tasks if they describe more than one action, even if they are in a single sentence.
 
-            Each task object must include exactly these six fields. Even if only one task is found, it should still be inside the `tasks` array.
+            - Tasks can be separated by **and**, **then**, punctuation, or implied actions.
+            
+            - Each task object must include exactly these six fields. Even if only one task is found, it should still be inside the `tasks` array.
 
             ")
         );
@@ -84,18 +87,15 @@ public class TaskGenerationAIService
                                 type = "object",
                                 properties = new
                                 {
-                                    properties = new
+                                    title = new { type = "string", description = "Title of the task extracted from the user's input." },
+                                    description = new { type = "string", description = "Description of the task extracted from or generated based on user's input."},
+                                    due_date = new { type = "string", format = "date", description = "Due date of the task in YYYY-MM-DD format." },
+                                    message = new { type = "string", description = "Optional message from the AI to the user. Leave null if not needed." },
+                                    label = new { type = "string", description = $@"Category label for the task, which must correspond to one of the {string.Join(", ", labelNames)}." },
+                                    isValidTask = new
                                     {
-                                        title = new { type = "string", description = "Title of the task extracted from the user's input." },
-                                        description = new { type = "string", description = "Description of the task extracted from or generated based on user's input."},
-                                        due_date = new { type = "string", format = "date", description = "Due date of the task in YYYY-MM-DD format." },
-                                        message = new { type = "string", description = "Optional message from the AI to the user. Leave null if not needed." },
-                                        label = new { type = "string", description = $@"Category label for the task, which must correspond to one of the {string.Join(", ", labelNames)}." },
-                                        isValidTask = new
-                                        {
-                                            type = "boolean",
-                                            description = "True if the input was understood as a task, false if it was unclear or vague."
-                                        }
+                                        type = "boolean",
+                                        description = "True if the input was understood as a task, false if it was unclear or vague."
                                     },
                                 },
                                 required = new[] { "title", "description", "due_date", "label", "isValidTask", "message" }
