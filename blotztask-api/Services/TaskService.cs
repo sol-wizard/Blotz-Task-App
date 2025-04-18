@@ -19,6 +19,7 @@ public interface ITaskService
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
     public Task<List<TaskItemDTO>> SearchTasksAsync(string query);
     public Task<ScheduledTasksDTO> GetScheduledTasks(string timeZone, DateTime todayDate, string userId);
+    public Task<List<TaskItemDTO>> GetDueTasksAsync(DateTime dueBeforeUtc, string userId);
 }
 
 public class TaskService : ITaskService
@@ -464,27 +465,33 @@ public class TaskService : ITaskService
     }
 
     public async Task<List<TaskItemDTO>> GetDueTasksAsync(DateTime dueBefore, string userId)
-    {
-        return await _dbContext.TaskItems
-            .Where(t => t.UserId == userId && t.DueDate <= dueBefore)
-            .Include(t => t.Label)
-            .OrderBy(t => t.DueDate)
-            .Select(t => new TaskItemDTO
-            {
-                Id = t.Id,
-                Title = t.Title,
-                Description = t.Description,
-                DueDate = t.DueDate,
-                IsDone = t.IsDone,
-                Label = new LabelDTO
+    {   
+        try
+        {
+            return await _dbContext.TaskItems
+                .Where(t => t.UserId == userId && t.DueDate <= dueBefore)
+                .Include(t => t.Label)
+                .OrderBy(t => t.DueDate)
+                .Select(t => new TaskItemDTO
                 {
-                    LabelId = t.Label.LabelId,
-                    Name = t.Label.Name,
-                    Color = t.Label.Color
-                }
-            })
-            .ToListAsync();
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description,
+                    DueDate = t.DueDate,
+                    IsDone = t.IsDone,
+                    Label = new LabelDTO
+                    {
+                        LabelId = t.Label.LabelId,
+                        Name = t.Label.Name,
+                        Color = t.Label.Color
+                    }
+                })
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unhandled exception: {ex.Message}");
+        }
     }
-
 }
 

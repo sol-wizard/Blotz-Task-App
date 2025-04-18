@@ -144,7 +144,13 @@ namespace BlotzTask.Controllers
         [HttpGet("due")]
         public async Task<IActionResult> GetDueTasks([FromQuery] DateTime dueBefore)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = HttpContext.Items["UserId"] as string;
+
+            if (userId == null)
+            {
+                throw new UnauthorizedAccessException("Could not find user id from Http Context");
+            }
+
             var tasks = await _taskService.GetDueTasksAsync(dueBefore.ToUniversalTime(), userId);
 
             return Ok(tasks);
