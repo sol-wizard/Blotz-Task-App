@@ -128,6 +128,7 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
 }));
 
 export const useTodayTasks = () => useTodayTaskStore((state) => state.todayTasks);
+export const useOverdueTasks = () => useTodayTaskStore((state) => state.overdueTasks);
 export const useIncompleteTodayTasks = () => useTodayTaskStore((state) => state.incompleteTodayTasks);
 export const useCompletedTodayTasks = () => useTodayTaskStore((state) => state.completedTodayTasks);
 export const useTodayTasksIsLoading = () => useTodayTaskStore((state) => state.todayTasksIsLoading);
