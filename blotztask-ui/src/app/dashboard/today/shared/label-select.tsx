@@ -51,7 +51,7 @@ export function LabelSelect({
               >
                 <Tag className="mr-1" size={16} />
 
-                <SelectValue placeholder="Select Label"/>
+                <SelectValue placeholder="Select Label" />
               </SelectLabelTrigger>
             </FormControl>
             <SelectContent ref={labelPickerRef ?? undefined}>
