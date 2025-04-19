@@ -40,6 +40,7 @@ export default function TaskContent({
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [currentLabelColor, setCurrentLabelColor] = useState(task.label.color);
   const handleEditState = () => setIsEditing(!isEditing);
 
   const handleFormSubmit = (data, task: TaskDetailDTO) => {
@@ -70,7 +71,10 @@ export default function TaskContent({
   return (
     <div className="flex flex-col w-full ">
       <div className="flex flex-row w-full bg-transparent group mb-2">
-        <TaskSeparator color={task.label.color} isDone={task.isDone} />
+        {!task.isDone && (
+          <TaskSeparator color={currentLabelColor} isDone={task.isDone}/>
+        )}
+        
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
@@ -145,7 +149,7 @@ export default function TaskContent({
 
                 {!isEditing && !task.isDone && (
                   <div className="justify-end hidden ml-4 w-32 group-hover:flex">
-                    <button className="mx-2.5 p-0.5 hover:bg-[#DEE6FF] rounded-md" onClick={handleEditState}>
+                    <button className="mx-2.5 p-0.5 hover:bg-[#DEE6FF] rounded-md" onClick={handleEditState} title="Edit Task">
                       <Pencil className="text-primary" size={20} />
                     </button>
                     <DeleteTaskDialog
@@ -161,13 +165,23 @@ export default function TaskContent({
                 <div className="flex flex-row justify-between mt-4 mb-2">
                   <div className="flex flex-row items-center">
                     <CalendarForm control={form.control} task={task} />
-                    <LabelSelect control={form.control} />
+                    <LabelSelect 
+                      control={form.control} 
+                      onLabelChange={(labelDTO) => {
+                        if (labelDTO && labelDTO.color) {
+                          setCurrentLabelColor(labelDTO.color);
+                        }
+                      }}
+                    />
                     <TimePicker control={form.control} />
                   </div>
                   <div className="flex flex-row ">
                     <button
                       className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20"
-                      onClick={handleEditState}
+                      onClick={() => {
+                        setCurrentLabelColor(task.label.color);
+                        handleEditState();
+                      }}
                     >
                       Cancel
                     </button>
