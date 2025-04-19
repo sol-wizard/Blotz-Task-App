@@ -22,11 +22,13 @@ export default function TaskContent({
   onSubmit,
   onDelete,
   handleTaskDeleteUndo,
+  isOverdue,
 }: {
   task: TaskDetailDTO;
   onSubmit: (taskContent: RawEditTaskDTO) => void;
   onDelete: (taskId: number) => void;
   handleTaskDeleteUndo: (taskId: number) => void;
+  isOverdue: boolean;
 }) {
   const form = useForm<z.infer<typeof taskFormSchema>>({
     resolver: zodResolver(taskFormSchema),
@@ -99,7 +101,7 @@ export default function TaskContent({
                     {task?.title}
                   </p>
                 )}
-                {!isEditing && <DueDateTag task={task} />}
+                {!isEditing && ( <DueDateTag task={task}  isOverdue={isOverdue}/> )}
               </div>
 
               <div className="flex w-full text-base text-gray-500 mt-2">
