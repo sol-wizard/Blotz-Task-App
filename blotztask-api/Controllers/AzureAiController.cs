@@ -24,8 +24,11 @@ namespace BlotzTask.Controllers
                 return BadRequest("Prompt cannot be empty.");
             }
 
-            var response = await _aiService.GenerateResponseAsync(request.Prompt);
-            return Ok(new { Response = response });
+            var (tasks, message) = await _aiService.GenerateResponseAsync(request.Prompt);
+            return Ok(new { 
+                tasks,
+                message
+            });
         }
     }
 }
