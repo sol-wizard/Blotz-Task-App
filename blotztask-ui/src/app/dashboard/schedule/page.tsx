@@ -4,6 +4,7 @@ import { useScheduleTaskActions, useScheduleTaskStore } from '../../store/schedu
 import AddTaskCard from '../today/components/add-task-card';
 import ScheduleHeader from './components/schedule-header';
 import TaskCard from '../today/components/task-card';
+import SectionSeparator from './components/section-separator';
 import SecondHeader2 from './components/secondheader2';
 import SecondHeader1 from './components/secondheader1';
 
@@ -27,9 +28,10 @@ export default function Schedule() {
         {overdueTasks.length !== 0 && (
           <div>
             <p className="my-5">Overdue</p>
-
+            <SectionSeparator />
             {overdueTasks.map((task) => {
               return (
+                <>
                 <TaskCard
                   key={task.id}
                   task={task}
@@ -38,6 +40,8 @@ export default function Schedule() {
                   handleTaskDelete={handleDeleteTask}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
+                <SectionSeparator />
+                </>
               );
             })}
           </div>
@@ -49,9 +53,10 @@ export default function Schedule() {
           <div>
             <SecondHeader1 text={"Today"}/>
             <p className="my-5">Today</p>
-
+            <SectionSeparator />
             {todayTasks.map((task) => {
               return (
+                <>
                 <TaskCard
                   key={task.id}
                   task={task}
@@ -60,6 +65,8 @@ export default function Schedule() {
                   handleTaskDelete={handleDeleteTask}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
+                <SectionSeparator />
+                </>
               );
             })}
           </div>
@@ -71,9 +78,10 @@ export default function Schedule() {
           <div>
             <SecondHeader2 text={"Tomorrow"} />
             <p className="my-5">Tomorrow</p>
-
+            <SectionSeparator />
             {tomorrowTasks.map((task) => {
               return (
+                <>
                 <TaskCard
                   key={task.id}
                   task={task}
@@ -82,6 +90,8 @@ export default function Schedule() {
                   handleTaskDelete={handleDeleteTask}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
+                <SectionSeparator />
+                </>
               );
             })}
           </div>
@@ -93,9 +103,10 @@ export default function Schedule() {
           <div>
             <SecondHeader2 text={"This week"} />
             <p className="my-5">This Week</p>
-
+            <SectionSeparator />
             {weekTasks.map((task) => {
               return (
+                <>
                 <TaskCard
                   key={task.id}
                   task={task}
@@ -104,6 +115,8 @@ export default function Schedule() {
                   handleTaskDelete={handleDeleteTask}
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
+                <SectionSeparator />
+                </>
               );
             })}
           </div>
@@ -116,14 +129,11 @@ export default function Schedule() {
             <SecondHeader2 text={"This month"} /> 
             {Object.entries(monthTasks).map(([month, tasks]) => (
               <div key={month}>
-                <p className="my-5">
-                  {new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString('en-US', {
-                    month: 'long',
-                  })}
-                </p>
-
+                <p className="my-5">{new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString('en-US', { month: 'long' })}</p>
+                <SectionSeparator />
                 {tasks.map((task) => {
                   return (
+                    <>
                     <TaskCard
                       key={task.id}
                       task={task}
@@ -132,6 +142,8 @@ export default function Schedule() {
                       handleTaskDelete={handleDeleteTask}
                       handleTaskDeleteUndo={handleTaskDeleteUndo}
                     />
+                    <SectionSeparator />
+                    </>
                   );
                 })}
               </div>
