@@ -4,7 +4,7 @@ import { Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from 'src/components/ui/task-card-input';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { taskFormSchema } from '../forms/task-form-schema';
 import { z } from 'zod';
@@ -42,11 +42,6 @@ export default function TaskContent({
   const [isEditing, setIsEditing] = useState(false);
   const [currentLabelColor, setCurrentLabelColor] = useState(task.label.color);
   const handleEditState = () => setIsEditing(!isEditing);
-
-  const labelId = useWatch({
-    control: form.control,
-    name: "labelId"
-  });
 
   const handleFormSubmit = (data, task: TaskDetailDTO) => {
     const taskContent: RawEditTaskDTO = {
@@ -154,7 +149,7 @@ export default function TaskContent({
 
                 {!isEditing && !task.isDone && (
                   <div className="justify-end hidden ml-4 w-32 group-hover:flex">
-                    <button className="mx-2.5 p-0.5 hover:bg-[#DEE6FF] rounded-md" onClick={handleEditState}>
+                    <button className="mx-2.5 p-0.5 hover:bg-[#DEE6FF] rounded-md" onClick={handleEditState} title="Edit Task">
                       <Pencil className="text-primary" size={20} />
                     </button>
                     <DeleteTaskDialog
