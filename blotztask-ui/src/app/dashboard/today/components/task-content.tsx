@@ -4,7 +4,7 @@ import { Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from 'src/components/ui/task-card-input';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { taskFormSchema } from '../forms/task-form-schema';
 import { z } from 'zod';
@@ -40,7 +40,13 @@ export default function TaskContent({
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [currentLabelColor, setCurrentLabelColor] = useState(task.label.color);
   const handleEditState = () => setIsEditing(!isEditing);
+
+  const labelId = useWatch({
+    control: form.control,
+    name: "labelId"
+  });
 
   const handleFormSubmit = (data, task: TaskDetailDTO) => {
     const taskContent: RawEditTaskDTO = {
@@ -70,7 +76,10 @@ export default function TaskContent({
   return (
     <div className="flex flex-col w-full ">
       <div className="flex flex-row w-full bg-transparent group mb-2">
-        <TaskSeparator color={task.label.color} isDone={task.isDone} isEditing={isEditing} />
+        {!task.isDone && (
+          <TaskSeparator color={currentLabelColor} isDone={task.isDone}/>
+        )}
+        
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
@@ -161,13 +170,23 @@ export default function TaskContent({
                 <div className="flex flex-row justify-between mt-4 mb-2">
                   <div className="flex flex-row items-center">
                     <CalendarForm control={form.control} task={task} />
-                    <LabelSelect control={form.control} />
+                    <LabelSelect 
+                      control={form.control} 
+                      onLabelChange={(labelDTO) => {
+                        if (labelDTO && labelDTO.color) {
+                          setCurrentLabelColor(labelDTO.color);
+                        }
+                      }}
+                    />
                     <TimePicker control={form.control} />
                   </div>
                   <div className="flex flex-row ">
                     <button
                       className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20"
-                      onClick={handleEditState}
+                      onClick={() => {
+                        setCurrentLabelColor(task.label.color);
+                        handleEditState();
+                      }}
                     >
                       Cancel
                     </button>

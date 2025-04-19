@@ -5,22 +5,17 @@ const TaskSeparator = ({
   color,
   isDone,
   className,
-  isEditing = false
 }: {
   color?: string;
   isDone?: boolean;
   className?: string;
-  isEditing?: boolean;
 }) => {
-
-  const separatorColor = !isEditing && isDone ? '#BFC0C9' : color || '#9698A7';
-
   return (
     <Separator
       orientation="vertical"
       decorative={true}
       className={cn('w-[4px] rounded-md', className)}
-      style={{ backgroundColor: separatorColor }}
+      style={{ background: isDone ? '#BFC0C9' : color || '#9698A7' }}
     />
   );
 };
