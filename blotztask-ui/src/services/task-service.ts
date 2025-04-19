@@ -1,8 +1,9 @@
-import { TaskDetailDTO } from '@/app/dashboard/task-list/models/task-detail-dto';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { fetchWithAuth } from '@/utils/fetch-with-auth';
-import { AddTaskItemDTO } from '@/model/add-task-item-dto';
-import { EditTaskItemDTO } from '@/app/dashboard/task-list/models/edit-task-item-dto';
-import { ScheduledTasksDTO } from '@/app/dashboard/task-list/models/scheduled-tasks-dto';
+import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
+import { mapRawAddTaskDTOtoAddTaskItemDTO, mapRawEditTaskDTOtoAddTaskItemDTO } from './util/util';
+import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
+import { ScheduledTasksDTO } from '@/model/scheduled-tasks-dto';
 
 export const fetchAllTaskItems = async (): Promise<TaskDetailDTO[]> => {
   const result = await fetchWithAuth<TaskDetailDTO[]>(
@@ -34,7 +35,12 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
   return result;
 };
 
-export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<TaskDetailDTO> => {
+export const addTaskItem = async (taskDetails: RawAddTaskDTO): Promise<TaskDetailDTO> => {
+  const addTaskForm = mapRawAddTaskDTOtoAddTaskItemDTO(taskDetails);
+  const localDate = new Date(addTaskForm.dueDate); 
+  //TODO: Current reset all time to 0, due to the team still investigating how to handle the time zone
+  localDate.setHours(0, 0, 0, 0); 
+  const utcDate = localDate.toISOString();
   try {
     const result = await fetchWithAuth<TaskDetailDTO>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,
@@ -45,7 +51,7 @@ export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<TaskDeta
         },
         body: JSON.stringify({
           ...addTaskForm,
-          dueDate: new Date(addTaskForm.dueDate).toISOString(), // Direct conversion
+          dueDate: utcDate, // Direct conversion
         }),
       }
     );
@@ -76,13 +82,15 @@ export const updateTaskStatus = async (taskId: number): Promise<string> => {
   }
 };
 
-export const editTask = async (taskEditForm: EditTaskItemDTO): Promise<string> => {
+export const editTask = async (taskEditForm: RawEditTaskDTO): Promise<string> => {
+  const taskEditDetails = mapRawEditTaskDTOtoAddTaskItemDTO(taskEditForm);
+
   try {
     const result = await fetchWithAuth<string>(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/${taskEditForm.id}`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/${taskEditDetails.id}`,
       {
         method: 'PUT',
-        body: JSON.stringify(taskEditForm),
+        body: JSON.stringify(taskEditDetails),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -129,9 +137,11 @@ export const undoDeleteTask = async (taskId: number) => {
 
 export const fetchScheduleTasks = async (): Promise<ScheduledTasksDTO> => {
   try {
+
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone; 
     const todayDate = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
     const result = await fetchWithAuth<ScheduledTasksDTO>(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/scheduled-tasks?todayDate=${encodeURIComponent(todayDate)}`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/scheduled-tasks?timeZone=${encodeURIComponent(timeZone)}&todayDate=${encodeURIComponent(todayDate)}`,
       {
         method: 'GET',
         headers: {
@@ -143,7 +153,7 @@ export const fetchScheduleTasks = async (): Promise<ScheduledTasksDTO> => {
   } catch (error) {
     console.error('Error deleting task:', error);
     throw error;
-  } 
+  }
 };
 
 export const fetchSearchedTasks = async (query: string): Promise<TaskDetailDTO[]> => {
