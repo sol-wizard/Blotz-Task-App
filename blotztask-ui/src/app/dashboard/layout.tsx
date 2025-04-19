@@ -1,8 +1,19 @@
+'use client';
 import React from 'react';
 import { AppSidebar } from './navbar/side-nav';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { useSession } from 'next-auth/react';
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+  const { status } = useSession();
+
+  if (status === 'loading') {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-xl text-gray-600 font-medium">Loading Dashboard...</p>
+      </div>
+    );
+  }
   return (
     <div className="flex h-screen">
       <SidebarProvider>
