@@ -46,8 +46,9 @@ export default function Schedule() {
             <SectionSeparator />
             {overdueTasks.map((task) => {
               return (
-                <div key={task.id}>
+                <>
                 <TaskCard
+                  key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
                   handleTaskEdit={handleTaskEdit}
@@ -55,7 +56,7 @@ export default function Schedule() {
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
                 <SectionSeparator />
-                </div>
+                </>
               );
             })}
           </div>
@@ -69,8 +70,9 @@ export default function Schedule() {
             <SectionSeparator />
             {todayTasks.map((task) => {
               return (
-                <div key={task.id}>
+                <>
                 <TaskCard
+                  key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
                   handleTaskEdit={handleTaskEdit}
@@ -78,7 +80,7 @@ export default function Schedule() {
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
                 <SectionSeparator />
-                </div>
+                </>
               );
             })}
           </div>
@@ -92,8 +94,9 @@ export default function Schedule() {
             <SectionSeparator />
             {tomorrowTasks.map((task) => {
               return (
-                <div key={task.id}>
+                <>
                 <TaskCard
+                  key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
                   handleTaskEdit={handleTaskEdit}
@@ -101,7 +104,7 @@ export default function Schedule() {
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
                 <SectionSeparator />
-                </div>
+                </>
               );
             })}
           </div>
@@ -115,8 +118,9 @@ export default function Schedule() {
             <SectionSeparator />
             {weekTasks.map((task) => {
               return (
-                <div key={task.id}>
+                <>
                 <TaskCard
+                  key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
                   handleTaskEdit={handleTaskEdit}
@@ -124,7 +128,7 @@ export default function Schedule() {
                   handleTaskDeleteUndo={handleTaskDeleteUndo}
                 />
                 <SectionSeparator />
-                </div>
+                </>
               );
             })}
           </div>
@@ -141,8 +145,9 @@ export default function Schedule() {
                 <SectionSeparator />
                 {tasks.map((task) => {
                   return (
-                    <div key={task.id}>
+                    <>
                     <TaskCard
+                      key={task.id}
                       task={task}
                       handleCheckboxChange={handleCheckboxChange}
                       handleTaskEdit={handleTaskEdit}
@@ -150,7 +155,7 @@ export default function Schedule() {
                       handleTaskDeleteUndo={handleTaskDeleteUndo}
                     />
                     <SectionSeparator />
-                    </div>
+                    </>
                   );
                 })}
               </div>
