@@ -70,7 +70,6 @@ export default function Today() {
                           handleTaskEdit={handleEditTask}
                           handleTaskDelete={handleDeleteTask}
                           handleTaskDeleteUndo={handleTaskDeleteUndo}
-                          isOverdue={false}
                         />
                         <SectionSeparator />
                       </React.Fragment>

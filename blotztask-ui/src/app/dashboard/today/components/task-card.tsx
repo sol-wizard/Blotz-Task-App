@@ -3,7 +3,7 @@ import React from 'react';
 import TaskContent from './task-content';
 import { cn } from '@/lib/utils';
 
-const TaskCard = ({ task, handleCheckboxChange, handleTaskEdit, handleTaskDelete, handleTaskDeleteUndo, isOverdue }) => {
+const TaskCard = ({ task, handleCheckboxChange, handleTaskEdit, handleTaskDelete, handleTaskDeleteUndo, isOverdue=false}) => {
   return (
     <div>
       <div className={cn('flex w-full rounded-lg p-2', isOverdue && 'bg-red-50')}>
