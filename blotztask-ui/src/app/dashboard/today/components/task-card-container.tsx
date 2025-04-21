@@ -1,6 +1,6 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import React from 'react';
-import TaskContent from './task-content';
+import TaskCard from './task-card';
 
 const TaskCardContainer = ({ task, handleCheckboxChange, handleTaskEdit, handleTaskDelete, handleTaskDeleteUndo }) => {
   return (
@@ -13,7 +13,7 @@ const TaskCardContainer = ({ task, handleCheckboxChange, handleTaskEdit, handleT
             className="h-6 w-6 mr-6 rounded-full border-2 border-black"
           />
         </div>
-        <TaskContent
+        <TaskCard
           task={task}
           onSubmit={handleTaskEdit}
           onDelete={(taskId) => handleTaskDelete(taskId)}

@@ -17,7 +17,7 @@ import TimePicker from '@/components/ui/time-picker';
 import { format } from 'date-fns';
 import { RawEditTaskDTO } from '../../../../model/raw-edit-task-dto';
 
-export default function TaskContent({
+export default function TaskCard({
   task,
   onSubmit,
   onDelete,
