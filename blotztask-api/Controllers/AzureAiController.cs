@@ -25,7 +25,7 @@ namespace BlotzTask.Controllers
             }
 
             var response = await _aiService.GenerateResponseAsync(request.Prompt);
-            return Ok(response);
+            return Ok(new { Response = response });
         }
     }
 }
