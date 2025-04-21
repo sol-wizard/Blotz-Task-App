@@ -1,4 +1,4 @@
-import SectionSeparator from './section-separator';
+import SectionSeparator from './ui/section-separator';
 import TaskCard from './task-card';
 
 export function CompletedTaskViewer({

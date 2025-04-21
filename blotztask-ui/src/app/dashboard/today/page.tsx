@@ -14,7 +14,7 @@ import {
   useTodayTasks,
   useTodayTasksIsLoading,
 } from '../../store/today-task-store';
-import SectionSeparator from './components/section-separator';
+import SectionSeparator from './components/ui/section-separator';
 import DisplayNoTask from './components/display-no-task';
 
 export default function Today() {
