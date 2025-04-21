@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { RawEditTaskDTO } from '../../../../../model/raw-edit-task-dto';
 import { TaskCardTitleBlock } from '../ui/task-card-title-block';
 import { TaskCardDescriptionBlock } from '../ui/task-card-description-block';
+import { TaskCardLabelBlock } from '../ui/task-card-label-block';
 
 export default function TaskCard({
   task,
@@ -86,19 +87,8 @@ export default function TaskCard({
 
               <div className="flex w-full text-base text-gray-500 mt-2">
                 <TaskCardDescriptionBlock task={task} isEditing={isEditing} control={form.control} errors={form.formState.errors} />
+                <TaskCardLabelBlock task={task} isEditing={isEditing} />
 
-
-                <div className="flex items-start ml-4 w-32 group-hover:hidden">
-                  {!isEditing && !task.isDone && (
-                    <>
-                      <div
-                        className="h-4 w-4 rounded-full"
-                        style={{ backgroundColor: task.label.color || 'gray' }}
-                      ></div>
-                      <span className="ml-2 font-bold">{task.label?.name || 'No label name'}</span>
-                    </>
-                  )}
-                </div>
 
                 {!isEditing && !task.isDone && (
                   <div className="justify-end hidden ml-4 w-32 group-hover:flex">
