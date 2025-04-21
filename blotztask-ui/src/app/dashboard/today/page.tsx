@@ -34,7 +34,7 @@ export default function Today() {
 
   useEffect(() => {
     loadTodayTasks();
-  }, [loadTodayTasks]);
+  }, []);
 
   return (
     <div className="ml-5 flex flex-col gap-12 h-full">
@@ -53,11 +53,12 @@ export default function Today() {
 
             <div className="flex items-start h-full">
               {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (
-                <div className="flex flex-col gap-6 w-full">
+                <div className="flex flex-col gap-4 w-full">
                   <Divider text="To Do" />
                   <SectionSeparator />
-                  {incompleteTodayTasks.length > 0 ? (
-                    incompleteTodayTasks.map((task) => (
+                  {/* TODO: Make this into a todoTaskViewer component as similar to the completedTaskViewer */}
+                  {incompleteTodayTasks.length > 0 ? (  
+                    incompleteTodayTasks.map((task) => (  
                       <>
                         <TaskCard
                           key={task.id}
@@ -73,6 +74,7 @@ export default function Today() {
                   ) : (
                     <p>No incomplete tasks for today!</p>
                   )}
+                  
                   {completedTodayTasks.length > 0 && (
                     <>
                       <Divider text="Done" />
