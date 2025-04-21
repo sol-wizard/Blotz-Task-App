@@ -1,4 +1,4 @@
-import DueDateTag from './due-date-tag';
+import DateTag from './ui/due-date-tag';
 import TaskSeparator from '../shared/task-separator';
 import { Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -99,7 +99,7 @@ export default function TaskContent({
                     {task?.title}
                   </p>
                 )}
-                {!isEditing && <DueDateTag task={task} />}
+                {!isEditing && <DateTag task={task} />}
               </div>
 
               <div className="flex w-full text-base text-gray-500 mt-2">

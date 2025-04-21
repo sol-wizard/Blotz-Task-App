@@ -5,7 +5,7 @@ import TodayHeader from './components/today-header';
 import TaskCard from './components/task-card';
 import AddTaskCard from './components/add-task-card';
 import { CompletedTaskViewer } from './components/completed-task-viewer';
-import Divider from './components/divider';
+import Divider from './components/ui/divider';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import {
   useCompletedTodayTasks,
