@@ -2,12 +2,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import React from 'react';
 import TaskContent from './task-content';
 import { cn } from '@/lib/utils';
-import { useOverdueTasks } from '../../../store/today-task-store';
 
-const TaskCard = ({ task, handleCheckboxChange, handleTaskEdit, handleTaskDelete, handleTaskDeleteUndo }) => {
-  const overdueTasks = useOverdueTasks();
-  const isOverdue = overdueTasks.some(overdueTask => overdueTask.id === task.id);
-
+const TaskCard = ({ task, handleCheckboxChange, handleTaskEdit, handleTaskDelete, handleTaskDeleteUndo, isOverdue }) => {
   return (
     <div>
       <div className={cn('flex w-full rounded-lg p-2', isOverdue && 'bg-red-50')}>

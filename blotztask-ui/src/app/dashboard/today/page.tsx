@@ -57,12 +57,12 @@ export default function Today() {
             <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
 
             <div className="flex items-start h-full">
-              {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 || overdueTasks.length > 0 ? (
+              {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (
                 <div className="flex flex-col gap-6 w-full">
                   <SectionHeading text="To Do" />
                   <SectionSeparator />
-                  {(overdueTasks.length > 0 || incompleteTodayTasks.length > 0) ? (
-                    [...overdueTasks, ...incompleteTodayTasks].map((task) => (
+                  {incompleteTodayTasks.length > 0 ? (
+                    incompleteTodayTasks.map((task) => (
                       <React.Fragment key={task.id}>
                         <TaskCard
                           task={task}
@@ -70,6 +70,7 @@ export default function Today() {
                           handleTaskEdit={handleEditTask}
                           handleTaskDelete={handleDeleteTask}
                           handleTaskDeleteUndo={handleTaskDeleteUndo}
+                          isOverdue={false}
                         />
                         <SectionSeparator />
                       </React.Fragment>
@@ -77,6 +78,25 @@ export default function Today() {
                   ) : (
                     <p>No incomplete tasks for today!</p>
                   )}
+
+                  {overdueTasks.length > 0 && (
+                    <div className="flex flex-col gap-6 w-full">
+                      {overdueTasks.map((task) => (
+                        <React.Fragment key={task.id}>
+                          <TaskCard
+                            task={task}
+                            handleCheckboxChange={handleCheckboxChange}
+                            handleTaskEdit={handleEditTask}
+                            handleTaskDelete={handleDeleteTask}
+                            handleTaskDeleteUndo={handleTaskDeleteUndo}
+                            isOverdue={true}
+                          />
+                          <SectionSeparator />
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )}
+
                   {completedTodayTasks.length > 0 && (
                     <>
                       <SectionHeading text="Done" />
