@@ -20,6 +20,7 @@ import { TaskCardTitleBlock } from '../ui/task-card-title-block';
 import { TaskCardDescriptionBlock } from '../ui/task-card-description-block';
 import { TaskCardLabelBlock } from '../ui/task-card-label-block';
 import { TaskEditActions } from '../ui/task-card-edit-actions-block';
+import { TaskCardEditFooter } from '../ui/task-card-edit-footer';
 
 export default function TaskCard({
   task,
@@ -107,24 +108,10 @@ export default function TaskCard({
               </div>
 
               {isEditing && (
-                <div className="flex flex-row justify-between mt-4 mb-2">
-                  <div className="flex flex-row items-center">
-                    <CalendarForm control={form.control} task={task} />
-                    <LabelSelect control={form.control} />
-                    <TimePicker control={form.control} />
-                  </div>
-                  <div className="flex flex-row ">
-                    <button
-                      className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20"
-                      onClick={handleEditState}
-                    >
-                      Cancel
-                    </button>
-                    <button type="submit" className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20">
-                      Save
-                    </button>
-                  </div>
-                </div>
+                <TaskCardEditFooter 
+                  control={form.control} 
+                  onCancel={handleEditState} 
+                />
               )}
             </div>
           </form>
