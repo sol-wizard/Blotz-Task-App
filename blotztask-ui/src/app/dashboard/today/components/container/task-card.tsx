@@ -1,21 +1,21 @@
-import DateTag from './ui/due-date-tag';
-import TaskSeparator from '../shared/task-separator';
+import DateTag from '../ui/due-date-tag';
+import TaskSeparator from '../../shared/task-separator';
 import { Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from 'src/components/ui/task-card-input';
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { taskFormSchema } from '../forms/task-form-schema';
+import { taskFormSchema } from '../../forms/task-form-schema';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { TaskDetailDTO } from '../../../../model/task-detail-dto';
-import { CalendarForm } from '../shared/calendar-form';
-import { LabelSelect } from '../shared/label-select';
-import DeleteTaskDialog from './container/delete-dialog-content';
+import { TaskDetailDTO } from '../../../../../model/task-detail-dto';
+import { CalendarForm } from '../../shared/calendar-form';
+import { LabelSelect } from '../../shared/label-select';
+import DeleteTaskDialog from './delete-dialog-content';
 import TimePicker from '@/components/ui/time-picker';
 import { format } from 'date-fns';
-import { RawEditTaskDTO } from '../../../../model/raw-edit-task-dto';
+import { RawEditTaskDTO } from '../../../../../model/raw-edit-task-dto';
 
 export default function TaskCard({
   task,

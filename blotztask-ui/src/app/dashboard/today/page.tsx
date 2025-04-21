@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import TodayHeader from './components/container/today-header';
-import TaskCardContainer from './components/task-card-container';
+import TaskCardContainer from './components/container/task-card-container';
 import AddTaskCardContainer from './components/container/add-task-card-container';
 import { CompletedTaskViewer } from './components/viewer/completed-task-viewer';
 import Divider from './components/ui/divider';
