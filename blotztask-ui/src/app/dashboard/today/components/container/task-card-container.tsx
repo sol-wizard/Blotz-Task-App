@@ -1,9 +1,26 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import React from 'react';
-import TaskCard from './task-card';
+import TaskCard, { TaskCardStatus } from './task-card';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
+import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
 
+type TaskCardContainerProps = {
+  task: TaskDetailDTO;
+  taskStatus?: TaskCardStatus;
+  handleCheckboxChange: (taskId: number) => void;
+  handleTaskEdit: (updatedTask: RawEditTaskDTO) => void;
+  handleTaskDelete: (taskId: number) => void;
+  handleTaskDeleteUndo: (taskId: number) => void;
+};
 
-const TaskCardContainer = ({ task, taskStatus, handleCheckboxChange, handleTaskEdit, handleTaskDelete, handleTaskDeleteUndo }) => {
+export default function TaskCardContainer({
+  task,
+  taskStatus,
+  handleCheckboxChange,
+  handleTaskEdit,
+  handleTaskDelete,
+  handleTaskDeleteUndo,
+}: TaskCardContainerProps) {
   return (
     <div>
       <div className="flex w-full">
@@ -24,6 +41,4 @@ const TaskCardContainer = ({ task, taskStatus, handleCheckboxChange, handleTaskE
       </div>
     </div>
   );
-};
-
-export default TaskCardContainer;
+}
