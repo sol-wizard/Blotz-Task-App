@@ -18,6 +18,8 @@ export const TaskCardTitleBlock = ({ task, isEditing, control, errors }) => {
               </FormItem>
             )}
           />
+
+        //TODO : Remove the logic in css using the variant based design approach
         ) : (
           <p className={`font-bold ${task.isDone ? 'text-gray-400' : 'text-black'}`}>{task.title}</p>
         )}

@@ -16,6 +16,7 @@ export const TaskCardDescriptionBlock = ({ task, isEditing, control, errors }) =
           </FormItem>
         )}
       />
+    //TODO : Remove the logic in css using the variant based design approach
     ) : (
       <p className={`w-[500px] break-words ${task.isDone ? 'text-gray-400' : 'text-black'}`}>{task.description}</p>
     )}
