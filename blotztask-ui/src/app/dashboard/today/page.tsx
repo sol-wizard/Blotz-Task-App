@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
-import TodayHeader from './components/today-header';
-import TaskCard from './components/task-card';
-import AddTaskCard from './components/add-task-card';
-import { CompletedTaskViewer } from './components/completed-task-viewer';
-import Divider from './components/divider';
+import TodayHeader from './components/container/today-header';
+import TaskCardContainer from './components/container/task-card-container';
+import AddTaskCardContainer from './components/container/add-task-card-container';
+import { CompletedTaskViewer } from './components/viewer/completed-task-viewer';
+import Divider from './components/ui/divider';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import {
   useCompletedTodayTasks,
@@ -14,8 +14,8 @@ import {
   useTodayTasks,
   useTodayTasksIsLoading,
 } from '../../store/today-task-store';
-import SectionSeparator from './components/section-separator';
-import DisplayNoTask from './components/display-no-task';
+import SectionSeparator from './components/ui/section-separator';
+import DisplayNoTask from './components/container/display-no-task';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
@@ -49,7 +49,7 @@ export default function Today() {
         ) : (
           <>
             <TodayHeader tasks={todayTasks} />
-            <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
+            <AddTaskCardContainer onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
 
             <div className="flex items-start h-full">
               {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (
@@ -57,17 +57,18 @@ export default function Today() {
                   <Divider text="To Do" />
                   <SectionSeparator />
                   {/* TODO: Make this into a todoTaskViewer component as similar to the completedTaskViewer */}
+                  {/* TODO: Add the loop for ovverdue task here */}
                   {incompleteTodayTasks.length > 0 ? (  
                     incompleteTodayTasks.map((task) => (  
                       <>
-                        <TaskCard
+                        <TaskCardContainer
                           key={task.id}
                           task={task}
                           handleCheckboxChange={handleCheckboxChange}
                           handleTaskEdit={handleEditTask}
                           handleTaskDelete={handleDeleteTask}
                           handleTaskDeleteUndo={handleTaskDeleteUndo}
-                        ></TaskCard>
+                        ></TaskCardContainer>
                         <SectionSeparator />
                       </>
                     ))
