@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import TodayHeader from './components/today-header';
+import TodayHeader from './components/container/today-header';
 import TaskCard from './components/task-card';
 import AddTaskCard from './components/add-task-card';
 import { CompletedTaskViewer } from './components/completed-task-viewer';
