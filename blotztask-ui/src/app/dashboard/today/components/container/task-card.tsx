@@ -16,6 +16,8 @@ import DeleteTaskDialog from './delete-dialog-content';
 import TimePicker from '@/components/ui/time-picker';
 import { format } from 'date-fns';
 import { RawEditTaskDTO } from '../../../../../model/raw-edit-task-dto';
+import { TaskCardTitleBlock } from '../ui/task-card-title-block';
+import { TaskCardDescriptionBlock } from '../ui/task-card-description-block';
 
 export default function TaskCard({
   task,
@@ -80,56 +82,11 @@ export default function TaskCard({
             className="flex flex-col w-full bg-transparent px-6"
           >
             <div className="flex flex-col w-full bg-transparent px-6">
-              <div className="flex flex-row justify-between w-full">
-                {isEditing ? (
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input className="font-bold" {...field}></Input>
-                        </FormControl>
-                        <FormMessage>{form.formState.errors.title?.message}</FormMessage>
-                      </FormItem>
-                    )}
-                  />
-                ) : (
-                  <p className="font-bold" style={{ color: task.isDone ? '#BFC0C9' : '#000000' }}>
-                    {task?.title}
-                  </p>
-                )}
-                {!isEditing && <DateTag task={task} />}
-              </div>
+            <TaskCardTitleBlock task={task} isEditing={isEditing} control={form.control} errors={form.formState.errors} />
 
               <div className="flex w-full text-base text-gray-500 mt-2">
-                <div className="flex flex-col w-full">
-                  {isEditing ? (
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Textarea
-                              placeholder={task?.description}
-                              {...field}
-                              className="w-full"
-                            ></Textarea>
-                          </FormControl>
-                          <FormMessage>{form.formState.errors.description?.message}</FormMessage>
-                        </FormItem>
-                      )}
-                    />
-                  ) : (
-                    <p
-                      style={{ color: task.isDone ? '#BFC0C9' : '#000000' }}
-                      className="w-[500px] break-words"
-                    >
-                      {task?.description}
-                    </p>
-                  )}
-                </div>
+                <TaskCardDescriptionBlock task={task} isEditing={isEditing} control={form.control} errors={form.formState.errors} />
+
 
                 <div className="flex items-start ml-4 w-32 group-hover:hidden">
                   {!isEditing && !task.isDone && (

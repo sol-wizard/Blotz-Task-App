@@ -2,6 +2,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import React from 'react';
 import TaskCard from './task-card';
 
+type TaskCardVariant = 'todo' | 'done' | 'overdue';
+//         
 const TaskCardContainer = ({ task, handleCheckboxChange, handleTaskEdit, handleTaskDelete, handleTaskDeleteUndo }) => {
   return (
     <div>
