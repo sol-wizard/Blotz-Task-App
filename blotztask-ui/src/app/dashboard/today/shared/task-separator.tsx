@@ -8,7 +8,7 @@ const TaskSeparator = ({
   className,
 }: {
   color?: string;
-  taskStatus: TaskCardStatus;
+  taskStatus?: TaskCardStatus;
   className?: string;
 }) => {
   
