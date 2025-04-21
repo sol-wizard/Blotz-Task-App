@@ -19,6 +19,7 @@ import { RawEditTaskDTO } from '../../../../../model/raw-edit-task-dto';
 import { TaskCardTitleBlock } from '../ui/task-card-title-block';
 import { TaskCardDescriptionBlock } from '../ui/task-card-description-block';
 import { TaskCardLabelBlock } from '../ui/task-card-label-block';
+import { TaskEditActions } from '../ui/task-card-edit-actions-block';
 
 export default function TaskCard({
   task,
@@ -83,25 +84,26 @@ export default function TaskCard({
             className="flex flex-col w-full bg-transparent px-6"
           >
             <div className="flex flex-col w-full bg-transparent px-6">
-            <TaskCardTitleBlock task={task} isEditing={isEditing} control={form.control} errors={form.formState.errors} />
+              <TaskCardTitleBlock task={task} isEditing={isEditing} control={form.control} errors={form.formState.errors} />
 
               <div className="flex w-full text-base text-gray-500 mt-2">
-                <TaskCardDescriptionBlock task={task} isEditing={isEditing} control={form.control} errors={form.formState.errors} />
-                <TaskCardLabelBlock task={task} isEditing={isEditing} />
-
-
-                {!isEditing && !task.isDone && (
-                  <div className="justify-end hidden ml-4 w-32 group-hover:flex">
-                    <button className="mx-2.5 p-0.5 hover:bg-[#DEE6FF] rounded-md" onClick={handleEditState}>
-                      <Pencil className="text-primary" size={20} />
-                    </button>
-                    <DeleteTaskDialog
-                      task={task}
-                      onDelete={onDelete}
-                      handleUndo={() => handleTaskDeleteUndo(task.id)}
-                    />
-                  </div>
-                )}
+                <TaskCardDescriptionBlock 
+                  task={task} 
+                  isEditing={isEditing} 
+                  control={form.control} 
+                  errors={form.formState.errors} 
+                />
+                <TaskCardLabelBlock 
+                  task={task} 
+                  isEditing={isEditing} 
+                />
+                <TaskEditActions 
+                  task={task} 
+                  isEditing={isEditing} 
+                  onEditToggle={handleEditState} 
+                  onDelete={onDelete} 
+                  onUndo={handleTaskDeleteUndo} 
+                />
               </div>
 
               {isEditing && (
