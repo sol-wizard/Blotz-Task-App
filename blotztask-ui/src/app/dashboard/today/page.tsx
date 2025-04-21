@@ -3,8 +3,8 @@
 import { useEffect } from 'react';
 import TodayHeader from './components/container/today-header';
 import TaskCard from './components/task-card';
-import AddTaskCard from './components/add-task-card';
-import { CompletedTaskViewer } from './components/completed-task-viewer';
+import AddTaskCardContainer from './components/container/add-task-card-container';
+import { CompletedTaskViewer } from './components/viewer/completed-task-viewer';
 import Divider from './components/ui/divider';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import {
@@ -49,7 +49,7 @@ export default function Today() {
         ) : (
           <>
             <TodayHeader tasks={todayTasks} />
-            <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
+            <AddTaskCardContainer onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
 
             <div className="flex items-start h-full">
               {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (

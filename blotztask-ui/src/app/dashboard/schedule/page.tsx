@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { useScheduleTaskActions, useScheduleTaskStore } from '../../store/schedule-task-store';
-import AddTaskCard from '../today/components/add-task-card';
+import AddTaskCardContainer from '../today/components/container/add-task-card-container';
 import ScheduleHeader from './components/schedule-header';
 import TaskCard from '../today/components/task-card';
 import SectionSeparator from './components/section-separator';
@@ -22,7 +22,7 @@ export default function Schedule() {
     <div>
       <ScheduleHeader />
       <p className="my-5" />
-      <AddTaskCard onAddTask={handleAddTask} />
+      <AddTaskCardContainer onAddTask={handleAddTask} />
       <p className="my-5" />
       <div>
         {overdueTasks.length !== 0 && (

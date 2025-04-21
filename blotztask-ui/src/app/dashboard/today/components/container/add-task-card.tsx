@@ -8,7 +8,7 @@ import AddTaskForm from '../../shared/add-task-form';
 
 type FormField = z.infer<typeof taskFormSchema>;
 
-const AddTaskContainer = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, onSubmit }) => {
+const AddTaskCard = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, onSubmit }) => {
   const form = useForm<FormField>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -51,4 +51,4 @@ const AddTaskContainer = ({ datePickerRef, labelPickerRef, timePickerRef, onCanc
   );
 };
 
-export default AddTaskContainer;
+export default AddTaskCard;
