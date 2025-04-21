@@ -1,5 +1,5 @@
 import SectionSeparator from '../../today/components/ui/section-separator';
-import TaskCard from '../../today/components/task-card';
+import TaskCardContainer from '../../today/components/task-card';
 
 export function TaskList({
   tasks,
@@ -12,13 +12,13 @@ export function TaskList({
     <div className="flex flex-col mt-10 w-full">
       {tasks.map((task) => (
         <div key={task.id} className="w-full mt-5">
-          <TaskCard
+          <TaskCardContainer
             task={task}
             handleCheckboxChange={handleCheckboxChange}
             handleTaskEdit={handleTaskEdit}
             handleTaskDelete={handleTaskDelete}
             handleTaskDeleteUndo={handleTaskDeleteUndo}
-          ></TaskCard>
+          ></TaskCardContainer>
           <SectionSeparator />
         </div>
       ))}

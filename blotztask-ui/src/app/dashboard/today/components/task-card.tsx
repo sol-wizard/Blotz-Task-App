@@ -2,7 +2,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import React from 'react';
 import TaskContent from './task-content';
 
-const TaskCard = ({ task, handleCheckboxChange, handleTaskEdit, handleTaskDelete, handleTaskDeleteUndo }) => {
+const TaskCardContainer = ({ task, handleCheckboxChange, handleTaskEdit, handleTaskDelete, handleTaskDeleteUndo }) => {
   return (
     <div>
       <div className="flex w-full">
@@ -24,4 +24,4 @@ const TaskCard = ({ task, handleCheckboxChange, handleTaskEdit, handleTaskDelete
   );
 };
 
-export default TaskCard;
+export default TaskCardContainer;

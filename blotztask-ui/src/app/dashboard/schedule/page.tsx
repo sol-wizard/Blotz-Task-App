@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useScheduleTaskActions, useScheduleTaskStore } from '../../store/schedule-task-store';
 import AddTaskCardContainer from '../today/components/container/add-task-card-container';
 import ScheduleHeader from './components/schedule-header';
-import TaskCard from '../today/components/task-card';
+import TaskCardContainer from '../today/components/task-card';
 import SectionSeparator from './components/section-separator';
 import SecondHeader2 from './components/secondheader2';
 import SecondHeader1 from './components/secondheader1';
@@ -32,7 +32,7 @@ export default function Schedule() {
             {overdueTasks.map((task) => {
               return (
                 <>
-                <TaskCard
+                <TaskCardContainer
                   key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
@@ -57,7 +57,7 @@ export default function Schedule() {
             {todayTasks.map((task) => {
               return (
                 <>
-                <TaskCard
+                <TaskCardContainer
                   key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
@@ -82,7 +82,7 @@ export default function Schedule() {
             {tomorrowTasks.map((task) => {
               return (
                 <>
-                <TaskCard
+                <TaskCardContainer
                   key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
@@ -107,7 +107,7 @@ export default function Schedule() {
             {weekTasks.map((task) => {
               return (
                 <>
-                <TaskCard
+                <TaskCardContainer
                   key={task.id}
                   task={task}
                   handleCheckboxChange={handleCheckboxChange}
@@ -134,7 +134,7 @@ export default function Schedule() {
                 {tasks.map((task) => {
                   return (
                     <>
-                    <TaskCard
+                    <TaskCardContainer
                       key={task.id}
                       task={task}
                       handleCheckboxChange={handleCheckboxChange}

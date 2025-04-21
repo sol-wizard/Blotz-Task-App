@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import TodayHeader from './components/container/today-header';
-import TaskCard from './components/task-card';
+import TaskCardContainer from './components/task-card';
 import AddTaskCardContainer from './components/container/add-task-card-container';
 import { CompletedTaskViewer } from './components/viewer/completed-task-viewer';
 import Divider from './components/ui/divider';
@@ -15,7 +15,7 @@ import {
   useTodayTasksIsLoading,
 } from '../../store/today-task-store';
 import SectionSeparator from './components/ui/section-separator';
-import DisplayNoTask from './components/display-no-task';
+import DisplayNoTask from './components/container/display-no-task';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
@@ -60,14 +60,14 @@ export default function Today() {
                   {incompleteTodayTasks.length > 0 ? (  
                     incompleteTodayTasks.map((task) => (  
                       <>
-                        <TaskCard
+                        <TaskCardContainer
                           key={task.id}
                           task={task}
                           handleCheckboxChange={handleCheckboxChange}
                           handleTaskEdit={handleEditTask}
                           handleTaskDelete={handleDeleteTask}
                           handleTaskDeleteUndo={handleTaskDeleteUndo}
-                        ></TaskCard>
+                        ></TaskCardContainer>
                         <SectionSeparator />
                       </>
                     ))
