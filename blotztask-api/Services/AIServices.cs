@@ -16,7 +16,7 @@ public class TaskGenerationAIService
         _labelService = labelService;
     }
 
-    public async Task<(List<ExtractedTaskDTO> Tasks, string? Message)> GenerateResponseAsync(string prompt)
+    public async Task<ExtractedTasksWrapperDTO> GenerateResponseAsync(string prompt)
     {
         List<LabelDTO> labels = await _labelService.GetAllLabelsAsync();
         var labelNames = labels.Select(label => label.Name).ToHashSet();
@@ -137,17 +137,30 @@ public class TaskGenerationAIService
                         .Select(t => handleExtractedTask(t, labels, labelNames))
                         .ToList();
 
-                    return (results, wrapper.Message);
+                    return new ExtractedTasksWrapperDTO
+                    {
+                        Tasks = results,
+                        Message = wrapper.Message
+                    };
                 }
             }
 
             Console.WriteLine("No valid function arguments received.");
-            return (new List<ExtractedTaskDTO>(), null);
+            return new ExtractedTasksWrapperDTO
+            {
+                Tasks = new List<ExtractedTaskDTO>(),
+                Message = null
+            };
+
         }
         catch (Exception ex)
         {
             Console.WriteLine($"An error occurred: {ex.Message}");
-            return (new List<ExtractedTaskDTO>(), null);
+            return new ExtractedTasksWrapperDTO
+            {
+                Tasks = new List<ExtractedTaskDTO>(),
+                Message = null
+            };
         }
     }
 
