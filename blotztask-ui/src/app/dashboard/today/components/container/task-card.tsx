@@ -76,7 +76,9 @@ export default function TaskCard({
   return (
     <div className="flex flex-col w-full ">
       <div className="flex flex-row w-full bg-transparent group mb-2">
-        <TaskSeparator color={task.label.color} taskStatus={status} />
+        <TaskSeparator 
+          color={task.label.color} 
+          taskStatus={status} />
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
