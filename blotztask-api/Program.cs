@@ -3,7 +3,7 @@ using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Security.KeyVault.Secrets;
 using BlotzTask.Data;
 using BlotzTask.Data.Entities;
-using BlotzTask.extension;
+using BlotzTask.Extension;
 using BlotzTask.Models.Validators;
 using BlotzTask.Services;
 using FluentValidation;
@@ -84,7 +84,7 @@ if (builder.Environment.IsProduction())
     builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(secretClient.GetSecret("db-string-connection").Value.Value.ToString()));
 }
 
-builder.Services.AddAzureOpenAI();
+builder.Services.AddAzureOpenAi();
 
 builder.Services.AddScoped<TaskGenerationAIService>();
 

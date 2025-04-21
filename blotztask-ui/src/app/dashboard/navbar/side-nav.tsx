@@ -1,6 +1,6 @@
 'use client';
 
-import { ListChecks, Home, ClipboardCheck, Plus, CalendarCheck, Bot } from 'lucide-react';
+import { ListChecks, ClipboardCheck, Plus, CalendarCheck, Bot } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -13,7 +13,6 @@ import {
   SidebarMenuButton,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { useSession } from 'next-auth/react';
 import { ProfileSectionButton } from './components/profile-section-button';
 import { Categories } from './components/categories';
 import { useEffect, useState } from 'react';
@@ -30,29 +29,26 @@ import { useSearchQuery, useSearchTaskActions } from '@/app/store/search-task-st
 import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
 import { addTaskItem } from '@/services/task-service';
 
-const authenticatedItems = [
+const menuItems = [
   { title: 'All Tasks', url: 'task-list', icon: ListChecks },
   { title: 'Today', url: 'today', icon: ClipboardCheck },
   { title: 'Schedule', url: 'schedule', icon: CalendarCheck },
 ];
 
-const guestItems = [{ title: 'Home', url: '/home', icon: Home }];
-const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
 const FEATURE_FLAG_KEY = 'aiEnabled';
 
 export function AppSidebar() {
-  const { data: session, status } = useSession();
   const { loadScheduleTasks } = useScheduleTaskActions();
   const { loadTodayTasks } = useTodayTaskActions();
   const pathname = usePathname();
   const [aiEnabled, setAiEnabled] = useState(false);
+  const { loadSearchTasks, setQuery } = useSearchTaskActions();
+  const query = useSearchQuery();
+  
   const handleSignOut = (e) => {
     e.preventDefault();
     window.location.href = '/api/auth/signout';
   };
-
-  // Determine which items to show based on session status
-  const items = status === 'loading' ? loadingItems : session ? authenticatedItems : guestItems;
 
   const [labels, setLabels] = useState<LabelDTO[]>([]);
 
@@ -77,9 +73,6 @@ export function AppSidebar() {
     setAiEnabled(value);
     localStorage.setItem(FEATURE_FLAG_KEY, value.toString());
   };
-
-  const { loadSearchTasks, setQuery } = useSearchTaskActions();
-  const query = useSearchQuery();
 
   const submitGlobalTask = async (data: RawAddTaskDTO) => {
     try {
@@ -132,7 +125,7 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               )}
 
-              {items.map((item) => (
+              {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     className={cn(
@@ -166,7 +159,6 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <ProfileSectionButton
-            session={session}
             onSignOut={handleSignOut}
             aiEnabled={aiEnabled}
             setAiEnabled={toggleAiFeature}

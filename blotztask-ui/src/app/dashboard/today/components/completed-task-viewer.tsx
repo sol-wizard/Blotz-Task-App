@@ -9,9 +9,9 @@ export function CompletedTaskViewer({
   handleTaskDeleteUndo,
 }) {
   return (
-    <div className="grid gap-6 w-full">
+    <>
       {completedTasks.length > 0 ? (
-        <div className="grid gap-6 w-full">
+        <div className="grid gap-4 w-full">
           {completedTasks.map((task) => (
             <>
               <TaskCard
@@ -29,6 +29,6 @@ export function CompletedTaskViewer({
       ) : (
         <p>No completed tasks for today!</p>
       )}
-    </div>
+    </>
   );
 }
