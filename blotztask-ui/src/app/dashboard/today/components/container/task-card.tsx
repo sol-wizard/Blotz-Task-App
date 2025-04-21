@@ -14,8 +14,11 @@ import { TaskCardLabelBlock } from '../ui/task-card-label-block';
 import { TaskEditActions } from '../ui/task-card-edit-actions-block';
 import { TaskCardEditFooter } from '../ui/task-card-edit-footer';
 
+export type TaskCardStatus = 'todo' | 'done';
+
 type TaskCardProps = {
   task: TaskDetailDTO;
+  status?: TaskCardStatus;   // optional, default to 'todo'
   onSubmit: (taskContent: RawEditTaskDTO) => void;
   onDelete: (taskId: number) => void;
   handleTaskDeleteUndo: (taskId: number) => void;
@@ -24,14 +27,15 @@ type TaskCardProps = {
 const defaultTaskFormValues = {
   title: '',
   description: '',
+  status: 'todo',
   date: new Date(),
   labelId: undefined,
   time: undefined,
 };
 
-
 export default function TaskCard({
   task,
+  status = 'todo',
   onSubmit,
   onDelete,
   handleTaskDeleteUndo,
@@ -72,7 +76,7 @@ export default function TaskCard({
   return (
     <div className="flex flex-col w-full ">
       <div className="flex flex-row w-full bg-transparent group mb-2">
-        <TaskSeparator color={task.label.color} isDone={task.isDone} />
+        <TaskSeparator color={task.label.color} taskStatus={status} />
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
@@ -82,7 +86,12 @@ export default function TaskCard({
             className="flex flex-col w-full bg-transparent px-6"
           >
             <div className="flex flex-col w-full bg-transparent px-6">
-              <TaskCardTitleBlock task={task} isEditing={isEditing} control={form.control} errors={form.formState.errors} />
+              <TaskCardTitleBlock 
+                task={task} 
+                isEditing={isEditing} 
+                control={form.control} 
+                errors={form.formState.errors} 
+              />
 
               <div className="flex w-full text-base text-gray-500 mt-2">
                 <TaskCardDescriptionBlock 

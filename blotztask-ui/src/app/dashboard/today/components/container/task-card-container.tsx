@@ -2,9 +2,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import React from 'react';
 import TaskCard from './task-card';
 
-type TaskCardVariant = 'todo' | 'done' | 'overdue';
-//         
-const TaskCardContainer = ({ task, handleCheckboxChange, handleTaskEdit, handleTaskDelete, handleTaskDeleteUndo }) => {
+
+const TaskCardContainer = ({ task, taskStatus, handleCheckboxChange, handleTaskEdit, handleTaskDelete, handleTaskDeleteUndo }) => {
   return (
     <div>
       <div className="flex w-full">
@@ -17,6 +16,7 @@ const TaskCardContainer = ({ task, handleCheckboxChange, handleTaskEdit, handleT
         </div>
         <TaskCard
           task={task}
+          status={taskStatus}
           onSubmit={handleTaskEdit}
           onDelete={(taskId) => handleTaskDelete(taskId)}
           handleTaskDeleteUndo={handleTaskDeleteUndo}

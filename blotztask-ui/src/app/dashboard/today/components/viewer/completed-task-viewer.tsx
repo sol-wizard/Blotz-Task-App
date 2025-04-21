@@ -17,6 +17,7 @@ export function CompletedTaskViewer({
               <TaskCardContainer
                 key={task.id}
                 task={task}
+                taskStatus="done"
                 handleCheckboxChange={handleCompletedCheckboxChange}
                 handleTaskEdit={handleTaskEdit}
                 handleTaskDelete={handleTaskDelete}
