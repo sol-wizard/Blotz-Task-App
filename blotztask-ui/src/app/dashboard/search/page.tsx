@@ -1,7 +1,7 @@
 'use client';
 import SearchTitle from './components/search-title';
 import { useFilteredTasks, useSearchQuery, useSearchTaskActions } from '../../store/search-task-store';
-import TaskCardContainer from '../today/components/task-card';
+import TaskCardContainer from '../today/components/task-card-container';
 import { Frown } from 'lucide-react';
 
 export default function Page() {

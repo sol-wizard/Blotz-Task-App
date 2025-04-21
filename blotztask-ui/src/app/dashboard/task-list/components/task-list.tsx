@@ -1,5 +1,5 @@
 import SectionSeparator from '../../today/components/ui/section-separator';
-import TaskCardContainer from '../../today/components/task-card';
+import TaskCardContainer from '../../today/components/task-card-container';
 
 export function TaskList({
   tasks,
