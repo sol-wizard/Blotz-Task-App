@@ -1,47 +1,44 @@
-import DateTag from '../ui/due-date-tag';
 import TaskSeparator from '../../shared/task-separator';
-import { Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from 'src/components/ui/task-card-input';
 import { useForm } from 'react-hook-form';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import { taskFormSchema } from '../../forms/task-form-schema';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { TaskDetailDTO } from '../../../../../model/task-detail-dto';
-import { CalendarForm } from '../../shared/calendar-form';
-import { LabelSelect } from '../../shared/label-select';
-import DeleteTaskDialog from './delete-dialog-content';
-import TimePicker from '@/components/ui/time-picker';
 import { format } from 'date-fns';
-import { RawEditTaskDTO } from '../../../../../model/raw-edit-task-dto';
+import type { TaskDetailDTO } from '../../../../../model/task-detail-dto';
+import type { RawEditTaskDTO } from '../../../../../model/raw-edit-task-dto';
 import { TaskCardTitleBlock } from '../ui/task-card-title-block';
 import { TaskCardDescriptionBlock } from '../ui/task-card-description-block';
 import { TaskCardLabelBlock } from '../ui/task-card-label-block';
 import { TaskEditActions } from '../ui/task-card-edit-actions-block';
 import { TaskCardEditFooter } from '../ui/task-card-edit-footer';
 
+type TaskCardProps = {
+  task: TaskDetailDTO;
+  onSubmit: (taskContent: RawEditTaskDTO) => void;
+  onDelete: (taskId: number) => void;
+  handleTaskDeleteUndo: (taskId: number) => void;
+};
+
+const defaultTaskFormValues = {
+  title: '',
+  description: '',
+  date: new Date(),
+  labelId: undefined,
+  time: undefined,
+};
+
+
 export default function TaskCard({
   task,
   onSubmit,
   onDelete,
   handleTaskDeleteUndo,
-}: {
-  task: TaskDetailDTO;
-  onSubmit: (taskContent: RawEditTaskDTO) => void;
-  onDelete: (taskId: number) => void;
-  handleTaskDeleteUndo: (taskId: number) => void;
-}) {
+}: TaskCardProps) {
   const form = useForm<z.infer<typeof taskFormSchema>>({
     resolver: zodResolver(taskFormSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      date: new Date(),
-      labelId: undefined,
-      time: undefined,
-    },
+    defaultValues: defaultTaskFormValues,
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -70,8 +67,8 @@ export default function TaskCard({
         time: format(new Date(task.dueDate), 'h:mm a'),
       });
     }
-  }, [task]);
-
+  }, [task, form]);
+  
   return (
     <div className="flex flex-col w-full ">
       <div className="flex flex-row w-full bg-transparent group mb-2">
