@@ -17,7 +17,7 @@ const TaskSeparator = ({
     todo: color || '#9698A7',
   };
 
-  const separatorColor = statusColorMap[taskStatus];
+  const separatorColor = statusColorMap[taskStatus] ?? color ?? '#9698A7';
 
   return (
     <Separator
