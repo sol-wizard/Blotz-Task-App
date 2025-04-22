@@ -18,7 +18,7 @@ export type TaskCardStatus = 'todo' | 'done';
 
 type TaskCardProps = {
   task: TaskDetailDTO;
-  status?: TaskCardStatus;   // optional, default to 'todo'
+  status?: TaskCardStatus; // optional, default to 'todo'
   onSubmit: (taskContent: RawEditTaskDTO) => void;
   onDelete: (taskId: number) => void;
   handleTaskDeleteUndo: (taskId: number) => void;
@@ -68,17 +68,15 @@ export default function TaskCard({
         description: task.description,
         date: new Date(task.dueDate),
         labelId: task.label.labelId,
-        time: format(new Date(task.dueDate), 'h:mm a'),
+        time: task.hasTime ? format(new Date(task.dueDate), 'h:mm a') : 'Time',
       });
     }
   }, [task, form]);
-  
+
   return (
     <div className="flex flex-col w-full ">
       <div className="flex flex-row w-full bg-transparent group mb-2">
-        <TaskSeparator 
-          color={task.label.color} 
-          taskStatus={status} />
+        <TaskSeparator color={task.label.color} taskStatus={status} />
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
@@ -88,39 +86,31 @@ export default function TaskCard({
             className="flex flex-col w-full bg-transparent px-6"
           >
             <div className="flex flex-col w-full bg-transparent px-6">
-              <TaskCardTitleBlock 
-                task={task} 
-                isEditing={isEditing} 
-                control={form.control} 
-                errors={form.formState.errors} 
+              <TaskCardTitleBlock
+                task={task}
+                isEditing={isEditing}
+                control={form.control}
+                errors={form.formState.errors}
               />
 
               <div className="flex w-full text-base text-gray-500 mt-2">
-                <TaskCardDescriptionBlock 
-                  task={task} 
-                  isEditing={isEditing} 
-                  control={form.control} 
-                  errors={form.formState.errors} 
+                <TaskCardDescriptionBlock
+                  task={task}
+                  isEditing={isEditing}
+                  control={form.control}
+                  errors={form.formState.errors}
                 />
-                <TaskCardLabelBlock 
-                  task={task} 
-                  isEditing={isEditing} 
-                />
-                <TaskEditActions 
-                  task={task} 
-                  isEditing={isEditing} 
-                  onEditToggle={handleEditState} 
-                  onDelete={onDelete} 
-                  onUndo={handleTaskDeleteUndo} 
+                <TaskCardLabelBlock task={task} isEditing={isEditing} />
+                <TaskEditActions
+                  task={task}
+                  isEditing={isEditing}
+                  onEditToggle={handleEditState}
+                  onDelete={onDelete}
+                  onUndo={handleTaskDeleteUndo}
                 />
               </div>
 
-              {isEditing && (
-                <TaskCardEditFooter 
-                  control={form.control} 
-                  onCancel={handleEditState} 
-                />
-              )}
+              {isEditing && <TaskCardEditFooter control={form.control} onCancel={handleEditState} />}
             </div>
           </form>
         </Form>

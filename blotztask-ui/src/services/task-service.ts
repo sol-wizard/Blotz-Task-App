@@ -37,10 +37,6 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
 
 export const addTaskItem = async (taskDetails: RawAddTaskDTO): Promise<TaskDetailDTO> => {
   const addTaskForm = mapRawAddTaskDTOtoAddTaskItemDTO(taskDetails);
-  const localDate = new Date(addTaskForm.dueDate); 
-  //TODO: Current reset all time to 0, due to the team still investigating how to handle the time zone
-  localDate.setHours(0, 0, 0, 0); 
-  const utcDate = localDate.toISOString();
   try {
     const result = await fetchWithAuth<TaskDetailDTO>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,
@@ -49,10 +45,7 @@ export const addTaskItem = async (taskDetails: RawAddTaskDTO): Promise<TaskDetai
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...addTaskForm,
-          dueDate: utcDate, // Direct conversion
-        }),
+        body: JSON.stringify(addTaskForm),
       }
     );
 
@@ -137,8 +130,7 @@ export const undoDeleteTask = async (taskId: number) => {
 
 export const fetchScheduleTasks = async (): Promise<ScheduledTasksDTO> => {
   try {
-
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone; 
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const todayDate = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
     const result = await fetchWithAuth<ScheduledTasksDTO>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/scheduled-tasks?timeZone=${encodeURIComponent(timeZone)}&todayDate=${encodeURIComponent(todayDate)}`,

@@ -7,16 +7,16 @@ import { parse, set } from 'date-fns';
 export const mapRawAddTaskDTOtoAddTaskItemDTO = (taskDetails: RawAddTaskDTO): AddTaskItemDTO => {
   let dateTime: string;
   let hasTime: boolean;
-  if (taskDetails.time) {
+  if (taskDetails.time != undefined) {
     const parsedTime = parse(taskDetails.time, 'h:mm a', new Date());
     const hours = parsedTime.getHours();
     const minutes = parsedTime.getMinutes();
     const dateWithTime = set(taskDetails.date, { hours, minutes });
     dateTime = dateWithTime.toISOString();
-    hasTime = false;
+    hasTime = true;
   } else {
     dateTime = taskDetails.date.toISOString();
-    hasTime = true;
+    hasTime = false;
   }
   const addTaskForm: AddTaskItemDTO = {
     title: taskDetails.title,
@@ -25,6 +25,7 @@ export const mapRawAddTaskDTOtoAddTaskItemDTO = (taskDetails: RawAddTaskDTO): Ad
     labelId: taskDetails.labelId ?? 6,
     hasTime: hasTime,
   };
+  console.log('addTaskForm:', addTaskForm);
   return addTaskForm;
 };
 
@@ -39,10 +40,10 @@ export const mapRawEditTaskDTOtoAddTaskItemDTO = (taskEditForm: RawEditTaskDTO):
 
     const dateWithTime = set(taskEditForm.date, { hours, minutes });
     dateTime = dateWithTime.toISOString();
-    hasTime = false;
+    hasTime = true;
   } else {
     dateTime = taskEditForm.date.toISOString();
-    hasTime = true;
+    hasTime = false;
   }
 
   const taskEditDetails: EditTaskItemDTO = {

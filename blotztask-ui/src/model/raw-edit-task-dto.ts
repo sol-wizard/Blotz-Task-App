@@ -6,5 +6,4 @@ export interface RawEditTaskDTO {
   labelId: number;
   date: Date;
   time: string;
-  hasTime: boolean;
 }
