@@ -4,4 +4,5 @@ export interface RawAddTaskDTO {
   labelId: number;
   date: Date;
   time: string;
+  hasTime: boolean;
 }
