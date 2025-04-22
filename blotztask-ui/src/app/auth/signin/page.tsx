@@ -53,16 +53,6 @@ const LoginPage = () => {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
-  
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: "url('/assets/images/sign_in.png')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      ></div>
 
       <div className="relative z-10 flex items-center justify-center min-h-screen">
       <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-96">
