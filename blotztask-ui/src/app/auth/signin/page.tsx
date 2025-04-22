@@ -52,7 +52,19 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-full justify-center flex flex-col items-center">
+    <div className="relative min-h-screen w-full overflow-hidden">
+  
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: "url('/assets/images/sign_in.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      ></div>
+
+      <div className="relative z-10 flex items-center justify-center min-h-screen">
       <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-96">
         <h1 className="text-2xl text-center font-medium text-blue-500">Welcome to Blotz</h1>
         <p className="text-center text-gray-600 text-sm"> Enter your email and password to start </p>
@@ -77,6 +89,8 @@ const LoginPage = () => {
         </form>
       </div>
     </div>
+  </div>
+
   );
 };
 
