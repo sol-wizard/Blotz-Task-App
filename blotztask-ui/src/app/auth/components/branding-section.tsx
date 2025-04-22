@@ -6,7 +6,7 @@ export default function BrandingSection() {
     <div className="flex-[2] relative hidden h-full flex-col items-center justify-center p-10 text-white dark:border-r lg:flex">
       <img
         src="/assets/images/logo.png"
-        className="w-320 h-auto mb-6" // 你可以调大小
+        className="w-320 h-auto mb-6" 
       />
     </div>
   );
