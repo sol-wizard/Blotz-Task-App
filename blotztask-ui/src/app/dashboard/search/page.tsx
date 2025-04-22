@@ -1,7 +1,7 @@
 'use client';
 import SearchTitle from './components/search-title';
 import { useFilteredTasks, useSearchQuery, useSearchTaskActions } from '../../store/search-task-store';
-import TaskCard from '../today/components/task-card';
+import TaskCardContainer from '../today/components/container/task-card-container';
 import { Frown } from 'lucide-react';
 
 export default function Page() {
@@ -16,13 +16,13 @@ export default function Page() {
       {query.length > 1 &&
         filteredTasks.map((task) => (
           <div key={task.id}>
-            <TaskCard
+            <TaskCardContainer
               task={task}
               handleCheckboxChange={handleCheckboxChange}
               handleTaskDelete={handleDeleteTask}
               handleTaskDeleteUndo={handleTaskDeleteUndo}
               handleTaskEdit={handleEditTask}
-            ></TaskCard>
+            ></TaskCardContainer>
           </div>
         ))}
 
