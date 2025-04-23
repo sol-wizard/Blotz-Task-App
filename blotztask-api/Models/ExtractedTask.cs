@@ -13,9 +13,6 @@ public class ExtractedTask
     [JsonPropertyName("due_date")]
     public string? DueDate { get; set; }
     
-    [JsonPropertyName("message")]
-    public string? Message { get; set; }
-    
     [JsonPropertyName("isValidTask")]
     public bool IsValidTask { get; set; }
 
