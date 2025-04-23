@@ -11,8 +11,6 @@ public class ExtractedTaskDTO
     [JsonPropertyName("due_date")]
     public string? DueDate { get; set; }
     
-    public string? Message { get; set; }
-    
     public bool IsValidTask { get; set; }
 
     public LabelDTO Label { get; set; }
