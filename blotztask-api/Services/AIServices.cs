@@ -202,10 +202,6 @@ public class TaskGenerationAIService
                 return null;
             }
 
-            Console.WriteLine($"[AI Debug] Tool Called: {toolCall.FunctionName}");
-            Console.WriteLine("[AI Debug] Raw FunctionArguments:");
-            Console.WriteLine(toolCall.FunctionArguments.ToString());
-
             var result = toolCall.FunctionArguments.ToObjectFromJson<T>();
 
             if (result == null && fallbackDeserializer != null)
