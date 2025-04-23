@@ -1,4 +1,4 @@
-namespace BlotzTask.extension;
+namespace BlotzTask.Extension;
 
 using Azure;
 using Azure.AI.OpenAI;
@@ -7,7 +7,7 @@ using OpenAI.Chat;
 
 public static class ServiceCollectionExtensions
 {
-        public static IServiceCollection AddAzureOpenAI(this IServiceCollection services)
+        public static IServiceCollection AddAzureOpenAi(this IServiceCollection services)
         {
             services.AddSingleton<ChatClient>(sp =>
             {
