@@ -18,8 +18,7 @@ public class TaskGenerationAIService
 
     public async Task<ExtractedTasksWrapperDTO> GenerateResponseAsync(string prompt)
     {
-        List<LabelDTO> labels = await _labelService.GetAllLabelsAsync();
-        var labelNames = labels.Select(label => label.Name).ToHashSet();
+        var (labels, labelNames) = await GetLabelInfoAsync();
 
         var messages = new List<ChatMessage>
         {
@@ -66,7 +65,75 @@ public class TaskGenerationAIService
             ")
         );
 
-        var extractTasksTool = ChatTool.CreateFunctionTool(
+        var tool = CreateExtractedTasksTool(labelNames);
+
+        var wrapper = await CallToolAndDeserializeAsync<ExtractedTasksWrapper>(
+            toolFunctionName: "extract_tasks",
+            messages: messages,
+            tool: tool);
+
+        return ConvertToWrapperDTO(wrapper, labels, labelNames);
+
+    }
+
+    public async Task<ExtractedTasksWrapperDTO> GenerateTasksFromGoalAsync(GoalToTasksRequest request)
+    {
+        var (labels, labelNames) = await GetLabelInfoAsync();
+        var messages = new List<ChatMessage>
+        {
+            new SystemChatMessage($@"
+            You are a task planning assistant. Today's date is {DateTime.UtcNow:yyyy-MM-dd}.
+            Your job is to break down a user's goal into multiple **meaningful and necessary** tasks using the `extract_tasks` function.
+
+            You MUST call the function with structured data. Never return plain text.
+
+            Each task must contain:
+            - `title`: A clear and focused title.
+            - `description`: A concise explanation of what to do.
+            - `due_date`: Estimated completion date in YYYY-MM-DD format, based on logical task flow and available time.
+            - `label`: One of the following categories: {string.Join(", ", labelNames)}.
+            - `isValidTask`: Set to true if this is a concrete and actionable task.
+
+            The final output should be an object like:
+            {{
+            ""tasks"": [ <list of task objects> ],
+            ""message"": ""A helpful message summarizing the task plan""
+            }}
+
+            Guidelines:
+            - The number of tasks should depend on the goal’s complexity, not on the number of available days.
+            - Use the provided duration only as a **soft time frame** to estimate due dates, not as a target for task count.
+            - You can use fewer tasks if the goal is simple, or more if it's complex.
+            - If the goal is vague, return an empty task list with a message asking for clarification.
+            "),
+            new UserChatMessage($"""
+            My goal is: {request.Goal}
+            I want to complete it in {request.DurationInDays} days.
+            Please help me plan actionable tasks.
+            """)
+        };
+
+        var tool = CreateExtractedTasksTool(labelNames);
+
+        var wrapper = await CallToolAndDeserializeAsync<ExtractedTasksWrapper>(
+            toolFunctionName: "extract_tasks",
+            messages: messages,
+            tool: tool);
+
+        return ConvertToWrapperDTO(wrapper, labels, labelNames);
+
+    }
+
+    private async Task<(List<LabelDTO> labels, HashSet<string> labelNames)> GetLabelInfoAsync()
+    {
+        var labels = await _labelService.GetAllLabelsAsync();
+        var labelNames = labels.Select(label => label.Name).ToHashSet();
+        return (labels, labelNames);
+    }
+
+    private ChatTool CreateExtractedTasksTool(HashSet<string> labelNames)
+    {
+        return ChatTool.CreateFunctionTool(
             functionName: "extract_tasks",
             functionDescription: "Extracts tasks details from the provided input and return a task array. ",
             functionParameters: BinaryData.FromObjectAsJson(new
@@ -101,66 +168,63 @@ public class TaskGenerationAIService
                             description = "Overall message to the user summarizing the result of task extraction."
                         }
                     },
-                    required = new[] { "tasks", "message" }
+                required = new[] { "tasks", "message" }
             })
         );
+    }
 
-        var options = new ChatCompletionOptions
+    private async Task<T?> CallToolAndDeserializeAsync<T>(
+        string toolFunctionName,
+        List<ChatMessage> messages,
+        ChatTool tool,
+        Func<string, T?>? fallbackDeserializer = null) where T : class
+    {
+        ChatCompletionOptions options = new()
         {
-            Tools = { extractTasksTool }
+            Tools = { tool }
         };
 
         try
         {
             ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, options);
 
-            // ✅ Log the full response to check what Azure OpenAI is returning
-            Console.WriteLine("Full AI Response:");
-            Console.WriteLine(JsonSerializer.Serialize(completion, new JsonSerializerOptions { WriteIndented = true }));
-
-            if (completion.ToolCalls.Count > 0)
+            if (completion.ToolCalls.Count == 0)
             {
-                var toolCall = completion.ToolCalls.FirstOrDefault(tc => tc.FunctionName == "extract_tasks");
-
-                if (toolCall != null)
-                {
-                    Console.WriteLine("Function Called: " + toolCall.FunctionName);
-                    Console.WriteLine("Raw Arguments: " + toolCall.FunctionArguments.ToString());
-
-                    var wrapper = toolCall.FunctionArguments
-                        .ToObjectFromJson<ExtractedTasksWrapper>()
-                        ?? throw new InvalidOperationException("Failed to parse tasks array.");
-
-                    Console.WriteLine("AI Message: " + wrapper.Message);
-
-                    var results = wrapper.Tasks
-                        .Select(t => handleExtractedTask(t, labels, labelNames))
-                        .ToList();
-
-                    return new ExtractedTasksWrapperDTO
-                    {
-                        Tasks = results,
-                        Message = wrapper.Message
-                    };
-                }
+                Console.WriteLine($"[AI Warning] No tool call triggered for '{toolFunctionName}'.");
+                return null;
             }
 
-            Console.WriteLine("No valid function arguments received.");
-            return new ExtractedTasksWrapperDTO
-            {
-                Tasks = new List<ExtractedTaskDTO>(),
-                Message = null
-            };
+            var toolCall = completion.ToolCalls.FirstOrDefault(tc => tc.FunctionName == toolFunctionName);
 
+            if (toolCall == null)
+            {
+                Console.WriteLine($"[AI Warning] Tool function '{toolFunctionName}' not found.");
+                return null;
+            }
+
+            Console.WriteLine($"[AI Debug] Tool Called: {toolCall.FunctionName}");
+            Console.WriteLine("[AI Debug] Raw FunctionArguments:");
+            Console.WriteLine(toolCall.FunctionArguments.ToString());
+
+            var result = toolCall.FunctionArguments.ToObjectFromJson<T>();
+
+            if (result == null && fallbackDeserializer != null)
+            {
+                Console.WriteLine("[AI Debug] Attempting fallback deserializer...");
+                result = fallbackDeserializer(toolCall.FunctionArguments.ToString());
+            }
+
+            if (result == null)
+            {
+                Console.WriteLine("[AI Error] Deserialization returned null.");
+            }
+
+            return result;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An error occurred: {ex.Message}");
-            return new ExtractedTasksWrapperDTO
-            {
-                Tasks = new List<ExtractedTaskDTO>(),
-                Message = null
-            };
+            Console.WriteLine($"[AI Error] Exception in tool call: {ex.Message}");
+            return null;
         }
     }
 
@@ -183,4 +247,32 @@ public class TaskGenerationAIService
             Label = labels.First(x => x.Name == extractedTask.label)
         };
     }
+
+    private ExtractedTasksWrapperDTO ConvertToWrapperDTO(
+        ExtractedTasksWrapper? wrapper,
+        List<LabelDTO> labels,
+        HashSet<string> labelNames,
+        string fallbackMessage = "AI failed to generate tasks.")
+    {
+        if (wrapper == null)
+        {
+            return new ExtractedTasksWrapperDTO
+            {
+                Message = fallbackMessage,
+                Tasks = new()
+            };
+        }
+
+        var results = wrapper.Tasks
+            .Select(t => handleExtractedTask(t, labels, labelNames))
+            .ToList();
+
+        return new ExtractedTasksWrapperDTO
+        {
+            Message = wrapper.Message,
+            Tasks = results
+        };
+    }
+
+
 }
