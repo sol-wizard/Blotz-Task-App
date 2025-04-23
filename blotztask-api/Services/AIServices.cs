@@ -16,24 +16,35 @@ public class TaskGenerationAIService
         _labelService = labelService;
     }
 
-    public async Task<ExtractedTaskDTO?> GenerateResponseAsync(string prompt)
+    public async Task<ExtractedTasksWrapperDTO> GenerateResponseAsync(string prompt)
     {
         List<LabelDTO> labels = await _labelService.GetAllLabelsAsync();
         var labelNames = labels.Select(label => label.Name).ToHashSet();
 
         var messages = new List<ChatMessage>
         {
-            new SystemChatMessage($@"
+            new UserChatMessage(prompt)
+        };
+        
+        messages.Insert(0, new SystemChatMessage($@"
             You are a task extraction assistant. Today's date is {DateTime.UtcNow:yyyy-MM-dd}. 
-            Always call the `extract_task` function with structured data. Never return plain text.
+            Please extract **all** tasks from the user input below and return a single JSON object with a `tasks` array.
+            Always call the `extract_tasks` function with structured data. Never return plain text.
 
-            Extract:
-            - `title`: A clear task title.
-            - `description`: A clear task description.
-            - `due_date`: A YYYY-MM-DD date, or null if not found.
-            - `message`: A helpful message to the user.
-            - `label`: A category label for the task.
-            - `isValidTask`: Set to true if the input clearly describes a task. Set to false if the input is vague or unclear.
+            Extract in the structure of: 
+            {{
+                ""tasks"": [
+                    {{
+                    ""title"": string,
+                    ""description"": string,
+                    ""due_date"": string (YYYY-MM-DD or null),
+                    ""label"": string, A category label for the task,
+                    ""isValidTask"": boolean, Set to true if the input clearly describes a task. Set to false if the input is vague or unclear
+                    }}
+                    // ... additional tasks if present
+                ],
+                ""message"": string, A helpful overall message to the user
+            }}
 
             Guidelines:
             - It's perfectly fine if a due date is missing. Just set `due_date` to null and include a message that you think is makesense
@@ -43,39 +54,60 @@ public class TaskGenerationAIService
             - Only set `isValidTask` to false if the input is clearly not a task or lacks any actionable meaning.
             
             - Keep the message consistent with `isValidTask`: if false, the message should ask the user to rephrase. If true, the message should confirm or guide.
+            
+            - You should split user input into multiple tasks if they describe more than one action, even if they are in a single sentence.
 
-            Always return all 4 fields: `title`, `due_date`, `message`, and `isValidTask`.
+            - Tasks can be separated by **and**, **then**, punctuation, or implied actions.
+            
+            - Each task object must include exactly these six fields. Even if only one task is found, it should still be inside the `tasks` array.
 
-            "),
-            new UserChatMessage(prompt)
-        };
+            - Return a single JSON object with two fields: `tasks` and `message`.
 
-        var extractTaskTool = ChatTool.CreateFunctionTool(
-            functionName: "extract_task",
-            functionDescription: "Extracts task details from the provided input.",
+            ")
+        );
+
+        var extractTasksTool = ChatTool.CreateFunctionTool(
+            functionName: "extract_tasks",
+            functionDescription: "Extracts tasks details from the provided input and return a task array. ",
             functionParameters: BinaryData.FromObjectAsJson(new
             {
                 type = "object",
-                properties = new
-                {
-                    title = new { type = "string", description = "Title of the task extracted from the user's input." },
-                    description = new { type = "string", description = "Description of the task extracted from or generated based on user's input."},
-                    due_date = new { type = "string", format = "date", description = "Due date of the task in YYYY-MM-DD format." },
-                    message = new { type = "string", description = "Optional message from the AI to the user. Leave null if not needed." },
-                    label = new { type = "string", description = $@"Category label for the task, which must correspond to one of the {string.Join(", ", labelNames)}." },
-                    isValidTask = new
+                    properties = new
                     {
-                        type = "boolean",
-                        description = "True if the input was understood as a task, false if it was unclear or vague."
-                    }
-                },
-                required = new[] { "title", "description", "due_date", "message", "label", "isValidTask" }
+                        tasks = new
+                        {
+                            type = "array",
+                            items = new
+                            {
+                                type = "object",
+                                properties = new
+                                {
+                                    title = new { type = "string", description = "Title of the task extracted from the user's input." },
+                                    description = new { type = "string", description = "Description of the task extracted from or generated based on user's input."},
+                                    due_date = new { type = "string", format = "date", description = "Due date of the task in YYYY-MM-DD format." },
+                                    label = new { type = "string", description = $@"Category label for the task, which must correspond to one of the {string.Join(", ", labelNames)}." },
+                                    isValidTask = new
+                                    {
+                                        type = "boolean",
+                                        description = "True if the input was understood as a task, false if it was unclear or vague."
+                                    },
+                                },
+                                required = new[] { "title", "description", "due_date", "label", "isValidTask" }
+                            }
+                        },
+                        message = new
+                        {
+                            type = "string",
+                            description = "Overall message to the user summarizing the result of task extraction."
+                        }
+                    },
+                    required = new[] { "tasks", "message" }
             })
         );
 
-        ChatCompletionOptions options = new()
+        var options = new ChatCompletionOptions
         {
-            Tools = { extractTaskTool }
+            Tools = { extractTasksTool }
         };
 
         try
@@ -88,37 +120,55 @@ public class TaskGenerationAIService
 
             if (completion.ToolCalls.Count > 0)
             {
-                var toolCall = completion.ToolCalls.FirstOrDefault(tc => tc.FunctionName == "extract_task");
+                var toolCall = completion.ToolCalls.FirstOrDefault(tc => tc.FunctionName == "extract_tasks");
 
                 if (toolCall != null)
                 {
                     Console.WriteLine("Function Called: " + toolCall.FunctionName);
                     Console.WriteLine("Raw Arguments: " + toolCall.FunctionArguments.ToString());
 
-                    // ✅ Deserialize correctly
-                    var extractedTask = toolCall.FunctionArguments.ToObjectFromJson<ExtractedTask>();
+                    var wrapper = toolCall.FunctionArguments
+                        .ToObjectFromJson<ExtractedTasksWrapper>()
+                        ?? throw new InvalidOperationException("Failed to parse tasks array.");
 
-                    if (extractedTask != null)
+                    Console.WriteLine("AI Message: " + wrapper.Message);
+
+                    var results = wrapper.Tasks
+                        .Select(t => handleExtractedTask(t, labels, labelNames))
+                        .ToList();
+
+                    return new ExtractedTasksWrapperDTO
                     {
-                        Console.WriteLine($"Extracted Task: Title={extractedTask.Title}, DueDate={extractedTask.DueDate}");
-                        return handleExtractedTask(extractedTask, labels, labelNames);
-                    }
-
+                        Tasks = results,
+                        Message = wrapper.Message
+                    };
                 }
             }
 
             Console.WriteLine("No valid function arguments received.");
-            return null;
+            return new ExtractedTasksWrapperDTO
+            {
+                Tasks = new List<ExtractedTaskDTO>(),
+                Message = null
+            };
+
         }
         catch (Exception ex)
         {
             Console.WriteLine($"An error occurred: {ex.Message}");
-            return null;
+            return new ExtractedTasksWrapperDTO
+            {
+                Tasks = new List<ExtractedTaskDTO>(),
+                Message = null
+            };
         }
     }
 
     private ExtractedTaskDTO handleExtractedTask(ExtractedTask? extractedTask, List<LabelDTO> labels, HashSet<string> labelNames)
     {
+        if (extractedTask is null)
+            throw new ArgumentNullException(nameof(extractedTask));
+
         if (!labelNames.Contains(extractedTask.label))
         {
             extractedTask.label = "Others";
@@ -129,9 +179,8 @@ public class TaskGenerationAIService
             Title = extractedTask.Title,
             Description = extractedTask.Description,
             DueDate = extractedTask.DueDate,
-            Message = extractedTask.Message,
             IsValidTask = extractedTask.IsValidTask,
-            Label = labels.FirstOrDefault(x => x.Name == extractedTask.label)
+            Label = labels.First(x => x.Name == extractedTask.label)
         };
     }
 }

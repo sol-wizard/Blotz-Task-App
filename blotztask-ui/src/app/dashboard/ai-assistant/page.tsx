@@ -6,31 +6,31 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import LoadingSpinner from '@/components/ui/loading-spinner';
-import Divider from '../today/components/ui/divider';
-import { ExtractedTask } from '@/model/extracted-task-dto';
 import { generateAiTask } from '@/services/ai-service';
 import { addTaskItem } from '@/services/task-service';
 import { mapExtractedTaskToAddTaskDTO } from './util/map-extracted-to-add-task';
+import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import Divider from '../today/components/ui/divider';
 
 export default function AiAssistant() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
-  const [extractedTask, setExtractedTask] = useState<ExtractedTask | null>(null);
+  const [extractedTasks, setExtractedTasks] = useState<ExtractedTasksWrapperDTO | null>(null);
   const [adding, setAdding] = useState(false);
-  const [addSuccess, setSaveSuccess] = useState(false);
+  const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
-    setExtractedTask(null);
-    setSaveSuccess(false);
+    setExtractedTasks(null);
+    setAddedTaskIndices(new Set());
     setLoading(true);
 
     try {
       const task = await generateAiTask(prompt);
-      setExtractedTask(task);
+      setExtractedTasks(task);
     } catch (error) {
       console.error('Failed to generate task:', error);
     } finally {
@@ -38,8 +38,8 @@ export default function AiAssistant() {
     }
   };
 
-  const handleAddTask = async () => {
-    if (!extractedTask) return;
+  const handleAddTask = async (extractedTask, index) => {
+    if (!extractedTasks) return;
 
     setAdding(true);
 
@@ -47,7 +47,7 @@ export default function AiAssistant() {
       const tasktoAdd = mapExtractedTaskToAddTaskDTO(extractedTask);
 
       await addTaskItem(tasktoAdd);
-      setSaveSuccess(true);
+      setAddedTaskIndices((prev) => new Set(prev).add(index));
     } catch (error) {
       console.error('Failed to save task:', error);
     } finally {
@@ -86,18 +86,24 @@ export default function AiAssistant() {
         </div>
       )}
 
-      {!loading && extractedTask && (
-        <>
-          <Alert className="bg-blue-50 border-blue-300 text-blue-800">
-            <Info className="h-4 w-4" />
-            <AlertTitle>AI Assistant 🤖</AlertTitle>
-            <AlertDescription>{extractedTask.message}</AlertDescription>
-          </Alert>
+      {extractedTasks?.message && (
+        <Alert className="bg-blue-50 border-blue-300 text-blue-800 flex items-start gap-2">
+          <Info className="h-4 w-4 mt-1" />
+          <div>
+            <AlertTitle className="font-semibold">AI Assistant 🤖</AlertTitle>
+            <AlertDescription className="text-sm">{extractedTasks.message}</AlertDescription>
+          </div>
+        </Alert>
+      )}
 
-          {extractedTask.isValidTask && (
+      {extractedTasks?.tasks?.length !== 0 &&
+        extractedTasks?.tasks
+          .filter((t) => t.isValidTask)
+          .map((extractedTask, index) => (
             <Card
+              key={index}
               className={`p-4 shadow-md space-y-2 border-2 rounded-xl transition-all ${
-                addSuccess ? 'border-green-400 bg-green-50' : 'border-zinc-200'
+                 addedTaskIndices.has(index) ? 'border-green-400 bg-green-50' : 'border-zinc-200'
               }`}
             >
               <h2 className="text-lg font-semibold text-zinc-800">{extractedTask.title}</h2>
@@ -120,21 +126,20 @@ export default function AiAssistant() {
               <Button
                 size="sm"
                 className={`mt-2 w-fit flex items-center gap-2 rounded-md font-medium transition ${
-                  addSuccess
+                  addedTaskIndices.has(index)
                     ? 'bg-gray-200 text-gray-500 border border-gray-300 cursor-not-allowed opacity-60'
                     : 'bg-violet-600 text-white hover:bg-violet-700'
                 }`}
-                onClick={handleAddTask}
-                disabled={adding || addSuccess}
+                onClick={() => handleAddTask(extractedTask, index)}
+                disabled={adding || addedTaskIndices.has(index)}
               >
-                {addSuccess ? '✅ Added' : adding ? 'Adding...' : 'Add Task'}
+                {addedTaskIndices.has(index) ? '✅ Added' : adding ? 'Adding...' : 'Add Task'}
               </Button>
             </Card>
-          )}
-        </>
-      )}
+          ))}
+      
 
-      {!loading && !extractedTask && <p className="text-zinc-400 text-sm italic">No task generated yet.</p>}
+      {!loading && !extractedTasks && <p className="text-zinc-400 text-sm italic">No task generated yet.</p>}
     </div>
   );
 }
