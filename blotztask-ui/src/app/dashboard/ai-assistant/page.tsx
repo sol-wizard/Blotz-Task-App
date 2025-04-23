@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import LoadingSpinner from '@/components/ui/loading-spinner';
-import Divider from '../today/components/divider';
 import { generateAiTask } from '@/services/ai-service';
 import { addTaskItem } from '@/services/task-service';
 import { mapExtractedTaskToAddTaskDTO } from './util/map-extracted-to-add-task';
 import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import Divider from '../today/components/ui/divider';
 
 export default function AiAssistant() {
   const [prompt, setPrompt] = useState('');
