@@ -76,6 +76,9 @@ const LoginPage = () => {
           <Button className={styles.submitButton} type="submit" disabled={isSubmitting}>
             {isSubmitting ? <LoadingSpinner className="text-[4px] mx-10" variant="white" /> : 'Log in'}
           </Button>
+          <p className="text-center text-sm text-gray-500 mt-4">
+            Don’t have an account? <a href="/auth/signup" className="text-blue-500 underline">Sign up</a>
+          </p>
         </form>
       </div>
     </div>
