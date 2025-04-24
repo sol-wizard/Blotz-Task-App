@@ -103,7 +103,7 @@ export default function AiAssistant() {
             <Card
               key={index}
               className={`p-4 shadow-md space-y-2 border-2 rounded-xl transition-all ${
-                 addedTaskIndices.has(index) ? 'border-green-400 bg-green-50' : 'border-zinc-200'
+                addedTaskIndices.has(index) ? 'border-green-400 bg-green-50' : 'border-zinc-200'
               }`}
             >
               <h2 className="text-lg font-semibold text-zinc-800">{extractedTask.title}</h2>
@@ -118,9 +118,7 @@ export default function AiAssistant() {
                   className="h-4 w-4 rounded-full"
                   style={{ backgroundColor: extractedTask.label.color || 'green' }}
                 ></span>
-                <span className="ml-2 font-bold">
-                  {extractedTask.label.name || 'Others'}
-                </span>
+                <span className="ml-2 font-bold">{extractedTask.label.name || 'Others'}</span>
               </p>
 
               <Button
@@ -137,7 +135,6 @@ export default function AiAssistant() {
               </Button>
             </Card>
           ))}
-      
 
       {!loading && !extractedTasks && <p className="text-zinc-400 text-sm italic">No task generated yet.</p>}
     </div>

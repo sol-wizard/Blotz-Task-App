@@ -1,14 +1,25 @@
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { format } from 'node_modules/date-fns/format';
+import { TaskCardStatus } from '../container/task-card';
+import { cn } from '@/lib/utils';
+import { CircleAlertIcon } from 'lucide-react';
 
-const DateTag = ({ task }: { task: TaskDetailDTO }) => {
+const DateTag = ({ task, taskStatus }: { task: TaskDetailDTO; taskStatus?: TaskCardStatus }) => {
+  const statusVariants = {
+    done: 'bg-transparent text-[#BFC0C9]',
+    todo: 'bg-[#E5E7EB] text-[#6B7280]',
+    overdue: 'bg-transparent text-[#6B7280]',
+  };
+  const statusClass = statusVariants[taskStatus] || statusVariants.todo;
+
   return (
-    <div
-      className="flex items-center justify-center w-40 
-                 text-xs rounded-full"
-      style={{ background: task.isDone ? undefined : '#E5E7EB', color: task.isDone ? '#BFC0C9' : '#6B7280' }}
-    >
-      Due day - {format(new Date(task.dueDate), 'MM/dd/yyyy')}
+    <div className={cn('flex items-center justify-center w-40 text-xs rounded-full', statusClass)}>
+      {taskStatus === 'overdue' && (
+        <span>
+          <CircleAlertIcon color="#fff" fill="#ef4444" />
+        </span>
+      )}
+      <span className="pl-1">Due day - {format(new Date(task.dueDate), 'MM/dd/yyyy')}</span>
     </div>
   );
 };

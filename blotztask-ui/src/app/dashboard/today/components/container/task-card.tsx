@@ -13,8 +13,9 @@ import { TaskCardDescriptionBlock } from '../ui/task-card-description-block';
 import { TaskCardLabelBlock } from '../ui/task-card-label-block';
 import { TaskEditActions } from '../ui/task-card-edit-actions-block';
 import { TaskCardEditFooter } from '../ui/task-card-edit-footer';
+import { cn } from '@/lib/utils';
 
-export type TaskCardStatus = 'todo' | 'done';
+export type TaskCardStatus = 'todo' | 'done' | 'overdue';
 
 type TaskCardProps = {
   task: TaskDetailDTO;
@@ -72,9 +73,17 @@ export default function TaskCard({
       });
     }
   }, [task, form]);
+
+  const bgTaskCard = {
+    overdue: 'bg-red-50',
+    todo: 'bg-transparent',
+    done: 'bg-transparent',
+  };
+
+  const bgTaskCardstatusClass = bgTaskCard[status] || bgTaskCard.todo;
   
   return (
-    <div className="flex flex-col w-full ">
+    <div className={cn("flex flex-col w-full", bgTaskCardstatusClass)}>
       <div className="flex flex-row w-full bg-transparent group mb-2">
         <TaskSeparator 
           color={task.label.color} 
@@ -90,6 +99,7 @@ export default function TaskCard({
             <div className="flex flex-col w-full bg-transparent px-6">
               <TaskCardTitleBlock 
                 task={task} 
+                taskStatus={status}
                 isEditing={isEditing} 
                 control={form.control} 
                 errors={form.formState.errors} 
@@ -98,6 +108,7 @@ export default function TaskCard({
               <div className="flex w-full text-base text-gray-500 mt-2">
                 <TaskCardDescriptionBlock 
                   task={task} 
+                  taskStatus={status}
                   isEditing={isEditing} 
                   control={form.control} 
                   errors={form.formState.errors} 
