@@ -1,5 +1,6 @@
 import SectionSeparator from '../ui/section-separator';
 import TaskCardContainer from '../container/task-card-container';
+import { Fragment } from 'react';
 
 export function CompletedTaskViewer({
   completedTasks,
@@ -13,9 +14,8 @@ export function CompletedTaskViewer({
       {completedTasks.length > 0 ? (
         <div className="grid gap-4 w-full">
           {completedTasks.map((task) => (
-            <>
+            <Fragment key={task.id}>
               <TaskCardContainer
-                key={task.id}
                 task={task}
                 taskStatus="done"
                 handleCheckboxChange={handleCompletedCheckboxChange}
@@ -24,7 +24,7 @@ export function CompletedTaskViewer({
                 handleTaskDeleteUndo={handleTaskDeleteUndo}
               />
               <SectionSeparator />
-            </>
+            </Fragment>
           ))}
         </div>
       ) : (
