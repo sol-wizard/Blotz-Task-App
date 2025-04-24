@@ -2,23 +2,24 @@ import SectionSeparator from '../ui/section-separator';
 import TaskCardContainer from '../container/task-card-container';
 import { Fragment } from 'react';
 
-export function CompletedTaskViewer({
-  completedTasks,
-  handleCompletedCheckboxChange,
+export function TodoTaskViewer({
+  todoTasks,
+  handleTodoCheckboxChange,
   handleTaskEdit,
   handleTaskDelete,
   handleTaskDeleteUndo,
 }) {
   return (
     <>
-      {completedTasks.length > 0 ? (
+      {todoTasks.length > 0 ? (
         <div className="grid gap-4 w-full">
-          {completedTasks.map((task) => (
+          {todoTasks.map((task) => (
             <Fragment key={task.id}>
               <TaskCardContainer
+                key={task.id}
                 task={task}
-                taskStatus="done"
-                handleCheckboxChange={handleCompletedCheckboxChange}
+                taskStatus="todo"
+                handleCheckboxChange={handleTodoCheckboxChange}
                 handleTaskEdit={handleTaskEdit}
                 handleTaskDelete={handleTaskDelete}
                 handleTaskDeleteUndo={handleTaskDeleteUndo}
@@ -28,7 +29,7 @@ export function CompletedTaskViewer({
           ))}
         </div>
       ) : (
-        <p>No completed tasks for today!</p>
+        <p>No incomplete tasks for today!</p>
       )}
     </>
   );

@@ -21,26 +21,27 @@ export default function Schedule() {
   return (
     <div>
       <ScheduleHeader />
-      <p className="my-5" />
+
       <AddTaskCardContainer onAddTask={handleAddTask} />
-      <p className="my-5" />
+
       <div>
         {overdueTasks.length !== 0 && (
           <div>
-            <p className="my-5">Overdue</p>
+            <SecondHeader2 text="overdue" />
+
             <SectionSeparator />
             {overdueTasks.map((task) => {
               return (
                 <>
-                <TaskCardContainer
-                  key={task.id}
-                  task={task}
-                  handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleEditTask}
-                  handleTaskDelete={handleDeleteTask}
-                  handleTaskDeleteUndo={handleTaskDeleteUndo}
-                />
-                <SectionSeparator />
+                  <TaskCardContainer
+                    key={task.id}
+                    task={task}
+                    handleCheckboxChange={handleCheckboxChange}
+                    handleTaskEdit={handleEditTask}
+                    handleTaskDelete={handleDeleteTask}
+                    handleTaskDeleteUndo={handleTaskDeleteUndo}
+                  />
+                  <SectionSeparator />
                 </>
               );
             })}
@@ -51,21 +52,20 @@ export default function Schedule() {
       <div>
         {todayTasks.length !== 0 && (
           <div>
-            <SecondHeader1 text={"Today"}/>
-            <p className="my-5">Today</p>
+            <SecondHeader1 text={'Today'} />
             <SectionSeparator />
             {todayTasks.map((task) => {
               return (
                 <>
-                <TaskCardContainer
-                  key={task.id}
-                  task={task}
-                  handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleEditTask}
-                  handleTaskDelete={handleDeleteTask}
-                  handleTaskDeleteUndo={handleTaskDeleteUndo}
-                />
-                <SectionSeparator />
+                  <TaskCardContainer
+                    key={task.id}
+                    task={task}
+                    handleCheckboxChange={handleCheckboxChange}
+                    handleTaskEdit={handleEditTask}
+                    handleTaskDelete={handleDeleteTask}
+                    handleTaskDeleteUndo={handleTaskDeleteUndo}
+                  />
+                  <SectionSeparator />
                 </>
               );
             })}
@@ -76,21 +76,20 @@ export default function Schedule() {
       <div>
         {tomorrowTasks.length !== 0 && (
           <div>
-            <SecondHeader2 text={"Tomorrow"} />
-            <p className="my-5">Tomorrow</p>
+            <SecondHeader2 text={'Tomorrow'} />
             <SectionSeparator />
             {tomorrowTasks.map((task) => {
               return (
                 <>
-                <TaskCardContainer
-                  key={task.id}
-                  task={task}
-                  handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleEditTask}
-                  handleTaskDelete={handleDeleteTask}
-                  handleTaskDeleteUndo={handleTaskDeleteUndo}
-                />
-                <SectionSeparator />
+                  <TaskCardContainer
+                    key={task.id}
+                    task={task}
+                    handleCheckboxChange={handleCheckboxChange}
+                    handleTaskEdit={handleEditTask}
+                    handleTaskDelete={handleDeleteTask}
+                    handleTaskDeleteUndo={handleTaskDeleteUndo}
+                  />
+                  <SectionSeparator />
                 </>
               );
             })}
@@ -101,21 +100,20 @@ export default function Schedule() {
       <div>
         {weekTasks.length !== 0 && (
           <div>
-            <SecondHeader2 text={"This week"} />
-            <p className="my-5">This Week</p>
+            <SecondHeader2 text={'This week'} />
             <SectionSeparator />
             {weekTasks.map((task) => {
               return (
                 <>
-                <TaskCardContainer
-                  key={task.id}
-                  task={task}
-                  handleCheckboxChange={handleCheckboxChange}
-                  handleTaskEdit={handleEditTask}
-                  handleTaskDelete={handleDeleteTask}
-                  handleTaskDeleteUndo={handleTaskDeleteUndo}
-                />
-                <SectionSeparator />
+                  <TaskCardContainer
+                    key={task.id}
+                    task={task}
+                    handleCheckboxChange={handleCheckboxChange}
+                    handleTaskEdit={handleEditTask}
+                    handleTaskDelete={handleDeleteTask}
+                    handleTaskDeleteUndo={handleTaskDeleteUndo}
+                  />
+                  <SectionSeparator />
                 </>
               );
             })}
@@ -126,23 +124,29 @@ export default function Schedule() {
       <div>
         {Object.keys(monthTasks).length !== 0 && (
           <div>
-            <SecondHeader2 text={"This month"} /> 
             {Object.entries(monthTasks).map(([month, tasks]) => (
               <div key={month}>
-                <p className="my-5">{new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString('en-US', { month: 'long' })}</p>
+                <SecondHeader2
+                  text={new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString(
+                    'en-US',
+                    {
+                      month: 'long',
+                    }
+                  )}
+                />
                 <SectionSeparator />
                 {tasks.map((task) => {
                   return (
                     <>
-                    <TaskCardContainer
-                      key={task.id}
-                      task={task}
-                      handleCheckboxChange={handleCheckboxChange}
-                      handleTaskEdit={handleEditTask}
-                      handleTaskDelete={handleDeleteTask}
-                      handleTaskDeleteUndo={handleTaskDeleteUndo}
-                    />
-                    <SectionSeparator />
+                      <TaskCardContainer
+                        key={task.id}
+                        task={task}
+                        handleCheckboxChange={handleCheckboxChange}
+                        handleTaskEdit={handleEditTask}
+                        handleTaskDelete={handleDeleteTask}
+                        handleTaskDeleteUndo={handleTaskDeleteUndo}
+                      />
+                      <SectionSeparator />
                     </>
                   );
                 })}
