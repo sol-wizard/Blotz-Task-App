@@ -38,7 +38,7 @@ const mockOverdueTasks: TaskDetailDTO[] = [
       color: '#4444FF',
     },
     dueDate: new Date(new Date().setHours(new Date().getHours() - 5)),
-    hasTime: false, // 5 hours ago
+    hasTime: false,
   },
 ];
 
