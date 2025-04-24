@@ -1,7 +1,30 @@
 import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { TaskDetailDTO } from "@/model/task-detail-dto";
+import { TaskCardStatus } from "../container/task-card";
+import { Control, FieldErrors } from "react-hook-form";
+import { z } from "zod";
+import { taskFormSchema } from "../../forms/task-form-schema";
+import { cn } from "@/lib/utils";
 
-export const TaskCardDescriptionBlock = ({ task, isEditing, control, errors }) => (
+type TaskCardDescriptionBlockProps = {
+  task: TaskDetailDTO;
+  taskStatus?: TaskCardStatus;
+  isEditing: boolean;
+  control: Control<z.infer<typeof taskFormSchema>>;
+  errors: FieldErrors<z.infer<typeof taskFormSchema>>;
+};
+
+export const TaskCardDescriptionBlock = ({ task, taskStatus='todo',  isEditing, control, errors }: TaskCardDescriptionBlockProps) => {
+  const statusVariants = {
+    done: 'text-gray-400',
+    todo: 'text-black',
+    overdue: 'text-black',
+  };
+
+  const statusClass = statusVariants[taskStatus] || statusVariants.todo;
+
+  return (
   <div className="flex flex-col w-full">
     {isEditing ? (
       <FormField
@@ -18,8 +41,8 @@ export const TaskCardDescriptionBlock = ({ task, isEditing, control, errors }) =
       />
     //TODO : Remove the logic in css using the variant based design approach
     ) : (
-      <p className={`w-[500px] break-words ${task.isDone ? 'text-gray-400' : 'text-black'}`}>{task.description}</p>
+      <p className={cn('w-[500px] break-words', statusClass)}>{task.description}</p>
     )}
   </div>
-);
+);}
   
