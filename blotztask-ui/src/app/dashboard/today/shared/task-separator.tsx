@@ -15,6 +15,7 @@ const TaskSeparator = ({
   const statusColorMap: Record<TaskCardStatus, string> = {
     done: '#BFC0C9',
     todo: color || '#9698A7',
+    overdue: color || '#9698A7',
   };
 
   const separatorColor = statusColorMap[taskStatus] ?? color ?? '#9698A7';
