@@ -1,7 +1,11 @@
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { fetchWithAuth } from '@/utils/fetch-with-auth';
 import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
-import { mapRawAddTaskDTOtoAddTaskItemDTO, mapRawEditTaskDTOtoAddTaskItemDTO } from './util/util';
+import {
+  convertToDueDateFormat,
+  mapRawAddTaskDTOtoAddTaskItemDTO,
+  mapRawEditTaskDTOtoEditTaskItemDTO,
+} from './util/util';
 import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
 import { ScheduledTasksDTO } from '@/model/scheduled-tasks-dto';
 
@@ -36,7 +40,8 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
 };
 
 export const addTaskItem = async (taskDetails: RawAddTaskDTO): Promise<TaskDetailDTO> => {
-  const addTaskForm = mapRawAddTaskDTOtoAddTaskItemDTO(taskDetails);
+  const { dueDate, hasTime } = convertToDueDateFormat(taskDetails.date, taskDetails.time);
+  const addTaskForm = mapRawAddTaskDTOtoAddTaskItemDTO(taskDetails, dueDate, hasTime);
   try {
     const result = await fetchWithAuth<TaskDetailDTO>(
       `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,
@@ -76,14 +81,16 @@ export const updateTaskStatus = async (taskId: number): Promise<string> => {
 };
 
 export const editTask = async (taskEditForm: RawEditTaskDTO): Promise<string> => {
-  const taskEditDetails = mapRawEditTaskDTOtoAddTaskItemDTO(taskEditForm);
+  const { dueDate, hasTime } = convertToDueDateFormat(taskEditForm.date, taskEditForm.time);
+
+  const editTaskData = mapRawEditTaskDTOtoEditTaskItemDTO(taskEditForm, dueDate, hasTime);
 
   try {
     const result = await fetchWithAuth<string>(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/${taskEditDetails.id}`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/${editTaskData.id}`,
       {
         method: 'PUT',
-        body: JSON.stringify(taskEditDetails),
+        body: JSON.stringify(editTaskData),
         headers: {
           'Content-Type': 'application/json',
         },
