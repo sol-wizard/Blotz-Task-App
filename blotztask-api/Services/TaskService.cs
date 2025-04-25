@@ -46,7 +46,8 @@ public class TaskService : ITaskService
                     Description = x.Description,
                     DueDate = x.DueDate,
                     IsDone = x.IsDone,
-                    Label = new LabelDTO { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color }
+                    Label = new LabelDTO { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color },
+                    HasTime = x.HasTime,
                 })
                 .ToListAsync();
         }
@@ -74,7 +75,8 @@ public class TaskService : ITaskService
             IsDone = task.IsDone,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
-            Label = new LabelDTO { Name = task.Label.Name, Color = task.Label.Color }
+            Label = new LabelDTO { Name = task.Label.Name, Color = task.Label.Color },
+            HasTime = task.HasTime
         };
 
         return result;
@@ -98,7 +100,8 @@ public class TaskService : ITaskService
             UpdatedAt = taskItem.UpdatedAt,
             DeletedAt = DateTime.UtcNow, // Track when it was deleted
             UserId = taskItem.UserId,
-            LabelId = taskItem.LabelId
+            LabelId = taskItem.LabelId,
+            HasTime = taskItem.HasTime
         };
         try
         {
@@ -137,7 +140,8 @@ public class TaskService : ITaskService
                 LabelId = addTaskItem.LabelId,
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
+                HasTime = addTaskItem.HasTime
             };
 
             _dbContext.TaskItems.Add(newTask);
@@ -175,6 +179,7 @@ public class TaskService : ITaskService
             task.DueDate = editTaskItem.DueDate;
             task.UpdatedAt = DateTime.UtcNow;
             task.LabelId = editTaskItem.LabelId;
+            task.HasTime = editTaskItem.HasTime;
 
 
             _dbContext.TaskItems.Update(task);
@@ -246,7 +251,8 @@ public class TaskService : ITaskService
                         LabelId = task.Label.LabelId,
                         Name = task.Label.Name,
                         Color = task.Label.Color
-                    }
+                    },
+                    HasTime = task.HasTime
                 })
                 .ToListAsync();
         }
@@ -309,7 +315,8 @@ public class TaskService : ITaskService
             CreatedAt = deletedTask.CreatedAt,
             UpdatedAt = DateTime.UtcNow,
             UserId = deletedTask.UserId,
-            LabelId = deletedTask.LabelId
+            LabelId = deletedTask.LabelId,
+            HasTime = deletedTask.HasTime,
         };
         try
         {
@@ -352,7 +359,8 @@ public class TaskService : ITaskService
                     LabelId = task.Label.LabelId,
                     Name = task.Label.Name,
                     Color = task.Label.Color
-                }
+                },
+                HasTime = task.HasTime,
             })
             .ToListAsync();
         }
@@ -392,7 +400,8 @@ public class TaskService : ITaskService
                         LabelId = task.Label.LabelId,
                         Name = task.Label.Name,
                         Color = task.Label.Color
-                    }
+                    },
+                    HasTime = task.HasTime
                 })
                 .OrderBy(t => t.DueDate)
                 .ToListAsync();
@@ -484,7 +493,8 @@ public class TaskService : ITaskService
                         LabelId = t.Label.LabelId,
                         Name = t.Label.Name,
                         Color = t.Label.Color
-                    }
+                    },
+                    HasTime = t.HasTime
                 })
                 .ToListAsync();
         }

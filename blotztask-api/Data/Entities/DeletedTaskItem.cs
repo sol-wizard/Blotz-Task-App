@@ -22,5 +22,6 @@ namespace BlotzTask.Data.Entities
         public int LabelId { get; set; }
         [ForeignKey("LabelId")]
         public Label Label { get; set; }
+        public bool HasTime { get; set; }
     }
 }
