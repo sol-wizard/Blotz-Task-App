@@ -1,6 +1,11 @@
+using BlotzTask.Application;
+using BlotzTask.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+builder.Services.AddDataProtection();
+builder.AddApplicationServices();
+builder.AddInfrastructureServices();
 
 var app = builder.Build();
 

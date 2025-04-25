@@ -12,7 +12,7 @@ namespace BlotzTask.Domain.Entities
         public bool IsDone { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public string UserId { get; set; }
+        public required int UserId { get; set; }
         [ForeignKey("UserId")] public required User User { get; set; }
         public int LabelId { get; set; }
         [ForeignKey("LabelId")] public required Label Label { get; set; }
