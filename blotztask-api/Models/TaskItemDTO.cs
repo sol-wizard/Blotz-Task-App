@@ -10,5 +10,7 @@
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public LabelDTO Label { get; set; }
+        public bool HasTime { get; set; } 
+
     }
 }

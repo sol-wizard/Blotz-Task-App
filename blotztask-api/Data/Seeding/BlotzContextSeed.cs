@@ -112,7 +112,8 @@ public static class BlotzContextSeed
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 UserId = user.Id,
-                LabelId = labelWork.LabelId
+                LabelId = labelWork.LabelId,
+                HasTime = false
             },
             new TaskItem
             {
@@ -123,7 +124,8 @@ public static class BlotzContextSeed
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 UserId = user.Id,
-                LabelId = labelPersonal.LabelId
+                LabelId = labelPersonal.LabelId,
+                HasTime = false
             }
         );
         await context.SaveChangesAsync();

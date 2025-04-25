@@ -8,5 +8,6 @@ namespace BlotzTask.Models
         public DateTimeOffset DueDate { get; set; } 
         public bool IsDone { get; set; }
         public int LabelId { get; set; }
+        public bool HasTime { get; set; }
     }
 }

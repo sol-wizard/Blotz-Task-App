@@ -9,4 +9,5 @@ export interface TaskDetailDTO {
   isDone: boolean;
   label: LabelDTO;
   dueDate: Date;
+  hasTime: boolean;
 }
