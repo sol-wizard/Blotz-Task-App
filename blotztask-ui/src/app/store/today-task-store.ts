@@ -49,17 +49,11 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
         setLoading
       );
 
-      if (data && Array.isArray(data)) {
+      if (data) {
         set({
           todayTasks: data,
           incompleteTodayTasks: data.filter((task) => !task.isDone),
           completedTodayTasks: data.filter((task) => task.isDone),
-        });
-      } else {
-        set({
-          todayTasks: [],
-          incompleteTodayTasks: [],
-          completedTodayTasks: [],
         });
       }
     },
@@ -72,10 +66,8 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
         setLoading
       );
 
-      if (scheduleTaskStore && scheduleTaskStore.overdueTasks) {
+      if (scheduleTaskStore) {
         set({ overdueTasks: scheduleTaskStore.overdueTasks });
-      } else {
-        set({ overdueTasks: [] }); // Set empty array if no overdue tasks
       }
     },
 
