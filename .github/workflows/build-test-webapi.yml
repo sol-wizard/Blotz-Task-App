@@ -6,6 +6,8 @@ on:
       - 'main'
     types:
       - opened
+      - edited
+      - reopened
       - synchronize
 
 jobs:
