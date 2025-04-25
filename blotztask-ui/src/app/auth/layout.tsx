@@ -8,7 +8,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div
         className="absolute inset-0 z-0"
         style={{
-          //backgroundColor: 'green',
           backgroundImage: "url('/assets/images/sign_in.png')",
           backgroundSize: 'cover',
           backgroundRepeat: 'no-repeat',
