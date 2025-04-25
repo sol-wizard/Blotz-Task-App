@@ -25,6 +25,7 @@ const mockOverdueTasks: TaskDetailDTO[] = [
       color: '#FF4444',
     },
     dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), // 2 days ago
+    hasTime: false,
   },
   {
     id: -2,
@@ -36,7 +37,8 @@ const mockOverdueTasks: TaskDetailDTO[] = [
       name: 'Personal',
       color: '#4444FF',
     },
-    dueDate: new Date(new Date().setHours(new Date().getHours() - 5)), // 5 hours ago
+    dueDate: new Date(new Date().setHours(new Date().getHours() - 5)),
+    hasTime: false,
   },
 ];
 
