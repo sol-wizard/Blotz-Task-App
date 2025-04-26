@@ -1,12 +1,13 @@
 using BlotzTask.Domain.Entities;
 using BlotzTask.Infrastructure.Identity;
+using BlotzTask.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Infrastructure.Data;
 
 
-public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions options) : base(options) { }
 
@@ -14,6 +15,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Label> Labels { get; set; }
     public DbSet<DeletedTaskItem> DeletedTaskItems { get; set; }
 
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

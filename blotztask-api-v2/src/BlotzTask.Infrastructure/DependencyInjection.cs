@@ -1,4 +1,5 @@
-﻿using BlotzTask.Infrastructure.Data;
+﻿using BlotzTask.Application.Common.Interfaces;
+using BlotzTask.Infrastructure.Data;
 using BlotzTask.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,9 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(dbConnectionString));
         
+        // ✅ Bind the IApplicationDbContext interface to the concrete ApplicationDbContext implementation
+        services.AddScoped<IApplicationDbContext>(provider =>
+            provider.GetRequiredService<ApplicationDbContext>());
 
         // ✅ ASP.NET Core Identity setup
         services.AddIdentityCore<ApplicationUser>()
