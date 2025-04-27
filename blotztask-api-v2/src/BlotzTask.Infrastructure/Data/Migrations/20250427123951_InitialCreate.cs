@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace BlotzTask.Infrastructure.Migrations
+namespace BlotzTask.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -176,7 +176,7 @@ namespace BlotzTask.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "User",
+                name: "Users",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -188,14 +188,14 @@ namespace BlotzTask.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_User", x => x.Id);
+                    table.PrimaryKey("PK_Users", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_User_AspNetUsers_ApplicationUserId",
+                        name: "FK_Users_AspNetUsers_ApplicationUserId",
                         column: x => x.ApplicationUserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_User_AspNetUsers_IdentityUserId",
+                        name: "FK_Users_AspNetUsers_IdentityUserId",
                         column: x => x.IdentityUserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -227,9 +227,9 @@ namespace BlotzTask.Infrastructure.Migrations
                         principalColumn: "LabelId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_DeletedTaskItems_User_UserId",
+                        name: "FK_DeletedTaskItems_Users_UserId",
                         column: x => x.UserId,
-                        principalTable: "User",
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -259,9 +259,9 @@ namespace BlotzTask.Infrastructure.Migrations
                         principalColumn: "LabelId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TaskItems_User_UserId",
+                        name: "FK_TaskItems_Users_UserId",
                         column: x => x.UserId,
-                        principalTable: "User",
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -337,13 +337,13 @@ namespace BlotzTask.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_User_ApplicationUserId",
-                table: "User",
+                name: "IX_Users_ApplicationUserId",
+                table: "Users",
                 column: "ApplicationUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_User_IdentityUserId",
-                table: "User",
+                name: "IX_Users_IdentityUserId",
+                table: "Users",
                 column: "IdentityUserId",
                 unique: true);
         }
@@ -379,7 +379,7 @@ namespace BlotzTask.Infrastructure.Migrations
                 name: "Labels");
 
             migrationBuilder.DropTable(
-                name: "User");
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

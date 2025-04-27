@@ -9,10 +9,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace BlotzTask.Infrastructure.Migrations
+namespace BlotzTask.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250425224850_InitialCreate")]
+    [Migration("20250427123951_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -194,7 +194,7 @@ namespace BlotzTask.Infrastructure.Migrations
                     b.HasIndex("IdentityUserId")
                         .IsUnique();
 
-                    b.ToTable("User");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("BlotzTask.Infrastructure.Identity.ApplicationUser", b =>

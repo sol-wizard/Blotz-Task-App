@@ -1,6 +1,7 @@
 ﻿using BlotzTask.Application.Common.Interfaces;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Infrastructure.Identity;
+using BlotzTask.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -31,6 +32,9 @@ public static class DependencyInjection
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+        
+        // ✅ Service Register
+        services.AddScoped<IUserService, UserService>();
         
         // ✅ Authorization
         services.AddAuthorization();

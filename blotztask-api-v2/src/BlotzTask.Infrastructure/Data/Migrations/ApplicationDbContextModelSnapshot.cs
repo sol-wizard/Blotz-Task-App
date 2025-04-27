@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace BlotzTask.Infrastructure.Migrations
+namespace BlotzTask.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -61,7 +61,7 @@ namespace BlotzTask.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DeletedTaskItems", (string)null);
+                    b.ToTable("DeletedTaskItems");
                 });
 
             modelBuilder.Entity("BlotzTask.Domain.Entities.Label", b =>
@@ -86,7 +86,7 @@ namespace BlotzTask.Infrastructure.Migrations
 
                     b.HasKey("LabelId");
 
-                    b.ToTable("Labels", (string)null);
+                    b.ToTable("Labels");
 
                     b.HasData(
                         new
@@ -158,7 +158,7 @@ namespace BlotzTask.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TaskItems", (string)null);
+                    b.ToTable("TaskItems");
                 });
 
             modelBuilder.Entity("BlotzTask.Domain.Entities.User", b =>
@@ -191,7 +191,7 @@ namespace BlotzTask.Infrastructure.Migrations
                     b.HasIndex("IdentityUserId")
                         .IsUnique();
 
-                    b.ToTable("User", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("BlotzTask.Infrastructure.Identity.ApplicationUser", b =>

@@ -1,6 +1,7 @@
 using BlotzTask.Application;
 using BlotzTask.Infrastructure;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Infrastructure.Data.Seeding;
 using BlotzTaskAPI;
 using Serilog;
 
