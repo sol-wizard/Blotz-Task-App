@@ -5,4 +5,5 @@ export interface EditTaskItemDTO {
   dueDate: string;
   isDone: boolean;
   labelId: number;
+  hasTime: boolean;
 }
