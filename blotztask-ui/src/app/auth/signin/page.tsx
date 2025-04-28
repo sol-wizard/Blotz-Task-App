@@ -52,7 +52,9 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-full justify-center flex flex-col items-center">
+    <div className="relative min-h-screen w-full overflow-hidden">
+
+      <div className="relative z-10 flex items-center justify-center min-h-screen">
       <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-96">
         <h1 className="text-2xl text-center font-medium text-blue-500">Welcome to Blotz</h1>
         <p className="text-center text-gray-600 text-sm"> Enter your email and password to start </p>
@@ -74,9 +76,14 @@ const LoginPage = () => {
           <Button className={styles.submitButton} type="submit" disabled={isSubmitting}>
             {isSubmitting ? <LoadingSpinner className="text-[4px] mx-10" variant="white" /> : 'Log in'}
           </Button>
+          <p className="text-center text-sm text-gray-500 mt-4">
+            Don’t have an account? <a href="/auth/signup" className="text-blue-500 underline">Sign up</a>
+          </p>
         </form>
       </div>
     </div>
+  </div>
+
   );
 };
 

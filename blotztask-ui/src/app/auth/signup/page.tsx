@@ -147,6 +147,9 @@ const SignUpPage = () => {
           >
             {isSubmitting ? <LoadingSpinner className="text-[4px] mx-10" variant="white" /> : 'Sign Up'}
           </Button>
+          <p className="text-center text-sm text-gray-500 mt-4">
+            Already have an account? <a href="/auth/signin" className="text-blue-500 underline">Sign in</a>
+          </p>
         </form>
       </div>
     </div>
