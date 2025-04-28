@@ -11,7 +11,7 @@ import { addTaskItem } from '@/services/task-service';
 import { mapExtractedTaskToAddTaskDTO } from './util/map-extracted-to-add-task';
 import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Dumbbell, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import Divider from '../today/components/ui/divider';
 
 export default function AiAssistant() {
