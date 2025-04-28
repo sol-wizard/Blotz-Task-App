@@ -478,7 +478,7 @@ public class TaskService : ITaskService
         try
         {
             return await _dbContext.TaskItems
-                .Where(t => t.UserId == userId && t.DueDate <= DateTime.UtcNow)
+                .Where(t => t.UserId == userId && t.DueDate < DateTime.UtcNow && !t.IsDone)
                 .Include(t => t.Label)
                 .OrderBy(t => t.DueDate)
                 .Select(t => new TaskItemDTO
