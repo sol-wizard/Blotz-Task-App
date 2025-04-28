@@ -65,14 +65,16 @@ public class TaskGenerationAIService
             ")
         );
 
+        // tool schema -- what structure AI must follow
         var tool = CreateExtractedTasksTool(labelNames);
 
+        // 
         var resultWrapper = await CallToolAndDeserializeAsync<ExtractedTasksWrapper>(
             toolFunctionName: "extract_tasks",
             messages: messages,
             tool: tool);
 
-        return ConvertToWrapperDTO(wrapper, labels, labelNames);
+        return ConvertToWrapperDTO(resultWrapper, labels, labelNames);
 
     }
 
@@ -101,7 +103,7 @@ public class TaskGenerationAIService
             }}
 
             Guidelines:
-            - The number of tasks should depend on the goal’s complexity, not on the number of available days.
+            - The number of tasks should depend on the goal's complexity, not on the number of available days.
             - Use the provided duration only as a **soft time frame** to estimate due dates, not as a target for task count.
             - You can use fewer tasks if the goal is simple, or more if it's complex.
             - If the goal is vague, return an empty task list with a message asking for clarification.
@@ -131,6 +133,7 @@ public class TaskGenerationAIService
         return (labels, labelNames);
     }
 
+    // give AI a standard structure to follow
     private ChatTool CreateExtractedTasksTool(HashSet<string> labelNames)
     {
         return ChatTool.CreateFunctionTool(
@@ -177,8 +180,10 @@ public class TaskGenerationAIService
         string toolFunctionName,
         List<ChatMessage> messages,
         ChatTool tool,
+        // pass-in fallbackDeserializer function as backup when json converter fails
         Func<string, T?>? fallbackDeserializer = null) where T : class
     {
+        // tools (output structures) to choose from
         ChatCompletionOptions options = new()
         {
             Tools = { tool }
@@ -188,12 +193,14 @@ public class TaskGenerationAIService
         {
             ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, options);
 
+            // no tool is called
             if (completion.ToolCalls.Count == 0)
             {
                 Console.WriteLine($"[AI Warning] No tool call triggered for '{toolFunctionName}'.");
                 return null;
             }
 
+            // Find the specific tool name called by AI
             var toolCall = completion.ToolCalls.FirstOrDefault(tc => tc.FunctionName == toolFunctionName);
 
             if (toolCall == null)
@@ -202,8 +209,10 @@ public class TaskGenerationAIService
                 return null;
             }
 
+            // deserialize the tool function arguments into the target type T
             var result = toolCall.FunctionArguments.ToObjectFromJson<T>();
 
+            // If deserialization fails and a fallback deserializer is provided, attempt fallback
             if (result == null && fallbackDeserializer != null)
             {
                 Console.WriteLine("[AI Debug] Attempting fallback deserializer...");
@@ -225,7 +234,7 @@ public class TaskGenerationAIService
         }
     }
 
-    private ExtractedTaskDTO handleExtractedTask(ExtractedTask? extractedTask, List<LabelDTO> labels, HashSet<string> labelNames)
+    private ExtractedTaskDTO HandleExtractedTask(ExtractedTask? extractedTask, List<LabelDTO> labels, HashSet<string> labelNames)
     {
         if (extractedTask is null)
             throw new ArgumentNullException(nameof(extractedTask));
@@ -260,6 +269,7 @@ public class TaskGenerationAIService
             };
         }
 
+        // check if ai generated label is legal and convert them in DTO
         var results = wrapper.Tasks
             .Select(t => HandleExtractedTask(t, labels, labelNames))
             .ToList();
