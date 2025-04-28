@@ -47,6 +47,7 @@ export default function TaskCard({
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [currentLabelColor, setCurrentLabelColor] = useState(task.label.color);
   const handleEditState = () => setIsEditing(!isEditing);
 
   const handleFormSubmit = (data, task: TaskDetailDTO) => {
@@ -60,6 +61,7 @@ export default function TaskCard({
       time: data.time,
     };
     onSubmit(taskContent);
+    setCurrentLabelColor(task.label.color);
   };
 
   useEffect(() => {
@@ -71,8 +73,20 @@ export default function TaskCard({
         labelId: task.label.labelId,
         time: task.hasTime ? format(new Date(task.dueDate), 'h:mm a') : 'Time',
       });
+      setCurrentLabelColor(task.label.color);
     }
   }, [task, form]);
+
+  const handleCancelEdit = () => {
+    setCurrentLabelColor(task.label.color);
+    handleEditState();
+  };
+
+  const handleLabelChange = (labelColor: string) => {
+    if (isEditing) {
+      setCurrentLabelColor(labelColor);
+    }
+  };
 
   const bgTaskCard = {
     overdue: 'bg-red-50',
@@ -85,7 +99,7 @@ export default function TaskCard({
   return (
     <div className={cn('flex flex-col w-full', bgTaskCardstatusClass)}>
       <div className="flex flex-row w-full bg-transparent group mb-2">
-        <TaskSeparator color={task.label.color} taskStatus={status} />
+        <TaskSeparator color={isEditing ? currentLabelColor : task.label.color} taskStatus={status} />
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((data) => {
@@ -121,7 +135,13 @@ export default function TaskCard({
                 />
               </div>
 
-              {isEditing && <TaskCardEditFooter control={form.control} onCancel={handleEditState} />}
+              {isEditing && (
+                <TaskCardEditFooter 
+                  control={form.control} 
+                  onCancel={handleCancelEdit}
+                  onLabelChange={handleLabelChange} 
+                />
+              )}
             </div>
           </form>
         </Form>
