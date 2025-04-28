@@ -4,6 +4,7 @@ import {
   addTaskItem,
   deleteTask,
   editTask,
+  fetchOvedueTasks,
   fetchTaskItemsDueToday,
   undoDeleteTask,
   updateTaskStatus,
@@ -11,36 +12,6 @@ import {
 import { performTaskAndRefresh } from './shared/util';
 import { RawAddTaskDTO } from '../../model/raw-add-task-dto';
 import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
-
-// Mock overdue tasks for demonstration since backend is not ready
-const mockOverdueTasks: TaskDetailDTO[] = [
-  {
-    id: -1,
-    title: 'Overdue Task 1',
-    description: 'This task is overdue',
-    isDone: false,
-    label: {
-      labelId: 1,
-      name: 'Work',
-      color: '#FF4444',
-    },
-    dueDate: new Date(new Date().setDate(new Date().getDate() - 2)), // 2 days ago
-    hasTime: false,
-  },
-  {
-    id: -2,
-    title: 'Overdue Task 2',
-    description: 'Another overdue task',
-    isDone: false,
-    label: {
-      labelId: 2,
-      name: 'Personal',
-      color: '#4444FF',
-    },
-    dueDate: new Date(new Date().setHours(new Date().getHours() - 5)),
-    hasTime: false,
-  },
-];
 
 type TodayTaskStore = {
   todayTasks: TaskDetailDTO[];
@@ -89,40 +60,76 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
 
     loadOverdueTasks: async () => {
       const { setLoading } = get().actions;
-      setLoading(true);
-      try {
-        // Simulate fetching overdue tasks
-        set({ overdueTasks: mockOverdueTasks });
-      } catch (error) {
-        console.error('Failed to load overdue tasks:', error);
-      } finally {
-        setLoading(false);
+
+      const overdueTasks = await performTaskAndRefresh(
+        ()=> fetchOvedueTasks(),
+        async () => {},
+        setLoading
+      )
+
+      if (overdueTasks) {
+        set({ overdueTasks: overdueTasks });
       }
     },
 
     handleAddTask: async (taskDetails: RawAddTaskDTO) => {
-      const { loadTodayTasks, setLoading } = get().actions;
-      await performTaskAndRefresh(() => addTaskItem(taskDetails), loadTodayTasks, setLoading);
+      const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
+      await performTaskAndRefresh(
+        () => addTaskItem(taskDetails),
+        async () => {
+          await loadTodayTasks();
+          await loadOverdueTasks();
+        },
+        setLoading
+      );
     },
 
     handleEditTask: async (updatedTask: RawEditTaskDTO) => {
-      const { loadTodayTasks, setLoading } = get().actions;
-      await performTaskAndRefresh(() => editTask(updatedTask), loadTodayTasks, setLoading);
+      const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
+      await performTaskAndRefresh(
+        () => editTask(updatedTask),
+        async () => {
+          await loadTodayTasks();
+          await loadOverdueTasks();
+        },
+        setLoading
+      );
     },
 
     handleDeleteTask: async (taskId: number) => {
-      const { loadTodayTasks, setLoading } = get().actions;
-      await performTaskAndRefresh(() => deleteTask(taskId), loadTodayTasks, setLoading);
+      const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
+      await performTaskAndRefresh(
+        () => deleteTask(taskId),
+        async () => {
+          await loadTodayTasks();
+          await loadOverdueTasks();
+        },
+        setLoading
+      );
     },
 
     handleTaskDeleteUndo: async (taskId: number) => {
-      const { loadTodayTasks, setLoading } = get().actions;
-      await performTaskAndRefresh(() => undoDeleteTask(taskId), loadTodayTasks, setLoading);
+      const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
+      await performTaskAndRefresh(
+        () => undoDeleteTask(taskId),
+        async () => {
+          await loadTodayTasks();
+          await loadOverdueTasks();
+        },
+        setLoading
+      );
     },
 
     handleCheckboxChange: async (taskId: number) => {
-      const { loadTodayTasks, setLoading } = get().actions;
-      await performTaskAndRefresh(() => updateTaskStatus(taskId), loadTodayTasks, setLoading);
+      const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
+      await performTaskAndRefresh(
+        () => updateTaskStatus(taskId),
+        async () => {
+          await loadTodayTasks();
+          await loadOverdueTasks();
+        },
+        setLoading
+      );
     },
   },
 }));

@@ -161,3 +161,16 @@ export const fetchSearchedTasks = async (query: string): Promise<TaskDetailDTO[]
 
   return result;
 };
+
+export const fetchOvedueTasks = async () => {
+  const result = await fetchWithAuth<TaskDetailDTO[]>(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/due-tasks`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+  return result;
+};
