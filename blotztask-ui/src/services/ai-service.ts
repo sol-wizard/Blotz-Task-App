@@ -18,25 +18,3 @@ export async function generateAiTask(prompt: string): Promise<ExtractedTasksWrap
 
   return result.response;
 }
-
-interface GoalToTasksRequest {
-  goal: string;
-  durationInDays: number;
-}
-
-export async function generateTasksFromGoal(
-  goal: string,
-  durationInDays: number
-): Promise<ExtractedTasksWrapperDTO> {
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/AzureAi/generate-tasks-from-goal`;
-
-  const result = await fetchWithAuth<{ response: ExtractedTasksWrapperDTO }>(url, {
-    method: 'POST',
-    body: JSON.stringify({ goal, durationInDays } satisfies GoalToTasksRequest),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  return result.response;
-}
