@@ -8,31 +8,33 @@ import { Label } from '@/components/ui/label';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import { generateAiTask, generateAiTaskFromGoal } from '@/services/ai-service';
 import { addTaskItem } from '@/services/task-service';
-import { mapExtractedTaskToAddTaskDTO } from './util/map-extracted-to-add-task';
 import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import Divider from '../today/components/ui/divider';
+import { mapExtractedTaskToAddTaskDTO } from '../ai-assistant/util/map-extracted-to-add-task';
 
 export default function AiAssistant() {
-  const [prompt, setPrompt] = useState('');
+  const [goal, setGoal] = useState('');
+  const [duration, setDuration] = useState('');
   const [loading, setLoading] = useState(false);
   const [extractedTasks, setExtractedTasks] = useState<ExtractedTasksWrapperDTO | null>(null);
   const [adding, setAdding] = useState(false);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
 
-  const handleGenerate = async () => {
-    if (!prompt.trim()) return;
+  const handleGoalToTask = async () => {
+    if (!goal.trim()) return;
 
     setExtractedTasks(null);
     setAddedTaskIndices(new Set());
     setLoading(true);
 
     try {
-      const task = await generateAiTask(prompt);
+      const payload = { goal, durationInDays: Number(duration) };
+      const task = await generateAiTaskFromGoal(payload);
       setExtractedTasks(task);
     } catch (error) {
-      console.error('Failed to generate task:', error);
+      console.error('Failed to generate goal-to-task:', error);
     } finally {
       setLoading(false);
     }
@@ -58,23 +60,37 @@ export default function AiAssistant() {
   return (
     <div className="ml-5 flex flex-col gap-6 mt-8 w-3/4">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-zinc-800">AI Task Assistant 🤖</h1>
+        <h1 className="text-3xl font-bold text-zinc-800">Goal to Task 🤖</h1>
         <p className="text-zinc-500 text-sm">
           Describe what you want to do and I&apos;ll turn it into a task.
         </p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="prompt">Prompt to generate Task</Label>
+        <Label htmlFor="goal">Goal to generate Tasks</Label>
         <Input
-          id="prompt"
-          placeholder="e.g. Remind me to submit the report by Friday"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          id="goal"
+          placeholder="e.g. I want to travel to Japan in June"
+          value={goal}
+          onChange={(e) => setGoal(e.target.value)}
         />
+        <Label htmlFor="duration" className="mt-2">
+          Duration (in days)
+        </Label>
 
-        <Button onClick={handleGenerate} disabled={loading} className="w-fit mt-2">
-          Generate Task
+        <Input
+          id="duration"
+          placeholder="16"
+          type="number"
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+        />
+        <p className="text-sm text-muted-foreground">
+          Please specify how many days you want to spend to complete this goal.
+        </p>
+
+        <Button onClick={handleGoalToTask} disabled={loading} className="w-fit mt-2">
+          Goal to Task
         </Button>
       </div>
 
