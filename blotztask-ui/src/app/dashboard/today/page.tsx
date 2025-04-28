@@ -59,20 +59,6 @@ export default function Today() {
             <div className="flex items-start h-full">
               {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (
                 <div className="flex flex-col gap-4 w-full">
-                  {incompleteTodayTasks.length > 0 && (
-                    <>
-                      <SectionHeading text="To Do" />
-                      <SectionSeparator />
-                      <TodoTaskViewer
-                        todoTasks={incompleteTodayTasks}
-                        handleTodoCheckboxChange={handleCheckboxChange}
-                        handleTaskEdit={handleEditTask}
-                        handleTaskDelete={handleDeleteTask}
-                        handleTaskDeleteUndo={handleTaskDeleteUndo}
-                      />
-                    </>
-                  )}
-
                   {overdueTasks.length > 0 && (
                     <>
                       <SectionHeading text="Overdue" />
@@ -80,6 +66,20 @@ export default function Today() {
                       <OverdueTaskViewer
                         overdueTasks={overdueTasks}
                         handleOverdueCheckboxChange={handleCheckboxChange}
+                        handleTaskEdit={handleEditTask}
+                        handleTaskDelete={handleDeleteTask}
+                        handleTaskDeleteUndo={handleTaskDeleteUndo}
+                      />
+                    </>
+                  )}
+
+                  {incompleteTodayTasks.length > 0 && (
+                    <>
+                      <SectionHeading text="To Do" />
+                      <SectionSeparator />
+                      <TodoTaskViewer
+                        todoTasks={incompleteTodayTasks}
+                        handleTodoCheckboxChange={handleCheckboxChange}
                         handleTaskEdit={handleEditTask}
                         handleTaskDelete={handleDeleteTask}
                         handleTaskDeleteUndo={handleTaskDeleteUndo}
