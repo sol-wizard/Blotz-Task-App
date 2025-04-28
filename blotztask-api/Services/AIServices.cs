@@ -67,7 +67,7 @@ public class TaskGenerationAIService
 
         var tool = CreateExtractedTasksTool(labelNames);
 
-        var wrapper = await CallToolAndDeserializeAsync<ExtractedTasksWrapper>(
+        var resultWrapper = await CallToolAndDeserializeAsync<ExtractedTasksWrapper>(
             toolFunctionName: "extract_tasks",
             messages: messages,
             tool: tool);
