@@ -4,7 +4,7 @@ import {
   addTaskItem,
   deleteTask,
   editTask,
-  fetchScheduleTasks,
+  fetchOvedueTasks,
   fetchTaskItemsDueToday,
   undoDeleteTask,
   updateTaskStatus,
@@ -60,14 +60,15 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
 
     loadOverdueTasks: async () => {
       const { setLoading } = get().actions;
-      const scheduleTaskStore = await performTaskAndRefresh(
-        () => fetchScheduleTasks(),
+
+      const overdueTasks = await performTaskAndRefresh(
+        ()=> fetchOvedueTasks(),
         async () => {},
         setLoading
-      );
+      )
 
-      if (scheduleTaskStore) {
-        set({ overdueTasks: scheduleTaskStore.overdueTasks });
+      if (overdueTasks) {
+        set({ overdueTasks: overdueTasks });
       }
     },
 
