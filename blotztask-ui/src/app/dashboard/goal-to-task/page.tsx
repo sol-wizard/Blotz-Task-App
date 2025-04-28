@@ -13,6 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import Divider from '../today/components/ui/divider';
 import { mapExtractedTaskToAddTaskDTO } from '../ai-assistant/util/map-extracted-to-add-task';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function AiAssistant() {
   const [goal, setGoal] = useState('');
@@ -60,7 +61,7 @@ export default function AiAssistant() {
   return (
     <div className="ml-5 flex flex-col gap-6 mt-8 w-3/4">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-zinc-800">Goal to Task 🤖</h1>
+        <h1 className="text-3xl font-bold text-zinc-800">Goal to Task 🏃‍♂️</h1>
         <p className="text-zinc-500 text-sm">
           Describe what you want to do and I&apos;ll turn it into a task.
         </p>
@@ -78,16 +79,23 @@ export default function AiAssistant() {
           Duration (in days)
         </Label>
 
-        <Input
-          id="duration"
-          placeholder="16"
-          type="number"
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
-        />
-        <p className="text-sm text-muted-foreground">
-          Please specify how many days you want to spend to complete this goal.
-        </p>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Input
+              id="duration"
+              placeholder="16"
+              type="number"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              className="w-1/4"
+            />
+          </TooltipTrigger>
+          <TooltipContent className="bg-white" side="right" sideOffset={5}>
+            <p className="text-sm text-muted-foreground cursor-help">
+              Please specify how many days you want to spend to complete this goal.
+            </p>
+          </TooltipContent>
+        </Tooltip>
 
         <Button onClick={handleGoalToTask} disabled={loading} className="w-fit mt-2">
           Goal to Task

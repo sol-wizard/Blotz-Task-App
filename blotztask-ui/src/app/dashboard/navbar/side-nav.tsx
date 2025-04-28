@@ -131,7 +131,7 @@ export function AppSidebar() {
                         className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
                       >
                         <Bot className="text-indigo-600" />
-                        <span className="pl-3 text-base text-indigo-700 font-medium">Goal to task ✨</span>
+                        <span className="pl-3 text-base text-indigo-700 font-medium">Goal to task 🎯</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
