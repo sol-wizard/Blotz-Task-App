@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import LoadingSpinner from '@/components/ui/loading-spinner';
-import { generateAiTask, generateAiTaskFromGoal } from '@/services/ai-service';
+import { generateAiTaskFromGoal } from '@/services/ai-service';
 import { addTaskItem } from '@/services/task-service';
 import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
