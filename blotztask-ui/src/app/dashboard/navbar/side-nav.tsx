@@ -44,7 +44,7 @@ export function AppSidebar() {
   const [aiEnabled, setAiEnabled] = useState(false);
   const { loadSearchTasks, setQuery } = useSearchTaskActions();
   const query = useSearchQuery();
-  
+
   const handleSignOut = (e) => {
     e.preventDefault();
     window.location.href = '/api/auth/signout';
@@ -112,17 +112,30 @@ export function AppSidebar() {
               </SidebarMenuItem>
 
               {aiEnabled && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link
-                      href="ai-assistant"
-                      className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
-                    >
-                      <Bot className="text-indigo-600" />
-                      <span className="pl-3 text-base text-indigo-700 font-medium">AI Assistant ✨</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link
+                        href="ai-assistant"
+                        className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
+                      >
+                        <Bot className="text-indigo-600" />
+                        <span className="pl-3 text-base text-indigo-700 font-medium">AI Assistant ✨</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link
+                        href="goal-to-task"
+                        className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
+                      >
+                        <Bot className="text-indigo-600" />
+                        <span className="pl-3 text-base text-indigo-700 font-medium">Goal to task 🎯</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
               )}
 
               {menuItems.map((item) => (
@@ -146,8 +159,10 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarGroup className='mt-20'>
-          <SidebarGroupLabel className="text-lg font-semibold mb-2 ml-2 px-4 text-primary">My Tasks</SidebarGroupLabel>
+        <SidebarGroup className="mt-20">
+          <SidebarGroupLabel className="text-lg font-semibold mb-2 ml-2 px-4 text-primary">
+            My Tasks
+          </SidebarGroupLabel>
           <SidebarSeparator className="mb-2 bg-primary" />
           <SidebarGroupContent>
             <SidebarMenu>
