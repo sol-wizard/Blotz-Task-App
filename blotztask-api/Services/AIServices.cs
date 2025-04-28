@@ -261,7 +261,7 @@ public class TaskGenerationAIService
         }
 
         var results = wrapper.Tasks
-            .Select(t => handleExtractedTask(t, labels, labelNames))
+            .Select(t => HandleExtractedTask(t, labels, labelNames))
             .ToList();
 
         return new ExtractedTasksWrapperDTO
