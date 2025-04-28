@@ -6,16 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import LoadingSpinner from '@/components/ui/loading-spinner';
-import { generateAiTask } from '@/services/ai-service';
+import { generateAiTask, generateAiTaskFromGoal } from '@/services/ai-service';
 import { addTaskItem } from '@/services/task-service';
 import { mapExtractedTaskToAddTaskDTO } from './util/map-extracted-to-add-task';
 import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
+import { Dumbbell, Info } from 'lucide-react';
 import Divider from '../today/components/ui/divider';
 
 export default function AiAssistant() {
   const [prompt, setPrompt] = useState('');
+  const [goal, setGoal] = useState('');
+  const [duration, setDuration] = useState('');
   const [loading, setLoading] = useState(false);
   const [extractedTasks, setExtractedTasks] = useState<ExtractedTasksWrapperDTO | null>(null);
   const [adding, setAdding] = useState(false);
@@ -33,6 +35,24 @@ export default function AiAssistant() {
       setExtractedTasks(task);
     } catch (error) {
       console.error('Failed to generate task:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoalToTask = async () => {
+    if (!goal.trim()) return;
+
+    setExtractedTasks(null);
+    setAddedTaskIndices(new Set());
+    setLoading(true);
+
+    try {
+      const payload = { goal, durationInDays: Number(duration) };
+      const task = await generateAiTaskFromGoal(payload);
+      setExtractedTasks(task);
+    } catch (error) {
+      console.error('Failed to generate goal-to-task:', error);
     } finally {
       setLoading(false);
     }
@@ -72,8 +92,32 @@ export default function AiAssistant() {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
         />
+
         <Button onClick={handleGenerate} disabled={loading} className="w-fit mt-2">
           Generate Task
+        </Button>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="goal">Goal to generate Tasks</Label>
+        <Input
+          id="goal"
+          placeholder="e.g. I want to travel to Japan in June"
+          value={goal}
+          onChange={(e) => setGoal(e.target.value)}
+        />
+        <Label htmlFor="duration" className="mt-2">
+          Duration (in days)
+        </Label>
+
+        <Input
+          id="duration"
+          placeholder="16"
+          type="number"
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+        />
+        <Button onClick={handleGoalToTask} disabled={loading} className="w-fit mt-2">
+          Goal to Task
         </Button>
       </div>
 
