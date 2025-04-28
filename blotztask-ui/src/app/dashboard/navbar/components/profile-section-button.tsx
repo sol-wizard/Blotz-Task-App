@@ -2,14 +2,15 @@
 
 import { useState } from 'react';
 import { useEffect } from 'react';
-import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { SidebarMenuItem } from '@/components/ui/sidebar';
 import { NavUser, User } from './nav-user';
 import { fetchCurrentUserInfo } from '@/services/user-service';
 
-export function ProfileSectionButton({ session, onSignOut, aiEnabled, setAiEnabled }) {
+export function ProfileSectionButton({ onSignOut, aiEnabled, setAiEnabled }) {
   const [userInfo, setUserInfo] = useState<User>();
 
   const loadUserInfo = async () => {
+      //TODO: Move this to parent fetch logic to parent
     const result = await fetchCurrentUserInfo();
     setUserInfo({
       name: `${result.data.firstname} ${result.data.lastname}`,
@@ -18,26 +19,22 @@ export function ProfileSectionButton({ session, onSignOut, aiEnabled, setAiEnabl
     });
   };
 
+  //TODO: Move this to parent 
   useEffect(() => {
     loadUserInfo();
   }, []);
 
   return (
     <SidebarMenuItem>
-      {session ? (
-        userInfo && 
-        <NavUser 
-         user={userInfo} 
-         onSignOut={onSignOut} 
-         aiEnabled={aiEnabled}
-         onToggleAI ={setAiEnabled}
+      {userInfo ? (
+        <NavUser
+          user={userInfo}
+          onSignOut={onSignOut}
+          aiEnabled={aiEnabled}
+          onToggleAI={setAiEnabled}
         />
       ) : (
-        <SidebarMenuButton asChild className="bg-primary text-white">
-          <a href="/signin">
-            <span>Sign In</span>
-          </a>
-        </SidebarMenuButton>
+        <>Loading</>
       )}
     </SidebarMenuItem>
   );

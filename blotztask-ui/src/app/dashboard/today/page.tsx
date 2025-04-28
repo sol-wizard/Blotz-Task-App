@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import TodayHeader from './components/today-header';
-import TaskCard from './components/task-card';
-import AddTaskCard from './components/add-task-card';
-import { CompletedTaskViewer } from './components/completed-task-viewer';
-import Divider from './components/divider';
+import TodayHeader from './components/container/today-header';
+import AddTaskCardContainer from './components/container/add-task-card-container';
+import { CompletedTaskViewer } from './components/viewer/completed-task-viewer';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import {
   useCompletedTodayTasks,
@@ -13,18 +11,24 @@ import {
   useTodayTaskActions,
   useTodayTasks,
   useTodayTasksIsLoading,
+  useOverdueTasks,
 } from '../../store/today-task-store';
-import SectionSeparator from './components/section-separator';
-import DisplayNoTask from './components/display-no-task';
+import SectionSeparator from './components/ui/section-separator';
+import DisplayNoTask from './components/container/display-no-task';
+import SectionHeading from './components/ui/divider';
+import { TodoTaskViewer } from './components/viewer/todo-task-viewer';
+import { OverdueTaskViewer } from './components/viewer/overdue-task-viewer';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
+  const overdueTasks = useOverdueTasks();
   const incompleteTodayTasks = useIncompleteTodayTasks();
   const completedTodayTasks = useCompletedTodayTasks();
   const todayTasksIsLoading = useTodayTasksIsLoading();
 
   const {
     loadTodayTasks,
+    loadOverdueTasks,
     handleAddTask,
     handleEditTask,
     handleDeleteTask,
@@ -34,7 +38,8 @@ export default function Today() {
 
   useEffect(() => {
     loadTodayTasks();
-  }, [loadTodayTasks]);
+    loadOverdueTasks();
+  }, [loadTodayTasks, loadOverdueTasks]);
 
   return (
     <div className="ml-5 flex flex-col gap-12 h-full">
@@ -49,33 +54,42 @@ export default function Today() {
         ) : (
           <>
             <TodayHeader tasks={todayTasks} />
-            <AddTaskCard onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
+            <AddTaskCardContainer onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
 
             <div className="flex items-start h-full">
               {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (
-                <div className="flex flex-col gap-6 w-full">
-                  <Divider text="To Do" />
-                  <SectionSeparator />
-                  {incompleteTodayTasks.length > 0 ? (
-                    incompleteTodayTasks.map((task) => (
-                      <>
-                        <TaskCard
-                          key={task.id}
-                          task={task}
-                          handleCheckboxChange={handleCheckboxChange}
-                          handleTaskEdit={handleEditTask}
-                          handleTaskDelete={handleDeleteTask}
-                          handleTaskDeleteUndo={handleTaskDeleteUndo}
-                        ></TaskCard>
-                        <SectionSeparator />
-                      </>
-                    ))
-                  ) : (
-                    <p>No incomplete tasks for today!</p>
+                <div className="flex flex-col gap-4 w-full">
+                  {incompleteTodayTasks.length > 0 && (
+                    <>
+                      <SectionHeading text="To Do" />
+                      <SectionSeparator />
+                      <TodoTaskViewer
+                        todoTasks={incompleteTodayTasks}
+                        handleTodoCheckboxChange={handleCheckboxChange}
+                        handleTaskEdit={handleEditTask}
+                        handleTaskDelete={handleDeleteTask}
+                        handleTaskDeleteUndo={handleTaskDeleteUndo}
+                      />
+                    </>
                   )}
+
+                  {overdueTasks.length > 0 && (
+                    <>
+                      <SectionHeading text="Overdue" />
+                      <SectionSeparator />
+                      <OverdueTaskViewer
+                        overdueTasks={overdueTasks}
+                        handleOverdueCheckboxChange={handleCheckboxChange}
+                        handleTaskEdit={handleEditTask}
+                        handleTaskDelete={handleDeleteTask}
+                        handleTaskDeleteUndo={handleTaskDeleteUndo}
+                      />
+                    </>
+                  )}
+
                   {completedTodayTasks.length > 0 && (
                     <>
-                      <Divider text="Done" />
+                      <SectionHeading text="Done" />
                       <SectionSeparator />
                       <CompletedTaskViewer
                         completedTasks={completedTodayTasks}

@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
-import AddTaskContainer from './add-task-container';
+import AddTaskCard from './add-task-card';
 import { PlusIcon } from '@radix-ui/react-icons';
 import useClickOutside from '@/utils/use-multiple-click-away';
 
-const AddTaskCard = ({ onAddTask }) => {
+const AddTaskCardContainer = ({ onAddTask }) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const datePickerRef = useRef<HTMLDivElement>(null);
@@ -25,7 +25,7 @@ const AddTaskCard = ({ onAddTask }) => {
             <span className="ml-3 text-gray-400 font-semibold text-lg">Add a task</span>
           </div>
         ) : (
-          <AddTaskContainer
+          <AddTaskCard
             onSubmit={(taskDetails) => {
               onAddTask(taskDetails);
               setIsFormVisible(false);
@@ -41,4 +41,4 @@ const AddTaskCard = ({ onAddTask }) => {
   );
 };
 
-export default AddTaskCard;
+export default AddTaskCardContainer;

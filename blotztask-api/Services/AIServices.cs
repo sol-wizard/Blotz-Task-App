@@ -221,6 +221,7 @@ public class TaskGenerationAIService
         {
             Console.WriteLine($"[AI Error] Exception in tool call: {ex.Message}");
             return null;
+
         }
     }
 
