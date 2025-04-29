@@ -13,6 +13,7 @@ import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import Divider from '../today/components/ui/divider';
+import VoiceRecognizer from './external-services/voice-recognizer';
 
 export default function AiAssistant() {
   const [prompt, setPrompt] = useState('');
@@ -66,12 +67,20 @@ export default function AiAssistant() {
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="prompt">Prompt to generate Task</Label>
-        <Input
-          id="prompt"
-          placeholder="e.g. Remind me to submit the report by Friday"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-        />
+        <div className="flex gap-2 items-center">
+          <Input
+            id="prompt"
+            placeholder="e.g. Remind me to submit the report by Friday"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            className="flex-1" // make input stretch nicely
+          />
+          <VoiceRecognizer
+            onResult={(spokenText) => {
+              setPrompt(spokenText);
+            }}
+          />
+        </div>
 
         <Button onClick={handleGenerate} disabled={loading} className="w-fit mt-2">
           Generate Task
