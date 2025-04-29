@@ -9,10 +9,11 @@ export const TaskCardEditFooter = ({ control, onCancel }) => (
         <LabelSelect control={control} />
         <TimePicker control={control} />
       </div>
-      <div className="flex flex-row">
+  
+      <div className="flex flex-row ml-auto space-x-2">
         <button 
             type="button" 
-            className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20" 
+            className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 w-20" 
             onClick={onCancel}
         >
           Cancel
