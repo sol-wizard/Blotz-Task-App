@@ -36,6 +36,7 @@ const useSpeechRecognition = (onResult: (text: string) => void, onError?: (error
     try {
       setState(prev => ({ ...prev, isInitializing: true, error: null }));
 
+      //TODO: Find a solution in NEXT JS to store secret securely in prod website
       const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(
         process.env.NEXT_PUBLIC_AZURE_SPEECH_KEY || '',
         process.env.NEXT_PUBLIC_AZURE_SPEECH_REGION || ''
