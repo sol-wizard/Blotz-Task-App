@@ -10,17 +10,12 @@ export interface TaskFormValues {
   // Add other form fields as needed
 }
 
-export const TaskCardEditFooter = ({ control, onCancel, onLabelChange } : {control: Control<TaskFormValues>; onCancel: () => void; onLabelChange: (color: string) => void}) => (
+export const TaskCardEditFooter = ({ control, onCancel } : {control: Control<TaskFormValues>; onCancel: () => void; }) => (
     <div className="flex flex-row justify-between mt-4 mb-2">
       <div className="flex flex-row items-center">
         <CalendarForm control={control} />
         <LabelSelect
-          control={control}
-          onLabelChange={(labelDTO) => {
-            if (labelDTO && labelDTO.color) {
-              onLabelChange(labelDTO.color);
-            }
-          }} />
+          control={control} />
         <TimePicker control={control} />
       </div>
       <div className="flex flex-row">
