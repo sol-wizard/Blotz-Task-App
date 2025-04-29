@@ -20,7 +20,7 @@ const GlobalAddTaskForm = ({ handleSubmit }) => {
       description: '',
       date: new Date(),
       labelId: undefined,
-      time: '',
+      time: undefined,
     },
   });
 
