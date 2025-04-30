@@ -66,7 +66,7 @@ const SignUpPage = () => {
 
   return (
     <div className="h-full justify-center flex flex-col items-center">
-      <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-96">
+      <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-full max-w-md sm:mx-auto">
         <h1 className="text-2xl text-center font-medium text-blue-500">Create an account</h1>
         <p className="text-center text-gray-600 text-sm">Enter your email below to create your account</p>
         {errors.root && <AlertDestructive title="Error" description={errors.root?.message} />}
