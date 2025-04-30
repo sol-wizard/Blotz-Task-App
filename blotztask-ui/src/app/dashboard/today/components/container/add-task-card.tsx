@@ -30,7 +30,7 @@ const AddTaskCard = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, o
             labelPickerRef={labelPickerRef}
             timePickerRef={timePickerRef}
           />
-          <div className="flex flex-row h-8 ml-4 mt-20">
+          <div className="flex flex-row h-8 ml-4 mt-20 mr-12">
             <button
               className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20 hover:bg-gray-100"
               type="button"
