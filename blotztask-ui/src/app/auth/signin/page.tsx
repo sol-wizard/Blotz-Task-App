@@ -52,8 +52,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      <div className="relative z-10 flex items-center justify-center min-h-screen">
+    <div className="h-full justify-center flex flex-col items-center">
         <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-full max-w-md sm:mx-auto">
           <h1 className="text-2xl text-center font-medium text-blue-500">Welcome to Blotz</h1>
           <p className="text-center text-gray-600 text-sm"> Enter your email and password to start </p>
@@ -91,7 +90,6 @@ const LoginPage = () => {
           </form>
         </div>
       </div>
-    </div>
   );
 };
 
