@@ -1,12 +1,21 @@
 import TimePicker from "@/components/ui/time-picker";
 import { CalendarForm } from "../../shared/calendar-form";
 import { LabelSelect } from "../../shared/label-select";
+import { Control } from "react-hook-form";
 
-export const TaskCardEditFooter = ({ control, onCancel }) => (
+export interface TaskFormValues {
+  date?: Date;
+  time?: string;
+  label?: { id: string; name: string; color: string };
+  // Add other form fields as needed
+}
+
+export const TaskCardEditFooter = ({ control, onCancel } : {control: Control<TaskFormValues>; onCancel: () => void; }) => (
     <div className="flex flex-row justify-between mt-4 mb-2">
       <div className="flex flex-row items-center">
         <CalendarForm control={control} />
-        <LabelSelect control={control} />
+        <LabelSelect
+          control={control} />
         <TimePicker control={control} />
       </div>
       <div className="flex flex-row">
