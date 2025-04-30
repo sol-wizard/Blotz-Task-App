@@ -19,9 +19,11 @@ import { fetchAllLabel } from '@/services/label-service';
 export function LabelSelect({
   control,
   labelPickerRef,
+  onLabelChange,
 }: {
   control: Control;
   labelPickerRef?: React.RefObject<HTMLDivElement>;
+  onLabelChange?: (label: LabelDTO | null) => void;
 }) {
   const [labels, setLabels] = useState<LabelDTO[]>([]);
 
@@ -44,7 +46,18 @@ export function LabelSelect({
       name="labelId"
       render={({ field }) => (
         <FormItem>
-          <Select value={field.value?.toString()} onValueChange={(value) => field.onChange(Number(value))}>
+          <Select
+            value={field.value?.toString()}
+            onValueChange={(value) => {
+              field.onChange(Number(value));
+
+              // Call the onLabelChange callback if provided
+              if (onLabelChange) {
+                const selectedLabel = labels.find((label) => label.labelId === Number(value));
+                onLabelChange(selectedLabel || null);
+              }
+            }}
+          >
             <FormControl>
               <SelectLabelTrigger
                 className={`flex flex-row w-30 items-center rounded-full px-3 py-1 text-xs`}
