@@ -49,7 +49,6 @@ export default function TaskCard({
   });
 
   const [isEditing, setIsEditing] = useState(false);
-  // const [currentLabelColor, setCurrentLabelColor] = useState(task.label.color);
   const [labels, setLabels] = useState<LabelDTO[]>([]);
   const watchLabelId = form.watch('labelId');
   const handleEditState = () => setIsEditing(!isEditing);
@@ -97,12 +96,6 @@ export default function TaskCard({
     form.setValue('labelId', task.label.labelId);
     handleEditState();
   };
-
-  // const handleLabelChange = (labelColor: string) => {
-  //   if (isEditing) {
-  //     setCurrentLabelColor(labelColor);
-  //   }
-  // };
 
   const bgTaskCard = {
     overdue: 'bg-red-50',
@@ -155,7 +148,6 @@ export default function TaskCard({
                 <TaskCardEditFooter 
                   control={form.control} 
                   onCancel={handleCancelEdit}
-                  // onLabelChange={handleLabelChange} 
                 />
               )}
             </div>
