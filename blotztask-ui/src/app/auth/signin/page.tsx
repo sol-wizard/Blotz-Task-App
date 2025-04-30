@@ -8,13 +8,9 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import LoadingSpinner from '@/components/ui/loading-spinner';
+import { loginSchema } from '../forms/auth-schema';
 
-const loginFormSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(9),
-});
-
-type LoginFormValues = z.infer<typeof loginFormSchema>;
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 const LoginPage = () => {
   const router = useRouter();
@@ -25,7 +21,7 @@ const LoginPage = () => {
     setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginFormSchema),
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
       password: '',

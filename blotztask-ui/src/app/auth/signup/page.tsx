@@ -7,19 +7,13 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import { RegisterFormData, registerUser } from '@/services/user-register-service';
 import { BadRequestError } from '@/model/error/bad-request-error';
+import { signUpSchema } from '../forms/auth-schema';
 
 const SignUpPage = () => {
   const router = useRouter();
-  const schema = z.object({
-    firstName: z.string(),
-    lastName: z.string(),
-    email: z.string().email({ message: 'Invalid email address' }),
-    password: z.string().min(9, { message: 'Password must be at least 9 characters' }),
-  });
 
   const {
     control,
@@ -27,7 +21,7 @@ const SignUpPage = () => {
     setError,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(signUpSchema),
   });
 
   const onSubmit = async (data: RegisterFormData) => {
