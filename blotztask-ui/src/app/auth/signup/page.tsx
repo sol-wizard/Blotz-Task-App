@@ -3,13 +3,14 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertDestructive } from '@/components/ui/alert-destructive';
-import { BadRequestError } from '@/model/error/bad-request-error';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import LoadingSpinner from '@/components/ui/loading-spinner';
+import { RegisterFormData, registerUser } from '@/services/user-register-service';
+import { BadRequestError } from '@/model/error/bad-request-error';
 
 const SignUpPage = () => {
   const router = useRouter();
@@ -29,24 +30,9 @@ const SignUpPage = () => {
     resolver: zodResolver(schema),
   });
 
-  //TODO : Move this logic to a service 
-  const onSubmit = async (data: { firstName: string; lastName: string; email: string; password: string }) => {
+  const onSubmit = async (data: RegisterFormData) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/userinfo/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-
-        const errorMessages = Array.isArray(errorData)
-          ? errorData.map((error) => error.description).join('\n')
-          : errorData.message || 'Registration failed.';
-
-        throw new BadRequestError(errorMessages);
-      }
+      await registerUser(data);
 
       toast.success('Account registered', {
         description: 'You can now login with the registered account',
