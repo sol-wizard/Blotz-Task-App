@@ -1,6 +1,6 @@
 import TimePicker from "@/components/ui/time-picker";
-import { CalendarForm } from "../../shared/calendar-form";
-import { LabelSelect } from "../../shared/label-select";
+import { CalendarForm } from "../ui/calendar-form";
+import { LabelSelect } from "../ui/label-select";
 
 export const TaskCardEditFooter = ({ control, onCancel }) => (
     <div className="flex flex-row justify-between mt-4 mb-2">
