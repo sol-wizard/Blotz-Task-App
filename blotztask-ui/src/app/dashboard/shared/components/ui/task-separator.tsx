@@ -1,6 +1,6 @@
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import type { TaskCardStatus } from '../components/container/task-card';
+import { TaskCardStatus } from '../taskcard/task-card';
 
 const TaskSeparator = ({
   color,

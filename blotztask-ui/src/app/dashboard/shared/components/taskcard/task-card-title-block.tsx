@@ -1,9 +1,9 @@
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/task-card-input';
-import DateTag from './due-date-tag';
+import DateTag from '../ui/due-date-tag';
 import { cn } from '@/lib/utils';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
-import { TaskCardStatus } from '../container/task-card';
+import { TaskCardStatus } from './task-card';
 import { Control, FieldErrors } from 'react-hook-form';
 import { z } from 'zod';
 import { taskFormSchema } from '../../forms/task-form-schema';

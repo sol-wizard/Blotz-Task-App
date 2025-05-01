@@ -1,5 +1,5 @@
-import SectionSeparator from '../ui/section-separator';
-import TaskCardContainer from '../container/task-card-container';
+import SectionSeparator from '../../../shared/components/ui/section-separator';
+import TaskCardContainer from '@/app/dashboard/shared/components/taskcard/task-card-container';
 import { Fragment } from 'react';
 
 export function TodoTaskViewer({

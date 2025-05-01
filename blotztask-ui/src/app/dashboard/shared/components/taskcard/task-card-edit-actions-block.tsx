@@ -1,5 +1,5 @@
 import { Pencil } from "lucide-react";
-import DeleteTaskDialog from "../container/delete-dialog-content";
+import DeleteTaskDialog from "../ui/delete-dialog-content";
 
 export const TaskEditActions = ({ task, isEditing, onEditToggle, onDelete, onUndo }) => {
     if (isEditing || task.isDone) return null;
