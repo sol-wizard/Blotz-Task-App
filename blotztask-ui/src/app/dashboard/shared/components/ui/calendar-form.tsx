@@ -6,7 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useState } from 'react';
-import { TaskDetailDTO } from '../../../../model/task-detail-dto';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { Control } from 'react-hook-form';
 
 export function CalendarForm({

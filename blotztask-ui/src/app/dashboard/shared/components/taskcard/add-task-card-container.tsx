@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import AddTaskCard from './add-task-card';
+import AddTaskCard from './add-task-card'
 import { PlusIcon } from '@radix-ui/react-icons';
 import useClickOutside from '@/utils/use-multiple-click-away';
 

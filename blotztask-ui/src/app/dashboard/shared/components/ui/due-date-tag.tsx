@@ -1,6 +1,6 @@
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { format } from 'node_modules/date-fns/format';
-import { TaskCardStatus } from '../container/task-card';
+import { TaskCardStatus } from '../taskcard/task-card'
 import { cn } from '@/lib/utils';
 import { CircleAlertIcon } from 'lucide-react';
 
