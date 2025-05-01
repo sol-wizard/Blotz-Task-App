@@ -11,8 +11,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Trash2 } from 'lucide-react';
-import { TaskDetailDTO } from '../../../../../model/task-detail-dto';
-import showTaskDeletedToast from '../../shared/show-task-deleted-toast';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
+import showTaskDeletedToast from './show-task-deleted-toast'
 
 const DeleteTaskDialog = ({
   onDelete,
@@ -27,7 +27,7 @@ const DeleteTaskDialog = ({
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <button className="p-0.5 hover:bg-[#DEE6FF] rounded-md">
-          <Trash2 className="text-primary" size={20} />
+          <Trash2 className="text-primary" size={18} />
         </button>
       </AlertDialogTrigger>
       <AlertDialogContent>
