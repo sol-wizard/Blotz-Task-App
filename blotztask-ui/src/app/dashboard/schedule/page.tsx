@@ -1,10 +1,10 @@
 'use client';
 import { useEffect } from 'react';
 import { useScheduleTaskActions, useScheduleTaskStore } from '../../store/schedule-task-store';
-import AddTaskCardContainer from '../today/components/container/add-task-card-container';
+import AddTaskCardContainer from '../shared/components/taskcard/add-task-card-container';
 import ScheduleHeader from './components/schedule-header';
-import TaskCardContainer from '../today/components/container/task-card-container';
-import SectionSeparator from './components/section-separator';
+import TaskCardContainer from '../shared/components/taskcard/task-card-container';
+import SectionSeparator from '../shared/components/ui/section-separator';
 import SecondHeader2 from './components/secondheader2';
 import SecondHeader1 from './components/secondheader1';
 

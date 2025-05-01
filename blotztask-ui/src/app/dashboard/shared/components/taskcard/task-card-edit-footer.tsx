@@ -1,6 +1,6 @@
 import TimePicker from "@/components/ui/time-picker";
-import { CalendarForm } from "../../shared/calendar-form";
-import { LabelSelect } from "../../shared/label-select";
+import { CalendarForm } from "../ui/calendar-form";
+import { LabelSelect } from "../ui/label-select";
 import { Control } from "react-hook-form";
 
 export interface TaskFormValues {

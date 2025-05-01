@@ -1,7 +1,7 @@
 import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { TaskDetailDTO } from "@/model/task-detail-dto";
-import { TaskCardStatus } from "../container/task-card";
+import { TaskCardStatus } from "./task-card";
 import { Control, FieldErrors } from "react-hook-form";
 import { z } from "zod";
 import { taskFormSchema } from "../../forms/task-form-schema";
