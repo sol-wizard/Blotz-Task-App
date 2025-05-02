@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import TodayHeader from './components/container/today-header';
-import AddTaskCardContainer from './components/container/add-task-card-container';
+import TodayHeader from './components/ui/today-header';
+import AddTaskCardContainer from '../shared/components/taskcard/add-task-card-container';
 import { CompletedTaskViewer } from './components/viewer/completed-task-viewer';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
 import {
@@ -13,8 +13,8 @@ import {
   useTodayTasksIsLoading,
   useOverdueTasks,
 } from '../../store/today-task-store';
-import SectionSeparator from './components/ui/section-separator';
-import DisplayNoTask from './components/container/display-no-task';
+import SectionSeparator from '../shared/components/ui/section-separator';
+import DisplayNoTask from './components/ui/display-no-task';
 import SectionHeading from './components/ui/divider';
 import { TodoTaskViewer } from './components/viewer/todo-task-viewer';
 import { OverdueTaskViewer } from './components/viewer/overdue-task-viewer';

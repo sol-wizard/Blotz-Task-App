@@ -3,22 +3,17 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertDestructive } from '@/components/ui/alert-destructive';
-import { BadRequestError } from '@/model/error/bad-request-error';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import LoadingSpinner from '@/components/ui/loading-spinner';
+import { RegisterFormData, registerUser } from '@/services/user-register-service';
+import { BadRequestError } from '@/model/error/bad-request-error';
+import { signUpSchema } from '../forms/auth-schema';
 
 const SignUpPage = () => {
   const router = useRouter();
-  const schema = z.object({
-    firstName: z.string(),
-    lastName: z.string(),
-    email: z.string().email({ message: 'Invalid email address' }),
-    password: z.string().min(9, { message: 'Password must be at least 9 characters' }),
-  });
 
   const {
     control,
@@ -26,27 +21,12 @@ const SignUpPage = () => {
     setError,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(signUpSchema),
   });
 
-  //TODO : Move this logic to a service 
-  const onSubmit = async (data: { firstName: string; lastName: string; email: string; password: string }) => {
+  const onSubmit = async (data: RegisterFormData) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/userinfo/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-
-        const errorMessages = Array.isArray(errorData)
-          ? errorData.map((error) => error.description).join('\n')
-          : errorData.message || 'Registration failed.';
-
-        throw new BadRequestError(errorMessages);
-      }
+      await registerUser(data);
 
       toast.success('Account registered', {
         description: 'You can now login with the registered account',
@@ -66,7 +46,7 @@ const SignUpPage = () => {
 
   return (
     <div className="h-full justify-center flex flex-col items-center">
-      <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-96">
+      <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-full max-w-md sm:mx-auto">
         <h1 className="text-2xl text-center font-medium text-blue-500">Create an account</h1>
         <p className="text-center text-gray-600 text-sm">Enter your email below to create your account</p>
         {errors.root && <AlertDestructive title="Error" description={errors.root?.message} />}
