@@ -16,7 +16,7 @@ public class TaskGenerationAIService
         _labelService = labelService;
     }
 
-    public async Task<ExtractedTasksWrapperDTO> GenerateResponseAsync(string prompt)
+    public async Task<ExtractedTasksWrapperDTO> GenerateResponseAsync(string prompt, string timezoneId)
     {
         var (labels, labelNames) = await GetLabelInfoAsync();
 
@@ -24,9 +24,11 @@ public class TaskGenerationAIService
         {
             new UserChatMessage(prompt)
         };
+
+        var localNow = GetLocalDate(timezoneId);
         
         messages.Insert(0, new SystemChatMessage($@"
-            You are a task extraction assistant. Today's date is {DateTime.UtcNow:yyyy-MM-dd}. 
+            You are a task extraction assistant. Today's date is {localNow:yyyy-MM-dd}. 
             Please extract **all** tasks from the user input below and return a single JSON object with a `tasks` array.
             Always call the `extract_tasks` function with structured data. Never return plain text.
 
@@ -81,10 +83,12 @@ public class TaskGenerationAIService
     public async Task<ExtractedTasksWrapperDTO> GenerateTasksFromGoalAsync(GoalToTasksRequest request)
     {
         var (labels, labelNames) = await GetLabelInfoAsync();
+
+        var localNow = GetLocalDate(request.TimeZoneId);
         var messages = new List<ChatMessage>
         {
             new SystemChatMessage($@"
-            You are a task planning assistant. Today's date is {DateTime.UtcNow:yyyy-MM-dd}.
+            You are a task planning assistant. Today's date is {localNow:yyyy-MM-dd}.
             Your job is to break down a user's goal into multiple **meaningful and necessary** tasks using the `extract_tasks` function.
 
             You MUST call the function with structured data. Never return plain text.
@@ -279,6 +283,12 @@ public class TaskGenerationAIService
             Message = wrapper.Message,
             Tasks = results
         };
+    }
+
+        private DateTime GetLocalDate(string timezoneId)
+    {
+        var timezone = TimeZoneInfo.FindSystemTimeZoneById(timezoneId);
+        return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timezone);
     }
 
 
