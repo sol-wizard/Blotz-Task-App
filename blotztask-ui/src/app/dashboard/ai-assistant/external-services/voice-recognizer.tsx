@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import { Button } from '@/components/ui/button';
+import { showWarningToast } from './utils/show-warning-toast';
 
 interface VoiceRecognizerProps {
   onResult: (text: string) => void;
@@ -34,42 +35,49 @@ const useSpeechRecognition = (onResult: (text: string) => void, onError?: (error
 
   const initializeRecognizer = async () => {
     try {
-      setState(prev => ({ ...prev, isInitializing: true, error: null }));
+      setState((prev) => ({ ...prev, isInitializing: true, error: null }));
 
       //TODO: Find a solution in NEXT JS to store secret securely in prod website
       const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(
         process.env.NEXT_PUBLIC_AZURE_SPEECH_KEY || '',
         process.env.NEXT_PUBLIC_AZURE_SPEECH_REGION || ''
       );
-      speechConfig.speechRecognitionLanguage = "en-US";
+      speechConfig.speechRecognitionLanguage = 'en-US';
 
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
 
       recognizer.recognizing = (s, e) => {
-        console.log("Recognizing:", e.result.text);
+        console.log('Recognizing:', e.result.text);
       };
 
       recognizer.recognized = (s, e) => {
         if (e.result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
-          console.log("Final recognized:", e.result.text);
+          console.log('Final recognized:', e.result.text);
           onResult(e.result.text);
         }
       };
 
       recognizer.canceled = (s, e) => {
         if (e.reason === SpeechSDK.CancellationReason.Error) {
-          const error = new Error(`Speech recognition canceled: ${e.errorDetails}`);
-          setState(prev => ({ ...prev, error }));
+          const details = e.errorDetails || 'Unkown error';
+          const isKeyError = details.includes('Unable to contact server');
+          const error = new Error(
+            isKeyError
+              ? `Speech service unavailable. Please check your Azure credentials and your internet connection. `
+              : `Speech recognition canceled: ${details}`
+          );
+          setState((prev) => ({ ...prev, error }));
           onError?.(error);
         }
       };
 
       recognizerRef.current = recognizer;
-      setState(prev => ({ ...prev, isInitializing: false }));
+      setState((prev) => ({ ...prev, isInitializing: false }));
     } catch (error) {
-      const speechError = error instanceof Error ? error : new Error('Failed to initialize speech recognition');
-      setState(prev => ({ ...prev, error: speechError, isInitializing: false }));
+      const speechError =
+        error instanceof Error ? error : new Error('Failed to initialize speech recognition');
+      setState((prev) => ({ ...prev, error: speechError, isInitializing: false }));
       onError?.(speechError);
     }
   };
@@ -80,22 +88,31 @@ const useSpeechRecognition = (onResult: (text: string) => void, onError?: (error
     }
 
     try {
-      await recognizerRef.current?.startContinuousRecognitionAsync();
-      setState(prev => ({ ...prev, isListening: true, error: null }));
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (error) {
+      const micError = new Error('Microphone access denied. Please check web browser settings.');
+      setState((prev) => ({ ...prev, error: micError }));
+      onError?.(micError);
+      return;
+    }
+
+    try {
+      recognizerRef.current?.startContinuousRecognitionAsync();
+      setState((prev) => ({ ...prev, isListening: true, error: null }));
     } catch (error) {
       const speechError = error instanceof Error ? error : new Error('Failed to start speech recognition');
-      setState(prev => ({ ...prev, error: speechError }));
+      setState((prev) => ({ ...prev, error: speechError }));
       onError?.(speechError);
     }
   };
 
   const stopListening = async () => {
     try {
-      await recognizerRef.current?.stopContinuousRecognitionAsync();
-      setState(prev => ({ ...prev, isListening: false, error: null }));
+      recognizerRef.current?.stopContinuousRecognitionAsync();
+      setState((prev) => ({ ...prev, isListening: false, error: null }));
     } catch (error) {
       const speechError = error instanceof Error ? error : new Error('Failed to stop speech recognition');
-      setState(prev => ({ ...prev, error: speechError }));
+      setState((prev) => ({ ...prev, error: speechError }));
       onError?.(speechError);
     }
   };
@@ -117,21 +134,22 @@ const useSpeechRecognition = (onResult: (text: string) => void, onError?: (error
 export default function VoiceRecognizer({ onResult, onError }: VoiceRecognizerProps) {
   const { isListening, isInitializing, error, toggleListening } = useSpeechRecognition(onResult, onError);
 
+  useEffect(() => {
+    if (error) {
+      showWarningToast(error.message);
+    }
+  }, [error]);
+
   return (
     <div className="flex flex-col gap-2">
       <Button
         onClick={toggleListening}
         disabled={isInitializing}
         className={`w-fit mt-2 flex items-center gap-2 ${isListening ? 'animate-pulse' : ''}`}
-        variant={isListening ? "default" : "outline"}
+        variant={isListening ? 'default' : 'outline'}
       >
         {isInitializing ? '🔄 Initializing...' : isListening ? '🔴 Stop Listening' : '🎙️ Speak'}
       </Button>
-      {error && (
-        <p className="text-sm text-red-500">
-          Error: {error.message}
-        </p>
-      )}
     </div>
   );
 }
