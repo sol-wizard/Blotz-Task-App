@@ -19,6 +19,18 @@ public static class BlotzContextSeed
         await SeedTasksForTodayAsync(context, user);
     }
 
+    public static async Task SeedBlotzUserAsync(UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
+    {
+        await SeedRolesAsync(roleManager);
+        var user = await SeedRegularUserAsync(userManager);
+        if (user == null)
+        {
+            Console.WriteLine("Regular user creation failed or already exists. Exiting seeding process.");
+            return;
+        }
+    }
+
+
     private static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
     {
         if (!await roleManager.RoleExistsAsync("User"))
@@ -92,7 +104,7 @@ public static class BlotzContextSeed
             Console.WriteLine("Tasks for today's date already exist. No seeding necessary.");
             return;
         }
-        
+
         var labelWork = await context.Labels.FirstOrDefaultAsync(l => l.Name == nameof(LabelType.Work));
         var labelPersonal = await context.Labels.FirstOrDefaultAsync(l => l.Name == nameof(LabelType.Personal));
 
