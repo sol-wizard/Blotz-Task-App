@@ -117,7 +117,7 @@ export default function TaskCard({
             })}
             className="flex flex-col w-full bg-transparent px-6"
           >
-            <div className="flex flex-col w-full bg-transparent px-6">
+            <div className="flex flex-col w-full bg-transparent px-2">
               <TaskCardTitleBlock
                 task={task}
                 taskStatus={status}

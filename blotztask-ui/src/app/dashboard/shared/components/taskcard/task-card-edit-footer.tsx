@@ -1,27 +1,35 @@
-import TimePicker from "@/components/ui/time-picker";
+import { Control } from "react-hook-form";
 import { CalendarForm } from "../ui/calendar-form";
 import { LabelSelect } from "../ui/label-select";
-import { Control } from "react-hook-form";
+import  TimePicker  from "@/components/ui/time-picker";
 
 export interface TaskFormValues {
   date?: Date;
   time?: string;
-  label?: { id: string; name: string; color: string };
-  // Add other form fields as needed
+  label?: {
+    id: string;
+    name: string;
+    color: string;
+  };
 }
 
 export const TaskCardEditFooter = ({ control, onCancel } : {control: Control<TaskFormValues>; onCancel: () => void; }) => (
-    <div className="flex flex-row justify-between mt-4 mb-2">
+    <div className="flex flex-row justify-between mt-4 mb-2 pl-2">
       <div className="flex flex-row items-center">
         <CalendarForm control={control} />
         <LabelSelect
           control={control} />
         <TimePicker control={control} />
       </div>
-      <div className="flex flex-row">
+    
+
+    <div className="w-full"> 
+      <div className="flex justify-end">
+
+      <div className="flex flex-row space-x-2">
         <button 
             type="button" 
-            className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20" 
+            className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 w-20" 
             onClick={onCancel}
         >
           Cancel
@@ -33,6 +41,7 @@ export const TaskCardEditFooter = ({ control, onCancel } : {control: Control<Tas
           Save
         </button>
       </div>
+      </div>
+    </div>
     </div>
   );
-  
