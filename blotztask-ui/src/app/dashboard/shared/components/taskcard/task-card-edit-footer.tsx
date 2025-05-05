@@ -14,7 +14,7 @@ export interface TaskFormValues {
 }
 
 export const TaskCardEditFooter = ({ control, onCancel } : {control: Control<TaskFormValues>; onCancel: () => void; }) => (
-    <div className="flex flex-row justify-between mt-4 mb-2 -ml-4">
+    <div className="flex flex-row justify-between mt-4 mb-2 pl-2">
       <div className="flex flex-row items-center">
         <CalendarForm control={control} />
         <LabelSelect
