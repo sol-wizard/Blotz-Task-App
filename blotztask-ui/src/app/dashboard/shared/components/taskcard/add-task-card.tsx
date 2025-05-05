@@ -6,6 +6,7 @@ import { Form, FormField } from '@/components/ui/form';
 import { taskFormSchema } from '../../forms/task-form-schema';
 import AddTaskForm from '../ui/add-task-form';
 
+
 type FormField = z.infer<typeof taskFormSchema>;
 
 const AddTaskCard = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, onSubmit }) => {
@@ -22,6 +23,7 @@ const AddTaskCard = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, o
 
   return (
     <Form {...form}>
+      
       <form className="flex flex-col w-full space-y-2" onSubmit={form.handleSubmit(onSubmit)}>
         <div className="flex flex-row justify-between items-center">
           <AddTaskForm
@@ -30,7 +32,7 @@ const AddTaskCard = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, o
             labelPickerRef={labelPickerRef}
             timePickerRef={timePickerRef}
           />
-          <div className="flex flex-row h-8 ml-4 mt-20">
+          <div className="flex flex-row h-8 ml-4 mt-20 mr-10"> 
             <button
               className="bg-neutral-300 rounded-lg px-3 py-2 text-xs text-gray-700 mx-2 w-20 hover:bg-gray-100"
               type="button"
@@ -45,7 +47,7 @@ const AddTaskCard = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, o
               Save
             </button>
           </div>
-        </div>
+          </div>     
       </form>
     </Form>
   );
