@@ -42,7 +42,7 @@ const AddTaskForm = ({
           </FormItem>
         )}
       />
-      <div className="flex flex-row space-x-4 items-center flex-1">
+      <div className="flex flex-row space-x-4 items-center flex-1 ml-3">
         <div className="flex flex-row items-center">
           <CalendarForm control={form.control} datePickerRef={datePickerRef} />
           <LabelSelect control={form.control} labelPickerRef={labelPickerRef} />
