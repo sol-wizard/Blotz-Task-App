@@ -36,8 +36,24 @@ namespace BlotzTask.Controllers
                 return BadRequest("Goal and a valid duration are required.");
             }
 
+
             var response = await _aiService.GenerateTasksFromGoalAsync(request);
-            return Ok(new { Response = response });
+            
+            if (response.ConfidenceScore < 0.7)
+            {
+                return Ok(new
+                {
+                    RequiresMoreInfo = true,
+                    Message = response.Message??"I need more details to create an accurate plan. Please provide more context or upload relevant materials.",
+                });
+            }
+
+            return Ok(new
+            {
+                RequiresMoreInfo = false,
+                Tasks = response.Tasks,
+                Message = response.Message,
+            });
         }
     }
 }
