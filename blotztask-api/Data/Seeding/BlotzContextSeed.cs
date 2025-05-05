@@ -9,10 +9,10 @@ public static class BlotzContextSeed
     public static async Task SeedBlotzContextAsync(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, BlotzTaskDbContext context)
     {
         await SeedRolesAsync(roleManager);
-        var user = await SeedAdminUserAsync(userManager);
+        var user = await SeedRegularUserAsync(userManager);
         if (user == null)
         {
-            Console.WriteLine("Admin user creation failed or already exists. Exiting seeding process.");
+            Console.WriteLine("Regular user creation failed or already exists. Exiting seeding process.");
             return;
         }
 
@@ -21,18 +21,18 @@ public static class BlotzContextSeed
 
     private static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
     {
-        if (!await roleManager.RoleExistsAsync("Admin"))
+        if (!await roleManager.RoleExistsAsync("User"))
         {
-            await roleManager.CreateAsync(new IdentityRole("Admin"));
-            Console.WriteLine("Admin role created successfully.");
+            await roleManager.CreateAsync(new IdentityRole("User"));
+            Console.WriteLine("User role created successfully.");
         }
         else
         {
-            Console.WriteLine("Admin role already exists.");
+            Console.WriteLine("User role already exists.");
         }
     }
 
-    private static async Task<User?> SeedAdminUserAsync(UserManager<User> userManager)
+    private static async Task<User?> SeedRegularUserAsync(UserManager<User> userManager)
     {
         var defaultUser = new User
         {
@@ -53,11 +53,11 @@ public static class BlotzContextSeed
         var createUserResult = await userManager.CreateAsync(defaultUser, "@Blotztest1");
         if (!createUserResult.Succeeded)
         {
-            Console.WriteLine("Admin user creation failed.");
+            Console.WriteLine("Regular user creation failed.");
             return null;
         }
 
-        await userManager.AddToRoleAsync(defaultUser, "Admin");
+        await userManager.AddToRoleAsync(defaultUser, "User");
         user = await userManager.FindByEmailAsync(defaultUser.Email);
 
         if (user != null)
@@ -69,7 +69,7 @@ public static class BlotzContextSeed
                 new Claim("CanDelete", "true")
             };
             await userManager.AddClaimsAsync(user, claims);
-            Console.WriteLine("Admin user and claims created successfully.");
+            Console.WriteLine("Regular user and claims created successfully.");
         }
 
         return user;
