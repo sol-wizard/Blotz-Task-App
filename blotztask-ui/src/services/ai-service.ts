@@ -1,4 +1,3 @@
-import { ExtractedTask } from '@/model/extracted-task-dto';
 import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
 import { fetchWithAuth } from '@/utils/fetch-with-auth';
 
