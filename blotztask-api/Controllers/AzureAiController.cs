@@ -43,14 +43,13 @@ namespace BlotzTask.Controllers
             {
                 return Ok(new
                 {
-                    RequiresMoreInfo = true,
+                    Tasks = new List<ExtractedTask>(),
                     Message = response.Message??"I need more details to create an accurate plan. Please provide more context or upload relevant materials.",
                 });
-            }
+            };
 
             return Ok(new
             {
-                RequiresMoreInfo = false,
                 Tasks = response.Tasks,
                 Message = response.Message,
             });
