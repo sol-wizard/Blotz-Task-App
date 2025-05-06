@@ -78,54 +78,127 @@ public class TaskGenerationAIService
 
     }
 
-    public async Task<GoalTasksWrapperDTO> GenerateTasksFromGoalAsync(GoalToTasksRequest request)
+    private async Task<string> GenerateConfidenceScoreAsync(GoalToTasksRequest request)
     {
-        var (labels, labelNames) = await GetLabelInfoAsync();
         var messages = new List<ChatMessage>
         {
             new SystemChatMessage($@"
-            You are a task planning assistant. You can only generate tasks when enough information is provided. Today's date is {DateTime.UtcNow:yyyy-MM-dd}.
-            First, your job is to provide a confidence score (0 to 1) for the user's goal.
+            You are a goal evaluation assistant. Today's date is {DateTime.UtcNow:yyyy-MM-dd}.
+
+            Your job is to assess how clear and specific the user's goal is. 
+            Output a **confidence score** between 0 and 1:
+
             - 1 means the goal is **clear, specific, and provides sufficient context** for task planning.
             - Below 0.7 means the goal is vague, overly general, complex, or niche, and more information is needed.
             - 0 means the goal is impossible to understand.
-            If the confidence score is below 0.7, return an empty task list and a message asking the user to clarify their goal.
 
+            **Do NOT generate any tasks or suggestions. Only return the confidence score.**
 
-            If the confidence score is over 0.7, then your job is to break down a user's goal into multiple **meaningful and necessary** tasks using the `create_goal_to_tasks` function.
-            Each task must contain:
-            - `title`: A clear and focused title.
-            - `description`: A concise explanation of what to do.
-            - `due_date`: Estimated completion date in YYYY-MM-DD format, based on logical task flow and available time.
-            - `label`: One of the following categories: {string.Join(", ", labelNames)}.
-            - `isValidTask`: Set to true if this is a concrete and actionable task.
-
-            The final output should be an object like:
+            Your response format must be:
             {{
-            ""tasks"": [ <list of task objects> ],
-            ""message"": ""
-                - If confidenceScore < 0.7: A message asking the user to clarify their goal to help youself give plans based on more information.
-                - If confidenceScore >= 0.7: A helpful message summarizing the task plan.""
+                ""confidenceScore"": (number between 0 and 1)
             }}
 
-            Guidelines:
-            - The number of tasks should depend on the goal's complexity, not on the number of available days.
-            - Use the provided duration only as a **soft time frame** to estimate due dates, not as a target for task count.
-            - You can use fewer tasks if the goal is simple, or more if it's complex.
-            - If the goal is vague or niche, set confidenceScore below 0.7 and return an empty task list with a message asking for clarification.
             "),
             new UserChatMessage($"""
             My goal is: {request.Goal}
             I want to complete it in {request.DurationInDays} days.
-            Please help me plan actionable tasks.
+            Please help me evaluate the clarity of my goal.
             """)
         };
+
+        var tool = CreateConfidenceScoreTool();
+        var wrapper = await CallToolAndDeserializeAsync<ConfidenceScoreWrapper>(
+            toolFunctionName: "assess_goal_confidence",
+            messages: messages,
+            tool: tool);
+
+
+        return wrapper.ConfidenceScore.ToString("F2"); 
+
+    }
+
+    public async Task<GoalTasksWrapperDTO> GenerateTasksFromGoalAsync(GoalToTasksRequest request)
+    {
+        var confidenceScoreString = await GenerateConfidenceScoreAsync(request);
+        double confidenceScore = double.Parse(confidenceScoreString);  
+
+        var (labels, labelNames) = await GetLabelInfoAsync();
+        var messages = new List<ChatMessage>();
+        if (confidenceScore < 0.7)
+        {
+            messages = new List<ChatMessage>
+            {
+                new SystemChatMessage($@"
+                You are a goal planning assistant. The user's goal was evaluated as unclear or lacking sufficient detail.
+
+                Your job:
+                - Politely ask the user to provide additional information **based on what is missing** from their original goal.
+                - Suggest what kind of details would help you create a better task plan. (For example: specific outcomes, context, time constraints, or any special considerations.)
+                - **Only respond by calling the `create_goal_to_tasks` function. Do not reply in natural language.**
+                
+                You should return an empty task and it contains::
+                - `title`: '' (an empty string).
+                - `description`: '' (an empty string).
+                - `due_date`: {DateTime.UtcNow:yyyy-MM-dd}
+                - `label`: One of the following categories: {string.Join(", ", labelNames)}.
+                - `isValidTask`: false.
+                Your response format must be:
+                {{
+                    ""tasks"": [<an empty task objects>],
+                    ""message"": ""(your request for clarification)""
+                    ""confidenceScore"": {confidenceScore}
+                }}
+            "),
+                new UserChatMessage($"""
+                My goal is: {request.Goal}
+                I want to complete it in {request.DurationInDays} days.
+                Please help me create a better task plan.
+                """)
+            };
+            
+        }
+        else {
+            
+            messages = new List<ChatMessage>
+            {
+                new SystemChatMessage($@"
+                You are a task planning assistant. Today's date is {DateTime.UtcNow:yyyy-MM-dd}.
+                Your job is to break down a user's goal into multiple **meaningful and necessary** tasks using the `create_goal_to_tasks` function.
+                Each task must contain:
+                - `title`: A clear and focused title.
+                - `description`: A concise explanation of what to do.
+                - `due_date`: Estimated completion date in YYYY-MM-DD format, based on logical task flow and available time.
+                - `label`: One of the following categories: {string.Join(", ", labelNames)}.
+                - `isValidTask`: Set to true if this is a concrete and actionable task.
+
+                The final output should be an object like:
+                {{
+                ""tasks"": [ <list of task objects> ],
+                ""message"": ""A helpful message summarizing the task plan.""
+                ""confidenceScore"": {confidenceScore}
+                }}
+
+                Guidelines:
+                - The number of tasks should depend on the goal's complexity, not on the number of available days.
+                - Use the provided duration only as a **soft time frame** to estimate due dates, not as a target for task count.
+                - You can use fewer tasks if the goal is simple, or more if it's complex.
+                "),
+                new UserChatMessage($"""
+                My goal is: {request.Goal}
+                I want to complete it in {request.DurationInDays} days.
+                Please help me plan actionable tasks.
+                """)
+            };
+        }
+       
 
         var tool = CreateGoalToTaskTool(labelNames);
         var wrapper = await CallToolAndDeserializeAsync<GoalTasksWrapper>(
             toolFunctionName: "create_goal_to_tasks",
             messages: messages,
             tool: tool);
+        
 
 
         return ConvertToGoalWrapperDTO(wrapper, labels, labelNames);
@@ -182,11 +255,28 @@ public class TaskGenerationAIService
         );
     }
 
+    private ChatTool CreateConfidenceScoreTool()
+{
+    return ChatTool.CreateFunctionTool(
+        functionName: "assess_goal_confidence",
+        functionDescription: "Evaluates the clarity of a user's goal and returns a confidence score between 0 and 1.",
+        functionParameters: BinaryData.FromObjectAsJson(new
+        {
+            type = "object",
+            properties = new
+            {
+                confidenceScore = new { type = "number" }
+            },
+            required = new[] { "confidenceScore" }
+        })
+    );
+}
+
     private ChatTool CreateGoalToTaskTool(HashSet<string> labelNames)
 {
     return ChatTool.CreateFunctionTool(
         functionName: "create_goal_to_tasks",
-        functionDescription: "Breaks down a goal into tasks and provides a confidence score.",
+        functionDescription: "Breaks down a goal into tasks.",
         functionParameters: BinaryData.FromObjectAsJson(new
         {
             type = "object",
@@ -209,8 +299,8 @@ public class TaskGenerationAIService
                         required = new[] { "title", "description", "due_date", "label", "isValidTask" }
                     }
                 },
-                message = new { type = "string" },
-                confidenceScore = new { type = "number" }  
+                message = new { type = "string" }, 
+                confidenceScore = new { type = "number" }              
             },
             required = new[] { "tasks", "message", "confidenceScore" }
         })
