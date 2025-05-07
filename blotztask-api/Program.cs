@@ -126,52 +126,25 @@ app.UseSwaggerUI();
 app.UseSerilogRequestLogging();
 
 
-if (app.Environment.IsProduction())
+using (var scope = app.Services.CreateScope())
 {
-    using (var scope = app.Services.CreateScope())
+    var services = scope.ServiceProvider;
+
+    try
     {
-        var services = scope.ServiceProvider;
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = services.GetRequiredService<UserManager<User>>();
 
-        try
-        {
-            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-            var userManager = services.GetRequiredService<UserManager<User>>();
+        await BlotzContextSeed.SeedBlotzUserAsync(userManager, roleManager);
 
-            await BlotzContextSeed.SeedBlotzUserAsync(userManager, roleManager);
-
-        }
-        catch (Exception ex)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred while seeding the guest user.");
-        }
     }
-
-}
-
-if (app.Environment.IsDevelopment())
-{
-    using (var scope = app.Services.CreateScope())
+    catch (Exception ex)
     {
-        var services = scope.ServiceProvider;
-
-        try
-        {
-            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-            var userManager = services.GetRequiredService<UserManager<User>>();
-            var dbContext = services.GetRequiredService<BlotzTaskDbContext>();
-
-            // Call the seed methods
-            await BlotzContextSeed.SeedBlotzContextAsync(userManager, roleManager, dbContext);
-
-        }
-        catch (Exception ex)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred while seeding the database.");
-        }
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the guest user.");
     }
 }
+
 
 app.UseHttpsRedirection();
 

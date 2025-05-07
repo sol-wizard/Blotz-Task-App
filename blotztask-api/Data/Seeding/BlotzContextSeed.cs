@@ -6,19 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 public static class BlotzContextSeed
 {
-    public static async Task SeedBlotzContextAsync(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, BlotzTaskDbContext context)
-    {
-        await SeedRolesAsync(roleManager);
-        var user = await SeedRegularUserAsync(userManager);
-        if (user == null)
-        {
-            Console.WriteLine("Regular user creation failed or already exists. Exiting seeding process.");
-            return;
-        }
-
-        await SeedTasksForTodayAsync(context, user);
-    }
-
     public static async Task SeedBlotzUserAsync(UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
     {
         await SeedRolesAsync(roleManager);
@@ -85,62 +72,5 @@ public static class BlotzContextSeed
         }
 
         return user;
-    }
-
-    private static async Task SeedTasksForTodayAsync(BlotzTaskDbContext context, User user)
-    {
-        TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
-
-        DateTimeOffset localDayStart = new DateTimeOffset(DateTime.Now.Date, localTimeZone.GetUtcOffset(DateTime.Now));
-
-        DateTimeOffset localDayStartUtc = localDayStart.ToUniversalTime();
-        DateTimeOffset localDayEndUtc = localDayStartUtc.AddDays(1);
-
-        bool hasTasksForToday = await context.TaskItems
-            .AnyAsync(t => t.DueDate >= localDayStartUtc && t.DueDate < localDayEndUtc);
-
-        if (hasTasksForToday)
-        {
-            Console.WriteLine("Tasks for today's date already exist. No seeding necessary.");
-            return;
-        }
-
-        var labelWork = await context.Labels.FirstOrDefaultAsync(l => l.Name == nameof(LabelType.Work));
-        var labelPersonal = await context.Labels.FirstOrDefaultAsync(l => l.Name == nameof(LabelType.Personal));
-
-        if (labelWork == null || labelPersonal == null)
-        {
-            Console.WriteLine("Label missing. Try to run migrations to seed the label. Failed to seed task");
-            return;
-        }
-
-        await context.TaskItems.AddRangeAsync(
-            new TaskItem
-            {
-                Title = "Initial Task 1",
-                Description = "Description for Task 1",
-                DueDate = localDayStartUtc,
-                IsDone = false,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                UserId = user.Id,
-                LabelId = labelWork.LabelId,
-                HasTime = false
-            },
-            new TaskItem
-            {
-                Title = "Initial Task 2",
-                Description = "Description for Task 2",
-                DueDate = localDayStartUtc,
-                IsDone = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                UserId = user.Id,
-                LabelId = labelPersonal.LabelId,
-                HasTime = false
-            }
-        );
-        await context.SaveChangesAsync();
-        Console.WriteLine("Tasks for today's date seeded successfully.");
     }
 }
