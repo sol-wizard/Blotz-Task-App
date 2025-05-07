@@ -38,21 +38,8 @@ namespace BlotzTask.Controllers
 
 
             var response = await _aiService.GenerateTasksFromGoalAsync(request);
-            
-            if (response.ConfidenceScore < 0.7)
-            {
-                return Ok(new ExtractedTasksWrapperDTO
-                {
-                    Tasks = new List<ExtractedTaskDTO>(),
-                    Message = response.Message??"I need more details to create an acdocurate plan. Please provide more context or upload relevant materials.",
-                });
-            };
 
-            return Ok(new ExtractedTasksWrapperDTO
-            {
-                Tasks = response.Tasks,
-                Message = response.Message,
-            });
+            return Ok( response );
         }
 
        

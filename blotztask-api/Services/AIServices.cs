@@ -3,6 +3,7 @@ using BlotzTask.Models;
 using BlotzTask.Services;
 using OpenAI.Chat;
 
+
 public class TaskGenerationAIService
 {
     private readonly ChatClient _chatClient;
@@ -118,7 +119,7 @@ public class TaskGenerationAIService
 
     }
 
-    public async Task<GoalTasksWrapperDTO> GenerateTasksFromGoalAsync(GoalToTasksRequest request)
+    public async Task<ExtractedTasksWrapperDTO> GenerateTasksFromGoalAsync(GoalToTasksRequest request)
     {
         var confidenceScoreString = await GenerateConfidenceScoreAsync(request);
         double confidenceScore = double.Parse(confidenceScoreString);  
@@ -415,7 +416,7 @@ public class TaskGenerationAIService
 
 
 
-    private GoalTasksWrapperDTO ConvertToGoalWrapperDTO(
+    private ExtractedTasksWrapperDTO ConvertToGoalWrapperDTO(
     GoalTasksWrapper? wrapper,
     List<LabelDTO> labels,
     HashSet<string> labelNames,
@@ -423,23 +424,28 @@ public class TaskGenerationAIService
 {
     if (wrapper == null)
     {
-        return new GoalTasksWrapperDTO
+        return new ExtractedTasksWrapperDTO
         {
             Message = fallbackMessage,
-            Tasks = new(),
-            ConfidenceScore = 0.0
+            Tasks = new List<ExtractedTaskDTO>(),
         };
     }
 
     var results = wrapper.Tasks
         .Select(t => HandleExtractedTask(t, labels, labelNames))
         .ToList();
-
-    return new GoalTasksWrapperDTO
+    if (wrapper.ConfidenceScore < 0.7)
     {
-        Message = wrapper.Message,
+        return new ExtractedTasksWrapperDTO
+        {
+            Tasks = new List<ExtractedTaskDTO>(),
+            Message = wrapper.Message??"I need more details to create an acdocurate plan. Please provide more context or upload relevant materials.",
+        };
+    }
+    return new ExtractedTasksWrapperDTO
+    {
         Tasks = results,
-        ConfidenceScore = wrapper.ConfidenceScore
+        Message = wrapper.Message,
     };
 }
 
