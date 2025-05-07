@@ -10,11 +10,14 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import { loginSchema } from '../forms/auth-schema';
+import { useState } from 'react';
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const LoginPage = () => {
   const router = useRouter();
+
+  const [isLoggingAsGuest, setIsLoggingAsGuest] = useState(false);
 
   const {
     register,
@@ -52,6 +55,32 @@ const LoginPage = () => {
     }
   };
 
+  const handleGuestLogin = async () => {
+    setIsLoggingAsGuest(true);
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: process.env.NEXT_PUBLIC_GUEST_EMAIL,
+        password: process.env.NEXT_PUBLIC_GUEST_PASSWORD,
+      });
+
+      if (result?.error) {
+        setError('root', {
+          message: 'Continue as guest failed. Please check your credentials',
+        });
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      console.log('Continue as guest failed: ', error);
+      setError('root', {
+        message: error,
+      });
+    } finally {
+      setIsLoggingAsGuest(false);
+    }
+  };
+
   return (
     <div className="h-full justify-center flex flex-col items-center">
       <div className="flex flex-col gap-4 bg-white p-5 rounded-lg w-full max-w-md sm:mx-auto">
@@ -73,13 +102,20 @@ const LoginPage = () => {
           <Button type="submit" disabled={isSubmitting} className="w-full bg-primary hover:bg-blue-600">
             {isSubmitting ? <LoadingSpinner className="text-[4px] mx-10" variant="white" /> : 'Log in'}
           </Button>
-          <p className="text-center text-sm text-gray-500 mt-4">
-            Don’t have an account?{' '}
-            <a href="/auth/signup" className="text-blue-500 underline">
-              Sign up
-            </a>
-          </p>
         </form>
+        <Button
+          disabled={isLoggingAsGuest}
+          onClick={handleGuestLogin}
+          className="w-full bg-primary hover:bg-blue-600"
+        >
+          Continue as Guest
+        </Button>
+        <p className="text-center text-sm text-gray-500 mt-4">
+          Don’t have an account?{' '}
+          <a href="/auth/signup" className="text-blue-500 underline">
+            Sign up
+          </a>
+        </p>
       </div>
     </div>
   );
