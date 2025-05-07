@@ -125,23 +125,28 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.UseSerilogRequestLogging();
 
-using (var scope = app.Services.CreateScope())
+
+if (app.Environment.IsProduction())
 {
-    var services = scope.ServiceProvider;
-
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-        var userManager = services.GetRequiredService<UserManager<User>>();
+        var services = scope.ServiceProvider;
 
-        await BlotzContextSeed.SeedBlotzUserAsync(userManager, roleManager);
+        try
+        {
+            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+            var userManager = services.GetRequiredService<UserManager<User>>();
 
+            await BlotzContextSeed.SeedBlotzUserAsync(userManager, roleManager);
+
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "An error occurred while seeding the guest user.");
+        }
     }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the guest user.");
-    }
+
 }
 
 if (app.Environment.IsDevelopment())
