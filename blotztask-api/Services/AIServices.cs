@@ -2,6 +2,7 @@ using System.Text.Json;
 using BlotzTask.Models;
 using BlotzTask.Services;
 using OpenAI.Chat;
+using BlotzTask.Models.GoalToTask;
 
 
 public class TaskGenerationAIService

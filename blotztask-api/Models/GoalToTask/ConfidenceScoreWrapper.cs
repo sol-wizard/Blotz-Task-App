@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-namespace BlotzTask.Models
+namespace BlotzTask.Models.GoalToTask
 {
     public class ConfidenceScoreWrapper
     {

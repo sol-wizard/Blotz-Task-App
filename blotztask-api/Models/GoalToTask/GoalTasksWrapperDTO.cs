@@ -1,5 +1,4 @@
-namespace BlotzTask.Models
-
+namespace BlotzTask.Models.GoalToTask
 {
     public class GoalTasksWrapperDTO
 {
