@@ -20,7 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();  
+builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -74,11 +74,11 @@ if (builder.Environment.IsDevelopment())
 if (builder.Environment.IsProduction())
 {
     var keyVaultEndpoint = builder.Configuration.GetSection("KeyVault").GetValue<string>("VaultURI");
-    
+
     builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultKeyVaultSecretManager());
 
     var secretClient = new SecretClient(new Uri(keyVaultEndpoint), new DefaultAzureCredential());
-    
+
     builder.Services.AddSingleton(secretClient);
 
     builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(secretClient.GetSecret("db-string-connection").Value.Value.ToString()));
@@ -89,7 +89,8 @@ builder.Services.AddAzureOpenAi();
 builder.Services.AddScoped<TaskGenerationAIService>();
 
 
-builder.Services.AddOpenTelemetry().UseAzureMonitor(options => {
+builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
+{
     var connectionString = builder.Configuration.GetSection("ApplicationInsights:ConnectionString").Value;
     options.ConnectionString = connectionString;
 });
@@ -102,7 +103,7 @@ builder.Services.AddCors(options =>
         {
             builder.WithOrigins("http://localhost:3000" // DEV frontend origin
                 , "https://blotz-task-app.vercel.app") // Prod frontend origin    
-                .WithMethods("GET", "POST", "OPTIONS","PUT","DELETE") // Specify allowed methods, do not allow method never used.
+                .WithMethods("GET", "POST", "OPTIONS", "PUT", "DELETE") // Specify allowed methods, do not allow method never used.
                 .WithHeaders("Content-Type", "Authorization") // Specify allowed headers,may be more headers to added.
                 .AllowCredentials(); // TODO: anti-csrf need to be built.
         });
@@ -124,30 +125,26 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.UseSerilogRequestLogging();
 
-if (app.Environment.IsDevelopment())
+
+using (var scope = app.Services.CreateScope())
 {
-    // Seed roles and super admin
-    using (var scope = app.Services.CreateScope())
+    var services = scope.ServiceProvider;
+
+    try
     {
-        var services = scope.ServiceProvider;
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = services.GetRequiredService<UserManager<User>>();
 
-        try
-        {
-            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-            var userManager = services.GetRequiredService<UserManager<User>>();
-            var dbContext = services.GetRequiredService<BlotzTaskDbContext>();
+        await BlotzContextSeed.SeedBlotzUserAsync(userManager, roleManager);
 
-            // Call the seed methods
-            await BlotzContextSeed.SeedBlotzContextAsync(userManager,roleManager,dbContext);
-
-        }
-        catch (Exception ex)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred while seeding the database.");
-        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the guest user.");
     }
 }
+
 
 app.UseHttpsRedirection();
 
