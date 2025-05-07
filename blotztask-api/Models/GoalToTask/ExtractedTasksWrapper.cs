@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace BlotzTask.Models
+namespace BlotzTask.Models.GoalToTask
 {
     public class ExtractedTasksWrapper
     {

@@ -25,7 +25,7 @@ export async function generateAiTaskFromGoal(payload: {
 }): Promise<ExtractedTasksWrapperDTO> {
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/AzureAi/generate-tasks-from-goal`;
 
-  const result = await fetchWithAuth<{ response: ExtractedTasksWrapperDTO }>(url, {
+  const result = await fetchWithAuth<ExtractedTasksWrapperDTO>(url, {
     method: 'POST',
     body: JSON.stringify(payload),
     headers: {
@@ -33,5 +33,5 @@ export async function generateAiTaskFromGoal(payload: {
     },
   });
 
-  return result.response;
+  return result;
 }

@@ -31,6 +31,7 @@ export default function AiAssistant() {
 
     try {
       const task = await generateAiTask(prompt);
+      console.log('Generated task:', task);
       setExtractedTasks(task);
     } catch (error) {
       console.error('Failed to generate task:', error);
