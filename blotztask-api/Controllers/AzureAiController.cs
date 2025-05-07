@@ -36,8 +36,13 @@ namespace BlotzTask.Controllers
                 return BadRequest("Goal and a valid duration are required.");
             }
 
+
             var response = await _aiService.GenerateTasksFromGoalAsync(request);
-            return Ok(new { Response = response });
+
+            return Ok( response );
         }
+
+       
+
     }
 }
