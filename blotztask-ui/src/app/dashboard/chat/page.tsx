@@ -53,7 +53,7 @@ export default function ChatPage() {
   }, []);
 
   // Handle offline message
-  const handleOfflineMessage = useCallback((userMessage: string) => {
+  const handleOfflineMessage = useCallback(() => {
     const botResponse = {
       id: uuidv4(),
       sender: 'ChatBot',
@@ -201,7 +201,7 @@ export default function ChatPage() {
         };
         
         setMessages(prev => [...prev, userMessage]);
-        handleOfflineMessage(messageToSend);
+        handleOfflineMessage();
       } else {
         if (connectionRef.current) {
           // The server will broadcast this message back to all clients including sender
@@ -223,7 +223,7 @@ export default function ChatPage() {
       };
       
       setMessages(prev => [...prev, userMessage]);
-      handleOfflineMessage(messageToSend);
+      handleOfflineMessage();
     }
   };
 
