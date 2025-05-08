@@ -3,6 +3,7 @@ using BlotzTask.Infrastructure;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Infrastructure.Data.Seeding;
 using BlotzTaskAPI;
+using BlotzTaskAPI.Middleware;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,8 @@ builder.Host.UseSerilog((context, services, configuration) =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
