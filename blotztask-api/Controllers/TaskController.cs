@@ -45,6 +45,7 @@ namespace BlotzTask.Controllers
         }
 
         [HttpGet("{id}")]
+        [Obsolete("This endpoint is not in use in frontend")]
         public async Task<IActionResult> GetTaskById(int id)
         {
             return Ok(await _taskService.GetTaskByID(id));
