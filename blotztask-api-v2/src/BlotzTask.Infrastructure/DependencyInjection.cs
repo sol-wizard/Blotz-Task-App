@@ -35,7 +35,8 @@ public static class DependencyInjection
         
         // ✅ Service Register
         services.AddScoped<IUserService, UserService>();
-        
+        services.AddScoped<IDomainUserResolver, DomainUserResolver>();
+
         // ✅ Authorization
         services.AddAuthorization();
     }
