@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useSession } from 'next-auth/react';
-import * as signalR from '@microsoft/signalr';
+import { useSignalR } from '@/hooks/use-signalR';
 
 interface Message {
   id: string;
@@ -29,14 +29,11 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string>('');
   const [newMessage, setNewMessage] = useState('');
-  const [isConnecting, setIsConnecting] = useState(true);
-  const [connectionError, setConnectionError] = useState<boolean>(false);
   const [connectionRetries, setConnectionRetries] = useState<number>(0);
   const [isOfflineMode, setIsOfflineMode] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const userName = session?.user?.name || 'User';
   const maxRetries = 3;
-  const connectionRef = useRef<signalR.HubConnection | null>(null);
 
   // Initialize with a default conversation ID
   useEffect(() => {
@@ -45,6 +42,21 @@ export default function ChatPage() {
       setConversationId(newConvoId);
     }
   }, [conversationId]);
+
+  // Use the SignalR hook
+  const {
+    connection,
+    connectionState,
+    invoke,
+    on,
+    start,
+    stop,
+    error
+  } = useSignalR(`${apiUrl}/chatHub`, false); // Auto-connect = false to manage connection ourselves
+
+  // Interpret the connection state for UI purposes
+  const isConnecting = connectionState === 'connecting' || connectionState === 'reconnecting';
+  const connectionError = !!error || isOfflineMode;
 
   // Function to get a random mock response
   const getMockResponse = useCallback(() => {
@@ -67,39 +79,10 @@ export default function ChatPage() {
     }, 1000);
   }, [getMockResponse]);
 
-  // Connect to SignalR hub
-  const connect = useCallback(async () => {
-    if (isOfflineMode) return;
-    
-    // Check if we already have an active connection
-    if (connectionRef.current && connectionRef.current.state === signalR.HubConnectionState.Connected) {
-      console.log('Using existing active SignalR connection');
-      return;
-    }
-    
-    // Clean up any existing connection before creating a new one
-    if (connectionRef.current) {
-      console.log('Stopping existing connection before creating a new one');
-      await connectionRef.current.stop();
-      connectionRef.current = null;
-    }
-
-    try {
-      setIsConnecting(true);
-      console.log('Creating new SignalR connection');
-      
-      const newConnection = new signalR.HubConnectionBuilder()
-        .withUrl(`${apiUrl}/chatHub`, {
-          skipNegotiation: false,
-          transport: signalR.HttpTransportType.WebSockets
-        })
-        .withAutomaticReconnect([0, 2000, 5000, 10000, 15000])
-        .configureLogging(signalR.LogLevel.Warning)
-        .build();
-
-      // Only register the event handler once
-      newConnection.off('ReceiveMessage');
-      newConnection.on('ReceiveMessage', (user, message, convoId) => {
+  // Set up message receiving
+  useEffect(() => {
+    if (connection) {
+      on('ReceiveMessage', (user, message, convoId) => {
         if (convoId === conversationId) {
           console.log('Received message from server:', { user, message, convoId });
           const newMsg = {
@@ -113,70 +96,41 @@ export default function ChatPage() {
           setMessages(prev => [...prev, newMsg]);
         }
       });
-
-      newConnection.onclose((error) => {
-        console.log('SignalR connection closed', error);
-        if (error) {
-          setConnectionError(true);
-          if (connectionRetries >= maxRetries) {
-            setIsOfflineMode(true);
-          }
-        }
-        connectionRef.current = null;
-      });
-
-      await newConnection.start();
-      console.log('Connected to SignalR Hub');
-      connectionRef.current = newConnection;
-      setConnectionError(false);
-      setIsConnecting(false);
-      setConnectionRetries(0);
-    } catch (error) {
-      console.error('Error connecting to SignalR Hub:', error);
-      connectionRef.current = null;
-      setConnectionRetries(prevRetries => prevRetries + 1);
-      
-      if (connectionRetries >= maxRetries) {
-        console.log(`Failed to connect after ${maxRetries} attempts, switching to offline mode`);
-        setIsOfflineMode(true);
-        setConnectionError(true);
-      } else {
-        setTimeout(connect, 5000);
-      }
-      setIsConnecting(false);
     }
-  }, [conversationId, apiUrl, connectionRetries, isOfflineMode, maxRetries]);
+  }, [connection, conversationId, on]);
 
+  // Connect to hub
   useEffect(() => {
-    if (conversationId && !isOfflineMode && !connectionRef.current) {
-      connect();
+    if (!isOfflineMode && conversationId) {
+      console.log('Attempting to connect to SignalR hub');
+      
+      start().catch(err => {
+        console.error('Error starting connection:', err);
+        setConnectionRetries(prev => prev + 1);
+        
+        if (connectionRetries >= maxRetries) {
+          console.log(`Failed to connect after ${connectionRetries} attempts, switching to offline mode`);
+          setIsOfflineMode(true);
+        }
+      });
     }
-
-    return () => {
-      if (connectionRef.current) {
-        console.log('Stopping SignalR connection on cleanup');
-        connectionRef.current.stop();
-        connectionRef.current = null;
-      }
-    };
-  }, [conversationId, connect, isOfflineMode]);
+  }, [conversationId, start, connectionRetries, maxRetries, isOfflineMode]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleReconnect = () => {
-    setIsConnecting(true);
-    setConnectionError(false);
-    setIsOfflineMode(false);
-    setConnectionRetries(0);
+  const handleReconnect = async () => {
+    if (isOfflineMode) {
+      setIsOfflineMode(false);
+      setConnectionRetries(0);
+    }
     
-    if (connectionRef.current) {
-      connectionRef.current.stop().then(() => {
-        connect();
-      });
-    } else {
-      connect();
+    try {
+      await stop();
+      await start();
+    } catch (error) {
+      console.error('Reconnection failed:', error);
     }
   };
 
@@ -203,15 +157,12 @@ export default function ChatPage() {
         setMessages(prev => [...prev, userMessage]);
         handleOfflineMessage();
       } else {
-        if (connectionRef.current) {
-          // The server will broadcast this message back to all clients including sender
-          await connectionRef.current.invoke('SendMessage', userName, messageToSend, conversationId);
-        }
+        // The server will broadcast this message back to all clients including sender
+        await invoke('SendMessage', userName, messageToSend, conversationId);
       }
     } catch (error) {
       console.error('Error sending message:', error);
       setIsOfflineMode(true);
-      setConnectionError(true);
       
       // Add the message locally since we're now in offline mode
       const userMessage = {
