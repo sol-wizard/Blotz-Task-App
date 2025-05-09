@@ -26,7 +26,7 @@ export default function Page() {
           </div>
         ))}
 
-      {(filteredTasks.length === 0 || query.length === 0) && 
+        {(filteredTasks.length === 0 || query.length === 0) && 
       
       <div className="flex flex-col justify-center items-center h-[calc(100vh-80px)]">
         <Frown color="lightgray" size={58}/>
