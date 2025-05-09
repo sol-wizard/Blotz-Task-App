@@ -5,8 +5,7 @@ import AddTaskCardContainer from '../shared/components/taskcard/add-task-card-co
 import ScheduleHeader from './components/schedule-header';
 import TaskCardContainer from '../shared/components/taskcard/task-card-container';
 import SectionSeparator from '../shared/components/ui/section-separator';
-import SecondHeader2 from './components/secondheader2';
-import SecondHeader1 from './components/secondheader1';
+import SectionHeading from './components/sectionHeading';
 
 export default function Schedule() {
   const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks } = useScheduleTaskStore();
@@ -19,142 +18,140 @@ export default function Schedule() {
   }, []);
 
   return (
-    <div>
+    <div className="flex flex-col gap-6 h-full">
       <ScheduleHeader />
-
       <AddTaskCardContainer onAddTask={handleAddTask} />
 
-      <div>
-        {overdueTasks.length !== 0 && (
-          <div>
-            <SecondHeader2 text="overdue" />
+        <div className="flex flex-col gap-4 w-full">
+          {overdueTasks.length !== 0 && (
+            <>
+              <SectionHeading text="Overdue" />
+              <SectionSeparator />
+              {overdueTasks.map((task) => {
+                return (
+                  <>
+                    <TaskCardContainer
+                      key={task.id}
+                      task={task}
+                      handleCheckboxChange={handleCheckboxChange}
+                      handleTaskEdit={handleEditTask}
+                      handleTaskDelete={handleDeleteTask}
+                      handleTaskDeleteUndo={handleTaskDeleteUndo}
+                    />
+                    <SectionSeparator />
+                  </>
+                );
+              })}
+            </>
+          )}
+        
 
-            <SectionSeparator />
-            {overdueTasks.map((task) => {
-              return (
-                <>
-                  <TaskCardContainer
-                    key={task.id}
-                    task={task}
-                    handleCheckboxChange={handleCheckboxChange}
-                    handleTaskEdit={handleEditTask}
-                    handleTaskDelete={handleDeleteTask}
-                    handleTaskDeleteUndo={handleTaskDeleteUndo}
+        
+          {todayTasks.length !== 0 && (
+            <>
+              <SectionHeading text={'Today'} />
+              <SectionSeparator />
+              {todayTasks.map((task) => {
+                return (
+                  <>
+                    <TaskCardContainer
+                      key={task.id}
+                      task={task}
+                      handleCheckboxChange={handleCheckboxChange}
+                      handleTaskEdit={handleEditTask}
+                      handleTaskDelete={handleDeleteTask}
+                      handleTaskDeleteUndo={handleTaskDeleteUndo}
+                    />
+                    <SectionSeparator />
+                  </>
+                );
+              })}
+            </>
+          )}
+  
+
+      
+          {tomorrowTasks.length !== 0 && (
+            <>
+              <SectionHeading text={'Tomorrow'} />
+              <SectionSeparator />
+              {tomorrowTasks.map((task) => {
+                return (
+                  <>
+                    <TaskCardContainer
+                      key={task.id}
+                      task={task}
+                      handleCheckboxChange={handleCheckboxChange}
+                      handleTaskEdit={handleEditTask}
+                      handleTaskDelete={handleDeleteTask}
+                      handleTaskDeleteUndo={handleTaskDeleteUndo}
+                    />
+                    <SectionSeparator />
+                  </>
+                );
+              })}
+            </>
+          )}
+       
+
+        
+          {weekTasks.length !== 0 && (
+            <>
+              <SectionHeading text={'This week'} />
+              <SectionSeparator />
+              {weekTasks.map((task) => {
+                return (
+                  <>
+                    <TaskCardContainer
+                      key={task.id}
+                      task={task}
+                      handleCheckboxChange={handleCheckboxChange}
+                      handleTaskEdit={handleEditTask}
+                      handleTaskDelete={handleDeleteTask}
+                      handleTaskDeleteUndo={handleTaskDeleteUndo}
+                    />
+                    <SectionSeparator />
+                  </>
+                );
+              })}
+            </>
+          )}
+        
+
+        
+          {Object.keys(monthTasks).length !== 0 && (
+            <>
+              {Object.entries(monthTasks).map(([month, tasks]) => (
+                <div key={month} className="flex flex-col gap-4 w-full">
+                  <SectionHeading
+                    text={new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString(
+                      'en-US',
+                      {
+                        month: 'long',
+                      }
+                    )}
                   />
                   <SectionSeparator />
-                </>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div>
-        {todayTasks.length !== 0 && (
-          <div>
-            <SecondHeader1 text={'Today'} />
-            <SectionSeparator />
-            {todayTasks.map((task) => {
-              return (
-                <>
-                  <TaskCardContainer
-                    key={task.id}
-                    task={task}
-                    handleCheckboxChange={handleCheckboxChange}
-                    handleTaskEdit={handleEditTask}
-                    handleTaskDelete={handleDeleteTask}
-                    handleTaskDeleteUndo={handleTaskDeleteUndo}
-                  />
-                  <SectionSeparator />
-                </>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div>
-        {tomorrowTasks.length !== 0 && (
-          <div>
-            <SecondHeader2 text={'Tomorrow'} />
-            <SectionSeparator />
-            {tomorrowTasks.map((task) => {
-              return (
-                <>
-                  <TaskCardContainer
-                    key={task.id}
-                    task={task}
-                    handleCheckboxChange={handleCheckboxChange}
-                    handleTaskEdit={handleEditTask}
-                    handleTaskDelete={handleDeleteTask}
-                    handleTaskDeleteUndo={handleTaskDeleteUndo}
-                  />
-                  <SectionSeparator />
-                </>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div>
-        {weekTasks.length !== 0 && (
-          <div>
-            <SecondHeader2 text={'This week'} />
-            <SectionSeparator />
-            {weekTasks.map((task) => {
-              return (
-                <>
-                  <TaskCardContainer
-                    key={task.id}
-                    task={task}
-                    handleCheckboxChange={handleCheckboxChange}
-                    handleTaskEdit={handleEditTask}
-                    handleTaskDelete={handleDeleteTask}
-                    handleTaskDeleteUndo={handleTaskDeleteUndo}
-                  />
-                  <SectionSeparator />
-                </>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div>
-        {Object.keys(monthTasks).length !== 0 && (
-          <div>
-            {Object.entries(monthTasks).map(([month, tasks]) => (
-              <div key={month}>
-                <SecondHeader2
-                  text={new Date(new Date().getFullYear(), parseInt(month, 10) - 1, 1).toLocaleString(
-                    'en-US',
-                    {
-                      month: 'long',
-                    }
-                  )}
-                />
-                <SectionSeparator />
-                {tasks.map((task) => {
-                  return (
-                    <>
-                      <TaskCardContainer
-                        key={task.id}
-                        task={task}
-                        handleCheckboxChange={handleCheckboxChange}
-                        handleTaskEdit={handleEditTask}
-                        handleTaskDelete={handleDeleteTask}
-                        handleTaskDeleteUndo={handleTaskDeleteUndo}
-                      />
-                      <SectionSeparator />
-                    </>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                  {tasks.map((task) => {
+                    return (
+                      <>
+                        <TaskCardContainer
+                          key={task.id}
+                          task={task}
+                          handleCheckboxChange={handleCheckboxChange}
+                          handleTaskEdit={handleEditTask}
+                          handleTaskDelete={handleDeleteTask}
+                          handleTaskDeleteUndo={handleTaskDeleteUndo}
+                        />
+                        <SectionSeparator />
+                      </>
+                    );
+                  })}
+                </div>
+              ))}
+            </>
+          )}
+        </div>
     </div>
   );
 }
