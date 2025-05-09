@@ -24,7 +24,7 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
         // Add to active connections dictionary
         _activeConnections.TryAdd(connectionId, DateTime.UtcNow.ToString());
         _logger.LogInformation($"User connected: {connectionId} (Active connections: {_activeConnections.Count})");
-        await Clients.All.SendAsync("UserConnected", connectionId);
+        await Clients.Caller.SendAsync("UserConnected", connectionId);
         await base.OnConnectedAsync();
     }
 
@@ -34,7 +34,7 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
         // Remove from active connections
         _activeConnections.TryRemove(connectionId, out _);
         _logger.LogInformation($"User disconnected: {connectionId} (Active connections: {_activeConnections.Count}). Exception: {exception?.Message}");
-        await Clients.All.SendAsync("UserDisconnected", connectionId);
+        await Clients.Caller.SendAsync("UserDisconnected", connectionId);
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -49,7 +49,7 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
         var timestamp = DateTime.Now;
 
         // Broadcast user's message
-        await Clients.All.SendAsync("ReceiveMessage", user, message, conversationId);
+        await Clients.Caller.SendAsync("ReceiveMessage", user, message, conversationId);
 
         var chatHistory = new ChatHistory();
         chatHistory.AddSystemMessage("You are in a conversation, keep your answers brief, always ask follow-up questions, ask if ready for full answer.");
@@ -89,7 +89,7 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
 
             // Send the complete message as one response
             var finalMessage = message.ToString();
-            await Clients.All.SendAsync("ReceiveMessage", "ChatBot", finalMessage, conversationId);
+            await Clients.Caller.SendAsync("ReceiveMessage", "ChatBot", finalMessage, conversationId);
         }
         catch (Exception ex)
         {
