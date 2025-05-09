@@ -1,4 +1,6 @@
-using BlotzTask.Application.Tasks.Commands.CreateTaskItem;
+using BlotzTask.Application.TaskItems.Commands.CreateTaskItem;
+using BlotzTask.Application.TaskItems.Models;
+using BlotzTask.Application.TaskItems.Queries.GetTaskItems;
 using BlotzTaskAPI.Models;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +16,27 @@ public class TaskItemsController : ControllerBase
     public TaskItemsController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+    
+    /// <summary>
+    /// Get all todo items for the current user.
+    /// </summary>
+    /// <returns>List of task items.</returns>
+    [HttpGet]
+    [ProducesResponseType(typeof(ApiResponse<List<TaskItemDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetTaskItems()
+    {
+        var data = await _mediator.Send(new GetTaskItemsQuery());
+
+        var response = new ApiResponse<List<TaskItemDto>>
+        {
+            Data = data,
+            Message = "Fetched todos successfully.",
+            Success = true
+        };
+
+        return Ok(response);
     }
 
     /// <summary>

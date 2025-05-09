@@ -2,7 +2,7 @@ using BlotzTask.Application.Common.Interfaces;
 using BlotzTask.Application.Common.Models;
 using BlotzTask.Domain.Entities;
 
-namespace BlotzTask.Application.Tasks.Commands.CreateTaskItem;
+namespace BlotzTask.Application.TaskItems.Commands.CreateTaskItem;
 
 public record CreateTaskItemCommand : IRequest<ResponseWrapper<string>>
 {

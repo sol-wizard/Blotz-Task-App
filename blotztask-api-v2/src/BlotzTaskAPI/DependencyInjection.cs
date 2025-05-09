@@ -1,6 +1,3 @@
-using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.Filters;
-
 namespace BlotzTaskAPI;
 
 public static class DependencyInjection
