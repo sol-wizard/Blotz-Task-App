@@ -1,6 +1,6 @@
 'use client';
 
-import { ListChecks, ClipboardCheck, Plus, CalendarCheck, Bot } from 'lucide-react';
+import { ListChecks, ClipboardCheck, Plus, CalendarCheck, Bot, MessageSquare } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -121,6 +121,17 @@ export function AppSidebar() {
                       >
                         <Bot className="text-indigo-600" />
                         <span className="pl-3 text-base text-indigo-700 font-medium">AI Assistant ✨</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link
+                        href="chat"
+                        className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
+                      >
+                        <MessageSquare className="text-indigo-600" />
+                        <span className="pl-3 text-base text-indigo-700 font-medium">Chat Assistant 💬</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
