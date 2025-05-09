@@ -1,3 +1,6 @@
+using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
+
 namespace BlotzTaskAPI;
 
 public static class DependencyInjection
@@ -7,7 +10,8 @@ public static class DependencyInjection
         services.AddControllers();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
-        
+        services.AddHttpContextAccessor();
+
         return services;
     }
 }
