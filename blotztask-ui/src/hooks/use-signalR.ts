@@ -4,9 +4,9 @@ import * as signalR from '@microsoft/signalr';
 interface UseSignalRResult {
   connection: signalR.HubConnection | null;
   connectionState: string;
-  invoke: <T = any>(methodName: string, ...args: any[]) => Promise<T>;
-  on: (methodName: string, callback: (...args: any[]) => void) => void;
-  off: (methodName: string, callback: (...args: any[]) => void) => void;
+  invoke: <T = unknown>(methodName: string, ...args: unknown[]) => Promise<T>;
+  on: (methodName: string, callback: (...args: unknown[]) => void) => void;
+  off: (methodName: string, callback: (...args: unknown[]) => void) => void;
   start: () => Promise<void>;
   stop: () => Promise<void>;
   error: Error | null;
@@ -90,7 +90,7 @@ export function useSignalR(hubUrl: string, autoConnect = true): UseSignalRResult
   }, []);
 
   // Invoke a hub method
-  const invoke = useCallback(async <T = any>(methodName: string, ...args: any[]): Promise<T> => {
+  const invoke = useCallback(async <T = unknown>(methodName: string, ...args: unknown[]): Promise<T> => {
     if (!connectionRef.current) {
       throw new Error('No active connection!');
     }
@@ -104,14 +104,14 @@ export function useSignalR(hubUrl: string, autoConnect = true): UseSignalRResult
   }, []);
 
   // Register a handler for a hub event
-  const on = useCallback((methodName: string, callback: (...args: any[]) => void) => {
+  const on = useCallback((methodName: string, callback: (...args: unknown[]) => void) => {
     if (connectionRef.current) {
       connectionRef.current.on(methodName, callback);
     }
   }, []);
 
   // Remove a handler for a hub event
-  const off = useCallback((methodName: string, callback: (...args: any[]) => void) => {
+  const off = useCallback((methodName: string, callback: (...args: unknown[]) => void) => {
     if (connectionRef.current) {
       connectionRef.current.off(methodName, callback);
     }

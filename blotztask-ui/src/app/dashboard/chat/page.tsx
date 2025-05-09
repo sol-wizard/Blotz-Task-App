@@ -85,10 +85,10 @@ export default function ChatPage() {
       on('ReceiveMessage', (user, message, convoId) => {
         if (convoId === conversationId) {
           console.log('Received message from server:', { user, message, convoId });
-          const newMsg = {
+          const newMsg: Message = {
             id: uuidv4(),
-            sender: user,
-            content: message,
+            sender: user as string, 
+            content: message as string,
             timestamp: new Date(),
             isBot: user === 'ChatBot'
           };
