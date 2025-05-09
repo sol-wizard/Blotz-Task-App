@@ -41,7 +41,7 @@ export function AppSidebar() {
   const { loadScheduleTasks } = useScheduleTaskActions();
   const { loadTodayTasks } = useTodayTaskActions();
   const pathname = usePathname();
-  const [aiEnabled, setAiEnabled] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(true);
   const { loadSearchTasks, setQuery } = useSearchTaskActions();
   const query = useSearchQuery();
 
