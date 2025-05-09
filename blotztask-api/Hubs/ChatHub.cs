@@ -90,7 +90,6 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
             // Send the complete message as one response
             var finalMessage = message.ToString();
             await Clients.All.SendAsync("ReceiveMessage", "ChatBot", finalMessage, conversationId);
-            await AppendToCsvLog(conversationId, "System", finalMessage);
         }
         catch (Exception ex)
         {
@@ -99,11 +98,5 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
             await Clients.Caller.SendAsync("ReceiveMessage", "System", "An error occurred while processing your request.");
         }
         return message.ToString();
-    }
-
-    private Task AppendToCsvLog(string conversationId, string sender, string message)
-    {
-        Console.WriteLine($"{DateTime.Now}, {conversationId}, {sender}: {message}");
-        return Task.CompletedTask;
     }
 }
