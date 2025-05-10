@@ -2,7 +2,10 @@ using BlotzTask.Application;
 using BlotzTask.Infrastructure;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Infrastructure.Data.Seeding;
+using BlotzTask.Infrastructure.Identity;
 using BlotzTaskAPI;
+using BlotzTaskAPI.Middleware;
+using Microsoft.AspNetCore.Identity;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +22,8 @@ builder.Host.UseSerilog((context, services, configuration) =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -37,7 +42,10 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = string.Empty; // ⬅️ This makes Swagger UI load at "/"
 });
 
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseHttpsRedirection();
-app.MapControllers();
+app.MapControllers().RequireAuthorization();
+app.MapIdentityApi<ApplicationUser>();
 
 app.Run();
