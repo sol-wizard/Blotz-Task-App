@@ -33,9 +33,15 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
         
+        builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+        
         // ✅ Service Register
         services.AddScoped<IUserService, UserService>();
-        
+        services.AddScoped<IDomainUserResolver, DomainUserResolver>();
+        services.AddScoped<IUserContext, UserContext>();
+
         // ✅ Authorization
         services.AddAuthorization();
     }
