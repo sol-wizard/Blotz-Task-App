@@ -18,6 +18,7 @@ namespace BlotzTask.Controllers
         }
 
         [HttpGet("alltask")]
+        [Tags("MigratedToCleanArchitecture")]
         public async Task<IActionResult> GetAllTask()
         {
             var userId = HttpContext.Items["UserId"] as string;
@@ -45,6 +46,7 @@ namespace BlotzTask.Controllers
         }
 
         [HttpGet("{id}")]
+        [Obsolete("This endpoint is not in use in frontend")]
         public async Task<IActionResult> GetTaskById(int id)
         {
             return Ok(await _taskService.GetTaskByID(id));
@@ -67,6 +69,7 @@ namespace BlotzTask.Controllers
 
 
         [HttpPost]
+        [Tags("MigratedToCleanArchitecture")]
         public async Task<IActionResult> AddTask([FromBody] AddTaskItemDTO addtaskItem)
         {
             var userId = HttpContext.Items["UserId"] as string;
