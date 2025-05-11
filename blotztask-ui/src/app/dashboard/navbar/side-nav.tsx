@@ -96,7 +96,7 @@ export function AppSidebar() {
 
               <SidebarMenuItem>
                 <AddTaskDialog submitGlobalTask={submitGlobalTask}>
-                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 ml-2 rounded-md hover:bg-blue-100 ">
+                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100 ">
                     <div
                       className={cn(
                         'bg-primary',
@@ -117,7 +117,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <Link
                         href="ai-assistant"
-                        className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
+                        className="flex items-center px-4 py-3 w-full rounded-md hover:bg-white"
                       >
                         <Bot className="text-indigo-600" />
                         <span className="pl-3 text-base text-indigo-700 font-medium">AI Assistant ✨</span>
@@ -128,7 +128,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <Link
                         href="goal-to-task"
-                        className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
+                        className="flex items-center px-4 py-3 w-full rounded-md hover:bg-white"
                       >
                         <Bot className="text-indigo-600" />
                         <span className="pl-3 text-base text-indigo-700 font-medium">Goal to task 🎯</span>
@@ -142,7 +142,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     className={cn(
-                      'flex items-center ml-2 px-4 py-3 w-full rounded-md',
+                      'flex items-center px-4 py-3 w-full rounded-md',
                       pathname === `/dashboard/${item.url}`
                         ? 'bg-blue-100 text-primary hover:bg-blue-200'
                         : 'hover:bg-blue-200'
