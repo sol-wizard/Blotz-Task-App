@@ -17,7 +17,7 @@ const AddTaskForm = ({
   timePickerRef?: React.RefObject<HTMLDivElement>;
 }) => {
   return (
-    <div className="flex flex-col w-full p-4">
+    <div className="flex flex-col w-full">
       <FormField
         control={form.control}
         name="title"
