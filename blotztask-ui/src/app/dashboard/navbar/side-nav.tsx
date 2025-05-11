@@ -1,6 +1,6 @@
 'use client';
 
-import { ListChecks, ClipboardCheck, Plus, CalendarCheck, Bot } from 'lucide-react';
+import { Plus, CircleCheckBig, List, Calendar, Sparkles, Target } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -23,27 +23,34 @@ import AddTaskDialog from './components/add-task-dialog';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SearchBar from './components/search-bar';
-import { useTodayTaskActions } from '../../store/today-task-store';
+import { useIncompleteTodayTasks, useOverdueTasks, useTodayTaskActions } from '../../store/today-task-store';
 import { useScheduleTaskActions } from '@/app/store/schedule-task-store';
 import { useSearchQuery, useSearchTaskActions } from '@/app/store/search-task-store';
 import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
 import { addTaskItem } from '@/services/task-service';
+import { Badge } from '@/components/ui/badge';
 
-const menuItems = [
-  { title: 'All Tasks', url: 'task-list', icon: ListChecks },
-  { title: 'Today', url: 'today', icon: ClipboardCheck },
-  { title: 'Schedule', url: 'schedule', icon: CalendarCheck },
-];
+
 
 const FEATURE_FLAG_KEY = 'aiEnabled';
 
 export function AppSidebar() {
   const { loadScheduleTasks } = useScheduleTaskActions();
-  const { loadTodayTasks } = useTodayTaskActions();
+  const { loadTodayTasks, loadOverdueTasks } = useTodayTaskActions();
+  const overdueTasks = useOverdueTasks();
+  const incompleteTodayTasks = useIncompleteTodayTasks();
   const pathname = usePathname();
   const [aiEnabled, setAiEnabled] = useState(true);
   const { loadSearchTasks, setQuery } = useSearchTaskActions();
   const query = useSearchQuery();
+
+  const todayBadgeCount = overdueTasks.length + incompleteTodayTasks.length;
+
+  const menuItems = [
+    { title: 'All Tasks', url: 'task-list', icon: List },
+    { title: 'Today', url: 'today', icon: CircleCheckBig, count: todayBadgeCount},
+    { title: 'Schedule', url: 'schedule', icon: Calendar },
+  ];
 
   const handleSignOut = (e) => {
     e.preventDefault();
@@ -63,6 +70,8 @@ export function AppSidebar() {
 
   useEffect(() => {
     loadAllLabel();
+    loadTodayTasks();
+    loadOverdueTasks();
     const flag = localStorage.getItem(FEATURE_FLAG_KEY);
     if (flag !== null) {
       setAiEnabled(flag === 'true');
@@ -96,7 +105,7 @@ export function AppSidebar() {
 
               <SidebarMenuItem>
                 <AddTaskDialog submitGlobalTask={submitGlobalTask}>
-                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 ml-2 rounded-md hover:bg-blue-100 ">
+                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100 ">
                     <div
                       className={cn(
                         'bg-primary',
@@ -104,7 +113,7 @@ export function AppSidebar() {
                         'inline-flex items-center justify-center'
                       )}
                     >
-                      <Plus size={16} />
+                      <Plus size={18} />
                     </div>
                     <span className="pl-3 text-primary text-xl">New Task</span>
                   </SidebarMenuButton>
@@ -117,10 +126,10 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <Link
                         href="ai-assistant"
-                        className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
+                        className="flex items-center px-4 py-3 w-full rounded-md hover:bg-white"
                       >
-                        <Bot className="text-indigo-600" />
-                        <span className="pl-3 text-base text-indigo-700 font-medium">AI Assistant ✨</span>
+                        <Sparkles size={18} className='text-indigo-700'/>
+                        <span className="pl-3 text-base font-medium text-indigo-700">AI Assistant</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -128,10 +137,10 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <Link
                         href="goal-to-task"
-                        className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
+                        className="flex items-center px-4 py-3 w-full rounded-md hover:bg-white"
                       >
-                        <Bot className="text-indigo-600" />
-                        <span className="pl-3 text-base text-indigo-700 font-medium">Goal to task 🎯</span>
+                        <Target size={18} className='text-red-500'/>
+                        <span className="pl-3 text-base text-indigo-700 font-medium">Goal to task</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -142,16 +151,26 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     className={cn(
-                      'flex items-center ml-2 px-4 py-3 w-full rounded-md',
+                      'flex items-center px-4 py-3 w-full rounded-md',
                       pathname === `/dashboard/${item.url}`
                         ? 'bg-blue-100 text-primary hover:bg-blue-200'
                         : 'hover:bg-blue-200'
                     )}
                     asChild
                   >
-                    <Link href={`/dashboard/${item.url}`}>
-                      <item.icon />
-                      <span className="pl-3 text-base">{item.title}</span>
+                    <Link href={`/dashboard/${item.url}`} className='flex justify-between '>
+                      <div className='flex items-center'>
+                        <item.icon size={18}/>
+                        <span className="pl-3 text-base">{item.title}</span>
+                      </div>
+
+                      {item.count !== undefined && (
+                        <Badge
+                          className="w-6 h-6 rounded-full bg-white text-primary border border-primary text-sm font-semibold flex items-center justify-center"
+                        >
+                          {item.count}
+                        </Badge>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
