@@ -1,10 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import { generateAiTask } from '@/services/ai-service';
 import { addTaskItem } from '@/services/task-service';
@@ -13,7 +11,7 @@ import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import Divider from '../today/components/ui/divider';
-import VoiceRecognizer from './external-services/voice-recognizer';
+import PromptInputSection from './component/prompt-input-container';
 
 export default function AiAssistant() {
   const [prompt, setPrompt] = useState('');
@@ -66,27 +64,12 @@ export default function AiAssistant() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="prompt">Prompt to generate Task</Label>
-        <div className="flex gap-2 items-center">
-          <Input
-            id="prompt"
-            placeholder="e.g. Remind me to submit the report by Friday"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="flex-1" // make input stretch nicely
-          />
-          <VoiceRecognizer
-            onResult={(spokenText) => {
-              setPrompt(spokenText);
-            }}
-          />
-        </div>
-
-        <Button onClick={handleGenerate} disabled={loading} className="w-fit mt-2">
-          Generate Task
-        </Button>
-      </div>
+      <PromptInputSection
+        prompt={prompt}
+        setPrompt={setPrompt}
+        loading={loading}
+        onGenerate={handleGenerate}
+      />
 
       <Divider text="Generated Task" />
 
