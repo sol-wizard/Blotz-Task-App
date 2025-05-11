@@ -24,7 +24,7 @@ namespace BlotzTask.Controllers
                 return BadRequest("Prompt cannot be empty.");
             }
 
-            var response = await _aiService.GenerateResponseAsync(request.Prompt);
+            var response = await _aiService.GenerateResponseAsync(request.Prompt, request.TimeZoneId);
             return Ok(new { Response = response });
         }
 

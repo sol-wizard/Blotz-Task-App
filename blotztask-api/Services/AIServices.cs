@@ -18,7 +18,7 @@ public class TaskGenerationAIService
         _labelService = labelService;
     }
 
-    public async Task<ExtractedTasksWrapperDTO> GenerateResponseAsync(string prompt)
+    public async Task<ExtractedTasksWrapperDTO> GenerateResponseAsync(string prompt, string timezoneId)
     {
         var (labels, labelNames) = await GetLabelInfoAsync();
 
@@ -26,9 +26,11 @@ public class TaskGenerationAIService
         {
             new UserChatMessage(prompt)
         };
+
+        var localNow = GetLocalDate(timezoneId);
         
         messages.Insert(0, new SystemChatMessage($@"
-            You are a task extraction assistant. Today's date is {DateTime.UtcNow:yyyy-MM-dd}. 
+            You are a task extraction assistant. Today's date is {localNow:yyyy-MM-dd}. 
             Please extract **all** tasks from the user input below and return a single JSON object with a `tasks` array.
             Always call the `extract_tasks` function with structured data. Never return plain text.
 
@@ -82,32 +84,35 @@ public class TaskGenerationAIService
 
     private async Task<string> GenerateConfidenceScoreAsync(GoalToTasksRequest request)
     {
+        var (labels, labelNames) = await GetLabelInfoAsync();
+
+        var localNow = GetLocalDate(request.TimeZoneId);
         var messages = new List<ChatMessage>
         {
             new SystemChatMessage($@"
-            You are a goal evaluation assistant. Today's date is {DateTime.UtcNow:yyyy-MM-dd}.
+        You are a goal evaluation assistant. Today's date is {localNow:yyyy-MM-dd}.
 
-            Your job is to assess how clear and specific the user's goal is. 
-            Output a **confidence score** between 0 and 1:
+        Your job is to assess how clear and specific the user's goal is. 
+        Output a **confidence score** between 0 and 1:
 
-            - 1 means the goal is **clear, specific, and provides sufficient context** for task planning.
-            - Below 0.7 means the goal is vague, overly general, complex, or niche, and more information is needed.
-            - 0 means the goal is impossible to understand.
+        - 1 means the goal is **clear, specific, and provides sufficient context** for task planning.
+        - Below 0.7 means the goal is vague, overly general, complex, or niche, and more information is needed.
+        - 0 means the goal is impossible to understand.
 
-            **Do NOT generate any tasks or suggestions. Only return the confidence score.**
+        **Do NOT generate any tasks or suggestions. Only return the confidence score.**
 
-            Your response format must be:
-            {{
-                ""confidenceScore"": (number between 0 and 1)
-            }}
-
-            "),
+        Your response format must be:
+        {{
+            ""confidenceScore"": (number between 0 and 1)
+        }}
+        "),
             new UserChatMessage($"""
-            My goal is: {request.Goal}
-            I want to complete it in {request.DurationInDays} days.
-            Please help me evaluate the clarity of my goal.
-            """)
+        My goal is: {request.Goal}
+        I want to complete it in {request.DurationInDays} days.
+        Please help me evaluate the clarity of my goal.
+        """)
         };
+
 
         var tool = CreateConfidenceScoreTool();
         var wrapper = await CallToolAndDeserializeAsync<ConfidenceScoreWrapper>(
@@ -413,6 +418,12 @@ public class TaskGenerationAIService
             Message = wrapper.Message,
             Tasks = results
         };
+    }
+
+        private DateTime GetLocalDate(string timezoneId)
+    {
+        var timezone = TimeZoneInfo.FindSystemTimeZoneById(timezoneId);
+        return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timezone);
     }
 
 
