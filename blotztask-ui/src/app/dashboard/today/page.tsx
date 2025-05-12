@@ -17,7 +17,7 @@ import SectionSeparator from '../shared/components/ui/section-separator';
 import DisplayNoTask from './components/ui/display-no-task';
 import SectionHeading from './components/ui/divider';
 import { TodoTaskViewer } from './components/viewer/todo-task-viewer';
-import { OverdueTaskViewer } from './components/viewer/overdue-task-viewer';
+import { OverdueTaskViewer } from '../shared/components/taskcard/overdue-task-viewer';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
