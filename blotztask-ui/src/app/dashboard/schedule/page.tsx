@@ -6,6 +6,7 @@ import ScheduleHeader from './components/schedule-header';
 import TaskCardContainer from '../shared/components/taskcard/task-card-container';
 import SectionSeparator from '../shared/components/ui/section-separator';
 import SectionHeading from './components/sectionHeading';
+import { OverdueTaskViewer } from '../shared/components/taskcard/overdue-task-viewer';
 
 export default function Schedule() {
   const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks } = useScheduleTaskStore();
@@ -27,21 +28,13 @@ export default function Schedule() {
             <>
               <SectionHeading text="Overdue" />
               <SectionSeparator />
-              {overdueTasks.map((task) => {
-                return (
-                  <>
-                    <TaskCardContainer
-                      key={task.id}
-                      task={task}
-                      handleCheckboxChange={handleCheckboxChange}
-                      handleTaskEdit={handleEditTask}
-                      handleTaskDelete={handleDeleteTask}
-                      handleTaskDeleteUndo={handleTaskDeleteUndo}
-                    />
-                    <SectionSeparator />
-                  </>
-                );
-              })}
+              <OverdueTaskViewer
+                        overdueTasks={overdueTasks}
+                        handleOverdueCheckboxChange={handleCheckboxChange}
+                        handleTaskEdit={handleEditTask}
+                        handleTaskDelete={handleDeleteTask}
+                        handleTaskDeleteUndo={handleTaskDeleteUndo}
+                      />
             </>
           )}
         
