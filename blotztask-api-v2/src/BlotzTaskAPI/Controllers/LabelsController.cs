@@ -1,5 +1,6 @@
 using BlotzTask.Application.Labels.Queries.GetLabels;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTaskAPI.Controllers;
