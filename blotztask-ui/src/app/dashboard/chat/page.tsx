@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useSession } from 'next-auth/react';
 import { useSignalR } from '@/hooks/use-signalR';
+import { ExtractedTask } from '@/model/extracted-task-dto';
 
 interface Message {
   id: string;
@@ -11,6 +12,10 @@ interface Message {
   content: string;
   timestamp: Date;
   isBot: boolean;
+}
+
+interface TaskList {
+  tasks: ExtractedTask[];
 }
 
 // Mock responses when backend is unavailable
@@ -27,10 +32,13 @@ const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 export default function ChatPage() {
   const { data: session } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [tasks, setTasks] = useState<ExtractedTask[]>([]);
   const [conversationId, setConversationId] = useState<string>('');
   const [newMessage, setNewMessage] = useState('');
   const [connectionRetries, setConnectionRetries] = useState<number>(0);
   const [isOfflineMode, setIsOfflineMode] = useState<boolean>(false);
+  const [showTasks, setShowTasks] = useState<boolean>(false);
+  const [isConversationComplete, setIsConversationComplete] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const userName = session?.user?.name || 'User';
   const maxRetries = 3;
@@ -52,7 +60,7 @@ export default function ChatPage() {
     start,
     stop,
     error
-  } = useSignalR(`${apiUrl}/chatHub`, false); // Auto-connect = false to manage connection ourselves
+  } = useSignalR(`${apiUrl}/chatHub`, false);
 
   // Interpret the connection state for UI purposes
   const isConnecting = connectionState === 'connecting' || connectionState === 'reconnecting';
@@ -79,12 +87,12 @@ export default function ChatPage() {
     }, 1000);
   }, [getMockResponse]);
 
-  // Set up message receiving
+  // Set up message and task receiving
   useEffect(() => {
     if (connection) {
+      // Handle regular messages
       on('ReceiveMessage', (user, message, convoId) => {
         if (convoId === conversationId) {
-          console.log('Received message from server:', { user, message, convoId });
           const newMsg: Message = {
             id: uuidv4(),
             sender: user as string, 
@@ -92,24 +100,37 @@ export default function ChatPage() {
             timestamp: new Date(),
             isBot: user === 'ChatBot'
           };
-          
           setMessages(prev => [...prev, newMsg]);
         }
       });
+
+      // Handle received tasks
+      on('ReceiveTasks', (taskList: TaskList) => {
+        if (taskList?.tasks?.length > 0) {
+          setTasks(taskList.tasks);
+          setShowTasks(true);
+          setIsConversationComplete(true);
+        }
+      });
+
+      // Handle conversation completion
+      on('ConversationCompleted', (convoId: string) => {
+        if (convoId === conversationId) {
+          setIsConversationComplete(true);
+        }
+      });
     }
+    
   }, [connection, conversationId, on]);
 
   // Connect to hub
   useEffect(() => {
     if (!isOfflineMode && conversationId) {
-      console.log('Attempting to connect to SignalR hub');
-      
       start().catch(err => {
         console.error('Error starting connection:', err);
         setConnectionRetries(prev => prev + 1);
         
         if (connectionRetries >= maxRetries) {
-          console.log(`Failed to connect after ${connectionRetries} attempts, switching to offline mode`);
           setIsOfflineMode(true);
         }
       });
@@ -118,7 +139,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, showTasks]);
 
   const handleReconnect = async () => {
     if (isOfflineMode) {
@@ -136,16 +157,13 @@ export default function ChatPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !conversationId) return;
+    if (!newMessage.trim() || !conversationId || isConversationComplete) return;
     
     const messageToSend = newMessage;
-    setNewMessage(''); // Clear input field immediately to prevent double sending
+    setNewMessage('');
     
     try {
-      console.log('Sending message:', messageToSend);
-      
       if (isOfflineMode) {
-        // For offline mode, we need to add messages locally
         const userMessage = {
           id: uuidv4(),
           sender: userName,
@@ -153,18 +171,15 @@ export default function ChatPage() {
           timestamp: new Date(),
           isBot: false
         };
-        
         setMessages(prev => [...prev, userMessage]);
         handleOfflineMessage();
       } else {
-        // The server will broadcast this message back to all clients including sender
         await invoke('SendMessage', userName, messageToSend, conversationId);
       }
     } catch (error) {
       console.error('Error sending message:', error);
       setIsOfflineMode(true);
       
-      // Add the message locally since we're now in offline mode
       const userMessage = {
         id: uuidv4(),
         sender: userName,
@@ -172,18 +187,25 @@ export default function ChatPage() {
         timestamp: new Date(),
         isBot: false
       };
-      
       setMessages(prev => [...prev, userMessage]);
       handleOfflineMessage();
     }
   };
 
+  const startNewConversation = () => {
+    const newConvoId = uuidv4();
+    setConversationId(newConvoId);
+    setMessages([]);
+    setTasks([]);
+    setShowTasks(false);
+    setIsConversationComplete(false);
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-6xl mx-auto p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Simple Chat</h1>
+        <h1 className="text-xl font-semibold">Goal Planning Chat</h1>
         
-        {/* Connection status indicator */}
         {connectionError && (
           <button 
             onClick={handleReconnect}
@@ -195,69 +217,119 @@ export default function ChatPage() {
         )}
       </div>
       
-      <div className="h-[calc(100vh-120px)] border rounded flex flex-col">
-        {/* Chat header */}
-        <div className="border-b px-4 py-2">
-          <div className="font-medium">Chat</div>
-          {isOfflineMode && (
-            <div className="text-xs text-amber-500">Offline mode</div>
-          )}
-        </div>
-        
-        {/* Messages */}
-        <div className="flex-1 overflow-auto p-4">
-          {messages.length === 0 && !isConnecting ? (
-            <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-              No messages yet. Start by sending a message.
-            </div>
-          ) : isConnecting ? (
-            <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-              Connecting to chat service...
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
-                  <div className={`max-w-[70%] rounded-lg p-3 ${
-                    msg.isBot
-                      ? 'bg-gray-100' 
-                      : 'bg-blue-100'
-                  }`}>
-                    <div className="text-xs mb-1 flex justify-between">
-                      <span>{msg.isBot ? 'Bot' : userName}</span>
-                      <span className="text-gray-500 ml-4">{msg.timestamp.toLocaleTimeString()}</span>
-                    </div>
-                    <div className="whitespace-pre-wrap break-words">
-                      {msg.content}
+      <div className="h-[calc(100vh-120px)] border rounded flex">
+        {/* Chat section */}
+        <div className={`${showTasks ? 'w-1/2' : 'w-full'} border-r flex flex-col`}>
+          {/* Chat header */}
+          <div className="border-b px-4 py-2 flex justify-between items-center">
+            <div className="font-medium">Conversation</div>
+            {isConversationComplete && (
+              <button 
+                onClick={startNewConversation}
+                className="text-sm bg-blue-100 px-2 py-1 rounded"
+              >
+                New Conversation
+              </button>
+            )}
+          </div>
+          
+          {/* Messages */}
+          <div className="flex-1 overflow-auto p-4">
+            {messages.length === 0 && !isConnecting ? (
+              <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+                {isConversationComplete ? (
+                  "This conversation is complete. Start a new one to continue."
+                ) : (
+                  "Describe your goal to get started. The assistant will help break it down into tasks."
+                )}
+              </div>
+            ) : isConnecting ? (
+              <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+                Connecting to chat service...
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {messages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
+                    <div className={`max-w-[80%] rounded-lg p-3 ${
+                      msg.isBot ? 'bg-gray-100' : 'bg-blue-100'
+                    }`}>
+                      <div className="text-xs mb-1 flex justify-between">
+                        <span>{msg.isBot ? 'Assistant' : userName}</span>
+                        <span className="text-gray-500 ml-4">
+                          {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <div className="whitespace-pre-wrap break-words">
+                        {msg.content}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </div>
+          
+          {/* Message input */}
+          <div className="border-t p-2">
+            <form onSubmit={handleSendMessage} className="flex gap-2">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                disabled={isConnecting || isConversationComplete}
+                placeholder={
+                  isConversationComplete 
+                    ? "Conversation completed" 
+                    : "Type your message..."
+                }
+                className="flex-1 border rounded p-2 disabled:bg-gray-100"
+              />
+              <button 
+                type="submit" 
+                disabled={isConnecting || !newMessage.trim() || isConversationComplete}
+                className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-blue-300"
+              >
+                Send
+              </button>
+            </form>
+          </div>
         </div>
         
-        {/* Message input */}
-        <div className="border-t p-2">
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              disabled={isConnecting}
-              placeholder="Type your message..."
-              className="flex-1 border rounded p-2"
-            />
-            <button 
-              type="submit" 
-              disabled={isConnecting || !newMessage.trim()}
-              className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-blue-300"
-            >
-              Send
-            </button>
-          </form>
-        </div>
+        {/* Tasks section */}
+        {showTasks && (
+          <div className="w-1/2 flex flex-col">
+            <div className="border-b px-4 py-2">
+              <div className="font-medium">Generated Tasks</div>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              {tasks.length > 0 ? (
+                <div className="space-y-3">
+                  {tasks.map((task, index) => (
+                    <div key={index} className={`border rounded p-3 ${task.isValidTask ? 'bg-green-50' : 'bg-amber-50'}`}>
+                      <div className="font-medium">{task.title}</div>
+                      <div className="text-sm text-gray-600 mt-1">{task.description}</div>
+                      <div className="flex justify-between mt-2 text-xs">
+                        <span className="bg-gray-100 px-2 py-1 rounded">{String(task.label)}</span>
+                        <span>Due: {task.due_date}</span>
+                      </div>
+                      {!task.isValidTask && (
+                        <div className="text-xs text-amber-600 mt-1">
+                          Note: This task may need adjustment
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+                  No tasks generated yet
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
