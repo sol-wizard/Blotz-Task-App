@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useSession } from 'next-auth/react';
 import { useSignalR } from '@/hooks/use-signalR';
 import { ExtractedTask } from '@/model/extracted-task-dto';
+import TaskCardToAdd from '../shared/components/taskcard/task-card-to-add';
 
 interface Message {
   id: string;
@@ -18,9 +19,9 @@ interface Message {
 const mockResponses = [
   "I'm unable to connect to the backend service right now. This is an offline response.",
   "The chat service appears to be offline. Here's a simulated response.",
-  "Backend connection failed. This is a fallback response from the frontend.",
+  'Backend connection failed. This is a fallback response from the frontend.',
   "I'm operating in offline mode. The chat server is currently unavailable.",
-  "This is a simulated response because the backend service is not responding."
+  'This is a simulated response because the backend service is not responding.',
 ];
 
 const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -29,6 +30,7 @@ export default function ChatPage() {
   const { data: session } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
   const [tasks, setTasks] = useState<ExtractedTask[]>([]);
+  const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
   const [conversationId, setConversationId] = useState<string>('');
   const [newMessage, setNewMessage] = useState('');
   const [connectionRetries, setConnectionRetries] = useState<number>(0);
@@ -39,6 +41,10 @@ export default function ChatPage() {
   const userName = session?.user?.name || 'User';
   const maxRetries = 3;
 
+  const handleTaskAdded = (index) => {
+    setAddedTaskIndices((prev) => new Set(prev).add(index));
+  };
+
   // Initialize with a default conversation ID
   useEffect(() => {
     if (!conversationId) {
@@ -48,15 +54,10 @@ export default function ChatPage() {
   }, [conversationId]);
 
   // Use the SignalR hook
-  const {
-    connection,
-    connectionState,
-    invoke,
-    on,
-    start,
-    stop,
-    error
-  } = useSignalR(`${apiUrl}/chatHub`, false);
+  const { connection, connectionState, invoke, on, start, stop, error } = useSignalR(
+    `${apiUrl}/chatHub`,
+    false
+  );
 
   // Interpret the connection state for UI purposes
   const isConnecting = connectionState === 'connecting' || connectionState === 'reconnecting';
@@ -75,11 +76,11 @@ export default function ChatPage() {
       sender: 'ChatBot',
       content: getMockResponse(),
       timestamp: new Date(Date.now() + 1000),
-      isBot: true
+      isBot: true,
     };
-    
+
     setTimeout(() => {
-      setMessages(prev => [...prev, botResponse]);
+      setMessages((prev) => [...prev, botResponse]);
     }, 1000);
   }, [getMockResponse]);
 
@@ -91,12 +92,12 @@ export default function ChatPage() {
         if (convoId === conversationId) {
           const newMsg: Message = {
             id: uuidv4(),
-            sender: user as string, 
+            sender: user as string,
             content: message as string,
             timestamp: new Date(),
-            isBot: user === 'ChatBot'
+            isBot: user === 'ChatBot',
           };
-          setMessages(prev => [...prev, newMsg]);
+          setMessages((prev) => [...prev, newMsg]);
         }
       });
 
@@ -107,7 +108,7 @@ export default function ChatPage() {
           setShowTasks(true);
           setIsConversationComplete(true);
         }
-        console.log(receivedTasks)
+        console.log(receivedTasks);
       });
 
       // Handle conversation completion
@@ -117,16 +118,15 @@ export default function ChatPage() {
         }
       });
     }
-    
   }, [connection, conversationId, on]);
 
   // Connect to hub
   useEffect(() => {
     if (!isOfflineMode && conversationId) {
-      start().catch(err => {
+      start().catch((err) => {
         console.error('Error starting connection:', err);
-        setConnectionRetries(prev => prev + 1);
-        
+        setConnectionRetries((prev) => prev + 1);
+
         if (connectionRetries >= maxRetries) {
           setIsOfflineMode(true);
         }
@@ -143,7 +143,7 @@ export default function ChatPage() {
       setIsOfflineMode(false);
       setConnectionRetries(0);
     }
-    
+
     try {
       await stop();
       await start();
@@ -155,10 +155,10 @@ export default function ChatPage() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !conversationId || isConversationComplete) return;
-    
+
     const messageToSend = newMessage;
     setNewMessage('');
-    
+
     try {
       if (isOfflineMode) {
         const userMessage = {
@@ -166,9 +166,9 @@ export default function ChatPage() {
           sender: userName,
           content: messageToSend,
           timestamp: new Date(),
-          isBot: false
+          isBot: false,
         };
-        setMessages(prev => [...prev, userMessage]);
+        setMessages((prev) => [...prev, userMessage]);
         handleOfflineMessage();
       } else {
         await invoke('SendMessage', userName, messageToSend, conversationId);
@@ -176,15 +176,15 @@ export default function ChatPage() {
     } catch (error) {
       console.error('Error sending message:', error);
       setIsOfflineMode(true);
-      
+
       const userMessage = {
         id: uuidv4(),
         sender: userName,
         content: messageToSend,
         timestamp: new Date(),
-        isBot: false
+        isBot: false,
       };
-      setMessages(prev => [...prev, userMessage]);
+      setMessages((prev) => [...prev, userMessage]);
       handleOfflineMessage();
     }
   };
@@ -196,24 +196,25 @@ export default function ChatPage() {
     setTasks([]);
     setShowTasks(false);
     setIsConversationComplete(false);
+    setAddedTaskIndices(new Set());
   };
 
   return (
     <div className="max-w-6xl mx-auto p-4">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Goal Planning Chat</h1>
-        
+
         {connectionError && (
-          <button 
+          <button
             onClick={handleReconnect}
             className="text-red-500 hover:text-red-700 flex items-center text-sm"
           >
-            {isOfflineMode ? "Offline Mode" : "Connection Error"} 
+            {isOfflineMode ? 'Offline Mode' : 'Connection Error'}
             <span className="ml-1">⟳</span>
           </button>
         )}
       </div>
-      
+
       <div className="h-[calc(100vh-120px)] border rounded flex">
         {/* Chat section */}
         <div className={`${showTasks ? 'w-1/2' : 'w-full'} border-r flex flex-col`}>
@@ -221,24 +222,19 @@ export default function ChatPage() {
           <div className="border-b px-4 py-2 flex justify-between items-center">
             <div className="font-medium">Conversation</div>
             {isConversationComplete && (
-              <button 
-                onClick={startNewConversation}
-                className="text-sm bg-blue-100 px-2 py-1 rounded"
-              >
+              <button onClick={startNewConversation} className="text-sm bg-blue-100 px-2 py-1 rounded">
                 New Conversation
               </button>
             )}
           </div>
-          
+
           {/* Messages */}
           <div className="flex-1 overflow-auto p-4">
             {messages.length === 0 && !isConnecting ? (
               <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-                {isConversationComplete ? (
-                  "This conversation is complete. Start a new one to continue."
-                ) : (
-                  "Describe your goal to get started. The assistant will help break it down into tasks."
-                )}
+                {isConversationComplete
+                  ? 'This conversation is complete. Start a new one to continue.'
+                  : 'Describe your goal to get started. The assistant will help break it down into tasks.'}
               </div>
             ) : isConnecting ? (
               <div className="h-full flex items-center justify-center text-gray-500 text-sm">
@@ -248,18 +244,16 @@ export default function ChatPage() {
               <div className="space-y-4">
                 {messages.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
-                    <div className={`max-w-[80%] rounded-lg p-3 ${
-                      msg.isBot ? 'bg-gray-100' : 'bg-blue-100'
-                    }`}>
+                    <div
+                      className={`max-w-[80%] rounded-lg p-3 ${msg.isBot ? 'bg-gray-100' : 'bg-blue-100'}`}
+                    >
                       <div className="text-xs mb-1 flex justify-between">
                         <span>{msg.isBot ? 'Assistant' : userName}</span>
                         <span className="text-gray-500 ml-4">
                           {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <div className="whitespace-pre-wrap break-words">
-                        {msg.content}
-                      </div>
+                      <div className="whitespace-pre-wrap break-words">{msg.content}</div>
                     </div>
                   </div>
                 ))}
@@ -267,7 +261,7 @@ export default function ChatPage() {
               </div>
             )}
           </div>
-          
+
           {/* Message input */}
           <div className="border-t p-2">
             <form onSubmit={handleSendMessage} className="flex gap-2">
@@ -276,15 +270,11 @@ export default function ChatPage() {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 disabled={isConnecting || isConversationComplete}
-                placeholder={
-                  isConversationComplete 
-                    ? "Conversation completed" 
-                    : "Type your message..."
-                }
+                placeholder={isConversationComplete ? 'Conversation completed' : 'Type your message...'}
                 className="flex-1 border rounded p-2 disabled:bg-gray-100"
               />
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isConnecting || !newMessage.trim() || isConversationComplete}
                 className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-blue-300"
               >
@@ -293,7 +283,7 @@ export default function ChatPage() {
             </form>
           </div>
         </div>
-        
+
         {/* Tasks section */}
         {showTasks && (
           <div className="w-1/2 flex flex-col">
@@ -304,19 +294,13 @@ export default function ChatPage() {
               {tasks.length > 0 ? (
                 <div className="space-y-3">
                   {tasks.map((task, index) => (
-                    <div key={index} className={`border rounded p-3 ${task.isValidTask ? 'bg-green-50' : 'bg-amber-50'}`}>
-                      <div className="font-medium">{task.title}</div>
-                      <div className="text-sm text-gray-600 mt-1">{task.description}</div>
-                      <div className="flex justify-between mt-2 text-xs">
-                        <span className="bg-gray-100 px-2 py-1 rounded">{task.label.name}</span>
-                        <span>Due: {task.due_date}</span>
-                      </div>
-                      {!task.isValidTask && (
-                        <div className="text-xs text-amber-600 mt-1">
-                          Note: This task may need adjustment
-                        </div>
-                      )}
-                    </div>
+                    <TaskCardToAdd
+                      key={index}
+                      taskToAdd={task}
+                      index={index}
+                      addedTaskIndices={addedTaskIndices}
+                      onTaskAdded={handleTaskAdded}
+                    />
                   ))}
                 </div>
               ) : (
