@@ -14,10 +14,6 @@ interface Message {
   isBot: boolean;
 }
 
-interface TaskList {
-  tasks: ExtractedTask[];
-}
-
 // Mock responses when backend is unavailable
 const mockResponses = [
   "I'm unable to connect to the backend service right now. This is an offline response.",
@@ -105,12 +101,13 @@ export default function ChatPage() {
       });
 
       // Handle received tasks
-      on('ReceiveTasks', (taskList: TaskList) => {
-        if (taskList?.tasks?.length > 0) {
-          setTasks(taskList.tasks);
+      on('ReceiveTasks', (receivedTasks: ExtractedTask[]) => {
+        if (receivedTasks?.length > 0) {
+          setTasks(receivedTasks);
           setShowTasks(true);
           setIsConversationComplete(true);
         }
+        console.log(receivedTasks)
       });
 
       // Handle conversation completion
@@ -311,7 +308,7 @@ export default function ChatPage() {
                       <div className="font-medium">{task.title}</div>
                       <div className="text-sm text-gray-600 mt-1">{task.description}</div>
                       <div className="flex justify-between mt-2 text-xs">
-                        <span className="bg-gray-100 px-2 py-1 rounded">{String(task.label)}</span>
+                        <span className="bg-gray-100 px-2 py-1 rounded">{task.label.name}</span>
                         <span>Due: {task.due_date}</span>
                       </div>
                       {!task.isValidTask && (

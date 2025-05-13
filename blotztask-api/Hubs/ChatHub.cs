@@ -150,9 +150,9 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
     }
 
     // Check if we can generate tasks based on the current state
-    private async Task<(bool canComplete, object tasks)> CheckIfReadyForTasks(
-    ChatHistory chatHistory,
-    ClarificationState state)
+    private async Task<(bool canComplete, List<ExtractedTaskDTO> tasks)> CheckIfReadyForTasks(
+        ChatHistory chatHistory,
+        ClarificationState state)
     {
         string context = $"Original goal: {state.OriginalGoal}\nClarifications:\n" +
                          string.Join("\n", state.ClarificationAnswers.Select((a, i) => $"{i + 1}. {a}"));
@@ -170,7 +170,6 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
 
         return (false, null);
     }
-
     // Process the bot's response and handle task generation or clarification
     private async Task ProcessBotResponse(
         string conversationId,
@@ -261,9 +260,9 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
     }
 
     // Try to parse the tasks from the response
-    private bool TryParseTasks(string response, out object tasks)
+    private bool TryParseTasks(string response, out List<ExtractedTaskDTO> tasks)
     {
-        tasks = new { tasks = Array.Empty<ExtractedTask>() };
+        tasks = new List<ExtractedTaskDTO>();
 
         if (string.IsNullOrWhiteSpace(response))
         {
@@ -271,24 +270,28 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
             return false;
         }
 
+        // First check if this is a plain text response (not JSON)
+        if (!response.Trim().StartsWith("{") && !response.Trim().StartsWith("["))
+        {
+            _logger.LogDebug("Response is not JSON, treating as plain text");
+            return false;
+        }
+
         try
         {
+            // Try to find the JSON portion in the response
             var jsonStart = response.IndexOf('{');
             var jsonEnd = response.LastIndexOf('}') + 1;
 
-            string jsonContent = null;
+            string jsonContent = response;
 
+            // If we found both markers, extract the JSON portion
             if (jsonStart >= 0 && jsonEnd > jsonStart && jsonEnd <= response.Length)
             {
                 jsonContent = response[jsonStart..jsonEnd];
                 _logger.LogDebug("Extracted JSON content: {JsonContent}", jsonContent);
             }
-            else
-            {
-                jsonContent = response;
-            }
 
-            // Deserialize with validation
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -298,27 +301,46 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
 
             var parsed = JsonSerializer.Deserialize<JsonElement>(jsonContent, options);
 
-            // Validate the JSON structure
-            if (!parsed.TryGetProperty("tasks", out var tasksArray) ||
-                tasksArray.ValueKind != JsonValueKind.Array)
+            // Check if this is a task response or just a regular message
+            if (!parsed.TryGetProperty("tasks", out var tasksArray))
             {
-                _logger.LogWarning("Response doesn't contain valid tasks array");
+                _logger.LogDebug("Response doesn't contain tasks property");
                 return false;
             }
 
-            // Validate each task
+            if (tasksArray.ValueKind != JsonValueKind.Array)
+            {
+                _logger.LogWarning("Tasks property is not an array");
+                return false;
+            }
+
+            // Get label information
+            var (labels, labelNames) = GetLabelInfoAsync().GetAwaiter().GetResult();
+
             foreach (var taskElement in tasksArray.EnumerateArray())
             {
                 if (taskElement.ValueKind != JsonValueKind.Object)
                 {
                     _logger.LogWarning("Invalid task element found");
-                    return false;
+                    continue;  // Skip invalid tasks but keep processing others
+                }
+
+                try
+                {
+                    var extractedTask = JsonSerializer.Deserialize<ExtractedTask>(taskElement.GetRawText(), options);
+                    if (extractedTask != null)
+                    {
+                        tasks.Add(HandleExtractedTask(extractedTask, labels, labelNames));
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogWarning(ex, "Failed to parse individual task");
+                    continue;  // Skip this task but continue with others
                 }
             }
 
-            // If we got here, the JSON is valid
-            tasks = JsonSerializer.Deserialize<object>(jsonContent, options);
-            return true;
+            return tasks.Count > 0;
         }
         catch (JsonException ex)
         {
@@ -337,5 +359,25 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
         var labels = await _labelService.GetAllLabelsAsync();
         var labelNames = labels.Select(label => label.Name).ToHashSet();
         return (labels, labelNames);
+    }
+
+    private ExtractedTaskDTO HandleExtractedTask(ExtractedTask? extractedTask, List<LabelDTO> labels, HashSet<string> labelNames)
+    {
+        if (extractedTask is null)
+            throw new ArgumentNullException(nameof(extractedTask));
+
+        if (!labelNames.Contains(extractedTask.label))
+        {
+            extractedTask.label = "Others";
+        }
+
+        return new ExtractedTaskDTO
+        {
+            Title = extractedTask.Title,
+            Description = extractedTask.Description,
+            DueDate = extractedTask.DueDate,
+            IsValidTask = extractedTask.IsValidTask,
+            Label = labels.First(x => x.Name == extractedTask.label)
+        };
     }
 }
