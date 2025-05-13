@@ -260,6 +260,8 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
     }
 
     // Try to parse the tasks from the response
+    
+    //TODO: Sort generated tasks by due date
     private bool TryParseTasks(string response, out List<ExtractedTaskDTO> tasks)
     {
         tasks = new List<ExtractedTaskDTO>();
