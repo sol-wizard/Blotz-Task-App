@@ -3,7 +3,6 @@ using System.Text.Json;
 using BlotzTask.Models;
 using BlotzTask.Services;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 /// <summary>
@@ -49,6 +48,8 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
         - Include ALL fields for each task
         - due_date must be future dates
         - isValidTask must be true for well-formed tasks
+        - Tasks must be in chronological order
+        - Each task should logically follow from the previous
         - label: One of the following categories: {2}.
         ";
 
@@ -111,14 +112,12 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
             clarificationState!.ClarificationAnswers.Add(message);
             clarificationState.ClarificationRound++;
             // Check if we can generate tasks now (before checking max rounds)
-            var checkResult = await CheckIfReadyForTasks(conversationId, chatHistory, clarificationState);
+            var checkResult = await CheckIfReadyForTasks(chatHistory, clarificationState);
             if (checkResult.canComplete)
             {
                 await Clients.Caller.SendAsync("ReceiveTasks", checkResult.tasks);
                 _completedConversations[conversationId] = true;
                 await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
-                chatHistory.AddAssistantMessage(checkResult.answer);
-                await Clients.Caller.SendAsync("ReceiveMessage", "ChatBot",checkResult.answer, conversationId);
                 return;
             }
 
@@ -150,8 +149,8 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
         }
     }
 
-    private async Task<(bool canComplete, object tasks, string answer)> CheckIfReadyForTasks(
-    string conversationId,
+    // Check if we can generate tasks based on the current state
+    private async Task<(bool canComplete, object tasks)> CheckIfReadyForTasks(
     ChatHistory chatHistory,
     ClarificationState state)
     {
@@ -166,12 +165,13 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
         if (TryParseTasks(answer.Content, out var tasks))
         {
             chatHistory.AddAssistantMessage(answer.Content);
-            return (true, tasks, answer.Content);
+            return (true, tasks);
         }
 
-        return (false, null, answer.Content);
+        return (false, null);
     }
 
+    // Process the bot's response and handle task generation or clarification
     private async Task ProcessBotResponse(
         string conversationId,
         ChatHistory chatHistory,
@@ -189,7 +189,7 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
         }
 
         // Handle first-round clarification check
-        if (!isClarifying && await NeedsClarification(userMessage))
+        if (!isClarifying && await NeedsClarification(chatHistory, userMessage))
         {
             _clarificationStates[conversationId] = new ClarificationState
             {
@@ -211,25 +211,37 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
         return chatHistory;
     }
 
-    private async Task<bool> NeedsClarification(string message)
+    private async Task<bool> NeedsClarification(ChatHistory chatHistory, string newMessage)
     {
-        var clarificationCheck = await _chatCompletionService.GetChatMessageContentAsync(
-            new ChatHistory
-            {
-            new ChatMessageContent(AuthorRole.System,
-                SystemMessageTemplate +
-                @"Analyze if this needs clarification. Respond ONLY with:
-                - ""CLARIFY"" if more info is needed
-                - ""PROCEED"" if ready for tasks
-                
-                User input: " + message)
-            });
+        // Create a temporary copy of the conversation history
+        var tempHistory = new ChatHistory(chatHistory);
+
+        // Add our clarification check prompt
+        tempHistory.AddSystemMessage(
+            @"Analyze if the user's latest input needs clarification considering the full conversation history.
+        Respond ONLY with:
+        - ""CLARIFY"" if you need more information to create proper tasks
+        - ""PROCEED"" if you have enough information to generate tasks
+        
+        Consider:
+        - Is the goal specific enough?
+        - Do we have all required parameters?
+        - Is the timeline clear?
+        - Are there ambiguous terms that need defining?");
+
+        tempHistory.AddUserMessage(newMessage);
+
+        var clarificationCheck = await _chatCompletionService.GetChatMessageContentAsync(tempHistory);
+
+        // Add some logging for debugging
+        _logger.LogDebug($"Clarification check for message: {newMessage}");
+        _logger.LogDebug($"Clarification response: {clarificationCheck.Content}");
+
         return clarificationCheck.Content?.Contains("CLARIFY") == true;
     }
-
     private async Task FinalizeGoalBreakdown(string conversationId, ChatHistory chatHistory, ClarificationState state)
     {
-        var checkResult = await CheckIfReadyForTasks(conversationId, chatHistory, state);
+        var checkResult = await CheckIfReadyForTasks(chatHistory, state);
         if (checkResult.canComplete)
         {
             await Clients.Caller.SendAsync("ReceiveTasks", checkResult.tasks);
@@ -248,26 +260,74 @@ public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatH
         await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
     }
 
+    // Try to parse the tasks from the response
     private bool TryParseTasks(string response, out object tasks)
     {
+        tasks = new { tasks = Array.Empty<ExtractedTask>() };
+
+        if (string.IsNullOrWhiteSpace(response))
+        {
+            _logger.LogWarning("Empty response received for task parsing");
+            return false;
+        }
+
         try
         {
             var jsonStart = response.IndexOf('{');
             var jsonEnd = response.LastIndexOf('}') + 1;
-            if (jsonStart >= 0 && jsonEnd > jsonStart)
+
+            string jsonContent = null;
+
+            if (jsonStart >= 0 && jsonEnd > jsonStart && jsonEnd <= response.Length)
             {
-                var jsonContent = response[jsonStart..jsonEnd];
-                tasks = JsonSerializer.Deserialize<object>(jsonContent);
-                return true;
+                jsonContent = response[jsonStart..jsonEnd];
+                _logger.LogDebug("Extracted JSON content: {JsonContent}", jsonContent);
+            }
+            else
+            {
+                jsonContent = response;
             }
 
-            tasks = JsonSerializer.Deserialize<object>(response);
+            // Deserialize with validation
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                AllowTrailingCommas = true,
+                ReadCommentHandling = JsonCommentHandling.Skip
+            };
+
+            var parsed = JsonSerializer.Deserialize<JsonElement>(jsonContent, options);
+
+            // Validate the JSON structure
+            if (!parsed.TryGetProperty("tasks", out var tasksArray) ||
+                tasksArray.ValueKind != JsonValueKind.Array)
+            {
+                _logger.LogWarning("Response doesn't contain valid tasks array");
+                return false;
+            }
+
+            // Validate each task
+            foreach (var taskElement in tasksArray.EnumerateArray())
+            {
+                if (taskElement.ValueKind != JsonValueKind.Object)
+                {
+                    _logger.LogWarning("Invalid task element found");
+                    return false;
+                }
+            }
+
+            // If we got here, the JSON is valid
+            tasks = JsonSerializer.Deserialize<object>(jsonContent, options);
             return true;
         }
-        catch
+        catch (JsonException ex)
         {
-            _logger.LogError("Failed to parse tasks from response: {Response}", response);
-            tasks = new { tasks = Array.Empty<ExtractedTask>() };
+            _logger.LogError(ex, "JSON parsing failed for response: {Response}", response);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error parsing tasks");
             return false;
         }
     }
