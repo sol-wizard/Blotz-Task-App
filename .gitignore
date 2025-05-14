@@ -1,0 +1,4 @@
+*.excalidraw
+./vs
+.git-autoconfig.json
+.vs/

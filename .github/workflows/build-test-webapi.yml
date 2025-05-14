@@ -1,0 +1,45 @@
+name: Build, test and run project 
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+jobs:
+    build-and-test-backend:
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+
+        - name: Set up .NET Core
+          uses: actions/setup-dotnet@v4
+          with:
+            dotnet-version: '8.0.x'
+
+        - name: Install dependencies
+          run: dotnet restore
+          working-directory: ./blotztask-api
+
+        - name: .Net - Tool restore
+          working-directory: ./blotztask-api
+          run: |
+            dotnet tool restore
+
+        - name: Build the project
+          run: dotnet build --configuration Release --no-restore
+          working-directory: ./blotztask-api
+
+        - name: Publish the project
+          run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
+          working-directory: ./blotztask-api
+
+        - name: Generate EF Core migration script
+          working-directory: ./blotztask-api
+          run: dotnet ef migrations script -o ${{ runner.temp }}/migrations.sql
