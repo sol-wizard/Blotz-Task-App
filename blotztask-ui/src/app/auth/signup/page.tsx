@@ -120,6 +120,24 @@ const SignUpPage = () => {
               <p className="text-red-500 text-sm">{String(errors.password.message)}</p>
             )}
           </div>
+          <div>
+            <Controller
+              name="confirmPassword"
+              control={control}
+              rules={{ required: 'Please confirm your password' }}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  type="password"
+                  placeholder="Confirm Password"
+                  className="w-full p-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              )}
+            />
+            {errors.confirmPassword?.message && (
+              <p className="text-red-500 text-sm">{String(errors.confirmPassword.message)}</p>
+            )}
+          </div>
           <Button
             className="w-full py-2.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             type="submit"
@@ -128,7 +146,10 @@ const SignUpPage = () => {
             {isSubmitting ? <LoadingSpinner className="text-[4px] mx-10" variant="white" /> : 'Sign Up'}
           </Button>
           <p className="text-center text-sm text-gray-500 mt-4">
-            Already have an account? <a href="/auth/signin" className="text-blue-500 underline">Sign in</a>
+            Already have an account?{' '}
+            <a href="/auth/signin" className="text-blue-500 underline">
+              Sign in
+            </a>
           </p>
         </form>
       </div>
