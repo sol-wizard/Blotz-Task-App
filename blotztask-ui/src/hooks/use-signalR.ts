@@ -1,130 +1,82 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import * as signalR from '@microsoft/signalr';
+import { useState, useEffect, useCallback } from 'react'; 
+import { signalRService } from '@/services/signalr-service';
+import * as signalR from '@microsoft/signalr'; 
 
 interface UseSignalRResult {
   connection: signalR.HubConnection | null;
   connectionState: string;
   invoke: <T = unknown>(methodName: string, ...args: unknown[]) => Promise<T>;
-  on: (methodName: string, callback: (...args: unknown[]) => void) => void;
-  off: (methodName: string, callback: (...args: unknown[]) => void) => void;
-  start: () => Promise<void>;
-  stop: () => Promise<void>;
-  error: Error | null;
+  on: (methodName: string, callback: (...args: unknown[]) => void) => void; 
+  off: (methodName: string, callback: (...args: unknown[]) => void) => void; 
+  start: () => Promise<void>; // Start the connection
+  stop: () => Promise<void>; // Stop the connection
+  error: Error | null; // Any error encountered
 }
 
-/**
- * React hook for managing a SignalR connection
- * @param hubUrl The URL of the SignalR hub
- * @param autoConnect Whether to automatically connect when the component mounts
- * @returns An object with connection methods and state
- */
+// The custom React hook for SignalR
+//TODO: Pretty sure the hubUrl is hard coded and pass in from the component, lets do it other way 
+// i will recommend we do it consistent like how we do for the REST API call, 
+// we have a service (signalR-service.ts) then the constant should be in the service file, so we no need pass the hard code hub url from parent from the component
 export function useSignalR(hubUrl: string, autoConnect = true): UseSignalRResult {
-  const [connectionState, setConnectionState] = useState<string>('disconnected');
-  const [error, setError] = useState<Error | null>(null);
-  const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const [connectionState, setConnectionState] = useState('disconnected'); // Track connection state
+  const [error, setError] = useState<Error | null>(null); // Track errors
 
-  // Create the connection instance
+  // Effect to create and configure the connection when hubUrl changes
   useEffect(() => {
-    connectionRef.current = new signalR.HubConnectionBuilder()
-      .withUrl(hubUrl)
-      .withAutomaticReconnect()
-      .build();
+    const conn = signalRService.createConnection(hubUrl);
 
-    // Update state when connection state changes
-    const onStateChange = () => {
-      if (connectionRef.current) {
-        setConnectionState(connectionRef.current.state);
-      }
-    };
+    const onStateChange = () => setConnectionState(conn.state);
 
-    const connection = connectionRef.current;
-    connection.onclose(onStateChange);
-    connection.onreconnecting(() => {
+    conn.onclose(onStateChange);
+    conn.onreconnecting(() => { 
       onStateChange();
       setError(new Error('Connection lost, trying to reconnect...'));
     });
-    connection.onreconnected(onStateChange);
+    conn.onreconnected(onStateChange);
 
     return () => {
-      // Clean up the connection when the component unmounts
-      if (connection) {
-        connection.stop().catch(console.error);
-        connectionRef.current = null;
-      }
+      signalRService.stopConnection().catch(console.error);
     };
   }, [hubUrl]);
 
-  // Start the connection
+  // Effect to auto-connect if autoConnect is true
+  //TODO: Check if we need autoConnect, how does it works , when we need to use it (if we dont need you can remove the param and remove this extra hook)
   useEffect(() => {
-    if (autoConnect && connectionRef.current) {
-      start();
+    if (autoConnect) {
+      start(); // Start the connection
     }
-  }, [autoConnect, hubUrl]);
+  }, [autoConnect]);
 
-  // Start connection
+
   const start = useCallback(async () => {
-    if (!connectionRef.current) return;
-
     try {
-      setError(null);
-      await connectionRef.current.start();
-      setConnectionState(connectionRef.current.state);
+      setError(null); 
+      await signalRService.startConnection();
+      const conn = signalRService.getConnection(); 
+      if (conn) setConnectionState(conn.state); 
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-      setConnectionState('disconnected');
-      throw err;
+      setError(err instanceof Error ? err : new Error(String(err))); 
+      setConnectionState('disconnected'); 
     }
   }, []);
 
-  // Stop connection
   const stop = useCallback(async () => {
-    if (!connectionRef.current) return;
-
     try {
-      await connectionRef.current.stop();
-      setConnectionState('disconnected');
+      await signalRService.stopConnection(); 
+      setConnectionState('disconnected'); 
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-      throw err;
-    }
-  }, []);
-
-  // Invoke a hub method
-  const invoke = useCallback(async <T = unknown>(methodName: string, ...args: unknown[]): Promise<T> => {
-    if (!connectionRef.current) {
-      throw new Error('No active connection!');
-    }
-    
-    try {
-      return await connectionRef.current.invoke<T>(methodName, ...args);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-      throw err;
-    }
-  }, []);
-
-  // Register a handler for a hub event
-  const on = useCallback((methodName: string, callback: (...args: unknown[]) => void) => {
-    if (connectionRef.current) {
-      connectionRef.current.on(methodName, callback);
-    }
-  }, []);
-
-  // Remove a handler for a hub event
-  const off = useCallback((methodName: string, callback: (...args: unknown[]) => void) => {
-    if (connectionRef.current) {
-      connectionRef.current.off(methodName, callback);
+      setError(err instanceof Error ? err : new Error(String(err))); 
     }
   }, []);
 
   return {
-    connection: connectionRef.current,
-    connectionState,
-    invoke,
-    on,
-    off,
-    start,
-    stop,
-    error
+    connection: signalRService.getConnection(), 
+    connectionState, 
+    invoke: signalRService.invoke, 
+    on: signalRService.on,
+    off: signalRService.off, 
+    start, 
+    stop, 
+    error,
   };
 }
