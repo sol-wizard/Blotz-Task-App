@@ -21,8 +21,9 @@ export default function Schedule() {
   return (
     <div>
       <ScheduleHeader />
-
-      <AddTaskCardContainer onAddTask={handleAddTask} />
+      <div className="mt-6 mb-4">
+        <AddTaskCardContainer onAddTask={handleAddTask} />
+      </div>
 
       <div>
         {overdueTasks.length !== 0 && (
