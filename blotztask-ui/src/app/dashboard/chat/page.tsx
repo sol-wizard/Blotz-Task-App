@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useSignalR } from '@/hooks/use-signalR';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import TaskCardToAdd from '../shared/components/taskcard/task-card-to-add';
+import { SIGNALR_HUBS_CHAT } from '@/services/signalr-service';
 
 interface Message {
   id: string;
@@ -23,8 +24,6 @@ const mockResponses = [
   "I'm operating in offline mode. The chat server is currently unavailable.",
   'This is a simulated response because the backend service is not responding.',
 ];
-
-const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -54,10 +53,7 @@ export default function ChatPage() {
   }, [conversationId]);
 
   // Use the SignalR hook
-  const { connection, connectionState, invoke, on, start, stop, error } = useSignalR(
-    `${apiUrl}/chatHub`,
-    false
-  );
+  const { connection, connectionState, invoke, on, start, stop, error } = useSignalR(SIGNALR_HUBS_CHAT);
 
   // Interpret the connection state for UI purposes
   const isConnecting = connectionState === 'connecting' || connectionState === 'reconnecting';

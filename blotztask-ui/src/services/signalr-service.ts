@@ -1,13 +1,12 @@
 import * as signalR from '@microsoft/signalr';
 
+const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+export const SIGNALR_HUBS_CHAT = `${apiUrl}/chatHub`;
 let connection: signalR.HubConnection | null = null;
 
 export const signalRService = {
   createConnection: (hubUrl: string): signalR.HubConnection => {
-    connection = new signalR.HubConnectionBuilder()
-      .withUrl(hubUrl)
-      .withAutomaticReconnect()
-      .build();
+    connection = new signalR.HubConnectionBuilder().withUrl(hubUrl).withAutomaticReconnect().build();
 
     return connection;
   },
