@@ -154,6 +154,10 @@ builder.Services.AddValidatorsFromAssemblyContaining<SampleValidationValidator>(
 // Register FluentValidation AutoValidation
 builder.Services.AddFluentValidationAutoValidation();
 
+builder.Services.AddSingleton<ConversationStateService>();
+builder.Services.AddScoped<TaskParserService>();
+builder.Services.AddScoped<ChatMessageService>();
+
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
