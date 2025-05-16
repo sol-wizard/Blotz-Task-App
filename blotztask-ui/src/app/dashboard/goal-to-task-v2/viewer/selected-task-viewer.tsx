@@ -1,6 +1,7 @@
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import TaskCardSelection from '../components/task-card-selection';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function SelectedTaskViewer({
   selectedTasks,
@@ -16,9 +17,11 @@ export default function SelectedTaskViewer({
           <CardHeader>
             <CardTitle>Selected Tasks</CardTitle>
           </CardHeader>
-          {selectedTasks.map((task) => (
-            <TaskCardSelection key={task.id} task={task} handleCheckBoxChange={handleCheckBoxChange} />
-          ))}
+          <ScrollArea className="flex flex-col flex-1 gap-3 max-h-[75vh]">
+            {selectedTasks.map((task) => (
+              <TaskCardSelection key={task.id} task={task} handleCheckBoxChange={handleCheckBoxChange} />
+            ))}
+          </ScrollArea>
         </Card>
       )}
     </div>

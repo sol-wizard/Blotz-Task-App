@@ -3,7 +3,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { Bot, Mic } from 'lucide-react';
-import { useState } from 'react';
 
 interface Message {
   sender: 'user' | 'bot';
