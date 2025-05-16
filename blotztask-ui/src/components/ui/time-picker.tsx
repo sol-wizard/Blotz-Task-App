@@ -6,15 +6,18 @@ import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Clock } from 'lucide-react';
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Control } from 'react-hook-form';
+import { cn } from '@/lib/utils';
 
 const times = ['9:00 AM', '12:00 PM', '3:00 PM', '6:00 PM', '9:00 PM', '12:00 AM'];
 
 export default function TimePicker({
   control,
   timePickerRef,
+  className,
 }: {
   control: Control;
   timePickerRef?: React.RefObject<HTMLDivElement>;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -29,9 +32,11 @@ export default function TimePicker({
               <PopoverTrigger asChild>
                 <FormControl>
                   <div
-                    className={`flex flex-row text-xs font-normal ml-4
-                            items-center rounded-full px-3 py-1 h-[1.625rem] 
-                            ${open ? 'bg-primary text-white' : 'bg-gray-300 text-neutral-700'}`}
+                    className={cn(
+                      'flex flex-row text-xs font-normal ml-4 items-center rounded-full px-3 py-1 h-[1.625rem]',
+                      open ? 'bg-primary text-white' : 'bg-gray-300 text-neutral-700',
+                      className
+                    )}
                   >
                     <Clock className="mr-1" size={16} />
 
