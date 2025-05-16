@@ -47,7 +47,7 @@ export default function AiTaskCard({ task }: { task: TaskDetailDTO }) {
             <div className="flex flex-col gap-1">
               <CalendarForm control={form.control} className="w-20" />
               <LabelSelect control={form.control} />
-              <TimePicker control={form.control} className="ml-0 w-32" />
+              <TimePicker control={form.control} className="ml-0 w-28" />
             </div>
           </form>
         </Form>
