@@ -8,15 +8,18 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useState } from 'react';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { Control } from 'react-hook-form';
+import { cn } from '@/lib/utils';
 
 export function CalendarForm({
   task,
   datePickerRef,
   control,
+  className,
 }: {
   task?: TaskDetailDTO;
   datePickerRef?: React.RefObject<HTMLDivElement>;
   control: Control;
+  className?: string;
 }) {
   const [showCalendar, setShowCalendar] = useState(false);
   const handleCalendarClose = () => setShowCalendar(false);
@@ -32,9 +35,11 @@ export function CalendarForm({
               <PopoverTrigger asChild>
                 <FormControl>
                   <button
-                    className={`flex flex-row text-xs font-normal
-                            items-center mr-4 rounded-full px-3 py-1 h-[1.625rem] 
-                            ${showCalendar ? 'bg-primary text-white' : 'bg-gray-300 text-neutral-700'}`}
+                    className={cn(
+                      'flex flex-row text-xs font-normal items-center mr-4 rounded-full px-3 py-1 h-[1.625rem]',
+                      showCalendar ? 'bg-primary text-white' : 'bg-gray-300 text-neutral-700',
+                      className
+                    )}
                     onClick={() => setShowCalendar((prev) => !prev)}
                   >
                     <CalendarDays className="mr-1" size={16} />
