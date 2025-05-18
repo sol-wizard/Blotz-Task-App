@@ -3,6 +3,8 @@ using BlotzTask.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.SemanticKernel.ChatCompletion;
 
+//TODO: Winnie please refactor this into normal constructor pattern rather than using primary constructor for a class
+//primary constructor for a class is a new way but for consistency and readability let follow the old way, check how other controller is doing
 public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatHub> logger, ILabelService labelService,
 ChatMessageService chatMessageService, ConversationStateService stateService, TaskParserService taskParserService
 ) : Hub
