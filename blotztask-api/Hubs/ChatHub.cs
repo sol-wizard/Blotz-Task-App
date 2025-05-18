@@ -14,7 +14,20 @@ ChatMessageService chatMessageService, ConversationStateService stateService, Ta
     private readonly ILogger<ChatHub> _logger = logger;
     private const int MaxClarificationRounds = 3;
 
-    // Track user connections
+// TODO: 🛠️ Winnie, please refactor the logic below into a service class (e.g. `ChatHubService`)
+//
+// ❓ Why:
+// The Hub handles too much logic — makes it harder to read, test, and maintain. It should focus only on real-time messaging.
+//
+// ✅ How:
+// - Create `IChatHubService` + `ChatHubService`
+// - Move logic from `SendMessage`, `ProcessBotResponse`, etc.
+// - Inject the service and delegate logic
+// - Use `HubCallerContext` and `IClientProxy` if needed
+//
+// 📎 Reference:
+// See how other controller is doing 
+// // Track user connections
     public override async Task OnConnectedAsync()
     {
         string connectionId = Context.ConnectionId;
