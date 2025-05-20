@@ -45,7 +45,6 @@ export function AppSidebar() {
   const { loadSearchTasks, setQuery } = useSearchTaskActions();
   const query = useSearchQuery();
 
-
   const todayBadgeCount = overdueTodayTasks.length + incompleteTodayTasks.length;
   const scheduleBadgeCount = overdueScheduleTasks.length + todayScheduleTasks.length + tomorrowScheduleTasks.length + weekScheduleTasks.length + Object.keys(monthScheduleTasks).length;
 
