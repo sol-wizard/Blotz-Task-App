@@ -3,31 +3,49 @@ using BlotzTask.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-//TODO: Winnie please refactor this into normal constructor pattern rather than using primary constructor for a class
-//primary constructor for a class is a new way but for consistency and readability let follow the old way, check how other controller is doing
-public class ChatHub(IChatCompletionService chatCompletionService, ILogger<ChatHub> logger, ILabelService labelService,
-ChatMessageService chatMessageService, ConversationStateService stateService, TaskParserService taskParserService
-) : Hub
+public class ChatHub : Hub
 {
     // TODO: Add more error handling using HandleErrorAsync
     // TODO: Sort tasks by due date
-    private readonly ILogger<ChatHub> _logger = logger;
+    private readonly IChatCompletionService _chatCompletionService;
+    private readonly ILogger<ChatHub> _logger;
+    private readonly ILabelService _labelService;
+    private readonly ChatMessageService _chatMessageService;
+    private readonly ConversationStateService _stateService;
+    private readonly TaskParserService _taskParserService;
+
+    public ChatHub(
+    IChatCompletionService chatCompletionService,
+    ILogger<ChatHub> logger,
+    ILabelService labelService,
+    ChatMessageService chatMessageService,
+    ConversationStateService stateService,
+    TaskParserService taskParserService)
+    {
+        _chatCompletionService = chatCompletionService;
+        _logger = logger;
+        _labelService = labelService;
+        _chatMessageService = chatMessageService;
+        _stateService = stateService;
+        _taskParserService = taskParserService;
+    }
+
     private const int MaxClarificationRounds = 3;
 
-// TODO: 🛠️ Winnie, please refactor the logic below into a service class (e.g. `ChatHubService`)
-//
-// ❓ Why:
-// The Hub handles too much logic — makes it harder to read, test, and maintain. It should focus only on real-time messaging.
-//
-// ✅ How:
-// - Create `IChatHubService` + `ChatHubService`
-// - Move logic from `SendMessage`, `ProcessBotResponse`, etc.
-// - Inject the service and delegate logic
-// - Use `HubCallerContext` and `IClientProxy` if needed
-//
-// 📎 Reference:
-// See how other controller is doing 
-// // Track user connections
+    // TODO: 🛠️ Winnie, please refactor the logic below into a service class (e.g. `ChatHubService`)
+    //
+    // ❓ Why:
+    // The Hub handles too much logic — makes it harder to read, test, and maintain. It should focus only on real-time messaging.
+    //
+    // ✅ How:
+    // - Create `IChatHubService` + `ChatHubService`
+    // - Move logic from `SendMessage`, `ProcessBotResponse`, etc.
+    // - Inject the service and delegate logic
+    // - Use `HubCallerContext` and `IClientProxy` if needed
+    //
+    // 📎 Reference:
+    // See how other controller is doing 
+    // // Track user connections
     public override async Task OnConnectedAsync()
     {
         string connectionId = Context.ConnectionId;
@@ -38,7 +56,7 @@ ChatMessageService chatMessageService, ConversationStateService stateService, Ta
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         string connectionId = Context.ConnectionId;
-        stateService.RemoveConversation(connectionId);
+        _stateService.RemoveConversation(connectionId);
         _logger.LogInformation($"User disconnected: {connectionId}. Exception: {exception?.Message}");
         await base.OnDisconnectedAsync(exception);
     }
@@ -47,7 +65,7 @@ ChatMessageService chatMessageService, ConversationStateService stateService, Ta
     public async Task SendMessage(string user, string message, string conversationId)
     {
         // Check if conversation is already completed
-        if (stateService.IsConversationCompleted(conversationId))
+        if (_stateService.IsConversationCompleted(conversationId))
         {
             await Clients.Caller.SendAsync("ReceiveMessage", "ChatBot",
                 "This conversation has been completed. Please start a new conversation if you have additional goals.",
@@ -55,27 +73,27 @@ ChatMessageService chatMessageService, ConversationStateService stateService, Ta
             return;
         }
 
-        if (!stateService.TryGetChatHistory(conversationId, out var chatHistory))
+        if (!_stateService.TryGetChatHistory(conversationId, out var chatHistory))
         {
             var (_, labelNames) = await GetLabelInfoAsync();
-            chatHistory = await chatMessageService.InitializeNewConversation(conversationId, labelNames);
+            chatHistory = await _chatMessageService.InitializeNewConversation(conversationId, labelNames);
         }
 
         chatHistory.AddUserMessage(message);
         await Clients.Caller.SendAsync("ReceiveMessage", user, message, conversationId);
 
-        bool isClarifying = stateService.TryGetClarificationState(conversationId, out var clarificationState);
+        bool isClarifying = _stateService.TryGetClarificationState(conversationId, out var clarificationState);
         if (isClarifying)
         {
             _logger.LogInformation($"Clarifying goal for conversation {conversationId}: {message}");
             clarificationState!.ClarificationAnswers.Add(message);
             clarificationState.ClarificationRound++;
             // Check if we can generate tasks now (before checking max rounds)
-            var checkResult = await chatMessageService.CheckIfReadyForTasks(chatHistory, clarificationState);
+            var checkResult = await _chatMessageService.CheckIfReadyForTasks(chatHistory, clarificationState);
             if (checkResult.canComplete)
             {
                 await Clients.Caller.SendAsync("ReceiveTasks", checkResult.tasks);
-                stateService.MarkConversationCompleted(conversationId);
+                _stateService.MarkConversationCompleted(conversationId);
                 await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
                 return;
             }
@@ -90,7 +108,7 @@ ChatMessageService chatMessageService, ConversationStateService stateService, Ta
 
         try
         {
-            var answer = await chatMessageService.GetChatResponseAsync(chatHistory);
+            var answer = await _chatMessageService.GetChatResponseAsync(chatHistory);
             var botResponse = answer.Content ?? string.Empty;
             await ProcessBotResponse(conversationId, chatHistory, botResponse, isClarifying, message);
 
@@ -119,32 +137,33 @@ ChatMessageService chatMessageService, ConversationStateService stateService, Ta
         try
         {
             // First check if the response contains valid tasks
-        if (taskParserService.TryParseTasks(botResponse, out var tasks))
-        {
-            await Clients.Caller.SendAsync("ReceiveTasks", tasks);
-            stateService.MarkConversationCompleted(conversationId);
-            await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
-            return;
-        }
-
-        // Handle first-round clarification check
-        if (!isClarifying && await chatMessageService.NeedsClarification(chatHistory, userMessage))
-        {
-            stateService.AddClarificationState(conversationId, new ConversationStateService.ClarificationState
+            if (_taskParserService.TryParseTasks(botResponse, out var tasks))
             {
-                OriginalGoal = userMessage,
-                ClarificationRound = 0
-            });
-        }
+                await Clients.Caller.SendAsync("ReceiveTasks", tasks);
+                _stateService.MarkConversationCompleted(conversationId);
+                await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
+                return;
+            }
 
-        chatHistory.AddAssistantMessage(botResponse);
-        await Clients.Caller.SendAsync("ReceiveMessage", "ChatBot", botResponse, conversationId);
-        } catch (Exception ex)
+            // Handle first-round clarification check
+            if (!isClarifying && await _chatMessageService.NeedsClarification(chatHistory, userMessage))
+            {
+                _stateService.AddClarificationState(conversationId, new ConversationStateService.ClarificationState
+                {
+                    OriginalGoal = userMessage,
+                    ClarificationRound = 0
+                });
+            }
+
+            chatHistory.AddAssistantMessage(botResponse);
+            await Clients.Caller.SendAsync("ReceiveMessage", "ChatBot", botResponse, conversationId);
+        }
+        catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing bot response");
             await HandleErrorAsync(ex, conversationId);
         }
-        
+
     }
 
     private async Task FinalizeGoalBreakdown(
@@ -154,7 +173,7 @@ ChatMessageService chatMessageService, ConversationStateService stateService, Ta
     {
         try
         {
-            var checkResult = await chatMessageService.CheckIfReadyForTasks(chatHistory, state);
+            var checkResult = await _chatMessageService.CheckIfReadyForTasks(chatHistory, state);
             if (checkResult.canComplete)
             {
                 await Clients.Caller.SendAsync("ReceiveTasks", checkResult.tasks);
@@ -167,7 +186,7 @@ ChatMessageService chatMessageService, ConversationStateService stateService, Ta
                 chatHistory.AddAssistantMessage(vagueResponse);
                 await Clients.Caller.SendAsync("ReceiveMessage", "ChatBot", vagueResponse, conversationId);
             }
-            stateService.MarkConversationCompleted(conversationId);
+            _stateService.MarkConversationCompleted(conversationId);
             await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
         }
         catch (Exception ex)
@@ -186,8 +205,8 @@ ChatMessageService chatMessageService, ConversationStateService stateService, Ta
         }
 
         // Mark conversation as completed on error
-        stateService.MarkConversationCompleted(conversationId);
-        
+        _stateService.MarkConversationCompleted(conversationId);
+
         await Clients.Caller.SendAsync("ReceiveMessage", "System",
             $"An error occurred while processing your request.\n\nDEBUG INFO: {errorDetail}");
         await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
@@ -195,7 +214,7 @@ ChatMessageService chatMessageService, ConversationStateService stateService, Ta
 
     private async Task<(List<LabelDTO> labels, HashSet<string> labelNames)> GetLabelInfoAsync()
     {
-        var labels = await labelService.GetAllLabelsAsync();
+        var labels = await _labelService.GetAllLabelsAsync();
         var labelNames = labels.Select(label => label.Name).ToHashSet();
         return (labels, labelNames);
     }
