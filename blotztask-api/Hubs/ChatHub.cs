@@ -9,10 +9,7 @@ public class ChatHub : Hub
 
     public ChatHub(
     ILogger<ChatHub> logger,
-    ILabelService labelService,
-    ChatMessageService chatMessageService,
     ConversationStateService stateService,
-    TaskParserService taskParserService,
     IChatHubService chatHubService)
     {
         _logger = logger;
