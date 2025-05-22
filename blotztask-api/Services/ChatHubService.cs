@@ -10,7 +10,6 @@ namespace BlotzTask.Services
     {
         Task HandleSendMessage(string user, string message, string conversationId, IHubCallerClients clients);
         Task HandleProcessBotResponse(string conversationId, ChatHistory chatHistory, string botResponse, bool isClarifying, string userMessage, IHubCallerClients clients);
-        Task HandleFinalizeGoalBreakdown(string conversationId, ChatHistory chatHistory, ConversationStateService.ClarificationState state, IHubCallerClients clients);
         Task HandleErrorAsync(Exception ex, string conversationId, IHubCallerClients clients);
         Task<(List<LabelDTO> labels, HashSet<string> labelNames)> GetLabelInfoAsync();
     }
@@ -124,7 +123,7 @@ namespace BlotzTask.Services
             }
         }
 
-        public async Task HandleFinalizeGoalBreakdown(string conversationId, ChatHistory chatHistory, ConversationStateService.ClarificationState state, IHubCallerClients clients)
+        private async Task HandleFinalizeGoalBreakdown(string conversationId, ChatHistory chatHistory, ConversationStateService.ClarificationState state, IHubCallerClients clients)
         {
             try
             {
