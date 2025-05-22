@@ -154,7 +154,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<SampleValidationValidator>(
 // Register FluentValidation AutoValidation
 builder.Services.AddFluentValidationAutoValidation();
 
-builder.Services.AddSingleton<ConversationStateService>();
+builder.Services.AddScoped<IChatHubService, ChatHubService>();
+builder.Services.AddScoped<ConversationStateService>();
 builder.Services.AddScoped<TaskParserService>();
 builder.Services.AddScoped<ChatMessageService>();
 
