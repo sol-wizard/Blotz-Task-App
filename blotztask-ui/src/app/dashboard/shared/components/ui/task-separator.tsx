@@ -11,7 +11,6 @@ const TaskSeparator = ({
   taskStatus?: TaskCardStatus;
   className?: string;
 }) => {
-  
   const statusColorMap: Record<TaskCardStatus, string> = {
     done: '#BFC0C9',
     todo: color || '#9698A7',

@@ -1,6 +1,6 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import React from 'react';
-import TaskCard, { TaskCardStatus } from "./task-card"
+import TaskCard, { TaskCardStatus } from './task-card';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
 
@@ -8,9 +8,9 @@ type TaskCardContainerProps = {
   task: TaskDetailDTO;
   taskStatus?: TaskCardStatus;
   handleCheckboxChange: (taskId: number) => void;
-  handleTaskEdit: (updatedTask: RawEditTaskDTO) => void;
-  handleTaskDelete: (taskId: number) => void;
-  handleTaskDeleteUndo: (taskId: number) => void;
+  handleTaskEdit?: (updatedTask: RawEditTaskDTO) => void;
+  handleTaskDelete?: (taskId: number) => void;
+  handleTaskDeleteUndo?: (taskId: number) => void;
 };
 
 export default function TaskCardContainer({
