@@ -1,167 +1,313 @@
 'use client';
 
-import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import LoadingSpinner from '@/components/ui/loading-spinner';
-import { generateAiTaskFromGoal } from '@/services/ai-service';
-import { addTaskItem } from '@/services/task-service';
-import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
-import Divider from '../today/components/ui/divider';
-import { mapExtractedTaskToAddTaskDTO } from '../ai-assistant/util/map-extracted-to-add-task';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { useSession } from 'next-auth/react';
+import { useSignalR } from '@/hooks/use-signalR';
+import { ExtractedTask } from '@/model/extracted-task-dto';
+import TaskCardToAdd from '../shared/components/taskcard/task-card-to-add';
+import { SIGNALR_HUBS_CHAT } from '@/services/signalr-service';
 
-export default function AiAssistant() {
-  const [goal, setGoal] = useState('');
-  const [duration, setDuration] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [extractedTasks, setExtractedTasks] = useState<ExtractedTasksWrapperDTO | null>(null);
-  const [adding, setAdding] = useState(false);
+interface Message {
+  id: string;
+  sender: string;
+  content: string;
+  timestamp: Date;
+  isBot: boolean;
+}
+
+// Mock responses when backend is unavailable
+const mockResponses = [
+  "I'm unable to connect to the backend service right now. This is an offline response.",
+  "The chat service appears to be offline. Here's a simulated response.",
+  'Backend connection failed. This is a fallback response from the frontend.',
+  "I'm operating in offline mode. The chat server is currently unavailable.",
+  'This is a simulated response because the backend service is not responding.',
+];
+
+export default function ChatPage() {
+  const { data: session } = useSession();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [tasks, setTasks] = useState<ExtractedTask[]>([]);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
+  const [conversationId, setConversationId] = useState<string>('');
+  const [newMessage, setNewMessage] = useState('');
+  const [connectionRetries, setConnectionRetries] = useState<number>(0);
+  const [isOfflineMode, setIsOfflineMode] = useState<boolean>(false);
+  const [showTasks, setShowTasks] = useState<boolean>(false);
+  const [isConversationComplete, setIsConversationComplete] = useState<boolean>(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const userName = session?.user?.name || 'User';
+  const maxRetries = 3;
 
-  const handleGoalToTask = async () => {
-    if (!goal.trim()) return;
+  const handleTaskAdded = (index) => {
+    setAddedTaskIndices((prev) => new Set(prev).add(index));
+  };
 
-    setExtractedTasks(null);
-    setAddedTaskIndices(new Set());
-    setLoading(true);
+  // Initialize with a default conversation ID
+  useEffect(() => {
+    if (!conversationId) {
+      const newConvoId = uuidv4();
+      setConversationId(newConvoId);
+    }
+  }, [conversationId]);
+
+  // Use the SignalR hook
+  const { connection, connectionState, invoke, on, start, stop, error } = useSignalR(SIGNALR_HUBS_CHAT);
+
+  // Interpret the connection state for UI purposes
+  const isConnecting = connectionState === 'connecting' || connectionState === 'reconnecting';
+  const connectionError = !!error || isOfflineMode;
+
+  // Function to get a random mock response
+  const getMockResponse = useCallback(() => {
+    const randomIndex = Math.floor(Math.random() * mockResponses.length);
+    return mockResponses[randomIndex];
+  }, []);
+
+  // Handle offline message
+  const handleOfflineMessage = useCallback(() => {
+    const botResponse = {
+      id: uuidv4(),
+      sender: 'ChatBot',
+      content: getMockResponse(),
+      timestamp: new Date(Date.now() + 1000),
+      isBot: true,
+    };
+
+    setTimeout(() => {
+      setMessages((prev) => [...prev, botResponse]);
+    }, 1000);
+  }, [getMockResponse]);
+
+  // Set up message and task receiving
+  useEffect(() => {
+    if (connection) {
+      // Handle regular messages
+      on('ReceiveMessage', (user, message, convoId) => {
+        if (convoId === conversationId) {
+          const newMsg: Message = {
+            id: uuidv4(),
+            sender: user as string,
+            content: message as string,
+            timestamp: new Date(),
+            isBot: user === 'ChatBot',
+          };
+          setMessages((prev) => [...prev, newMsg]);
+        }
+      });
+
+      // Handle received tasks
+      on('ReceiveTasks', (receivedTasks: ExtractedTask[]) => {
+        if (receivedTasks?.length > 0) {
+          setTasks(receivedTasks);
+          setShowTasks(true);
+          setIsConversationComplete(true);
+        }
+        console.log(receivedTasks);
+      });
+
+      // Handle conversation completion
+      on('ConversationCompleted', (convoId: string) => {
+        if (convoId === conversationId) {
+          setIsConversationComplete(true);
+        }
+      });
+    }
+  }, [connection, conversationId, on]);
+
+  // Connect to hub
+  useEffect(() => {
+    if (!isOfflineMode && conversationId) {
+      start().catch((err) => {
+        console.error('Error starting connection:', err);
+        setConnectionRetries((prev) => prev + 1);
+
+        if (connectionRetries >= maxRetries) {
+          setIsOfflineMode(true);
+        }
+      });
+    }
+  }, [conversationId, start, connectionRetries, maxRetries, isOfflineMode]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, showTasks]);
+
+  const handleReconnect = async () => {
+    if (isOfflineMode) {
+      setIsOfflineMode(false);
+      setConnectionRetries(0);
+    }
 
     try {
-      const payload = { goal, durationInDays: Number(duration) };
-      const task = await generateAiTaskFromGoal(payload);
-      setExtractedTasks(task);
+      await stop();
+      await start();
     } catch (error) {
-      console.error('Failed to generate goal-to-task:', error);
-    } finally {
-      setLoading(false);
+      console.error('Reconnection failed:', error);
     }
   };
 
-  const handleAddTask = async (extractedTask, index) => {
-    if (!extractedTasks) return;
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !conversationId || isConversationComplete) return;
 
-    setAdding(true);
+    const messageToSend = newMessage;
+    setNewMessage('');
 
     try {
-      const tasktoAdd = mapExtractedTaskToAddTaskDTO(extractedTask);
-
-      await addTaskItem(tasktoAdd);
-      setAddedTaskIndices((prev) => new Set(prev).add(index));
+      if (isOfflineMode) {
+        const userMessage = {
+          id: uuidv4(),
+          sender: userName,
+          content: messageToSend,
+          timestamp: new Date(),
+          isBot: false,
+        };
+        setMessages((prev) => [...prev, userMessage]);
+        handleOfflineMessage();
+      } else {
+        await invoke('SendMessage', userName, messageToSend, conversationId);
+      }
     } catch (error) {
-      console.error('Failed to save task:', error);
-    } finally {
-      setAdding(false);
+      console.error('Error sending message:', error);
+      setIsOfflineMode(true);
+
+      const userMessage = {
+        id: uuidv4(),
+        sender: userName,
+        content: messageToSend,
+        timestamp: new Date(),
+        isBot: false,
+      };
+      setMessages((prev) => [...prev, userMessage]);
+      handleOfflineMessage();
     }
+  };
+
+  const startNewConversation = () => {
+    const newConvoId = uuidv4();
+    setConversationId(newConvoId);
+    setMessages([]);
+    setTasks([]);
+    setShowTasks(false);
+    setIsConversationComplete(false);
+    setAddedTaskIndices(new Set());
   };
 
   return (
-    <div className="ml-5 flex flex-col gap-6 mt-8 w-3/4">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-zinc-800">Goal to Task 🏃‍♂️</h1>
-        <p className="text-zinc-500 text-sm">
-          Describe what you want to do and I&apos;ll turn it into a task.
-        </p>
+    <div className="max-w-6xl mx-auto p-4">
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Goal Planning Chat</h1>
+
+        {connectionError && (
+          <button
+            onClick={handleReconnect}
+            className="text-red-500 hover:text-red-700 flex items-center text-sm"
+          >
+            {isOfflineMode ? 'Offline Mode' : 'Connection Error'}
+            <span className="ml-1">⟳</span>
+          </button>
+        )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="goal">Goal to generate Tasks</Label>
-        <Input
-          id="goal"
-          placeholder="e.g. I want to travel to Japan in June"
-          value={goal}
-          onChange={(e) => setGoal(e.target.value)}
-        />
-        <Label htmlFor="duration" className="mt-2">
-          Duration (in days)
-        </Label>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Input
-              id="duration"
-              placeholder="16"
-              type="number"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              className="w-1/4"
-            />
-          </TooltipTrigger>
-          <TooltipContent className="bg-white" side="right" sideOffset={5}>
-            <p className="text-sm text-muted-foreground cursor-help">
-              Please specify how many days you want to spend to complete this goal.
-            </p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Button onClick={handleGoalToTask} disabled={loading} className="w-fit mt-2">
-          Goal to Task
-        </Button>
-      </div>
-
-      <Divider text="Generated Task" />
-
-      {loading && (
-        <div className="flex items-center gap-2 text-sm text-zinc-500">
-          <LoadingSpinner variant="blue" className="text-xs" />
-          Generating your task...
-        </div>
-      )}
-
-      {extractedTasks?.message && (
-        <Alert className="bg-blue-50 border-blue-300 text-blue-800 flex items-start gap-2">
-          <Info className="h-4 w-4 mt-1" />
-          <div>
-            <AlertTitle className="font-semibold">AI Assistant 🤖</AlertTitle>
-            <AlertDescription className="text-sm">{extractedTasks.message}</AlertDescription>
+      <div className="h-[calc(100vh-120px)] border rounded flex">
+        {/* Chat section */}
+        <div className={`${showTasks ? 'w-1/2' : 'w-full'} border-r flex flex-col`}>
+          {/* Chat header */}
+          <div className="border-b px-4 py-2 flex justify-between items-center">
+            <div className="font-medium">Conversation</div>
+            {isConversationComplete && (
+              <button onClick={startNewConversation} className="text-sm bg-blue-100 px-2 py-1 rounded">
+                New Conversation
+              </button>
+            )}
           </div>
-        </Alert>
-      )}
 
-      {extractedTasks?.tasks?.length !== 0 &&
-        extractedTasks?.tasks
-          .filter((t) => t.isValidTask)
-          .map((extractedTask, index) => (
-            <Card
-              key={index}
-              className={`p-4 shadow-md space-y-2 border-2 rounded-xl transition-all ${
-                addedTaskIndices.has(index) ? 'border-green-400 bg-green-50' : 'border-zinc-200'
-              }`}
-            >
-              <h2 className="text-lg font-semibold text-zinc-800">{extractedTask.title}</h2>
-              <p className="text-sm text-zinc-600">
-                <strong>Description:</strong> {extractedTask.description ?? 'None'}
-              </p>
-              <p className="text-sm text-zinc-600">
-                <strong>Due Date:</strong> {extractedTask.due_date ?? 'None'}
-              </p>
-              <p className="text-sm text-zinc-600 flex items-center">
-                <span
-                  className="h-4 w-4 rounded-full"
-                  style={{ backgroundColor: extractedTask.label.color || 'green' }}
-                ></span>
-                <span className="ml-2 font-bold">{extractedTask.label.name || 'Others'}</span>
-              </p>
+          {/* Messages */}
+          <div className="flex-1 overflow-auto p-4">
+            {messages.length === 0 && !isConnecting ? (
+              <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+                {isConversationComplete
+                  ? 'This conversation is complete. Start a new one to continue.'
+                  : 'Describe your goal to get started. The assistant will help break it down into tasks.'}
+              </div>
+            ) : isConnecting ? (
+              <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+                Connecting to chat service...
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {messages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
+                    <div
+                      className={`max-w-[80%] rounded-lg p-3 ${msg.isBot ? 'bg-gray-100' : 'bg-blue-100'}`}
+                    >
+                      <div className="text-xs mb-1 flex justify-between">
+                        <span>{msg.isBot ? 'Assistant' : userName}</span>
+                        <span className="text-gray-500 ml-4">
+                          {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </div>
 
-              <Button
-                size="sm"
-                className={`mt-2 w-fit flex items-center gap-2 rounded-md font-medium transition ${
-                  addedTaskIndices.has(index)
-                    ? 'bg-gray-200 text-gray-500 border border-gray-300 cursor-not-allowed opacity-60'
-                    : 'bg-violet-600 text-white hover:bg-violet-700'
-                }`}
-                onClick={() => handleAddTask(extractedTask, index)}
-                disabled={adding || addedTaskIndices.has(index)}
+          {/* Message input */}
+          <div className="border-t p-2">
+            <form onSubmit={handleSendMessage} className="flex gap-2">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                disabled={isConnecting || isConversationComplete}
+                placeholder={isConversationComplete ? 'Conversation completed' : 'Type your message...'}
+                className="flex-1 border rounded p-2 disabled:bg-gray-100"
+              />
+              <button
+                type="submit"
+                disabled={isConnecting || !newMessage.trim() || isConversationComplete}
+                className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-blue-300"
               >
-                {addedTaskIndices.has(index) ? '✅ Added' : adding ? 'Adding...' : 'Add Task'}
-              </Button>
-            </Card>
-          ))}
+                Send
+              </button>
+            </form>
+          </div>
+        </div>
 
-      {!loading && !extractedTasks && <p className="text-zinc-400 text-sm italic">No task generated yet.</p>}
+        {/* Tasks section */}
+        {showTasks && (
+          <div className="w-1/2 flex flex-col">
+            <div className="border-b px-4 py-2">
+              <div className="font-medium">Generated Tasks</div>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              {tasks.length > 0 ? (
+                <div className="space-y-3">
+                  {tasks.map((task, index) => (
+                    <TaskCardToAdd
+                      key={index}
+                      taskToAdd={task}
+                      index={index}
+                      addedTaskIndices={addedTaskIndices}
+                      onTaskAdded={handleTaskAdded}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+                  No tasks generated yet
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -15,6 +15,7 @@ namespace BlotzTask.Controllers
 
         // POST api/<SampleValidationController>
         [HttpPost]
+        [Obsolete]
         [AllowAnonymous]
         public IActionResult CreateValidation(SampleValidationDTO dto)
         {
