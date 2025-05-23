@@ -32,7 +32,7 @@ public class ChatHub : Hub
     }
 
 
-    //TODO: Add comments about Functionality...
+    //TODO: Add comments about Functionality and param explain...
     public async Task SendMessage(string user, string message, string conversationId)
     {
         await _chatHubService.HandleSendMessage(user, message, conversationId, Clients);

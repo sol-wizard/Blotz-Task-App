@@ -6,6 +6,7 @@ namespace BlotzTask.Services
 {
     // TODO: Add more error handling using HandleErrorAsync
     // TODO: Sort tasks by due date
+    // TODO: This HandleProcessBotResponse and HandleErrorAsync seems to be use in this class only, should we have it private?
     public interface IChatHubService
     {
         Task HandleSendMessage(string user, string message, string conversationId, IHubCallerClients clients);
@@ -28,7 +29,7 @@ namespace BlotzTask.Services
             ILabelService labelService,
             ChatMessageService chatMessageService,
             ConversationStateService stateService,
-            TaskParserService taskParserService)
+            TaskParserService taskParserService) 
         {
             _logger = logger;
             _labelService = labelService;
