@@ -57,7 +57,7 @@ export default function Today() {
             <AddTaskCardContainer onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
 
             <div className="flex items-start h-full">
-              {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (
+              {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 || overdueTasks.length > 0 ? (
                 <div className="flex flex-col gap-4 w-full">
                   {overdueTasks.length > 0 && (
                     <>
