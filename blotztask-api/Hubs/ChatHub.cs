@@ -1,3 +1,4 @@
+using BlotzTask.Models.GoalToTask;
 using BlotzTask.Services;
 using Microsoft.AspNetCore.SignalR;
 
@@ -39,13 +40,29 @@ public class ChatHub : Hub
     public async Task SendMessage(string user, string message, string conversationId)
     {
         // 1. Echo user's message back
-        await Clients.Caller.SendAsync("ReceiveMessage", user, message, conversationId);
+        var userMsg = new ConversationMessage
+        {
+            Sender = user,
+            Content = message,
+            ConversationId = conversationId,
+            Timestamp = DateTime.UtcNow,
+            IsBot = false
+        };
+        await Clients.Caller.SendAsync("ReceiveMessage", userMsg);
 
-        // 2. Get bot reply from service
-        string botReply = await _goalPlannerChatService.HandleSendMessage(user, message, conversationId);
+        // Generate bot response
+        var botContent = await _goalPlannerChatService.HandleSendMessage(user, message, conversationId);
 
-        // 3. Send bot reply
-        await Clients.Caller.SendAsync("ReceiveMessage", "ChatBot", botReply, conversationId);
+        // Create and send the bot's message
+        var botMsg = new ConversationMessage
+        {
+            Sender = "ChatBot",
+            Content = botContent,
+            ConversationId = conversationId,
+            Timestamp = DateTime.UtcNow,
+            IsBot = true
+        };
+        await Clients.Caller.SendAsync("ReceiveMessage", botMsg);
         // await _chatHubService.HandleSendMessage(user, message, conversationId, Clients);
     }
 }
