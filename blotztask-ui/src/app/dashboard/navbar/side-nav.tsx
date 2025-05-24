@@ -24,7 +24,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SearchBar from './components/search-bar';
 import { useIncompleteTodayTasks, useOverdueTasks, useTodayTaskActions } from '../../store/today-task-store';
-import { useScheduleTaskActions } from '@/app/store/schedule-task-store';
+import { useScheduleTaskStore, useScheduleTaskActions } from '@/app/store/schedule-task-store';
 import { useSearchQuery, useSearchTaskActions } from '@/app/store/search-task-store';
 import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
 import { addTaskItem } from '@/services/task-service';
@@ -37,19 +37,21 @@ const FEATURE_FLAG_KEY = 'aiEnabled';
 export function AppSidebar() {
   const { loadScheduleTasks } = useScheduleTaskActions();
   const { loadTodayTasks, loadOverdueTasks } = useTodayTaskActions();
-  const overdueTasks = useOverdueTasks();
+  const overdueTodayTasks = useOverdueTasks();
   const incompleteTodayTasks = useIncompleteTodayTasks();
+  const { overdueTasks: overdueScheduleTasks, todayTasks: todayScheduleTasks, tomorrowTasks: tomorrowScheduleTasks, weekTasks: weekScheduleTasks, monthTasks: monthScheduleTasks } = useScheduleTaskStore();
   const pathname = usePathname();
   const [aiEnabled, setAiEnabled] = useState(true);
   const { loadSearchTasks, setQuery } = useSearchTaskActions();
   const query = useSearchQuery();
 
-  const todayBadgeCount = overdueTasks.length + incompleteTodayTasks.length;
+  const todayBadgeCount = overdueTodayTasks.length + incompleteTodayTasks.length;
+  const scheduleBadgeCount = overdueScheduleTasks.length + todayScheduleTasks.length + tomorrowScheduleTasks.length + weekScheduleTasks.length + Object.keys(monthScheduleTasks).length;
 
   const menuItems = [
     { title: 'All Tasks', url: 'task-list', icon: List },
     { title: 'Today', url: 'today', icon: CircleCheckBig, count: todayBadgeCount},
-    { title: 'Schedule', url: 'schedule', icon: Calendar },
+    { title: 'Schedule', url: 'schedule', icon: Calendar, count: scheduleBadgeCount },
   ];
 
   const handleSignOut = (e) => {
@@ -72,6 +74,7 @@ export function AppSidebar() {
     loadAllLabel();
     loadTodayTasks();
     loadOverdueTasks();
+    loadScheduleTasks();
     const flag = localStorage.getItem(FEATURE_FLAG_KEY);
     if (flag !== null) {
       setAiEnabled(flag === 'true');
