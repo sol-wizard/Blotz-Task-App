@@ -2,7 +2,6 @@ import { TaskDetailDTO } from '../../model/task-detail-dto';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware'
 import { useTodayTaskStore } from '@/app/store/today-task-store';
-
 import {
   addTaskItem,
   deleteTask,
