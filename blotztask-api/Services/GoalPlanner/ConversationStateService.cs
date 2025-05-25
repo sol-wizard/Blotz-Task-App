@@ -6,16 +6,19 @@ namespace BlotzTask.Services.GoalPlanner;
 
 public interface IConversationStateService
 {
-    public bool TryGetChatHistory(string conversationId, out ChatHistory chatHistory);
-    public void SetChatHistory(string conversationId, ChatHistory chatHistory);
-    public ClarificationState GetClarificationState(string conversationId);
-    public void SetClarificationState(string conversationId, ClarificationState state);
+    bool TryGetChatHistory(string conversationId, out ChatHistory chatHistory);
+    void SetChatHistory(string conversationId, ChatHistory chatHistory);
+    ClarificationState GetClarificationState(string conversationId);
+    void SetClarificationState(string conversationId, ClarificationState state);
+    bool IsConversationComplete(string conversationId);
+    void SetConversationComplete(string conversationId, bool isComplete);
+    void RemoveConversation(string conversationId);
 }
 public class ConversationStateServiceV2 : IConversationStateService
 {
     private static readonly ConcurrentDictionary<string, ChatHistory> ConversationHistories = new();
     private static readonly ConcurrentDictionary<string, ClarificationState> ClarificationStates = new();
-    // private static readonly ConcurrentDictionary<string, bool> _completedConversations = new();
+    private static readonly ConcurrentDictionary<string, bool> ConversationCompletionStatus = new();
     
     public bool TryGetChatHistory(string conversationId, out ChatHistory chatHistory)
         => ConversationHistories.TryGetValue(conversationId, out chatHistory);
@@ -33,16 +36,16 @@ public class ConversationStateServiceV2 : IConversationStateService
     public void SetClarificationState(string conversationId, ClarificationState state)
         => ClarificationStates[conversationId] = state;
 
-    // public bool IsConversationCompleted(string conversationId)
-    //     => _completedConversations.TryGetValue(conversationId, out var completed) && completed;
-    //
-    // public void MarkConversationCompleted(string conversationId)
-    //     => _completedConversations[conversationId] = true;
-    //
-    // public void RemoveConversation(string conversationId)
-    // {
-    //     _conversationHistories.TryRemove(conversationId, out _);
-    //     _clarificationStates.TryRemove(conversationId, out _);
-    //     _completedConversations.TryRemove(conversationId, out _);
-    // }
+    public bool IsConversationComplete(string conversationId)
+        => ConversationCompletionStatus.TryGetValue(conversationId, out var isComplete) && isComplete;
+
+    public void SetConversationComplete(string conversationId, bool isComplete)
+        => ConversationCompletionStatus[conversationId] = isComplete;
+
+    public void RemoveConversation(string conversationId)
+    {
+        ConversationHistories.TryRemove(conversationId, out _);
+        ClarificationStates.TryRemove(conversationId, out _);
+        ConversationCompletionStatus.TryRemove(conversationId, out _);
+    }
 }

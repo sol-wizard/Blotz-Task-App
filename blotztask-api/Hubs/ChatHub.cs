@@ -6,13 +6,16 @@ public class ChatHub : Hub
 {
     private readonly ILogger<ChatHub> _logger;
     private readonly IGoalPlannerChatService _goalPlannerChatService;
+    private readonly IConversationStateService _conversationStateService;
 
     public ChatHub(
     ILogger<ChatHub> logger, 
-    IGoalPlannerChatService goalPlannerChatService)
+    IGoalPlannerChatService goalPlannerChatService,
+    IConversationStateService conversationStateService)
     {
         _logger = logger;
         _goalPlannerChatService = goalPlannerChatService;
+        _conversationStateService = conversationStateService;
     }
     public override async Task OnConnectedAsync()
     {
@@ -47,6 +50,8 @@ public class ChatHub : Hub
 
         if (result.IsConversationComplete)
         {
+            // ✅ Cleanup state after completion
+            _conversationStateService.RemoveConversation(conversationId);
             await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
         }
     }

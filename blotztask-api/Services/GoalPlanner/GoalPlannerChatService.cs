@@ -38,13 +38,12 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         var isReady = await _goalPlannerAiService.IsReadyToGeneratePlanAsync(chatHistory);
 
         string botContent;
-        bool isComplete = false;
 
         if (!isReady && state.ClarificationRound >= MaxClarificationRounds)
         {
             botContent = "Sorry, I couldn't generate a helpful task plan based on the information provided. You can try restating your goal with more details.";
             state.ClarificationRound = 0;
-            isComplete = true;
+            _conversationStateService.SetConversationComplete(conversationId, true);
         }
         else if (!isReady)
         {
@@ -55,7 +54,7 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         {
             botContent = await _goalPlannerAiService.GenerateAiResponse(chatHistory);
             state.ClarificationRound = 0;
-            isComplete = true;
+            _conversationStateService.SetConversationComplete(conversationId, true);
         }
 
         _conversationStateService.SetClarificationState(conversationId, state);
@@ -70,7 +69,7 @@ public class GoalPlannerChatService : IGoalPlannerChatService
                 Timestamp = DateTime.UtcNow,
                 IsBot = true
             },
-            IsConversationComplete = isComplete
+            IsConversationComplete = _conversationStateService.IsConversationComplete(conversationId)
         };
     }
 }
