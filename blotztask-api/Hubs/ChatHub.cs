@@ -1,5 +1,6 @@
 using BlotzTask.Models.GoalToTask;
 using BlotzTask.Services;
+using BlotzTask.Services.GoalPlanner;
 using Microsoft.AspNetCore.SignalR;
 
 public class ChatHub : Hub
@@ -39,6 +40,13 @@ public class ChatHub : Hub
     //TODO: Add comments about Functionality and param explain...
     public async Task SendMessage(string user, string message, string conversationId)
     {
+        // Check if this is the user's first message in the conversation.
+        // If no chat history exists, initialize a new conversation with a system prompt.
+        if (!_stateService.TryGetChatHistory(conversationId, out var chatHistory))
+        {
+            chatHistory = _goalPlannerChatService.InitializeNewConversation(conversationId);
+        }
+        
         // 1. Echo user's message back
         var userMsg = new ConversationMessage
         {
@@ -48,11 +56,12 @@ public class ChatHub : Hub
             Timestamp = DateTime.UtcNow,
             IsBot = false
         };
+        chatHistory.AddUserMessage(userMsg.Content);
         await Clients.Caller.SendAsync("ReceiveMessage", userMsg);
 
         // Generate bot response
-        var botContent = await _goalPlannerChatService.HandleSendMessage(user, message, conversationId);
-
+        var botContent = await _goalPlannerChatService.GenerateAiResponse(chatHistory);
+    
         // Create and send the bot's message
         var botMsg = new ConversationMessage
         {
