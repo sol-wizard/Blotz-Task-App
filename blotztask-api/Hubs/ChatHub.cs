@@ -58,22 +58,34 @@ public class ChatHub : Hub
         chatHistory.AddUserMessage(userMsg.Content);
         await Clients.Caller.SendAsync("ReceiveMessage", userMsg);
         
-        //Analyse if need more clarification
+        // Get clarification state and evaluate plan readiness
+        var clarificationState = _conversationStateService.GetClarificationState(conversationId);
         var isReadyToGeneratePlan = await _goalPlannerChatService.IsReadyToGeneratePlanAsync(chatHistory);
 
         string botContent;
 
         if (!isReadyToGeneratePlan)
         {
-            // AI thinks more clarification is needed – generate a helpful follow-up question
-            botContent = await _goalPlannerChatService.GenerateClarifyingQuestionAsync(chatHistory);
+            //TODO: Change this 3 into a constant
+            if (clarificationState.ClarificationRound >= 3)
+            {
+                botContent = "Sorry, I couldn't generate a helpful task plan based on the information provided. You can try restating your goal with more details.";
+                clarificationState.ClarificationRound = 0;
+            }
+            else
+            {
+                botContent = await _goalPlannerChatService.GenerateClarifyingQuestionAsync(chatHistory);
+                clarificationState.ClarificationRound++;
+            }
         }
         else
         {
-            // AI is ready to generate the full step-by-step plan
             botContent = await _goalPlannerChatService.GenerateAiResponse(chatHistory);
+            clarificationState.ClarificationRound = 0;
         }
 
+        // Save updated clarification state
+        _conversationStateService.SetClarificationState(conversationId, clarificationState);
         // Create and send the bot's message
         var botMsg = new ConversationMessage
         {
