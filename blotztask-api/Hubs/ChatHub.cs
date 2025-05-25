@@ -29,8 +29,6 @@ public class ChatHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         string connectionId = Context.ConnectionId;
-        //TODO: Renable this after conversationstate ready
-        // _conversationStateService.RemoveConversation(connectionId);
         _logger.LogInformation($"User disconnected: {connectionId}. Exception: {exception?.Message}");
         await base.OnDisconnectedAsync(exception);
     }
@@ -64,27 +62,30 @@ public class ChatHub : Hub
 
         string botContent;
 
-        if (!isReadyToGeneratePlan)
+        // Case 1: Not ready and clarification round limit exceeded
+        //TODO: Change this 3 into a constant
+        if (!isReadyToGeneratePlan && clarificationState.ClarificationRound >= 3)
         {
-            //TODO: Change this 3 into a constant
-            if (clarificationState.ClarificationRound >= 3)
-            {
-                botContent = "Sorry, I couldn't generate a helpful task plan based on the information provided. You can try restating your goal with more details.";
-                clarificationState.ClarificationRound = 0;
-                await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
-            }
-            else
-            {
-                botContent = await _goalPlannerChatService.GenerateClarifyingQuestionAsync(chatHistory);
-                clarificationState.ClarificationRound++;
-            }
+            botContent = "Sorry, I couldn't generate a helpful task plan based on the information provided. You can try restating your goal with more details.";
+            clarificationState.ClarificationRound = 0;
+
+            await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
         }
+        // Case 2: Not ready, still under max clarification attempts
+        else if (!isReadyToGeneratePlan)
+        {
+            botContent = await _goalPlannerChatService.GenerateClarifyingQuestionAsync(chatHistory);
+            clarificationState.ClarificationRound++;
+        }
+        // Case 3: Ready to generate plan
         else
         {
             botContent = await _goalPlannerChatService.GenerateAiResponse(chatHistory);
             clarificationState.ClarificationRound = 0;
+            
+            await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
         }
-
+        
         // Save updated clarification state
         _conversationStateService.SetClarificationState(conversationId, clarificationState);
         // Create and send the bot's message
