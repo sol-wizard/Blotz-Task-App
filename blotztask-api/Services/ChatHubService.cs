@@ -47,13 +47,15 @@ namespace BlotzTask.Services
                     conversationId);
                 return;
             }
-
+            
+            //Moved
             if (!_stateService.TryGetChatHistory(conversationId, out var chatHistory))
             {
                 var (_, labelNames) = await GetLabelInfoAsync();
                 chatHistory = await _chatMessageService.InitializeNewConversation(conversationId, labelNames);
             }
-
+            
+            //Moved
             chatHistory.AddUserMessage(message);
             await clients.Caller.SendAsync("ReceiveMessage", user, message, conversationId);
 
@@ -165,6 +167,7 @@ namespace BlotzTask.Services
             await clients.Caller.SendAsync("ConversationCompleted", conversationId);
         }
 
+        //Moved
         public async Task<(List<LabelDTO> labels, HashSet<string> labelNames)> GetLabelInfoAsync()
         {
             var labels = await _labelService.GetAllLabelsAsync();
