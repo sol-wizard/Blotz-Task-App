@@ -155,10 +155,10 @@ builder.Services.AddValidatorsFromAssemblyContaining<SampleValidationValidator>(
 // Register FluentValidation AutoValidation
 builder.Services.AddFluentValidationAutoValidation();
 
-builder.Services.AddScoped<IChatHubService, ChatHubService>();
-builder.Services.AddScoped<ConversationStateService>();
-builder.Services.AddScoped<TaskParserService>();
-builder.Services.AddScoped<ChatMessageService>();
+builder.Services.AddScoped<IConversationStateService, ConversationStateServiceV2>();
+// builder.Services.AddScoped<IChatHubService, ChatHubService>();
+// builder.Services.AddScoped<TaskParserService>();
+// builder.Services.AddScoped<ChatMessageService>();
 builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
 
 var app = builder.Build();

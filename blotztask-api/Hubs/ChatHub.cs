@@ -1,24 +1,22 @@
 using BlotzTask.Models.GoalToTask;
-using BlotzTask.Services;
 using BlotzTask.Services.GoalPlanner;
 using Microsoft.AspNetCore.SignalR;
 
 public class ChatHub : Hub
 {
     private readonly ILogger<ChatHub> _logger;
-    private readonly ConversationStateService _stateService;
-    private readonly IChatHubService _chatHubService;
+    // private readonly IChatHubService _chatHubService;
+    private readonly IConversationStateService _conversationStateService;
     private readonly IGoalPlannerChatService _goalPlannerChatService;
 
     public ChatHub(
     ILogger<ChatHub> logger,
-    ConversationStateService stateService,
     IGoalPlannerChatService goalPlannerChatService,
-    IChatHubService chatHubService)
+    IConversationStateService conversationStateService)
     {
         _logger = logger;
-        _stateService = stateService;
-        _chatHubService = chatHubService;
+        // _chatHubService = chatHubService;
+        _conversationStateService = conversationStateService;
         _goalPlannerChatService = goalPlannerChatService;
     }
     public override async Task OnConnectedAsync()
@@ -31,7 +29,8 @@ public class ChatHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         string connectionId = Context.ConnectionId;
-        _stateService.RemoveConversation(connectionId);
+        //TODO: Renable this after conversationstate ready
+        // _conversationStateService.RemoveConversation(connectionId);
         _logger.LogInformation($"User disconnected: {connectionId}. Exception: {exception?.Message}");
         await base.OnDisconnectedAsync(exception);
     }
@@ -42,9 +41,9 @@ public class ChatHub : Hub
     {
         // Check if this is the user's first message in the conversation.
         // If no chat history exists, initialize a new conversation with a system prompt.
-        if (!_stateService.TryGetChatHistory(conversationId, out var chatHistory))
+        if (!_conversationStateService.TryGetChatHistory(conversationId, out var chatHistory))
         {
-            chatHistory = _goalPlannerChatService.InitializeNewConversation(conversationId);
+            chatHistory = await _goalPlannerChatService.InitializeNewConversation(conversationId);
         }
         
         // 1. Echo user's message back
@@ -58,10 +57,23 @@ public class ChatHub : Hub
         };
         chatHistory.AddUserMessage(userMsg.Content);
         await Clients.Caller.SendAsync("ReceiveMessage", userMsg);
+        
+        //Analyse if need more clarification
+        var isReadyToGeneratePlan = await _goalPlannerChatService.IsReadyToGeneratePlanAsync(chatHistory);
 
-        // Generate bot response
-        var botContent = await _goalPlannerChatService.GenerateAiResponse(chatHistory);
-    
+        string botContent;
+
+        if (!isReadyToGeneratePlan)
+        {
+            // AI thinks more clarification is needed – generate a helpful follow-up question
+            botContent = await _goalPlannerChatService.GenerateClarifyingQuestionAsync(chatHistory);
+        }
+        else
+        {
+            // AI is ready to generate the full step-by-step plan
+            botContent = await _goalPlannerChatService.GenerateAiResponse(chatHistory);
+        }
+
         // Create and send the bot's message
         var botMsg = new ConversationMessage
         {
@@ -71,6 +83,7 @@ public class ChatHub : Hub
             Timestamp = DateTime.UtcNow,
             IsBot = true
         };
+
         await Clients.Caller.SendAsync("ReceiveMessage", botMsg);
         // await _chatHubService.HandleSendMessage(user, message, conversationId, Clients);
     }
