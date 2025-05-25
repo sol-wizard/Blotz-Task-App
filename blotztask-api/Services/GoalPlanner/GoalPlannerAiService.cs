@@ -36,6 +36,15 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         return result.Content;
     }
     
+    /// <summary>
+    /// Initializes a new conversation session by creating a chat history with a system prompt
+    /// that instructs the AI how to behave as a goal planning assistant.
+    /// It also sets up initial conversation state (e.g., clarification rounds).
+    /// </summary>
+    /// <param name="conversationId">The unique identifier for the conversation session.</param>
+    /// <returns>
+    /// A <see cref="ChatHistory"/> object containing the initialized system message.
+    /// </returns>
     public async Task<ChatHistory> InitializeNewConversation(string conversationId)
     {
         var labelNames = await GetLabelNamesAsync();
@@ -51,6 +60,15 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         return chatHistory;
     }
     
+    /// <summary>
+    /// Uses an AI model to evaluate whether the user's goal and clarification history
+    /// contains enough clear, specific, and complete information to generate a meaningful,
+    /// step-by-step task plan.
+    /// </summary>
+    /// <param name="originalChatHistory">The current chat history including user input and previous AI responses.</param>
+    /// <returns>
+    /// <c>true</c> if the AI determines the goal is ready to be broken into tasks; otherwise, <c>false</c>.
+    /// </returns>
     public async Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory)
     {
         // Create a temporary copy
@@ -73,12 +91,18 @@ Respond with one word only: YES or NO.";
 
         var result = await _chatCompletionService.GetChatMessageContentAsync(analysisHistory);
         var response = result?.Content?.Trim().ToUpperInvariant();
-
-        Console.WriteLine($"AI readiness response: {response}");
-
+        
         return response == "YES";
     }
     
+    /// <summary>
+    /// Uses an AI model to generate a single, concise clarifying question that helps the user
+    /// provide more detail about their goal, so it can later be translated into a structured task plan.
+    /// </summary>
+    /// <param name="originalChatHistory">The current chat history containing all previous messages.</param>
+    /// <returns>
+    /// A friendly, AI-generated clarifying question, or a fallback prompt if the AI response is empty.
+    /// </returns>
     public async Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory)
     {
         // Clone the original chat history
@@ -107,9 +131,7 @@ Today’s date: {0:yyyy-MM-dd}.
 
         var result = await _chatCompletionService.GetChatMessageContentAsync(clarificationHistory);
         var response = result?.Content?.Trim();
-
-        Console.WriteLine($"AI clarification question: {response}");
-
+        
         return response ?? "Can you clarify your goal a bit more?";
     }
     
