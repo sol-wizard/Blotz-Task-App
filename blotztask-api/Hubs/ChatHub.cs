@@ -71,6 +71,7 @@ public class ChatHub : Hub
             {
                 botContent = "Sorry, I couldn't generate a helpful task plan based on the information provided. You can try restating your goal with more details.";
                 clarificationState.ClarificationRound = 0;
+                await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
             }
             else
             {
