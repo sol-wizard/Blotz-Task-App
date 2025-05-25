@@ -159,7 +159,7 @@ builder.Services.AddScoped<IConversationStateService, ConversationStateServiceV2
 // builder.Services.AddScoped<IChatHubService, ChatHubService>();
 // builder.Services.AddScoped<TaskParserService>();
 // builder.Services.AddScoped<ChatMessageService>();
-builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
+builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
 
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();

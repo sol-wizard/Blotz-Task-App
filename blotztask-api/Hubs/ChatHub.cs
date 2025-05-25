@@ -7,17 +7,17 @@ public class ChatHub : Hub
     private readonly ILogger<ChatHub> _logger;
     // private readonly IChatHubService _chatHubService;
     private readonly IConversationStateService _conversationStateService;
-    private readonly IGoalPlannerChatService _goalPlannerChatService;
+    private readonly IGoalPlannerAiService _goalPlannerAiService;
 
     public ChatHub(
     ILogger<ChatHub> logger,
-    IGoalPlannerChatService goalPlannerChatService,
+    IGoalPlannerAiService goalPlannerAiService,
     IConversationStateService conversationStateService)
     {
         _logger = logger;
         // _chatHubService = chatHubService;
         _conversationStateService = conversationStateService;
-        _goalPlannerChatService = goalPlannerChatService;
+        _goalPlannerAiService = goalPlannerAiService;
     }
     public override async Task OnConnectedAsync()
     {
@@ -41,7 +41,7 @@ public class ChatHub : Hub
         // If no chat history exists, initialize a new conversation with a system prompt.
         if (!_conversationStateService.TryGetChatHistory(conversationId, out var chatHistory))
         {
-            chatHistory = await _goalPlannerChatService.InitializeNewConversation(conversationId);
+            chatHistory = await _goalPlannerAiService.InitializeNewConversation(conversationId);
         }
         
         // 1. Echo user's message back
@@ -58,7 +58,7 @@ public class ChatHub : Hub
         
         // Get clarification state and evaluate plan readiness
         var clarificationState = _conversationStateService.GetClarificationState(conversationId);
-        var isReadyToGeneratePlan = await _goalPlannerChatService.IsReadyToGeneratePlanAsync(chatHistory);
+        var isReadyToGeneratePlan = await _goalPlannerAiService.IsReadyToGeneratePlanAsync(chatHistory);
 
         string botContent;
 
@@ -74,13 +74,13 @@ public class ChatHub : Hub
         // Case 2: Not ready, still under max clarification attempts
         else if (!isReadyToGeneratePlan)
         {
-            botContent = await _goalPlannerChatService.GenerateClarifyingQuestionAsync(chatHistory);
+            botContent = await _goalPlannerAiService.GenerateClarifyingQuestionAsync(chatHistory);
             clarificationState.ClarificationRound++;
         }
         // Case 3: Ready to generate plan
         else
         {
-            botContent = await _goalPlannerChatService.GenerateAiResponse(chatHistory);
+            botContent = await _goalPlannerAiService.GenerateAiResponse(chatHistory);
             clarificationState.ClarificationRound = 0;
             
             await Clients.Caller.SendAsync("ConversationCompleted", conversationId);

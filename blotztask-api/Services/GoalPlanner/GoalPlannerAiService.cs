@@ -4,7 +4,7 @@ using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace BlotzTask.Services.GoalPlanner;
 
-public interface IGoalPlannerChatService
+public interface IGoalPlannerAiService
 {
     Task<string> GenerateAiResponse(ChatHistory chatHistory);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
@@ -12,7 +12,7 @@ public interface IGoalPlannerChatService
     Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory);
 }
 
-public class GoalPlannerChatService : IGoalPlannerChatService
+public class GoalPlannerAiService : IGoalPlannerAiService
 {
     private readonly ILabelService _labelService;
     private readonly IChatCompletionService _chatCompletionService;
@@ -20,7 +20,7 @@ public class GoalPlannerChatService : IGoalPlannerChatService
     
     private const int MaxClarificationRounds = 3;
 
-    public GoalPlannerChatService(
+    public GoalPlannerAiService(
         ILabelService labelService, 
         IChatCompletionService chatCompletionService,
         IConversationStateService conversationStateService)
