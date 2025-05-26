@@ -3,6 +3,8 @@ import { z } from 'zod';
 
 const timeSchema = z.string().refine(
   (time) => {
+    if (!time) return true; // skip validation if empty
+
     const parsedTime = parse(time, 'h:mm a', new Date());
     return isValid(parsedTime);
   },
