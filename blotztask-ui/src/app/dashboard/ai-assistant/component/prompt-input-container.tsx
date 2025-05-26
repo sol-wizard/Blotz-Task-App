@@ -11,7 +11,7 @@ const MOCK_TASKS: TaskDetailDTO[] = [
     id: 1,
     title: "Review project presentation slides",
     description: "Go through the slides for tomorrow's client meeting and make final adjustments.",
-    dueDate: new Date(), // ✅ today's date
+    dueDate: new Date(), 
     isDone: false,
     hasTime: false,
     label: {
@@ -24,7 +24,7 @@ const MOCK_TASKS: TaskDetailDTO[] = [
     id: 2,
     title: "Study for final exam",
     description: "Prepare for the upcoming final exam. Focus on chapters 5–8.",
-    dueDate: new Date(), // ✅ today's date
+    dueDate: new Date(),
     isDone: false,
     hasTime: false,
     label: {
@@ -88,17 +88,19 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
         {loading ? "Generating…" : "Generate Task"}
       </Button>
 
-        {/* Render mock task cards using TaskCard */}
-        {mockTasks.length > 0 && (
-          <div className="mt-4 space-y-4">
-            {mockTasks.map((task) => (
-              <div
-                key={task.id}
-                className="rounded-xl bg-blue-50 border border-blue-200 p-4"
-              >
-                <p className="text-sm font-medium text-blue-700 mb-2">
-                  AI Generated Task – Pending Confirmation
-                </p>
+      {mockTasks.length > 0 && (
+        <div className="mt-4 space-y-4">
+          {mockTasks.map((task) => (
+            <div
+              key={task.id}
+              className="rounded-xl bg-blue-50 border border-blue-200 p-4"
+            >
+              <p className="text-sm font-medium text-blue-700 mb-3">
+                AI Task Suggestion
+              </p>
+
+              {/* White card wrapper */}
+              <div className="bg-white rounded-lg p-4 shadow-sm">
                 <TaskCard
                   task={task}
                   status="todo"
@@ -107,9 +109,18 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
                   handleTaskDeleteUndo={(id) => console.log("Undo delete for", id)}
                 />
               </div>
-            ))}
-          </div>
-        )}
+
+              {/* Action buttons outside the white card */}
+              <div className="mt-4 flex justify-end gap-2">
+                <Button onClick={() => console.log("Add task", task.id)}>
+                  ✅ Add Task
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
 
       </div>
   );
