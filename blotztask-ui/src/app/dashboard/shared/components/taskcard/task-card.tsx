@@ -87,7 +87,7 @@ export default function TaskCard({
         description: task.description,
         date: new Date(task.dueDate),
         labelId: task.label.labelId,
-        time: task.hasTime ? format(new Date(task.dueDate), 'h:mm a') : 'Time',
+        time: task.hasTime ? format(new Date(task.dueDate), 'h:mm a') : undefined,
       });
     }
   }, [task, form]);
