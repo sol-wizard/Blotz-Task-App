@@ -12,9 +12,20 @@ import {
 } from '@/services/task-service';
 import { TaskList } from './components/task-list';
 import { TaskDetailDTO } from '../../../model/task-detail-dto';
+import { useTodayTaskActions } from '../../store/today-task-store';
+import { useScheduleTaskActions } from '@/app/store/schedule-task-store';
 
 export default function Page() {
   const [taskList, setTaskList] = useState<TaskDetailDTO[]>([]);
+
+  const { loadTodayTasks, loadOverdueTasks } = useTodayTaskActions();
+  const { loadScheduleTasks } = useScheduleTaskActions();
+  
+  useEffect(() => {
+    loadTodayTasks();
+    loadOverdueTasks();
+    loadScheduleTasks();
+  }, [taskList]);
 
   const loadTasks = async () => {
     const data = await fetchAllTaskItems();
