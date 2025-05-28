@@ -24,7 +24,7 @@ const MOCK_TASKS: TaskDetailDTO[] = [
   {
     id: 2,
     title: "Study for final exam",
-    description: "Prepare for the upcoming final exam. Focus on chapters 5–8.",
+    description: "Prepare for the upcoming final exam. Focus on chapters 5-8.",
     dueDate: new Date(),
     isDone: false,
     hasTime: false,
