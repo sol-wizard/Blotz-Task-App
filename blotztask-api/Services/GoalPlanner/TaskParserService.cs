@@ -1,8 +1,12 @@
 using System.Text.Json;
 using BlotzTask.Models;
-using BlotzTask.Services;
+namespace BlotzTask.Services.GoalPlanner;
 
-public class TaskParserService
+public interface ITaskParserService
+{
+    bool TryParseTasks(string response, out List<ExtractedTaskDTO> tasks);
+}
+public class TaskParserService:ITaskParserService
 {
     private readonly ILogger<TaskParserService> _logger;
     private readonly ILabelService _labelService;
@@ -15,13 +19,17 @@ public class TaskParserService
 
     public bool TryParseTasks(string response, out List<ExtractedTaskDTO> tasks)
     {
-        tasks = new List<ExtractedTaskDTO>();
+        tasks = [];
 
         if (string.IsNullOrWhiteSpace(response))
         {
             _logger.LogWarning("Empty response received for task parsing");
             return false;
         }
+
+        // Remove markdown code block markers if present
+        var lines = response.Split('\n');
+        response = string.Join("\n", lines.Where(line => !line.TrimStart().StartsWith("```")));
 
         // First check if this is a plain text response (not JSON)
         if (!response.Trim().StartsWith("{") && !response.Trim().StartsWith("["))
