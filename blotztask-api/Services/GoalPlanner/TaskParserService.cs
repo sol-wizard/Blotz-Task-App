@@ -2,7 +2,11 @@ using System.Text.Json;
 using BlotzTask.Models;
 namespace BlotzTask.Services.GoalPlanner;
 
-public class TaskParserService
+public interface ITaskParserService
+{
+    bool TryParseTasks(string response, out List<ExtractedTaskDTO> tasks);
+}
+public class TaskParserService:ITaskParserService
 {
     private readonly ILogger<TaskParserService> _logger;
     private readonly ILabelService _labelService;
@@ -15,7 +19,7 @@ public class TaskParserService
 
     public bool TryParseTasks(string response, out List<ExtractedTaskDTO> tasks)
     {
-        tasks = new List<ExtractedTaskDTO>();
+        tasks = [];
 
         if (string.IsNullOrWhiteSpace(response))
         {

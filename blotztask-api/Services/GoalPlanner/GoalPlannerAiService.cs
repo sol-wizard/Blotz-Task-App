@@ -8,7 +8,7 @@ namespace BlotzTask.Services.GoalPlanner;
 
 public interface IGoalPlannerAiService
 {
-    Task<(bool canComplete, List<ExtractedTaskDTO> tasks)> GenerateAiResponse(ChatHistory chatHistory);
+    Task<List<ExtractedTaskDTO>> GenerateAiResponse(ChatHistory chatHistory);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
     Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory, int currentRound);
     Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory, int currentRound);
@@ -19,7 +19,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
     private readonly ILabelService _labelService;
     private readonly IChatCompletionService _chatCompletionService;
     private readonly IConversationStateService _conversationStateService;
-    private readonly TaskParserService _taskParser;
+    private readonly ITaskParserService _taskParser;
 
     private const int MaxClarificationRounds = 3;
 
@@ -27,7 +27,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         ILabelService labelService,
         IChatCompletionService chatCompletionService,
         IConversationStateService conversationStateService,
-        TaskParserService taskParser)
+        ITaskParserService taskParser)
     {
         _labelService = labelService;
         _chatCompletionService = chatCompletionService;
@@ -35,7 +35,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         _taskParser = taskParser;
         ;
     }
-    public async Task<(bool canComplete, List<ExtractedTaskDTO> tasks)> GenerateAiResponse(
+    public async Task<List<ExtractedTaskDTO>> GenerateAiResponse(
     ChatHistory chatHistory)
     {
         var tempHistory = new ChatHistory(chatHistory);
@@ -43,16 +43,13 @@ public class GoalPlannerAiService : IGoalPlannerAiService
 
         var answer = await _chatCompletionService.GetChatMessageContentAsync(tempHistory);
 
-        Console.WriteLine("answer content: " + answer.Content);
-
         if (!string.IsNullOrEmpty(answer?.Content) && _taskParser.TryParseTasks(answer.Content, out var tasks))
         {
-            Console.WriteLine("have generated tasks");
             chatHistory.AddAssistantMessage(answer.Content);
-            return (true, tasks);
+            return tasks;
         }
 
-        return (false, null);
+        return null;
     }
 
     /// <summary>
@@ -171,7 +168,7 @@ Current question count: {2}/{1}
     private async Task<List<string>> GetLabelNamesAsync()
     {
         var labels = await _labelService.GetAllLabelsAsync();
-        return labels.Select(label => label.Name).ToList();
+        return [.. labels.Select(label => label.Name)];
     }
 
 }

@@ -161,7 +161,7 @@ builder.Services.AddScoped<IConversationStateService, ConversationStateServiceV2
 // builder.Services.AddScoped<ChatMessageService>();
 builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
 builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
-builder.Services.AddScoped<BlotzTask.Services.GoalPlanner.TaskParserService>();
+builder.Services.AddScoped<ITaskParserService, TaskParserService>();
 
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();

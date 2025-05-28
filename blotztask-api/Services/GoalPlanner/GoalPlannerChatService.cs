@@ -54,19 +54,17 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         }
         else
         {
-            var aiResponse = await _goalPlannerAiService.GenerateAiResponse(chatHistory);
-            if (aiResponse.tasks != null && aiResponse.tasks.Count > 0)
+            var aiResponseTasks = await _goalPlannerAiService.GenerateAiResponse(chatHistory);
+            if (aiResponseTasks != null && aiResponseTasks.Count > 0)
             {
-                tasks = aiResponse.tasks;
-                botContent = $"Here are your tasks: {string.Join(", ", aiResponse.tasks.Select(t => t.Description))}";
+                tasks = aiResponseTasks;
+                botContent = $"Here are your tasks: {string.Join(", ", aiResponseTasks.Select(t => t.Description))}";
             }
             else
             {
                 botContent =  "No tasks could be generated.";
             }
             
-
-            Console.WriteLine(botContent);
             state.ClarificationRound = 0;
             _conversationStateService.SetConversationComplete(conversationId, true);
         }
