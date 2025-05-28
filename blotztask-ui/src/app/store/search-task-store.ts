@@ -41,6 +41,7 @@ const useSearchTaskStore = create<SearchTaskStore>((set, get) => ({
       const { query } = get();
       if (query.length > 1) {
         try {
+          console.log('Making API call with query:', query);
           const searchedResults = await fetchSearchedTasks(query);
           set({ filteredTasks: searchedResults });
         } catch (error) {
