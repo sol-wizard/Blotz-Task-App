@@ -36,7 +36,7 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         chatHistory.AddUserMessage(userMessage.Content);
 
         var state = _conversationStateService.GetClarificationState(conversationId);
-        var isReady = await _goalPlannerAiService.IsReadyToGeneratePlanAsync(chatHistory);
+        var isReady = await _goalPlannerAiService.IsReadyToGeneratePlanAsync(chatHistory, state.ClarificationRound);
 
         string botContent;
         List<ExtractedTaskDTO>? tasks = null;

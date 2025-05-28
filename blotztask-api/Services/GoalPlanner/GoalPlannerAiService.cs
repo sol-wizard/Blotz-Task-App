@@ -10,7 +10,7 @@ public interface IGoalPlannerAiService
 {
     Task<(bool canComplete, List<ExtractedTaskDTO> tasks)> GenerateAiResponse(ChatHistory chatHistory);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
-    Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory);
+    Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory, int currentRound);
     Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory, int currentRound);
 }
 
@@ -38,14 +38,8 @@ public class GoalPlannerAiService : IGoalPlannerAiService
     public async Task<(bool canComplete, List<ExtractedTaskDTO> tasks)> GenerateAiResponse(
     ChatHistory chatHistory)
     {
-        var userMessages = $"Original goal and Clarifications:\n" + string.Join("\n", chatHistory
-            .Where(message => message.Role == AuthorRole.User)
-            .Select(message => message.Content));
-
-        Console.WriteLine("User messages:" + userMessages);
-
         var tempHistory = new ChatHistory(chatHistory);
-        tempHistory.AddAssistantMessage($"Based on these details:\n{userMessages}\n\nCan you now generate tasks in the required JSON format?");
+        tempHistory.AddSystemMessage($"Based on these details, can you now generate tasks in the required JSON format?");
 
         var answer = await _chatCompletionService.GetChatMessageContentAsync(tempHistory);
 
@@ -94,25 +88,33 @@ public class GoalPlannerAiService : IGoalPlannerAiService
     /// <returns>
     /// <c>true</c> if the AI determines the goal is ready to be broken into tasks; otherwise, <c>false</c>.
     /// </returns>
-    public async Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory)
+    public async Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory, int currentRound)
     {
         // Create a temporary copy
         var analysisHistory = new ChatHistory(originalChatHistory);
 
         // Add analysis-specific system prompt only to the cloned history
-        const string analysisPrompt =
-            @"Analyze if the user's latest input needs clarification considering the full conversation history.
-        Respond ONLY with:
-        - ""NO"" if you need more information to create proper tasks
-        - ""YES"" if you have enough information to generate tasks
-        
-        Consider:
-        - Is the goal specific enough?
-        - Do we have all required parameters?
-        - Is the timeline clear?
-        - Are there ambiguous terms that need defining?";
+        const string analysisPrompt = @"Analyze if the user's latest input needs clarification considering the full conversation history.
 
-        analysisHistory.AddSystemMessage(analysisPrompt);
+Maximum clarifying questions allowed: {0}
+Current question count: {1}/{0}
+
+Respond ONLY with:
+- ""NO"" if you need more information to create proper tasks
+- ""YES"" if you have enough information to generate tasks
+
+Consider:
+- Is the goal specific enough?
+- Do we have all required parameters?
+- Is the timeline clear and specific (today, tomorrow, Friday, by 3pm, January 15th)?
+- Are there ambiguous terms that need defining?
+
+Timeline must be specific - reject vague timing like ""soon"", ""urgent"", ""ASAP"".
+Be generous with YES when goal is clear and timeline is specific.";
+
+        analysisHistory.AddSystemMessage(string.Format(analysisPrompt,
+    MaxClarificationRounds, currentRound
+    ));
 
         var result = await _chatCompletionService.GetChatMessageContentAsync(analysisHistory);
         var response = result?.Content?.Trim().ToUpperInvariant();
