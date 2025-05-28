@@ -35,18 +35,9 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         _taskParser = taskParser;
         ;
     }
-    // public async Task<string> GenerateAiResponse(ChatHistory chatHistory)
-    // {
-    // var result = await _chatCompletionService.GetChatMessageContentAsync(chatHistory);
-    //     Console.WriteLine($"AI result: {result.Content}");
-    //     return result.Content;
-    // }
-
     public async Task<(bool canComplete, List<ExtractedTaskDTO> tasks)> GenerateAiResponse(
     ChatHistory chatHistory)
     {
-        // string context = $"Original goal: {state.OriginalGoal}\nClarifications:\n" +
-        //                  string.Join("\n", state.ClarificationAnswers.Select((a, i) => $"{i + 1}. {a}"));
         var userMessages = $"Original goal and Clarifications:\n" + string.Join("\n", chatHistory
             .Where(message => message.Role == AuthorRole.User)
             .Select(message => message.Content));
@@ -107,13 +98,6 @@ public class GoalPlannerAiService : IGoalPlannerAiService
     {
         // Create a temporary copy
         var analysisHistory = new ChatHistory(originalChatHistory);
-        // var analysisHistory = new ChatHistory();
-
-        // // Copy all messages, including system prompts
-        // foreach (var message in originalChatHistory)
-        // {
-        //     analysisHistory.AddMessage(message.Role, message.Content);
-        // }
 
         // Add analysis-specific system prompt only to the cloned history
         const string analysisPrompt =
@@ -148,13 +132,6 @@ public class GoalPlannerAiService : IGoalPlannerAiService
     {
         // Clone the original chat history
         var clarificationHistory = new ChatHistory(originalChatHistory);
-        // var clarificationHistory = new ChatHistory();
-
-        // foreach (var message in originalChatHistory)
-        // {
-        //     clarificationHistory.AddMessage(message.Role, message.Content);
-        // }
-
         // Add system prompt that instructs AI to ask one clarifying question
         const string clarifyPrompt = @"
 You are a helpful assistant helping users define their goals clearly. Today's date is {0:yyyy-MM-dd}.
