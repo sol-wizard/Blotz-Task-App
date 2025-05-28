@@ -156,9 +156,6 @@ builder.Services.AddValidatorsFromAssemblyContaining<SampleValidationValidator>(
 builder.Services.AddFluentValidationAutoValidation();
 
 builder.Services.AddScoped<IConversationStateService, ConversationStateServiceV2>();
-// builder.Services.AddScoped<IChatHubService, ChatHubService>();
-// builder.Services.AddScoped<TaskParserService>();
-// builder.Services.AddScoped<ChatMessageService>();
 builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
 builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
 builder.Services.AddScoped<ITaskParserService, TaskParserService>();
