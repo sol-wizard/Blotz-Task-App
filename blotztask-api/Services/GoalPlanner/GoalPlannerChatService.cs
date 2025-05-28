@@ -1,3 +1,4 @@
+using BlotzTask.Models;
 using BlotzTask.Models.GoalToTask;
 using BlotzTask.Services.GoalPlanner.Models;
 
@@ -38,6 +39,7 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         var isReady = await _goalPlannerAiService.IsReadyToGeneratePlanAsync(chatHistory);
 
         string botContent;
+        List<ExtractedTaskDTO>? tasks = null;
 
         if (!isReady && state.ClarificationRound >= MaxClarificationRounds)
         {
@@ -47,12 +49,24 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         }
         else if (!isReady)
         {
-            botContent = await _goalPlannerAiService.GenerateClarifyingQuestionAsync(chatHistory);
+            botContent = await _goalPlannerAiService.GenerateClarifyingQuestionAsync(chatHistory, state.ClarificationRound);
             state.ClarificationRound++;
         }
         else
         {
-            botContent = await _goalPlannerAiService.GenerateAiResponse(chatHistory);
+            var aiResponse = await _goalPlannerAiService.GenerateAiResponse(chatHistory);
+            if (aiResponse.tasks != null && aiResponse.tasks.Count > 0)
+            {
+                tasks = aiResponse.tasks;
+                botContent = $"Here are your tasks: {string.Join(", ", aiResponse.tasks.Select(t => t.Description))}";
+            }
+            else
+            {
+                botContent =  "No tasks could be generated.";
+            }
+            
+
+            Console.WriteLine(botContent);
             state.ClarificationRound = 0;
             _conversationStateService.SetConversationComplete(conversationId, true);
         }
@@ -67,9 +81,10 @@ public class GoalPlannerChatService : IGoalPlannerChatService
                 Content = botContent,
                 ConversationId = conversationId,
                 Timestamp = DateTime.UtcNow,
-                IsBot = true
+                IsBot = true,
             },
-            IsConversationComplete = _conversationStateService.IsConversationComplete(conversationId)
+            IsConversationComplete = _conversationStateService.IsConversationComplete(conversationId),
+            Tasks = tasks,
         };
     }
 }

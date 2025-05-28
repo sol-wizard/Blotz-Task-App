@@ -46,7 +46,15 @@ public class ChatHub : Hub
 
         var result = await _goalPlannerChatService.HandleUserMessageAsync(userMsg);
 
-        await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
+        if (result.Tasks != null)
+        {
+            await Clients.Caller.SendAsync("ReceiveTasks", result.Tasks);
+        }
+        else if (!result.IsConversationComplete)
+        {
+            await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
+        }
+        
 
         if (result.IsConversationComplete)
         {

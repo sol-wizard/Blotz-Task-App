@@ -1,6 +1,6 @@
 using System.Text.Json;
 using BlotzTask.Models;
-using BlotzTask.Services;
+namespace BlotzTask.Services.GoalPlanner;
 
 public class TaskParserService
 {
