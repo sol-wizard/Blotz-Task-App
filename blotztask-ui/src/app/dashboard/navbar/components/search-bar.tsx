@@ -6,19 +6,15 @@ import { useDebounce } from '@/utils/use-debounce';
 const SearchBar = ({ query, loadSearchTasks, setQuery }) => {
   const router = useRouter();
   const [inputValue, setInputValue] = useState(query);
-  const debouncedValue = useDebounce(inputValue, 300); // 300ms delay
+  const debouncedValue = useDebounce(inputValue, 500);
 
-  useEffect(() => {
-    console.log('Input value changed:', inputValue);
-  }, [inputValue]);
 
-  useEffect(() => {
-    console.log('Debounced value changed:', debouncedValue);
+  useEffect(()=>{
     setQuery(debouncedValue);
-    if (debouncedValue.length > 0) {
+    if(debouncedValue.length > 0){
       loadSearchTasks();
     }
-  }, [debouncedValue]);
+  }, [debouncedValue])
 
   useEffect(() => {
     if (query.length > 0) {
