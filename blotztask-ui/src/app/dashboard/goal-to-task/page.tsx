@@ -7,7 +7,9 @@ import { useSignalR } from '@/hooks/use-signalR';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import TaskCardToAdd from '../shared/components/taskcard/task-card-to-add';
 import { SIGNALR_HUBS_CHAT } from '@/services/signalr-service';
+import { ConversationMessage } from './model/chat-message';
 
+//TODO: Is message and chat message same ?
 interface Message {
   id: string;
   sender: string;
@@ -83,21 +85,22 @@ export default function ChatPage() {
   // Set up message and task receiving
   useEffect(() => {
     if (connection) {
-      // Handle regular messages
-      on('ReceiveMessage', (user, message, convoId) => {
-        if (convoId === conversationId) {
+      // ✅ Type-safe message handler
+      on('ReceiveMessage', (msg: ConversationMessage) => {
+        if (msg.conversationId === conversationId) {
           const newMsg: Message = {
             id: uuidv4(),
-            sender: user as string,
-            content: message as string,
-            timestamp: new Date(),
-            isBot: user === 'ChatBot',
+            sender: msg.sender,
+            content: msg.content,
+            timestamp: new Date(msg.timestamp), // if timestamp is a string
+            isBot: msg.isBot,
           };
+  
           setMessages((prev) => [...prev, newMsg]);
         }
       });
-
-      // Handle received tasks
+  
+      // 👇 These stay the same unless you also type `ExtractedTask`
       on('ReceiveTasks', (receivedTasks: ExtractedTask[]) => {
         if (receivedTasks?.length > 0) {
           setTasks(receivedTasks);
@@ -106,8 +109,7 @@ export default function ChatPage() {
         }
         console.log(receivedTasks);
       });
-
-      // Handle conversation completion
+  
       on('ConversationCompleted', (convoId: string) => {
         if (convoId === conversationId) {
           setIsConversationComplete(true);
@@ -115,7 +117,7 @@ export default function ChatPage() {
       });
     }
   }, [connection, conversationId, on]);
-
+  
   // Connect to hub
   useEffect(() => {
     if (!isOfflineMode && conversationId) {

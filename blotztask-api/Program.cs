@@ -6,6 +6,7 @@ using BlotzTask.Data.Entities;
 using BlotzTask.Extension;
 using BlotzTask.Models.Validators;
 using BlotzTask.Services;
+using BlotzTask.Services.GoalPlanner;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -154,10 +155,10 @@ builder.Services.AddValidatorsFromAssemblyContaining<SampleValidationValidator>(
 // Register FluentValidation AutoValidation
 builder.Services.AddFluentValidationAutoValidation();
 
-builder.Services.AddScoped<IChatHubService, ChatHubService>();
-builder.Services.AddScoped<ConversationStateService>();
-builder.Services.AddScoped<TaskParserService>();
-builder.Services.AddScoped<ChatMessageService>();
+builder.Services.AddScoped<IConversationStateService, ConversationStateServiceV2>();
+builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
+builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
+builder.Services.AddScoped<ITaskParserService, TaskParserService>();
 
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
