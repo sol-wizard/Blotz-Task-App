@@ -33,29 +33,22 @@ public class TaskService : ITaskService
 
     public async Task<List<TaskItemDTO>> GetTodoItemsByUser(string userId)
     {
-        try
-        {
-            return await _dbContext.TaskItems
-                .Where(x => x.UserId == userId)
-                .Include(x => x.Label)
-                .OrderBy(x => x.DueDate)
-                .Select(x => new TaskItemDTO
-                {
-                    Id = x.Id,
-                    Title = x.Title,
-                    Description = x.Description,
-                    DueDate = x.DueDate,
-                    IsDone = x.IsDone,
-                    Label = new LabelDTO { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color },
-                    HasTime = x.HasTime,
-                })
-                .ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            //TODO: Add some error log throw 
-            throw;
-        }
+
+        return await _dbContext.TaskItems
+            .Where(x => x.UserId == userId)
+            .Include(x => x.Label)
+            .OrderBy(x => x.DueDate)
+            .Select(x => new TaskItemDTO
+            {
+                Id = x.Id,
+                Title = x.Title,
+                Description = x.Description,
+                DueDate = x.DueDate,
+                IsDone = x.IsDone,
+                Label = new LabelDTO { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color },
+                HasTime = x.HasTime,
+            })
+            .ToListAsync();
     }
     public async Task<TaskItemDTO> GetTaskByID(int Id)
     {
@@ -202,8 +195,6 @@ public class TaskService : ITaskService
 
     public async Task<TaskStatusResultDTO> TaskStatusUpdate(int taskId, bool? isDone = null)
     {
-        try
-        {
             var task = await _dbContext.TaskItems.FindAsync(taskId);
 
             if (task == null)
@@ -224,12 +215,6 @@ public class TaskService : ITaskService
                 UpdatedAt = task.UpdatedAt,
                 Message = task.IsDone ? "Task marked as completed." : "Task marked as incomplete."
             };
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-
     }
 
     public async Task<List<TaskItemDTO>> GetTaskByDate(DateTime startDateUTC, DateTime endDateUTC, string userId)
