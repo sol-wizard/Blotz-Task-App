@@ -26,8 +26,8 @@ export default function Schedule() {
       <AddTaskCardContainer onAddTask={handleAddTask} />
 
       {scheduleTasksIsLoading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
-          <div className="flex flex-col items-center">
+        <div className="inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
+          <div className="flex flex-col items-center justify-center flex-1 py-20">
             <LoadingSpinner variant="blue" className="mb-4 text-[10px]" />
             <p className="mt-8 font-semibold text-zinc-600">Loading...</p>
           </div>
