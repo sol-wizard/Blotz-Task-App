@@ -57,8 +57,10 @@ public class GoalPlannerChatService : IGoalPlannerChatService
             var aiResponseTasks = await _goalPlannerAiService.GenerateAiResponse(chatHistory);
             if (aiResponseTasks != null && aiResponseTasks.Count > 0)
             {
-                tasks = aiResponseTasks;
-                botContent = $"Here are your tasks: {string.Join(", ", aiResponseTasks.Select(t => t.Description))}";
+                var revisedTasks = await _goalPlannerAiService.ReviseGeneratedTasksAsync(aiResponseTasks, chatHistory);
+
+                tasks = revisedTasks;
+                botContent = $"Here are your tasks: {string.Join(", ", revisedTasks.Select(t => t.Description))}";
             }
             else
             {

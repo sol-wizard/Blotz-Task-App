@@ -5,18 +5,18 @@ using BlotzTask.Data.Entities;
 
 namespace BlotzTask.Services;
 
-public interface IUserInfoService
+public interface IUserService
 {
     public Task<UserInfoDTO> GetCurrentUserInfoAsync(string userId);
 
     public Task<IdentityResult> RegisterUserAsync(RegisterRequestDTO request);
 }
 
-public class UserInfoService : IUserInfoService
+public class UserService : IUserService
 {
     private readonly UserManager<User> _userManager;
 
-    public UserInfoService(UserManager<User> userManager)
+    public UserService(UserManager<User> userManager)
     {
         _userManager = userManager;
     }

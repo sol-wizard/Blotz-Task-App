@@ -4,10 +4,8 @@ using Azure.Security.KeyVault.Secrets;
 using BlotzTask.Data;
 using BlotzTask.Data.Entities;
 using BlotzTask.Extension;
-using BlotzTask.Models.Validators;
 using BlotzTask.Services;
 using BlotzTask.Services.GoalPlanner;
-using FluentValidation;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +14,6 @@ using Microsoft.OpenApi.Models;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Serilog;
-using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using Swashbuckle.AspNetCore.Filters;
 
 
@@ -49,7 +46,7 @@ builder.Services.AddIdentityCore<User>()
     .AddEntityFrameworkStores<BlotzTaskDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddScoped<IUserInfoService, UserInfoService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ILabelService, LabelService>();
 
@@ -149,11 +146,6 @@ builder.Services.AddCors(options =>
                 .AllowCredentials(); // TODO: anti-csrf need to be built.
         });
 });
-
-// Auto-Register Validator
-builder.Services.AddValidatorsFromAssemblyContaining<SampleValidationValidator>();
-// Register FluentValidation AutoValidation
-builder.Services.AddFluentValidationAutoValidation();
 
 builder.Services.AddScoped<IConversationStateService, ConversationStateServiceV2>();
 builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
