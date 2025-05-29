@@ -9,12 +9,12 @@ namespace BlotzTask.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize] // make sure only authenticate user can use this method
-public class UserInfoController : ControllerBase
+public class UserController : ControllerBase
 {
-    private readonly IUserInfoService _userInfoService;
-    public UserInfoController(IUserInfoService userInfoService)
+    private readonly IUserService _userService;
+    public UserController(IUserService userService)
     {
-        _userInfoService = userInfoService;
+        _userService = userService;
     }
 
     [HttpGet("current-user-info")]
@@ -29,7 +29,7 @@ public class UserInfoController : ControllerBase
                 return Unauthorized(new { message = "User not authenticated or missing required claims" });
             }
 
-            var userInfo = await _userInfoService.GetCurrentUserInfoAsync(userId);
+            var userInfo = await _userService.GetCurrentUserInfoAsync(userId);
             var message = userInfo.Message;
             // return result
             return Ok(new ResponseWrapper<UserInfoDTO>(userInfo, message, true));
@@ -47,7 +47,7 @@ public class UserInfoController : ControllerBase
             return BadRequest(ModelState);
         }
         
-        var result = await _userInfoService.RegisterUserAsync(request);
+        var result = await _userService.RegisterUserAsync(request);
 
         if (!result.Succeeded)
         {

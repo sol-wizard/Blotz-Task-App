@@ -9,7 +9,7 @@ interface UserInfoAPIResponse<T> {
 
 export const fetchCurrentUserInfo = async (): Promise<UserInfoAPIResponse<UserInfoDTO>> => {
   const result = await fetchWithAuth<UserInfoAPIResponse<UserInfoDTO>>(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/UserInfo/current-user-info`,
+    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/User/current-user-info`,
     {
       method: 'GET',
       headers: {
