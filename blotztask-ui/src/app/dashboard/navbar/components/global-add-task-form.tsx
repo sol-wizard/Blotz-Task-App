@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,8 +13,10 @@ import { DialogFooter } from '@/components/ui/dialog';
 type FormField = z.infer<typeof taskFormSchema>;
 
 const GlobalAddTaskForm = ({ handleSubmit }) => {
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const form = useForm<FormField>({
     resolver: zodResolver(taskFormSchema),
+    mode: 'onChange',
     defaultValues: {
       title: '',
       description: '',
@@ -24,12 +26,19 @@ const GlobalAddTaskForm = ({ handleSubmit }) => {
     },
   });
 
+  const handleSave = async () => {
+    setAttemptedSubmit(true);
+    const valid = await form.trigger();
+    if (valid) {
+      form.handleSubmit(handleSubmit)();
+    }
+  };
+
   return (
     <Form {...form}>
       <form className="flex flex-col space-y-2" onSubmit={form.handleSubmit(handleSubmit)}>
         <div className="flex flex-row justify-center mb-3">
-    
-          <div className="w-6 h-6 mt-8 mr-4 border-2 border-gray-400 rounded-full border-dashed"/>
+          <div className="w-6 h-6 mt-8 mr-4 border-2 border-gray-400 rounded-full border-dashed" />
           <TaskSeparator color="#c7d2fe" className="mx-4" />
           <AddTaskForm form={form} />
         </div>
@@ -45,7 +54,15 @@ const GlobalAddTaskForm = ({ handleSubmit }) => {
               </button>
             </DialogClose>
             <DialogFooter>
-              <button type="submit" className="bg-primary rounded-lg px-3 py-1 text-xs text-white w-20">
+              <button
+                type="button"
+                onClick={handleSave}
+                className={`rounded-lg px-3 py-1 text-xs w-20 transition-colors ${
+                  attemptedSubmit && !form.formState.isValid
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-primary text-white hover:bg-blue-600'
+                }`}
+              >
                 Save
               </button>
             </DialogFooter>

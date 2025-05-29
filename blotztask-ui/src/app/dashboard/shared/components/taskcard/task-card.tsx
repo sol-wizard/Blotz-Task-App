@@ -55,13 +55,13 @@ export default function TaskCard({
 
   useEffect(() => {
     fetchAllLabel()
-      .then(labelData => setLabels(labelData))
-      .catch(error => console.error('Error loading labels:', error));
+      .then((labelData) => setLabels(labelData))
+      .catch((error) => console.error('Error loading labels:', error));
   }, []);
 
   const getCurrentLabelColor = () => {
     if (isEditing && watchLabelId) {
-      const selectedLabel = labels.find(label => label.labelId === watchLabelId);
+      const selectedLabel = labels.find((label) => label.labelId === watchLabelId);
       return selectedLabel?.color || task.label.color;
     }
     return task.label.color;
@@ -87,7 +87,7 @@ export default function TaskCard({
         description: task.description,
         date: new Date(task.dueDate),
         labelId: task.label.labelId,
-        time: task.hasTime ? format(new Date(task.dueDate), 'h:mm a') : 'Time',
+        time: task.hasTime ? format(new Date(task.dueDate), 'h:mm a') : undefined,
       });
     }
   }, [task, form]);
@@ -111,10 +111,16 @@ export default function TaskCard({
         <TaskSeparator color={getCurrentLabelColor()} taskStatus={status} />
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((data) => {
-              handleFormSubmit(data, task);
-              handleEditState();
-            })}
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const valid = await form.trigger();
+              if (valid) {
+                form.handleSubmit((data) => {
+                  handleFormSubmit(data, task);
+                  handleEditState();
+                })();
+              }
+            }}
             className="flex flex-col w-full bg-transparent px-6"
           >
             <div className="flex flex-col w-full bg-transparent px-2">
@@ -144,12 +150,7 @@ export default function TaskCard({
                 />
               </div>
 
-              {isEditing && (
-                <TaskCardEditFooter 
-                  control={form.control} 
-                  onCancel={handleCancelEdit}
-                />
-              )}
+              {isEditing && <TaskCardEditFooter control={form.control} onCancel={handleCancelEdit} />}
             </div>
           </form>
         </Form>
