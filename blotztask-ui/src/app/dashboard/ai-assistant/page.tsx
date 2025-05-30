@@ -9,12 +9,15 @@ import { Info } from 'lucide-react';
 import Divider from '../today/components/ui/divider';
 import PromptInputSection from './component/prompt-input-container';
 import TaskCardToAdd from '../shared/components/taskcard/task-card-to-add';
+import { useScheduleTaskActions } from '../../store/schedule-task-store';
 
 export default function AiAssistant() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [wrappedExtractedTasks, setWrappedExtractedTasks] = useState<ExtractedTasksWrapperDTO | null>(null);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
+
+  const { handleAddTask } = useScheduleTaskActions();
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
@@ -52,6 +55,7 @@ export default function AiAssistant() {
         setPrompt={setPrompt}
         loading={loading}
         onGenerate={handleGenerate}
+        onSubmit={(taskDetails) => handleAddTask(taskDetails)}
       />
 
       <Divider text="Generated Task" />

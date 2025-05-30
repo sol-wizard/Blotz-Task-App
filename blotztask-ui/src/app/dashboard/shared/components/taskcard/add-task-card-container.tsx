@@ -62,6 +62,7 @@ const AddTaskCardContainer = ({ onAddTask }) => {
                       setPrompt={setPrompt}
                       loading={loading}
                       onGenerate={handlePromptGenerate}
+                      onSubmit={(taskDetails) => onAddTask(taskDetails)}
                     />
                   </div>
                 ) : (
