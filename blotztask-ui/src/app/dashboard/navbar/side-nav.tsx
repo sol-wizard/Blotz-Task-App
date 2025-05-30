@@ -37,16 +37,16 @@ const FEATURE_FLAG_KEY = 'aiEnabled';
 export function AppSidebar() {
   const { loadScheduleTasks } = useScheduleTaskActions();
   const { loadTodayTasks, loadOverdueTasks } = useTodayTaskActions();
-  const overdueTodayTasks = useOverdueTasks();
-  const incompleteTodayTasks = useIncompleteTodayTasks();
-  const { overdueTasks: overdueScheduleTasks, todayTasks: todayScheduleTasks, tomorrowTasks: tomorrowScheduleTasks, weekTasks: weekScheduleTasks, monthTasks: monthScheduleTasks } = useScheduleTaskStore();
+  const overdueFromTodayStore = useOverdueTasks();
+  const incompleteFromTodayStore = useIncompleteTodayTasks();
+  const { overdueTasks: overdueFromScheduleStore, todayTasks: todayFromScheduleStore, tomorrowTasks: tomorrowFromScheduleStore, weekTasks: weekFromScheduleStore, monthTasks: monthFromScheduleStore } = useScheduleTaskStore();
   const pathname = usePathname();
   const [aiEnabled, setAiEnabled] = useState(true);
   const { loadSearchTasks, setQuery } = useSearchTaskActions();
   const query = useSearchQuery();
 
-  const todayBadgeCount = overdueTodayTasks.length + incompleteTodayTasks.length;
-  const scheduleBadgeCount = overdueScheduleTasks.length + todayScheduleTasks.length + tomorrowScheduleTasks.length + weekScheduleTasks.length + Object.keys(monthScheduleTasks).length;
+  const todayBadgeCount = overdueFromTodayStore.length + incompleteFromTodayStore.length;
+  const scheduleBadgeCount = overdueFromScheduleStore.length + todayFromScheduleStore.length + tomorrowFromScheduleStore.length + weekFromScheduleStore.length + Object.keys(monthFromScheduleStore).length;
 
   const menuItems = [
     { title: 'All Tasks', url: 'task-list', icon: List },

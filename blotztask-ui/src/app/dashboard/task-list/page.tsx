@@ -20,12 +20,6 @@ export default function Page() {
 
   const { loadTodayTasks, loadOverdueTasks } = useTodayTaskActions();
   const { loadScheduleTasks } = useScheduleTaskActions();
-  
-  useEffect(() => {
-    loadTodayTasks();
-    loadOverdueTasks();
-    loadScheduleTasks();
-  }, [taskList]);
 
   const loadTasks = async () => {
     const data = await fetchAllTaskItems();
@@ -70,7 +64,10 @@ export default function Page() {
 
   useEffect(() => {
     loadTasks();
-  }, []);
+    loadTodayTasks();
+    loadOverdueTasks();
+    loadScheduleTasks();
+  }, [taskList]);
 
   return (
     <div className="flex flex-col w-full items-end mt-5">
