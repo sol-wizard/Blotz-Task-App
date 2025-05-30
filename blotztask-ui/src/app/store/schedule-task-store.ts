@@ -1,5 +1,7 @@
 import { TaskDetailDTO } from '../../model/task-detail-dto';
 import { create } from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware'
+import { useTodayTaskStore } from '@/app/store/today-task-store';
 import {
   addTaskItem,
   deleteTask,
@@ -30,7 +32,7 @@ type ScheduleTaskStore = {
   };
 };
 
-export const useScheduleTaskStore = create<ScheduleTaskStore>((set, get) => ({
+export const useScheduleTaskStore = create<ScheduleTaskStore>()(subscribeWithSelector((set, get) => ({
   overdueTasks: [],
   todayTasks: [],
   tomorrowTasks: [],
@@ -82,6 +84,15 @@ export const useScheduleTaskStore = create<ScheduleTaskStore>((set, get) => ({
       await performTaskAndRefresh(() => updateTaskStatus(taskId), loadScheduleTasks, setLoading);
     },
   },
-}));
+})));
 
 export const useScheduleTaskActions = () => useScheduleTaskStore((state) => state.actions);
+
+useScheduleTaskStore.subscribe(
+  state => [state.todayTasks, state.overdueTasks, state.monthTasks, state.weekTasks, state.tomorrowTasks],
+  () => {
+    const { loadTodayTasks, loadOverdueTasks } = useTodayTaskStore.getState().actions;
+    loadTodayTasks;
+    loadOverdueTasks;
+  },
+);
