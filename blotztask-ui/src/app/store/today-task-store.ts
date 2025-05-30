@@ -12,6 +12,8 @@ import {
 import { performTaskAndRefresh } from './shared/util';
 import { RawAddTaskDTO } from '../../model/raw-add-task-dto';
 import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
+import { useScheduleTaskStore } from '@/app/store/schedule-task-store';
+import { subscribeWithSelector } from 'zustand/middleware';
 
 type TodayTaskStore = {
   todayTasks: TaskDetailDTO[];
@@ -31,7 +33,7 @@ type TodayTaskStore = {
   };
 };
 
-const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
+export const useTodayTaskStore = create<TodayTaskStore>()(subscribeWithSelector((set, get) => ({
   todayTasks: [],
   overdueTasks: [],
   incompleteTodayTasks: [],
@@ -132,7 +134,7 @@ const useTodayTaskStore = create<TodayTaskStore>((set, get) => ({
       );
     },
   },
-}));
+})));
 
 export const useTodayTasks = () => useTodayTaskStore((state) => state.todayTasks);
 export const useOverdueTasks = () => useTodayTaskStore((state) => state.overdueTasks);
@@ -140,3 +142,11 @@ export const useIncompleteTodayTasks = () => useTodayTaskStore((state) => state.
 export const useCompletedTodayTasks = () => useTodayTaskStore((state) => state.completedTodayTasks);
 export const useTodayTasksIsLoading = () => useTodayTaskStore((state) => state.todayTasksIsLoading);
 export const useTodayTaskActions = () => useTodayTaskStore((state) => state.actions);
+
+useTodayTaskStore.subscribe(
+  state => [state.todayTasks, state.overdueTasks],
+  () => {
+    const { loadScheduleTasks } = useScheduleTaskStore.getState().actions;
+    loadScheduleTasks();
+  }
+);
