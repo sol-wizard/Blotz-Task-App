@@ -1,9 +1,20 @@
 import { Command, CommandInput } from '@/components/ui/command';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useDebounce } from '@/utils/use-debounce';
 
 const SearchBar = ({ query, loadSearchTasks, setQuery }) => {
   const router = useRouter();
+  const [inputValue, setInputValue] = useState(query);
+  const debouncedValue = useDebounce(inputValue, 500);
+
+
+  useEffect(()=>{
+    setQuery(debouncedValue);
+    if(debouncedValue.length > 0){
+      loadSearchTasks();
+    }
+  }, [debouncedValue])
 
   useEffect(() => {
     if (query.length > 0) {
@@ -26,11 +37,8 @@ const SearchBar = ({ query, loadSearchTasks, setQuery }) => {
     >
       <CommandInput
         placeholder="Search a task..."
-        value={query}
-        onValueChange={(value) => {
-          setQuery(value);
-          loadSearchTasks();
-        }}
+        value={inputValue}
+        onValueChange={setInputValue}
       />
     </Command>
   );
