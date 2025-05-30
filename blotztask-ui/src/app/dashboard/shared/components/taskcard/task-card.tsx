@@ -111,16 +111,10 @@ export default function TaskCard({
         <TaskSeparator color={getCurrentLabelColor()} taskStatus={status} />
         <Form {...form}>
           <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const valid = await form.trigger();
-              if (valid) {
-                form.handleSubmit((data) => {
-                  handleFormSubmit(data, task);
-                  handleEditState();
-                })();
-              }
-            }}
+            onSubmit={form.handleSubmit((data) => {
+              handleFormSubmit(data, task);
+              handleEditState();
+            })}
             className="flex flex-col w-full bg-transparent px-6"
           >
             <div className="flex flex-col w-full bg-transparent px-2">

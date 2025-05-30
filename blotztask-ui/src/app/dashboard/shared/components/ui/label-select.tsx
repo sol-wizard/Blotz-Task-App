@@ -20,12 +20,10 @@ export function LabelSelect({
   control,
   labelPickerRef,
   onLabelChange,
-  attemptedSubmit,
 }: {
   control: Control;
   labelPickerRef?: React.RefObject<HTMLDivElement>;
   onLabelChange?: (label: LabelDTO | null) => void;
-  attemptedSubmit?: boolean;
 }) {
   const [labels, setLabels] = useState<LabelDTO[]>([]);
 
@@ -63,9 +61,7 @@ export function LabelSelect({
             <FormControl>
               <SelectLabelTrigger
                 className={`flex flex-row w-30 items-center rounded-full px-3 py-1 text-xs ${
-                  fieldState.invalid || (attemptedSubmit && !field.value)
-                    ? 'border border-red-500 text-red-500 bg-red-50'
-                    : ''
+                  fieldState.invalid ? 'border border-red-500 text-red-500 bg-red-50' : ''
                 }`}
               >
                 <Tag className="mr-1" size={16} />

@@ -9,10 +9,8 @@ import AddTaskForm from '../ui/add-task-form';
 type FormField = z.infer<typeof taskFormSchema>;
 
 const AddTaskCard = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, onSubmit }) => {
-  const [attemptedSubmit, setAttemptedSubmit] = React.useState(false);
   const form = useForm<FormField>({
     resolver: zodResolver(taskFormSchema),
-    mode: 'onChange',
     defaultValues: {
       title: '',
       description: '',
@@ -21,14 +19,6 @@ const AddTaskCard = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, o
       time: undefined,
     },
   });
-
-  const handleSave = async () => {
-    setAttemptedSubmit(true);
-    const valid = await form.trigger();
-    if (valid) {
-      form.handleSubmit(onSubmit)();
-    }
-  };
 
   return (
     <Form {...form}>
@@ -39,7 +29,6 @@ const AddTaskCard = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, o
             datePickerRef={datePickerRef}
             labelPickerRef={labelPickerRef}
             timePickerRef={timePickerRef}
-            attemptedSubmit={attemptedSubmit}
           />
           <div className="flex flex-row h-8 ml-4 mt-20 mr-10">
             <button
@@ -50,13 +39,8 @@ const AddTaskCard = ({ datePickerRef, labelPickerRef, timePickerRef, onCancel, o
               Cancel
             </button>
             <button
-              type="button"
-              onClick={handleSave}
-              className={`rounded-lg px-3 py-1 text-xs w-20 transition-colors ${
-                attemptedSubmit && !form.formState.isValid
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-primary text-white hover:bg-blue-600'
-              }`}
+              type="submit"
+              className="bg-primary text-white hover:bg-blue-600 rounded-lg px-3 py-1 text-xs w-20 transition-colors"
             >
               Save
             </button>

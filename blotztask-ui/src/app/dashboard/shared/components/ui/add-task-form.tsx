@@ -10,13 +10,11 @@ const AddTaskForm = ({
   datePickerRef,
   labelPickerRef,
   timePickerRef,
-  attemptedSubmit,
 }: {
   form;
   datePickerRef?: React.RefObject<HTMLDivElement>;
   labelPickerRef?: React.RefObject<HTMLDivElement>;
   timePickerRef?: React.RefObject<HTMLDivElement>;
-  attemptedSubmit?: boolean;
 }) => {
   return (
     <div className="flex flex-col w-full">
@@ -51,11 +49,7 @@ const AddTaskForm = ({
       <div className="flex flex-row space-x-4 items-center flex-1 ml-3">
         <div className="flex flex-row items-center">
           <CalendarForm control={form.control} datePickerRef={datePickerRef} />
-          <LabelSelect
-            control={form.control}
-            labelPickerRef={labelPickerRef}
-            attemptedSubmit={attemptedSubmit}
-          />
+          <LabelSelect control={form.control} labelPickerRef={labelPickerRef} />
           <TimePicker control={form.control} timePickerRef={timePickerRef} />
         </div>
       </div>
