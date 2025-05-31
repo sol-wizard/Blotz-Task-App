@@ -13,13 +13,13 @@ const DateTag = ({ task, taskStatus }: { task: TaskDetailDTO; taskStatus?: TaskC
   const statusClass = statusVariants[taskStatus] || statusVariants.todo;
 
   return (
-    <div className={cn('flex items-center justify-center w-40 text-xs rounded-full', statusClass)}>
+    <div className={cn('flex items-center justify-center px-6 text-xs rounded-full', statusClass)}>
       {taskStatus === 'overdue' && (
         <span>
           <CircleAlertIcon color="#fff" fill="#ef4444" />
         </span>
       )}
-      <span className="pl-1">Due day - {format(new Date(task.dueDate), 'MM/dd/yyyy')}</span>
+      <span className="pl-1">{format(new Date(task.dueDate), 'MM/dd/yyyy')}</span>
     </div>
   );
 };
