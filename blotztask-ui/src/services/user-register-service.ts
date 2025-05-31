@@ -8,7 +8,7 @@ export type RegisterFormData = {
 };
 
 export async function registerUser(data: RegisterFormData) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/userinfo/register`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/user/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),

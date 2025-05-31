@@ -108,7 +108,11 @@ const LoginPage = () => {
           onClick={handleGuestLogin}
           className="w-full bg-primary hover:bg-blue-600"
         >
-          Continue as Guest
+          {isLoggingAsGuest ? (
+            <LoadingSpinner className="text-[4px] mx-10" variant="white" />
+          ) : (
+            'Continue as Guest'
+          )}
         </Button>
         <p className="text-center text-sm text-gray-500 mt-4">
           Don’t have an account?{' '}
