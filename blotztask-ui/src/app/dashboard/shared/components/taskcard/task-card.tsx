@@ -107,7 +107,7 @@ export default function TaskCard({
 
   return (
     <div className={cn('flex flex-col w-full', bgTaskCardstatusClass)}>
-      <div className="flex flex-row w-full bg-transparent group mb-2">
+      <div className="flex flex-row w-full bg-transparent group">
         <TaskSeparator color={getCurrentLabelColor()} taskStatus={status} />
         <Form {...form}>
           <form
@@ -126,7 +126,7 @@ export default function TaskCard({
                 errors={form.formState.errors}
               />
 
-              <div className="flex w-full text-base text-gray-500 mt-2">
+              <div className="flex w-full text-base text-gray-500 p-2">
                 <TaskCardDescriptionBlock
                   task={task}
                   taskStatus={status}

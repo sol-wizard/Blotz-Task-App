@@ -4,7 +4,7 @@ import { TaskCardStatus } from '../taskcard/task-card'
 import { cn } from '@/lib/utils';
 import { CircleAlertIcon } from 'lucide-react';
 
-const DateTag = ({ task, taskStatus }: { task: TaskDetailDTO; taskStatus?: TaskCardStatus }) => {
+const DateAndTimeTag = ({ task, taskStatus }: { task: TaskDetailDTO; taskStatus?: TaskCardStatus }) => {
   const statusVariants = {
     done: 'bg-transparent text-[#BFC0C9]',
     todo: 'bg-[#E5E7EB] text-[#6B7280]',
@@ -24,4 +24,4 @@ const DateTag = ({ task, taskStatus }: { task: TaskDetailDTO; taskStatus?: TaskC
   );
 };
 
-export default DateTag;
+export default DateAndTimeTag;
