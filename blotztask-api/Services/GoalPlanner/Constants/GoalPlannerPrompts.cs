@@ -30,6 +30,6 @@ Important rules:
 - due_date must be future dates
 - isValidTask must be true for well-formed tasks
 - Tasks must be in chronological order
-- label must be one of: {2}
+- label must be one of: {1}
 ";
 }
