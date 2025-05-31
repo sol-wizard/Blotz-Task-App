@@ -10,7 +10,6 @@ import type { TaskDetailDTO } from '../../../../../model/task-detail-dto';
 import type { RawEditTaskDTO } from '../../../../../model/raw-edit-task-dto';
 import { TaskCardTitleBlock } from './task-card-title-block';
 import { TaskCardDescriptionBlock } from './task-card-description-block';
-import { TaskCardLabelBlock } from './task-card-label-block';
 import { TaskEditActions } from './task-card-edit-actions-block';
 import { TaskCardEditFooter } from './task-card-edit-footer';
 import { cn } from '@/lib/utils';
@@ -107,7 +106,7 @@ export default function TaskCard({
 
   return (
     <div className={cn('flex flex-col w-full', bgTaskCardstatusClass)}>
-      <div className="flex flex-row w-full bg-transparent group mb-2">
+      <div className="flex flex-row w-full bg-transparent group">
         <TaskSeparator color={getCurrentLabelColor()} taskStatus={status} />
         <Form {...form}>
           <form
@@ -126,7 +125,7 @@ export default function TaskCard({
                 errors={form.formState.errors}
               />
 
-              <div className="flex w-full text-base text-gray-500 mt-2">
+              <div className="flex w-full text-base text-gray-500 py-2">
                 <TaskCardDescriptionBlock
                   task={task}
                   taskStatus={status}
@@ -134,7 +133,6 @@ export default function TaskCard({
                   control={form.control}
                   errors={form.formState.errors}
                 />
-                <TaskCardLabelBlock task={task} isEditing={isEditing} />
                 <TaskEditActions
                   task={task}
                   isEditing={isEditing}
