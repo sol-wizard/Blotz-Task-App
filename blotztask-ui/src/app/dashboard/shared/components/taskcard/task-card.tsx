@@ -125,7 +125,7 @@ export default function TaskCard({
                 errors={form.formState.errors}
               />
 
-              <div className="flex w-full text-base text-gray-500 p-2">
+              <div className="flex w-full text-base text-gray-500 py-2">
                 <TaskCardDescriptionBlock
                   task={task}
                   taskStatus={status}
