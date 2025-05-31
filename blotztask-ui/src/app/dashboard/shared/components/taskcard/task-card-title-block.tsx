@@ -1,6 +1,6 @@
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/task-card-input';
-import DateAndTimeTag from '../ui/due-date-tag';
+import DateAndTimeTag from '../ui/duedate-and-time-tag';
 import { cn } from '@/lib/utils';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { TaskCardStatus } from './task-card';
