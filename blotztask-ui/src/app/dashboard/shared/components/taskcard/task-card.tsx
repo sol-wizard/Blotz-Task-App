@@ -134,7 +134,6 @@ export default function TaskCard({
                   control={form.control}
                   errors={form.formState.errors}
                 />
-                <TaskCardLabelBlock task={task} isEditing={isEditing} />
                 <TaskEditActions
                   task={task}
                   isEditing={isEditing}

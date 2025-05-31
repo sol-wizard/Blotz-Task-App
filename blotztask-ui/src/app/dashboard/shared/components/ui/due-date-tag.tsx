@@ -13,7 +13,7 @@ const DateAndTimeTag = ({ task, taskStatus }: { task: TaskDetailDTO; taskStatus?
   const statusClass = statusVariants[taskStatus] || statusVariants.todo;
 
   return (
-    <div className={cn('flex items-center justify-center px-6 text-xs rounded-full', statusClass)}>
+    <div className={cn('flex items-center justify-center px-5 text-xs rounded-full', statusClass)}>
       {taskStatus === 'overdue' && (
         <span>
           <CircleAlertIcon color="#fff" fill="#ef4444" />
