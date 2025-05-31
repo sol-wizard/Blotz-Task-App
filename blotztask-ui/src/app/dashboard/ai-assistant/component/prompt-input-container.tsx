@@ -105,16 +105,15 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
       {mockTasks.length > 0 && (
         <div className="mt-4 space-y-4">
           {mockTasks.map((task) => (
-            <div
-              key={task.id}
-              className="rounded-xl bg-blue-50 border border-blue-200 p-4"
-            >
-              <p className="text-sm font-medium text-blue-700 mb-3">
-                AI Task Suggestion
-              </p>
-
+            <div className="flex flex-row gap-2 w-full" key={task.id}>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={() => onSubmit(dtoCast(task))}>
+                  ✅ Add Task
+                </Button>
+              </div>
               {/* White card wrapper */}
-              <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="bg-white rounded-lg p-4 shadow-sm border-2 border-blue-200 w-full">
+                
                 <TaskCard
                   task={task}
                   status="todo"
@@ -122,13 +121,6 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
                   onDelete={handleTaskDelete}
                   handleTaskDeleteUndo={(id) => console.log("Undo delete for", id)}
                 />
-              </div>
-
-              {/* Action buttons outside the white card */}
-              <div className="mt-4 flex justify-end gap-2">
-                <Button onClick={() => onSubmit(dtoCast(task))}>
-                  ✅ Add Task
-                </Button>
               </div>
             </div>
           ))}
