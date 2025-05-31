@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useSession } from 'next-auth/react';
-import { useSignalR } from '@/hooks/use-signalR';
+import { useSignalR } from '@/app/dashboard/goal-to-task/hooks/use-signalR';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import TaskCardToAdd from '../shared/components/taskcard/task-card-to-add';
 import { SIGNALR_HUBS_CHAT } from '@/services/signalr-service';
