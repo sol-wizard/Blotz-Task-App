@@ -10,7 +10,6 @@ import type { TaskDetailDTO } from '../../../../../model/task-detail-dto';
 import type { RawEditTaskDTO } from '../../../../../model/raw-edit-task-dto';
 import { TaskCardTitleBlock } from './task-card-title-block';
 import { TaskCardDescriptionBlock } from './task-card-description-block';
-import { TaskCardLabelBlock } from './task-card-label-block';
 import { TaskEditActions } from './task-card-edit-actions-block';
 import { TaskCardEditFooter } from './task-card-edit-footer';
 import { cn } from '@/lib/utils';
