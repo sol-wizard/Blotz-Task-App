@@ -7,39 +7,47 @@ import TaskCardContainer from '../shared/components/taskcard/task-card-container
 import SectionSeparator from '../shared/components/ui/section-separator';
 import SectionHeading from './components/sectionHeading';
 import { OverdueTaskViewer } from '../shared/components/taskcard/overdue-task-viewer';
+import LoadingSpinner from '../../../components/ui/loading-spinner';
 
 export default function Schedule() {
-  const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks } = useScheduleTaskStore();
+  const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks, scheduleTasksIsLoading } =
+    useScheduleTaskStore();
   const { loadScheduleTasks } = useScheduleTaskStore((state) => state.actions);
   const { handleAddTask, handleEditTask, handleDeleteTask, handleTaskDeleteUndo, handleCheckboxChange } =
     useScheduleTaskActions();
 
   useEffect(() => {
     loadScheduleTasks();
-  }, []);
+  }, [loadScheduleTasks]);
 
   return (
-    <div className="flex flex-col gap-6 h-full">
+    <div className="relative flex flex-col gap-6 h-full min-h-screen">
       <ScheduleHeader />
       <AddTaskCardContainer onAddTask={handleAddTask} />
 
+      {scheduleTasksIsLoading && (
+        <div className="inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
+          <div className="flex flex-col items-center justify-center flex-1 py-20">
+            <LoadingSpinner variant="blue" className="mb-4 text-[10px]" />
+            <p className="mt-8 font-semibold text-zinc-600">Loading...</p>
+          </div>
+        </div>
+      )}
+      {!scheduleTasksIsLoading && (
         <div className="flex flex-col gap-4 w-full">
           {overdueTasks.length !== 0 && (
             <>
               <SectionHeading text="Overdue" />
               <SectionSeparator />
               <OverdueTaskViewer
-                        overdueTasks={overdueTasks}
-                        handleOverdueCheckboxChange={handleCheckboxChange}
-                        handleTaskEdit={handleEditTask}
-                        handleTaskDelete={handleDeleteTask}
-                        handleTaskDeleteUndo={handleTaskDeleteUndo}
-                      />
+                overdueTasks={overdueTasks}
+                handleOverdueCheckboxChange={handleCheckboxChange}
+                handleTaskEdit={handleEditTask}
+                handleTaskDelete={handleDeleteTask}
+                handleTaskDeleteUndo={handleTaskDeleteUndo}
+              />
             </>
           )}
-        
-
-        
           {todayTasks.length !== 0 && (
             <>
               <SectionHeading text={'Today'} />
@@ -61,9 +69,6 @@ export default function Schedule() {
               })}
             </>
           )}
-  
-
-      
           {tomorrowTasks.length !== 0 && (
             <>
               <SectionHeading text={'Tomorrow'} />
@@ -85,9 +90,6 @@ export default function Schedule() {
               })}
             </>
           )}
-       
-
-        
           {weekTasks.length !== 0 && (
             <>
               <SectionHeading text={'This week'} />
@@ -109,9 +111,6 @@ export default function Schedule() {
               })}
             </>
           )}
-        
-
-        
           {Object.keys(monthTasks).length !== 0 && (
             <>
               {Object.entries(monthTasks).map(([month, tasks]) => (
@@ -145,6 +144,7 @@ export default function Schedule() {
             </>
           )}
         </div>
+      )}
     </div>
   );
 }
