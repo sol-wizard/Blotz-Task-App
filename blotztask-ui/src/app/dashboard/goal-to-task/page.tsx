@@ -9,12 +9,14 @@ import TaskCardToAdd from '../shared/components/taskcard/task-card-to-add';
 import { SIGNALR_HUBS_CHAT } from '@/services/signalr-service';
 import { ConversationMessage } from './models/chat-message';
 import { Message } from './models/message';
-import { mockResponses } from './constants/mock-response';
+import { mockResponses, mockTasks } from './constants/mock-response';
 
 export default function ChatPage() {
   const { data: session } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [tasks, setTasks] = useState<ExtractedTask[]>([]);
+
+  //TODO: Remove mock tasks after ui fix and use the backend response
+  const [tasks, setTasks] = useState<ExtractedTask[]>(mockTasks);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
   const [conversationId, setConversationId] = useState<string>('');
   const [newMessage, setNewMessage] = useState('');
@@ -182,24 +184,24 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="mx-auto h-[75vh] p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Goal Planning Chat</h1>
+    <div className="mx-auto h-[75vh] p-4 flex ">
+      <div className="flex flex-col h-full">
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-xl font-semibold">Goal Planning Chat</h1>
 
-        {connectionError && (
-          <button
-            onClick={handleReconnect}
-            className="text-red-500 hover:text-red-700 flex items-center text-sm"
-          >
-            {isOfflineMode ? 'Offline Mode' : 'Connection Error'}
-            <span className="ml-1">⟳</span>
-          </button>
-        )}
-      </div>
+          {connectionError && (
+            <button
+              onClick={handleReconnect}
+              className="text-red-500 hover:text-red-700 flex items-center text-sm"
+            >
+              {isOfflineMode ? 'Offline Mode' : 'Connection Error'}
+              <span className="ml-1">⟳</span>
+            </button>
+          )}
+        </div>
 
-      <div className="flex h-full">
         {/* Chat section */}
-        <div className={`${showTasks ? 'w-1/2' : 'w-full'} flex flex-col`}>
+        <div className={`${showTasks ? 'w-1/2' : 'w-full'} flex flex-col h-full`}>
           {/* Chat header */}
           <div className="px-4 py-2 flex justify-between items-center">
             {isConversationComplete && (
@@ -265,34 +267,35 @@ export default function ChatPage() {
           </div>
         </div>
 
-        {/* Tasks section */}
-        {showTasks && (
-          <div className="w-1/2 flex flex-col">
-            <div className="border-b px-4 py-2">
-              <div className="font-medium">Generated Tasks</div>
-            </div>
-            <div className="flex-1 overflow-auto p-4">
-              {tasks.length > 0 ? (
-                <div className="space-y-3">
-                  {tasks.map((task, index) => (
-                    <TaskCardToAdd
-                      key={index}
-                      taskToAdd={task}
-                      index={index}
-                      addedTaskIndices={addedTaskIndices}
-                      onTaskAdded={handleTaskAdded}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-                  No tasks generated yet
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
+      {/* {showTasks && ( */}
+        <div className="w-1/2 flex flex-col">
+          <div className="border-b px-4 py-2">
+            <div className="font-medium">Generated Tasks</div>
+          </div>
+
+          <div className="flex-1 overflow-auto p-4">
+            {tasks.length > 0 ? (
+              <div className="space-y-3">
+                {tasks.map((task, index) => (
+                  <TaskCardToAdd
+                    key={index}
+                    taskToAdd={task}
+                    index={index}
+                    addedTaskIndices={addedTaskIndices}
+                    onTaskAdded={handleTaskAdded}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+                No tasks generated yet
+              </div>
+            )}
+          </div>
+
+        </div>
+      {/* )} */}
     </div>
   );
 }
