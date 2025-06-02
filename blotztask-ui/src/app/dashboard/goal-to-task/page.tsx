@@ -5,12 +5,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { useSession } from 'next-auth/react';
 import { useSignalR } from '@/app/dashboard/goal-to-task/hooks/use-signalR';
 import { ExtractedTask } from '@/model/extracted-task-dto';
-import TaskCardToAdd from '../shared/components/taskcard/task-card-to-add';
 import { SIGNALR_HUBS_CHAT } from '@/services/signalr-service';
 import { ConversationMessage } from './models/chat-message';
 import { Message } from './models/message';
 import { mockResponses, mockTasks } from './constants/mock-response';
 import { Button } from '@/components/ui/button';
+import { GeneratedTasksPanel } from './components/generated-tasks-panel';
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -115,7 +115,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, showTasks]);
+  }, [messages]);
 
   const handleReconnect = async () => {
     if (isOfflineMode) {
@@ -267,31 +267,12 @@ export default function ChatPage() {
 
       </div>
 
-      {showTasks && (
-        <div className="flex flex-col w-1/2">
-          <div className="border-b px-4 py-2">
-            <div className="font-medium">Generated Tasks</div>
-          </div>
-
-          <div className="flex-1 overflow-auto p-4">
-            <div className="space-y-3">
-              {tasks.length === 0 ? (
-                <p className="text-gray-500 text-sm">No task generated.</p>
-              ) : (
-                tasks.map((task, index) => (
-                  <TaskCardToAdd
-                    key={index}
-                    taskToAdd={task}
-                    index={index}
-                    addedTaskIndices={addedTaskIndices}
-                    onTaskAdded={handleTaskAdded}
-                  />
-                ))
-              )}
-            </div>
-          </div>
-
-        </div>
+      {showTasks && (   
+        <GeneratedTasksPanel
+          tasks={tasks}
+          addedTaskIndices={addedTaskIndices}
+          onTaskAdded={handleTaskAdded}
+        />
       )} 
     </div>
   );
