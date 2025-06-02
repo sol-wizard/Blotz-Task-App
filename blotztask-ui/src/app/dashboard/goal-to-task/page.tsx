@@ -26,7 +26,6 @@ export default function ChatPage() {
   const [isConversationComplete, setIsConversationComplete] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const userName = session?.user?.name || 'User';
-  const maxRetries = 3;
 
   const handleTaskAdded = (index) => {
     setAddedTaskIndices((prev) => new Set(prev).add(index));
@@ -110,13 +109,9 @@ export default function ChatPage() {
       start().catch((err) => {
         console.error('Error starting connection:', err);
         setConnectionRetries((prev) => prev + 1);
-
-        if (connectionRetries >= maxRetries) {
-          setIsOfflineMode(true);
-        }
       });
     }
-  }, [conversationId, start, connectionRetries, maxRetries, isOfflineMode]);
+  }, [conversationId, start, connectionRetries, isOfflineMode]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
