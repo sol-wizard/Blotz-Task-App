@@ -182,7 +182,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="mx-auto p-4">
+    <div className="mx-auto h-[75vh] p-4">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Goal Planning Chat</h1>
 
@@ -197,12 +197,11 @@ export default function ChatPage() {
         )}
       </div>
 
-      <div className="h-[calc(100vh-120px)] border rounded flex">
+      <div className="flex h-full">
         {/* Chat section */}
-        <div className={`${showTasks ? 'w-1/2' : 'w-full'} border-r flex flex-col`}>
+        <div className={`${showTasks ? 'w-1/2' : 'w-full'} flex flex-col`}>
           {/* Chat header */}
-          <div className="border-b px-4 py-2 flex justify-between items-center">
-            <div className="font-medium">Conversation</div>
+          <div className="px-4 py-2 flex justify-between items-center">
             {isConversationComplete && (
               <button onClick={startNewConversation} className="text-sm bg-blue-100 px-2 py-1 rounded">
                 New Conversation
@@ -245,7 +244,7 @@ export default function ChatPage() {
           </div>
 
           {/* Message input */}
-          <div className="border-t p-2">
+          <div className="p-2">
             <form onSubmit={handleSendMessage} className="flex gap-2">
               <input
                 type="text"
