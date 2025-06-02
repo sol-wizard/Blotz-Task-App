@@ -1,20 +1,21 @@
-using BlotzTask.Services;
+using BlotzTask.Models.GoalToTask;
+using BlotzTask.Services.GoalPlanner;
 using Microsoft.AspNetCore.SignalR;
 
 public class ChatHub : Hub
 {
     private readonly ILogger<ChatHub> _logger;
-    private readonly ConversationStateService _stateService;
-    private readonly IChatHubService _chatHubService;
+    private readonly IGoalPlannerChatService _goalPlannerChatService;
+    private readonly IConversationStateService _conversationStateService;
 
     public ChatHub(
-    ILogger<ChatHub> logger,
-    ConversationStateService stateService,
-    IChatHubService chatHubService)
+    ILogger<ChatHub> logger, 
+    IGoalPlannerChatService goalPlannerChatService,
+    IConversationStateService conversationStateService)
     {
         _logger = logger;
-        _stateService = stateService;
-        _chatHubService = chatHubService;
+        _goalPlannerChatService = goalPlannerChatService;
+        _conversationStateService = conversationStateService;
     }
     public override async Task OnConnectedAsync()
     {
@@ -26,15 +27,40 @@ public class ChatHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         string connectionId = Context.ConnectionId;
-        _stateService.RemoveConversation(connectionId);
         _logger.LogInformation($"User disconnected: {connectionId}. Exception: {exception?.Message}");
         await base.OnDisconnectedAsync(exception);
     }
-
-
-    //TODO: Add comments about Functionality and param explain...
+    
     public async Task SendMessage(string user, string message, string conversationId)
     {
-        await _chatHubService.HandleSendMessage(user, message, conversationId, Clients);
+        var userMsg = new ConversationMessage
+        {
+            Sender = user,
+            Content = message,
+            ConversationId = conversationId,
+            Timestamp = DateTime.UtcNow,
+            IsBot = false
+        };
+
+        await Clients.Caller.SendAsync("ReceiveMessage", userMsg);
+
+        var result = await _goalPlannerChatService.HandleUserMessageAsync(userMsg);
+
+        if (result.Tasks != null)
+        {
+            await Clients.Caller.SendAsync("ReceiveTasks", result.Tasks);
+        }
+        else if (!result.IsConversationComplete)
+        {
+            await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
+        }
+        
+
+        if (result.IsConversationComplete)
+        {
+            // ✅ Cleanup state after completion
+            _conversationStateService.RemoveConversation(conversationId);
+            await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
+        }
     }
 }

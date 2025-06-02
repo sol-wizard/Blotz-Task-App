@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import VoiceRecognizer from "../external-services/voice-recognizer";
 import { TaskDetailDTO } from "@/model/task-detail-dto";
 import TaskCard from "../../shared/components/taskcard/task-card";
+import { RawAddTaskDTO } from "@/model/raw-add-task-dto";
 
 const MOCK_TASKS: TaskDetailDTO[] = [
   {
@@ -15,7 +16,7 @@ const MOCK_TASKS: TaskDetailDTO[] = [
     isDone: false,
     hasTime: false,
     label: {
-      labelId: 1,
+      labelId: 6,
       name: "Work",
       color: "#7C3AED",
     },
@@ -23,23 +24,35 @@ const MOCK_TASKS: TaskDetailDTO[] = [
   {
     id: 2,
     title: "Study for final exam",
-    description: "Prepare for the upcoming final exam. Focus on chapters 5–8.",
+    description: "Prepare for the upcoming final exam. Focus on chapters 5-8.",
     dueDate: new Date(),
     isDone: false,
     hasTime: false,
     label: {
-      labelId: 3,
+      labelId: 8,
       name: "Academic",
       color: "#F87171",
     },
   },
 ];
 
+const dtoCast = (task: TaskDetailDTO) => {
+    const taskContent: RawAddTaskDTO = {
+      title: task.title,
+      description: task.description,
+      labelId: task.label.labelId,
+      date: task.dueDate,
+      time: undefined,
+    };
+    return taskContent;
+  };
+
 interface PromptInputSectionProps {
   prompt: string;
   setPrompt: (value: string) => void;
   loading: boolean;
   onGenerate: () => void;
+  onSubmit: (task: RawAddTaskDTO) => void;
 }
 
 const PromptInputSection: React.FC<PromptInputSectionProps> = ({
@@ -47,6 +60,7 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
   setPrompt,
   loading,
   onGenerate,
+  onSubmit,
 }) => {
 
   const [mockTasks, setMockTasks] = useState<TaskDetailDTO[]>([]);
@@ -91,16 +105,15 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
       {mockTasks.length > 0 && (
         <div className="mt-4 space-y-4">
           {mockTasks.map((task) => (
-            <div
-              key={task.id}
-              className="rounded-xl bg-blue-50 border border-blue-200 p-4"
-            >
-              <p className="text-sm font-medium text-blue-700 mb-3">
-                AI Task Suggestion
-              </p>
-
+            <div className="flex flex-row gap-2 w-full" key={task.id}>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={() => onSubmit(dtoCast(task))}>
+                  ✅ Add Task
+                </Button>
+              </div>
               {/* White card wrapper */}
-              <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="bg-white rounded-lg p-4 shadow-sm border-2 border-blue-200 w-full">
+                
                 <TaskCard
                   task={task}
                   status="todo"
@@ -108,13 +121,6 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
                   onDelete={handleTaskDelete}
                   handleTaskDeleteUndo={(id) => console.log("Undo delete for", id)}
                 />
-              </div>
-
-              {/* Action buttons outside the white card */}
-              <div className="mt-4 flex justify-end gap-2">
-                <Button onClick={() => console.log("Add task", task.id)}>
-                  ✅ Add Task
-                </Button>
               </div>
             </div>
           ))}

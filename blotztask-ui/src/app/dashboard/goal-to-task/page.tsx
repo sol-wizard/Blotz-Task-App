@@ -3,27 +3,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useSession } from 'next-auth/react';
-import { useSignalR } from '@/hooks/use-signalR';
+import { useSignalR } from '@/app/dashboard/goal-to-task/hooks/use-signalR';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import TaskCardToAdd from '../shared/components/taskcard/task-card-to-add';
 import { SIGNALR_HUBS_CHAT } from '@/services/signalr-service';
-
-interface Message {
-  id: string;
-  sender: string;
-  content: string;
-  timestamp: Date;
-  isBot: boolean;
-}
-
-// Mock responses when backend is unavailable
-const mockResponses = [
-  "I'm unable to connect to the backend service right now. This is an offline response.",
-  "The chat service appears to be offline. Here's a simulated response.",
-  'Backend connection failed. This is a fallback response from the frontend.',
-  "I'm operating in offline mode. The chat server is currently unavailable.",
-  'This is a simulated response because the backend service is not responding.',
-];
+import { ConversationMessage } from './models/chat-message';
+import { Message } from './models/message';
+import { mockResponses } from './constants/mock-response';
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -83,21 +69,22 @@ export default function ChatPage() {
   // Set up message and task receiving
   useEffect(() => {
     if (connection) {
-      // Handle regular messages
-      on('ReceiveMessage', (user, message, convoId) => {
-        if (convoId === conversationId) {
+      // ✅ Type-safe message handler
+      on('ReceiveMessage', (msg: ConversationMessage) => {
+        if (msg.conversationId === conversationId) {
           const newMsg: Message = {
             id: uuidv4(),
-            sender: user as string,
-            content: message as string,
-            timestamp: new Date(),
-            isBot: user === 'ChatBot',
+            sender: msg.sender,
+            content: msg.content,
+            timestamp: new Date(msg.timestamp), // if timestamp is a string
+            isBot: msg.isBot,
           };
+  
           setMessages((prev) => [...prev, newMsg]);
         }
       });
-
-      // Handle received tasks
+  
+      // 👇 These stay the same unless you also type `ExtractedTask`
       on('ReceiveTasks', (receivedTasks: ExtractedTask[]) => {
         if (receivedTasks?.length > 0) {
           setTasks(receivedTasks);
@@ -106,8 +93,7 @@ export default function ChatPage() {
         }
         console.log(receivedTasks);
       });
-
-      // Handle conversation completion
+  
       on('ConversationCompleted', (convoId: string) => {
         if (convoId === conversationId) {
           setIsConversationComplete(true);
@@ -115,7 +101,7 @@ export default function ChatPage() {
       });
     }
   }, [connection, conversationId, on]);
-
+  
   // Connect to hub
   useEffect(() => {
     if (!isOfflineMode && conversationId) {
@@ -196,7 +182,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4">
+    <div className="mx-auto p-4">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Goal Planning Chat</h1>
 
