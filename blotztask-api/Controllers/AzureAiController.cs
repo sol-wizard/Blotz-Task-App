@@ -27,22 +27,6 @@ namespace BlotzTask.Controllers
             var response = await _aiService.GenerateResponseAsync(request.Prompt, request.TimeZoneId);
             return Ok(new { Response = response });
         }
-
-        [HttpPost("generate-tasks-from-goal")]
-        public async Task<IActionResult> GenerateTasksFromGoal([FromBody] GoalToTasksRequest request)
-        {
-            if (string.IsNullOrWhiteSpace(request?.Goal) || request.DurationInDays <= 0)
-            {
-                return BadRequest("Goal and a valid duration are required.");
-            }
-
-
-            var response = await _aiService.GenerateTasksFromGoalAsync(request);
-
-            return Ok( response );
-        }
-
        
-
     }
 }
