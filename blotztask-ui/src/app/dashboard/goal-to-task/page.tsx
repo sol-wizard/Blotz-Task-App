@@ -5,12 +5,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { useSession } from 'next-auth/react';
 import { useSignalR } from '@/app/dashboard/goal-to-task/hooks/use-signalR';
 import { ExtractedTask } from '@/model/extracted-task-dto';
-import { SIGNALR_HUBS_CHAT } from '@/services/signalr-service';
 import { ConversationMessage } from './models/chat-message';
 import { Message } from './models/message';
 import { mockResponses, mockTasks } from './constants/mock-response';
 import { Button } from '@/components/ui/button';
 import { GeneratedTasksPanel } from './components/generated-tasks-panel';
+import MessageInput from './components/message-input';
+import * as signalR from '@microsoft/signalr';
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -19,33 +20,69 @@ export default function ChatPage() {
   //TODO: Remove mock tasks after ui fix and use the backend response
   const [tasks, setTasks] = useState<ExtractedTask[]>(mockTasks);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
-  const [conversationId, setConversationId] = useState<string>('');
-  const [newMessage, setNewMessage] = useState('');
-  const [connectionRetries, setConnectionRetries] = useState<number>(0);
+
+  const [conversationId, setConversationId] = useState<string>(() => {
+    console.log('[SignalR] Create Conversation ID...');
+    return uuidv4();
+  });
+  
+  const [userMessageInput, setUserMessageInput] = useState<string>('');
+
+  //TODO: Not sure if we need connection retries, what is this for?
+  // const [connectionRetries, setConnectionRetries] = useState<number>(0);
   const [isOfflineMode, setIsOfflineMode] = useState<boolean>(false);
   const [showTasks, setShowTasks] = useState<boolean>(false);
   const [isConversationComplete, setIsConversationComplete] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
+
+
+  // Use the SignalR hook
+  const { connection, connectionState, invoke, on, start, stop, error } = useSignalR();
+
+  // Interpret the connection state for UI purposes
+  const isConnecting = connectionState === 'connecting' || connectionState === 'reconnecting';
+  const connectionError = !!error || isOfflineMode;
 
   const handleTaskAdded = (index) => {
     setAddedTaskIndices((prev) => new Set(prev).add(index));
   };
 
-  // Initialize with a default conversation ID
+  // // Initialize with a default conversation ID
+  //TODO: Not sure if we need extra effect to initialize the id, we can initialize it when the state is created at the top
+  // useEffect(() => {
+  //   console.log('[SignalR] Create Conversation ID...');
+  //   if (!conversationId) {
+  //     const newConvoId = uuidv4();
+  //     setConversationId(newConvoId);
+  //   }
+  // }, [conversationId]);
+
+  // SignalR: Log connection start/stop
   useEffect(() => {
-    if (!conversationId) {
-      const newConvoId = uuidv4();
-      setConversationId(newConvoId);
+    if (
+      !isOfflineMode &&
+      connection &&
+      //We might need this disconnected state check because there are a couple of time this effect is run due to maybe strict mode in react 18 
+      // and dependency array is not empty
+      connection.state === signalR.HubConnectionState.Disconnected 
+    ) {
+      console.log('[SignalR] Attempting to start connection...', { error, isOfflineMode, connectionError });
+      start()
+        .then(() => console.log('[SignalR] Connection started', { error, isOfflineMode, connectionError }))
+        .catch((err) => {
+          console.error('[SignalR] Error starting connection:', err, { error, isOfflineMode, connectionError });
+        });
     }
-  }, [conversationId]);
-
-  // Use the SignalR hook
-  const { connection, connectionState, invoke, on, start, stop, error } = useSignalR(SIGNALR_HUBS_CHAT);
-
-  // Interpret the connection state for UI purposes
-  const isConnecting = connectionState === 'connecting' || connectionState === 'reconnecting';
-  const connectionError = !!error || isOfflineMode;
+    return () => {
+      if (connection) {
+        console.log('[SignalR] Stopping connection...', { error, isOfflineMode, connectionError });
+        stop().then(() => console.log('[SignalR] Connection stopped', { error, isOfflineMode, connectionError }));
+      }
+    };
+  }, [conversationId, start, connection, stop, isOfflineMode]);
 
   // Function to get a random mock response
   const getMockResponse = useCallback(() => {
@@ -71,8 +108,10 @@ export default function ChatPage() {
   // Set up message and task receiving
   useEffect(() => {
     if (connection) {
+      console.log('[SignalR] Registering handlers', { error, isOfflineMode, connectionError });
       // ✅ Type-safe message handler
       on('ReceiveMessage', (msg: ConversationMessage) => {
+        console.log('[SignalR] Received message:', msg, { error, isOfflineMode, connectionError });
         if (msg.conversationId === conversationId) {
           const newMsg: Message = {
             id: uuidv4(),
@@ -81,21 +120,21 @@ export default function ChatPage() {
             timestamp: new Date(msg.timestamp), // if timestamp is a string
             isBot: msg.isBot,
           };
-  
           setMessages((prev) => [...prev, newMsg]);
         }
       });
-  
+
       // 👇 These stay the same unless you also type `ExtractedTask`
       on('ReceiveTasks', (receivedTasks: ExtractedTask[]) => {
+        console.log('[SignalR] Received tasks:', receivedTasks, { error, isOfflineMode, connectionError });
         if (receivedTasks?.length > 0) {
           setTasks(receivedTasks);
           setIsConversationComplete(true);
         }
-        console.log(receivedTasks);
       });
-  
+
       on('ConversationCompleted', (convoId: string) => {
+        console.log('[SignalR] Conversation completed for:', convoId, { error, isOfflineMode, connectionError });
         if (convoId === conversationId) {
           setIsConversationComplete(true);
         }
@@ -104,23 +143,25 @@ export default function ChatPage() {
   }, [connection, conversationId, on]);
   
   // Connect to hub
-  useEffect(() => {
-    if (!isOfflineMode && conversationId) {
-      start().catch((err) => {
-        console.error('Error starting connection:', err);
-        setConnectionRetries((prev) => prev + 1);
-      });
-    }
-  }, [conversationId, start, connectionRetries, isOfflineMode]);
+  // useEffect(() => {
+  //   if (!isOfflineMode && conversationId) {
+  //     start().catch((err) => {
+  //       console.error('Error starting connection:', err);
+  //       setConnectionRetries((prev) => prev + 1);
+  //     });
+  //   }
+  // }, [conversationId, start, connectionRetries, isOfflineMode]);
 
+  //Use to scroll to the bottom of the messages, every time the messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleReconnect = async () => {
+    console.log('[SignalR] handleReconnect called', { error, isOfflineMode, connectionError });
     if (isOfflineMode) {
       setIsOfflineMode(false);
-      setConnectionRetries(0);
+      // setConnectionRetries(0);
     }
 
     try {
@@ -133,10 +174,10 @@ export default function ChatPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !conversationId || isConversationComplete) return;
+    if (!userMessageInput.trim() || !conversationId || isConversationComplete) return;
 
-    const messageToSend = newMessage;
-    setNewMessage('');
+    const messageToSend = userMessageInput;
+    setUserMessageInput('');
 
     try {
       if (isOfflineMode) {
@@ -244,25 +285,13 @@ export default function ChatPage() {
           </div>
 
           {/* Message input */}
-          <div className="p-2">
-            <form onSubmit={handleSendMessage} className="flex gap-2">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                disabled={isConnecting || isConversationComplete}
-                placeholder={isConversationComplete ? 'Conversation completed' : 'Type your message...'}
-                className="flex-1 border rounded p-2 disabled:bg-gray-100"
-              />
-              <button
-                type="submit"
-                disabled={isConnecting || !newMessage.trim() || isConversationComplete}
-                className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-blue-300"
-              >
-                Send
-              </button>
-            </form>
-          </div>
+          <MessageInput
+            userMessageInput={userMessageInput}
+            setUserMessageInput={setUserMessageInput}
+            handleSendMessage={handleSendMessage}
+            isConnecting={isConnecting}
+            isConversationComplete={isConversationComplete}
+          />
         </div>
 
       </div>
