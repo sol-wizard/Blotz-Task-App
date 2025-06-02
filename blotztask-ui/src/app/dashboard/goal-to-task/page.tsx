@@ -182,16 +182,20 @@ export default function ChatPage() {
       <div className="flex flex-col h-full w-full">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-xl font-semibold">Goal Planning Chat</h1>
+          
+          <div className="flex items-center gap-2">
+            {connectionError && (
+              <button
+                onClick={handleReconnect}
+                className="text-red-500 hover:text-red-700 flex items-center text-sm"
+              >
+                {isOfflineMode ? 'Offline Mode' : 'Connection Error'}
+                <span className="ml-1">⟳</span>
+              </button>
+            )}
 
-          {connectionError && (
-            <button
-              onClick={handleReconnect}
-              className="text-red-500 hover:text-red-700 flex items-center text-sm"
-            >
-              {isOfflineMode ? 'Offline Mode' : 'Connection Error'}
-              <span className="ml-1">⟳</span>
-            </button>
-          )}
+            <Button variant="outline" onClick={() => setShowTasks((prev) => !prev)}>show & hide</Button>
+          </div>
         </div>
 
         {/* Chat section */}
@@ -262,25 +266,28 @@ export default function ChatPage() {
         </div>
 
       </div>
-        <Button variant="outline" onClick={() => setShowTasks((prev) => !prev)}>hide</Button>
 
       {showTasks && (
-        <div className="flex flex-col">
+        <div className="flex flex-col w-1/2">
           <div className="border-b px-4 py-2">
             <div className="font-medium">Generated Tasks</div>
           </div>
 
           <div className="flex-1 overflow-auto p-4">
             <div className="space-y-3">
-              {tasks.map((task, index) => (
-                <TaskCardToAdd
-                  key={index}
-                  taskToAdd={task}
-                  index={index}
-                  addedTaskIndices={addedTaskIndices}
-                  onTaskAdded={handleTaskAdded}
-                />
-              ))}
+              {tasks.length === 0 ? (
+                <p className="text-gray-500 text-sm">No task generated.</p>
+              ) : (
+                tasks.map((task, index) => (
+                  <TaskCardToAdd
+                    key={index}
+                    taskToAdd={task}
+                    index={index}
+                    addedTaskIndices={addedTaskIndices}
+                    onTaskAdded={handleTaskAdded}
+                  />
+                ))
+              )}
             </div>
           </div>
 
