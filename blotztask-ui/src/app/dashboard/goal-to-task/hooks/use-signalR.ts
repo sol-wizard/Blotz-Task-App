@@ -14,13 +14,13 @@ interface UseSignalRResult {
 }
 
 // The custom React hook for SignalR
-export function useSignalR(hubUrl: string): UseSignalRResult {
+export function useSignalR(): UseSignalRResult {
   const [connectionState, setConnectionState] = useState('disconnected'); // Track connection state
   const [error, setError] = useState<Error | null>(null); // Track errors
 
   // Effect to create and configure the connection when hubUrl changes
   useEffect(() => {
-    const conn = signalRService.createConnection(hubUrl);
+    const conn = signalRService.createConnection();
 
     const onStateChange = () => setConnectionState(conn.state);
 
@@ -34,7 +34,7 @@ export function useSignalR(hubUrl: string): UseSignalRResult {
     return () => {
       signalRService.stopConnection().catch(console.error);
     };
-  }, [hubUrl]);
+  }, []);
 
   const start = useCallback(async () => {
     try {

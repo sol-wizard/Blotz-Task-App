@@ -1,18 +1,28 @@
 import * as signalR from '@microsoft/signalr';
 
 const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-export const SIGNALR_HUBS_CHAT = `${apiUrl}/chatHub`;
+const SIGNALR_HUBS_CHAT = `${apiUrl}/chatHub`;
 let connection: signalR.HubConnection | null = null;
 
 export const signalRService = {
-  createConnection: (hubUrl: string): signalR.HubConnection => {
-    connection = new signalR.HubConnectionBuilder().withUrl(hubUrl).withAutomaticReconnect().build();
+  createConnection: (): signalR.HubConnection => {
+    connection = new signalR.HubConnectionBuilder()
+      .withUrl(SIGNALR_HUBS_CHAT)
+      .withAutomaticReconnect()
+      .build();
 
     return connection;
   },
 
   startConnection: async () => {
     if (!connection) throw new Error('Connection not created.');
+
+    const currentState = connection.state;
+    if (currentState !== signalR.HubConnectionState.Disconnected) {
+      console.warn(`[SignalR] Cannot start — current state is: ${currentState}`);
+      return;
+    }
+
     await connection.start();
   },
 
