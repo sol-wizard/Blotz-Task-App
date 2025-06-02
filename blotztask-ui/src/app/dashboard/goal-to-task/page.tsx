@@ -10,6 +10,7 @@ import { SIGNALR_HUBS_CHAT } from '@/services/signalr-service';
 import { ConversationMessage } from './models/chat-message';
 import { Message } from './models/message';
 import { mockResponses, mockTasks } from './constants/mock-response';
+import { Button } from '@/components/ui/button';
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -89,7 +90,6 @@ export default function ChatPage() {
       on('ReceiveTasks', (receivedTasks: ExtractedTask[]) => {
         if (receivedTasks?.length > 0) {
           setTasks(receivedTasks);
-          setShowTasks(true);
           setIsConversationComplete(true);
         }
         console.log(receivedTasks);
@@ -173,14 +173,13 @@ export default function ChatPage() {
     setConversationId(newConvoId);
     setMessages([]);
     setTasks([]);
-    setShowTasks(false);
     setIsConversationComplete(false);
     setAddedTaskIndices(new Set());
   };
 
   return (
     <div className="mx-auto h-[75vh] p-4 flex ">
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full w-full">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-xl font-semibold">Goal Planning Chat</h1>
 
@@ -196,7 +195,7 @@ export default function ChatPage() {
         </div>
 
         {/* Chat section */}
-        <div className={`${showTasks ? 'w-1/2' : 'w-full'} flex flex-col h-full`}>
+        <div className="flex flex-col h-full">
           {/* Chat header */}
           <div className="px-4 py-2 flex justify-between items-center">
             {isConversationComplete && (
@@ -263,34 +262,30 @@ export default function ChatPage() {
         </div>
 
       </div>
-      {/* {showTasks && ( */}
-        <div className="w-1/2 flex flex-col">
+        <Button variant="outline" onClick={() => setShowTasks((prev) => !prev)}>hide</Button>
+
+      {showTasks && (
+        <div className="flex flex-col">
           <div className="border-b px-4 py-2">
             <div className="font-medium">Generated Tasks</div>
           </div>
 
           <div className="flex-1 overflow-auto p-4">
-            {tasks.length > 0 ? (
-              <div className="space-y-3">
-                {tasks.map((task, index) => (
-                  <TaskCardToAdd
-                    key={index}
-                    taskToAdd={task}
-                    index={index}
-                    addedTaskIndices={addedTaskIndices}
-                    onTaskAdded={handleTaskAdded}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-                No tasks generated yet
-              </div>
-            )}
+            <div className="space-y-3">
+              {tasks.map((task, index) => (
+                <TaskCardToAdd
+                  key={index}
+                  taskToAdd={task}
+                  index={index}
+                  addedTaskIndices={addedTaskIndices}
+                  onTaskAdded={handleTaskAdded}
+                />
+              ))}
+            </div>
           </div>
 
         </div>
-      {/* )} */}
+      )} 
     </div>
   );
 }
