@@ -28,7 +28,7 @@ export default function ChatPage() {
   
   const [userMessageInput, setUserMessageInput] = useState<string>('');
 
-  //TODO: Not sure if we need connection retries, what is this for?
+  //TODO 1: Not sure if we need connection retries, what is this for?
   // const [connectionRetries, setConnectionRetries] = useState<number>(0);
   const [isOfflineMode, setIsOfflineMode] = useState<boolean>(false);
   const [showTasks, setShowTasks] = useState<boolean>(false);
@@ -51,7 +51,7 @@ export default function ChatPage() {
   };
 
   // // Initialize with a default conversation ID
-  //TODO: Not sure if we need extra effect to initialize the id, we can initialize it when the state is created at the top
+  //TODO 3: Not sure if we need extra effect to initialize the id, we can initialize it when the state is created at the top
   // useEffect(() => {
   //   console.log('[SignalR] Create Conversation ID...');
   //   if (!conversationId) {
@@ -142,7 +142,7 @@ export default function ChatPage() {
     }
   }, [connection, conversationId, on]);
   
-  // Connect to hub
+  //TODO 4: Do we need this extra effect to start() ? this is double trigger sometimes
   // useEffect(() => {
   //   if (!isOfflineMode && conversationId) {
   //     start().catch((err) => {
