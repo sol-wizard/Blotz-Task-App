@@ -39,7 +39,6 @@ export default function Today() {
 
   const { loadScheduleTasks } = useScheduleTaskActions();
 
-
   useEffect(() => {
     loadTodayTasks();
     loadOverdueTasks();
