@@ -8,17 +8,24 @@ import SectionSeparator from '../shared/components/ui/section-separator';
 import SectionHeading from './components/sectionHeading';
 import { OverdueTaskViewer } from '../shared/components/taskcard/overdue-task-viewer';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
+import { useTodayTaskActions } from '../../store/today-task-store';
 
 export default function Schedule() {
   const { overdueTasks, todayTasks, tomorrowTasks, weekTasks, monthTasks, scheduleTasksIsLoading } =
     useScheduleTaskStore();
-  const { loadScheduleTasks } = useScheduleTaskStore((state) => state.actions);
-  const { handleAddTask, handleEditTask, handleDeleteTask, handleTaskDeleteUndo, handleCheckboxChange } =
+  const { loadScheduleTasks, handleAddTask, handleEditTask, handleDeleteTask, handleTaskDeleteUndo, handleCheckboxChange } =
     useScheduleTaskActions();
+
+  const { loadTodayTasks, loadOverdueTasks } = useTodayTaskActions();
 
   useEffect(() => {
     loadScheduleTasks();
   }, [loadScheduleTasks]);
+
+  useEffect(() => {
+    loadTodayTasks();
+    loadOverdueTasks();
+  }, [loadOverdueTasks, loadTodayTasks, scheduleTasksIsLoading]);
 
   return (
     <div className="relative flex flex-col gap-6 h-full min-h-screen">
