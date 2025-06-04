@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { GeneratedTasksPanel } from "./components/generated-tasks-panel";
 import MessageInput from "./components/message-input";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ExtractedTask } from "@/model/extracted-task-dto";
 import { mockTasks } from "./constants/mock-response";
 import { Message } from "./models/message";
@@ -36,8 +36,6 @@ export default function ChatPage() {
 
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const connect = signalRService.createConnection();
@@ -86,11 +84,6 @@ export default function ChatPage() {
     };
   }, []);
 
-  //Use to scroll to the bottom of the messages, every time the messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userMessageInput.trim() || isConversationComplete) return;
@@ -125,12 +118,10 @@ export default function ChatPage() {
         <ChatPanel
           messages={messages}
           userName={userName}
-          messagesEndRef={messagesEndRef}
           connectionState={connectionState}
           isConversationComplete={isConversationComplete}
         />
-
-        {/* Message input */}
+        
         <MessageInput
           userMessageInput={userMessageInput}
           setUserMessageInput={setUserMessageInput}

@@ -5,7 +5,6 @@ import { ChatMessageList } from "./chat-message-list";
 type Props = {
   messages: Message[];
   userName: string;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
   connectionState: HubConnectionState;
   isConversationComplete: boolean;
 };
@@ -13,7 +12,6 @@ type Props = {
 export const ChatPanel = ({
   messages,
   userName,
-  messagesEndRef,
   connectionState,
   isConversationComplete,
 }: Props) => {
@@ -33,7 +31,6 @@ export const ChatPanel = ({
         <ChatMessageList
           messages={messages}
           userName={userName}
-          messagesEndRef={messagesEndRef}
         />
       )}
     </div>

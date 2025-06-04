@@ -1,12 +1,18 @@
+import { useEffect, useRef } from "react";
 import { Message } from "../models/message";
 
 type Props = {
   messages: Message[];
   userName: string;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
 };
 
-export const ChatMessageList = ({ messages, userName, messagesEndRef }: Props) => {
+export const ChatMessageList = ({ messages, userName}: Props) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+  
   return (
     <div className="space-y-4">
       {messages.map((msg) => (
