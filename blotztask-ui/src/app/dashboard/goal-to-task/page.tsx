@@ -12,7 +12,7 @@ import { signalRService } from "@/services/signalr-service";
 import { ConversationMessage } from "./models/chat-message";
 import { v4 as uuidv4 } from 'uuid';
 import { HubConnectionState } from "@microsoft/signalr";
-import { ChatMessageList } from "./components/chat-message-list";
+import { ChatPanel } from "./components/chat-panel";
 
 
 export default function ChatPage() {
@@ -99,32 +99,9 @@ export default function ChatPage() {
     setUserMessageInput('');
 
     try {
-      // if (isOfflineMode) {
-      //   const userMessage = {
-      //     id: uuidv4(),
-      //     sender: userName,
-      //     content: messageToSend,
-      //     timestamp: new Date(),
-      //     isBot: false,
-      //   };
-      //   setMessages((prev) => [...prev, userMessage]);
-      //   handleOfflineMessage();
-      // } else {
-        await signalRService.invoke('SendMessage', userName, messageToSend, conversationId);
-      // }
+      await signalRService.invoke('SendMessage', userName, messageToSend, conversationId);
     } catch (error) {
       console.error('Error sending message:', error);
-      // setIsOfflineMode(true);
-
-      // const userMessage = {
-      //   id: uuidv4(),
-      //   sender: userName,
-      //   content: messageToSend,
-      //   timestamp: new Date(),
-      //   isBot: false,
-      // };
-      // setMessages((prev) => [...prev, userMessage]);
-      // handleOfflineMessage();
     }
   };
   
@@ -139,53 +116,19 @@ export default function ChatPage() {
         <h1 className="text-xl font-semibold">Goal Planning Chat</h1>
         
         <div className="flex items-center gap-2">
-          {/* {connectionError && (
-            <button
-              // onClick={handleReconnect}
-              className="text-red-500 hover:text-red-700 flex items-center text-sm"
-            >
-              {isOfflineMode ? 'Offline Mode' : 'Connection Error'}
-              <span className="ml-1">⟳</span>
-            </button>
-          )} */}
-
           <Button variant="outline" onClick={() => setShowTasks((prev) => !prev)}>show & hide</Button>
         </div>
       </div>
 
       {/* Chat section */}
       <div className="flex flex-col h-full">
-        {/* Chat header */}
-        <div className="px-4 py-2 flex justify-between items-center">
-          {/* {isConversationComplete && (
-            <button 
-              // onClick={startNewConversation}
-              className="text-sm bg-blue-100 px-2 py-1 rounded">
-              New Conversation
-            </button>
-          )} */}
-        </div>
-
-        {/* Messages */}
-        <div className="flex-1 overflow-auto p-4">
-          {messages.length === 0 && connectionState === HubConnectionState.Connected ? (
-            <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-              {isConversationComplete
-                ? 'This conversation is complete. Start a new one to continue.'
-                : 'Describe your goal to get started. The assistant will help break it down into tasks.'}
-            </div>
-          ) : connectionState === HubConnectionState.Connecting ? (
-            <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-              Connecting to chat service...
-            </div>
-          ) : (
-            <ChatMessageList
-              messages={messages}
-              userName={userName}
-              messagesEndRef={messagesEndRef}
-            />
-          )}
-        </div>
+        <ChatPanel
+          messages={messages}
+          userName={userName}
+          messagesEndRef={messagesEndRef}
+          connectionState={connectionState}
+          isConversationComplete={isConversationComplete}
+        />
 
         {/* Message input */}
         <MessageInput
@@ -196,7 +139,6 @@ export default function ChatPage() {
           isConversationComplete={isConversationComplete}
         />
       </div>
-
     </div>
 
     {showTasks && (   
