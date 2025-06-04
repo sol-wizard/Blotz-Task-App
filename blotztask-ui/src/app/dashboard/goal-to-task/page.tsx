@@ -26,8 +26,11 @@ export default function ChatPage() {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [connectionState, setConnectionState] = useState<HubConnectionState>(HubConnectionState.Disconnected); // Track connection state
   const [isConversationComplete, setIsConversationComplete] = useState<boolean>(false);
+
+  //TODO: Instead of just log connection error, we can give user a better user message based on why it failed (e.g. "Run out of token or something else")
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  //TODO : If we use react hook form here, we dont need to use this state here anymore
   const [userMessageInput, setUserMessageInput] = useState<string>('');
 
   const [tasks, setTasks] = useState<ExtractedTask[]>(mockTasks);
@@ -69,6 +72,7 @@ export default function ChatPage() {
     if (!userMessageInput.trim() || isConversationComplete) return;
 
     const messageToSend = userMessageInput;
+    //TODO: If we use the react hook form here, we can easily reset the
     setUserMessageInput('');
 
     try {
@@ -82,11 +86,36 @@ export default function ChatPage() {
     setAddedTaskIndices((prev) => new Set(prev).add(index));
   };
 
+  const handleReconnect = async () => {
+    if (connection) {
+      setConnectionError(null);
+      setConnectionState(HubConnectionState.Connecting);
+  
+      try {
+        await connection.start();
+        setupChatHandlers(
+          connection,
+          setMessages,
+          setTasks,
+          setIsConversationComplete,
+          setConnectionState,
+          setShowTasks
+        );
+      } catch (err) {
+        console.error("Reconnect failed", err);
+        setConnectionError("Failed to reconnect. Please try again.");
+        setConnectionState(HubConnectionState.Disconnected);
+      }
+    }
+  };
+
  return (
   <div className="mx-auto h-[75vh] p-4 flex ">
     <div className="flex flex-col h-full w-full">
       <ChatPanelHeader
         connectionError={connectionError}
+        isReconnecting={connectionState === HubConnectionState.Connecting}
+        onReconnect={handleReconnect}
         onToggleTasks={() => setShowTasks((prev) => !prev)}
       />
 
