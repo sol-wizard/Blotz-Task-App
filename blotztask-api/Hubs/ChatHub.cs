@@ -43,7 +43,10 @@ public class ChatHub : Hub
         };
 
         await Clients.Caller.SendAsync("ReceiveMessage", userMsg);
-
+        
+        // Send BotTyping signal to clients
+        await Clients.Caller.SendAsync("BotTyping", conversationId);
+        
         var result = await _goalPlannerChatService.HandleUserMessageAsync(userMsg);
 
         if (result.Tasks != null)
