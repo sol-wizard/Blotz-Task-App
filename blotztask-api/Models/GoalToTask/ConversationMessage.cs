@@ -1,7 +1,7 @@
 namespace BlotzTask.Models.GoalToTask;
 
 // This class is strongly typed to client end (frontend) expected messaging object
-// Any changes of structure in this class need to also change in the client end 
+// Any changes of structure in this class need to also change in the client end (ConversationMessage)
 public class ConversationMessage
 {
     //TODO: Not sure if we need default here, or is there other way to suppress compiler warning
