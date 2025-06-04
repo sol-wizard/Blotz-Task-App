@@ -1,9 +1,9 @@
 import { HubConnectionState } from "@microsoft/signalr";
-import { Message } from "../models/message";
 import { ChatMessageList } from "./chat-message-list";
+import { ConversationMessage } from "../models/chat-message";
 
 type Props = {
-  messages: Message[];
+  messages: ConversationMessage[];
   userName: string;
   connectionState: HubConnectionState;
   isConversationComplete: boolean;

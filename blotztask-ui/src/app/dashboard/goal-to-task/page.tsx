@@ -6,7 +6,6 @@ import MessageInput from "./components/message-input";
 import { useEffect, useState } from "react";
 import { ExtractedTask } from "@/model/extracted-task-dto";
 import { mockTasks } from "./constants/mock-response";
-import { Message } from "./models/message";
 import { useSession } from "next-auth/react";
 import { signalRService } from "@/services/signalr-service";
 import { ConversationMessage } from "./models/chat-message";
@@ -28,11 +27,10 @@ export default function ChatPage() {
     return uuidv4();
   });
   
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [connectionState, setConnectionState] = useState<HubConnectionState>(HubConnectionState.Disconnected); // Track connection state
   const [userMessageInput, setUserMessageInput] = useState<string>('');
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
-
 
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
@@ -46,17 +44,16 @@ export default function ChatPage() {
         console.log('[SignalR] Connection started')
         setConnectionState(HubConnectionState.Connected);
         connect.on('ReceiveMessage', (msg: ConversationMessage) => {
+
           console.log('[SignalR] Received message:', msg);
-          if (msg.conversationId === conversationId) {
-            const newMsg: Message = {
-              id: uuidv4(),
+            const newMsg: ConversationMessage = {
+              conversationId: msg.conversationId,
               sender: msg.sender,
               content: msg.content,
-              timestamp: new Date(msg.timestamp), // if timestamp is a string
+              timestamp: new Date(msg.timestamp),
               isBot: msg.isBot,
             };
             setMessages((prev) => [...prev, newMsg]);
-          }
         });
   
         // 👇 These stay the same unless you also type `ExtractedTask`
@@ -121,7 +118,7 @@ export default function ChatPage() {
           connectionState={connectionState}
           isConversationComplete={isConversationComplete}
         />
-        
+
         <MessageInput
           userMessageInput={userMessageInput}
           setUserMessageInput={setUserMessageInput}
