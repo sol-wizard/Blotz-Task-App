@@ -39,7 +39,7 @@ export const TaskCardTitleBlock = ({
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input className="font-bold" {...field} />
+                <Input className="w-[1000px] text-base px-3 py-2 min-h-[40px] border border-gray-300 rounded-md" {...field} />
               </FormControl>
               <FormMessage>{errors.title?.message}</FormMessage>
             </FormItem>
