@@ -20,12 +20,12 @@ export default function Schedule() {
 
   useEffect(() => {
     loadScheduleTasks();
-  }, [loadScheduleTasks]);
+  }, []);
 
   useEffect(() => {
     loadTodayTasks();
     loadOverdueTasks();
-  }, [loadOverdueTasks, loadTodayTasks, scheduleTasksIsLoading]);
+  }, [scheduleTasksIsLoading]);
 
   return (
     <div className="relative flex flex-col gap-6 h-full min-h-screen">

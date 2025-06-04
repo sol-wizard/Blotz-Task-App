@@ -42,11 +42,11 @@ export default function Today() {
   useEffect(() => {
     loadTodayTasks();
     loadOverdueTasks();
-  }, [loadOverdueTasks, loadTodayTasks]);
+  }, []);
 
   useEffect(() => {
     loadScheduleTasks();
-  }, [loadScheduleTasks, todayTasksIsLoading]);
+  }, [todayTasksIsLoading]);
 
   return (
     <div className="ml-5 flex flex-col gap-12 h-full">
