@@ -12,6 +12,7 @@ import { ConversationMessage } from "./models/chat-message";
 import { v4 as uuidv4 } from 'uuid';
 import { HubConnectionState } from "@microsoft/signalr";
 import { ChatPanel } from "./components/chat-panel";
+import { setupChatHandlers } from "./utils/setup-chat-handler";
 
 
 export default function ChatPage() {
@@ -42,41 +43,20 @@ export default function ChatPage() {
     connect
       .start()
       .then(() => {
-        console.log('[SignalR] Connection started')
-        setConnectionState(HubConnectionState.Connected);
-        connect.on('ReceiveMessage', (msg: ConversationMessage) => {
-
-          console.log('[SignalR] Received message:', msg);
-            const newMsg: ConversationMessage = {
-              conversationId: msg.conversationId,
-              sender: msg.sender,
-              content: msg.content,
-              timestamp: new Date(msg.timestamp),
-              isBot: msg.isBot,
-            };
-            setMessages((prev) => [...prev, newMsg]);
-        });
-  
-        // 👇 These stay the same unless you also type `ExtractedTask`
-        connect.on('ReceiveTasks', (receivedTasks: ExtractedTask[]) => {
-          console.log('[SignalR] Received tasks:', receivedTasks);
-          if (receivedTasks?.length > 0) {
-            setTasks(receivedTasks);
-            setIsConversationComplete(true);
-          }
-        });
-  
-        connect.on('ConversationCompleted', (convoId: string) => {
-          console.log('[SignalR] Conversation completed for:', convoId);
-          setIsConversationComplete(true);
-        });
+        setupChatHandlers(
+          connect,
+          setMessages,
+          setTasks,
+          setIsConversationComplete,
+          setConnectionState
+        );
       })
       .catch((err) => {
         console.error('[SignalR] Error starting connection:', err);
       });
 
     return () => {
-      connect
+      connection
       .stop()
         .then(() => console.log('[SignalR] Connection stopped'));
     };
