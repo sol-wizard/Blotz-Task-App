@@ -14,7 +14,7 @@ export const ChatMessageList = ({ messages, userName}: Props) => {
   }, [messages]);
   
   return (
-<div className="space-y-4">
+    <div className="space-y-4">
       {messages.map((msg, index) => (
         <div
           key={index}

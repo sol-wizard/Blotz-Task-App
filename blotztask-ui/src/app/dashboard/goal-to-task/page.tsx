@@ -17,6 +17,7 @@ import { ChatPanel } from "./components/chat-panel";
 export default function ChatPage() {
   const { data: session } = useSession();
 
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [tasks, setTasks] = useState<ExtractedTask[]>(mockTasks);
   const [showTasks, setShowTasks] = useState<boolean>(false);
 
@@ -37,7 +38,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     const connect = signalRService.createConnection();
-    // setConnection(connect);
+    setConnection(connect);
     connect
       .start()
       .then(() => {
@@ -89,7 +90,7 @@ export default function ChatPage() {
     setUserMessageInput('');
 
     try {
-      await signalRService.invoke('SendMessage', userName, messageToSend, conversationId);
+      await signalRService.invoke(connection, 'SendMessage', userName, messageToSend, conversationId);
     } catch (error) {
       console.error('Error sending message:', error);
     }
