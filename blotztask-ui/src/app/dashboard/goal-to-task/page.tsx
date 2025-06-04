@@ -11,6 +11,8 @@ import { useSession } from "next-auth/react";
 import { signalRService } from "@/services/signalr-service";
 import { ConversationMessage } from "./models/chat-message";
 import { v4 as uuidv4 } from 'uuid';
+import { HubConnectionState } from "@microsoft/signalr";
+import { ChatMessageList } from "./components/chat-message-list";
 
 
 export default function ChatPage() {
@@ -27,15 +29,13 @@ export default function ChatPage() {
   });
   
   const [messages, setMessages] = useState<Message[]>([]);
-  const [connectionState, setConnectionState] = useState('disconnected'); // Track connection state
+  const [connectionState, setConnectionState] = useState<HubConnectionState>(HubConnectionState.Disconnected); // Track connection state
   const [userMessageInput, setUserMessageInput] = useState<string>('');
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
 
 
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
-
-  const isConnecting = connectionState === 'connecting';
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -46,7 +46,7 @@ export default function ChatPage() {
       .start()
       .then(() => {
         console.log('[SignalR] Connection started')
-        setConnectionState('connected');
+        setConnectionState(HubConnectionState.Connected);
         connect.on('ReceiveMessage', (msg: ConversationMessage) => {
           console.log('[SignalR] Received message:', msg);
           if (msg.conversationId === conversationId) {
@@ -168,35 +168,22 @@ export default function ChatPage() {
 
         {/* Messages */}
         <div className="flex-1 overflow-auto p-4">
-          {messages.length === 0 && !isConnecting ? (
+          {messages.length === 0 && connectionState === HubConnectionState.Connected ? (
             <div className="h-full flex items-center justify-center text-gray-500 text-sm">
               {isConversationComplete
                 ? 'This conversation is complete. Start a new one to continue.'
                 : 'Describe your goal to get started. The assistant will help break it down into tasks.'}
             </div>
-          ) : isConnecting ? (
+          ) : connectionState === HubConnectionState.Connecting ? (
             <div className="h-full flex items-center justify-center text-gray-500 text-sm">
               Connecting to chat service...
             </div>
           ) : (
-            <div className="space-y-4">
-              {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
-                  <div
-                    className={`max-w-[80%] rounded-lg p-3 ${msg.isBot ? 'bg-gray-100' : 'bg-blue-100'}`}
-                  >
-                    <div className="text-xs mb-1 flex justify-between">
-                      <span>{msg.isBot ? 'Assistant' : userName}</span>
-                      <span className="text-gray-500 ml-4">
-                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <div className="whitespace-pre-wrap break-words">{msg.content}</div>
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
+            <ChatMessageList
+              messages={messages}
+              userName={userName}
+              messagesEndRef={messagesEndRef}
+            />
           )}
         </div>
 
@@ -205,7 +192,7 @@ export default function ChatPage() {
           userMessageInput={userMessageInput}
           setUserMessageInput={setUserMessageInput}
           handleSendMessage={handleSendMessage}
-          isConnecting={isConnecting}
+          isConnecting={connectionState === HubConnectionState.Connecting}
           isConversationComplete={isConversationComplete}
         />
       </div>
