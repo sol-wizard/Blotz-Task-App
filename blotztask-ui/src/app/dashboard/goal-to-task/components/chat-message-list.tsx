@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
-import { ConversationMessage } from "../models/chat-message";
+import { ChatRenderMessage } from "../models/chat-message";
 
 type Props = {
-  messages: ConversationMessage[];
+  messages: ChatRenderMessage[];
   userName: string;
 };
 

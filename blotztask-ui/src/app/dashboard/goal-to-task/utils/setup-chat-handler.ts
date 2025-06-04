@@ -1,11 +1,11 @@
 import { HubConnection, HubConnectionState } from "@microsoft/signalr";
 import { Dispatch, SetStateAction } from "react";
 import { ExtractedTask } from "@/model/extracted-task-dto";
-import { ConversationMessage } from "../models/chat-message";
+import { ChatRenderMessage } from "../models/chat-message";
 
 export function setupChatHandlers(
   connection: HubConnection,
-  setMessages: Dispatch<SetStateAction<ConversationMessage[]>>,
+  setMessages: Dispatch<SetStateAction<ChatRenderMessage[]>>,
   setTasks: Dispatch<SetStateAction<ExtractedTask[]>>,
   setIsConversationComplete: Dispatch<SetStateAction<boolean>>,
   setConnectionState: Dispatch<SetStateAction<HubConnectionState>>,
@@ -14,9 +14,16 @@ export function setupChatHandlers(
   console.log("[SignalR] Connection started");
   setConnectionState(HubConnectionState.Connected);
 
-  connection.on("ReceiveMessage", (msg: ConversationMessage) => {
+  connection.on("ReceiveMessage", (msg: ChatRenderMessage) => {
     console.log("[SignalR] Received message:", msg);
-    const newMsg: ConversationMessage = {
+
+    if (msg.isBot) {
+      setMessages((prev) =>
+        prev.filter((m) => !m.isBotTypingPlaceholder)
+      );
+    }
+
+    const newMsg: ChatRenderMessage = {
       conversationId: msg.conversationId,
       sender: msg.sender,
       content: msg.content,
@@ -38,5 +45,17 @@ export function setupChatHandlers(
   connection.on("ConversationCompleted", (convoId: string) => {
     console.log("[SignalR] Conversation completed for:", convoId);
     setIsConversationComplete(true);
+  });
+
+  connection.on("BotTyping", (convoId: string) => {
+    const typingMsg: ChatRenderMessage = {
+      conversationId: convoId,
+      sender: "Assistant",
+      content: "Typing...",
+      timestamp: new Date(),
+      isBot: true,
+      isBotTypingPlaceholder: true,
+    };
+    setMessages((prev) => [...prev, typingMsg]);
   });
 }

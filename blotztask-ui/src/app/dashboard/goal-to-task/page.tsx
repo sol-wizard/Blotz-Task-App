@@ -7,12 +7,12 @@ import { ExtractedTask } from "@/model/extracted-task-dto";
 import { mockTasks } from "./constants/mock-response";
 import { useSession } from "next-auth/react";
 import { signalRService } from "@/services/signalr-service";
-import { ConversationMessage } from "./models/chat-message";
 import { v4 as uuidv4 } from 'uuid';
 import { HubConnectionState } from "@microsoft/signalr";
 import { ChatPanel } from "./components/chat-panel";
 import { setupChatHandlers } from "./utils/setup-chat-handler";
 import { ChatPanelHeader } from "./components/chat-panel-header";
+import { ChatRenderMessage } from "./models/chat-message";
 
 
 export default function ChatPage() {
@@ -29,7 +29,7 @@ export default function ChatPage() {
 
   //TODO: Instead of just log connection error, we can give user a better user message based on why it failed (e.g. "Run out of token or something else")
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [messages, setMessages] = useState<ChatRenderMessage[]>([]);
   //TODO : If we use react hook form here, we dont need to use this state here anymore
   const [userMessageInput, setUserMessageInput] = useState<string>('');
 
