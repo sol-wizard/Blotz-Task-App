@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
 import { GeneratedTasksPanel } from "./components/generated-tasks-panel";
 import MessageInput from "./components/message-input";
 import { useEffect, useState } from "react";
@@ -13,26 +12,27 @@ import { v4 as uuidv4 } from 'uuid';
 import { HubConnectionState } from "@microsoft/signalr";
 import { ChatPanel } from "./components/chat-panel";
 import { setupChatHandlers } from "./utils/setup-chat-handler";
+import { ChatPanelHeader } from "./components/chat-panel-header";
 
 
 export default function ChatPage() {
   const { data: session } = useSession();
 
-  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-  const [tasks, setTasks] = useState<ExtractedTask[]>(mockTasks);
-  const [showTasks, setShowTasks] = useState<boolean>(false);
-
-  const [isConversationComplete, setIsConversationComplete] = useState<boolean>(false);
-
   const [conversationId] = useState<string>(() => {
     console.log('[SignalR] Create Conversation ID...');
     return uuidv4();
   });
-  
-  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [connectionState, setConnectionState] = useState<HubConnectionState>(HubConnectionState.Disconnected); // Track connection state
+  const [isConversationComplete, setIsConversationComplete] = useState<boolean>(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [userMessageInput, setUserMessageInput] = useState<string>('');
+
+  const [tasks, setTasks] = useState<ExtractedTask[]>(mockTasks);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
+  const [showTasks, setShowTasks] = useState<boolean>(false);
 
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
@@ -48,11 +48,13 @@ export default function ChatPage() {
           setMessages,
           setTasks,
           setIsConversationComplete,
-          setConnectionState
+          setConnectionState,
+          setShowTasks
         );
       })
       .catch((err) => {
         console.error('[SignalR] Error starting connection:', err);
+        setConnectionError("Failed to connect to chat service. Please try again.");
       });
 
     return () => {
@@ -83,13 +85,10 @@ export default function ChatPage() {
  return (
   <div className="mx-auto h-[75vh] p-4 flex ">
     <div className="flex flex-col h-full w-full">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Goal Planning Chat</h1>
-        
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setShowTasks((prev) => !prev)}>show & hide</Button>
-        </div>
-      </div>
+      <ChatPanelHeader
+        connectionError={connectionError}
+        onToggleTasks={() => setShowTasks((prev) => !prev)}
+      />
 
       {/* Chat section */}
       <div className="flex flex-col h-full">
@@ -118,5 +117,4 @@ export default function ChatPage() {
       />
     )} 
   </div>
- )
-}
+)}
