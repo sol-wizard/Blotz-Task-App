@@ -7,13 +7,21 @@ import { addTaskItem } from '@/services/task-service';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import { mapExtractedTaskToAddTaskDTO } from '@/app/dashboard/ai-assistant/util/map-extracted-to-add-task';
 
-export default function TaskCardToAdd({ 
-  taskToAdd, 
-  index, 
-  addedTaskIndices, 
+interface TaskCardToAddProps {
+  taskToAdd: ExtractedTask;
+  index: number;
+  addedTaskIndices: Set<number>;
+  onTaskAdded?: (index: number) => void;
+  disabled?: boolean;
+}
+
+export default function TaskCardToAdd({
+  taskToAdd,
+  index,
+  addedTaskIndices,
   onTaskAdded,
-  disabled = false 
-}: { taskToAdd: ExtractedTask; index: number; addedTaskIndices: Set<number>; onTaskAdded?: (index: number) => void; disabled?: boolean }) {
+  disabled = false,
+}: TaskCardToAddProps) {
   const [adding, setAdding] = useState(false);
   const isAdded = addedTaskIndices.has(index);
 
