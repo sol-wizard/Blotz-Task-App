@@ -45,7 +45,7 @@ public class ChatHub : Hub
         await Clients.Caller.SendAsync("ReceiveMessage", userMsg);
         
         // Send BotTyping signal to clients
-        await Clients.Caller.SendAsync("BotTyping", conversationId);
+        await Clients.Caller.SendAsync("BotTyping", true);
         
         var result = await _goalPlannerChatService.HandleUserMessageAsync(userMsg);
 
@@ -58,6 +58,7 @@ public class ChatHub : Hub
             await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
         }
         
+        await Clients.Caller.SendAsync("BotTyping", false);
 
         if (result.IsConversationComplete)
         {

@@ -1,12 +1,13 @@
 import { useEffect, useRef } from "react";
-import { ChatRenderMessage } from "../models/chat-message";
+import { ConversationMessage } from "../models/chat-message";
 
 type Props = {
-  messages: ChatRenderMessage[];
+  messages: ConversationMessage[];
   userName: string;
+  isBotTyping: boolean;
 };
 
-export const ChatMessageList = ({ messages, userName}: Props) => {
+export const ChatMessageList = ({ messages, userName, isBotTyping }: Props) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,6 +39,15 @@ export const ChatMessageList = ({ messages, userName}: Props) => {
           </div>
         </div>
       ))}
+
+      {isBotTyping && (
+        <div className="flex justify-start">
+          <div className="bg-gray-100 rounded-lg p-3 max-w-[80%] text-sm italic text-gray-500 animate-pulse">
+            Assistant is typing...
+          </div>
+        </div>
+      )}
+  
       <div ref={messagesEndRef} />
     </div>
   );
