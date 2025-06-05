@@ -1,5 +1,3 @@
-import { ExtractedTask } from "@/model/extracted-task-dto";
-
 // Mock responses when backend is unavailable
 export const mockResponses = [
     "I'm unable to connect to the backend service right now. This is an offline response.",
