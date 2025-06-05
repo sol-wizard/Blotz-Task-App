@@ -4,7 +4,6 @@ import { GeneratedTasksPanel } from "./components/generated-tasks-panel";
 import MessageInput from "./components/message-input";
 import { useEffect, useState } from "react";
 import { ExtractedTask } from "@/model/extracted-task-dto";
-import { mockTasks } from "./constants/mock-response";
 import { useSession } from "next-auth/react";
 import { signalRService } from "@/services/signalr-service";
 import { v4 as uuidv4 } from 'uuid';
@@ -12,8 +11,7 @@ import { HubConnectionState } from "@microsoft/signalr";
 import { ChatPanel } from "./components/chat-panel";
 import { setupChatHandlers } from "./utils/setup-chat-handler";
 import { ChatPanelHeader } from "./components/chat-panel-header";
-import { ChatRenderMessage } from "./models/chat-message";
-
+import { ConversationMessage } from "./models/chat-message";
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -29,14 +27,14 @@ export default function ChatPage() {
 
   //TODO: Instead of just log connection error, we can give user a better user message based on why it failed (e.g. "Run out of token or something else")
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatRenderMessage[]>([]);
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
   //TODO : If we use react hook form here, we dont need to use this state here anymore
   const [userMessageInput, setUserMessageInput] = useState<string>('');
+  const [isBotTyping, setIsBotTyping] = useState<boolean>(false);
 
-  const [tasks, setTasks] = useState<ExtractedTask[]>(mockTasks);
+  const [tasks, setTasks] = useState<ExtractedTask[]>([]);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
   const [showTasks, setShowTasks] = useState<boolean>(false);
-
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
 
@@ -52,7 +50,8 @@ export default function ChatPage() {
           setTasks,
           setIsConversationComplete,
           setConnectionState,
-          setShowTasks
+          setShowTasks,
+          setIsBotTyping
         );
       })
       .catch((err) => {
@@ -99,7 +98,8 @@ export default function ChatPage() {
           setTasks,
           setIsConversationComplete,
           setConnectionState,
-          setShowTasks
+          setShowTasks,
+          setIsBotTyping
         );
       } catch (err) {
         console.error("Reconnect failed", err);
@@ -126,6 +126,7 @@ export default function ChatPage() {
           userName={userName}
           connectionState={connectionState}
           isConversationComplete={isConversationComplete}
+          isBotTyping={isBotTyping}
         />
 
         <MessageInput
