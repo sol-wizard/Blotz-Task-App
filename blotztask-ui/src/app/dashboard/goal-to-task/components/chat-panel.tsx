@@ -1,12 +1,13 @@
 import { HubConnectionState } from "@microsoft/signalr";
 import { ChatMessageList } from "./chat-message-list";
-import { ChatRenderMessage } from "../models/chat-message";
+import { ConversationMessage } from "../models/chat-message";
 
 type Props = {
-  messages: ChatRenderMessage[];
+  messages: ConversationMessage[];
   userName: string;
   connectionState: HubConnectionState;
   isConversationComplete: boolean;
+  isBotTyping: boolean;
 };
 
 export const ChatPanel = ({
@@ -14,6 +15,7 @@ export const ChatPanel = ({
   userName,
   connectionState,
   isConversationComplete,
+  isBotTyping,
 }: Props) => {
   return (
     <div className="flex-1 overflow-auto p-4">
@@ -31,6 +33,7 @@ export const ChatPanel = ({
         <ChatMessageList
           messages={messages}
           userName={userName}
+          isBotTyping={isBotTyping}
         />
       )}
     </div>
