@@ -6,7 +6,7 @@ interface MessageInputProps {
   userMessageInput: string;
   setUserMessageInput: (value: string) => void;
   handleSendMessage: (e: React.FormEvent) => void;
-  isConnecting: boolean;
+  isConnected: boolean;
   isConversationComplete: boolean;
 }
 
@@ -15,7 +15,7 @@ export default function MessageInput({
   userMessageInput: newMessage,
   setUserMessageInput: setNewMessage,
   handleSendMessage,
-  isConnecting,
+  isConnected,
   isConversationComplete,
 }: MessageInputProps) {
   return (
@@ -25,13 +25,13 @@ export default function MessageInput({
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          disabled={isConnecting || isConversationComplete}
+          disabled={!isConnected || isConversationComplete}
           placeholder={isConversationComplete ? 'Conversation completed' : 'Type your message...'}
           className="flex-1 border rounded p-2 disabled:bg-gray-100"
         />
         <Button
           type="submit"
-          disabled={isConnecting || !newMessage.trim() || isConversationComplete}
+          disabled={!isConnected || !newMessage.trim() || isConversationComplete}
           className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-blue-300"
         >
           Send
