@@ -16,13 +16,13 @@ export const GeneratedTasksPanel = ({
   return (
     <div className="flex flex-col w-1/2">
       <div className="border-b px-4 py-2">
-        <div className="font-medium">Generated Tasks</div>
+        <div className="font-medium">Tasks ready to add</div>
       </div>
 
       <div className="flex-1 overflow-auto p-4">
         <div className="space-y-3">
           {tasks.length === 0 ? (
-            <p className="text-gray-500 text-sm">No task generated.</p>
+            <p className="text-gray-500 text-sm">Please select from the generated tasks on the left to add.</p>
           ) : (
             tasks.map((task, index) => (
               <TaskCardToAdd
