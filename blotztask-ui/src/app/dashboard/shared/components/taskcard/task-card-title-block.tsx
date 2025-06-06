@@ -31,15 +31,15 @@ export const TaskCardTitleBlock = ({
   const statusClass = statusVariants[taskStatus] || statusVariants.todo;
 
   return (
-    <div className="flex py-1 justify-between">
+    <div className="flex w-full py-1">
       {isEditing ? (
         <FormField
           control={control}
           name="title"
           render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input className="font-bold" {...field} />
+            <FormItem className='w-full'>
+              <FormControl className='w-full'>
+                <Input className="w-full text-base px-3 py-2 min-h-[40px] border border-gray-300 rounded-md" {...field} />
               </FormControl>
               <FormMessage>{errors.title?.message}</FormMessage>
             </FormItem>
