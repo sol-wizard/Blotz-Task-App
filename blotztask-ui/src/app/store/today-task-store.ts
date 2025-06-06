@@ -12,7 +12,6 @@ import {
 import { performTaskAndRefresh } from './shared/util';
 import { RawAddTaskDTO } from '../../model/raw-add-task-dto';
 import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
-import { useScheduleTaskStore } from '@/app/store/schedule-task-store';
 import { subscribeWithSelector } from 'zustand/middleware';
 
 type TodayTaskStore = {
@@ -142,11 +141,3 @@ export const useIncompleteTodayTasks = () => useTodayTaskStore((state) => state.
 export const useCompletedTodayTasks = () => useTodayTaskStore((state) => state.completedTodayTasks);
 export const useTodayTasksIsLoading = () => useTodayTaskStore((state) => state.todayTasksIsLoading);
 export const useTodayTaskActions = () => useTodayTaskStore((state) => state.actions);
-
-useTodayTaskStore.subscribe(
-  state => [state.todayTasks, state.overdueTasks],
-  () => {
-    const { loadScheduleTasks } = useScheduleTaskStore.getState().actions;
-    loadScheduleTasks();
-  }
-);

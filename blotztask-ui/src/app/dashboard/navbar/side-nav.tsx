@@ -46,7 +46,9 @@ export function AppSidebar() {
   const query = useSearchQuery();
 
   const todayBadgeCount = overdueFromTodayStore.length + incompleteFromTodayStore.length;
-  const scheduleBadgeCount = overdueFromScheduleStore.length + todayFromScheduleStore.length + tomorrowFromScheduleStore.length + weekFromScheduleStore.length + Object.keys(monthFromScheduleStore).length;
+  
+  const monthTasksCount = Object.values(monthFromScheduleStore).flat().length;
+  const scheduleBadgeCount = overdueFromScheduleStore.length + todayFromScheduleStore.length + tomorrowFromScheduleStore.length + weekFromScheduleStore.length + monthTasksCount;
 
   const menuItems = [
     { title: 'All Tasks', url: 'task-list', icon: List },
