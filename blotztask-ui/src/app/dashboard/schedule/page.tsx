@@ -22,6 +22,7 @@ export default function Schedule() {
     loadScheduleTasks();
   }, []);
 
+  //TODO: Refactor the today task and overdue task in to a single global state and remove this useEffect
   useEffect(() => {
     loadTodayTasks();
     loadOverdueTasks();
