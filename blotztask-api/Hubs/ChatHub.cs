@@ -63,7 +63,6 @@ public class ChatHub : Hub
         if (result.IsConversationComplete)
         {
             // ✅ Cleanup state after completion
-            _conversationStateService.RemoveConversation(conversationId);
             await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
         }
     }
