@@ -133,7 +133,7 @@ export default function ChatPage() {
           userMessageInput={userMessageInput}
           setUserMessageInput={setUserMessageInput}
           handleSendMessage={handleSendMessage}
-          isConnecting={connectionState === HubConnectionState.Connecting}
+          isConnected={connectionState === HubConnectionState.Connected}
           isConversationComplete={isConversationComplete}
         />
       </div>
