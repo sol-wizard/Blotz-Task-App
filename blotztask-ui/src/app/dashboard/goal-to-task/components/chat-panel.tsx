@@ -1,6 +1,8 @@
 import { HubConnectionState } from "@microsoft/signalr";
 import { ChatMessageList } from "./chat-message-list";
 import { ConversationMessage } from "../models/chat-message";
+import { ExtractedTask } from "@/model/extracted-task-dto";
+import TaskPreviewCard from "./task-preview-card";
 
 type Props = {
   messages: ConversationMessage[];
@@ -8,6 +10,9 @@ type Props = {
   connectionState: HubConnectionState;
   isConversationComplete: boolean;
   isBotTyping: boolean;
+  showTasks:boolean;
+  tasks: ExtractedTask[];
+  onTaskAdded: (ExtractedTask)=>void;
 };
 
 export const ChatPanel = ({
@@ -16,6 +21,9 @@ export const ChatPanel = ({
   connectionState,
   isConversationComplete,
   isBotTyping,
+  showTasks,
+  tasks,
+  onTaskAdded,
 }: Props) => {
   return (
     <div className="flex-1 overflow-auto p-4">
@@ -30,11 +38,35 @@ export const ChatPanel = ({
           Connecting to chat service...
         </div>
       ) : (
-        <ChatMessageList
-          messages={messages}
-          userName={userName}
-          isBotTyping={isBotTyping}
-        />
+        <>
+          <ChatMessageList
+            messages={messages}
+            userName={userName}
+            isBotTyping={isBotTyping}
+          />
+          <div>
+            {showTasks && (
+              <>
+                <div className="flex justify-start">
+                  <div className="max-w-[80%] rounded-lg p-3 bg-gray-100">
+                    <div className="text-xs mb-1 flex justify-between">
+                      <span>Assistant</span>
+                      <span className="text-gray-500 ml-4">{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                    </div>
+                    <div className="whitespace-pre-wrap break-words">Here are your tasks</div>
+                  </div>
+                </div>
+                {tasks.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No task generated.</p>
+                ) : (
+                  tasks.map((task, ind) => {
+                    return <TaskPreviewCard key={ind} task={task} onTaskAdded={onTaskAdded} />;
+                  })
+                )}
+              </>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

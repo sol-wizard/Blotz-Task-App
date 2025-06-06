@@ -1,17 +1,17 @@
 'use client';
 
-import { GeneratedTasksPanel } from "./components/generated-tasks-panel";
-import MessageInput from "./components/message-input";
-import { useEffect, useState } from "react";
-import { ExtractedTask } from "@/model/extracted-task-dto";
-import { useSession } from "next-auth/react";
-import { signalRService } from "@/services/signalr-service";
+import { GeneratedTasksPanel } from './components/generated-tasks-panel';
+import MessageInput from './components/message-input';
+import { useEffect, useState } from 'react';
+import { ExtractedTask } from '@/model/extracted-task-dto';
+import { useSession } from 'next-auth/react';
+import { signalRService } from '@/services/signalr-service';
 import { v4 as uuidv4 } from 'uuid';
-import { HubConnectionState } from "@microsoft/signalr";
-import { ChatPanel } from "./components/chat-panel";
-import { setupChatHandlers } from "./utils/setup-chat-handler";
-import { ChatPanelHeader } from "./components/chat-panel-header";
-import { ConversationMessage } from "./models/chat-message";
+import { HubConnectionState } from '@microsoft/signalr';
+import { ChatPanel } from './components/chat-panel';
+import { setupChatHandlers } from './utils/setup-chat-handler';
+import { ChatPanelHeader } from './components/chat-panel-header';
+import { ConversationMessage } from './models/chat-message';
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -35,6 +35,7 @@ export default function ChatPage() {
   const [tasks, setTasks] = useState<ExtractedTask[]>([]);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
   const [showTasks, setShowTasks] = useState<boolean>(false);
+  const [readyToAddTasks, setReadyToAddTasks] = useState<ExtractedTask[]>([]);
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
 
@@ -60,9 +61,7 @@ export default function ChatPage() {
       });
 
     return () => {
-      connection
-      .stop()
-        .then(() => console.log('[SignalR] Connection stopped'));
+      connect.stop().then(() => console.log('[SignalR] Connection stopped'));
     };
   }, []);
 
@@ -80,16 +79,20 @@ export default function ChatPage() {
       console.error('Error sending message:', error);
     }
   };
-  
+
   const handleTaskAdded = (index) => {
     setAddedTaskIndices((prev) => new Set(prev).add(index));
+  };
+
+  const addTaskToPanel = (task: ExtractedTask) => {
+    setReadyToAddTasks((prev) => [...prev, task]);
   };
 
   const handleReconnect = async () => {
     if (connection) {
       // setConnectionError(null);
       setConnectionState(HubConnectionState.Connecting);
-  
+
       try {
         await connection.start();
         setupChatHandlers(
@@ -102,49 +105,52 @@ export default function ChatPage() {
           setIsBotTyping
         );
       } catch (err) {
-        console.error("Reconnect failed", err);
+        console.error('Reconnect failed', err);
         // setConnectionError("Failed to reconnect. Please try again.");
         setConnectionState(HubConnectionState.Disconnected);
       }
     }
   };
 
- return (
-  <div className="mx-auto h-[75vh] p-4 flex ">
-    <div className="flex flex-col h-full w-full">
-      <ChatPanelHeader
-        connectionState={connectionState}
-        isReconnecting={connectionState === HubConnectionState.Connecting}
-        onReconnect={handleReconnect}
-        onToggleTasks={() => setShowTasks((prev) => !prev)}
-      />
-
-      {/* Chat section */}
-      <div className="flex flex-col h-full">
-        <ChatPanel
-          messages={messages}
-          userName={userName}
+  return (
+    <div className="mx-auto h-[75vh] p-4 flex ">
+      <div className="flex flex-col h-full w-full">
+        <ChatPanelHeader
           connectionState={connectionState}
-          isConversationComplete={isConversationComplete}
-          isBotTyping={isBotTyping}
+          isReconnecting={connectionState === HubConnectionState.Connecting}
+          onReconnect={handleReconnect}
+          onToggleTasks={() => setShowTasks((prev) => !prev)}
         />
 
-        <MessageInput
-          userMessageInput={userMessageInput}
-          setUserMessageInput={setUserMessageInput}
-          handleSendMessage={handleSendMessage}
-          isConnected={connectionState === HubConnectionState.Connected}
-          isConversationComplete={isConversationComplete}
-        />
+        {/* Chat section */}
+        <div className="flex flex-col h-full">
+          <ChatPanel
+            messages={messages}
+            userName={userName}
+            connectionState={connectionState}
+            isConversationComplete={isConversationComplete}
+            isBotTyping={isBotTyping}
+            showTasks={showTasks}
+            tasks={tasks}
+            onTaskAdded={addTaskToPanel}
+          />
+          <MessageInput
+            userMessageInput={userMessageInput}
+            setUserMessageInput={setUserMessageInput}
+            handleSendMessage={handleSendMessage}
+            isConnected={connectionState === HubConnectionState.Connected}
+            isConversationComplete={isConversationComplete}
+          />
+        </div>
       </div>
-    </div>
 
-    {showTasks && (   
-      <GeneratedTasksPanel
-        tasks={tasks}
-        addedTaskIndices={addedTaskIndices}
-        onTaskAdded={handleTaskAdded}
-      />
-    )} 
-  </div>
-)}
+      {showTasks && (
+        <GeneratedTasksPanel
+          tasks={readyToAddTasks}
+          addedTaskIndices={addedTaskIndices}
+          onTaskAdded={handleTaskAdded}
+        />
+      )}
+    </div>
+  );
+}
