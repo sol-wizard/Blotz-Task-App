@@ -54,13 +54,13 @@ export default function TaskCard({
 
   useEffect(() => {
     fetchAllLabel()
-      .then(labelData => setLabels(labelData))
-      .catch(error => console.error('Error loading labels:', error));
+      .then((labelData) => setLabels(labelData))
+      .catch((error) => console.error('Error loading labels:', error));
   }, []);
 
   const getCurrentLabelColor = () => {
     if (isEditing && watchLabelId) {
-      const selectedLabel = labels.find(label => label.labelId === watchLabelId);
+      const selectedLabel = labels.find((label) => label.labelId === watchLabelId);
       return selectedLabel?.color || task.label.color;
     }
     return task.label.color;
@@ -142,12 +142,7 @@ export default function TaskCard({
                 />
               </div>
 
-              {isEditing && (
-                <TaskCardEditFooter 
-                  control={form.control} 
-                  onCancel={handleCancelEdit}
-                />
-              )}
+              {isEditing && <TaskCardEditFooter control={form.control} onCancel={handleCancelEdit} />}
             </div>
           </form>
         </Form>
