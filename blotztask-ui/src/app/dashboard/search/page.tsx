@@ -3,6 +3,8 @@ import SearchTitle from './components/search-title';
 import { useFilteredTasks, useSearchQuery, useSearchTaskActions } from '../../store/search-task-store';
 import TaskCardContainer from '../shared/components/taskcard/task-card-container';
 import { Frown } from 'lucide-react';
+import SectionSeparator from '../shared/components/ui/section-separator';
+
 
 export default function Page() {
   const query = useSearchQuery();
@@ -15,7 +17,7 @@ export default function Page() {
       <SearchTitle />
       {query.length > 1 &&
         filteredTasks.map((task) => (
-          <div key={task.id}>
+          <div className="w-full mt-5 mb-5 flex flex-col gap-2" key={task.id}>
             <TaskCardContainer
               task={task}
               handleCheckboxChange={handleCheckboxChange}
@@ -23,6 +25,7 @@ export default function Page() {
               handleTaskDeleteUndo={handleTaskDeleteUndo}
               handleTaskEdit={handleEditTask}
             ></TaskCardContainer>
+            <SectionSeparator />
           </div>
         ))}
 
