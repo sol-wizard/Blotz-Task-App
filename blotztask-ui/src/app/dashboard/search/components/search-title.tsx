@@ -8,11 +8,9 @@ const SearchTitle = () => {
   return (
     <>
       {query.length > 1 ? (
-        <p style={{ fontWeight: '2rem', fontSize: '2rem' }}>
-          Searching for &quot;{query}&quot;
-        </p>
+        <p className="text-2xl font-bold">Searching for &quot;{query}&quot;</p>
       ) : (
-        <p style={{ fontWeight: 'bold', fontSize: '1.5rem' }}>Searching for ...</p>
+        <p className="text-xl font-bold">Searching for ...</p>
       )}
     </>
   );
