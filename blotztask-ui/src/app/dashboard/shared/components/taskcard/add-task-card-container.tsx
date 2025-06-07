@@ -15,13 +15,12 @@ const AddTaskCardContainer = ({ onAddTask }) => {
   const labelPickerRef = useRef<HTMLDivElement>(null);
   const timePickerRef = useRef<HTMLDivElement>(null);
 
-  const [useAIAssistant, setUseAIAssistant] = useState(false);
+  const [useAIAssistant, setUseAIAssistant] = useState(true);
 
-  //TODO: Move prompt state to somewhere else later
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
 
-  //TODO: This is temporary , will be move to the parent component and replace the inner logic with real implementation
+  //TODO: replace the inner logic with real implementation
   const handlePromptGenerate = () => {
     setLoading(true)
     setTimeout(()=>{
@@ -63,6 +62,7 @@ const AddTaskCardContainer = ({ onAddTask }) => {
                       setPrompt={setPrompt}
                       loading={loading}
                       onGenerate={handlePromptGenerate}
+                      onSubmit={(taskDetails) => onAddTask(taskDetails)}
                     />
                   </div>
                 ) : (

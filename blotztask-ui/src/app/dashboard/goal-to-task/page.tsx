@@ -1,167 +1,150 @@
 'use client';
 
-import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import LoadingSpinner from '@/components/ui/loading-spinner';
-import { generateAiTaskFromGoal } from '@/services/ai-service';
-import { addTaskItem } from '@/services/task-service';
-import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
-import Divider from '../today/components/ui/divider';
-import { mapExtractedTaskToAddTaskDTO } from '../ai-assistant/util/map-extracted-to-add-task';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { GeneratedTasksPanel } from "./components/generated-tasks-panel";
+import MessageInput from "./components/message-input";
+import { useEffect, useState } from "react";
+import { ExtractedTask } from "@/model/extracted-task-dto";
+import { useSession } from "next-auth/react";
+import { signalRService } from "@/services/signalr-service";
+import { v4 as uuidv4 } from 'uuid';
+import { HubConnectionState } from "@microsoft/signalr";
+import { ChatPanel } from "./components/chat-panel";
+import { setupChatHandlers } from "./utils/setup-chat-handler";
+import { ChatPanelHeader } from "./components/chat-panel-header";
+import { ConversationMessage } from "./models/chat-message";
 
-export default function AiAssistant() {
-  const [goal, setGoal] = useState('');
-  const [duration, setDuration] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [extractedTasks, setExtractedTasks] = useState<ExtractedTasksWrapperDTO | null>(null);
-  const [adding, setAdding] = useState(false);
+export default function ChatPage() {
+  const { data: session } = useSession();
+
+  const [conversationId] = useState<string>(() => {
+    console.log('[SignalR] Create Conversation ID...');
+    return uuidv4();
+  });
+
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
+  const [connectionState, setConnectionState] = useState<HubConnectionState>(HubConnectionState.Disconnected); // Track connection state
+  const [isConversationComplete, setIsConversationComplete] = useState<boolean>(false);
+
+  //TODO: we can give user a better user message based on why it failed maybe a dialog(e.g. "Run out of token or something else")
+  // const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  //TODO : If we use react hook form here, we dont need to use this state here anymore
+  const [userMessageInput, setUserMessageInput] = useState<string>('');
+  const [isBotTyping, setIsBotTyping] = useState<boolean>(false);
+
+  const [tasks, setTasks] = useState<ExtractedTask[]>([]);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
+  const [showTasks, setShowTasks] = useState<boolean>(false);
+  //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
+  const userName = session?.user?.name || 'User';
 
-  const handleGoalToTask = async () => {
-    if (!goal.trim()) return;
+  useEffect(() => {
+    const connect = signalRService.createConnection();
+    setConnection(connect);
+    connect
+      .start()
+      .then(() => {
+        setupChatHandlers(
+          connect,
+          setMessages,
+          setTasks,
+          setIsConversationComplete,
+          setConnectionState,
+          setShowTasks,
+          setIsBotTyping
+        );
+      })
+      .catch((err) => {
+        console.error('[SignalR] Error starting connection:', err);
+        // setConnectionError("Failed to connect to chat service. Please try again.");
+      });
 
-    setExtractedTasks(null);
-    setAddedTaskIndices(new Set());
-    setLoading(true);
+    return () => {
+      connection
+      .stop()
+        .then(() => console.log('[SignalR] Connection stopped'));
+    };
+  }, []);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userMessageInput.trim() || isConversationComplete) return;
+
+    const messageToSend = userMessageInput;
+    //TODO: If we use the react hook form here, we can easily reset the
+    setUserMessageInput('');
 
     try {
-      const payload = { goal, durationInDays: Number(duration) };
-      const task = await generateAiTaskFromGoal(payload);
-      setExtractedTasks(task);
+      await signalRService.invoke(connection, 'SendMessage', userName, messageToSend, conversationId);
     } catch (error) {
-      console.error('Failed to generate goal-to-task:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error sending message:', error);
+    }
+  };
+  
+  const handleTaskAdded = (index) => {
+    setAddedTaskIndices((prev) => new Set(prev).add(index));
+  };
+
+  const handleReconnect = async () => {
+    if (connection) {
+      // setConnectionError(null);
+      setConnectionState(HubConnectionState.Connecting);
+  
+      try {
+        await connection.start();
+        setupChatHandlers(
+          connection,
+          setMessages,
+          setTasks,
+          setIsConversationComplete,
+          setConnectionState,
+          setShowTasks,
+          setIsBotTyping
+        );
+      } catch (err) {
+        console.error("Reconnect failed", err);
+        // setConnectionError("Failed to reconnect. Please try again.");
+        setConnectionState(HubConnectionState.Disconnected);
+      }
     }
   };
 
-  const handleAddTask = async (extractedTask, index) => {
-    if (!extractedTasks) return;
+ return (
+  <div className="mx-auto h-[75vh] p-4 flex ">
+    <div className="flex flex-col h-full w-full">
+      <ChatPanelHeader
+        connectionState={connectionState}
+        isReconnecting={connectionState === HubConnectionState.Connecting}
+        onReconnect={handleReconnect}
+        onToggleTasks={() => setShowTasks((prev) => !prev)}
+      />
 
-    setAdding(true);
-
-    try {
-      const tasktoAdd = mapExtractedTaskToAddTaskDTO(extractedTask);
-
-      await addTaskItem(tasktoAdd);
-      setAddedTaskIndices((prev) => new Set(prev).add(index));
-    } catch (error) {
-      console.error('Failed to save task:', error);
-    } finally {
-      setAdding(false);
-    }
-  };
-
-  return (
-    <div className="ml-5 flex flex-col gap-6 mt-8 w-3/4">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-zinc-800">Goal to Task 🏃‍♂️</h1>
-        <p className="text-zinc-500 text-sm">
-          Describe what you want to do and I&apos;ll turn it into a task.
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="goal">Goal to generate Tasks</Label>
-        <Input
-          id="goal"
-          placeholder="e.g. I want to travel to Japan in June"
-          value={goal}
-          onChange={(e) => setGoal(e.target.value)}
+      {/* Chat section */}
+      <div className="flex flex-col h-full">
+        <ChatPanel
+          messages={messages}
+          userName={userName}
+          connectionState={connectionState}
+          isConversationComplete={isConversationComplete}
+          isBotTyping={isBotTyping}
         />
-        <Label htmlFor="duration" className="mt-2">
-          Duration (in days)
-        </Label>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Input
-              id="duration"
-              placeholder="16"
-              type="number"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              className="w-1/4"
-            />
-          </TooltipTrigger>
-          <TooltipContent className="bg-white" side="right" sideOffset={5}>
-            <p className="text-sm text-muted-foreground cursor-help">
-              Please specify how many days you want to spend to complete this goal.
-            </p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Button onClick={handleGoalToTask} disabled={loading} className="w-fit mt-2">
-          Goal to Task
-        </Button>
+        <MessageInput
+          userMessageInput={userMessageInput}
+          setUserMessageInput={setUserMessageInput}
+          handleSendMessage={handleSendMessage}
+          isConnecting={connectionState === HubConnectionState.Connecting}
+          isConversationComplete={isConversationComplete}
+        />
       </div>
-
-      <Divider text="Generated Task" />
-
-      {loading && (
-        <div className="flex items-center gap-2 text-sm text-zinc-500">
-          <LoadingSpinner variant="blue" className="text-xs" />
-          Generating your task...
-        </div>
-      )}
-
-      {extractedTasks?.message && (
-        <Alert className="bg-blue-50 border-blue-300 text-blue-800 flex items-start gap-2">
-          <Info className="h-4 w-4 mt-1" />
-          <div>
-            <AlertTitle className="font-semibold">AI Assistant 🤖</AlertTitle>
-            <AlertDescription className="text-sm">{extractedTasks.message}</AlertDescription>
-          </div>
-        </Alert>
-      )}
-
-      {extractedTasks?.tasks?.length !== 0 &&
-        extractedTasks?.tasks
-          .filter((t) => t.isValidTask)
-          .map((extractedTask, index) => (
-            <Card
-              key={index}
-              className={`p-4 shadow-md space-y-2 border-2 rounded-xl transition-all ${
-                addedTaskIndices.has(index) ? 'border-green-400 bg-green-50' : 'border-zinc-200'
-              }`}
-            >
-              <h2 className="text-lg font-semibold text-zinc-800">{extractedTask.title}</h2>
-              <p className="text-sm text-zinc-600">
-                <strong>Description:</strong> {extractedTask.description ?? 'None'}
-              </p>
-              <p className="text-sm text-zinc-600">
-                <strong>Due Date:</strong> {extractedTask.due_date ?? 'None'}
-              </p>
-              <p className="text-sm text-zinc-600 flex items-center">
-                <span
-                  className="h-4 w-4 rounded-full"
-                  style={{ backgroundColor: extractedTask.label.color || 'green' }}
-                ></span>
-                <span className="ml-2 font-bold">{extractedTask.label.name || 'Others'}</span>
-              </p>
-
-              <Button
-                size="sm"
-                className={`mt-2 w-fit flex items-center gap-2 rounded-md font-medium transition ${
-                  addedTaskIndices.has(index)
-                    ? 'bg-gray-200 text-gray-500 border border-gray-300 cursor-not-allowed opacity-60'
-                    : 'bg-violet-600 text-white hover:bg-violet-700'
-                }`}
-                onClick={() => handleAddTask(extractedTask, index)}
-                disabled={adding || addedTaskIndices.has(index)}
-              >
-                {addedTaskIndices.has(index) ? '✅ Added' : adding ? 'Adding...' : 'Add Task'}
-              </Button>
-            </Card>
-          ))}
-
-      {!loading && !extractedTasks && <p className="text-zinc-400 text-sm italic">No task generated yet.</p>}
     </div>
-  );
-}
+
+    {showTasks && (   
+      <GeneratedTasksPanel
+        tasks={tasks}
+        addedTaskIndices={addedTaskIndices}
+        onTaskAdded={handleTaskAdded}
+      />
+    )} 
+  </div>
+)}
