@@ -17,7 +17,7 @@ export default function Page() {
       <SearchTitle />
       {query.length > 1 &&
         filteredTasks.map((task) => (
-          <div className="w-full mt-5 mb-5 flex flex-col gap-[15px]" key={task.id}>
+          <div className="w-full mt-5 mb-5 flex flex-col gap-2" key={task.id}>
             <TaskCardContainer
               task={task}
               handleCheckboxChange={handleCheckboxChange}
