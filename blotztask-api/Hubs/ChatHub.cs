@@ -49,21 +49,26 @@ public class ChatHub : Hub
         
         var result = await _goalPlannerChatService.HandleUserMessageAsync(userMsg);
 
+        if (result.IsConversationComplete)
+        {
+            if (result.BotMessage != null)
+                await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
+
+            await Clients.Caller.SendAsync("BotTyping", false);
+            await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
+            return; 
+        }
+
         if (result.Tasks != null)
         {
             await Clients.Caller.SendAsync("ReceiveTasks", result.Tasks);
         }
-        else if (!result.IsConversationComplete)
+        if (result.BotMessage != null)
         {
             await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
         }
         
         await Clients.Caller.SendAsync("BotTyping", false);
 
-        if (result.IsConversationComplete)
-        {
-            // ✅ Cleanup state after completion
-            await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
-        }
     }
 }

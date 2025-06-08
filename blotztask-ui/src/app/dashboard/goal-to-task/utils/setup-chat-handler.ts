@@ -32,19 +32,8 @@ export function setupChatHandlers(
     console.log('[SignalR] Received tasks:', receivedTasks);
     if (receivedTasks?.length > 0) {
       setTasks(receivedTasks);
-      setIsConversationComplete(false);
       setShowTasks(true);
     }
-    setMessages((prev) => [
-      ...prev,
-      {
-        sender: 'ChatBot',
-        content: "If you're happy with these tasks, you can type **end this** to end the conversation.",
-        conversationId: prev.length > 0 ? prev[prev.length - 1].conversationId : '',
-        timestamp: new Date(),
-        isBot: true,
-      },
-    ]);
   });
 
   connection.on('ConversationCompleted', (convoId: string) => {

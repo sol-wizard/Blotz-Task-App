@@ -29,21 +29,7 @@ public class GoalPlannerChatService : IGoalPlannerChatService
 
         if (UserExplicitlyEndedConversation(userMessage.Content))
         {
-            // clear logic, moved from chathub
-            _conversationStateService.RemoveConversation(conversationId);
-            return new GoalPlanningChatResult
-            {
-                BotMessage = new ConversationMessage
-                {
-                    Sender = "ChatBot",
-                    Content = "Okay, your plan is complete. You can start a new one anytime.",
-                    ConversationId = conversationId,
-                    Timestamp = DateTime.UtcNow,
-                    IsBot = true,
-                },
-                IsConversationComplete = true,
-                Tasks = null,
-            };
+            return EndConversation(conversationId); 
         }
 
         if (!_conversationStateService.TryGetChatHistory(conversationId, out var chatHistory))
@@ -79,7 +65,7 @@ public class GoalPlannerChatService : IGoalPlannerChatService
                 var revisedTasks = await _goalPlannerAiService.ReviseGeneratedTasksAsync(aiResponseTasks, chatHistory);
 
                 tasks = revisedTasks;
-                botContent = $"Here are your tasks: {string.Join(", ", revisedTasks.Select(t => t.Description))}";
+                botContent = "If you're happy with these tasks, you can type **end this** to end the conversation.";
             }
             else
             {
@@ -103,6 +89,25 @@ public class GoalPlannerChatService : IGoalPlannerChatService
             },
             IsConversationComplete = false,
             Tasks = tasks,
+        };
+    }
+
+    private GoalPlanningChatResult EndConversation(string conversationId)
+    {
+        _conversationStateService.RemoveConversation(conversationId);
+
+        return new GoalPlanningChatResult
+        {
+            BotMessage = new ConversationMessage
+            {
+                Sender = "ChatBot",
+                Content = "Okay, your plan is complete. You can start a new one anytime.",
+                ConversationId = conversationId,
+                Timestamp = DateTime.UtcNow,
+                IsBot = true,
+            },
+            IsConversationComplete = true,
+            Tasks = null,
         };
     }
     
