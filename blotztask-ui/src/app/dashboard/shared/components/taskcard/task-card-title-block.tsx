@@ -39,7 +39,7 @@ export const TaskCardTitleBlock = ({
           render={({ field }) => (
             <FormItem className='w-full'>
               <FormControl className='w-full'>
-                <Input className="w-full text-base px-3 py-2 min-h-[40px] border border-gray-300 rounded-md" {...field} />
+                <Input className="font-bold" {...field} />
               </FormControl>
               <FormMessage>{errors.title?.message}</FormMessage>
             </FormItem>
