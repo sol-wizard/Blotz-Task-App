@@ -6,16 +6,13 @@ public class ChatHub : Hub
 {
     private readonly ILogger<ChatHub> _logger;
     private readonly IGoalPlannerChatService _goalPlannerChatService;
-    private readonly IConversationStateService _conversationStateService;
 
     public ChatHub(
     ILogger<ChatHub> logger, 
-    IGoalPlannerChatService goalPlannerChatService,
-    IConversationStateService conversationStateService)
+    IGoalPlannerChatService goalPlannerChatService)
     {
         _logger = logger;
         _goalPlannerChatService = goalPlannerChatService;
-        _conversationStateService = conversationStateService;
     }
     public override async Task OnConnectedAsync()
     {
@@ -43,24 +40,26 @@ public class ChatHub : Hub
         };
 
         await Clients.Caller.SendAsync("ReceiveMessage", userMsg);
-
+        
+        // Send BotTyping signal to clients
+        await Clients.Caller.SendAsync("BotTyping", true);
+        
         var result = await _goalPlannerChatService.HandleUserMessageAsync(userMsg);
+
+        if (result.IsConversationComplete)
+        { 
+            await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
+            await Clients.Caller.SendAsync("BotTyping", false);
+            await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
+            return; 
+        }
 
         if (result.Tasks != null)
         {
             await Clients.Caller.SendAsync("ReceiveTasks", result.Tasks);
         }
-        else if (!result.IsConversationComplete)
-        {
-            await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
-        }
         
-
-        if (result.IsConversationComplete)
-        {
-            // ✅ Cleanup state after completion
-            _conversationStateService.RemoveConversation(conversationId);
-            await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
-        }
+        await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
+        await Clients.Caller.SendAsync("BotTyping", false);
     }
 }
