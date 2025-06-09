@@ -6,16 +6,13 @@ public class ChatHub : Hub
 {
     private readonly ILogger<ChatHub> _logger;
     private readonly IGoalPlannerChatService _goalPlannerChatService;
-    private readonly IConversationStateService _conversationStateService;
 
     public ChatHub(
     ILogger<ChatHub> logger, 
-    IGoalPlannerChatService goalPlannerChatService,
-    IConversationStateService conversationStateService)
+    IGoalPlannerChatService goalPlannerChatService)
     {
         _logger = logger;
         _goalPlannerChatService = goalPlannerChatService;
-        _conversationStateService = conversationStateService;
     }
     public override async Task OnConnectedAsync()
     {
@@ -50,10 +47,8 @@ public class ChatHub : Hub
         var result = await _goalPlannerChatService.HandleUserMessageAsync(userMsg);
 
         if (result.IsConversationComplete)
-        {
-            if (result.BotMessage != null)
-                await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
-
+        { 
+            await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
             await Clients.Caller.SendAsync("BotTyping", false);
             await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
             return; 
@@ -63,12 +58,8 @@ public class ChatHub : Hub
         {
             await Clients.Caller.SendAsync("ReceiveTasks", result.Tasks);
         }
-        if (result.BotMessage != null)
-        {
-            await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
-        }
         
+        await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
         await Clients.Caller.SendAsync("BotTyping", false);
-
     }
 }
