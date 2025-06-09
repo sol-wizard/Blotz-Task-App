@@ -86,3 +86,4 @@ const useSearchTaskStore = create<SearchTaskStore>((set, get) => ({
 export const useSearchQuery = () => useSearchTaskStore((state) => state.query);
 export const useFilteredTasks = () => useSearchTaskStore((state) => state.filteredTasks);
 export const useSearchTaskActions = () => useSearchTaskStore((state) => state.actions);
+export const useSearchTasksIsLoading = () => useSearchTaskStore((state) => state.searchTaskIsLoading);
