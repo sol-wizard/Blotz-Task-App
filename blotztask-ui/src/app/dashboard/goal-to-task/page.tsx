@@ -12,6 +12,9 @@ import { ChatPanel } from "./components/chat-panel";
 import { setupChatHandlers } from "./utils/setup-chat-handler";
 import { ChatPanelHeader } from "./components/chat-panel-header";
 import { ConversationMessage } from "./models/chat-message";
+import { TasksSidebar } from "./components/tasks-sidebar";
+import { SidebarProvider, SidebarTrigger } from "./components/ui/sidepanel";
+
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -110,13 +113,13 @@ export default function ChatPage() {
   };
 
  return (
-  <div className="mx-auto h-[75vh] p-4 flex ">
+  <div className="mx-auto h-[75vh] p-4 flex">
+    <SidebarProvider>
     <div className="flex flex-col h-full w-full">
       <ChatPanelHeader
         connectionState={connectionState}
         isReconnecting={connectionState === HubConnectionState.Connecting}
         onReconnect={handleReconnect}
-        onToggleTasks={() => setShowTasks((prev) => !prev)}
       />
 
       {/* Chat section */}
@@ -139,12 +142,19 @@ export default function ChatPage() {
       </div>
     </div>
 
-    {showTasks && (   
+    {/* {showTasks && (   
       <GeneratedTasksPanel
         tasks={tasks}
         addedTaskIndices={addedTaskIndices}
         onTaskAdded={handleTaskAdded}
       />
-    )} 
+    )}  */}
+
+    <TasksSidebar
+        tasks={tasks}
+        addedTaskIndices={addedTaskIndices}
+        onTaskAdded={handleTaskAdded}
+      />
+    </SidebarProvider>
   </div>
 )}
