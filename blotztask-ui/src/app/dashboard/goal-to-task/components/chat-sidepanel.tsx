@@ -15,17 +15,17 @@ import { useSidebar, SidebarTrigger } from "../components/ui/sidepanel";
 import { Button } from '@/components/ui/button';
 import TaskCardToAdd from "../../shared/components/taskcard/task-card-to-add";
 
-interface TasksSidebarProps {
+interface SidePanelProps {
   tasks: ExtractedTask[];
   addedTaskIndices: Set<number>;
   onTaskAdded: (idx: number) => void;
 }
 
-export function TasksSidebar({
+export function SidePanel({
   tasks,
   addedTaskIndices,
   onTaskAdded,
-}: TasksSidebarProps) {
+}: SidePanelProps) {
   const { open } = useSidebar();
   return (
     <Sidebar side="right" variant="floating" collapsible="icon" className="ml-2">

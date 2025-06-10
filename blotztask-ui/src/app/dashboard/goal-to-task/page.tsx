@@ -11,7 +11,7 @@ import { ChatPanel } from "./components/chat-panel";
 import { setupChatHandlers } from "./utils/setup-chat-handler";
 import { ChatPanelHeader } from "./components/chat-panel-header";
 import { ConversationMessage } from "./models/chat-message";
-import { TasksSidebar } from "./components/tasks-sidebar";
+import { SidePanel } from "./components/chat-sidepanel";
 import { SidebarProvider } from "./components/ui/sidepanel";
 
 
@@ -36,6 +36,7 @@ export default function ChatPage() {
 
   const [tasks, setTasks] = useState<ExtractedTask[]>([]);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
+  //TODO: Delete this useState and all its usage
   const [showTasks, setShowTasks] = useState<boolean>(false);
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
@@ -141,15 +142,7 @@ export default function ChatPage() {
       </div>
     </div>
 
-    {/* {showTasks && (   
-      <GeneratedTasksPanel
-        tasks={tasks}
-        addedTaskIndices={addedTaskIndices}
-        onTaskAdded={handleTaskAdded}
-      />
-    )}  */}
-
-    <TasksSidebar
+    <SidePanel
         tasks={tasks}
         addedTaskIndices={addedTaskIndices}
         onTaskAdded={handleTaskAdded}
