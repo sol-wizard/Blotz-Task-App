@@ -4,39 +4,40 @@ import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
 import { parse, set } from 'date-fns';
 
-export const mapRawAddTaskDTOtoAddTaskItemDTO = (taskDetails: RawAddTaskDTO): AddTaskItemDTO => {
-  let dateTime: string;
-  if (taskDetails.time) {
-    const parsedTime = parse(taskDetails.time, 'h:mm a', new Date());
+export const combineDateAndTime = (date: Date, time?: string): { dueDate: string; hasTime: boolean } => {
+  if (time) {
+    const parsedTime = parse(time, 'h:mm a', new Date());
     const hours = parsedTime.getHours();
     const minutes = parsedTime.getMinutes();
-    const dateWithTime = set(taskDetails.date, { hours, minutes });
-    dateTime = dateWithTime.toISOString();
+    const dateWithTime = set(date, { hours, minutes });
+    return {
+      dueDate: dateWithTime.toISOString(),
+      hasTime: true,
+    };
   } else {
-    dateTime = taskDetails.date.toISOString();
+    return {
+      dueDate: date.toISOString(),
+      hasTime: false,
+    };
   }
+};
+
+export const prepareAddTaskItemDTO = (taskDetails: RawAddTaskDTO): AddTaskItemDTO => {
+  const { dueDate, hasTime } = combineDateAndTime(taskDetails.date, taskDetails.time);
+
   const addTaskForm: AddTaskItemDTO = {
     title: taskDetails.title,
     description: taskDetails.description ?? '',
-    dueDate: dateTime,
+    dueDate: dueDate,
     labelId: taskDetails.labelId ?? 6,
+    hasTime: hasTime,
   };
+  console.log('addTaskForm:', addTaskForm);
   return addTaskForm;
 };
 
-export const mapRawEditTaskDTOtoAddTaskItemDTO = (taskEditForm: RawEditTaskDTO): EditTaskItemDTO => {
-  let dateTime: string;
-  if (taskEditForm.time) {
-    const parsedTime = parse(taskEditForm.time, 'h:mm a', new Date());
-
-    const hours = parsedTime.getHours();
-    const minutes = parsedTime.getMinutes();
-
-    const dateWithTime = set(taskEditForm.date, { hours, minutes });
-    dateTime = dateWithTime.toISOString();
-  } else {
-    dateTime = taskEditForm.date.toISOString();
-  }
+export const prepareEditTaskItemDTO = (taskEditForm: RawEditTaskDTO): EditTaskItemDTO => {
+  const { dueDate, hasTime } = combineDateAndTime(taskEditForm.date, taskEditForm.time);
 
   const taskEditDetails: EditTaskItemDTO = {
     id: taskEditForm.id,
@@ -44,7 +45,8 @@ export const mapRawEditTaskDTOtoAddTaskItemDTO = (taskEditForm: RawEditTaskDTO):
     description: taskEditForm.description,
     isDone: taskEditForm.isDone,
     labelId: taskEditForm.labelId,
-    dueDate: dateTime,
+    dueDate: dueDate,
+    hasTime: hasTime,
   };
 
   return taskEditDetails;

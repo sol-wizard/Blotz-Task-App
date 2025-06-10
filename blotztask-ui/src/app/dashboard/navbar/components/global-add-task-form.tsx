@@ -1,12 +1,12 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
-import { taskFormSchema } from '../../today/forms/task-form-schema';
-import AddTaskForm from '../../today/shared/add-task-form';
+import { taskFormSchema } from '../../shared/forms/task-form-schema';
+import AddTaskForm from '../../shared/components/ui/add-task-form';
 import { Separator } from '@/components/ui/separator';
-import TaskSeparator from '../../today/shared/task-separator';
+import TaskSeparator from '../../shared/components/ui/task-separator';
 import { DialogClose } from '@radix-ui/react-dialog';
 import { DialogFooter } from '@/components/ui/dialog';
 
@@ -20,7 +20,7 @@ const GlobalAddTaskForm = ({ handleSubmit }) => {
       description: '',
       date: new Date(),
       labelId: undefined,
-      time: '',
+      time: undefined,
     },
   });
 

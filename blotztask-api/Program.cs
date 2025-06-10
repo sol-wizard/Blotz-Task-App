@@ -3,24 +3,29 @@ using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Security.KeyVault.Secrets;
 using BlotzTask.Data;
 using BlotzTask.Data.Entities;
-using BlotzTask.extension;
-using BlotzTask.Models.Validators;
+using BlotzTask.Extension;
 using BlotzTask.Services;
-using FluentValidation;
+using BlotzTask.Services.GoalPlanner;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
 using Microsoft.OpenApi.Models;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
 using Serilog;
-using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using Swashbuckle.AspNetCore.Filters;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
-builder.Services.AddControllers();  
+// Add services to the container.
+builder.Services.AddSignalR();
+
+builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -41,7 +46,7 @@ builder.Services.AddIdentityCore<User>()
     .AddEntityFrameworkStores<BlotzTaskDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddScoped<IUserInfoService, UserInfoService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ILabelService, LabelService>();
 
@@ -74,24 +79,58 @@ if (builder.Environment.IsDevelopment())
 if (builder.Environment.IsProduction())
 {
     var keyVaultEndpoint = builder.Configuration.GetSection("KeyVault").GetValue<string>("VaultURI");
-    
+
     builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultKeyVaultSecretManager());
 
     var secretClient = new SecretClient(new Uri(keyVaultEndpoint), new DefaultAzureCredential());
-    
+
     builder.Services.AddSingleton(secretClient);
 
     builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(secretClient.GetSecret("db-string-connection").Value.Value.ToString()));
 }
 
-builder.Services.AddAzureOpenAI();
+builder.Services.AddAzureOpenAi();
 
 builder.Services.AddScoped<TaskGenerationAIService>();
 
 
-builder.Services.AddOpenTelemetry().UseAzureMonitor(options => {
+builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
+{
     var connectionString = builder.Configuration.GetSection("ApplicationInsights:ConnectionString").Value;
     options.ConnectionString = connectionString;
+});
+
+// Register IChatCompletionService for Azure OpenAI
+builder.Services.AddSingleton<IChatCompletionService>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<Program>>();
+    var config = builder.Configuration;
+    var secretClient = sp.GetService<SecretClient>();
+    var endpoint = config["AzureOpenAI:Endpoint"];
+    var deploymentId = config["AzureOpenAI:DeploymentId"] ?? "gpt-4o-mini";
+    var apiKey = config["AzureOpenAI:ApiKey"];
+
+    if (secretClient != null && builder.Environment.IsProduction())
+    {
+        try
+        {
+            apiKey = secretClient.GetSecret("azureopenai-apikey").Value.Value;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to retrieve API key from Azure Key Vault");
+        }
+    }
+
+    if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(deploymentId))
+        throw new ArgumentException("Azure OpenAI configuration is missing or invalid.");
+
+    logger.LogDebug("Initializing Azure OpenAI with endpoint: {Endpoint}, deployment: {DeploymentId}", endpoint, deploymentId);
+
+    return Kernel.CreateBuilder()
+        .AddAzureOpenAIChatCompletion(deploymentId, endpoint, apiKey)
+        .Build()
+        .GetRequiredService<IChatCompletionService>();
 });
 
 builder.Services.AddCors(options =>
@@ -102,16 +141,16 @@ builder.Services.AddCors(options =>
         {
             builder.WithOrigins("http://localhost:3000" // DEV frontend origin
                 , "https://blotz-task-app.vercel.app") // Prod frontend origin    
-                .WithMethods("GET", "POST", "OPTIONS","PUT","DELETE") // Specify allowed methods, do not allow method never used.
-                .WithHeaders("Content-Type", "Authorization") // Specify allowed headers,may be more headers to added.
+                .WithMethods("GET", "POST", "OPTIONS", "PUT", "DELETE") // Specify allowed methods
+                .WithHeaders("Content-Type", "Authorization", "x-signalr-user-agent", "x-requested-with") // Added SignalR headers
                 .AllowCredentials(); // TODO: anti-csrf need to be built.
         });
 });
 
-// Auto-Register Validator
-builder.Services.AddValidatorsFromAssemblyContaining<SampleValidationValidator>();
-// Register FluentValidation AutoValidation
-builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddScoped<IConversationStateService, ConversationStateServiceV2>();
+builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
+builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
+builder.Services.AddScoped<ITaskParserService, TaskParserService>();
 
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
@@ -124,30 +163,26 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.UseSerilogRequestLogging();
 
-if (app.Environment.IsDevelopment())
+
+using (var scope = app.Services.CreateScope())
 {
-    // Seed roles and super admin
-    using (var scope = app.Services.CreateScope())
+    var services = scope.ServiceProvider;
+
+    try
     {
-        var services = scope.ServiceProvider;
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = services.GetRequiredService<UserManager<User>>();
 
-        try
-        {
-            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-            var userManager = services.GetRequiredService<UserManager<User>>();
-            var dbContext = services.GetRequiredService<BlotzTaskDbContext>();
+        await BlotzContextSeed.SeedBlotzUserAsync(userManager, roleManager);
 
-            // Call the seed methods
-            await BlotzContextSeed.SeedBlotzContextAsync(userManager,roleManager,dbContext);
-
-        }
-        catch (Exception ex)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred while seeding the database.");
-        }
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the guest user.");
     }
 }
+
 
 app.UseHttpsRedirection();
 
@@ -156,5 +191,6 @@ app.UseAuthorization();
 
 app.MapSwagger().RequireAuthorization();
 app.MapControllers().RequireAuthorization();
+app.MapHub<ChatHub>("/chatHub");
 
 app.Run();

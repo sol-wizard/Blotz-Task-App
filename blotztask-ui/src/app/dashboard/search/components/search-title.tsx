@@ -2,6 +2,7 @@
 import { useSearchQuery } from '../../../store/search-task-store';
 
 const SearchTitle = () => {
+  //TODO: Move usehook to parent component
   const query = useSearchQuery();
 
   return (

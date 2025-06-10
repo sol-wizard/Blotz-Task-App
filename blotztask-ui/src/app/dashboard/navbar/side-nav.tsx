@@ -1,6 +1,6 @@
 'use client';
 
-import { ListChecks, Home, ClipboardCheck, Plus, CalendarCheck, Bot } from 'lucide-react';
+import { Plus, CircleCheckBig, List, Calendar, Sparkles, Target } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -13,7 +13,6 @@ import {
   SidebarMenuButton,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { useSession } from 'next-auth/react';
 import { ProfileSectionButton } from './components/profile-section-button';
 import { Categories } from './components/categories';
 import { useEffect, useState } from 'react';
@@ -24,35 +23,43 @@ import AddTaskDialog from './components/add-task-dialog';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import SearchBar from './components/search-bar';
-import { useTodayTaskActions } from '../../store/today-task-store';
-import { useScheduleTaskActions } from '@/app/store/schedule-task-store';
+import { useIncompleteTodayTasks, useOverdueTasks, useTodayTaskActions } from '../../store/today-task-store';
+import { useScheduleTaskStore, useScheduleTaskActions } from '@/app/store/schedule-task-store';
 import { useSearchQuery, useSearchTaskActions } from '@/app/store/search-task-store';
 import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
 import { addTaskItem } from '@/services/task-service';
+import { Badge } from '@/components/ui/badge';
 
-const authenticatedItems = [
-  { title: 'All Tasks', url: 'task-list', icon: ListChecks },
-  { title: 'Today', url: 'today', icon: ClipboardCheck },
-  { title: 'Schedule', url: 'schedule', icon: CalendarCheck },
-];
 
-const guestItems = [{ title: 'Home', url: '/home', icon: Home }];
-const loadingItems = [{ title: 'Loading...', url: '#', icon: Home }];
+
 const FEATURE_FLAG_KEY = 'aiEnabled';
 
 export function AppSidebar() {
-  const { data: session, status } = useSession();
   const { loadScheduleTasks } = useScheduleTaskActions();
-  const { loadTodayTasks } = useTodayTaskActions();
+  const { loadTodayTasks, loadOverdueTasks } = useTodayTaskActions();
+  const overdueFromTodayStore = useOverdueTasks();
+  const incompleteFromTodayStore = useIncompleteTodayTasks();
+  const { overdueTasks: overdueFromScheduleStore, todayTasks: todayFromScheduleStore, tomorrowTasks: tomorrowFromScheduleStore, weekTasks: weekFromScheduleStore, monthTasks: monthFromScheduleStore } = useScheduleTaskStore();
   const pathname = usePathname();
-  const [aiEnabled, setAiEnabled] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(true);
+  const { loadSearchTasks, setQuery } = useSearchTaskActions();
+  const query = useSearchQuery();
+
+  const todayBadgeCount = overdueFromTodayStore.length + incompleteFromTodayStore.length;
+  
+  const monthTasksCount = Object.values(monthFromScheduleStore).flat().length;
+  const scheduleBadgeCount = overdueFromScheduleStore.length + todayFromScheduleStore.length + tomorrowFromScheduleStore.length + weekFromScheduleStore.length + monthTasksCount;
+
+  const menuItems = [
+    { title: 'All Tasks', url: 'task-list', icon: List },
+    { title: 'Today', url: 'today', icon: CircleCheckBig, count: todayBadgeCount},
+    { title: 'Schedule', url: 'schedule', icon: Calendar, count: scheduleBadgeCount },
+  ];
+
   const handleSignOut = (e) => {
     e.preventDefault();
     window.location.href = '/api/auth/signout';
   };
-
-  // Determine which items to show based on session status
-  const items = status === 'loading' ? loadingItems : session ? authenticatedItems : guestItems;
 
   const [labels, setLabels] = useState<LabelDTO[]>([]);
 
@@ -67,6 +74,9 @@ export function AppSidebar() {
 
   useEffect(() => {
     loadAllLabel();
+    loadTodayTasks();
+    loadOverdueTasks();
+    loadScheduleTasks();
     const flag = localStorage.getItem(FEATURE_FLAG_KEY);
     if (flag !== null) {
       setAiEnabled(flag === 'true');
@@ -77,9 +87,6 @@ export function AppSidebar() {
     setAiEnabled(value);
     localStorage.setItem(FEATURE_FLAG_KEY, value.toString());
   };
-
-  const { loadSearchTasks, setQuery } = useSearchTaskActions();
-  const query = useSearchQuery();
 
   const submitGlobalTask = async (data: RawAddTaskDTO) => {
     try {
@@ -103,7 +110,7 @@ export function AppSidebar() {
 
               <SidebarMenuItem>
                 <AddTaskDialog submitGlobalTask={submitGlobalTask}>
-                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 ml-2 rounded-md hover:bg-blue-100 ">
+                  <SidebarMenuButton className="flex items-center w-full px-4 py-3 rounded-md hover:bg-blue-100 ">
                     <div
                       className={cn(
                         'bg-primary',
@@ -111,7 +118,7 @@ export function AppSidebar() {
                         'inline-flex items-center justify-center'
                       )}
                     >
-                      <Plus size={16} />
+                      <Plus size={18} />
                     </div>
                     <span className="pl-3 text-primary text-xl">New Task</span>
                   </SidebarMenuButton>
@@ -119,33 +126,56 @@ export function AppSidebar() {
               </SidebarMenuItem>
 
               {aiEnabled && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link
-                      href="ai-assistant"
-                      className="flex items-center ml-2 px-4 py-3 w-full rounded-md hover:bg-white"
-                    >
-                      <Bot className="text-indigo-600" />
-                      <span className="pl-3 text-base text-indigo-700 font-medium">AI Assistant ✨</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link
+                        href="ai-assistant"
+                        className="flex items-center px-4 py-3 w-full rounded-md hover:bg-white"
+                      >
+                        <Sparkles size={18} className='text-indigo-700'/>
+                        <span className="pl-3 text-base font-medium text-indigo-700">AI Assistant</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link
+                        href="goal-to-task"
+                        className="flex items-center px-4 py-3 w-full rounded-md hover:bg-white"
+                      >
+                        <Target size={18} className='text-red-500'/>
+                        <span className="pl-3 text-base text-indigo-700 font-medium">Goal to task</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
               )}
 
-              {items.map((item) => (
+              {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     className={cn(
-                      'flex items-center ml-2 px-4 py-3 w-full rounded-md',
+                      'flex items-center px-4 py-3 w-full rounded-md',
                       pathname === `/dashboard/${item.url}`
                         ? 'bg-blue-100 text-primary hover:bg-blue-200'
                         : 'hover:bg-blue-200'
                     )}
                     asChild
                   >
-                    <Link href={`/dashboard/${item.url}`}>
-                      <item.icon />
-                      <span className="pl-3 text-base">{item.title}</span>
+                    <Link href={`/dashboard/${item.url}`} className='flex justify-between '>
+                      <div className='flex items-center'>
+                        <item.icon size={18}/>
+                        <span className="pl-3 text-base">{item.title}</span>
+                      </div>
+
+                      {item.count !== undefined && (
+                        <Badge
+                          className="w-6 h-6 rounded-full bg-white text-primary border border-primary text-sm font-semibold flex items-center justify-center"
+                        >
+                          {item.count}
+                        </Badge>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -153,8 +183,10 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarGroup className='mt-20'>
-          <SidebarGroupLabel className="text-lg font-semibold mb-2 ml-2 px-4 text-primary">My Tasks</SidebarGroupLabel>
+        <SidebarGroup className="mt-20">
+          <SidebarGroupLabel className="text-lg font-semibold mb-2 ml-2 px-4 text-primary">
+            My Tasks
+          </SidebarGroupLabel>
           <SidebarSeparator className="mb-2 bg-primary" />
           <SidebarGroupContent>
             <SidebarMenu>
@@ -166,7 +198,6 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <ProfileSectionButton
-            session={session}
             onSignOut={handleSignOut}
             aiEnabled={aiEnabled}
             setAiEnabled={toggleAiFeature}

@@ -1,36 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import LoadingSpinner from '@/components/ui/loading-spinner';
-import Divider from '../today/components/divider';
-import { ExtractedTask } from '@/model/extracted-task-dto';
 import { generateAiTask } from '@/services/ai-service';
-import { addTaskItem } from '@/services/task-service';
-import { mapExtractedTaskToAddTaskDTO } from './util/map-extracted-to-add-task';
+import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import Divider from '../today/components/ui/divider';
+import PromptInputSection from './component/prompt-input-container';
+import TaskCardToAdd from '../shared/components/taskcard/task-card-to-add';
+import { useScheduleTaskActions } from '../../store/schedule-task-store';
 
 export default function AiAssistant() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
-  const [extractedTask, setExtractedTask] = useState<ExtractedTask | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [addSuccess, setSaveSuccess] = useState(false);
+  const [wrappedExtractedTasks, setWrappedExtractedTasks] = useState<ExtractedTasksWrapperDTO | null>(null);
+  const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
+
+  const { handleAddTask } = useScheduleTaskActions();
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
-    setExtractedTask(null);
-    setSaveSuccess(false);
+    setWrappedExtractedTasks(null);
+    setAddedTaskIndices(new Set());
     setLoading(true);
 
     try {
       const task = await generateAiTask(prompt);
-      setExtractedTask(task);
+      console.log('Generated task:', task);
+      setWrappedExtractedTasks(task);
     } catch (error) {
       console.error('Failed to generate task:', error);
     } finally {
@@ -38,21 +37,8 @@ export default function AiAssistant() {
     }
   };
 
-  const handleAddTask = async () => {
-    if (!extractedTask) return;
-
-    setAdding(true);
-
-    try {
-      const tasktoAdd = mapExtractedTaskToAddTaskDTO(extractedTask);
-
-      await addTaskItem(tasktoAdd);
-      setSaveSuccess(true);
-    } catch (error) {
-      console.error('Failed to save task:', error);
-    } finally {
-      setAdding(false);
-    }
+  const handleTaskAdded = (index) => {
+    setAddedTaskIndices((prev) => new Set(prev).add(index));
   };
 
   return (
@@ -64,18 +50,13 @@ export default function AiAssistant() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="prompt">Prompt to generate Task</Label>
-        <Input
-          id="prompt"
-          placeholder="e.g. Remind me to submit the report by Friday"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-        />
-        <Button onClick={handleGenerate} disabled={loading} className="w-fit mt-2">
-          Generate Task
-        </Button>
-      </div>
+      <PromptInputSection
+        prompt={prompt}
+        setPrompt={setPrompt}
+        loading={loading}
+        onGenerate={handleGenerate}
+        onSubmit={(taskDetails) => handleAddTask(taskDetails)}
+      />
 
       <Divider text="Generated Task" />
 
@@ -86,55 +67,32 @@ export default function AiAssistant() {
         </div>
       )}
 
-      {!loading && extractedTask && (
-        <>
-          <Alert className="bg-blue-50 border-blue-300 text-blue-800">
-            <Info className="h-4 w-4" />
-            <AlertTitle>AI Assistant 🤖</AlertTitle>
-            <AlertDescription>{extractedTask.message}</AlertDescription>
-          </Alert>
-
-          {extractedTask.isValidTask && (
-            <Card
-              className={`p-4 shadow-md space-y-2 border-2 rounded-xl transition-all ${
-                addSuccess ? 'border-green-400 bg-green-50' : 'border-zinc-200'
-              }`}
-            >
-              <h2 className="text-lg font-semibold text-zinc-800">{extractedTask.title}</h2>
-              <p className="text-sm text-zinc-600">
-                <strong>Description:</strong> {extractedTask.description ?? 'None'}
-              </p>
-              <p className="text-sm text-zinc-600">
-                <strong>Due Date:</strong> {extractedTask.due_date ?? 'None'}
-              </p>
-              <p className="text-sm text-zinc-600 flex items-center">
-                <span
-                  className="h-4 w-4 rounded-full"
-                  style={{ backgroundColor: extractedTask.label.color || 'green' }}
-                ></span>
-                <span className="ml-2 font-bold">
-                  {extractedTask.label.name || 'Others'}
-                </span>
-              </p>
-
-              <Button
-                size="sm"
-                className={`mt-2 w-fit flex items-center gap-2 rounded-md font-medium transition ${
-                  addSuccess
-                    ? 'bg-gray-200 text-gray-500 border border-gray-300 cursor-not-allowed opacity-60'
-                    : 'bg-violet-600 text-white hover:bg-violet-700'
-                }`}
-                onClick={handleAddTask}
-                disabled={adding || addSuccess}
-              >
-                {addSuccess ? '✅ Added' : adding ? 'Adding...' : 'Add Task'}
-              </Button>
-            </Card>
-          )}
-        </>
+      {wrappedExtractedTasks?.message && (
+        <Alert className="bg-blue-50 border-blue-300 text-blue-800 flex items-start gap-2">
+          <Info className="h-4 w-4 mt-1" />
+          <div>
+            <AlertTitle className="font-semibold">AI Assistant 🤖</AlertTitle>
+            <AlertDescription className="text-sm">{wrappedExtractedTasks.message}</AlertDescription>
+          </div>
+        </Alert>
       )}
 
-      {!loading && !extractedTask && <p className="text-zinc-400 text-sm italic">No task generated yet.</p>}
+      {wrappedExtractedTasks?.tasks?.length !== 0 &&
+        wrappedExtractedTasks?.tasks
+          .filter((t) => t.isValidTask)
+          .map((extractedTask, index) => (
+            <TaskCardToAdd
+              key={index}
+              taskToAdd={extractedTask}
+              index={index}
+              addedTaskIndices={addedTaskIndices}
+              onTaskAdded={handleTaskAdded}
+            />
+          ))}
+
+      {!loading && !wrappedExtractedTasks && (
+        <p className="text-zinc-400 text-sm italic">No task generated yet.</p>
+      )}
     </div>
   );
 }

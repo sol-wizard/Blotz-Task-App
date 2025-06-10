@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BlotzTask.Data.Entities
 {
@@ -19,5 +18,6 @@ namespace BlotzTask.Data.Entities
         public int LabelId { get; set; }
         [ForeignKey("LabelId")]
         public Label Label { get; set; }
+        public bool HasTime { get; set; } 
     }
 }

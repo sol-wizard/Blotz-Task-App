@@ -40,6 +40,9 @@ namespace BlotzTask.Migrations
                     b.Property<DateTimeOffset>("DueDate")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<bool>("HasTime")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDone")
                         .HasColumnType("bit");
 
@@ -138,6 +141,9 @@ namespace BlotzTask.Migrations
 
                     b.Property<DateTimeOffset>("DueDate")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("HasTime")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDone")
                         .HasColumnType("bit");
