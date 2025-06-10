@@ -9,7 +9,6 @@ export function setupChatHandlers(
   setTasks: Dispatch<SetStateAction<ExtractedTask[]>>,
   setIsConversationComplete: Dispatch<SetStateAction<boolean>>,
   setConnectionState: Dispatch<SetStateAction<HubConnectionState>>,
-  setShowTasks: Dispatch<SetStateAction<boolean>>,
   setIsBotTyping: Dispatch<SetStateAction<boolean>>
 ) {
   console.log('[SignalR] Connection started');
@@ -32,7 +31,6 @@ export function setupChatHandlers(
     console.log('[SignalR] Received tasks:', receivedTasks);
     if (receivedTasks?.length > 0) {
       setTasks(receivedTasks);
-      setShowTasks(true);
     }
   });
 
