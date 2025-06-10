@@ -14,7 +14,6 @@ import { ConversationMessage } from "./models/chat-message";
 import { SidePanel } from "./components/chat-sidepanel";
 import { SidebarProvider } from "./components/ui/sidepanel";
 
-
 export default function ChatPage() {
   const { data: session } = useSession();
 
@@ -36,8 +35,6 @@ export default function ChatPage() {
 
   const [tasks, setTasks] = useState<ExtractedTask[]>([]);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
-  //TODO: Delete this useState and all its usage
-  const [showTasks, setShowTasks] = useState<boolean>(false);
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
 
@@ -53,7 +50,6 @@ export default function ChatPage() {
           setTasks,
           setIsConversationComplete,
           setConnectionState,
-          setShowTasks,
           setIsBotTyping
         );
       })
@@ -101,7 +97,6 @@ export default function ChatPage() {
           setTasks,
           setIsConversationComplete,
           setConnectionState,
-          setShowTasks,
           setIsBotTyping
         );
       } catch (err) {

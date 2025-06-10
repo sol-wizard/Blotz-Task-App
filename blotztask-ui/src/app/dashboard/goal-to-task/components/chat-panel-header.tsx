@@ -1,5 +1,4 @@
 // ./components/chat-panel-header.tsx
-import { Button } from "@/components/ui/button";
 import { HubConnectionState } from "@microsoft/signalr/dist/esm/HubConnection";
 
 type Props = {
