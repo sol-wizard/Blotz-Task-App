@@ -51,7 +51,7 @@ const SidebarProvider = React.forwardRef<
   }
 >(
   (
-    { defaultOpen = true, open: openProp, onOpenChange: setOpenProp, className, style, children, ...props },
+    { defaultOpen = false, open: openProp, onOpenChange: setOpenProp, className, style, children, ...props },
     ref
   ) => {
     const isMobile = useIsMobile();
