@@ -1,6 +1,5 @@
 'use client';
 
-import { GeneratedTasksPanel } from "./components/generated-tasks-panel";
 import MessageInput from "./components/message-input";
 import { useEffect, useState } from "react";
 import { ExtractedTask } from "@/model/extracted-task-dto";
@@ -13,7 +12,7 @@ import { setupChatHandlers } from "./utils/setup-chat-handler";
 import { ChatPanelHeader } from "./components/chat-panel-header";
 import { ConversationMessage } from "./models/chat-message";
 import { TasksSidebar } from "./components/tasks-sidebar";
-import { SidebarProvider, SidebarTrigger } from "./components/ui/sidepanel";
+import { SidebarProvider } from "./components/ui/sidepanel";
 
 
 export default function ChatPage() {
@@ -113,7 +112,7 @@ export default function ChatPage() {
   };
 
  return (
-  <div className="mx-auto h-[75vh] p-4 flex">
+  <div className="mx-auto h-[75vh] p-4 flex ">
     <SidebarProvider>
     <div className="flex flex-col h-full w-full">
       <ChatPanelHeader
