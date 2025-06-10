@@ -31,7 +31,7 @@ export const TaskCardTitleBlock = ({
   const statusClass = statusVariants[taskStatus] || statusVariants.todo;
 
   return (
-    <div className="flex w-full py-1">
+    <div className="flex w-full justify-between">
       {isEditing ? (
         <FormField
           control={control}
