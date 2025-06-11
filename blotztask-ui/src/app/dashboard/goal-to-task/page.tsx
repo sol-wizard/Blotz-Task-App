@@ -1,6 +1,5 @@
 'use client';
 
-import { GeneratedTasksPanel } from "./components/generated-tasks-panel";
 import MessageInput from "./components/message-input";
 import { useEffect, useState } from "react";
 import { ExtractedTask } from "@/model/extracted-task-dto";
@@ -12,6 +11,8 @@ import { ChatPanel } from "./components/chat-panel";
 import { setupChatHandlers } from "./utils/setup-chat-handler";
 import { ChatPanelHeader } from "./components/chat-panel-header";
 import { ConversationMessage } from "./models/chat-message";
+import { SidePanel } from "./components/chat-sidepanel";
+import { SidebarProvider } from "./components/ui/sidepanel";
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -34,7 +35,6 @@ export default function ChatPage() {
 
   const [tasks, setTasks] = useState<ExtractedTask[]>([]);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
-  const [showTasks, setShowTasks] = useState<boolean>(false);
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
 
@@ -50,7 +50,6 @@ export default function ChatPage() {
           setTasks,
           setIsConversationComplete,
           setConnectionState,
-          setShowTasks,
           setIsBotTyping
         );
       })
@@ -98,7 +97,6 @@ export default function ChatPage() {
           setTasks,
           setIsConversationComplete,
           setConnectionState,
-          setShowTasks,
           setIsBotTyping
         );
       } catch (err) {
@@ -111,12 +109,12 @@ export default function ChatPage() {
 
  return (
   <div className="mx-auto h-[75vh] p-4 flex ">
+    <SidebarProvider>
     <div className="flex flex-col h-full w-full">
       <ChatPanelHeader
         connectionState={connectionState}
         isReconnecting={connectionState === HubConnectionState.Connecting}
         onReconnect={handleReconnect}
-        onToggleTasks={() => setShowTasks((prev) => !prev)}
       />
 
       {/* Chat section */}
@@ -139,12 +137,11 @@ export default function ChatPage() {
       </div>
     </div>
 
-    {showTasks && (   
-      <GeneratedTasksPanel
+    <SidePanel
         tasks={tasks}
         addedTaskIndices={addedTaskIndices}
         onTaskAdded={handleTaskAdded}
       />
-    )} 
+    </SidebarProvider>
   </div>
 )}
