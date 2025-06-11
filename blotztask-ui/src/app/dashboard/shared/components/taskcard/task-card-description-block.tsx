@@ -41,7 +41,7 @@ export const TaskCardDescriptionBlock = ({ task, taskStatus='todo',  isEditing, 
       />
     //TODO : Remove the logic in css using the variant based design approach
     ) : (
-      <p className={cn('w-[500px] break-words', statusClass)}>{task.description}</p>
+      <p className={cn('break-words', statusClass)}>{task.description}</p>
     )}
   </div>
 );}

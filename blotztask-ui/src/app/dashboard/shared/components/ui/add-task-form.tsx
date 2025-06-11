@@ -24,7 +24,7 @@ const AddTaskForm = ({
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Input placeholder="Enter task title" className="font-bold text-base" {...field}></Input>
+              <Input placeholder="Enter task title" className="font-bold" {...field}></Input>
             </FormControl>
             <FormMessage />
           </FormItem>
