@@ -38,21 +38,10 @@ jobs:
         run: npm run build
         working-directory: ./blotztask-ui
 
-      - name: Prepare Deployment Package
-        run: |
-          mkdir -p deploy/.next/static
-          cp -r build/standalone/* deploy/
-          cp -r build/static/* deploy/.next/static
-          cp -r public deploy/public
-          cp package.json deploy/
-          cd deploy && zip -r ../deploy.zip .
-        working-directory: ./blotztask-ui
-
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.WEBAPP_NAME }}
-          slot-name: "Staging"
           publish-profile: ${{ env.APPLICATION_PUBLISH_PROFILE }}
-          package: ./blotztask-ui/deploy.zip
+          package: ./blotztask-ui/build/standalone
