@@ -32,7 +32,7 @@ jobs:
         
       - name: Copy static assets
         run: |
-          mv ./next/static ./build/standalone/build
+          mv ./build/static ./build/standalone/build
           mv ./public ./build/standalone
         working-directory: blotztask-ui
 
