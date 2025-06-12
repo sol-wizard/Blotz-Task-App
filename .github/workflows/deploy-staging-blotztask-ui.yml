@@ -32,7 +32,8 @@ jobs:
         
       - name: Copy static assets
         run: |
-          cp -r public build/standalone/public
+          mv ./next/static ./build/standalone/build
+          mv ./public ./build/standalone
         working-directory: blotztask-ui
 
       - name: "Deploy to Azure Web App"
