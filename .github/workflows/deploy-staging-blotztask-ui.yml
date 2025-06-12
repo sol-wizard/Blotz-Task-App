@@ -38,11 +38,11 @@ jobs:
         run: npm run build
         working-directory: ./blotztask-ui
 
-      - name: Zip deployment package
+      - name: Prepare Deployment Package
         run: |
           mkdir -p deploy
-          cp -r .next/standalone/* deploy/
-          cp -r .next/static deploy/.next/static
+          cp -r build/standalone/* deploy/
+          cp -r build/static deploy/.next/static
           cp -r public deploy/public
           cp package.json deploy/
           cd deploy && zip -r ../deploy.zip .
