@@ -22,23 +22,24 @@ jobs:
         with:
           node-version: "20.x"
 
-      - name: npm install, build, and test
+      - name: Build and prepare standalone output
         working-directory: ./blotztask-ui
         run: |
           npm install
           npm run build
-          mv ./build/static ./build/standalone/build
-          mv ./public ./build/standalone
-
-      - name: Install dependencies
-        run: npm install
-        working-directory: ./blotztask-ui
-
-      - name: Build Next.js App (standalone)
-        working-directory: ./blotztask-ui
-        run: |
-          npm run build
-          mv ./build/static ./build/standalone/.next
+      
+          # Ensure the final structure exists
+          mkdir -p build/standalone/.next/static
+      
+          # Move static assets (if any)
+          if [ -d build/static ]; then
+            cp -r build/static/* build/standalone/.next/static/
+          fi
+      
+          # Move public folder (if exists)
+          if [ -d public ]; then
+            cp -r public build/standalone/
+          fi
 
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
