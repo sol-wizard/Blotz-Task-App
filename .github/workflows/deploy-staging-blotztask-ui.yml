@@ -30,11 +30,29 @@ jobs:
           mv ./build/static ./build/standalone/build
           mv ./public ./build/standalone
 
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./blotztask-ui
+
+      - name: Build Next.js App (standalone)
+        run: npm run build
+        working-directory: ./blotztask-ui
+
+      - name: Zip deployment package
+        run: |
+          mkdir -p deploy
+          cp -r .next/standalone/* deploy/
+          cp -r .next/static deploy/.next/static
+          cp -r public deploy/public
+          cp package.json deploy/
+          cd deploy && zip -r ../deploy.zip .
+        working-directory: ./blotztask-ui
+
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ env.WEBAPP_NAME }}
-          slot-name: "Production"
+          slot-name: "Staging"
           publish-profile: ${{ env.APPLICATION_PUBLISH_PROFILE }}
-          package: ./build/standalone
+          package: ./blotztask-ui/deploy.zip
