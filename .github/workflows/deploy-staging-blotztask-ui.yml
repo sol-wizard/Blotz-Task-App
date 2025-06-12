@@ -22,24 +22,19 @@ jobs:
         with:
           node-version: "20.x"
 
-      - name: Build and prepare standalone output
-        working-directory: ./blotztask-ui
+      - name: Install dependencies
+        run: npm ci
+        working-directory: blotztask-ui
+        
+      - name: Build Next.js app
+        run: npm run build
+        working-directory: blotztask-ui
+        
+      - name: Copy static assets
         run: |
-          npm install
-          npm run build
-      
-          # Ensure the final structure exists
-          mkdir -p build/standalone/.next/static
-      
-          # Move static assets (if any)
-          if [ -d build/static ]; then
-            cp -r build/static/* build/standalone/.next/static/
-          fi
-      
-          # Move public folder (if exists)
-          if [ -d public ]; then
-            cp -r public build/standalone/
-          fi
+          cp -r .next/static build/standalone/.next/static
+          cp -r public build/standalone/public
+        working-directory: blotztask-ui
 
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
