@@ -32,7 +32,6 @@ jobs:
         
       - name: Copy static assets
         run: |
-          cp -r build/static build/standalone/.next/static
           cp -r public build/standalone/public
         working-directory: blotztask-ui
 
