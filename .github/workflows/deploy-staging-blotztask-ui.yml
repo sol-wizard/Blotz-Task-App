@@ -35,11 +35,11 @@ jobs:
         working-directory: ./blotztask-ui
 
       - name: Build Next.js App (standalone)
+        working-directory: ./blotztask-ui
         run: |
           npm run build
           mv ./build/static ./build/standalone/.next
           mv ./public ./build/standalone
-        working-directory: ./blotztask-ui
 
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
