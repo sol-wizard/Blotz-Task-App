@@ -39,7 +39,6 @@ jobs:
         run: |
           npm run build
           mv ./build/static ./build/standalone/.next
-          [ -d public ] && mv public ./build/standalone
 
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
