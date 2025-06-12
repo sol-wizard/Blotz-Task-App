@@ -105,6 +105,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="relative">
               <SidebarMenuItem className="w-full">
+                <p>Test prod</p>
                 <SearchBar query={query} loadSearchTasks={loadSearchTasks} setQuery={setQuery} />
               </SidebarMenuItem>
 
