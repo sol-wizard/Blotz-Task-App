@@ -3,7 +3,7 @@ name: Staging - Build and deploy Next.js app to Azure Web App
 on:
   push:
     branches:
-      - fix-frontend-staging-deploy  
+      - main 
   workflow_dispatch:
 
 env:
@@ -42,6 +42,10 @@ jobs:
           mv ./public ./build/standalone
         working-directory: blotztask-ui
 
+  deploy:
+    environment: staging
+    runs-on: ubuntu-latest
+    steps:
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
