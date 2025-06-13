@@ -25,6 +25,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: blotztask-ui
+
+      - name: Create .env.local file with environment variables
+        run: |
+          echo "NEXT_PUBLIC_GUEST_EMAIL=${{ secrets.NEXT_PUBLIC_GUEST_EMAIL }}" >> .env.local
+          echo "NEXT_PUBLIC_GUEST_PASSWORD=${{ secrets.NEXT_PUBLIC_GUEST_PASSWORD }}" >> .env.local
+        working-directory: blotztask-ui
         
       - name: Build Next.js app
         run: npm run build
