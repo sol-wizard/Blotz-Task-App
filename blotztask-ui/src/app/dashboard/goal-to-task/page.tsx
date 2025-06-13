@@ -125,6 +125,7 @@ export default function ChatPage() {
             isBotTyping={isBotTyping}
           />
           {/* TODO: Allow file upload*/}
+          {/* TODO: Integrate voice input */}
           <ChatForm
             className="mt-auto"
             isPending={isBotTyping || connectionState !== HubConnectionState.Connected}
@@ -135,8 +136,8 @@ export default function ChatPage() {
                 value={userMessageInput}
                 onChange={(e) => setUserMessageInput(e.target.value)}
                 // allowAttachments
-                files={files}
-                setFiles={setFiles}
+                // files={files}
+                // setFiles={setFiles}
                 stop={stop}
                 isGenerating={isBotTyping}
                 enableInterrupt={false}
