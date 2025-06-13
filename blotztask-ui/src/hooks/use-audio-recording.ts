@@ -16,7 +16,7 @@ export function useAudioRecording({
   const [isRecording, setIsRecording] = useState(false)
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null)
-  const activeRecordingRef = useRef<any>(null)
+  const activeRecordingRef = useRef<Promise<Blob>>(null)
 
   useEffect(() => {
     const checkSpeechSupport = async () => {

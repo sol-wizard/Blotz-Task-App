@@ -135,8 +135,8 @@ export default function ChatPage() {
                 value={userMessageInput}
                 onChange={(e) => setUserMessageInput(e.target.value)}
                 // allowAttachments
-                // files={files}
-                // setFiles={setFiles}
+                files={files}
+                setFiles={setFiles}
                 stop={stop}
                 isGenerating={isBotTyping}
                 enableInterrupt={false}

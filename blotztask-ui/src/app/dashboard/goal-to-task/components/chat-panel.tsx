@@ -2,6 +2,7 @@ import { HubConnectionState } from '@microsoft/signalr';
 import { ConversationMessage } from '../models/chat-message';
 import { ChatMessages } from '@/components/ui/chat';
 import { MessageList } from '@/components/ui/message-list';
+import { Message } from '@/components/ui/chat-message';
 
 type Props = {
   messages: ConversationMessage[];
