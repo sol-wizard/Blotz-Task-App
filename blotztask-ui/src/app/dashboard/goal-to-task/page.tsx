@@ -131,13 +131,13 @@ export default function ChatPage() {
             isPending={isBotTyping || connectionState !== HubConnectionState.Connected}
             handleSubmit={handleSendMessage}
           >
-            {({ files, setFiles }) => (
+            {() => (
               <MessageInput
                 value={userMessageInput}
                 onChange={(e) => setUserMessageInput(e.target.value)}
                 // allowAttachments
-                files={files}
-                setFiles={setFiles}
+                // files={files}
+                // setFiles={setFiles}
                 stop={stop}
                 isGenerating={isBotTyping}
                 enableInterrupt={false}
