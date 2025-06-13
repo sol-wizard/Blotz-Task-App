@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import { useSession } from 'next-auth/react';
 import { signalRService } from '@/services/signalr-service';
+import { useEffect, useState } from 'react';
+import { ExtractedTask } from '@/model/extracted-task-dto';
+import { useSession } from 'next-auth/react';
+import { signalRService } from '@/services/signalr-service';
 import { v4 as uuidv4 } from 'uuid';
 import { HubConnectionState } from '@microsoft/signalr';
 import { ChatPanel } from './components/chat-panel';
@@ -63,6 +67,7 @@ export default function ChatPage() {
 
     return () => {
       connection.stop().then(() => console.log('[SignalR] Connection stopped'));
+      connection.stop().then(() => console.log('[SignalR] Connection stopped'));
     };
   }, []);
 
@@ -81,6 +86,7 @@ export default function ChatPage() {
     }
   };
 
+
   const handleTaskAdded = (index) => {
     setAddedTaskIndices((prev) => new Set(prev).add(index));
   };
@@ -89,6 +95,7 @@ export default function ChatPage() {
     if (connection) {
       // setConnectionError(null);
       setConnectionState(HubConnectionState.Connecting);
+
 
       try {
         await connection.start();
@@ -101,6 +108,7 @@ export default function ChatPage() {
           setIsBotTyping
         );
       } catch (err) {
+        console.error('Reconnect failed', err);
         console.error('Reconnect failed', err);
         // setConnectionError("Failed to reconnect. Please try again.");
         setConnectionState(HubConnectionState.Disconnected);
@@ -160,5 +168,8 @@ export default function ChatPage() {
         <SidePanel tasks={selectedTasks} addedTaskIndices={addedTaskIndices} onTaskAdded={handleTaskAdded} />
       </SidebarProvider>
     </div>
+  );
+}
+
   );
 }

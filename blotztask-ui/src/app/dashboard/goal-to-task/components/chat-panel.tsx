@@ -26,6 +26,8 @@ export const ChatPanel = ({
           {isConversationComplete
             ? 'This conversation is complete. Start a new one to continue.'
             : 'Describe your goal to get started. The assistant will help break it down into tasks.'}
+            ? 'This conversation is complete. Start a new one to continue.'
+            : 'Describe your goal to get started. The assistant will help break it down into tasks.'}
         </div>
       ) : connectionState === HubConnectionState.Connecting ? (
         <div className="h-full flex items-center justify-center text-gray-500 text-sm">
