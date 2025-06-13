@@ -43,6 +43,7 @@ jobs:
         working-directory: blotztask-ui
 
   deploy:
+    needs: build
     environment: staging
     runs-on: ubuntu-latest
     steps:
