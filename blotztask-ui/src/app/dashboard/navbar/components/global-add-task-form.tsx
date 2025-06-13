@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,10 +13,9 @@ import { DialogFooter } from '@/components/ui/dialog';
 type FormField = z.infer<typeof taskFormSchema>;
 
 const GlobalAddTaskForm = ({ handleSubmit }) => {
-  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const form = useForm<FormField>({
     resolver: zodResolver(taskFormSchema),
-    mode: 'onChange',
+    mode: 'onSubmit',
     defaultValues: {
       title: '',
       description: '',
@@ -25,14 +24,6 @@ const GlobalAddTaskForm = ({ handleSubmit }) => {
       time: undefined,
     },
   });
-
-  const handleSave = async () => {
-    setAttemptedSubmit(true);
-    const valid = await form.trigger();
-    if (valid) {
-      form.handleSubmit(handleSubmit)();
-    }
-  };
 
   return (
     <Form {...form}>
@@ -55,11 +46,12 @@ const GlobalAddTaskForm = ({ handleSubmit }) => {
             </DialogClose>
             <DialogFooter>
               <button
-                type="button"
-                onClick={handleSave}
-                className={`rounded-lg px-3 py-1 text-xs w-20 transition-colors ${
-                  attemptedSubmit && !form.formState.isValid
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                className={`rounded-lg px-3 py-1 text-xs w-20 transition-colors
+                ${
+                  form.formState.isSubmitting
+                    ? 'bg-gray-300 text-gray-500 cursor-wait'
                     : 'bg-primary text-white hover:bg-blue-600'
                 }`}
               >
