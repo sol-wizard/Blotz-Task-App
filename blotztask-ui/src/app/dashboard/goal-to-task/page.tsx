@@ -131,20 +131,23 @@ export default function ChatPage() {
             isPending={isBotTyping || connectionState !== HubConnectionState.Connected}
             handleSubmit={handleSendMessage}
           >
-            {() => (
-              <MessageInput
-                value={userMessageInput}
-                onChange={(e) => setUserMessageInput(e.target.value)}
-                // allowAttachments
-                // files={files}
-                // setFiles={setFiles}
-                stop={stop}
-                isGenerating={isBotTyping}
-                enableInterrupt={false}
-                disabled={isConversationComplete || connectionState !== HubConnectionState.Connected}
-                placeholder={isConversationComplete ? 'Conversation completed' : 'Type your message...'}
-              />
-            )}
+            {
+              // ((files, setFiles))
+              () => (
+                <MessageInput
+                  value={userMessageInput}
+                  onChange={(e) => setUserMessageInput(e.target.value)}
+                  // allowAttachments
+                  // files={files}
+                  // setFiles={setFiles}
+                  stop={stop}
+                  isGenerating={isBotTyping}
+                  enableInterrupt={false}
+                  disabled={isConversationComplete || connectionState !== HubConnectionState.Connected}
+                  placeholder={isConversationComplete ? 'Conversation completed' : 'Type your message...'}
+                />
+              )
+            }
           </ChatForm>
         </ChatContainer>
 
