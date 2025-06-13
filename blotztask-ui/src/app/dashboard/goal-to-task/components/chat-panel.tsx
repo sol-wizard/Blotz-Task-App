@@ -1,23 +1,15 @@
 import { HubConnectionState } from '@microsoft/signalr';
-import { ConversationMessage } from '../models/chat-message';
 import { ChatMessages } from '@/components/ui/chat';
 import { MessageList } from '@/components/ui/message-list';
-import { Message } from '@/components/ui/chat-message';
+import { MessageWithTasks } from '@/components/ui/chat-message';
+import { ExtractedTask } from '@/model/extracted-task-dto';
 
 type Props = {
-  messages: ConversationMessage[];
+  messages: MessageWithTasks[];
   connectionState: HubConnectionState;
   isConversationComplete: boolean;
   isBotTyping: boolean;
-};
-
-//TODO: Should we use Message instead of ConversationMessage type? Need to change be as wel
-const transformToMessages = (conversationMessages: ConversationMessage[]): Message[] => {
-  return conversationMessages.map((msg, index) => ({
-    id: `${msg.conversationId}-${index}`, // or use a proper unique ID if available
-    role: msg.isBot ? 'assistant' : 'user',
-    content: msg.content,
-  }));
+  onTaskAdded: (task: ExtractedTask) => void;
 };
 
 export const ChatPanel = ({
@@ -25,6 +17,7 @@ export const ChatPanel = ({
   connectionState,
   isConversationComplete,
   isBotTyping,
+  onTaskAdded,
 }: Props) => {
   return (
     <div className="flex-1 overflow-auto p-4">
@@ -40,7 +33,7 @@ export const ChatPanel = ({
         </div>
       ) : (
         <ChatMessages messages={[]}>
-          <MessageList messages={transformToMessages(messages)} isTyping={isBotTyping} />
+          <MessageList messages={messages} isTyping={isBotTyping} onTaskAdd={onTaskAdded} />
         </ChatMessages>
       )}
     </div>

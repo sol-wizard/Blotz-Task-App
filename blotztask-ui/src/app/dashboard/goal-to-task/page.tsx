@@ -9,11 +9,11 @@ import { HubConnectionState } from '@microsoft/signalr';
 import { ChatPanel } from './components/chat-panel';
 import { setupChatHandlers } from './utils/setup-chat-handler';
 import { ChatPanelHeader } from './components/chat-panel-header';
-import { ConversationMessage } from './models/chat-message';
 import { SidePanel } from './components/chat-sidepanel';
 import { SidebarProvider } from './components/ui/sidepanel';
 import { ChatContainer, ChatForm } from '@/components/ui/chat';
 import { MessageInput } from '@/components/ui/message-input';
+import { MessageWithTasks } from '@/components/ui/chat-message';
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -29,13 +29,14 @@ export default function ChatPage() {
 
   //TODO: we can give user a better user message based on why it failed maybe a dialog(e.g. "Run out of token or something else")
   // const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [messages, setMessages] = useState<MessageWithTasks[]>([]);
   //TODO: If we use react hook form here, we dont need to use this state here anymore
   const [userMessageInput, setUserMessageInput] = useState<string>('');
   const [isBotTyping, setIsBotTyping] = useState<boolean>(false);
 
-  const [tasks, setTasks] = useState<ExtractedTask[]>([]);
+  const [, setTasks] = useState<ExtractedTask[]>([]);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
+  const [selectedTasks, setSelectedTasks] = useState<ExtractedTask[]>([]);
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
 
@@ -106,6 +107,10 @@ export default function ChatPage() {
     }
   };
 
+  const addTaskToPanel = (task: ExtractedTask) => {
+    setSelectedTasks((prev) => [...prev, task]);
+  };
+
   return (
     <div className="mx-auto h-[75vh] p-4 flex ">
       <SidebarProvider>
@@ -123,31 +128,35 @@ export default function ChatPage() {
             connectionState={connectionState}
             isConversationComplete={isConversationComplete}
             isBotTyping={isBotTyping}
+            onTaskAdded={addTaskToPanel}
           />
           {/* TODO: Allow file upload*/}
+          {/* TODO: Integrate audio input */}
           <ChatForm
             className="mt-auto"
             isPending={isBotTyping || connectionState !== HubConnectionState.Connected}
             handleSubmit={handleSendMessage}
           >
-            {({ files, setFiles }) => (
-              <MessageInput
-                value={userMessageInput}
-                onChange={(e) => setUserMessageInput(e.target.value)}
-                // allowAttachments
-                files={files}
-                setFiles={setFiles}
-                stop={stop}
-                isGenerating={isBotTyping}
-                enableInterrupt={false}
-                disabled={isConversationComplete || connectionState !== HubConnectionState.Connected}
-                placeholder={isConversationComplete ? 'Conversation completed' : 'Type your message...'}
-              />
-            )}
+            {
+              // ({ files, setFiles })
+              () => (
+                <MessageInput
+                  value={userMessageInput}
+                  onChange={(e) => setUserMessageInput(e.target.value)}
+                  // allowAttachments
+                  // files={files}
+                  // setFiles={setFiles}
+                  stop={stop}
+                  isGenerating={isBotTyping}
+                  enableInterrupt={false}
+                  disabled={isConversationComplete || connectionState !== HubConnectionState.Connected}
+                  placeholder={isConversationComplete ? 'Conversation completed' : 'Type your message...'}
+                />
+              )
+            }
           </ChatForm>
         </ChatContainer>
-
-        <SidePanel tasks={tasks} addedTaskIndices={addedTaskIndices} onTaskAdded={handleTaskAdded} />
+        <SidePanel tasks={selectedTasks} addedTaskIndices={addedTaskIndices} onTaskAdded={handleTaskAdded} />
       </SidebarProvider>
     </div>
   );

@@ -13,13 +13,14 @@ import {
 } from "@/components/ui/collapsible"
 import { FilePreview } from "@/components/ui/file-preview"
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
+import { ExtractedTask } from "@/model/extracted-task-dto"
 
 const chatBubbleVariants = cva(
   "group/message relative break-words rounded-lg p-3 text-sm sm:max-w-[70%]",
   {
     variants: {
       isUser: {
-        true: "bg-primary text-primary-foreground",
+        true: "bg-userMessageBox text-primary-foreground",
         false: "bg-muted text-foreground",
       },
       animation: {
@@ -119,6 +120,10 @@ export interface ChatMessageProps extends Message {
   showTimeStamp?: boolean
   animation?: Animation
   actions?: React.ReactNode
+}
+
+export interface MessageWithTasks extends Message {
+  tasks?: ExtractedTask[];
 }
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({
