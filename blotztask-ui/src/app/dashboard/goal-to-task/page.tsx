@@ -4,10 +4,6 @@ import { useEffect, useState } from 'react';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import { useSession } from 'next-auth/react';
 import { signalRService } from '@/services/signalr-service';
-import { useEffect, useState } from 'react';
-import { ExtractedTask } from '@/model/extracted-task-dto';
-import { useSession } from 'next-auth/react';
-import { signalRService } from '@/services/signalr-service';
 import { v4 as uuidv4 } from 'uuid';
 import { HubConnectionState } from '@microsoft/signalr';
 import { ChatPanel } from './components/chat-panel';
@@ -168,8 +164,5 @@ export default function ChatPage() {
         <SidePanel tasks={selectedTasks} addedTaskIndices={addedTaskIndices} onTaskAdded={handleTaskAdded} />
       </SidebarProvider>
     </div>
-  );
-}
-
   );
 }
