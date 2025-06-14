@@ -19,8 +19,10 @@ const AddTaskCardContainer = ({ onAddTask }) => {
   const timePickerRef = useRef<HTMLDivElement>(null);
 
   const [useAiAssistant, setUseAiAssistant] = useState(true);
+  //TODO: If we use react hook form we probably dont need to sotre this state 
   const [prompt, setPrompt] = useState('');
   const [loadingAiTasks, setLoadingAiTasks] = useState(false);
+  
   const [wrappedExtractedTasks, setWrappedExtractedTasks] = useState<ExtractedTasksWrapperDTO | null>(null);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
 
