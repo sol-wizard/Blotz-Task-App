@@ -1,0 +1,71 @@
+name: Staging - Build and deploy Next.js app to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  APPLICATION_PUBLISH_PROFILE: ${{ secrets.APP_PUBLISH_PROFILE }}
+  WEBAPP_NAME: "blotztask-ui"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js version
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: blotztask-ui
+      
+      # TODO: Temporary manual push variable to .env.local file. Fix this after figure out how to set env in app services that can use in next js app
+      - name: Create .env.local file with environment variables
+        run: |
+          cp .env.staging .env.local
+          echo "NEXT_PUBLIC_GUEST_EMAIL=${{ secrets.NEXT_PUBLIC_GUEST_EMAIL }}" >> .env.local
+          echo "NEXT_PUBLIC_GUEST_PASSWORD=${{ secrets.NEXT_PUBLIC_GUEST_PASSWORD }}" >> .env.local
+        working-directory: blotztask-ui
+        
+      - name: Build Next.js app
+        run: npm run build
+        working-directory: blotztask-ui
+        
+      - name: Copy static assets
+        run: |
+          mv ./build/static ./build/standalone/build
+          mv ./public ./build/standalone
+        working-directory: blotztask-ui
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-standalone
+          path: blotztask-ui/build/standalone
+
+  deploy:
+    needs: build
+    environment: staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build output
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-standalone
+          path: blotztask-ui/build/standalone
+
+      - name: "Deploy to Azure Web App"
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: wapp-blotztask-ui-staging
+          publish-profile: ${{ env.APPLICATION_PUBLISH_PROFILE }}
+          package: ./blotztask-ui/build/standalone
