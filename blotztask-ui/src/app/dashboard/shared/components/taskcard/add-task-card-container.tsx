@@ -17,7 +17,7 @@ const AddTaskCardContainer = ({ onAddTask }) => {
   const labelPickerRef = useRef<HTMLDivElement>(null);
   const timePickerRef = useRef<HTMLDivElement>(null);
 
-  const [useAIAssistant, setUseAIAssistant] = useState(false);
+  const [useAIAssistant, setUseAIAssistant] = useState(true);
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [wrappedExtractedTasks, setWrappedExtractedTasks] = useState<ExtractedTasksWrapperDTO | null>(null);
