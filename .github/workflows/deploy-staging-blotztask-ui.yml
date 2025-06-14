@@ -3,7 +3,7 @@ name: Staging - Build and deploy Next.js app to Azure Web App
 on:
   push:
     branches:
-      - fix-frontend-staging-deploy 
+      - main
   workflow_dispatch:
 
 env:
