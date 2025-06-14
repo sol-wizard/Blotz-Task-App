@@ -1,4 +1,4 @@
-import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { FormControl, FormField, FormItem } from '@/components/ui/form';
 import { CalendarForm } from './calendar-form';
 import { LabelSelect } from './label-select';
 import { Input } from '@/components/ui/task-card-input';
@@ -21,12 +21,17 @@ const AddTaskForm = ({
       <FormField
         control={form.control}
         name="title"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <FormItem>
             <FormControl>
-              <Input placeholder="Enter task title" className="font-bold" {...field}></Input>
+              <Input
+                placeholder="Enter task title"
+                className={`font-bold text-base ${
+                  fieldState.invalid ? 'border border-red-500 text-red-500 placeholder-red-400 bg-red-50' : ''
+                }`}
+                {...field}
+              ></Input>
             </FormControl>
-            <FormMessage />
           </FormItem>
         )}
       />
@@ -38,7 +43,6 @@ const AddTaskForm = ({
             <FormControl>
               <Textarea placeholder="Fill in the detailed information" className="w-full" {...field} />
             </FormControl>
-            <FormMessage />
           </FormItem>
         )}
       />

@@ -11,7 +11,7 @@ import {
 import { Tag } from 'lucide-react';
 import { LabelDTO } from '@/model/label-dto';
 import { Control } from 'react-hook-form';
-import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { FormControl, FormField, FormItem } from '@/components/ui/form';
 
 import { useEffect, useState } from 'react';
 import { fetchAllLabel } from '@/services/label-service';
@@ -44,7 +44,7 @@ export function LabelSelect({
     <FormField
       control={control}
       name="labelId"
-      render={({ field }) => (
+      render={({ field, fieldState }) => (
         <FormItem>
           <Select
             value={field.value?.toString()}
@@ -60,7 +60,9 @@ export function LabelSelect({
           >
             <FormControl>
               <SelectLabelTrigger
-                className={`flex flex-row w-30 items-center rounded-full px-3 py-1 text-xs`}
+                className={`flex flex-row w-30 items-center rounded-full px-3 py-1 text-xs ${
+                  fieldState.invalid ? 'border border-red-500 text-red-500 bg-red-50' : ''
+                }`}
               >
                 <Tag className="mr-1" size={16} />
 
@@ -89,8 +91,6 @@ export function LabelSelect({
               </SelectGroup>
             </SelectContent>
           </Select>
-
-          <FormMessage />
         </FormItem>
       )}
     />
