@@ -1,6 +1,6 @@
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/task-card-input';
-import DateTag from '../ui/due-date-tag';
+import DateAndTimeTag from '../ui/duedate-and-time-tag';
 import { cn } from '@/lib/utils';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { TaskCardStatus } from './task-card';
@@ -31,14 +31,14 @@ export const TaskCardTitleBlock = ({
   const statusClass = statusVariants[taskStatus] || statusVariants.todo;
 
   return (
-    <div className="flex justify-between">
+    <div className="flex w-full justify-between">
       {isEditing ? (
         <FormField
           control={control}
           name="title"
           render={({ field }) => (
-            <FormItem>
-              <FormControl>
+            <FormItem className='w-full'>
+              <FormControl className='w-full'>
                 <Input className="font-bold" {...field} />
               </FormControl>
               <FormMessage>{errors.title?.message}</FormMessage>
@@ -48,7 +48,7 @@ export const TaskCardTitleBlock = ({
       ) : (
         <p className={cn('font-bold', statusClass)}>{task.title}</p>
       )}
-      {!isEditing && <DateTag task={task} taskStatus={taskStatus} />}
+      {!isEditing && <DateAndTimeTag task={task} taskStatus={taskStatus} />}
     </div>
   );
 };

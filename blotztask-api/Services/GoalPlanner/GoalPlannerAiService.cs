@@ -11,6 +11,7 @@ public interface IGoalPlannerAiService
     Task<List<ExtractedTaskDTO>> GenerateAiResponse(ChatHistory chatHistory);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
     Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory, int currentRound);
+    Task<List<ExtractedTaskDTO>> ReviseGeneratedTasksAsync(List<ExtractedTaskDTO> rawTasks, ChatHistory chatHistory);
     Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory, int currentRound);
 }
 
@@ -163,6 +164,35 @@ Current question count: {2}/{1}
         var response = result?.Content?.Trim();
 
         return response ?? "Can you clarify your goal a bit more?";
+    }
+    
+    public async Task<List<ExtractedTaskDTO>> ReviseGeneratedTasksAsync(List<ExtractedTaskDTO> rawTasks, ChatHistory chatHistory)
+    {
+
+        string taskListText = string.Join("\n", rawTasks.Select(t => $"- {t.Description}"));
+
+        chatHistory.AddSystemMessage($"""
+                                      You previously generated the following tasks based on the user's goal:
+                                      {taskListText}
+
+                                      Please review and revise this task list if:
+                                      - The tasks are too generic or vague
+                                      - Important steps are missing
+                                      - Tasks are not actionable or clear
+
+                                      If everything is fine, simply re-list them.
+                                      Return the improved tasks in the required JSON format.
+                                      """);
+
+        var revisionResult = await _chatCompletionService.GetChatMessageContentAsync(chatHistory);
+
+        if (!string.IsNullOrEmpty(revisionResult?.Content) && _taskParser.TryParseTasks(revisionResult.Content, out var revisedTasks))
+        {
+            return revisedTasks;
+        }
+
+        // fallback to original if parse fails
+        return rawTasks;
     }
 
     private async Task<List<string>> GetLabelNamesAsync()

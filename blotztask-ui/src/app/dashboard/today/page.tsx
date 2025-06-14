@@ -18,6 +18,7 @@ import DisplayNoTask from './components/ui/display-no-task';
 import SectionHeading from './components/ui/divider';
 import { TodoTaskViewer } from './components/viewer/todo-task-viewer';
 import { OverdueTaskViewer } from '../shared/components/taskcard/overdue-task-viewer';
+import { useScheduleTaskActions } from '@/app/store/schedule-task-store';
 
 export default function Today() {
   const todayTasks = useTodayTasks();
@@ -36,10 +37,17 @@ export default function Today() {
     handleCheckboxChange,
   } = useTodayTaskActions();
 
+  const { loadScheduleTasks } = useScheduleTaskActions();
+
   useEffect(() => {
     loadTodayTasks();
     loadOverdueTasks();
-  }, [loadTodayTasks, loadOverdueTasks]);
+  }, []);
+
+  //TODO: Refactor the today task and overdue task in to a single global state and remove this useEffect
+  useEffect(() => {
+    loadScheduleTasks();
+  }, [todayTasksIsLoading]);
 
   return (
     <div className="ml-5 flex flex-col gap-12 h-full">
@@ -57,7 +65,7 @@ export default function Today() {
             <AddTaskCardContainer onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
 
             <div className="flex items-start h-full">
-              {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 ? (
+              {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 || overdueTasks.length > 0 ? (
                 <div className="flex flex-col gap-4 w-full">
                   {overdueTasks.length > 0 && (
                     <>

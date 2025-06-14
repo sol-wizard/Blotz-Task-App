@@ -27,6 +27,11 @@ public class GoalPlannerChatService : IGoalPlannerChatService
     {
         var conversationId = userMessage.ConversationId;
 
+        if (UserExplicitlyEndedConversation(userMessage.Content))
+        {
+            return EndConversation(conversationId); 
+        }
+
         if (!_conversationStateService.TryGetChatHistory(conversationId, out var chatHistory))
         {
             chatHistory = await _goalPlannerAiService.InitializeNewConversation(conversationId);
@@ -57,16 +62,17 @@ public class GoalPlannerChatService : IGoalPlannerChatService
             var aiResponseTasks = await _goalPlannerAiService.GenerateAiResponse(chatHistory);
             if (aiResponseTasks != null && aiResponseTasks.Count > 0)
             {
-                tasks = aiResponseTasks;
-                botContent = $"Here are your tasks: {string.Join(", ", aiResponseTasks.Select(t => t.Description))}";
+                var revisedTasks = await _goalPlannerAiService.ReviseGeneratedTasksAsync(aiResponseTasks, chatHistory);
+
+                tasks = revisedTasks;
+                botContent = "If you're happy with these tasks, you can type **end this** to end the conversation.";
             }
             else
             {
-                botContent =  "No tasks could be generated.";
+                botContent = "No tasks could be generated.";
             }
-            
+
             state.ClarificationRound = 0;
-            _conversationStateService.SetConversationComplete(conversationId, true);
         }
 
         _conversationStateService.SetClarificationState(conversationId, state);
@@ -81,8 +87,34 @@ public class GoalPlannerChatService : IGoalPlannerChatService
                 Timestamp = DateTime.UtcNow,
                 IsBot = true,
             },
-            IsConversationComplete = _conversationStateService.IsConversationComplete(conversationId),
+            IsConversationComplete = false,
             Tasks = tasks,
         };
     }
+
+    private GoalPlanningChatResult EndConversation(string conversationId)
+    {
+        _conversationStateService.RemoveConversation(conversationId);
+
+        return new GoalPlanningChatResult
+        {
+            BotMessage = new ConversationMessage
+            {
+                Sender = "ChatBot",
+                Content = "Okay, your plan is complete. You can start a new one anytime.",
+                ConversationId = conversationId,
+                Timestamp = DateTime.UtcNow,
+                IsBot = true,
+            },
+            IsConversationComplete = true,
+            Tasks = null,
+        };
+    }
+    
+    private bool UserExplicitlyEndedConversation(string message)
+    {
+        var lower = message.ToLowerInvariant();
+        return lower.Contains("end this") || lower.Contains("that's all");
+    }
+
 }
