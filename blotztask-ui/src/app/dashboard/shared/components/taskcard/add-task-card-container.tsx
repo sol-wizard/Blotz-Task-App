@@ -9,6 +9,7 @@ import { H5 } from '@/components/ui/heading-with-anchor';
 import PromptInputSection from '@/app/dashboard/ai-assistant/component/prompt-input-container';
 import { generateAiTask } from '@/services/ai-service';
 import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
+import AiGeneratedTasksList from '@/app/dashboard/ai-assistant/component/ai-generated-tasks-list';
 
 const AddTaskCardContainer = ({ onAddTask }) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -17,9 +18,9 @@ const AddTaskCardContainer = ({ onAddTask }) => {
   const labelPickerRef = useRef<HTMLDivElement>(null);
   const timePickerRef = useRef<HTMLDivElement>(null);
 
-  const [useAIAssistant, setUseAIAssistant] = useState(true);
+  const [useAiAssistant, setUseAiAssistant] = useState(true);
   const [prompt, setPrompt] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loadingAiTasks, setLoadingAiTasks] = useState(false);
   const [wrappedExtractedTasks, setWrappedExtractedTasks] = useState<ExtractedTasksWrapperDTO | null>(null);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
 
@@ -28,7 +29,7 @@ const AddTaskCardContainer = ({ onAddTask }) => {
 
     setWrappedExtractedTasks(null);
     setAddedTaskIndices(new Set());
-    setLoading(true);
+    setLoadingAiTasks(true);
 
     try {
       const task = await generateAiTask(prompt);
@@ -36,7 +37,7 @@ const AddTaskCardContainer = ({ onAddTask }) => {
     } catch (error) {
       console.error('Failed to generate task:', error);
     } finally {
-      setLoading(false);
+      setLoadingAiTasks(false);
     }
   };
 
@@ -63,29 +64,28 @@ const AddTaskCardContainer = ({ onAddTask }) => {
             <div className="flex items-center space-x-2">
               <Switch 
                 id="ai-assistant"                   
-                checked={useAIAssistant}
+                checked={useAiAssistant}
                 onCheckedChange={(checked) => {
-                  setUseAIAssistant(checked);
-                  if (!checked) {
-                    setWrappedExtractedTasks(null);
-                    setAddedTaskIndices(new Set());
-                  }
+                  setUseAiAssistant(checked);
                 }}
               />
               <Label htmlFor="ai-assistant">🤖 Ai Assistant</Label>
             </div>
             </CardHeader>
             <CardContent>
-              {useAIAssistant ? (
+              {useAiAssistant ? (
                   <div className='p-2 flex flex-col gap-4'>
                     <PromptInputSection
-                        prompt={prompt}
-                        setPrompt={setPrompt}
-                        loading={loading}
-                        onGenerate={handlePromptGenerate}
-                        wrappedExtractedTasks={wrappedExtractedTasks}
-                        addedTaskIndices={addedTaskIndices}
-                        handleTaskAdded={handleTaskAdded}
+                      prompt={prompt}
+                      setPrompt={setPrompt}
+                      loading={loadingAiTasks}
+                      onGenerate={handlePromptGenerate}
+                    />
+                    <AiGeneratedTasksList 
+                      loading={loadingAiTasks}
+                      wrappedExtractedTasks={wrappedExtractedTasks}
+                      addedTaskIndices={addedTaskIndices}
+                      handleTaskAdded={handleTaskAdded}
                     />
                   </div>
                 ) : (
