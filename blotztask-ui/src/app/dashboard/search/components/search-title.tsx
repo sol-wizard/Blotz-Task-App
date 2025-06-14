@@ -7,13 +7,20 @@ const SearchTitle = () => {
 
   return (
     <>
-      {query.length > 1 ? (
-        <p className="text-2xl font-bold">Searching for &quot;{query}&quot;</p>
+      {query.length > 0 ? (
+        <h2 className="mt-3 text-2xl font-semibold text-gray-600 mb-8 pl-5">
+          Searching for “{query}”
+        </h2>
       ) : (
-        <p className="text-xl font-bold">Searching for ...</p>
+        <h2 className="text-2xl font-semibold text-gray-400 mb-4">
+          Searching for ...
+        </h2>
       )}
     </>
   );
 };
 
 export default SearchTitle;
+
+// test
+

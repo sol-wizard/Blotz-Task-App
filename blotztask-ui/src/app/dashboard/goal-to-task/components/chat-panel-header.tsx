@@ -1,9 +1,7 @@
 // ./components/chat-panel-header.tsx
-import { Button } from "@/components/ui/button";
 import { HubConnectionState } from "@microsoft/signalr/dist/esm/HubConnection";
 
 type Props = {
-  onToggleTasks: () => void;
   onReconnect: () => void;
   isReconnecting: boolean;
   connectionState: HubConnectionState;
@@ -11,7 +9,6 @@ type Props = {
 
 
 export const ChatPanelHeader = ({ 
-  onToggleTasks,
   onReconnect,
   isReconnecting,
   connectionState
@@ -49,10 +46,6 @@ export const ChatPanelHeader = ({
             </button>
           </div>
         )}
-
-        <Button variant="outline" onClick={onToggleTasks}>
-          show & hide
-        </Button>
       </div>
     </div>
   );

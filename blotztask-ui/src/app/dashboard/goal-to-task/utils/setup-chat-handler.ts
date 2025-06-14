@@ -1,7 +1,7 @@
-import { HubConnection, HubConnectionState } from "@microsoft/signalr";
-import { Dispatch, SetStateAction } from "react";
-import { ExtractedTask } from "@/model/extracted-task-dto";
-import { ConversationMessage } from "../models/chat-message";
+import { HubConnection, HubConnectionState } from '@microsoft/signalr';
+import { Dispatch, SetStateAction } from 'react';
+import { ExtractedTask } from '@/model/extracted-task-dto';
+import { ConversationMessage } from '../models/chat-message';
 
 export function setupChatHandlers(
   connection: HubConnection,
@@ -9,14 +9,13 @@ export function setupChatHandlers(
   setTasks: Dispatch<SetStateAction<ExtractedTask[]>>,
   setIsConversationComplete: Dispatch<SetStateAction<boolean>>,
   setConnectionState: Dispatch<SetStateAction<HubConnectionState>>,
-  setShowTasks: Dispatch<SetStateAction<boolean>>,
   setIsBotTyping: Dispatch<SetStateAction<boolean>>
 ) {
-  console.log("[SignalR] Connection started");
+  console.log('[SignalR] Connection started');
   setConnectionState(HubConnectionState.Connected);
 
-  connection.on("ReceiveMessage", (msg: ConversationMessage) => {
-    console.log("[SignalR] Received message:", msg);
+  connection.on('ReceiveMessage', (msg: ConversationMessage) => {
+    console.log('[SignalR] Received message:', msg);
 
     const newMsg: ConversationMessage = {
       conversationId: msg.conversationId,
@@ -28,21 +27,19 @@ export function setupChatHandlers(
     setMessages((prev) => [...prev, newMsg]);
   });
 
-  connection.on("ReceiveTasks", (receivedTasks: ExtractedTask[]) => {
-    console.log("[SignalR] Received tasks:", receivedTasks);
+  connection.on('ReceiveTasks', (receivedTasks: ExtractedTask[]) => {
+    console.log('[SignalR] Received tasks:', receivedTasks);
     if (receivedTasks?.length > 0) {
       setTasks(receivedTasks);
-      setIsConversationComplete(true);
-      setShowTasks(true);
     }
   });
 
-  connection.on("ConversationCompleted", (convoId: string) => {
-    console.log("[SignalR] Conversation completed for:", convoId);
+  connection.on('ConversationCompleted', (convoId: string) => {
+    console.log('[SignalR] Conversation completed for:', convoId);
     setIsConversationComplete(true);
   });
 
-  connection.on("BotTyping", (isTyping: boolean) => {
+  connection.on('BotTyping', (isTyping: boolean) => {
     setIsBotTyping(isTyping);
   });
 }
