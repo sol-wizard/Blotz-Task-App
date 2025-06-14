@@ -18,7 +18,7 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
 }) => {
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       <Label htmlFor="prompt">Prompt to generate Task</Label>
       <div className="flex gap-2 items-center">
         <Input
@@ -26,7 +26,7 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
           placeholder="e.g. Remind me to submit the report by Friday"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          className="flex-1"
+          className="flex-1 py-0 h-10 "
         />
         <VoiceRecognizer
           onResult={(spokenText) => {
@@ -36,7 +36,7 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
         <Button 
           onClick={onGenerate} 
           disabled={loading || !prompt.trim()} 
-          className="w-fit mt-2 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
+          className="w-fit px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
         >
           {loading ? "Generating…" : "Generate Task"}
         </Button>
