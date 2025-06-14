@@ -61,7 +61,7 @@ const AddTaskCardContainer = ({ onAddTask }) => {
           <Card className='w-full px-6 pb-4 pt-1'>
           <CardHeader className='flex-row justify-between p-4'>
             <H5>Add New Task</H5>
-            <div className="flex items-center space-x-2">
+            <div className="flex h-full items-center space-x-2">
               <Switch 
                 id="ai-assistant"                   
                 checked={useAiAssistant}
