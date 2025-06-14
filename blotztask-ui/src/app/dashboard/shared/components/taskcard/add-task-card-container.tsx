@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { H5 } from '@/components/ui/heading-with-anchor';
 import PromptInputSection from '@/app/dashboard/ai-assistant/component/prompt-input-container';
+import { generateAiTask } from '@/services/ai-service';
+import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
+import AiGeneratedTasksList from '@/app/dashboard/ai-assistant/component/ai-generated-tasks-list';
 
 const AddTaskCardContainer = ({ onAddTask }) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -15,18 +18,31 @@ const AddTaskCardContainer = ({ onAddTask }) => {
   const labelPickerRef = useRef<HTMLDivElement>(null);
   const timePickerRef = useRef<HTMLDivElement>(null);
 
-  const [useAIAssistant, setUseAIAssistant] = useState(true);
-
+  const [useAiAssistant, setUseAiAssistant] = useState(true);
   const [prompt, setPrompt] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loadingAiTasks, setLoadingAiTasks] = useState(false);
+  const [wrappedExtractedTasks, setWrappedExtractedTasks] = useState<ExtractedTasksWrapperDTO | null>(null);
+  const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
 
-  //TODO: replace the inner logic with real implementation
-  const handlePromptGenerate = () => {
-    setLoading(true)
-    setTimeout(()=>{
-      console.log("generating task")
-    }, 1000)
-    setLoading(false)
+  const handlePromptGenerate = async () => {
+    if (!prompt.trim()) return;
+
+    setWrappedExtractedTasks(null);
+    setAddedTaskIndices(new Set());
+    setLoadingAiTasks(true);
+
+    try {
+      const task = await generateAiTask(prompt);
+      setWrappedExtractedTasks(task);
+    } catch (error) {
+      console.error('Failed to generate task:', error);
+    } finally {
+      setLoadingAiTasks(false);
+    }
+  };
+
+  const handleTaskAdded = (index) => {
+    setAddedTaskIndices((prev) => new Set(prev).add(index));
   };
 
   useClickOutside([cardRef, datePickerRef, labelPickerRef, timePickerRef], () => {
@@ -45,24 +61,31 @@ const AddTaskCardContainer = ({ onAddTask }) => {
           <Card className='w-full px-6 pb-4 pt-1'>
           <CardHeader className='flex-row justify-between p-4'>
             <H5>Add New Task</H5>
-            <div className="flex items-center space-x-2">
+            <div className="flex h-full items-center space-x-2">
               <Switch 
                 id="ai-assistant"                   
-                checked={useAIAssistant}
-                onCheckedChange={setUseAIAssistant}
+                checked={useAiAssistant}
+                onCheckedChange={(checked) => {
+                  setUseAiAssistant(checked);
+                }}
               />
               <Label htmlFor="ai-assistant">🤖 Ai Assistant</Label>
             </div>
             </CardHeader>
             <CardContent>
-              {useAIAssistant ? (
-                  <div className='p-2'>
+              {useAiAssistant ? (
+                  <div className='p-2 flex flex-col gap-4'>
                     <PromptInputSection
                       prompt={prompt}
                       setPrompt={setPrompt}
-                      loading={loading}
+                      loading={loadingAiTasks}
                       onGenerate={handlePromptGenerate}
-                      onSubmit={(taskDetails) => onAddTask(taskDetails)}
+                    />
+                    <AiGeneratedTasksList 
+                      loading={loadingAiTasks}
+                      wrappedExtractedTasks={wrappedExtractedTasks}
+                      addedTaskIndices={addedTaskIndices}
+                      handleTaskAdded={handleTaskAdded}
                     />
                   </div>
                 ) : (
