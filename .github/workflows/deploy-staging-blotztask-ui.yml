@@ -9,6 +9,7 @@ on:
 env:
   APPLICATION_PUBLISH_PROFILE: ${{ secrets.APP_PUBLISH_PROFILE }}
   WEBAPP_NAME: "blotztask-ui"
+  BUILD_DIR: build # This is used to set the build directory for the next js app due to vercel is expecting .next and web app is expecting build
 
 jobs:
   build:
