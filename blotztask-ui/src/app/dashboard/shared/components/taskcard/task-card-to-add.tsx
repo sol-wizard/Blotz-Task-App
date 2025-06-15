@@ -15,6 +15,7 @@ interface TaskCardToAddProps {
   disabled?: boolean;
 }
 
+// This task card is used by AI page
 export default function TaskCardToAdd({
   taskToAdd,
   index,
