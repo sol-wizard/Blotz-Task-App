@@ -10,8 +10,7 @@ import { RawEditTaskDTO } from "@/model/raw-edit-task-dto";
 interface AiGeneratedTasksListProps {
   loading: boolean;
   aiAssistantResponse: AIAssistantResponse;
-  addedTaskIndices: Set<number>;
-  handleTaskAdded: (value: number) => void;
+  onAddTask: (task: TaskDetailDTO) => void;
 }
 
 const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({

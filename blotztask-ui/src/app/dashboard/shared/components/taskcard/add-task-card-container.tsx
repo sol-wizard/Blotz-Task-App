@@ -46,7 +46,7 @@ const AddTaskCardContainer = ({ onAddTask }) => {
             </CardHeader>
             <CardContent>
               {useAiAssistant ? (
-                  <AiAssistant />
+                  <AiAssistant onAddTask={onAddTask}/>
                 ) : (
                   <AddTaskCard
                     onSubmit={(taskDetails) => {
