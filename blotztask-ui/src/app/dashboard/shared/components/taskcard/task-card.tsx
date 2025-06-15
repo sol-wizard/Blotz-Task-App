@@ -23,7 +23,7 @@ type TaskCardProps = {
   status?: TaskCardStatus; // optional, default to 'todo'
   onSubmit: (taskContent: RawEditTaskDTO) => void;
   onDelete: (taskId: number) => void;
-  handleTaskDeleteUndo: (taskId: number) => void;
+  handleTaskDeleteUndo?: (taskId: number) => void; //This is nullable because AI task card dont have to undo the delete
 };
 
 const defaultTaskFormValues = {

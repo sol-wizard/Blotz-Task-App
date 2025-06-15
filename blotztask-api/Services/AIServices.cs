@@ -27,7 +27,7 @@ public class TaskGenerationAIService
         };
 
         var localNow = GetLocalDate(timezoneId);
-        
+        //TODO: Check if we need to redo how we define invalid task, test this by random input in the AI assistant
         messages.Insert(0, new SystemChatMessage($@"
             You are a task extraction assistant. Today's date is {localNow:yyyy-MM-dd}. 
             Please extract **all** tasks from the user input below and return a single JSON object with a `tasks` array.
