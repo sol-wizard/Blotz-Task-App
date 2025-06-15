@@ -1,5 +1,14 @@
 {
     "git": {
       "deploymentEnabled": false
-    }
+    },
+    "builds": [
+      {
+        "src": "next.config.mjs",
+        "use": "@vercel/next",
+        "config": {
+          "distDir": null
+        }
+      }
+    ]
   }
