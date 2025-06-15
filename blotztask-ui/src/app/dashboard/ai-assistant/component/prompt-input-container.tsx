@@ -2,20 +2,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import VoiceRecognizer from "../external-services/voice-recognizer";
 import { Button } from "@/components/ui/button";
-
+import { useState } from "react";
 interface PromptInputSectionProps {
-  prompt: string;
-  setPrompt: (value: string) => void;
   loading: boolean;
-  onGenerate: () => void;
+  onGenerate: (prompt: string) => void;
 }
 
 const PromptInputSection: React.FC<PromptInputSectionProps> = ({
-  prompt,
-  setPrompt,
   loading,
   onGenerate,
 }) => {
+  const [prompt, setPrompt] = useState('');
 
   return (
     <div className="flex flex-col gap-4">
@@ -34,7 +31,7 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
           }}
         />
         <Button 
-          onClick={onGenerate} 
+          onClick={() => onGenerate(prompt)} 
           disabled={loading || !prompt.trim()} 
           className="w-fit px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
         >

@@ -1,22 +1,22 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { AIAssistantResponse } from "@/model/ai-assistant-response";
 import { Info } from "lucide-react";
 import { TaskDetailDTO } from "@/model/task-detail-dto";
 import AITaskCardContainer from "./ai-task-card-container";
 import { RawEditTaskDTO } from "@/model/raw-edit-task-dto";
 import { RawAddTaskDTO } from "@/model/raw-add-task-dto";
-// import TaskCardContainer from "../../shared/components/taskcard/task-card-container";
 
 interface AiGeneratedTasksListProps {
   loading: boolean;
-  aiAssistantResponse: AIAssistantResponse;
+  aiMessage: string;
+  tasks: TaskDetailDTO[];
   onAddTask: (task: RawAddTaskDTO) => void;
 }
 
 const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
   loading,
-  aiAssistantResponse,
+  aiMessage,
+  tasks,
 }) => {
 
   //TODO: Handle add task to task list
@@ -46,18 +46,18 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
         </div>
       )}
     
-      {aiAssistantResponse?.message && (
+      {aiMessage && (
         <Alert className="bg-blue-50 border-blue-300 text-blue-800 flex items-start gap-2">
           <Info className="h-4 w-4 mt-1" />
           <div>
             <AlertTitle className="font-semibold">AI Assistant 🤖</AlertTitle>
-            <AlertDescription className="text-sm">{aiAssistantResponse.message}</AlertDescription>
+            <AlertDescription className="text-sm">{aiMessage}</AlertDescription>
           </div>
         </Alert>
       )}
     
-      {aiAssistantResponse?.tasks?.length !== 0 &&
-        aiAssistantResponse?.tasks
+      {tasks?.length !== 0 &&
+        tasks
           .map((task, index) => (
             <AITaskCardContainer
               key={index}
@@ -68,7 +68,7 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
             />
       ))}
     
-      {!loading && !aiAssistantResponse && (
+      {!loading && tasks.length === 0 && (
         <p className="text-zinc-400 text-sm italic">No task generated yet.</p>
       )}
     </div>
