@@ -51,7 +51,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-standalone
-          path: blotztask-ui/build/standalone
+          path: blotztask-ui/.next/standalone
 
   deploy:
     needs: build
