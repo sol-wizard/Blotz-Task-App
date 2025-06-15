@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PromptInputSection from '@/app/dashboard/ai-assistant/component/prompt-input-container';
 import AiGeneratedTasksList from '@/app/dashboard/ai-assistant/component/ai-generated-tasks-list';
-import { AIAssistantResponse } from '@/model/extracted-tasks-wrapper-dto';
+import { AIAssistantResponse } from '@/model/ai-assistant-response';
 import { generateAiTask } from '@/services/ai-service';
 
 interface AiAssistantProps {

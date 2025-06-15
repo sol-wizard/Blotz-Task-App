@@ -1,5 +1,12 @@
-import { AIAssistantResponse, ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
+import { AIAssistantResponse } from '@/model/ai-assistant-response';
+import { ExtractedTask } from '@/model/extracted-task-dto';
 import { fetchWithAuth } from '@/utils/fetch-with-auth';
+
+// Raw backend response
+interface AIGeneratedTasksResponse {
+  message: string;
+  tasks: ExtractedTask[];
+}
 
 interface PromptRequest {
   prompt: string;
@@ -18,7 +25,7 @@ export async function generateAiTask(prompt: string): Promise<AIAssistantRespons
     timeZoneId: getUserTimeZone(),
   };
 
-  const result = await fetchWithAuth<{ response: ExtractedTasksWrapperDTO }>(url, {
+  const result = await fetchWithAuth<{ response: AIGeneratedTasksResponse }>(url, {
     method: 'POST',
     body: JSON.stringify(payload),
     headers: {

@@ -1,6 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { AIAssistantResponse } from "@/model/extracted-tasks-wrapper-dto";
+import { AIAssistantResponse } from "@/model/ai-assistant-response";
 import { Info } from "lucide-react";
 // import TaskCardContainer from "../../shared/components/taskcard/task-card-container";
 
