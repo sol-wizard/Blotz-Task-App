@@ -6,10 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { H5 } from '@/components/ui/heading-with-anchor';
-import PromptInputSection from '@/app/dashboard/ai-assistant/component/prompt-input-container';
-import { generateAiTask } from '@/services/ai-service';
-import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
-import AiGeneratedTasksList from '@/app/dashboard/ai-assistant/component/ai-generated-tasks-list';
+import AiAssistant from '../../../ai-assistant/component/ai-assistant';
 
 const AddTaskCardContainer = ({ onAddTask }) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -19,33 +16,6 @@ const AddTaskCardContainer = ({ onAddTask }) => {
   const timePickerRef = useRef<HTMLDivElement>(null);
 
   const [useAiAssistant, setUseAiAssistant] = useState(true);
-  //TODO: If we use react hook form we probably dont need to sotre this state 
-  const [prompt, setPrompt] = useState('');
-  const [loadingAiTasks, setLoadingAiTasks] = useState(false);
-  
-  const [wrappedExtractedTasks, setWrappedExtractedTasks] = useState<ExtractedTasksWrapperDTO | null>(null);
-  const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
-
-  const handlePromptGenerate = async () => {
-    if (!prompt.trim()) return;
-
-    setWrappedExtractedTasks(null);
-    setAddedTaskIndices(new Set());
-    setLoadingAiTasks(true);
-
-    try {
-      const task = await generateAiTask(prompt);
-      setWrappedExtractedTasks(task);
-    } catch (error) {
-      console.error('Failed to generate task:', error);
-    } finally {
-      setLoadingAiTasks(false);
-    }
-  };
-
-  const handleTaskAdded = (index) => {
-    setAddedTaskIndices((prev) => new Set(prev).add(index));
-  };
 
   useClickOutside([cardRef, datePickerRef, labelPickerRef, timePickerRef], () => {
     setIsFormVisible(false);
@@ -76,20 +46,7 @@ const AddTaskCardContainer = ({ onAddTask }) => {
             </CardHeader>
             <CardContent>
               {useAiAssistant ? (
-                  <div className='p-2 flex flex-col gap-4'>
-                    <PromptInputSection
-                      prompt={prompt}
-                      setPrompt={setPrompt}
-                      loading={loadingAiTasks}
-                      onGenerate={handlePromptGenerate}
-                    />
-                    <AiGeneratedTasksList 
-                      loading={loadingAiTasks}
-                      wrappedExtractedTasks={wrappedExtractedTasks}
-                      addedTaskIndices={addedTaskIndices}
-                      handleTaskAdded={handleTaskAdded}
-                    />
-                  </div>
+                  <AiAssistant />
                 ) : (
                   <AddTaskCard
                     onSubmit={(taskDetails) => {
