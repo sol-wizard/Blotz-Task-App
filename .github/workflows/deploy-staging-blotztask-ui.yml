@@ -2,10 +2,10 @@ name: Staging - Build and deploy Next.js app to Azure Web App
 
 on:
   push:
-    # paths:
-    #   - 'blotztask-ui/**'
+    paths:
+      - 'blotztask-ui/**'
     branches:
-      - fix-staging-frontend-deploy-yml
+      - main
   workflow_dispatch:
 
 env:
