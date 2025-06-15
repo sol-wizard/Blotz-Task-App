@@ -1,5 +1,12 @@
-import { ExtractedTasksWrapperDTO } from '@/model/extracted-tasks-wrapper-dto';
+import { AIAssistantResponse } from '@/model/ai-assistant-response';
+import { ExtractedTask } from '@/model/extracted-task-dto';
 import { fetchWithAuth } from '@/utils/fetch-with-auth';
+
+// Raw backend response
+interface AIGeneratedTasksResponse {
+  message: string;
+  tasks: ExtractedTask[];
+}
 
 interface PromptRequest {
   prompt: string;
@@ -10,7 +17,7 @@ function getUserTimeZone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
 
-export async function generateAiTask(prompt: string): Promise<ExtractedTasksWrapperDTO> {
+export async function generateAiTask(prompt: string): Promise<AIAssistantResponse> {
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/AzureAi/generate`;
 
   const payload: PromptRequest = {
@@ -18,7 +25,7 @@ export async function generateAiTask(prompt: string): Promise<ExtractedTasksWrap
     timeZoneId: getUserTimeZone(),
   };
 
-  const result = await fetchWithAuth<{ response: ExtractedTasksWrapperDTO }>(url, {
+  const result = await fetchWithAuth<{ response: AIGeneratedTasksResponse }>(url, {
     method: 'POST',
     body: JSON.stringify(payload),
     headers: {
@@ -26,5 +33,19 @@ export async function generateAiTask(prompt: string): Promise<ExtractedTasksWrap
     },
   });
 
-  return result.response;
+  //Map the restult from backend AI to TaskDetailDTO so can fit into frontend component
+  const tasks = result.response.tasks.map((task) => ({
+    id: 0, // New task dont need id
+    description: task.description,
+    title: task.title,
+    isDone: false,
+    label: task.label,
+    dueDate: new Date(task.due_date),
+    hasTime: false, //TODO: Current AI generate task still not support time
+  }));
+
+  return {
+    message: result.response.message,
+    tasks,
+  };
 }

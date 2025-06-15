@@ -6,28 +6,21 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { H5 } from '@/components/ui/heading-with-anchor';
-import PromptInputSection from '@/app/dashboard/ai-assistant/component/prompt-input-container';
+import AiAssistant from '../../../ai-assistant/component/ai-assistant';
+import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
 
-const AddTaskCardContainer = ({ onAddTask }) => {
+interface AddTaskCardContainerProps {
+  onAddTask: (task: RawAddTaskDTO) => void;
+}
+
+const AddTaskCardContainer = ({ onAddTask }: AddTaskCardContainerProps) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const datePickerRef = useRef<HTMLDivElement>(null);
   const labelPickerRef = useRef<HTMLDivElement>(null);
   const timePickerRef = useRef<HTMLDivElement>(null);
 
-  const [useAIAssistant, setUseAIAssistant] = useState(true);
-
-  const [prompt, setPrompt] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  //TODO: replace the inner logic with real implementation
-  const handlePromptGenerate = () => {
-    setLoading(true)
-    setTimeout(()=>{
-      console.log("generating task")
-    }, 1000)
-    setLoading(false)
-  };
+  const [useAiAssistant, setUseAiAssistant] = useState(true);
 
   useClickOutside([cardRef, datePickerRef, labelPickerRef, timePickerRef], () => {
     setIsFormVisible(false);
@@ -45,26 +38,20 @@ const AddTaskCardContainer = ({ onAddTask }) => {
           <Card className='w-full px-6 pb-4 pt-1'>
           <CardHeader className='flex-row justify-between p-4'>
             <H5>Add New Task</H5>
-            <div className="flex items-center space-x-2">
+            <div className="flex h-full items-center space-x-2">
               <Switch 
                 id="ai-assistant"                   
-                checked={useAIAssistant}
-                onCheckedChange={setUseAIAssistant}
+                checked={useAiAssistant}
+                onCheckedChange={(checked) => {
+                  setUseAiAssistant(checked);
+                }}
               />
               <Label htmlFor="ai-assistant">🤖 Ai Assistant</Label>
             </div>
             </CardHeader>
             <CardContent>
-              {useAIAssistant ? (
-                  <div className='p-2'>
-                    <PromptInputSection
-                      prompt={prompt}
-                      setPrompt={setPrompt}
-                      loading={loading}
-                      onGenerate={handlePromptGenerate}
-                      onSubmit={(taskDetails) => onAddTask(taskDetails)}
-                    />
-                  </div>
+              {useAiAssistant ? (
+                  <AiAssistant onAddTask={onAddTask}/>
                 ) : (
                   <AddTaskCard
                     onSubmit={(taskDetails) => {

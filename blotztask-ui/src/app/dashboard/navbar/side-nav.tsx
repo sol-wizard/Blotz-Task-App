@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, CircleCheckBig, List, Calendar, Sparkles, Target } from 'lucide-react';
+import { Plus, CircleCheckBig, List, Calendar, Target } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -128,17 +128,6 @@ export function AppSidebar() {
 
               {aiEnabled && (
                 <>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <Link
-                        href="ai-assistant"
-                        className="flex items-center px-4 py-3 w-full rounded-md hover:bg-white"
-                      >
-                        <Sparkles size={18} className='text-indigo-700'/>
-                        <span className="pl-3 text-base font-medium text-indigo-700">AI Assistant</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <Link

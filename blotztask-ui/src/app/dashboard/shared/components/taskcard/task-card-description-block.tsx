@@ -39,7 +39,6 @@ export const TaskCardDescriptionBlock = ({ task, taskStatus='todo',  isEditing, 
           </FormItem>
         )}
       />
-    //TODO : Remove the logic in css using the variant based design approach
     ) : (
       <p className={cn('break-words', statusClass)}>{task.description}</p>
     )}
