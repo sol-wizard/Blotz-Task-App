@@ -2,6 +2,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { AIAssistantResponse } from "@/model/ai-assistant-response";
 import { Info } from "lucide-react";
+import { TaskDetailDTO } from "@/model/task-detail-dto";
+import AITaskCardContainer from "./ai-task-card-container";
+import { RawEditTaskDTO } from "@/model/raw-edit-task-dto";
 // import TaskCardContainer from "../../shared/components/taskcard/task-card-container";
 
 interface AiGeneratedTasksListProps {
@@ -15,6 +18,23 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
   loading,
   aiAssistantResponse,
 }) => {
+
+  //TODO: Handle add task to task list
+  const handleAddTask = (task: TaskDetailDTO) => {
+    console.log('add this ai generated task to task list', task);
+  };
+
+  //TODO: Handle edit the task that is still in the state
+  const handleTaskEdit = (task: RawEditTaskDTO) => {
+    console.log('You need to edit this task in the state', task);
+  }; 
+
+  //TODO: Handle delete task from the state 
+  //TODO: Delete is not abit tricky because have some bug when click outside effect which will close the card
+  const handleTaskDelete = (taskId: number) => {
+    console.log('You are trying to delete this task from the state', taskId);
+  };
+  
   return (
     <div className="flex flex-col gap-4">
       {loading && (
@@ -37,16 +57,13 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
       {aiAssistantResponse?.tasks?.length !== 0 &&
         aiAssistantResponse?.tasks
           .map((task, index) => (
-            <p key={index}>{task.title}</p>
-            // <TaskCardContainer
-            //   key={index}
-            //   task={task}
-            //   taskStatus="overdue"
-            //   handleCheckboxChange={handleOverdueCheckboxChange}
-            //   handleTaskEdit={handleTaskEdit}
-            //   handleTaskDelete={handleTaskDelete}
-            //   handleTaskDeleteUndo={handleTaskDeleteUndo}
-            // />
+            <AITaskCardContainer
+              key={index}
+              task={task}
+              handleCheckboxChange={handleAddTask}
+              handleTaskEdit={handleTaskEdit}
+              handleTaskDelete={handleTaskDelete}
+            />
       ))}
     
       {!loading && !aiAssistantResponse && (
