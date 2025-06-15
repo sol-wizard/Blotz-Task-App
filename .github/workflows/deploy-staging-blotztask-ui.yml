@@ -47,19 +47,21 @@ jobs:
       - name: Prepare deployment package
         run: |
           mkdir -p deploy
-          # Copy entire standalone output
+          # Copy ALL required files
           cp -R .next/standalone/* deploy/
-          # Copy static files
           cp -R public deploy/
-          # Ensure static assets
-          mkdir -p deploy/.next/static
-          cp -R .next/static/* deploy/.next/static/
+          cp -R .next/static deploy/.next/
+          cp package.json deploy/
+          
+          # Verify structure
+          ls -la deploy/
+          [ -f deploy/server.js ] || exit 1
         working-directory: blotztask-ui
-
+      
       - name: Upload build output
         uses: actions/upload-artifact@v4
         with:
-          name: nextjs-deployment 
+          name: nextjs-deployment
           path: blotztask-ui/deploy
 
   deploy:
