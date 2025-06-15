@@ -67,6 +67,6 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: wapp-blotztask-ui-staging
+          app-name: wapp-blotztaskapp-ui-staging
           publish-profile: ${{ env.APPLICATION_PUBLISH_PROFILE }}
           package: ./blotztask-ui/build/standalone
