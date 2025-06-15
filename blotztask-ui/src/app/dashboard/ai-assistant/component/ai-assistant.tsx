@@ -3,10 +3,10 @@ import PromptInputSection from '@/app/dashboard/ai-assistant/component/prompt-in
 import AiGeneratedTasksList from '@/app/dashboard/ai-assistant/component/ai-generated-tasks-list';
 import { AIAssistantResponse } from '@/model/ai-assistant-response';
 import { generateAiTask } from '@/services/ai-service';
-import { TaskDetailDTO } from '@/model/task-detail-dto';
+import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
 
 interface AiAssistantProps {
-  onAddTask: (task: TaskDetailDTO) => void;
+  onAddTask: (task: RawAddTaskDTO) => void;
 }
 
 const AiAssistant: React.FC<AiAssistantProps> = ({ onAddTask }) => {

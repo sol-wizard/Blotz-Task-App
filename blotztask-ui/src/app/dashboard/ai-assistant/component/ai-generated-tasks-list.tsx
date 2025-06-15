@@ -5,12 +5,13 @@ import { Info } from "lucide-react";
 import { TaskDetailDTO } from "@/model/task-detail-dto";
 import AITaskCardContainer from "./ai-task-card-container";
 import { RawEditTaskDTO } from "@/model/raw-edit-task-dto";
+import { RawAddTaskDTO } from "@/model/raw-add-task-dto";
 // import TaskCardContainer from "../../shared/components/taskcard/task-card-container";
 
 interface AiGeneratedTasksListProps {
   loading: boolean;
   aiAssistantResponse: AIAssistantResponse;
-  onAddTask: (task: TaskDetailDTO) => void;
+  onAddTask: (task: RawAddTaskDTO) => void;
 }
 
 const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
@@ -21,6 +22,8 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
   //TODO: Handle add task to task list
   const handleAddTask = (task: TaskDetailDTO) => {
     console.log('add this ai generated task to task list', task);
+    //TODO: Need to map the task to the raw add task dto
+    // onAddTask(task);
   };
 
   //TODO: Handle edit the task that is still in the state

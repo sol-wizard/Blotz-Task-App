@@ -7,8 +7,13 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { H5 } from '@/components/ui/heading-with-anchor';
 import AiAssistant from '../../../ai-assistant/component/ai-assistant';
+import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
 
-const AddTaskCardContainer = ({ onAddTask }) => {
+interface AddTaskCardContainerProps {
+  onAddTask: (task: RawAddTaskDTO) => void;
+}
+
+const AddTaskCardContainer = ({ onAddTask }: AddTaskCardContainerProps) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const datePickerRef = useRef<HTMLDivElement>(null);
