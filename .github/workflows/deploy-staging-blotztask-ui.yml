@@ -62,7 +62,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nextjs-standalone
-          path: blotztask-ui/build/standalone
+          path: blotztask-ui/.next/standalone
 
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
