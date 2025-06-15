@@ -2,10 +2,10 @@ name: Staging - Build and deploy Next.js app to Azure Web App
 
 on:
   push:
-    paths:
-      - 'blotztask-ui/**'
+    # paths:
+    #   - 'blotztask-ui/**'
     branches:
-      - main
+      - fix-staging-frontend-deploy-yml
   workflow_dispatch:
 
 env:
@@ -43,8 +43,8 @@ jobs:
         
       - name: Copy static assets
         run: |
-          mv ./build/static ./build/standalone/build
-          mv ./public ./build/standalone
+          mv ./public ./.next/standalone/blotztask-ui/
+          mv ./.next/static ./.next/standalone/blotztask-ui/.next/
         working-directory: blotztask-ui
 
       - name: Upload build output
