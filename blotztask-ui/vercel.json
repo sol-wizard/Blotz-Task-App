@@ -4,10 +4,12 @@
     },
     "builds": [
       {
-        "src": "next.config.mjs",
-        "use": "@vercel/next",
-        "config": {
-          "distDir": null
+        {
+          "src": "package.json",
+          "use": "@vercel/next",
+          "config": {
+            "distDir": null
+          }
         }
       }
     ]
