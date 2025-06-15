@@ -2,10 +2,8 @@ name: Staging - Build and deploy Next.js app to Azure Web App
 
 on:
   push:
-    # paths:
-    #   - 'blotztask-ui/**'
     branches:
-      - fix-staging-frontend-deploy-yml
+      - main
   workflow_dispatch:
 
 env:
@@ -38,31 +36,20 @@ jobs:
         working-directory: blotztask-ui
         
       - name: Build Next.js app
-        run: |
-          npm run build
-          # Verify build output
-          ls -la .next/standalone/
+        run: npm run build
         working-directory: blotztask-ui
-      
-      - name: Prepare deployment package
+        
+      - name: Copy static assets
         run: |
-          mkdir -p deploy
-          # Copy ALL required files
-          cp -R .next/standalone/* deploy/
-          cp -R public deploy/
-          cp -R .next/static deploy/.next/
-          cp package.json deploy/
-          
-          # Verify structure
-          ls -la deploy/
-          [ -f deploy/server.js ] || exit 1
+          mv ./build/static ./build/standalone/build
+          mv ./public ./build/standalone
         working-directory: blotztask-ui
-      
+
       - name: Upload build output
         uses: actions/upload-artifact@v4
         with:
-          name: nextjs-deployment
-          path: blotztask-ui/deploy
+          name: nextjs-standalone
+          path: blotztask-ui/build/standalone
 
   deploy:
     needs: build
@@ -72,8 +59,8 @@ jobs:
       - name: Download build output
         uses: actions/download-artifact@v4
         with:
-          name: nextjs-deployment 
-          path: deploy
+          name: nextjs-standalone
+          path: blotztask-ui/build/standalone
 
       - name: "Deploy to Azure Web App"
         id: deploy-to-webapp
@@ -81,4 +68,4 @@ jobs:
         with:
           app-name: wapp-blotztask-ui-staging
           publish-profile: ${{ env.APPLICATION_PUBLISH_PROFILE }}
-          package: ./deploy
+          package: ./blotztask-ui/build/standalone
