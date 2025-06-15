@@ -3,7 +3,6 @@
       "deploymentEnabled": false
     },
     "builds": [
-      {
         {
           "src": "package.json",
           "use": "@vercel/next",
@@ -11,6 +10,5 @@
             "distDir": null
           }
         }
-      }
     ]
   }
