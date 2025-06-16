@@ -1,12 +1,12 @@
-import TaskPreviewCard from "@/app/dashboard/goal-to-task/components/task=preview-card"
+import TaskPreviewCard from "@/app/dashboard/goal-to-task/components/task-preview-card"
 import {
   ChatMessage,
-  MessageWithTasks,
   type ChatMessageProps,
   type Message,
 } from "@/components/ui/chat-message"
 import { TypingIndicator } from "@/components/ui/typing-indicator"
 import { ExtractedTask } from "@/model/extracted-task-dto"
+import { MessageWithTasks } from "@/app/dashboard/goal-to-task/models/message-with-tasks"
 
 type AdditionalMessageOptions = Omit<ChatMessageProps, keyof Message>
 

@@ -2,7 +2,7 @@ import { HubConnection, HubConnectionState } from '@microsoft/signalr';
 import { Dispatch, SetStateAction } from 'react';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import { ConversationMessage } from '../models/chat-message';
-import { MessageWithTasks } from '@/components/ui/chat-message';
+import { MessageWithTasks } from '../models/message-with-tasks';
 import { v4 as uuidv4 } from 'uuid';
 
 export function setupChatHandlers(

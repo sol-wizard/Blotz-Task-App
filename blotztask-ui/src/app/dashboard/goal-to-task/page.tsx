@@ -13,9 +13,8 @@ import { SidePanel } from './components/chat-sidepanel';
 import { SidebarProvider } from './components/ui/sidepanel';
 import { ChatContainer, ChatForm } from '@/components/ui/chat';
 import { MessageInput } from '@/components/ui/message-input';
-import { MessageWithTasks } from '@/components/ui/chat-message';
+import { MessageWithTasks } from './models/message-with-tasks';
 
-//TODO: Delete unnecessary shadcn chatbit kit components
 export default function ChatPage() {
   const { data: session } = useSession();
 

@@ -1,7 +1,7 @@
 import { HubConnectionState } from '@microsoft/signalr';
 import { ChatMessages } from '@/components/ui/chat';
 import { MessageList } from '@/components/ui/message-list';
-import { MessageWithTasks } from '@/components/ui/chat-message';
+import { MessageWithTasks } from '../models/message-with-tasks';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 
 type Props = {
