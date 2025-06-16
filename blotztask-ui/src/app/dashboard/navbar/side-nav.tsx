@@ -103,7 +103,6 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <p>{process.env.NODE_ENV}</p>
             <SidebarMenu className="relative">
               <SidebarMenuItem className="w-full">
                 <SearchBar query={query} loadSearchTasks={loadSearchTasks} setQuery={setQuery} />
