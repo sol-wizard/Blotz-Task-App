@@ -4,12 +4,12 @@ import { ExtractedTask } from '@/model/extracted-task-dto';
 import { CalendarDaysIcon, CheckIcon, Loader2Icon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 
-type TaskPreviewCardProps = {
+type ChatInlineTaskcardProps = {
   task: ExtractedTask;
   onTaskAdded: (task: ExtractedTask) => void;
 };
 
-const TaskPreviewCard = ({ task, onTaskAdded }: TaskPreviewCardProps) => {
+const ChatInlineTaskcard = ({ task, onTaskAdded }: ChatInlineTaskcardProps) => {
   const [adding, setAdding] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
 
@@ -63,4 +63,4 @@ const TaskPreviewCard = ({ task, onTaskAdded }: TaskPreviewCardProps) => {
   );
 };
 
-export default TaskPreviewCard;
+export default ChatInlineTaskcard;

@@ -1,4 +1,3 @@
-import TaskPreviewCard from "@/app/dashboard/goal-to-task/components/task-preview-card"
 import {
   ChatMessage,
   type ChatMessageProps,
@@ -7,6 +6,7 @@ import {
 import { TypingIndicator } from "@/components/ui/typing-indicator"
 import { ExtractedTask } from "@/model/extracted-task-dto"
 import { MessageWithTasks } from "@/app/dashboard/goal-to-task/models/message-with-tasks"
+import ChatInlineTaskcard from "@/app/dashboard/goal-to-task/components/chat-inline-taskcard"
 
 type AdditionalMessageOptions = Omit<ChatMessageProps, keyof Message>
 
@@ -33,7 +33,7 @@ export function MessageList({
           return (
             <>
               {message.tasks.map((task, ind) => (
-                <TaskPreviewCard key={ind} task={task} onTaskAdded={onTaskAdd} />
+                <ChatInlineTaskcard key={ind} task={task} onTaskAdded={onTaskAdd} />
               ))}
             </>
           )
