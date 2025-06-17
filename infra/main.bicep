@@ -1,21 +1,35 @@
 @description('Name of the application')
-param appName string = 'BlotzTaskApp' 
+param projectName string = 'blotztask' 
 
 @description('Location for all resources')
 param location string = resourceGroup().location
 
-module appServicePlan 'modules/appService.bicep' = {
-  name: 'BlotzTask-Webapp-module'//TODO: Add a unique suffix
+@description('Environment for all resources')
+@allowed(['dev', 'staging', 'prod'])
+param environment string
+
+@secure()
+param dbAdminUsername string
+@secure()
+param dbAdminPassword string
+
+module webApp 'modules/appService.bicep' = {
+  name:'${deployment().name}-webApp'//TODO: Add a unique suffix
   params: {
-    webAppName: appName
-    connectionString : appInsight.outputs.connectionString
+    webAppName: '${projectName}-api' 
+    location: location
+    environment: environment
   }
 }
 
 module kv 'modules/keyVault.bicep' = {
-  name: 'BlotzTaskApp-keyvault-module' //TODO: Add a unique suffix
+  name: '${deployment().name}-keyvault' //TODO: Add a unique suffix
   params: {
+    projectName: projectName
     location: location
+    environment: environment
+    dbAdminUsername: dbAdminUsername
+    dbAdminPassword: dbAdminPassword
   }
 }
 
@@ -24,20 +38,32 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
 }
 
 module sql 'modules/sqlserver.bicep' = {
-  name: 'BlotzTaskApp-sql-module'//TODO: Add a unique suffix
+  name: '${deployment().name}-database'
   params: {
-    appName: appName
+    projectName: projectName
     location: location
+    environment: environment
     dbAdminUsername: keyVault.getSecret('db-admin-username')
     dbAdminPassword: keyVault.getSecret('db-admin-password')
   }
 }
 
-module appInsight 'modules/appInsight.bicep' = {
-  name: 'BlotzTaskApp-appInsight-module'//TODO: Add a unique suffix
+module storeConnectionString 'modules/keyVaultSecret.bicep' = {
+  name: '${deployment().name}-store-connection-string'
   params: {
-    appName: appName
+    keyVaultName: kv.outputs.name
+    secretName: 'sql-connection-string'
+    secretValue: sql.outputs.connectionString
+  }
+}
+
+module openAi 'modules/openAi.bicep' = {
+  name: '${deployment().name}-openai'
+  params: {
     location: location
+    environment: environment
+    projectName: projectName
+    keyVaultName: kv.outputs.name
   }
 }
 

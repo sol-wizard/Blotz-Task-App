@@ -1,36 +1,36 @@
-param webAppName string = 'BlotzTaskApp' // move to parent Name of the application
+param webAppName string // move to parent Name of the application
 param location string = resourceGroup().location // Location for all resources
-param connectionString string
-var appServicePlanName = toLower('AppServicePlan-${webAppName}')
-var webSiteName = toLower('wapp-${webAppName}')
+param environment string
 
-//TODO : A new app service plan is created from azure portal please update the bicep script here
+var corsAllowedOrigins = environment == 'staging' ? [
+  'https://wapp-blotztaskapp-ui-staging.azurewebsites.net'
+] : environment == 'prod' ? [
+  'https://blotz-task-app.vercel.app'
+] : []
+
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
-  name: appServicePlanName
+  name: 'asp-${webAppName}-${environment}'
   location: location
   sku: {
-    name: 'F1'
-    tier: 'Free'
-    size: 'F1'
-    family: 'F'
-    capacity: 0
+    name: 'B1'
+    tier: 'Basic'
+    size: 'B1'
+    family: 'B'
+    capacity: 1
   }
   kind: 'app'
 }
 
 resource appService 'Microsoft.Web/sites@2022-09-01' = {
-  name: webSiteName
+  name: 'wapp-${webAppName}-${environment}'
   location: location
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
-      alwaysOn: false
-      appSettings: [
-        {
-          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-          value: connectionString
-        }
-      ]
+      alwaysOn: true
+      cors: {
+        allowedOrigins: corsAllowedOrigins
+      }
     }
   }
 }
