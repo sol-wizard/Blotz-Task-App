@@ -43,10 +43,12 @@ export default function ChatPage() {
   useEffect(() => {
     const connect = signalRService.createConnection();
     setConnection(connect);
+    let cleanupHandlers: (() => void) | null = null;
+
     connect
       .start()
       .then(() => {
-        setupChatHandlers(
+        cleanupHandlers = setupChatHandlers(
           connect,
           setMessages,
           setTasks,
@@ -57,12 +59,15 @@ export default function ChatPage() {
       })
       .catch((err) => {
         console.error('[SignalR] Error starting connection:', err);
-        // setConnectionError("Failed to connect to chat service. Please try again.");
       });
 
     return () => {
-      connection.stop().then(() => console.log('[SignalR] Connection stopped'));
-      connection.stop().then(() => console.log('[SignalR] Connection stopped'));
+      if (cleanupHandlers) {
+        cleanupHandlers(); // Remove handlers
+      }
+      if (connect) {
+        connect.stop().then(() => console.log('[SignalR] Connection stopped'));
+      }
     };
   }, []);
 
@@ -81,7 +86,6 @@ export default function ChatPage() {
     }
   };
 
-
   const handleTaskAdded = (index) => {
     setAddedTaskIndices((prev) => new Set(prev).add(index));
   };
@@ -90,7 +94,6 @@ export default function ChatPage() {
     if (connection) {
       // setConnectionError(null);
       setConnectionState(HubConnectionState.Connecting);
-
 
       try {
         await connection.start();

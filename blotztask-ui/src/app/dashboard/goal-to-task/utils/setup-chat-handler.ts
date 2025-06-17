@@ -12,41 +12,54 @@ export function setupChatHandlers(
   setIsConversationComplete: Dispatch<SetStateAction<boolean>>,
   setConnectionState: Dispatch<SetStateAction<HubConnectionState>>,
   setIsBotTyping: Dispatch<SetStateAction<boolean>>
-) {
+): () => void {
   console.log('[SignalR] Connection started');
   setConnectionState(HubConnectionState.Connected);
 
-  connection.on('ReceiveMessage', (msg: ConversationMessage) => {
+  const receiveMessageHandler = (msg: ConversationMessage) => {
     console.log('[SignalR] Received message:', msg);
 
     const newMsg: MessageWithTasks = {
-      id: `${msg.conversationId}-${uuidv4}`,
+      id: `${msg.conversationId}-${uuidv4()}`,
       role: msg.isBot ? 'assistant' : 'user',
       content: msg.content,
     };
     setMessages((prev) => [...prev, newMsg]);
-  });
+  };
 
-  connection.on('ReceiveTasks', (receivedTasks: ExtractedTask[]) => {
+  const receiveTasksHandler = (receivedTasks: ExtractedTask[]) => {
     console.log('[SignalR] Received tasks:', receivedTasks);
     if (receivedTasks?.length > 0) {
       setTasks(receivedTasks);
       const newMsg: MessageWithTasks = {
-        id: `tasks-${uuidv4}`,
+        id: `tasks-${uuidv4()}`,
         role: 'assistant',
         content: 'Generated tasks',
-        tasks:receivedTasks,
+        tasks: receivedTasks,
       };
       setMessages((prev) => [...prev, newMsg]);
     }
-  });
+  };
 
-  connection.on('ConversationCompleted', (convoId: string) => {
+  const conversationCompletedHandler = (convoId: string) => {
     console.log('[SignalR] Conversation completed for:', convoId);
     setIsConversationComplete(true);
-  });
+  };
 
-  connection.on('BotTyping', (isTyping: boolean) => {
+  const botTypingHandler = (isTyping: boolean) => {
     setIsBotTyping(isTyping);
-  });
+  };
+
+  connection.on('ReceiveMessage', receiveMessageHandler);
+  connection.on('ReceiveTasks', receiveTasksHandler);
+  connection.on('ConversationCompleted', conversationCompletedHandler);
+  connection.on('BotTyping', botTypingHandler);
+
+  // Return cleanup function to remove handlers
+  return () => {
+    connection.off('ReceiveMessage', receiveMessageHandler);
+    connection.off('ReceiveTasks', receiveTasksHandler);
+    connection.off('ConversationCompleted', conversationCompletedHandler);
+    connection.off('BotTyping', botTypingHandler);
+  };
 }

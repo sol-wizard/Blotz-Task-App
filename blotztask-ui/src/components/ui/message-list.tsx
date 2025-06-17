@@ -10,14 +10,6 @@ import { MessageWithTasks } from "@/app/dashboard/goal-to-task/models/message-wi
 
 type AdditionalMessageOptions = Omit<ChatMessageProps, keyof Message>
 
-// interface MessageListProps {
-//   messages: Message[]
-//   showTimeStamps?: boolean
-//   isTyping?: boolean
-//   messageOptions?:
-//     | AdditionalMessageOptions
-//     | ((message: Message) => AdditionalMessageOptions)
-// }
 interface MessageWithTasksListProps {
   messages: MessageWithTasks[]
   showTimeStamps?: boolean
