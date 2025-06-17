@@ -145,7 +145,7 @@ export default function VoiceRecognizer({ onResult, onError }: VoiceRecognizerPr
       <Button
         onClick={toggleListening}
         disabled={isInitializing}
-        className={`w-fit mt-2 flex items-center gap-2 ${isListening ? 'animate-pulse' : ''}`}
+        className={`w-fit flex items-center gap-2 ${isListening ? 'animate-pulse' : ''}`}
         variant={isListening ? 'default' : 'outline'}
       >
         {isInitializing ? '🔄 Initializing...' : isListening ? '🔴 Stop Listening' : '🎙️ Speak'}
