@@ -29,7 +29,7 @@ export default function ChatPage() {
 
   //TODO: we can give user a better user message based on why it failed maybe a dialog(e.g. "Run out of token or something else")
   // const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [messages, setMessages] = useState<MessageWithTasks[]>([]);
+  const [messagesWithTasks, setMessagesWithTasks] = useState<MessageWithTasks[]>([]);
   //TODO: If we use react hook form here, we dont need to use this state here anymore
   const [userMessageInput, setUserMessageInput] = useState<string>('');
   const [isBotTyping, setIsBotTyping] = useState<boolean>(false);
@@ -50,7 +50,7 @@ export default function ChatPage() {
       .then(() => {
         cleanupHandlers = setupChatHandlers(
           connect,
-          setMessages,
+          setMessagesWithTasks,
           setTasks,
           setIsConversationComplete,
           setConnectionState,
@@ -99,7 +99,7 @@ export default function ChatPage() {
         await connection.start();
         setupChatHandlers(
           connection,
-          setMessages,
+          setMessagesWithTasks,
           setTasks,
           setIsConversationComplete,
           setConnectionState,
@@ -131,7 +131,7 @@ export default function ChatPage() {
 
           {/* Chat section */}
           <ChatPanel
-            messages={messages}
+            messagesWithTasks={messagesWithTasks}
             connectionState={connectionState}
             isConversationComplete={isConversationComplete}
             isBotTyping={isBotTyping}

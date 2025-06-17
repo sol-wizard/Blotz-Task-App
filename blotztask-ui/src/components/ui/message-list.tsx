@@ -11,7 +11,7 @@ import { MessageWithTasks } from "@/app/dashboard/goal-to-task/models/message-wi
 type AdditionalMessageOptions = Omit<ChatMessageProps, keyof Message>
 
 interface MessageWithTasksListProps {
-  messages: MessageWithTasks[]
+  messagesWithTasks: MessageWithTasks[]
   showTimeStamps?: boolean
   isTyping?: boolean
   messageOptions?:
@@ -21,19 +21,14 @@ interface MessageWithTasksListProps {
 }
 
 export function MessageList({
-  messages,
+  messagesWithTasks,
   showTimeStamps = true,
   isTyping = false,
-  messageOptions,
   onTaskAdd,
 }: MessageWithTasksListProps) {
   return (
     <div className="space-y-4 overflow-visible">
-      {messages.map((message, index) => {
-        const additionalOptions =
-          typeof messageOptions === "function"
-            ? messageOptions(message)
-            : messageOptions
+      {messagesWithTasks.map((message, index) => {
         if (message.tasks) {
           return (
             <>
@@ -49,7 +44,6 @@ export function MessageList({
             key={index}
             showTimeStamp={showTimeStamps}
             {...message}
-            {...additionalOptions}
           />
         )
       })}

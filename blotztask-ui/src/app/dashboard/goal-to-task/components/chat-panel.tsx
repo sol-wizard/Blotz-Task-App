@@ -5,7 +5,7 @@ import { MessageWithTasks } from '../models/message-with-tasks';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 
 type Props = {
-  messages: MessageWithTasks[];
+  messagesWithTasks: MessageWithTasks[];
   connectionState: HubConnectionState;
   isConversationComplete: boolean;
   isBotTyping: boolean;
@@ -13,7 +13,7 @@ type Props = {
 };
 
 export const ChatPanel = ({
-  messages,
+  messagesWithTasks,
   connectionState,
   isConversationComplete,
   isBotTyping,
@@ -21,7 +21,7 @@ export const ChatPanel = ({
 }: Props) => {
   return (
     <div className="flex-1 overflow-auto p-4">
-      {messages.length === 0 && connectionState === HubConnectionState.Connected ? (
+      {messagesWithTasks.length === 0 && connectionState === HubConnectionState.Connected ? (
         <div className="h-full flex items-center justify-center text-gray-500 text-sm">
           {isConversationComplete
             ? 'This conversation is complete. Start a new one to continue.'
@@ -33,7 +33,7 @@ export const ChatPanel = ({
         </div>
       ) : (
         <ChatMessages messages={[]}>
-          <MessageList messages={messages} isTyping={isBotTyping} onTaskAdd={onTaskAdded} />
+          <MessageList messagesWithTasks={messagesWithTasks} isTyping={isBotTyping} onTaskAdd={onTaskAdded} />
         </ChatMessages>
       )}
     </div>
