@@ -66,5 +66,11 @@ module openAi 'modules/openAi.bicep' = {
     keyVaultName: kv.outputs.name
   }
 }
-
-//TODO: Deploy managed identity when ready
+module githubActionIdentity 'modules/identity.bicep' = {
+  name: '${deployment().name}-github-action-identity'
+  params: {
+    identityName: 'uami-${projectName}-${environment}'
+    location: location
+    keyVaultName: kv.outputs.name
+  }
+}
