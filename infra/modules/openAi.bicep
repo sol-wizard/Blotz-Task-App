@@ -15,7 +15,7 @@ resource openAiService 'Microsoft.CognitiveServices/accounts@2025-04-01-preview'
     publicNetworkAccess: 'Enabled'
   }
 }
-
+// The model type need to be correct support in the regoin of the openAiService. Check the table https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models?tabs=standard%2Cstandard-chat-completions
 resource gpt41MiniDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-04-01-preview' = {
   name: 'gpt-4.1-mini'  
   parent: openAiService
