@@ -84,6 +84,8 @@ module githubActionIdentity 'modules/identity.bicep' = {
   params: {
     identityName: 'uami-${projectName}-${environment}'
     location: location
+    environment: environment
+    projectName: projectName
     keyVaultName: kv.outputs.name
   }
 }

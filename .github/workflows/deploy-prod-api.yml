@@ -80,7 +80,7 @@ jobs:
         - uses: Azure/get-keyvault-secrets@v1
           with:
             keyvault: "kv-blotztask-prod-v2" # TODO: do different way to get this
-            secrets: 'db-string-connection'  
+            secrets: 'sql-string-connection'  
           id: get-secret-connection-strings
 
         - name: EF - Apply Migration SQL Script 
