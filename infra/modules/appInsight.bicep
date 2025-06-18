@@ -1,14 +1,18 @@
-param appName string
-param location string
-var appInsightName = toLower('AppInsight-${appName}')
 
-//TODO : A new app insight resource is created from azure portal please update the bicep script here
+param location string = resourceGroup().location
+param environment string
+param projectName string
+
 resource appInsight 'Microsoft.Insights/components@2020-02-02' = {
-  name: appInsightName
+  name: 'appi-${projectName}-${environment}'
   location: location
   kind: 'web'
   properties: {
     Application_Type: 'web'
+    Flow_Type: 'Bluefield'
+    Request_Source: 'rest'
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
   }
 }
 

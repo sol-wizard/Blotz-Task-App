@@ -1,6 +1,7 @@
 param webAppName string // move to parent Name of the application
 param location string = resourceGroup().location // Location for all resources
 param environment string
+param appInsightConnectionString string
 
 var corsAllowedOrigins = environment == 'staging' ? [
   'https://wapp-blotztaskapp-ui-staging.azurewebsites.net'
@@ -31,6 +32,12 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
       cors: {
         allowedOrigins: corsAllowedOrigins
       }
+      appSettings: [
+        {
+          name: 'ApplicationInsights:ConnectionString'
+          value: appInsightConnectionString
+        }
+      ]
     }
   }
 }

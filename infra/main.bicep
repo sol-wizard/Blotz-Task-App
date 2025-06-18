@@ -13,12 +13,22 @@ param dbAdminUsername string
 @secure()
 param dbAdminPassword string
 
-module webApp 'modules/appService.bicep' = {
+
+module appInsight 'modules/appInsight.bicep' = {
+  name: '${deployment().name}-app-insight'
+  params: {
+    projectName: projectName
+    environment: environment
+    location: location
+  }
+}
+module webAppForAPI 'modules/appService.bicep' = {
   name:'${deployment().name}-webApp'//TODO: Add a unique suffix
   params: {
     webAppName: '${projectName}-api' 
     location: location
     environment: environment
+    appInsightConnectionString: appInsight.outputs.connectionString // Pass the connection string
   }
 }
 
@@ -74,3 +84,13 @@ module githubActionIdentity 'modules/identity.bicep' = {
     keyVaultName: kv.outputs.name
   }
 }
+
+module speech 'modules/speech.bicep' = {
+  name: '${deployment().name}-speech'
+  params: {
+    projectName: projectName
+    location: location
+    environment: environment
+  }
+}
+
