@@ -2,8 +2,6 @@ name: Build and deploy ASP.Net Core app to Production
 
 on:
   push:
-    paths:
-      - 'blotztask-api/**'
     branches:
       - implement-full-bicep-for-azure-resources
   workflow_dispatch:
