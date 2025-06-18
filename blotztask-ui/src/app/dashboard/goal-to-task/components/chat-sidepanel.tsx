@@ -10,13 +10,13 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "../components/ui/sidepanel";
-import { ExtractedTask } from "@/model/extracted-task-dto";
 import { useSidebar, SidebarTrigger } from "../components/ui/sidepanel";
 import { Button } from '@/components/ui/button';
 import TaskCardToAdd from "../../shared/components/taskcard/task-card-to-add";
+import { TaskDetailDTO } from "@/model/task-detail-dto";
 
 interface SidePanelProps {
-  tasks: ExtractedTask[];
+  tasks: TaskDetailDTO[];
   addedTaskIndices: Set<number>;
   onTaskAdded: (idx: number) => void;
 }

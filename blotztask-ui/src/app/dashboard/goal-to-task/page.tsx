@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ExtractedTask } from '@/model/extracted-task-dto';
 import { useSession } from 'next-auth/react';
 import { signalRService } from '@/services/signalr-service';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,6 +13,7 @@ import { SidebarProvider } from './components/ui/sidepanel';
 import { ChatContainer, ChatForm } from '@/components/ui/chat';
 import { MessageInput } from '@/components/ui/message-input';
 import { MessageWithTasks } from './models/message-with-tasks';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -34,9 +34,9 @@ export default function ChatPage() {
   const [userMessageInput, setUserMessageInput] = useState<string>('');
   const [isBotTyping, setIsBotTyping] = useState<boolean>(false);
 
-  const [, setTasks] = useState<ExtractedTask[]>([]);
+  const [, setTasks] = useState<TaskDetailDTO[]>([]);
   const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
-  const [selectedTasks, setSelectedTasks] = useState<ExtractedTask[]>([]);
+  const [selectedTasks, setSelectedTasks] = useState<TaskDetailDTO[]>([]);
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
 
@@ -114,7 +114,7 @@ export default function ChatPage() {
     }
   };
 
-  const addTaskToPanel = (task: ExtractedTask) => {
+  const addTaskToPanel = (task:TaskDetailDTO) => {
     setSelectedTasks((prev) => [...prev, task]);
   };
 

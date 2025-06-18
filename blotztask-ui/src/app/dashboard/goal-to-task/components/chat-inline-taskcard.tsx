@@ -1,12 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ExtractedTask } from '@/model/extracted-task-dto';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { CalendarDaysIcon, CheckIcon, Loader2Icon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 
 type ChatInlineTaskcardProps = {
-  task: ExtractedTask;
-  onTaskAdded: (task: ExtractedTask) => void;
+  task: TaskDetailDTO;
+  onTaskAdded: (task: TaskDetailDTO) => void;
 };
 
 const ChatInlineTaskcard = ({ task, onTaskAdded }: ChatInlineTaskcardProps) => {
@@ -41,7 +41,7 @@ const ChatInlineTaskcard = ({ task, onTaskAdded }: ChatInlineTaskcardProps) => {
         {/* TODO: Add due time */}
           <span className="text-xs text-zinc-600 flex flex-row justify-start gap-1">
             <CalendarDaysIcon size={14} stroke="#52525b" />
-            {task.due_date ?? 'None'}
+            {(task.dueDate as Date).toLocaleDateString()}
           </span>
         </div>
         </div>

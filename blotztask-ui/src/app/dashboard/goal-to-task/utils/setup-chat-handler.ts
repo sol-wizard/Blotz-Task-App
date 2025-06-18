@@ -3,12 +3,15 @@ import { Dispatch, SetStateAction } from 'react';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import { ConversationMessage } from '../models/chat-message';
 import { MessageWithTasks } from '../models/message-with-tasks';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4} from 'uuid';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
+import { mapExtractedToTaskDetail } from './map-extracted-to-task-dto';
+
 
 export function setupChatHandlers(
   connection: HubConnection,
   setMessages: Dispatch<SetStateAction<MessageWithTasks[]>>,
-  setTasks: Dispatch<SetStateAction<ExtractedTask[]>>,
+  setTasks: Dispatch<SetStateAction<TaskDetailDTO[]>>,
   setIsConversationComplete: Dispatch<SetStateAction<boolean>>,
   setConnectionState: Dispatch<SetStateAction<HubConnectionState>>,
   setIsBotTyping: Dispatch<SetStateAction<boolean>>
@@ -30,12 +33,15 @@ export function setupChatHandlers(
   const receiveTasksHandler = (receivedTasks: ExtractedTask[]) => {
     console.log('[SignalR] Received tasks:', receivedTasks);
     if (receivedTasks?.length > 0) {
-      setTasks(receivedTasks);
+      const tasks = receivedTasks.map(task => mapExtractedToTaskDetail(task))
+      setTasks(
+        tasks
+      );
       const newMsg: MessageWithTasks = {
         id: `tasks-${uuidv4()}`,
         role: 'assistant',
         content: 'Generated tasks',
-        tasks: receivedTasks,
+        tasks: tasks,
       };
       setMessages((prev) => [...prev, newMsg]);
     }
