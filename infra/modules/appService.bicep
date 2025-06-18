@@ -2,6 +2,9 @@ param webAppName string // move to parent Name of the application
 param location string = resourceGroup().location // Location for all resources
 param environment string
 param appInsightConnectionString string
+param keyVaultUri string
+param openAiEndpoint string
+param openAiDeploymentId string
 
 var corsAllowedOrigins = environment == 'staging' ? [
   'https://wapp-blotztaskapp-ui-staging.azurewebsites.net'
@@ -36,6 +39,22 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
         {
           name: 'ApplicationInsights:ConnectionString'
           value: appInsightConnectionString
+        }
+        {
+          name: 'KeyVault:VaultURI'
+          value: keyVaultUri
+        }
+        {
+          name: 'AzureOpenAI:Endpoint'
+          value: openAiEndpoint
+        }
+        {
+          name: 'AzureOpenAI:DeploymentId'
+          value: openAiDeploymentId
+        }
+        {
+          name: 'ASPNETCORE_ENVIRONMENT'
+          value: environment == 'prod' ? 'Production' : 'Staging'
         }
       ]
     }

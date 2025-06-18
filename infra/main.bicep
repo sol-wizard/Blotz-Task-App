@@ -28,7 +28,10 @@ module webAppForAPI 'modules/appService.bicep' = {
     webAppName: '${projectName}-api' 
     location: location
     environment: environment
-    appInsightConnectionString: appInsight.outputs.connectionString // Pass the connection string
+    appInsightConnectionString: appInsight.outputs.connectionString
+    keyVaultUri: kv.outputs.vaultUri
+    openAiEndpoint: openAi.outputs.endpoint
+    openAiDeploymentId: openAi.outputs.deploymentId
   }
 }
 

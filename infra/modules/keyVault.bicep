@@ -63,3 +63,4 @@ resource secretPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
 }
 
 output name string = kv.name
+output vaultUri string = kv.properties.vaultUri

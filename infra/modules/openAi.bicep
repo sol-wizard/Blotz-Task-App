@@ -42,3 +42,6 @@ module storeOpenAiKey 'keyVaultSecret.bicep' = {
     secretValue: openAiService.listKeys().key1
   }
 }
+
+output endpoint string = openAiService.properties.endpoint
+output deploymentId string = gpt41MiniDeployment.properties.model.name
