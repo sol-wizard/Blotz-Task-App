@@ -22,6 +22,16 @@ module appInsight 'modules/appInsight.bicep' = {
     location: location
   }
 }
+module kv 'modules/keyVault.bicep' = {
+  name: '${deployment().name}-keyvault' //TODO: Add a unique suffix
+  params: {
+    projectName: projectName
+    location: location
+    environment: environment
+    dbAdminUsername: dbAdminUsername
+    dbAdminPassword: dbAdminPassword
+  }
+}
 module webAppForAPI 'modules/appService.bicep' = {
   name:'${deployment().name}-webApp'//TODO: Add a unique suffix
   params: {
@@ -35,19 +45,17 @@ module webAppForAPI 'modules/appService.bicep' = {
   }
 }
 
-module kv 'modules/keyVault.bicep' = {
-  name: '${deployment().name}-keyvault' //TODO: Add a unique suffix
-  params: {
-    projectName: projectName
-    location: location
-    environment: environment
-    dbAdminUsername: dbAdminUsername
-    dbAdminPassword: dbAdminPassword
-  }
-}
-
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: kv.outputs.name
+}
+
+resource kvAdminRoleWebApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, 'kv-admin-webapp-${projectName}-${environment}')
+  properties: {
+    principalId: webAppForAPI.outputs.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
+  }
 }
 
 module sql 'modules/sqlserver.bicep' = {

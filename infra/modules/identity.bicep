@@ -28,7 +28,6 @@ resource fic 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentity
   }
 }
 
-//TODO: we need to deploy manaually the role assignment for contributor in scope subscriotion level due to bicep scope
 resource keyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(resourceGroup().id, 'kv-admin-access-${githubActionIdentity.name}')
   scope: keyVault
@@ -39,6 +38,7 @@ resource keyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01
   }
 }
 
+//TODO: For staging remove the contributor role assignment which point to the subscription level
 resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(resourceGroup().id, 'contributor-access-${githubActionIdentity.name}')
   scope: resourceGroup()  // Assign at resource group level

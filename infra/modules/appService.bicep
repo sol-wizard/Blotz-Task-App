@@ -25,9 +25,13 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   kind: 'app'
 }
 
+//TODO: Need to turn the log on
 resource appService 'Microsoft.Web/sites@2022-09-01' = {
   name: 'wapp-${webAppName}-${environment}'
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
@@ -60,3 +64,6 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
     }
   }
 }
+
+output principalId string = appService.identity.principalId
+output name string = appService.name
