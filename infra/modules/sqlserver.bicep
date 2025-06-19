@@ -38,5 +38,5 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   }
 }
 
-var connectionString = 'Server=tcp:${sqlServer.name}.database.windows.net,1433;Initial Catalog=${projectName}-database;Persist Security Info=False;User ID=${dbAdminUsername};Password=${dbAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+var connectionString = 'Server=tcp:${sqlServer.name}.database.windows.net,1433;Initial Catalog=${sqlServer::db.name};Persist Security Info=False;User ID=${dbAdminUsername};Password=${dbAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
 output connectionString string = connectionString

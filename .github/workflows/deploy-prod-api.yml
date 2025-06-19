@@ -93,8 +93,7 @@ jobs:
           id: deploy-to-webapp
           uses: azure/webapps-deploy@v3
           with:
-            app-name: 'wapp-blotztask-api-prod'
-            slot-name: 'Production'
+            app-name: 'wapp-blotztask-api-prod' #TODO: change to dynamic name
             package: './'
 
         - name: azure logout
