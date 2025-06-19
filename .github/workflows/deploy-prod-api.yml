@@ -86,7 +86,7 @@ jobs:
         - name: EF - Apply Migration SQL Script 
           uses: azure/sql-action@v2.3
           with:
-            connection-string: ${{ steps.get-secret-connection-strings.outputs.db-string-connection }} # TODO: do different way to get this
+            connection-string: ${{ steps.get-secret-connection-strings.outputs.sql-connection-string }} # TODO: do different way to get this
             path: ./migrations.sql    
             
         - name: Deploy to Azure Web App #What if my deployment failed here? can i rollback the above script deployment? You cant, you just need to make the schema changes is backward compitatble
