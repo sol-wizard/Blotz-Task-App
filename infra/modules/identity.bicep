@@ -39,5 +39,15 @@ resource keyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01
   }
 }
 
+resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, 'contributor-access-${githubActionIdentity.name}')
+  scope: resourceGroup()  // Assign at resource group level
+  properties: {
+    principalId: githubActionIdentity.properties.principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c') // Contributor role ID
+    principalType: 'ServicePrincipal'
+  }
+}
+
 output principalId string = githubActionIdentity.properties.principalId
 output resourceId string = githubActionIdentity.id
