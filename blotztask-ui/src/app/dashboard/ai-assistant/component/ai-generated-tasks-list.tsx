@@ -5,11 +5,15 @@ import { TaskDetailDTO } from "@/model/task-detail-dto";
 import AITaskCardContainer from "./ai-task-card-container";
 import { RawEditTaskDTO } from "@/model/raw-edit-task-dto";
 import { RawAddTaskDTO } from "@/model/raw-add-task-dto";
+import { mapTaskToAddTask } from "../../goal-to-task/utils/map-task-to-addtask-dto";
+import { editTask } from "@/services/task-service";
+import { performTaskAndRefresh } from "@/app/store/shared/util";
 
 interface AiGeneratedTasksListProps {
   loading: boolean;
   aiMessage: string;
   tasks: TaskDetailDTO[];
+  setTasks: React.Dispatch<React.SetStateAction<TaskDetailDTO[]>>;
   onAddTask: (task: RawAddTaskDTO) => void;
 }
 
@@ -17,18 +21,21 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
   loading,
   aiMessage,
   tasks,
+  setTasks,
+  onAddTask,
 }) => {
 
-  //TODO: Handle add task to task list
   const handleAddTask = (task: TaskDetailDTO) => {
-    console.log('add this ai generated task to task list', task);
-    //TODO: Need to map the task to the raw add task dto
-    // onAddTask(task);
+    const taskToAdd = mapTaskToAddTask(task);
+    onAddTask(taskToAdd);
   };
 
-  //TODO: Handle edit the task that is still in the state
-  const handleTaskEdit = (task: RawEditTaskDTO) => {
-    console.log('You need to edit this task in the state', task);
+  const handleTaskEdit = (updatedTask: RawEditTaskDTO) => {
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === updatedTask.id ? { ...task, ...updatedTask } : task
+      )
+    );
   }; 
 
   //TODO: Handle delete task from the state 

@@ -19,6 +19,7 @@ export default function AITaskCardContainer({
   handleTaskEdit,
   handleTaskDelete,
 }: AITaskCardContainerProps) {
+  console.log(task.id);
   return (
     <div>
       <div className="flex w-full">

@@ -34,9 +34,9 @@ export async function generateAiTask(prompt: string): Promise<AIAssistantRespons
   });
 
   //Map the result from backend AI to TaskDetailDTO so can fit into frontend component
-  const tasks = result.response.tasks.map((task) => {
+  const tasks = result.response.tasks.map((task, index) => {
     const newTask = {
-      id: 0,
+      id: index,
       description: task.description,
       title: task.title,
       isDone: false,

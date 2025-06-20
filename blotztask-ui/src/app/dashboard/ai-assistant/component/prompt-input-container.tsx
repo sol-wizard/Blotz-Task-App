@@ -1,5 +1,4 @@
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import VoiceRecognizer from "../external-services/voice-recognizer";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
