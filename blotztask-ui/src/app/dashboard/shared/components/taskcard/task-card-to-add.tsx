@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { addTaskItem } from '@/services/task-service';
-import { ExtractedTask } from '@/model/extracted-task-dto';
-import { mapExtractedTaskToAddTaskDTO } from '@/app/dashboard/ai-assistant/util/map-extracted-to-add-task';
+import { mapTaskToAddTask } from '@/app/dashboard/goal-to-task/utils/map-task-to-addtask-dto';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 
 interface TaskCardToAddProps {
-  taskToAdd: ExtractedTask;
+  taskToAdd: TaskDetailDTO;
   index: number;
   addedTaskIndices: Set<number>;
   onTaskAdded?: (index: number) => void;
@@ -32,7 +32,7 @@ export default function TaskCardToAdd({
     setAdding(true);
 
     try {
-      await addTaskItem(mapExtractedTaskToAddTaskDTO(taskToAdd));
+      await addTaskItem(mapTaskToAddTask(taskToAdd));
       
       if (onTaskAdded) {
         onTaskAdded(index);
@@ -55,7 +55,7 @@ export default function TaskCardToAdd({
         <strong>Description:</strong> {taskToAdd.description ?? 'None'}
       </p>
       <p className="text-sm text-zinc-600">
-        <strong>Due Date:</strong> {taskToAdd.due_date ?? 'None'}
+        <strong>Due Date:</strong> {taskToAdd.dueDate.toLocaleDateString()}
       </p>
       <p className="text-sm text-zinc-600 flex items-center">
         <span
