@@ -3,6 +3,7 @@ import { CalendarDaysIcon } from 'lucide-react';
 import { ChatTaskEditActions } from './chat-task-edit-actions-block';
 import { useState } from 'react';
 import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
+import TaskSeparator from '../../shared/components/ui/task-separator';
 
 type ChatSidePanelTaskcardProps = {
   task: TaskDetailDTO2;
@@ -23,10 +24,7 @@ const ChatSidePanelTaskcard = ({ task, handleRemoveTask }: ChatSidePanelTaskcard
         onMouseLeave={() => setIsHovered(false)}
       >
         <div className="flex flex-row gap-3">
-          <div
-            className="h-auto rounded-sm w-1"
-            style={{ backgroundColor: task.label.color || 'green' }}
-          ></div>
+          <TaskSeparator color={task.label.color} taskStatus={'todo'} />
           <div className="pr-2 flex flex-col gap-1 flex-1">
             <h2 className="text-sm font-semibold text-zinc-800">{task.title}</h2>
             <p className="text-xs text-zinc-600">{task.description ?? 'None'}</p>

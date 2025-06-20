@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
 import { CalendarDaysIcon, CheckIcon, Loader2Icon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
+import TaskSeparator from '../../shared/components/ui/task-separator';
 
 type ChatInlineTaskcardProps = {
   task: TaskDetailDTO2;
@@ -34,7 +35,7 @@ const ChatInlineTaskcard = ({ task, onTaskAdded }: ChatInlineTaskcardProps) => {
         className={`flex flex-row justify-between w-[80%] mt-4 p-4 shadow-md space-y-2 border-2 rounded-xl`}
       >
         <div className='flex flex-row gap-3'>
-        <div className="h-auto w-1 rounded-sm" style={{ backgroundColor: task.label.color || 'green' }}></div>
+        <TaskSeparator color={task.label.color} taskStatus={'todo'} />
         <div className="pr-2 flex flex-col gap-1">
           <h2 className="text-md font-semibold text-zinc-800">{task.title}</h2>
           <p className="text-xs text-zinc-600">{task.description ?? 'None'}</p>
