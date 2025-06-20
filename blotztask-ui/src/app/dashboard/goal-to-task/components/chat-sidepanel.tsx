@@ -1,4 +1,3 @@
-// components/tasks-sidebar.tsx
 'use client';
 
 import {
@@ -26,9 +25,9 @@ interface SidePanelProps {
 export function SidePanel({ tasks, setTasks }: SidePanelProps) {
   const { open } = useSidebar();
   const [isLoading, setIsLoading] = useState(false);
-  const onRemoveTaskcard = (taskId: string) => {
-    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
-  };
+  // const onRemoveTaskcard = (taskId: string) => {
+  //   setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+  // };
 
   const handleAddAllTasks = async () => {
     setIsLoading(true);
@@ -58,7 +57,10 @@ export function SidePanel({ tasks, setTasks }: SidePanelProps) {
             <SidebarMenu>
               {tasks.map((task, i) => (
                 <SidebarMenuItem key={i} className="p-0">
-                  <ChatSidePanelTaskcard task={task} handleRemoveTask={onRemoveTaskcard} />
+                  <ChatSidePanelTaskcard 
+                  task={task} 
+                  // handleRemoveTask={onRemoveTaskcard} 
+                  />
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
