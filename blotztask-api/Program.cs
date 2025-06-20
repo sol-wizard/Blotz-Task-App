@@ -86,7 +86,7 @@ if (builder.Environment.IsProduction())
 
     builder.Services.AddSingleton(secretClient);
 
-    builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(secretClient.GetSecret("db-string-connection").Value.Value.ToString()));
+    builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(secretClient.GetSecret("sql-connection-string").Value.Value.ToString()));
 }
 
 builder.Services.AddAzureOpenAi();
