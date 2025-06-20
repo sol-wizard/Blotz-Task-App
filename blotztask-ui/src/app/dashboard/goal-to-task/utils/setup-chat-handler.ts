@@ -2,44 +2,69 @@ import { HubConnection, HubConnectionState } from '@microsoft/signalr';
 import { Dispatch, SetStateAction } from 'react';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import { ConversationMessage } from '../models/chat-message';
+import { MessageWithTasks } from '../models/message-with-tasks';
+import { v4 as uuidv4} from 'uuid';
+import { mapExtractedToTaskDetail } from './map-extracted-to-task-dto';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 
 export function setupChatHandlers(
   connection: HubConnection,
-  setMessages: Dispatch<SetStateAction<ConversationMessage[]>>,
-  setTasks: Dispatch<SetStateAction<ExtractedTask[]>>,
+  setMessages: Dispatch<SetStateAction<MessageWithTasks[]>>,
+  setTasks: Dispatch<SetStateAction<TaskDetailDTO[]>>,
   setIsConversationComplete: Dispatch<SetStateAction<boolean>>,
   setConnectionState: Dispatch<SetStateAction<HubConnectionState>>,
   setIsBotTyping: Dispatch<SetStateAction<boolean>>
-) {
+): () => void {
   console.log('[SignalR] Connection started');
   setConnectionState(HubConnectionState.Connected);
 
-  connection.on('ReceiveMessage', (msg: ConversationMessage) => {
+  const receiveMessageHandler = (msg: ConversationMessage) => {
     console.log('[SignalR] Received message:', msg);
 
-    const newMsg: ConversationMessage = {
-      conversationId: msg.conversationId,
-      sender: msg.sender,
+    const newMsg: MessageWithTasks = {
+      id: `${msg.conversationId}-${uuidv4()}`,
+      role: msg.isBot ? 'assistant' : 'user',
       content: msg.content,
-      timestamp: new Date(msg.timestamp),
-      isBot: msg.isBot,
     };
     setMessages((prev) => [...prev, newMsg]);
-  });
+  };
 
-  connection.on('ReceiveTasks', (receivedTasks: ExtractedTask[]) => {
+  const receiveTasksHandler = (receivedTasks: ExtractedTask[]) => {
     console.log('[SignalR] Received tasks:', receivedTasks);
     if (receivedTasks?.length > 0) {
-      setTasks(receivedTasks);
+      const tasks = receivedTasks.map(task => mapExtractedToTaskDetail(task))
+      setTasks(
+        tasks
+      );
+      const newMsg: MessageWithTasks = {
+        id: `${uuidv4()}`,
+        role: 'assistant',
+        content: 'Generated tasks',
+        tasks: tasks,
+      };
+      setMessages((prev) => [...prev, newMsg]);
     }
-  });
+  };
 
-  connection.on('ConversationCompleted', (convoId: string) => {
+  const conversationCompletedHandler = (convoId: string) => {
     console.log('[SignalR] Conversation completed for:', convoId);
     setIsConversationComplete(true);
-  });
+  };
 
-  connection.on('BotTyping', (isTyping: boolean) => {
+  const botTypingHandler = (isTyping: boolean) => {
     setIsBotTyping(isTyping);
-  });
+  };
+
+  connection.on('ReceiveMessage', receiveMessageHandler);
+  connection.on('ReceiveTasks', receiveTasksHandler);
+  connection.on('ConversationCompleted', conversationCompletedHandler);
+  connection.on('BotTyping', botTypingHandler);
+
+  // Return cleanup function to remove handlers
+  return () => {
+    connection.off('ReceiveMessage', receiveMessageHandler);
+    connection.off('ReceiveTasks', receiveTasksHandler);
+    connection.off('ConversationCompleted', conversationCompletedHandler);
+    connection.off('BotTyping', botTypingHandler);
+  };
 }

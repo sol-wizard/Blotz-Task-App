@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ExtractedTask } from '@/model/extracted-task-dto';
 import { useSession } from 'next-auth/react';
 import { signalRService } from '@/services/signalr-service';
 import { v4 as uuidv4 } from 'uuid';
@@ -9,11 +8,12 @@ import { HubConnectionState } from '@microsoft/signalr';
 import { ChatPanel } from './components/chat-panel';
 import { setupChatHandlers } from './utils/setup-chat-handler';
 import { ChatPanelHeader } from './components/chat-panel-header';
-import { ConversationMessage } from './models/chat-message';
 import { SidePanel } from './components/chat-sidepanel';
 import { SidebarProvider } from './components/ui/sidepanel';
 import { ChatContainer, ChatForm } from '@/components/ui/chat';
 import { MessageInput } from '@/components/ui/message-input';
+import { MessageWithTasks } from './models/message-with-tasks';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -29,25 +29,27 @@ export default function ChatPage() {
 
   //TODO: we can give user a better user message based on why it failed maybe a dialog(e.g. "Run out of token or something else")
   // const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [messagesWithTasks, setMessagesWithTasks] = useState<MessageWithTasks[]>([]);
   //TODO: If we use react hook form here, we dont need to use this state here anymore
   const [userMessageInput, setUserMessageInput] = useState<string>('');
   const [isBotTyping, setIsBotTyping] = useState<boolean>(false);
 
-  const [tasks, setTasks] = useState<ExtractedTask[]>([]);
-  const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
+  const [, setTasks] = useState<TaskDetailDTO[]>([]);
+  const [selectedTasks, setSelectedTasks] = useState<TaskDetailDTO[]>([]);
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
 
   useEffect(() => {
     const connect = signalRService.createConnection();
     setConnection(connect);
+    let cleanupHandlers: (() => void) | null = null;
+
     connect
       .start()
       .then(() => {
-        setupChatHandlers(
+        cleanupHandlers = setupChatHandlers(
           connect,
-          setMessages,
+          setMessagesWithTasks,
           setTasks,
           setIsConversationComplete,
           setConnectionState,
@@ -56,11 +58,15 @@ export default function ChatPage() {
       })
       .catch((err) => {
         console.error('[SignalR] Error starting connection:', err);
-        // setConnectionError("Failed to connect to chat service. Please try again.");
       });
 
     return () => {
-      connection.stop().then(() => console.log('[SignalR] Connection stopped'));
+      if (cleanupHandlers) {
+        cleanupHandlers(); // Remove handlers
+      }
+      if (connect) {
+        connect.stop().then(() => console.log('[SignalR] Connection stopped'));
+      }
     };
   }, []);
 
@@ -79,10 +85,6 @@ export default function ChatPage() {
     }
   };
 
-  const handleTaskAdded = (index) => {
-    setAddedTaskIndices((prev) => new Set(prev).add(index));
-  };
-
   const handleReconnect = async () => {
     if (connection) {
       // setConnectionError(null);
@@ -92,7 +94,7 @@ export default function ChatPage() {
         await connection.start();
         setupChatHandlers(
           connection,
-          setMessages,
+          setMessagesWithTasks,
           setTasks,
           setIsConversationComplete,
           setConnectionState,
@@ -104,6 +106,10 @@ export default function ChatPage() {
         setConnectionState(HubConnectionState.Disconnected);
       }
     }
+  };
+
+  const addTaskToPanel = (task:TaskDetailDTO) => {
+    setSelectedTasks((prev) => [...prev, task]);
   };
 
   return (
@@ -119,20 +125,21 @@ export default function ChatPage() {
 
           {/* Chat section */}
           <ChatPanel
-            messages={messages}
+            messagesWithTasks={messagesWithTasks}
             connectionState={connectionState}
             isConversationComplete={isConversationComplete}
             isBotTyping={isBotTyping}
+            onTaskAdded={addTaskToPanel}
           />
           {/* TODO: Allow file upload*/}
-          {/* TODO: Integrate voice input */}
+          {/* TODO: Integrate audio input */}
           <ChatForm
             className="mt-auto"
             isPending={isBotTyping || connectionState !== HubConnectionState.Connected}
             handleSubmit={handleSendMessage}
           >
             {
-              // ((files, setFiles))
+              // ({ files, setFiles })
               () => (
                 <MessageInput
                   value={userMessageInput}
@@ -150,8 +157,7 @@ export default function ChatPage() {
             }
           </ChatForm>
         </ChatContainer>
-
-        <SidePanel tasks={tasks} addedTaskIndices={addedTaskIndices} onTaskAdded={handleTaskAdded} />
+        <SidePanel tasks={selectedTasks} setTasks={setSelectedTasks}/>
       </SidebarProvider>
     </div>
   );
