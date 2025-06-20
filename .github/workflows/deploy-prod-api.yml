@@ -1,9 +1,6 @@
 name: Build and deploy ASP.Net Core app to Production
 
 on:
-  push:
-    branches:
-      - implement-full-bicep-for-azure-resources
   workflow_dispatch:
 
 permissions: # Do i need a permission write here ?
