@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { addTaskItem } from '@/services/task-service';
 import { mapTaskToAddTask } from '@/app/dashboard/goal-to-task/utils/map-task-to-addtask-dto';
-import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 
 interface TaskCardToAddProps {
-  taskToAdd: TaskDetailDTO2;
+  taskToAdd: TaskDetailDTO;
   index: number;
   addedTaskIndices: Set<number>;
   onTaskAdded?: (index: number) => void;

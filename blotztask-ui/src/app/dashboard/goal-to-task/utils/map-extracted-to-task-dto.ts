@@ -1,10 +1,10 @@
 import { ExtractedTask } from '@/model/extracted-task-dto';
-import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
-import { v4 as uuidv4} from 'uuid';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 
-export function mapExtractedToTaskDetail(extractedTask: ExtractedTask): TaskDetailDTO2 {
+export function mapExtractedToTaskDetail(extractedTask: ExtractedTask): TaskDetailDTO {
   return {
-      id: uuidv4(),
+    //TODO: This is just a temporary id, we not using id for now, just to fulfill the DTO, we will need new dto for it 
+      id: Date.now() + Math.floor(Math.random() * 10),
       description: extractedTask.description,
       title: extractedTask.title,
       isDone: false,

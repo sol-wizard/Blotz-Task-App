@@ -5,13 +5,12 @@ import { ConversationMessage } from '../models/chat-message';
 import { MessageWithTasks } from '../models/message-with-tasks';
 import { v4 as uuidv4} from 'uuid';
 import { mapExtractedToTaskDetail } from './map-extracted-to-task-dto';
-import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
-
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 
 export function setupChatHandlers(
   connection: HubConnection,
   setMessages: Dispatch<SetStateAction<MessageWithTasks[]>>,
-  setTasks: Dispatch<SetStateAction<TaskDetailDTO2[]>>,
+  setTasks: Dispatch<SetStateAction<TaskDetailDTO[]>>,
   setIsConversationComplete: Dispatch<SetStateAction<boolean>>,
   setConnectionState: Dispatch<SetStateAction<HubConnectionState>>,
   setIsBotTyping: Dispatch<SetStateAction<boolean>>

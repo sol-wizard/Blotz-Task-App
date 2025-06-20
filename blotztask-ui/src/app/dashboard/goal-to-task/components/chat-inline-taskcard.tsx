@@ -1,13 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
 import { CalendarDaysIcon, CheckIcon, Loader2Icon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import TaskSeparator from '../../shared/components/ui/task-separator';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 
 type ChatInlineTaskcardProps = {
-  task: TaskDetailDTO2;
-  onTaskAdded: (task: TaskDetailDTO2) => void;
+  task: TaskDetailDTO;
+  onTaskAdded: (task: TaskDetailDTO) => void;
 };
 
 const ChatInlineTaskcard = ({ task, onTaskAdded }: ChatInlineTaskcardProps) => {

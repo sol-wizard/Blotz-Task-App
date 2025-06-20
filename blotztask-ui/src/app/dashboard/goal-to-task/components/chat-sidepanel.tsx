@@ -12,14 +12,14 @@ import {
 import { useSidebar, SidebarTrigger } from '../components/ui/sidepanel';
 import { Button } from '@/components/ui/button';
 import ChatSidePanelTaskcard from './chat-sidepanel-taskcard';
-import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
 import { addTaskItem } from '@/services/task-service';
 import { mapTaskToAddTask } from '../utils/map-task-to-addtask-dto';
 import React, { useState } from 'react';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 
 interface SidePanelProps {
-  tasks: TaskDetailDTO2[];
-  setTasks: React.Dispatch<React.SetStateAction<TaskDetailDTO2[]>>;
+  tasks: TaskDetailDTO[];
+  setTasks: React.Dispatch<React.SetStateAction<TaskDetailDTO[]>>;
 }
 
 export function SidePanel({ tasks, setTasks }: SidePanelProps) {

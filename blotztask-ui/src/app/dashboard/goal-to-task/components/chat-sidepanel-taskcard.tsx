@@ -1,10 +1,10 @@
 import { Card } from '@/components/ui/card';
 import { CalendarDaysIcon } from 'lucide-react';
-import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
 import TaskSeparator from '../../shared/components/ui/task-separator';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 
 type ChatSidePanelTaskcardProps = {
-  task: TaskDetailDTO2;
+  task: TaskDetailDTO;
   // handleRemoveTask: (taskId: string) => void;
 };
 
@@ -30,7 +30,7 @@ const ChatSidePanelTaskcard = ({ task }: ChatSidePanelTaskcardProps) => {
             <div className="text-xs text-zinc-600 flex flex-row justify-between items-center">
               <span className="flex flex-row justify-start gap-1">
                 <CalendarDaysIcon size={14} stroke="#52525b" />
-                {(task.dueDate as Date).toLocaleDateString()}
+                {task.dueDate.toLocaleDateString()}
               </span>
               {/* <ChatTaskEditActions
                 isEditing={isEditing}

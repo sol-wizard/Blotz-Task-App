@@ -6,7 +6,7 @@ import {
 import { TypingIndicator } from "@/components/ui/typing-indicator"
 import { MessageWithTasks } from "@/app/dashboard/goal-to-task/models/message-with-tasks"
 import ChatInlineTaskcard from "@/app/dashboard/goal-to-task/components/chat-inline-taskcard"
-import { TaskDetailDTO2 } from "@/model/task-detail-dto-2"
+import { TaskDetailDTO } from "@/model/task-detail-dto"
 
 type AdditionalMessageOptions = Omit<ChatMessageProps, keyof Message>
 
@@ -17,7 +17,7 @@ interface MessageWithTasksListProps {
   messageOptions?:
     | AdditionalMessageOptions
     | ((message: Message) => AdditionalMessageOptions)
-  onTaskAdd?:(task: TaskDetailDTO2) => void;
+  onTaskAdd?:(task: TaskDetailDTO) => void;
 }
 
 export function MessageList({

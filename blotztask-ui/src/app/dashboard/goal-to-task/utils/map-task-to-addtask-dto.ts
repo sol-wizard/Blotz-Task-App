@@ -1,7 +1,7 @@
 import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
-import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 
-export function mapTaskToAddTask(task: TaskDetailDTO2): RawAddTaskDTO {
+export function mapTaskToAddTask(task: TaskDetailDTO): RawAddTaskDTO {
   return {
     title: task.title,
     description: task.description,
