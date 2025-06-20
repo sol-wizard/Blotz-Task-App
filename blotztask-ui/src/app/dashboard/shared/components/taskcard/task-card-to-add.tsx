@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { addTaskItem } from '@/services/task-service';
-import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { mapTaskToAddTask } from '@/app/dashboard/goal-to-task/utils/map-task-to-addtask-dto';
+import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
 
 interface TaskCardToAddProps {
-  taskToAdd: TaskDetailDTO;
+  taskToAdd: TaskDetailDTO2;
   index: number;
   addedTaskIndices: Set<number>;
   onTaskAdded?: (index: number) => void;
