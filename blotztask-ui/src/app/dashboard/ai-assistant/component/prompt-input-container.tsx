@@ -16,7 +16,6 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
 
   return (
     <div className="flex flex-col gap-4">
-      <Label htmlFor="prompt">Prompt to generate Task</Label>
       <div className="flex gap-2 items-center">
         <Input
           id="prompt"
@@ -35,7 +34,7 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
           disabled={loading || !prompt.trim()} 
           className="w-fit px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
         >
-          {/* TODO: If we use react hook form we probably dont need this loading state  */}
+          {/* TODO: If we use react hook form we probably don't need this loading state  */}
           {loading ? "Generating…" : "Generate Task"}
         </Button>
       </div>

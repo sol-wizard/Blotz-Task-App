@@ -33,16 +33,22 @@ export async function generateAiTask(prompt: string): Promise<AIAssistantRespons
     },
   });
 
-  //Map the restult from backend AI to TaskDetailDTO so can fit into frontend component
-  const tasks = result.response.tasks.map((task) => ({
-    id: 0, // New task dont need id
-    description: task.description,
-    title: task.title,
-    isDone: false,
-    label: task.label,
-    dueDate: new Date(task.due_date),
-    hasTime: false, //TODO: Current AI generate task still not support time
-  }));
+  //Map the result from backend AI to TaskDetailDTO so can fit into frontend component
+  const tasks = result.response.tasks.map((task) => {
+    const newTask = {
+      id: 0,
+      description: task.description,
+      title: task.title,
+      isDone: false,
+      label: task.label,
+      dueDate: new Date(task.due_date),
+      hasTime: false,
+    };
+    console.log(task.due_date);
+    console.log('Generated task:', newTask); // 每个 task 打印一次
+
+    return newTask;
+  });
 
   return {
     message: result.response.message,
