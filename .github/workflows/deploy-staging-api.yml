@@ -56,8 +56,7 @@ jobs:
           path: ${{ runner.temp }}/migrations.sql  
  
   deploy:
-    # TODO: change to ubuntu-latest
-      runs-on: windows-latest
+      runs-on: ubuntu-latest
       needs: build
       environment:
         name: 'Staging'
@@ -77,10 +76,9 @@ jobs:
         - name: Azure login
           uses: azure/login@v2
           with:
-            #TODO: Move this to github environment variables
-            client-id: ${{ vars.AZURE_CLIENT_ID }}
-            tenant-id: ${{ vars.AZURE_TENANT_ID }}
-            subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+            client-id: ${{ secrets.AZURE_UAI_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_UAI_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         
         - uses: Azure/get-keyvault-secrets@v1
           with:
