@@ -4,14 +4,14 @@ import { ExtractedTask } from '@/model/extracted-task-dto';
 import { ConversationMessage } from '../models/chat-message';
 import { MessageWithTasks } from '../models/message-with-tasks';
 import { v4 as uuidv4} from 'uuid';
-import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { mapExtractedToTaskDetail } from './map-extracted-to-task-dto';
+import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
 
 
 export function setupChatHandlers(
   connection: HubConnection,
   setMessages: Dispatch<SetStateAction<MessageWithTasks[]>>,
-  setTasks: Dispatch<SetStateAction<TaskDetailDTO[]>>,
+  setTasks: Dispatch<SetStateAction<TaskDetailDTO2[]>>,
   setIsConversationComplete: Dispatch<SetStateAction<boolean>>,
   setConnectionState: Dispatch<SetStateAction<HubConnectionState>>,
   setIsBotTyping: Dispatch<SetStateAction<boolean>>
@@ -38,7 +38,7 @@ export function setupChatHandlers(
         tasks
       );
       const newMsg: MessageWithTasks = {
-        id: `tasks-${uuidv4()}`,
+        id: `${uuidv4()}`,
         role: 'assistant',
         content: 'Generated tasks',
         tasks: tasks,

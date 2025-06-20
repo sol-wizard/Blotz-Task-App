@@ -2,14 +2,14 @@ import { HubConnectionState } from '@microsoft/signalr';
 import { ChatMessages } from '@/components/ui/chat';
 import { MessageList } from '@/components/ui/message-list';
 import { MessageWithTasks } from '../models/message-with-tasks';
-import { TaskDetailDTO } from '@/model/task-detail-dto';
+import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
 
 type Props = {
   messagesWithTasks: MessageWithTasks[];
   connectionState: HubConnectionState;
   isConversationComplete: boolean;
   isBotTyping: boolean;
-  onTaskAdded: (task: TaskDetailDTO) => void;
+  onTaskAdded: (task: TaskDetailDTO2) => void;
 };
 
 export const ChatPanel = ({

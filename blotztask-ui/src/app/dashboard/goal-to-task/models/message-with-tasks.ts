@@ -1,6 +1,6 @@
 import { Message } from "@/components/ui/chat-message";
-import { TaskDetailDTO } from "@/model/task-detail-dto";
+import { TaskDetailDTO2 } from "@/model/task-detail-dto-2";
 
 export interface MessageWithTasks extends Message {
-  tasks?: TaskDetailDTO[];
+  tasks?: TaskDetailDTO2[];
 }

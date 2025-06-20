@@ -13,7 +13,7 @@ import { SidebarProvider } from './components/ui/sidepanel';
 import { ChatContainer, ChatForm } from '@/components/ui/chat';
 import { MessageInput } from '@/components/ui/message-input';
 import { MessageWithTasks } from './models/message-with-tasks';
-import { TaskDetailDTO } from '@/model/task-detail-dto';
+import { TaskDetailDTO2 } from '@/model/task-detail-dto-2';
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -34,9 +34,8 @@ export default function ChatPage() {
   const [userMessageInput, setUserMessageInput] = useState<string>('');
   const [isBotTyping, setIsBotTyping] = useState<boolean>(false);
 
-  const [, setTasks] = useState<TaskDetailDTO[]>([]);
-  const [addedTaskIndices, setAddedTaskIndices] = useState<Set<number>>(new Set());
-  const [selectedTasks, setSelectedTasks] = useState<TaskDetailDTO[]>([]);
+  const [, setTasks] = useState<TaskDetailDTO2[]>([]);
+  const [selectedTasks, setSelectedTasks] = useState<TaskDetailDTO2[]>([]);
   //TODO: I dont think we store user info in the frontend session, but we can implement that later (we currently use api to get user info)
   const userName = session?.user?.name || 'User';
 
@@ -86,10 +85,6 @@ export default function ChatPage() {
     }
   };
 
-  const handleTaskAdded = (index) => {
-    setAddedTaskIndices((prev) => new Set(prev).add(index));
-  };
-
   const handleReconnect = async () => {
     if (connection) {
       // setConnectionError(null);
@@ -107,14 +102,13 @@ export default function ChatPage() {
         );
       } catch (err) {
         console.error('Reconnect failed', err);
-        console.error('Reconnect failed', err);
         // setConnectionError("Failed to reconnect. Please try again.");
         setConnectionState(HubConnectionState.Disconnected);
       }
     }
   };
 
-  const addTaskToPanel = (task:TaskDetailDTO) => {
+  const addTaskToPanel = (task:TaskDetailDTO2) => {
     setSelectedTasks((prev) => [...prev, task]);
   };
 
@@ -163,7 +157,7 @@ export default function ChatPage() {
             }
           </ChatForm>
         </ChatContainer>
-        <SidePanel tasks={selectedTasks} addedTaskIndices={addedTaskIndices} onTaskAdded={handleTaskAdded} />
+        <SidePanel tasks={selectedTasks} setTasks={setSelectedTasks}/>
       </SidebarProvider>
     </div>
   );
