@@ -1,5 +1,4 @@
-// components/tasks-sidebar.tsx
-"use client";
+'use client';
 
 import {
   Sidebar,
@@ -9,24 +8,42 @@ import {
   SidebarGroup,
   SidebarMenu,
   SidebarMenuItem,
-} from "../components/ui/sidepanel";
-import { ExtractedTask } from "@/model/extracted-task-dto";
-import { useSidebar, SidebarTrigger } from "../components/ui/sidepanel";
+} from '../components/ui/sidepanel';
+import { useSidebar, SidebarTrigger } from '../components/ui/sidepanel';
 import { Button } from '@/components/ui/button';
-import TaskCardToAdd from "../../shared/components/taskcard/task-card-to-add";
+import ChatSidePanelTaskcard from './chat-sidepanel-taskcard';
+import { addTaskItem } from '@/services/task-service';
+import { mapTaskToAddTask } from '../utils/map-task-to-addtask-dto';
+import React, { useState } from 'react';
+import { TaskDetailDTO } from '@/model/task-detail-dto';
 
 interface SidePanelProps {
-  tasks: ExtractedTask[];
-  addedTaskIndices: Set<number>;
-  onTaskAdded: (idx: number) => void;
+  tasks: TaskDetailDTO[];
+  setTasks: React.Dispatch<React.SetStateAction<TaskDetailDTO[]>>;
 }
 
-export function SidePanel({
-  tasks,
-  addedTaskIndices,
-  onTaskAdded,
-}: SidePanelProps) {
+export function SidePanel({ tasks, setTasks }: SidePanelProps) {
   const { open } = useSidebar();
+  const [isLoading, setIsLoading] = useState(false);
+  // const onRemoveTaskcard = (taskId: string) => {
+  //   setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+  // };
+
+  const handleAddAllTasks = async () => {
+    setIsLoading(true);
+    await Promise.all(
+      tasks.map(async (task) => {
+        try {
+          await addTaskItem(mapTaskToAddTask(task));
+        } catch (error: unknown) {
+          console.error('Failed to save task:', error);
+        }
+      })
+    );
+    setTasks([]);
+    setIsLoading(false);
+  };
+
   return (
     <Sidebar side="right" variant="floating" collapsible="icon" className="ml-2">
       <SidebarHeader className="w-full text-base font-semibold px-4 py-3">
@@ -34,30 +51,32 @@ export function SidePanel({
         <SidebarTrigger />
       </SidebarHeader>
 
-      {open &&
+      {open && (
         <SidebarContent>
           <SidebarGroup>
             <SidebarMenu>
-              {tasks.map((t, i) => (
+              {tasks.map((task, i) => (
                 <SidebarMenuItem key={i} className="p-0">
-                  <TaskCardToAdd
-                    taskToAdd={t}
-                    index={i}
-                    addedTaskIndices={addedTaskIndices}
-                    onTaskAdded={onTaskAdded}
+                  <ChatSidePanelTaskcard 
+                  task={task} 
+                  // handleRemoveTask={onRemoveTaskcard} 
                   />
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
-      }
-      
-      {open && 
+      )}
+
+      {open && (
         <SidebarFooter className="text-xs text-muted-foreground px-8 py-2">
-          <Button>Save & Add</Button>
+          {tasks.length > 0 && (
+            <Button onClick={handleAddAllTasks} disabled={isLoading}>
+              {isLoading ? 'Saving...' : 'Save & Add'}
+            </Button>
+          )}
         </SidebarFooter>
-      }
+      )}
     </Sidebar>
   );
 }

@@ -38,7 +38,7 @@ module storeOpenAiKey 'keyVaultSecret.bicep' = {
   name: '${deployment().name}-store-openai-key'
   params: {
     keyVaultName: keyVaultName
-    secretName: 'openai-api-key'
+    secretName: 'azureopenai-apikey'
     secretValue: openAiService.listKeys().key1
   }
 }

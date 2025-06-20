@@ -169,7 +169,10 @@ const config: Config = {
   				'light-bg': 'var(--shiki-light-bg)',
   				dark: 'var(--shiki-dark)',
   				'dark-bg': 'var(--shiki-dark-bg)'
-  			}
+  			},
+			userMessageBox: {
+				DEFAULT: '#4380FD4D'
+			}
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
