@@ -2,3 +2,5 @@
 ./vs
 .git-autoconfig.json
 .vs/
+# TODO: temporary hide power shell script
+*.ps1
