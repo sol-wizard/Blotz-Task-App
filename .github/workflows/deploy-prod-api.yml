@@ -1,4 +1,5 @@
-name: Build and deploy ASP.Net Core app to Production
+name: Production - Build and deploy WebApi to Azure Web App
+
 
 on:
   workflow_dispatch:
