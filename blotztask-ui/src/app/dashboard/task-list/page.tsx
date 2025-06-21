@@ -71,7 +71,7 @@ export default function Page() {
 
   return (
     <div className="flex flex-col w-full items-end mt-5">
-      <div className="text-primary-dark flex w-full justify-between">
+      <div className="text-primary-dark flex w-full justify-between mb-5">
         <H1>All Tasks</H1>
       </div>
 

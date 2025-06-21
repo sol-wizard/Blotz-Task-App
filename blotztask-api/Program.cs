@@ -93,12 +93,14 @@ builder.Services.AddAzureOpenAi();
 
 builder.Services.AddScoped<TaskGenerationAIService>();
 
-
-builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
+if (builder.Environment.IsProduction())
 {
-    var connectionString = builder.Configuration.GetSection("ApplicationInsights:ConnectionString").Value;
-    options.ConnectionString = connectionString;
-});
+    builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
+    {
+        var connectionString = builder.Configuration.GetSection("ApplicationInsights:ConnectionString").Value;
+        options.ConnectionString = connectionString;
+    });
+}
 
 // Register IChatCompletionService for Azure OpenAI
 builder.Services.AddSingleton<IChatCompletionService>(sp =>
