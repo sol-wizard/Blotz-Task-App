@@ -28,7 +28,7 @@ export default function TaskCardContainer({
           <Checkbox
             checked={task.isDone}
             onCheckedChange={() => handleCheckboxChange(task.id)}
-            className="h-6 w-6 mr-6 rounded-full border-2 border-black"
+            className="h-6 w-6 mx-3 rounded-full border-2 border-black"
           />
         </div>
         <TaskCard
