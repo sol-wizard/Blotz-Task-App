@@ -5,11 +5,13 @@ import { TaskDetailDTO } from "@/model/task-detail-dto";
 import AITaskCardContainer from "./ai-task-card-container";
 import { RawEditTaskDTO } from "@/model/raw-edit-task-dto";
 import { RawAddTaskDTO } from "@/model/raw-add-task-dto";
+import { mapTaskToAddTask } from "../../goal-to-task/utils/map-task-to-addtask-dto";
 
 interface AiGeneratedTasksListProps {
   loading: boolean;
   aiMessage: string;
   tasks: TaskDetailDTO[];
+  setTasks: React.Dispatch<React.SetStateAction<TaskDetailDTO[]>>;
   onAddTask: (task: RawAddTaskDTO) => void;
 }
 
@@ -17,22 +19,26 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
   loading,
   aiMessage,
   tasks,
+  setTasks,
+  onAddTask,
 }) => {
 
-  //TODO: Handle add task to task list
+  //TODO: Now when adding a task the AI assistant would close. Avoid this
   const handleAddTask = (task: TaskDetailDTO) => {
-    console.log('add this ai generated task to task list', task);
-    //TODO: Need to map the task to the raw add task dto
-    // onAddTask(task);
+    const taskToAdd = mapTaskToAddTask(task);
+    onAddTask(taskToAdd);
   };
 
-  //TODO: Handle edit the task that is still in the state
-  const handleTaskEdit = (task: RawEditTaskDTO) => {
-    console.log('You need to edit this task in the state', task);
+  const handleTaskEdit = (updatedTask: RawEditTaskDTO) => {
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === updatedTask.id ? { ...task, ...updatedTask } : task
+      )
+    );
   }; 
 
   //TODO: Handle delete task from the state 
-  //TODO: Delete is not abit tricky because have some bug when click outside effect which will close the card
+  //TODO: Delete is not a bit tricky because have some bug when click outside effect which will close the card
   const handleTaskDelete = (taskId: number) => {
     console.log('You are trying to delete this task from the state', taskId);
   };
