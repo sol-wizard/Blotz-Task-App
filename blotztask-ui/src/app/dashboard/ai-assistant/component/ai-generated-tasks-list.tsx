@@ -6,8 +6,6 @@ import AITaskCardContainer from "./ai-task-card-container";
 import { RawEditTaskDTO } from "@/model/raw-edit-task-dto";
 import { RawAddTaskDTO } from "@/model/raw-add-task-dto";
 import { mapTaskToAddTask } from "../../goal-to-task/utils/map-task-to-addtask-dto";
-import { editTask } from "@/services/task-service";
-import { performTaskAndRefresh } from "@/app/store/shared/util";
 
 interface AiGeneratedTasksListProps {
   loading: boolean;
@@ -25,6 +23,7 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
   onAddTask,
 }) => {
 
+  //TODO: Now when adding a task the AI assistant would close. Avoid this
   const handleAddTask = (task: TaskDetailDTO) => {
     const taskToAdd = mapTaskToAddTask(task);
     onAddTask(taskToAdd);
