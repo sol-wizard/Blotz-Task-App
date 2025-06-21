@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Clock } from 'lucide-react';
-import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Control } from 'react-hook-form';
 
 const times = ['9:00 AM', '12:00 PM', '3:00 PM', '6:00 PM', '9:00 PM', '12:00 AM'];
@@ -66,7 +66,6 @@ export default function TimePicker({
                 </Command>
               </PopoverContent>
             </Popover>
-            <FormMessage />
           </FormItem>
         );
       }}

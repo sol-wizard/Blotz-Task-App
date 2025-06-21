@@ -67,7 +67,7 @@ export default function Page() {
     loadTodayTasks();
     loadOverdueTasks();
     loadScheduleTasks();
-  }, [taskList]);
+  }, []);
 
   return (
     <div className="flex flex-col w-full items-end mt-5">
