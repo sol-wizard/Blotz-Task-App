@@ -51,10 +51,10 @@ namespace BlotzTask.Controllers
         {
             return Ok(await _taskService.GetTaskByID(id));
         }
-        
-        //TODO: change the route "due-date" to "by-date"
-        [HttpGet("due-date")]
-        public async Task<IActionResult> GetTaskByDate([FromQuery] DateTime startDateUTC)
+
+    
+        [HttpGet("today-todo")]
+        public async Task<IActionResult> GetTodayTodoTasks()
         {
             var userId = HttpContext.Items["UserId"] as string;
 
@@ -62,9 +62,14 @@ namespace BlotzTask.Controllers
             {
                 throw new UnauthorizedAccessException("Could not find user id from Http Context");
             }
+
+            DateTime now = DateTime.UtcNow;
+
+            DateTime endOfTodayUtc = now.Date.AddDays(1);
+
+            var tasks = await _taskService.GetTodoTasksByDate(now, endOfTodayUtc, userId);
             
-            DateTime endDateUtc = startDateUTC.AddDays(1);
-            return Ok(await _taskService.GetTaskByDate(startDateUTC, endDateUtc, userId));
+            return Ok(tasks);
         }
 
 
