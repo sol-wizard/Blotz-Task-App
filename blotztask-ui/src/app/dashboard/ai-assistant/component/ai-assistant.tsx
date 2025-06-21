@@ -43,6 +43,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({ onAddTask }) => {
         loading={loading}
         aiMessage={aiMessage}
         tasks={tasks}
+        setTasks={setTasks}
         onAddTask={onAddTask}
       />
     </div>
