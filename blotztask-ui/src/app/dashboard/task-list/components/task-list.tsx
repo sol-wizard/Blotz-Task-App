@@ -1,5 +1,6 @@
 import SectionSeparator from '../../shared/components/ui/section-separator';
 import TaskCardContainer from '../../shared/components/taskcard/task-card-container';
+import { Fragment } from 'react';
 
 export function TaskList({
   tasks,
@@ -9,9 +10,9 @@ export function TaskList({
   handleTaskDeleteUndo,
 }) {
   return (
-    <div className="flex flex-col mt-10 w-full">
+    <div className="grid gap-4 w-full">
       {tasks.map((task) => (
-        <div key={task.id} className="w-full mt-5">
+        <Fragment key={task.id}>
           <TaskCardContainer
             task={task}
             handleCheckboxChange={handleCheckboxChange}
@@ -20,7 +21,7 @@ export function TaskList({
             handleTaskDeleteUndo={handleTaskDeleteUndo}
           ></TaskCardContainer>
           <SectionSeparator />
-        </div>
+        </Fragment>
       ))}
     </div>
   );
