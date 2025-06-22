@@ -40,9 +40,6 @@ export const EnvironmentIndicator = () => {
       <span className="font-bold uppercase py-1 px-3 rounded-full text-xs bg-white">
         {text}
       </span>
-      <span>
-        🚧 This project is a work in progress. Expect some bugs or changes.
-      </span>
     </div>
   );
 }; 
