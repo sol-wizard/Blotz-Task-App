@@ -1,5 +1,4 @@
 import * as React from 'react';
-
 import { cn } from '@/lib/utils';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
@@ -9,7 +8,7 @@ const TaskCardInput = React.forwardRef<HTMLInputElement, InputProps>(({ classNam
     <input
       type={type}
       className={cn(
-        'flex h-9 w-full bg-transparent px-3 py-1 text-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 focus:ring-0 focus:outline-none',
+        'flex h-9 w-full bg-transparent px-3 py-1 text-sm text-[#444964] font-sans transition-colors placeholder:text-[#444964] disabled:cursor-not-allowed disabled:opacity-50 focus:ring-0 focus:outline-none',
         className
       )}
       ref={ref}
@@ -17,6 +16,7 @@ const TaskCardInput = React.forwardRef<HTMLInputElement, InputProps>(({ classNam
     />
   );
 });
+
 TaskCardInput.displayName = 'TaskCardInput';
 
 export { TaskCardInput as Input };
