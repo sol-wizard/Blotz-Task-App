@@ -2,6 +2,7 @@ import { Input } from "@/components/ui/input";
 import VoiceRecognizer from "../external-services/voice-recognizer";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+
 interface PromptInputSectionProps {
   loading: boolean;
   onGenerate: (prompt: string) => void;
@@ -33,7 +34,7 @@ const PromptInputSection: React.FC<PromptInputSectionProps> = ({
           disabled={loading || !prompt.trim()} 
           className="w-fit px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
         >
-          {/* TODO: If we use react hook form we probably don't need this loading state  */}
+          {/* TODO: If we use react hook form we probably don't need this loading state */}
           {loading ? "Generating…" : "Generate Task"}
         </Button>
       </div>
