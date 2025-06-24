@@ -95,3 +95,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .task-text {
+    color: #444964;
+  }
+}
+
