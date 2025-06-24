@@ -23,7 +23,8 @@ type TaskCardProps = {
   status?: TaskCardStatus; // optional, default to 'todo'
   onSubmit: (taskContent: RawEditTaskDTO) => void;
   onDelete: (taskId: number) => void;
-  handleTaskDeleteUndo: (taskId: number) => void;
+  handleTaskDeleteUndo?: (taskId: number) => void;
+
 };
 
 const defaultTaskFormValues = {
