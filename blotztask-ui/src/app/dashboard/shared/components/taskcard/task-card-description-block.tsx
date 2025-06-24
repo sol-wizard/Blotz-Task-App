@@ -5,7 +5,6 @@ import { TaskCardStatus } from "./task-card";
 import { Control, FieldErrors } from "react-hook-form";
 import { z } from "zod";
 import { taskFormSchema } from "../../forms/task-form-schema";
-import { cn } from "@/lib/utils";
 
 type TaskCardDescriptionBlockProps = {
   task: TaskDetailDTO;
