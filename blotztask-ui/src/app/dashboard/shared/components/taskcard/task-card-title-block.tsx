@@ -1,7 +1,6 @@
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/task-card-input';
 import DateAndTimeTag from '../ui/duedate-and-time-tag';
-import { cn } from '@/lib/utils';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { TaskCardStatus } from './task-card';
 import { Control, FieldErrors } from 'react-hook-form';
@@ -14,41 +13,36 @@ type TaskCardTitleBlockProps = {
   isEditing: boolean;
   control: Control<z.infer<typeof taskFormSchema>>;
   errors: FieldErrors<z.infer<typeof taskFormSchema>>;
+  className?: string;
 };
 
 export const TaskCardTitleBlock = ({
   task,
-  taskStatus = 'todo',
   isEditing,
   control,
   errors,
 }: TaskCardTitleBlockProps) => {
-  const statusVariants = {
-    done: 'text-gray-400',
-    todo: 'text-black',
-    overdue: 'text-black',
-  };
-  const statusClass = statusVariants[taskStatus] || statusVariants.todo;
-
   return (
-    <div className="flex w-full justify-between">
+    <div className="flex py-1 justify-between">
       {isEditing ? (
         <FormField
           control={control}
           name="title"
           render={({ field }) => (
-            <FormItem className='w-full'>
-              <FormControl className='w-full'>
-                <Input className="font-bold" {...field} />
+            <FormItem>
+              <FormControl>
+                <Input className="text-[#444964]" {...field} />
               </FormControl>
               <FormMessage>{errors.title?.message}</FormMessage>
             </FormItem>
           )}
         />
       ) : (
-        <p className={cn('font-bold', statusClass)}>{task.title}</p>
+        <p className="text-[#444964]">
+          {task.title}
+        </p>
       )}
-      {!isEditing && <DateAndTimeTag task={task} taskStatus={taskStatus} />}
+      {!isEditing && <DateAndTimeTag task={task} />}
     </div>
   );
 };
