@@ -223,7 +223,7 @@ public class TaskService : ITaskService
     {
         return await _dbContext.TaskItems
             .Where(task => task.UserId == userId)
-            .Where(task => !task.IsDone) // ✅ 只要未完成任务
+            .Where(task => !task.IsDone)
             .Where(task => task.DueDate >= startDateUTC && task.DueDate < endDateUTC)
             .Select(task => new TaskItemDTO
             {
