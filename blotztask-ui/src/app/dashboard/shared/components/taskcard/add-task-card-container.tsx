@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import AddTaskCard from './add-task-card'
+import AddTaskCard from './add-task-card';
 import { PlusIcon } from '@radix-ui/react-icons';
 import useClickOutside from '@/utils/use-multiple-click-away';
 import { Switch } from '@/components/ui/switch';
@@ -16,17 +16,14 @@ const AddTaskCardContainer = ({ onAddTask }) => {
   const timePickerRef = useRef<HTMLDivElement>(null);
 
   const [useAIAssistant, setUseAIAssistant] = useState(true);
-
-  const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
 
-  //TODO: replace the inner logic with real implementation
   const handlePromptGenerate = () => {
-    setLoading(true)
-    setTimeout(()=>{
-      console.log("generating task")
-    }, 1000)
-    setLoading(false)
+    setLoading(true);
+    setTimeout(() => {
+      console.log("generating task");
+    }, 1000);
+    setLoading(false);
   };
 
   useClickOutside([cardRef, datePickerRef, labelPickerRef, timePickerRef], () => {
@@ -42,44 +39,41 @@ const AddTaskCardContainer = ({ onAddTask }) => {
             <span className="ml-3 text-gray-400 font-semibold text-lg">Add a task</span>
           </div>
         ) : (
-          <Card className='w-full px-6 pb-4 pt-1'>
-          <CardHeader className='flex-row justify-between p-4'>
-            <H5>Add New Task</H5>
-            <div className="flex items-center space-x-2">
-              <Switch 
-                id="ai-assistant"                   
-                checked={useAIAssistant}
-                onCheckedChange={setUseAIAssistant}
-              />
-              <Label htmlFor="ai-assistant">🤖 Ai Assistant</Label>
-            </div>
+          <Card className="w-full px-6 pb-4 pt-1">
+            <CardHeader className="flex-row justify-between p-4">
+              <H5>Add New Task</H5>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="ai-assistant"
+                  checked={useAIAssistant}
+                  onCheckedChange={setUseAIAssistant}
+                />
+                <Label htmlFor="ai-assistant">🤖 Ai Assistant</Label>
+              </div>
             </CardHeader>
             <CardContent>
               {useAIAssistant ? (
-                  <div className='p-2'>
-                    <PromptInputSection
-                      prompt={prompt}
-                      setPrompt={setPrompt}
-                      loading={loading}
-                      onGenerate={handlePromptGenerate}
-                      onSubmit={(taskDetails) => onAddTask(taskDetails)}
-                    />
-                  </div>
-                ) : (
-                  <AddTaskCard
-                    onSubmit={(taskDetails) => {
-                      onAddTask(taskDetails);
-                      setIsFormVisible(false);
-                    }}
-                    onCancel={() => setIsFormVisible(false)}
-                    datePickerRef={datePickerRef}
-                    labelPickerRef={labelPickerRef}
-                    timePickerRef={timePickerRef}
+                <div className="p-2">
+                  <PromptInputSection
+                    loading={loading}
+                    onGenerate={handlePromptGenerate}
                   />
-                )}
+                </div>
+              ) : (
+                <AddTaskCard
+                  onSubmit={(taskDetails) => {
+                    onAddTask(taskDetails);
+                    setIsFormVisible(false);
+                  }}
+                  onCancel={() => setIsFormVisible(false)}
+                  datePickerRef={datePickerRef}
+                  labelPickerRef={labelPickerRef}
+                  timePickerRef={timePickerRef}
+                />
+              )}
             </CardContent>
           </Card>
-       )}
+        )}
       </div>
     </div>
   );
