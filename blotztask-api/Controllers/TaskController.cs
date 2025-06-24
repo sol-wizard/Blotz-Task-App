@@ -63,11 +63,11 @@ namespace BlotzTask.Controllers
                 throw new UnauthorizedAccessException("Could not find user id from Http Context");
             }
 
-            DateTime now = DateTime.UtcNow;
+            DateTime currentUTCTime = DateTime.UtcNow;
 
-            DateTime endOfTodayUtc = now.Date.AddDays(1);
+            DateTime endOfTodayUtc = currentUTCTime.Date.AddDays(1);
 
-            var tasks = await _taskService.GetTodoTasksByDate(now, endOfTodayUtc, userId);
+            var tasks = await _taskService.GetTodoTasksByDate(currentUTCTime, endOfTodayUtc, userId);
             
             return Ok(tasks);
         }
