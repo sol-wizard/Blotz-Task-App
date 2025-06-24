@@ -50,7 +50,7 @@ export default function Today() {
   }, [todayTasksIsLoading]);
 
   return (
-    <div className="ml-5 flex flex-col gap-12 h-full">
+    <div className="flex flex-col gap-12 h-full">
       <div className="flex flex-col gap-6 h-full">
         {todayTasksIsLoading ? (
           <div className="flex justify-center items-center min-h-screen">
