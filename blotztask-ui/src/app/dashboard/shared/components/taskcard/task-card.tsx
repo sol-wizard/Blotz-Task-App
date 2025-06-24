@@ -23,7 +23,7 @@ type TaskCardProps = {
   status?: TaskCardStatus; // optional, default to 'todo'
   onSubmit: (taskContent: RawEditTaskDTO) => void;
   onDelete: (taskId: number) => void;
-  handleTaskDeleteUndo?: (taskId: number) => void; //This is nullable because AI task card dont have to undo the delete
+  handleTaskDeleteUndo: (taskId: number) => void;
 };
 
 const defaultTaskFormValues = {
@@ -54,13 +54,13 @@ export default function TaskCard({
 
   useEffect(() => {
     fetchAllLabel()
-      .then((labelData) => setLabels(labelData))
-      .catch((error) => console.error('Error loading labels:', error));
+      .then(labelData => setLabels(labelData))
+      .catch(error => console.error('Error loading labels:', error));
   }, []);
 
   const getCurrentLabelColor = () => {
     if (isEditing && watchLabelId) {
-      const selectedLabel = labels.find((label) => label.labelId === watchLabelId);
+      const selectedLabel = labels.find(label => label.labelId === watchLabelId);
       return selectedLabel?.color || task.label.color;
     }
     return task.label.color;
@@ -142,7 +142,12 @@ export default function TaskCard({
                 />
               </div>
 
-              {isEditing && <TaskCardEditFooter control={form.control} onCancel={handleCancelEdit} />}
+              {isEditing && (
+                <TaskCardEditFooter 
+                  control={form.control} 
+                  onCancel={handleCancelEdit}
+                />
+              )}
             </div>
           </form>
         </Form>

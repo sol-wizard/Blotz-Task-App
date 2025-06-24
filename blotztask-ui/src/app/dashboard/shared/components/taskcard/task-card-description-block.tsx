@@ -15,33 +15,27 @@ type TaskCardDescriptionBlockProps = {
   errors: FieldErrors<z.infer<typeof taskFormSchema>>;
 };
 
-export const TaskCardDescriptionBlock = ({ task, taskStatus='todo',  isEditing, control, errors }: TaskCardDescriptionBlockProps) => {
-  const statusVariants = {
-    done: 'text-gray-400',
-    todo: 'text-black',
-    overdue: 'text-black',
-  };
-
-  const statusClass = statusVariants[taskStatus] || statusVariants.todo;
-
+export const TaskCardDescriptionBlock = ({ task, isEditing, control, errors }: TaskCardDescriptionBlockProps) => {
   return (
-  <div className="flex flex-col w-full">
-    {isEditing ? (
-      <FormField
-        control={control}
-        name="description"
-        render={({ field }) => (
-          <FormItem>
-            <FormControl>
-              <Textarea className="w-full" placeholder={task.description} {...field} />
-            </FormControl>
-            <FormMessage>{errors.description?.message}</FormMessage>
-          </FormItem>
-        )}
-      />
-    ) : (
-      <p className={cn('break-words', statusClass)}>{task.description}</p>
-    )}
-  </div>
-);}
-  
+    <div className="flex flex-col w-full">
+      {isEditing ? (
+        <FormField
+          control={control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Textarea className="w-full" placeholder={task.description} {...field} />
+              </FormControl>
+              <FormMessage>{errors.description?.message}</FormMessage>
+            </FormItem>
+          )}
+        />
+      ) : (
+        <p className="w-[500px] break-words text-[#444964]">
+          {task.description}
+        </p>
+      )}
+    </div>
+  );
+};

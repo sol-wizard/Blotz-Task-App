@@ -4,25 +4,16 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { addTaskItem } from '@/services/task-service';
-import { mapTaskToAddTask } from '@/app/dashboard/goal-to-task/utils/map-task-to-addtask-dto';
-import { TaskDetailDTO } from '@/model/task-detail-dto';
+import { ExtractedTask } from '@/model/extracted-task-dto';
+import { mapExtractedTaskToAddTaskDTO } from '@/app/dashboard/ai-assistant/util/map-extracted-to-add-task';
 
-interface TaskCardToAddProps {
-  taskToAdd: TaskDetailDTO;
-  index: number;
-  addedTaskIndices: Set<number>;
-  onTaskAdded?: (index: number) => void;
-  disabled?: boolean;
-}
-
-// This task card is used by AI page
-export default function TaskCardToAdd({
-  taskToAdd,
-  index,
-  addedTaskIndices,
+export default function TaskCardToAdd({ 
+  taskToAdd, 
+  index, 
+  addedTaskIndices, 
   onTaskAdded,
-  disabled = false,
-}: TaskCardToAddProps) {
+  disabled = false 
+}: { taskToAdd: ExtractedTask; index: number; addedTaskIndices: Set<number>; onTaskAdded?: (index: number) => void; disabled?: boolean }) {
   const [adding, setAdding] = useState(false);
   const isAdded = addedTaskIndices.has(index);
 
@@ -32,7 +23,7 @@ export default function TaskCardToAdd({
     setAdding(true);
 
     try {
-      await addTaskItem(mapTaskToAddTask(taskToAdd));
+      await addTaskItem(mapExtractedTaskToAddTaskDTO(taskToAdd));
       
       if (onTaskAdded) {
         onTaskAdded(index);
@@ -55,7 +46,7 @@ export default function TaskCardToAdd({
         <strong>Description:</strong> {taskToAdd.description ?? 'None'}
       </p>
       <p className="text-sm text-zinc-600">
-        <strong>Due Date:</strong> {taskToAdd.dueDate.toLocaleDateString()}
+        <strong>Due Date:</strong> {taskToAdd.due_date ?? 'None'}
       </p>
       <p className="text-sm text-zinc-600 flex items-center">
         <span
