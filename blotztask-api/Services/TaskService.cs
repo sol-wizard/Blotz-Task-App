@@ -14,7 +14,8 @@ public interface ITaskService
     public Task<ResponseWrapper<int>> DeleteTaskByIDAsync(int Id);
     public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDTO addTaskItem, string userId);
     public Task<TaskStatusResultDTO> TaskStatusUpdate(int id, bool? isDone = null);
-    public Task<List<TaskItemDTO>> GetTaskByDate(DateTime startDateUTC, DateTime endDateUTC, string userId);
+    public Task<List<TaskItemDTO>> GetTodoTasksByDate(DateTime startDateUTC, DateTime endDateUTC, string userId);
+
     public Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
     public Task<List<TaskItemDTO>> SearchTasksAsync(string query);
@@ -216,36 +217,32 @@ public class TaskService : ITaskService
                 Message = task.IsDone ? "Task marked as completed." : "Task marked as incomplete."
             };
     }
+    
 
-    public async Task<List<TaskItemDTO>> GetTaskByDate(DateTime startDateUTC, DateTime endDateUTC, string userId)
+    public async Task<List<TaskItemDTO>> GetTodoTasksByDate(DateTime startDateUTC, DateTime endDateUTC, string userId)
     {
-        try
-        {
-            return await _dbContext.TaskItems
-                .Where(task => task.UserId == userId)
-                .Where(task => task.DueDate >= startDateUTC && task.DueDate < endDateUTC)
-                .Select(task => new TaskItemDTO
+        return await _dbContext.TaskItems
+            .Where(task => task.UserId == userId)
+            .Where(task => !task.IsDone) 
+            .Where(task => task.DueDate >= startDateUTC && task.DueDate < endDateUTC)
+            .Select(task => new TaskItemDTO
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                DueDate = task.DueDate,
+                IsDone = task.IsDone,
+                Label = new LabelDTO
                 {
-                    Id = task.Id,
-                    Title = task.Title,
-                    Description = task.Description,
-                    DueDate = task.DueDate,
-                    IsDone = task.IsDone,
-                    Label = new LabelDTO
-                    {
-                        LabelId = task.Label.LabelId,
-                        Name = task.Label.Name,
-                        Color = task.Label.Color
-                    },
-                    HasTime = task.HasTime
-                })
-                .ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Unhandled exception: {ex.Message}");
-        }
+                    LabelId = task.Label.LabelId,
+                    Name = task.Label.Name,
+                    Color = task.Label.Color
+                },
+                HasTime = task.HasTime
+            })
+            .ToListAsync();
     }
+
 
     public async Task<MonthlyStatDTO> GetMonthlyStats(string userId, int year, int month)
     {
