@@ -23,7 +23,7 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
   onAddTask,
 }) => {
 
-  //TODO: Now when adding a task the check box should be checked. Also, when a task is added and checked, clicking again will delete it.
+  //TODO: More functionality should be added to this function
   const handleAddTask = (task: TaskDetailDTO) => {
     const taskToAdd = mapTaskToAddTask(task);
     onAddTask(taskToAdd);
