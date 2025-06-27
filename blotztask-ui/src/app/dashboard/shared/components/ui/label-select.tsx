@@ -47,11 +47,10 @@ export function LabelSelect({
       render={({ field, fieldState }) => (
         <FormItem>
           <Select
-            value={field.value?.toString()}
+            value={field.value !== undefined ? String(field.value) : undefined}
             onValueChange={(value) => {
               field.onChange(Number(value));
 
-              // Call the onLabelChange callback if provided
               if (onLabelChange) {
                 const selectedLabel = labels.find((label) => label.labelId === Number(value));
                 onLabelChange(selectedLabel || null);
@@ -65,29 +64,26 @@ export function LabelSelect({
                 }`}
               >
                 <Tag className="mr-1" size={16} />
-
                 <SelectValue placeholder="Select Label" />
               </SelectLabelTrigger>
             </FormControl>
             <SelectContent ref={labelPickerRef ?? undefined}>
               <SelectGroup>
-                {labels.map((label) => {
-                  return (
-                    <LabelSelectItem
-                      key={label.labelId}
-                      value={label.labelId.toString()}
-                      className="flex flex-row px-3 py-2 rounded-md"
-                    >
-                      <div className="flex flex-row items-center">
-                        <span
-                          className={`w-4 h-4 rounded-full mr-2`}
-                          style={{ backgroundColor: label.color }}
-                        />
-                        <div className="flex-1">{label.name}</div>
-                      </div>
-                    </LabelSelectItem>
-                  );
-                })}
+                {labels.map((label) => (
+                  <LabelSelectItem
+                    key={label.labelId}
+                    value={label.labelId.toString()}
+                    className="flex flex-row px-3 py-2 rounded-md"
+                  >
+                    <div className="flex flex-row items-center">
+                      <span
+                        className="w-4 h-4 rounded-full mr-2"
+                        style={{ backgroundColor: label.color }}
+                      />
+                      <div className="flex-1">{label.name}</div>
+                    </div>
+                  </LabelSelectItem>
+                ))}
               </SelectGroup>
             </SelectContent>
           </Select>

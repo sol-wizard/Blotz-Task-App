@@ -20,10 +20,10 @@ export type TaskCardStatus = 'todo' | 'done' | 'overdue';
 
 type TaskCardProps = {
   task: TaskDetailDTO;
-  status?: TaskCardStatus; // optional, default to 'todo'
+  status?: TaskCardStatus;
   onSubmit: (taskContent: RawEditTaskDTO) => void;
   onDelete: (taskId: number) => void;
-  handleTaskDeleteUndo?: (taskId: number) => void; //This is nullable because AI task card dont have to undo the delete
+  handleTaskDeleteUndo?: (taskId: number) => void;
 };
 
 const defaultTaskFormValues = {
@@ -31,7 +31,7 @@ const defaultTaskFormValues = {
   description: '',
   status: 'todo',
   date: new Date(),
-  labelId: undefined,
+  labelId: undefined, // ✅ 默认显示 Select Label
   time: undefined,
 };
 
@@ -50,7 +50,15 @@ export default function TaskCard({
   const [isEditing, setIsEditing] = useState(false);
   const [labels, setLabels] = useState<LabelDTO[]>([]);
   const watchLabelId = form.watch('labelId');
-  const handleEditState = () => setIsEditing(!isEditing);
+
+  const handleEditState = () => {
+    setIsEditing(!isEditing);
+
+    if (!isEditing) {
+      // ✅ 进入编辑状态时，强制清空标签，显示“Select Label”
+      form.setValue('labelId', undefined);
+    }
+  };
 
   useEffect(() => {
     fetchAllLabel()
@@ -85,14 +93,14 @@ export default function TaskCard({
         title: task.title,
         description: task.description,
         date: new Date(task.dueDate),
-        labelId: task.label.labelId,
+        labelId: undefined, // ✅ 不保留原标签，显示默认 placeholder
         time: task.hasTime ? format(new Date(task.dueDate), 'h:mm a') : undefined,
       });
     }
   }, [task, form]);
 
   const handleCancelEdit = () => {
-    form.setValue('labelId', task.label.labelId);
+    form.setValue('labelId', task.label.labelId); // 恢复原标签
     handleEditState();
   };
 
