@@ -23,7 +23,6 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
   onAddTask,
 }) => {
 
-  //TODO: More functionality should be added to this function
   const handleAddTask = (task: TaskDetailDTO) => {
     const taskToAdd = mapTaskToAddTask(task);
     onAddTask(taskToAdd);
