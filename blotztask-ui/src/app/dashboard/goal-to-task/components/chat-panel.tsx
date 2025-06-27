@@ -3,6 +3,7 @@ import { ChatMessages } from '@/components/ui/chat';
 import { MessageList } from '@/components/ui/message-list';
 import { MessageWithTasks } from '../models/message-with-tasks';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
+import ChatStartScreen from './chat-start-screen';
 
 type Props = {
   messagesWithTasks: MessageWithTasks[];
@@ -10,6 +11,7 @@ type Props = {
   isConversationComplete: boolean;
   isBotTyping: boolean;
   onTaskAdded: (task: TaskDetailDTO) => void;
+  appendToChat: (messageToSend: string) => Promise<void>;
 };
 
 export const ChatPanel = ({
@@ -18,14 +20,17 @@ export const ChatPanel = ({
   isConversationComplete,
   isBotTyping,
   onTaskAdded,
+  appendToChat,
 }: Props) => {
   return (
     <div className="flex-1 overflow-auto p-4">
       {messagesWithTasks.length === 0 && connectionState === HubConnectionState.Connected ? (
         <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-          {isConversationComplete
-            ? 'This conversation is complete. Start a new one to continue.'
-            : 'Describe your goal to get started. The assistant will help break it down into tasks.'}
+          {isConversationComplete ? (
+            'This conversation is complete. Start a new one to continue.'
+          ) : (
+            <ChatStartScreen appendToChat={appendToChat} />
+          )}
         </div>
       ) : connectionState === HubConnectionState.Connecting ? (
         <div className="h-full flex items-center justify-center text-gray-500 text-sm">
