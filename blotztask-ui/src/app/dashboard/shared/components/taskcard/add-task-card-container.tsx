@@ -72,7 +72,7 @@ const AddTaskCardContainer = ({ onAddTask }: AddTaskCardContainerProps) => {
                 )}
             </CardContent>
           </Card>
-       )}
+        )}
       </div>
     </div>
   );

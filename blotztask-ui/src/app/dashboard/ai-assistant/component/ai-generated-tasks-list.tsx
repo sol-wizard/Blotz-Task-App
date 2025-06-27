@@ -23,7 +23,7 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
   onAddTask,
 }) => {
 
-  //TODO: Now when adding a task the AI assistant would close. Avoid this
+  //TODO: More functionality should be added to this function
   const handleAddTask = (task: TaskDetailDTO) => {
     const taskToAdd = mapTaskToAddTask(task);
     onAddTask(taskToAdd);
@@ -37,10 +37,8 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
     );
   }; 
 
-  //TODO: Handle delete task from the state 
-  //TODO: Delete is not a bit tricky because have some bug when click outside effect which will close the card
   const handleTaskDelete = (taskId: number) => {
-    console.log('You are trying to delete this task from the state', taskId);
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
   };
   
   return (
