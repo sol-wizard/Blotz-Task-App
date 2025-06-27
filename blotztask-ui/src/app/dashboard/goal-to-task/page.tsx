@@ -14,7 +14,6 @@ import { ChatContainer, ChatForm } from '@/components/ui/chat';
 import { MessageInput } from '@/components/ui/message-input';
 import { MessageWithTasks } from './models/message-with-tasks';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
-import { PromptSuggestions } from '@/components/ui/prompt-suggestions';
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -113,7 +112,7 @@ export default function ChatPage() {
     setSelectedTasks((prev) => [...prev, task]);
   };
 
-  const append = async (messageToSend: string ) => {
+  const appendToChat = async (messageToSend: string) => {
     try {
       await signalRService.invoke(connection, 'SendMessage', userName, messageToSend, conversationId);
     } catch (error) {
@@ -139,6 +138,7 @@ export default function ChatPage() {
             isConversationComplete={isConversationComplete}
             isBotTyping={isBotTyping}
             onTaskAdded={addTaskToPanel}
+            appendToChat={appendToChat}
           />
           {/* TODO: Allow file upload*/}
           {/* TODO: Integrate audio input */}
@@ -165,16 +165,6 @@ export default function ChatPage() {
               )
             }
           </ChatForm>
-          <PromptSuggestions
-            label=""
-            append={append}
-            suggestions={[
-              'Plan a 2-day hiking trip to the Blue Mountains for this coming weekend.',
-              'I want to learn to bake sourdough bread this weekend.',
-              'Improve my public speaking skills for a presentation by next week.',
-            ]}
-            buttonDisabled={isBotTyping || connectionState !== HubConnectionState.Connected || isConversationComplete}
-          />
         </ChatContainer>
         <SidePanel tasks={selectedTasks} setTasks={setSelectedTasks} />
       </SidebarProvider>
