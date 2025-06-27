@@ -27,6 +27,7 @@ const AiGeneratedTasksList: React.FC<AiGeneratedTasksListProps> = ({
   const handleAddTask = (task: TaskDetailDTO) => {
     const taskToAdd = mapTaskToAddTask(task);
     onAddTask(taskToAdd);
+    handleTaskDelete(task.id);
   };
 
   const handleTaskEdit = (updatedTask: RawEditTaskDTO) => {
