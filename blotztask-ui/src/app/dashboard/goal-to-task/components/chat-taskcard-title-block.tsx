@@ -1,11 +1,9 @@
 import { FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/task-card-input';
-import { cn } from '@/lib/utils';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { Control, FieldErrors } from 'react-hook-form';
 import { z } from 'zod';
 import { taskFormSchema } from '../../shared/forms/task-form-schema';
-import DateAndTimeTag from '../../shared/components/ui/duedate-and-time-tag';
 
 type ChatTaskCardTitleBlockProps = {
   task: TaskDetailDTO;

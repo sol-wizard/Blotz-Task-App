@@ -28,9 +28,9 @@ export function SidePanel({ tasks, setTasks }: SidePanelProps) {
 
   // TODO: Add edit task function
   // TODO: Ensure only one task card can be in editing mode at a time
-  const handleUpdateTask = () => {
+  // const handleUpdateTask = () => {
 
-  };
+  // };
 
 
   const handleDeleteTask = (taskId: number) => {
@@ -73,7 +73,6 @@ export function SidePanel({ tasks, setTasks }: SidePanelProps) {
                   <SidebarMenuItem key={task.id} className="p-0"> 
                     <ChatSidePanelTaskcard
                       task={task}
-                      onSubmit={handleUpdateTask} 
                       onDelete={handleDeleteTask}
                     />
                   </SidebarMenuItem>

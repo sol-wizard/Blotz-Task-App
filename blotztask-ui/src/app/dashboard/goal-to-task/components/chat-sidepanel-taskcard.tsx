@@ -19,7 +19,6 @@ export type TaskCardStatus = 'todo' | 'done' | 'overdue';
 
 type TaskCardProps = {
   task: TaskDetailDTO;
-  onSubmit: (taskContent: TaskDetailDTO) => void;
   onDelete: (taskId: number) => void;
 };
 
@@ -32,7 +31,7 @@ const defaultTaskFormValues = {
   time: undefined,
 };
 
-export default function ChatSidePanelTaskcard({ task, onSubmit, onDelete }: TaskCardProps) {
+export default function ChatSidePanelTaskcard({ task, onDelete }: TaskCardProps) {
   const form = useForm<z.infer<typeof taskFormSchema>>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: defaultTaskFormValues,
