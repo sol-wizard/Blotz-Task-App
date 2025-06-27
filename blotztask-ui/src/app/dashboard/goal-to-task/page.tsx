@@ -14,6 +14,7 @@ import { ChatContainer, ChatForm } from '@/components/ui/chat';
 import { MessageInput } from '@/components/ui/message-input';
 import { MessageWithTasks } from './models/message-with-tasks';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
+import { PromptSuggestions } from '@/components/ui/prompt-suggestions';
 
 export default function ChatPage() {
   const { data: session } = useSession();
@@ -108,12 +109,20 @@ export default function ChatPage() {
     }
   };
 
-  const addTaskToPanel = (task:TaskDetailDTO) => {
+  const addTaskToPanel = (task: TaskDetailDTO) => {
     setSelectedTasks((prev) => [...prev, task]);
   };
 
+  const append = async (messageToSend: string ) => {
+    try {
+      await signalRService.invoke(connection, 'SendMessage', userName, messageToSend, conversationId);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
+
   return (
-    <div className="mx-auto h-[75vh] p-4 flex ">
+    <div className="mx-auto h-[90vh] p-4 flex center">
       <SidebarProvider>
         {/* TODO: Add start new chat */}
         <ChatContainer className="flex flex-col h-full w-full">
@@ -156,8 +165,18 @@ export default function ChatPage() {
               )
             }
           </ChatForm>
+          <PromptSuggestions
+            label=""
+            append={append}
+            suggestions={[
+              'Plan a 2-day hiking trip to the Blue Mountains for this coming weekend.',
+              'I want to learn to bake sourdough bread this weekend.',
+              'Improve my public speaking skills for a presentation by next week.',
+            ]}
+            buttonDisabled={isBotTyping || connectionState !== HubConnectionState.Connected || isConversationComplete}
+          />
         </ChatContainer>
-        <SidePanel tasks={selectedTasks} setTasks={setSelectedTasks}/>
+        <SidePanel tasks={selectedTasks} setTasks={setSelectedTasks} />
       </SidebarProvider>
     </div>
   );
