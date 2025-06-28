@@ -108,12 +108,20 @@ export default function ChatPage() {
     }
   };
 
-  const addTaskToPanel = (task:TaskDetailDTO) => {
+  const addTaskToPanel = (task: TaskDetailDTO) => {
     setSelectedTasks((prev) => [...prev, task]);
   };
 
+  const appendToChat = async (messageToSend: string) => {
+    try {
+      await signalRService.invoke(connection, 'SendMessage', userName, messageToSend, conversationId);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
+
   return (
-    <div className="mx-auto h-[75vh] p-4 flex ">
+    <div className="mx-auto h-[90vh] p-4 flex center">
       <SidebarProvider>
         {/* TODO: Add start new chat */}
         <ChatContainer className="flex flex-col h-full w-full">
@@ -130,6 +138,7 @@ export default function ChatPage() {
             isConversationComplete={isConversationComplete}
             isBotTyping={isBotTyping}
             onTaskAdded={addTaskToPanel}
+            appendToChat={appendToChat}
           />
           {/* TODO: Allow file upload*/}
           {/* TODO: Integrate audio input */}
@@ -157,7 +166,7 @@ export default function ChatPage() {
             }
           </ChatForm>
         </ChatContainer>
-        <SidePanel tasks={selectedTasks} setTasks={setSelectedTasks}/>
+        <SidePanel tasks={selectedTasks} setTasks={setSelectedTasks} />
       </SidebarProvider>
     </div>
   );
