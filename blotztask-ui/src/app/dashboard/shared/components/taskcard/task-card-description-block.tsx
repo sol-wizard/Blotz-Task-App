@@ -18,8 +18,8 @@ type TaskCardDescriptionBlockProps = {
 export const TaskCardDescriptionBlock = ({ task, taskStatus='todo',  isEditing, control, errors }: TaskCardDescriptionBlockProps) => {
   const statusVariants = {
     done: 'text-gray-400',
-    todo: 'text-black',
-    overdue: 'text-black',
+    todo: 'text-gray-400',
+    overdue: 'text-gray-400',
   };
 
   const statusClass = statusVariants[taskStatus] || statusVariants.todo;
