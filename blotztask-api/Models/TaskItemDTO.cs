@@ -2,6 +2,7 @@
 {
     public class TaskItemDTO
     {
+        // TODO: Change id to string type for holding uuidv4 
         public int Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
