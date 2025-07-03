@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction } from 'react';
 import { ExtractedTask } from '@/model/extracted-task-dto';
 import { ConversationMessage } from '../models/chat-message';
 import { MessageWithTasks } from '../models/message-with-tasks';
-import { v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import { mapExtractedToTaskDetail } from './map-extracted-to-task-dto';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 
@@ -32,10 +32,8 @@ export function setupChatHandlers(
   const receiveTasksHandler = (receivedTasks: ExtractedTask[]) => {
     console.log('[SignalR] Received tasks:', receivedTasks);
     if (receivedTasks?.length > 0) {
-      const tasks = receivedTasks.map(task => mapExtractedToTaskDetail(task))
-      setTasks(
-        tasks
-      );
+      const tasks = receivedTasks.map((task) => mapExtractedToTaskDetail(task));
+      setTasks(tasks);
       const newMsg: MessageWithTasks = {
         id: `${uuidv4()}`,
         role: 'assistant',
@@ -55,10 +53,16 @@ export function setupChatHandlers(
     setIsBotTyping(isTyping);
   };
 
+  const tokenLimitExceededHandler = (payload: { errorType: string; message: string }) => {
+    console.error('Token limit exceeded:', payload);
+    alert(payload.message ?? 'Token limit exceeded.');
+  };
+
   connection.on('ReceiveMessage', receiveMessageHandler);
   connection.on('ReceiveTasks', receiveTasksHandler);
   connection.on('ConversationCompleted', conversationCompletedHandler);
   connection.on('BotTyping', botTypingHandler);
+  connection.on('TokenLimitExceeded', tokenLimitExceededHandler);
 
   // Return cleanup function to remove handlers
   return () => {
@@ -66,5 +70,6 @@ export function setupChatHandlers(
     connection.off('ReceiveTasks', receiveTasksHandler);
     connection.off('ConversationCompleted', conversationCompletedHandler);
     connection.off('BotTyping', botTypingHandler);
+    connection.off('TokenLimitExceeded', tokenLimitExceededHandler);
   };
 }
