@@ -1,3 +1,4 @@
+using BlotzTask.Exceptions;
 using BlotzTask.Models.GoalToTask;
 using BlotzTask.Services.GoalPlanner;
 using Microsoft.AspNetCore.SignalR;
@@ -43,23 +44,36 @@ public class ChatHub : Hub
         
         // Send BotTyping signal to clients
         await Clients.Caller.SendAsync("BotTyping", true);
-        
-        var result = await _goalPlannerChatService.HandleUserMessageAsync(userMsg);
 
-        if (result.IsConversationComplete)
-        { 
+        try
+        {
+            var result = await _goalPlannerChatService.HandleUserMessageAsync(userMsg);
+
+            if (result.IsConversationComplete)
+            {
+                await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
+                await Clients.Caller.SendAsync("BotTyping", false);
+                await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
+                return;
+            }
+
+            if (result.Tasks != null)
+            {
+                await Clients.Caller.SendAsync("ReceiveTasks", result.Tasks);
+            }
+
             await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
             await Clients.Caller.SendAsync("BotTyping", false);
-            await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
-            return; 
         }
-
-        if (result.Tasks != null)
+        catch (TokenLimitExceededException ex)
         {
-            await Clients.Caller.SendAsync("ReceiveTasks", result.Tasks);
+            await Clients.Caller.SendAsync("BotTyping", false);
+
+            await Clients.Caller.SendAsync("TokenLimitExceeded", new
+            {
+                errorType = "TokenLimitExceeded",
+                message = ex.Message
+            });
         }
-        
-        await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
-        await Clients.Caller.SendAsync("BotTyping", false);
     }
 }
