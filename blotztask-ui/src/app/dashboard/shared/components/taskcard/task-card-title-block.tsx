@@ -25,8 +25,8 @@ export const TaskCardTitleBlock = ({
 }: TaskCardTitleBlockProps) => {
   const statusVariants = {
     done: 'text-gray-400',
-    todo: 'text-black',
-    overdue: 'text-black',
+    todo: 'text-gray-400',
+    overdue: 'text-gray-400',
   };
   const statusClass = statusVariants[taskStatus] || statusVariants.todo;
 
