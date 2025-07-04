@@ -74,6 +74,7 @@ public class ChatHub : Hub
                 errorType = "TokenLimitExceeded",
                 message = ex.Message
             });
+            throw new ApplicationException("Token limit exceeded in GoalPlannerChatHub.", ex);
         }
     }
 }
