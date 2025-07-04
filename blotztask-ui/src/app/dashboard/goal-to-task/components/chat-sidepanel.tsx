@@ -11,11 +11,11 @@ import {
 } from '../components/ui/sidepanel';
 import { useSidebar, SidebarTrigger } from '../components/ui/sidepanel';
 import { Button } from '@/components/ui/button';
-import ChatSidePanelTaskcard from './chat-sidepanel-taskcard';
-import { addTaskItem } from '@/services/task-service';
-import { mapTaskToAddTask } from '../utils/map-task-to-addtask-dto';
+import { addTaskItem } from '@/services/task-service'; // Service to add tasks to backend
+import { mapTaskToAddTask } from '../utils/map-task-to-addtask-dto'; // Utility for mapping task DTOs
 import React, { useState } from 'react';
-import { TaskDetailDTO } from '@/model/task-detail-dto';
+import type { TaskDetailDTO } from '@/model/task-detail-dto';
+import ChatSidePanelTaskcard from './chat-sidepanel-taskcard';
 
 interface SidePanelProps {
   tasks: TaskDetailDTO[];
@@ -25,10 +25,19 @@ interface SidePanelProps {
 export function SidePanel({ tasks, setTasks }: SidePanelProps) {
   const { open } = useSidebar();
   const [isLoading, setIsLoading] = useState(false);
-  // const onRemoveTaskcard = (taskId: string) => {
-  //   setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+
+  // TODO: Add edit task function
+  // TODO: Ensure only one task card can be in editing mode at a time
+  // const handleUpdateTask = () => {
+
   // };
 
+
+  const handleDeleteTask = (taskId: number) => {
+    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+  };
+
+  // Handler for saving all tasks to the backend
   const handleAddAllTasks = async () => {
     setIsLoading(true);
     await Promise.all(
@@ -40,7 +49,7 @@ export function SidePanel({ tasks, setTasks }: SidePanelProps) {
         }
       })
     );
-    setTasks([]);
+    setTasks([]); // Clear tasks from sidebar after saving successfully
     setIsLoading(false);
   };
 
@@ -55,14 +64,20 @@ export function SidePanel({ tasks, setTasks }: SidePanelProps) {
         <SidebarContent>
           <SidebarGroup>
             <SidebarMenu>
-              {tasks.map((task, i) => (
-                <SidebarMenuItem key={i} className="p-0">
-                  <ChatSidePanelTaskcard 
-                  task={task} 
-                  // handleRemoveTask={onRemoveTaskcard} 
-                  />
+              {tasks.length === 0 ? ( 
+                <SidebarMenuItem className="p-4 text-center text-gray-500">
+                  No selected tasks yet.
                 </SidebarMenuItem>
-              ))}
+              ) : (
+                tasks.map((task) => (
+                  <SidebarMenuItem key={task.id} className="p-0"> 
+                    <ChatSidePanelTaskcard
+                      task={task}
+                      onDelete={handleDeleteTask}
+                    />
+                  </SidebarMenuItem>
+                ))
+              )}
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>

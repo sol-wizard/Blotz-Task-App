@@ -1,6 +1,6 @@
 import { Pencil, Trash2 } from 'lucide-react';
 
-export const ChatTaskEditActions = ({ isEditing, isHovered, onEditToggle, onDelete }) => {
+export const ChatTaskEditActions = ({ isEditing, isHovered, onEditToggle, onDelete, taskId }) => {
   if (isEditing) return null;
 
   return (
@@ -8,7 +8,7 @@ export const ChatTaskEditActions = ({ isEditing, isHovered, onEditToggle, onDele
       <button type="button" className="mx-2.5 p-0.5 hover:bg-[#DEE6FF] rounded-md" onClick={onEditToggle}>
         <Pencil className="text-primary" size={20} />
       </button>
-      <button className="p-0.5 hover:bg-[#DEE6FF] rounded-md" onClick={onDelete}>
+      <button className="p-0.5 hover:bg-[#DEE6FF] rounded-md" onClick={() => onDelete(taskId)}>
         <Trash2 className="text-primary" size={18} />
       </button>
     </div>
