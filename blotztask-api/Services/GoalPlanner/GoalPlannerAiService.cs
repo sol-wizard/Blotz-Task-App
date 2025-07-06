@@ -18,23 +18,22 @@ public interface IGoalPlannerAiService
 public class GoalPlannerAiService : IGoalPlannerAiService
 {
     private readonly ILabelService _labelService;
-    private readonly IChatCompletionService _chatCompletionService;
     private readonly IConversationStateService _conversationStateService;
     private readonly ITaskParserService _taskParser;
+    private readonly ISafeChatCompletionService _safeChatCompletionService;
 
     private const int MaxClarificationRounds = 3;
 
     public GoalPlannerAiService(
         ILabelService labelService,
-        IChatCompletionService chatCompletionService,
         IConversationStateService conversationStateService,
-        ITaskParserService taskParser)
+        ITaskParserService taskParser,
+        ISafeChatCompletionService safeChatCompletionService)
     {
         _labelService = labelService;
-        _chatCompletionService = chatCompletionService;
         _conversationStateService = conversationStateService;
         _taskParser = taskParser;
-        ;
+        _safeChatCompletionService = safeChatCompletionService;
     }
     public async Task<List<ExtractedTaskDTO>> GenerateAiResponse(
     ChatHistory chatHistory)
@@ -42,11 +41,11 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         var tempHistory = new ChatHistory(chatHistory);
         tempHistory.AddSystemMessage($"Based on these details, can you now generate tasks in the required JSON format?");
 
-        var answer = await _chatCompletionService.GetChatMessageContentAsync(tempHistory);
+        var answer = await _safeChatCompletionService.GetSafeContentAsync(tempHistory);
 
-        if (!string.IsNullOrEmpty(answer?.Content) && _taskParser.TryParseTasks(answer.Content, out var tasks))
+        if (!string.IsNullOrEmpty(answer) && _taskParser.TryParseTasks(answer, out var tasks))
         {
-            chatHistory.AddAssistantMessage(answer.Content);
+            chatHistory.AddAssistantMessage(answer);
             return tasks;
         }
 
@@ -114,8 +113,8 @@ Be generous with YES when goal is clear and timeline is specific.";
     MaxClarificationRounds, currentRound
     ));
 
-        var result = await _chatCompletionService.GetChatMessageContentAsync(analysisHistory);
-        var response = result?.Content?.Trim().ToUpperInvariant();
+        var result = await _safeChatCompletionService.GetSafeContentAsync(analysisHistory);
+        var response = result.Trim().ToUpperInvariant();
 
         return response == "YES";
     }
@@ -160,8 +159,8 @@ Current question count: {2}/{1}
             MaxClarificationRounds, currentRound
             ));
 
-        var result = await _chatCompletionService.GetChatMessageContentAsync(clarificationHistory);
-        var response = result?.Content?.Trim();
+        var result = await _safeChatCompletionService.GetSafeContentAsync(clarificationHistory);
+        var response = result.Trim();
 
         return response ?? "Can you clarify your goal a bit more?";
     }
@@ -184,9 +183,9 @@ Current question count: {2}/{1}
                                       Return the improved tasks in the required JSON format.
                                       """);
 
-        var revisionResult = await _chatCompletionService.GetChatMessageContentAsync(chatHistory);
+        var revisionResult = await _safeChatCompletionService.GetSafeContentAsync(chatHistory);
 
-        if (!string.IsNullOrEmpty(revisionResult?.Content) && _taskParser.TryParseTasks(revisionResult.Content, out var revisedTasks))
+        if (!string.IsNullOrEmpty(revisionResult) && _taskParser.TryParseTasks(revisionResult, out var revisedTasks))
         {
             return revisedTasks;
         }
