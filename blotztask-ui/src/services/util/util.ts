@@ -2,7 +2,7 @@ import { EditTaskItemDTO } from '@/model/edit-task-item-dto';
 import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
 import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
 import { AddTaskItemDTO } from '@/model/add-task-item-dto';
-import { parse, set } from 'date-fns';
+import { endOfDay, parse, set } from 'date-fns';
 
 export const combineDateAndTime = (date: Date, time?: string): { dueDate: string; hasTime: boolean } => {
   if (time) {
@@ -16,7 +16,7 @@ export const combineDateAndTime = (date: Date, time?: string): { dueDate: string
     };
   } else {
     return {
-      dueDate: date.toISOString(),
+      dueDate: endOfDay(date).toISOString(),
       hasTime: false,
     };
   }
