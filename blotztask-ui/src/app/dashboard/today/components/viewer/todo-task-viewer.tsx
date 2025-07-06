@@ -3,11 +3,6 @@ import TaskCardContainer from '@/app/dashboard/shared/components/taskcard/task-c
 import { AnimatePresence, motion } from 'framer-motion';
 import { Fragment, useState } from 'react';
 
-const taskVariants = {
-  normal: { opacity: 1, y: 0 },
-  removing: { opacity: 0, y: -30 },
-};
-
 export function TodoTaskViewer({
   todoTasks,
   handleTodoCheckboxChange,
@@ -42,10 +37,9 @@ export function TodoTaskViewer({
                   <motion.div
                     key={task.id}
                     layout
-                    variants={taskVariants}
-                    initial="normal"
-                    animate="normal"
-                    exit="removing"
+                    initial={{ opacity: 1, y: 0 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -30 }}
                     transition={{ duration: 0.3 }}
                   >
                     <Fragment key={task.id}>
