@@ -4,7 +4,6 @@ import TaskCard, { TaskCardStatus } from './task-card';
 import { TaskDetailDTO } from '@/model/task-detail-dto';
 import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 
 type TaskCardContainerProps = {
   task: TaskDetailDTO;

@@ -1,6 +1,5 @@
 import SectionSeparator from '../../../shared/components/ui/section-separator';
 import TaskCardContainer from '@/app/dashboard/shared/components/taskcard/task-card-container';
-import TaskExitAnimation from '@/app/dashboard/shared/components/ui/task-exit-animation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Fragment, useState } from 'react';
 
