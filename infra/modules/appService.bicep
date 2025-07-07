@@ -39,6 +39,7 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
       alwaysOn: true
       cors: {
         allowedOrigins: corsAllowedOrigins
+        supportCredentials: true
       }
       appSettings: [
         {
