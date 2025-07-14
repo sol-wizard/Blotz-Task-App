@@ -14,6 +14,7 @@ public interface IConversationStateService
     void SetConversationComplete(string conversationId, bool isComplete);
     void RemoveConversation(string conversationId);
 }
+//TODO: Rename this service to "ConversationStateService" without V2
 public class ConversationStateServiceV2 : IConversationStateService
 {
     private static readonly ConcurrentDictionary<string, ChatHistory> ConversationHistories = new();

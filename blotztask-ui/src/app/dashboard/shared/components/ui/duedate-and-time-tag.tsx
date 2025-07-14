@@ -19,7 +19,7 @@ const DateAndTimeTag = ({ task, taskStatus }: { task: TaskDetailDTO; taskStatus?
           <CircleAlertIcon color="#fff" fill="#ef4444" />
         </span>
       )}
-      <span className="pl-1">Due Day - {format(new Date(task.dueDate), 'MM/dd/yyyy')}</span>
+      <span className="pl-1">{format(new Date(task.dueDate), 'MM/dd/yyyy')}</span>
 
     </div>
   );

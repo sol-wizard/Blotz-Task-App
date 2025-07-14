@@ -22,13 +22,14 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
     family: 'B'
     capacity: 1
   }
-  kind: 'app'
+  kind: 'linux'
 }
 
 //TODO: Need to turn the log on
 resource appService 'Microsoft.Web/sites@2022-09-01' = {
   name: 'wapp-${webAppName}-${environment}'
   location: location
+  kind: 'app,linux'
   identity: {
     type: 'SystemAssigned'
   }
@@ -38,6 +39,7 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
       alwaysOn: true
       cors: {
         allowedOrigins: corsAllowedOrigins
+        supportCredentials: true
       }
       appSettings: [
         {
