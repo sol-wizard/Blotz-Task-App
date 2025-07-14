@@ -17,14 +17,14 @@ namespace BlotzTask.Controllers
         }
 
         [HttpPost("generate")]
-        public async Task<IActionResult> Generate([FromBody] PromptRequest request)
+        public async Task<IActionResult> Generate([FromBody] PromptRequest request, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(request?.Prompt))
             {
                 return BadRequest("Prompt cannot be empty.");
             }
 
-            var response = await _aiService.GenerateResponseAsync(request.Prompt, request.TimeZoneId);
+            var response = await _aiService.GenerateResponseAsync(request.Prompt, request.TimeZoneId, cancellationToken);
             return Ok(new { Response = response });
         }
        

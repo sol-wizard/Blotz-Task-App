@@ -17,7 +17,7 @@ namespace BlotzTask.Controllers
             _labelService = labelService;
         }
 
-        [HttpGet("alllabel")]
+        [HttpGet]
         [Tags("MigratedToCleanArchitecture")]
         public async Task<IActionResult> GetAllLabels()
         {
