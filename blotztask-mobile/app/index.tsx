@@ -1,18 +1,15 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Button } from "react-native-paper";
+import { Link, router } from "expo-router";
 
 export default function Index() {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text className="text-red-500">
-        Edit app/index.tsx to edit this screen.
-      </Text>
-      <Text>hello world</Text>
+    <View className="flex-1 justify-center items-center">
+      <Link href="/login" asChild>
+      <Button onPress={() => router.push('/login')}>
+        Go to Login
+      </Button>
+      </Link>
     </View>
   );
 }
