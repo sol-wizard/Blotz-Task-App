@@ -8,7 +8,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <PaperProvider theme={theme}>
-        <Stack />
+        <Stack screenOptions={{ headerShown: false }} />  
       </PaperProvider>
     </SafeAreaProvider>
   );
