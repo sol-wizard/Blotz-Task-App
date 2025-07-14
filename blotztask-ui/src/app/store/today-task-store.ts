@@ -32,108 +32,110 @@ type TodayTaskStore = {
   };
 };
 
-export const useTodayTaskStore = create<TodayTaskStore>()(subscribeWithSelector((set, get) => ({
-  todayTasks: [],
-  overdueTasks: [],
-  incompleteTodayTasks: [],
-  completedTodayTasks: [],
-  todayTasksIsLoading: false,
-  actions: {
-    setLoading: (value) => set({ todayTasksIsLoading: value }),
+export const useTodayTaskStore = create<TodayTaskStore>()(
+  subscribeWithSelector((set, get) => ({
+    todayTasks: [],
+    overdueTasks: [],
+    incompleteTodayTasks: [],
+    completedTodayTasks: [],
+    todayTasksIsLoading: false,
+    actions: {
+      setLoading: (value) => set({ todayTasksIsLoading: value }),
 
-    loadTodayTasks: async () => {
-      const { setLoading } = get().actions;
+      loadTodayTasks: async () => {
+        const { setLoading } = get().actions;
 
-      const data = await performTaskAndRefresh(
-        () => fetchTaskItemsDueToday(),
-        async () => {}, // no-op reload since it's already loading
-        setLoading
-      );
+        const data = await performTaskAndRefresh(
+          () => fetchTaskItemsDueToday(),
+          async () => {}, // no-op reload since it's already loading
+          setLoading
+        );
 
-      if (data) {
-        set({
-          todayTasks: data,
-          incompleteTodayTasks: data.filter((task) => !task.isDone),
-          completedTodayTasks: data.filter((task) => task.isDone),
-        });
-      }
+        if (data) {
+          set({
+            todayTasks: data,
+            incompleteTodayTasks: data.filter((task) => !task.isDone),
+            completedTodayTasks: data.filter((task) => task.isDone),
+          });
+        }
+      },
+
+      loadOverdueTasks: async () => {
+        const { setLoading } = get().actions;
+
+        const overdueTasks = await performTaskAndRefresh(
+          () => fetchOvedueTasks(),
+          async () => {},
+          setLoading
+        );
+
+        if (overdueTasks) {
+          set({ overdueTasks: overdueTasks });
+        }
+      },
+
+      handleAddTask: async (taskDetails: RawAddTaskDTO) => {
+        const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
+        await performTaskAndRefresh(
+          () => addTaskItem(taskDetails),
+          async () => {
+            await loadTodayTasks();
+            await loadOverdueTasks();
+          },
+          setLoading
+        );
+      },
+
+      handleEditTask: async (updatedTask: RawEditTaskDTO) => {
+        const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
+        await performTaskAndRefresh(
+          () => editTask(updatedTask),
+          async () => {
+            await loadTodayTasks();
+            await loadOverdueTasks();
+          },
+          setLoading
+        );
+      },
+
+      handleDeleteTask: async (taskId: number) => {
+        const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
+        await performTaskAndRefresh(
+          () => deleteTask(taskId),
+          async () => {
+            await loadTodayTasks();
+            await loadOverdueTasks();
+          },
+          setLoading
+        );
+      },
+
+      handleTaskDeleteUndo: async (taskId: number) => {
+        const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
+        await performTaskAndRefresh(
+          () => undoDeleteTask(taskId),
+          async () => {
+            await loadTodayTasks();
+            await loadOverdueTasks();
+          },
+          setLoading
+        );
+      },
+
+      handleCheckboxChange: async (taskId: number) => {
+        const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
+        await performTaskAndRefresh(
+          () => updateTaskStatus(taskId),
+          async () => {
+            await loadTodayTasks();
+            await loadOverdueTasks();
+          },
+          setLoading
+        );
+      },
     },
-
-    loadOverdueTasks: async () => {
-      const { setLoading } = get().actions;
-
-      const overdueTasks = await performTaskAndRefresh(
-        ()=> fetchOvedueTasks(),
-        async () => {},
-        setLoading
-      )
-
-      if (overdueTasks) {
-        set({ overdueTasks: overdueTasks });
-      }
-    },
-
-    handleAddTask: async (taskDetails: RawAddTaskDTO) => {
-      const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
-      await performTaskAndRefresh(
-        () => addTaskItem(taskDetails),
-        async () => {
-          await loadTodayTasks();
-          await loadOverdueTasks();
-        },
-        setLoading
-      );
-    },
-
-    handleEditTask: async (updatedTask: RawEditTaskDTO) => {
-      const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
-      await performTaskAndRefresh(
-        () => editTask(updatedTask),
-        async () => {
-          await loadTodayTasks();
-          await loadOverdueTasks();
-        },
-        setLoading
-      );
-    },
-
-    handleDeleteTask: async (taskId: number) => {
-      const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
-      await performTaskAndRefresh(
-        () => deleteTask(taskId),
-        async () => {
-          await loadTodayTasks();
-          await loadOverdueTasks();
-        },
-        setLoading
-      );
-    },
-
-    handleTaskDeleteUndo: async (taskId: number) => {
-      const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
-      await performTaskAndRefresh(
-        () => undoDeleteTask(taskId),
-        async () => {
-          await loadTodayTasks();
-          await loadOverdueTasks();
-        },
-        setLoading
-      );
-    },
-
-    handleCheckboxChange: async (taskId: number) => {
-      const { loadTodayTasks, loadOverdueTasks, setLoading } = get().actions;
-      await performTaskAndRefresh(
-        () => updateTaskStatus(taskId),
-        async () => {
-          await loadTodayTasks();
-          await loadOverdueTasks();
-        },
-        setLoading
-      );
-    },
-  },
-})));
+  }))
+);
 
 export const useTodayTasks = () => useTodayTaskStore((state) => state.todayTasks);
 export const useOverdueTasks = () => useTodayTaskStore((state) => state.overdueTasks);
