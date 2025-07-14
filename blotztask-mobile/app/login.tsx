@@ -1,126 +1,118 @@
-import { View, StyleSheet } from "react-native";
-import { Text, TextInput, Button, HelperText } from "react-native-paper";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import React, { useState } from 'react';
+import { View } from 'react-native';
+import { Button, Card, TextInput, Text, HelperText, Snackbar } from 'react-native-paper';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { login } from '../services/auth';
 
+// Form validation schema
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
+  email: z.string().email('Please enter a valid email'),
+  password: z.string().min(1, 'Password is required'),
 });
 
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginScreen() {
-  const { control, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+export default function Login() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  const { control, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
   });
 
-  const onSubmit = (data: LoginForm) => {
-    console.log(data);
+  const onSubmit = async (data: LoginFormData) => {
+    try {
+      setIsLoading(true);
+      const response = await login(data);
+      console.log('Login successful:', response);
+      setSnackbarMessage('Login successful!');
+      setSnackbarVisible(true);
+    } catch (error) {
+      console.error('Login error:', error);
+      setSnackbarMessage('Login failed. Please try again.');
+      setSnackbarVisible(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.form}>
-        <Text variant="headlineLarge" style={styles.title}>
-          Login
+    <View className="flex-1 justify-center p-6">
+      <Card className="p-6">
+        <Text variant="headlineMedium" className="text-center mb-6">
+          Welcome Back
         </Text>
-        
+
         <Controller
           control={control}
           name="email"
-          render={({ field: { onChange, value } }) => (
-            <View>
+          render={({ field: { onChange, onBlur, value } }) => (
+            <View className="mb-4">
               <TextInput
                 label="Email"
-                mode="outlined"
-                style={styles.input}
+                value={value}
+                onBlur={onBlur}
+                onChangeText={onChange}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                value={value}
-                onChangeText={onChange}
+                mode="outlined"
+                disabled={isLoading}
                 error={!!errors.email}
               />
-              {errors.email && (
-                <HelperText type="error">
-                  {errors.email.message}
-                </HelperText>
-              )}
+              <HelperText type="error" visible={!!errors.email}>
+                {errors.email?.message}
+              </HelperText>
             </View>
           )}
         />
-        
+
         <Controller
           control={control}
           name="password"
-          render={({ field: { onChange, value } }) => (
-            <View>
+          render={({ field: { onChange, onBlur, value } }) => (
+            <View className="mb-6">
               <TextInput
                 label="Password"
-                mode="outlined"
-                secureTextEntry
-                style={styles.input}
                 value={value}
+                onBlur={onBlur}
                 onChangeText={onChange}
+                secureTextEntry
+                mode="outlined"
+                disabled={isLoading}
                 error={!!errors.password}
               />
-              {errors.password && (
-                <HelperText type="error">
-                  {errors.password.message}
-                </HelperText>
-              )}
+              <HelperText type="error" visible={!!errors.password}>
+                {errors.password?.message}
+              </HelperText>
             </View>
           )}
         />
 
         <Button
           mode="contained"
-          style={styles.button}
-          contentStyle={styles.buttonContent}
           onPress={handleSubmit(onSubmit)}
+          loading={isLoading}
+          disabled={isLoading}
+          className="py-1"
         >
-          Sign In
+          {isLoading ? 'Signing In...' : 'Sign In'}
         </Button>
-      </View>
+      </Card>
+
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+      >
+        {snackbarMessage}
+      </Snackbar>
     </View>
   );
-}
-
-//TODO: Move styles to a separate file or can we use native wind ?
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  form: {
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-    marginHorizontal: 16,
-    backgroundColor: 'white',
-    borderRadius: 12,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  title: {
-    textAlign: 'center',
-    marginBottom: 32,
-    fontWeight: 'bold',
-  },
-  input: {
-    marginBottom: 16,
-  },
-  button: {
-    marginTop: 8,
-  },
-  buttonContent: {
-    paddingVertical: 8,
-  },
-}); 
+} 
