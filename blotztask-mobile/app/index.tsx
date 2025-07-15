@@ -10,7 +10,7 @@ export default function Index() {
   useEffect(() => {
     // If not loading and not authenticated, redirect to login
     if (!isLoading && !isAuthenticated) {
-      router.replace('/login');
+      router.replace("/login" as any);
     }
   }, [isLoading, isAuthenticated]);
 
@@ -37,19 +37,18 @@ export default function Index() {
       <Text variant="headlineMedium" style={{ marginBottom: 16 }}>
         Welcome to Blotz!
       </Text>
-      
+
       {user && (
-        <Text variant="bodyLarge" style={{ marginBottom: 32, textAlign: 'center' }}>
-          Hello, {user.name}! 🎉{'\n'}
+        <Text
+          variant="bodyLarge"
+          style={{ marginBottom: 32, textAlign: "center" }}
+        >
+          Hello, {user.name}! 🎉{"\n"}
           {user.email}
         </Text>
       )}
 
-      <Button 
-        mode="outlined" 
-        onPress={logout}
-        style={{ marginTop: 16 }}
-      >
+      <Button mode="outlined" onPress={logout} style={{ marginTop: 16 }}>
         Sign Out
       </Button>
     </View>
