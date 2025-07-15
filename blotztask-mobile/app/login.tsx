@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StatusBar, Dimensions } from 'react-native';
 import { 
   Button, 
@@ -12,7 +12,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { LinearGradient } from 'expo-linear-gradient';
-import { login } from '../services/auth';
+import { router } from 'expo-router';
+import { useAuth } from '../contexts/AuthContext';
 
 const { height } = Dimensions.get('window');
 
@@ -25,7 +26,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const [isLoading, setIsLoading] = useState(false);
+  const { login, isLoading: authLoading, isAuthenticated } = useAuth();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -38,19 +39,21 @@ export default function Login() {
     },
   });
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/');
+    }
+  }, [isAuthenticated]);
+
   const onSubmit = async (data: LoginFormData) => {
     try {
-      setIsLoading(true);
-      const response = await login(data);
-      console.log('Login successful:', response);
-      setSnackbarMessage('Welcome back! Login successful.');
-      setSnackbarVisible(true);
+      await login(data.email, data.password);
+      // Success message and redirect handled by AuthProvider
     } catch (error) {
       console.error('Login error:', error);
       setSnackbarMessage('Invalid credentials. Please try again.');
       setSnackbarVisible(true);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -150,7 +153,7 @@ export default function Login() {
                     autoCapitalize="none"
                     autoComplete="email"
                     mode="outlined"
-                    disabled={isLoading}
+                    disabled={authLoading}
                     error={!!errors.email}
                     left={<TextInput.Icon icon="email" />}
                     style={{ 
@@ -198,7 +201,7 @@ export default function Login() {
                     secureTextEntry={!showPassword}
                     autoComplete="password"
                     mode="outlined"
-                    disabled={isLoading}
+                    disabled={authLoading}
                     error={!!errors.password}
                     left={<TextInput.Icon icon="lock" />}
                     right={
@@ -242,8 +245,8 @@ export default function Login() {
             <Button
               mode="contained"
               onPress={handleSubmit(onSubmit)}
-              loading={isLoading}
-              disabled={isLoading}
+              loading={authLoading}
+              disabled={authLoading}
               style={{
                 borderRadius: 12,
                 paddingVertical: 8
@@ -255,7 +258,7 @@ export default function Login() {
                 letterSpacing: 0.5
               }}
             >
-              {isLoading ? 'Signing In...' : 'Sign In'}
+              {authLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </Card>
         </ScrollView>
@@ -267,9 +270,7 @@ export default function Login() {
         onDismiss={() => setSnackbarVisible(false)}
         duration={4000}
         style={{ 
-          backgroundColor: snackbarMessage.includes('successful') 
-            ? '#16a34a' 
-            : '#ef4444',
+          backgroundColor: '#ef4444',
           marginBottom: 16,
           marginHorizontal: 16,
           borderRadius: 12

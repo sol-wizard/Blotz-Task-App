@@ -45,7 +45,9 @@
     "react-native-webview": "13.13.5",
     "tailwindcss": "^3.4.17",
     "zod": "^4.0.5",
-    "expo-linear-gradient": "~14.1.5"
+    "expo-linear-gradient": "~14.1.5",
+    "@react-native-async-storage/async-storage": "2.1.2",
+    "expo-secure-store": "~14.2.3"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
