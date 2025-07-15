@@ -5,7 +5,8 @@ export async function fetchWithAuth(
   options: RequestInit = {}
 ): Promise<Response> {
   try {
-    const token = await SecureStore.getItemAsync("@blotz_auth_token");
+    const token = await SecureStore.getItemAsync("blotz_auth_token");
+    console.log("Fetched token:", token);
 
     if (!token) {
       throw new Error("No access token found.");
