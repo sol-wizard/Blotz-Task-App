@@ -67,6 +67,8 @@ public class ChatHub : Hub
         }
         catch (TokenLimitExceededException ex)
         {
+            _logger.LogError(ex, "Token limit exceeded: {Message}", ex.Message);
+
             await Clients.Caller.SendAsync("BotTyping", false);
 
             await Clients.Caller.SendAsync("TokenLimitExceeded", new
