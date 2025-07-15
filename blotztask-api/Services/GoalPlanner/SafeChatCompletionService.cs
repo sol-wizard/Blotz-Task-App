@@ -31,6 +31,7 @@ public class SafeChatCompletionService : ISafeChatCompletionService
         }
     }
 
+    //TODO: This is a potential break if message does not contain the follow.Maybe there is a better way of doing this
     private bool IsTokenOrRateLimitError(Exception ex)
     {
         var msg = ex.Message ?? "";
