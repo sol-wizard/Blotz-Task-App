@@ -1,4 +1,4 @@
-namespace BlotzTask.Services.GoalPlanner.Models;
+namespace BlotzTask.Modules.Chat.DTOs;
 
 public class ClarificationState
 {

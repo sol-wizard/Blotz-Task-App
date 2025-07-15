@@ -1,8 +1,7 @@
-using Azure;
-using BlotzTask.Exceptions;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace BlotzTask.Services.GoalPlanner;
+namespace BlotzTask.Modules.Chat.Services;
 
 public interface ISafeChatCompletionService
 {

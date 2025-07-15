@@ -39,7 +39,6 @@
 
   <ItemGroup>
     <Folder Include="Infrastructure\" />
-    <Folder Include="Models\CustomError\" />
     <Folder Include="Modules\" />
   </ItemGroup>
 </Project>

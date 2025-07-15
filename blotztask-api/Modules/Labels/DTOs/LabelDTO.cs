@@ -1,10 +1,9 @@
-﻿namespace BlotzTask.Models
+﻿namespace BlotzTask.Modules.Labels.DTOs;
+
+public class LabelDto
 {
-    public class LabelDTO
-    {
-        public int LabelId { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Color { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-    }
+    public int LabelId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Color { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
 }

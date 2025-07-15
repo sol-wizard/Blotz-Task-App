@@ -1,6 +1,7 @@
-using BlotzTask.Models;
-using BlotzTask.Models.GoalToTask;
-using BlotzTask.Services;
+using BlotzTask.Modules.Chat.DTOs;
+using BlotzTask.Modules.Labels.DTOs;
+using BlotzTask.Modules.Labels.Services;
+using BlotzTask.Shared.DTOs;
 using OpenAI.Chat;
 
 namespace BlotzTask.Modules.AiTask.Services;
@@ -19,7 +20,7 @@ public class TaskGenerationAiService
         _labelService = labelService;
     }
 
-    public async Task<ExtractedTasksWrapperDTO> GenerateResponseAsync(string prompt, string timezoneId, CancellationToken ct)
+    public async Task<ExtractedTasksWrapperDto> GenerateResponseAsync(string prompt, string timezoneId, CancellationToken ct)
     {
         var (labels, labelNames) = await GetLabelInfoAsync();
 
@@ -80,11 +81,11 @@ public class TaskGenerationAiService
             cancellationToken: ct
             );
 
-        return ConvertToWrapperDTO(resultWrapper, labels, labelNames);
+        return ConvertToWrapperDto(resultWrapper, labels, labelNames);
     }
 
 
-    private async Task<(List<LabelDTO> labels, HashSet<string> labelNames)> GetLabelInfoAsync()
+    private async Task<(List<LabelDto> labels, HashSet<string> labelNames)> GetLabelInfoAsync()
     {
         var labels = await _labelService.GetAllLabelsAsync();
         var labelNames = labels.Select(label => label.Name).ToHashSet();
@@ -193,35 +194,35 @@ public class TaskGenerationAiService
         }
     }
 
-    private ExtractedTaskDTO HandleExtractedTask(ExtractedTask? extractedTask, List<LabelDTO> labels, HashSet<string> labelNames)
+    private ExtractedTaskDto HandleExtractedTask(ExtractedTask? extractedTask, List<LabelDto> labels, HashSet<string> labelNames)
     {
         if (extractedTask is null)
             throw new ArgumentNullException(nameof(extractedTask));
 
-        if (!labelNames.Contains(extractedTask.label))
+        if (!labelNames.Contains(extractedTask.Label))
         {
-            extractedTask.label = "Others";
+            extractedTask.Label = "Others";
         }
 
-        return new ExtractedTaskDTO
+        return new ExtractedTaskDto
         {
             Title = extractedTask.Title,
             Description = extractedTask.Description,
             DueDate = extractedTask.DueDate,
             IsValidTask = extractedTask.IsValidTask,
-            Label = labels.First(x => x.Name == extractedTask.label)
+            Label = labels.First(x => x.Name == extractedTask.Label)
         };
     }
 
-    private ExtractedTasksWrapperDTO ConvertToWrapperDTO(
+    private ExtractedTasksWrapperDto ConvertToWrapperDto(
         ExtractedTasksWrapper? wrapper,
-        List<LabelDTO> labels,
+        List<LabelDto> labels,
         HashSet<string> labelNames,
         string fallbackMessage = "AI failed to generate tasks.")
     {
         if (wrapper == null)
         {
-            return new ExtractedTasksWrapperDTO
+            return new ExtractedTasksWrapperDto
             {
                 Message = fallbackMessage,
                 Tasks = new()
@@ -233,7 +234,7 @@ public class TaskGenerationAiService
             .Select(t => HandleExtractedTask(t, labels, labelNames))
             .ToList();
 
-        return new ExtractedTasksWrapperDTO
+        return new ExtractedTasksWrapperDto
         {
             Message = wrapper.Message,
             Tasks = results

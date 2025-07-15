@@ -1,8 +1,7 @@
-using BlotzTask.Models;
-using BlotzTask.Models.GoalToTask;
-using BlotzTask.Services.GoalPlanner.Models;
+using BlotzTask.Modules.Chat.DTOs;
+using BlotzTask.Shared.DTOs;
 
-namespace BlotzTask.Services.GoalPlanner;
+namespace BlotzTask.Modules.Chat.Services;
 public interface IGoalPlannerChatService
 {
     Task<GoalPlanningChatResult> HandleUserMessageAsync(ConversationMessage userMessage);
@@ -44,7 +43,7 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         var isReady = await _goalPlannerAiService.IsReadyToGeneratePlanAsync(chatHistory, state.ClarificationRound);
 
         string botContent;
-        List<ExtractedTaskDTO>? tasks = null;
+        List<ExtractedTaskDto>? tasks = null;
 
         if (!isReady && state.ClarificationRound >= MaxClarificationRounds)
         {

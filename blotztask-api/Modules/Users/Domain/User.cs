@@ -1,7 +1,7 @@
-﻿using BlotzTask.Tasks.Domain;
+﻿using BlotzTask.Modules.Tasks.Domain;
 using Microsoft.AspNetCore.Identity;
 
-namespace BlotzTask.Data.Entities;
+namespace BlotzTask.Modules.Users.Domain;
 public class User : IdentityUser
 {
   public string FirstName { get; set; }

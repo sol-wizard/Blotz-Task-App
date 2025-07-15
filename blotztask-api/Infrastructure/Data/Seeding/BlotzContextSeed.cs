@@ -1,8 +1,8 @@
 using System.Security.Claims;
-using BlotzTask.Data;
-using BlotzTask.Data.Entities;
+using BlotzTask.Modules.Users.Domain;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+
+namespace BlotzTask.Infrastructure.Data.Seeding;
 
 public static class BlotzContextSeed
 {

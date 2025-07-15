@@ -1,6 +1,6 @@
-namespace BlotzTask.Models;
-
 using System.Text.Json.Serialization;
+
+namespace BlotzTask.Shared.DTOs;
 
 public class ExtractedTask
 {
@@ -17,5 +17,5 @@ public class ExtractedTask
     public bool IsValidTask { get; set; }
 
     [JsonPropertyName("label")]
-    public string label { get; set; }
+    public string Label { get; set; }
 }

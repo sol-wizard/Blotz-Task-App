@@ -1,5 +1,5 @@
 
-namespace BlotzTask.Models;
+namespace BlotzTask.Shared.DTOs;
 public class ResponseWrapper<T>
 {
     public T Data { get; set; }

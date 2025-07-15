@@ -1,17 +1,17 @@
-using BlotzTask.Models;
-using BlotzTask.Services.GoalPlanner.Constants;
-using BlotzTask.Services.GoalPlanner.Models;
-using Microsoft.EntityFrameworkCore.Diagnostics;
+using BlotzTask.Modules.Chat.Constants;
+using BlotzTask.Modules.Chat.DTOs;
+using BlotzTask.Modules.Labels.Services;
+using BlotzTask.Shared.DTOs;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace BlotzTask.Services.GoalPlanner;
+namespace BlotzTask.Modules.Chat.Services;
 
 public interface IGoalPlannerAiService
 {
-    Task<List<ExtractedTaskDTO>> GenerateAiResponse(ChatHistory chatHistory);
+    Task<List<ExtractedTaskDto>> GenerateAiResponse(ChatHistory chatHistory);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
     Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory, int currentRound);
-    Task<List<ExtractedTaskDTO>> ReviseGeneratedTasksAsync(List<ExtractedTaskDTO> rawTasks, ChatHistory chatHistory);
+    Task<List<ExtractedTaskDto>> ReviseGeneratedTasksAsync(List<ExtractedTaskDto> rawTasks, ChatHistory chatHistory);
     Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory, int currentRound);
 }
 
@@ -35,7 +35,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         _taskParser = taskParser;
         _safeChatCompletionService = safeChatCompletionService;
     }
-    public async Task<List<ExtractedTaskDTO>> GenerateAiResponse(
+    public async Task<List<ExtractedTaskDto>> GenerateAiResponse(
     ChatHistory chatHistory)
     {
         var tempHistory = new ChatHistory(chatHistory);
@@ -165,7 +165,7 @@ Current question count: {2}/{1}
         return response ?? "Can you clarify your goal a bit more?";
     }
     
-    public async Task<List<ExtractedTaskDTO>> ReviseGeneratedTasksAsync(List<ExtractedTaskDTO> rawTasks, ChatHistory chatHistory)
+    public async Task<List<ExtractedTaskDto>> ReviseGeneratedTasksAsync(List<ExtractedTaskDto> rawTasks, ChatHistory chatHistory)
     {
 
         string taskListText = string.Join("\n", rawTasks.Select(t => $"- {t.Description}"));

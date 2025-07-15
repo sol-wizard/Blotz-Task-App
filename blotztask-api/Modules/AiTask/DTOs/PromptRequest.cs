@@ -1,4 +1,4 @@
-namespace BlotzTask.Models;
+namespace BlotzTask.Modules.AiTask.DTOs;
 
 public class PromptRequest
 {

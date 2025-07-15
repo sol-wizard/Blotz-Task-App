@@ -1,4 +1,4 @@
-using BlotzTask.Models;
+using BlotzTask.Modules.AiTask.DTOs;
 using BlotzTask.Modules.AiTask.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

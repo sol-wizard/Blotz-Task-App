@@ -1,12 +1,10 @@
 using System.Text.Json.Serialization;
-namespace BlotzTask.Models.GoalToTask
+
+namespace BlotzTask.Modules.Chat.DTOs;
+
+public class ConfidenceScoreWrapper
 {
-    public class ConfidenceScoreWrapper
-    {
 
-        [JsonPropertyName("confidenceScore")]
-        public double ConfidenceScore { get; set; }
-    }
-    
-
+    [JsonPropertyName("confidenceScore")]
+    public double ConfidenceScore { get; set; }
 }

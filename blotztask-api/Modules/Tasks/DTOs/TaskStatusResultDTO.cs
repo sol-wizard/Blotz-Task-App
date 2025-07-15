@@ -1,9 +1,8 @@
-namespace BlotzTask.Models
+namespace BlotzTask.Modules.Tasks.DTOs;
+
+public class TaskStatusResultDto
 {
-    public class TaskStatusResultDTO
-    {
-        public int Id { get; set; }
-        public DateTime UpdatedAt { get; set; }
-        public string Message {get; set;} = string.Empty;
-    }
+    public int Id { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public string Message {get; set;} = string.Empty;
 }

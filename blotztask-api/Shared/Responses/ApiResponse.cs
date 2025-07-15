@@ -1,4 +1,4 @@
-namespace BlotzTask.Models.ApiResponse;
+namespace BlotzTask.Shared.Responses;
 
 public class ApiResponse<T>
 {

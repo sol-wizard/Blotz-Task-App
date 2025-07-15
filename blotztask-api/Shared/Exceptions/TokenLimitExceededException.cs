@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace BlotzTask.Exceptions;
+namespace BlotzTask.Shared.Exceptions;
 
 public class TokenLimitExceededException : Exception
 {

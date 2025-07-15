@@ -1,17 +1,15 @@
-﻿using BlotzTask.Data;
-using BlotzTask.Data.Entities;
-using BlotzTask.Infrastructure.Data;
-using BlotzTask.Labels.Domain;
-using BlotzTask.Models;
+﻿using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Labels.Domain;
+using BlotzTask.Modules.Labels.DTOs;
 using Microsoft.EntityFrameworkCore;
 
-namespace BlotzTask.Services;
+namespace BlotzTask.Modules.Labels.Services;
 
 public interface ILabelService
 {
-    public Task<List<LabelDTO>> GetAllLabelsAsync();
+    public Task<List<LabelDto>> GetAllLabelsAsync();
     public Task<Label> GetLabelById(int id);
-    public Task<string> AddLabelAsync(AddLabelDTO addLabel);
+    public Task<string> AddLabelAsync(AddLabelDto addLabel);
 }
 
 public class LabelService : ILabelService
@@ -23,12 +21,12 @@ public class LabelService : ILabelService
         _dbContext = dbContext;
     }
 
-    public async Task<List<LabelDTO>> GetAllLabelsAsync()
+    public async Task<List<LabelDto>> GetAllLabelsAsync()
     {
         try
         {
             return await _dbContext.Labels
-                .Select(label => new LabelDTO
+                .Select(label => new LabelDto
                      {
                          LabelId = label.LabelId,
                          Name = label.Name,
@@ -48,7 +46,7 @@ public class LabelService : ILabelService
         return await _dbContext.Labels.FindAsync(id);
     }
 
-    public async Task<string> AddLabelAsync(AddLabelDTO addLabel)
+    public async Task<string> AddLabelAsync(AddLabelDto addLabel)
     {
         var addlabel = new Label
         {

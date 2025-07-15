@@ -1,10 +1,11 @@
+using System.Security.Claims;
+using BlotzTask.Modules.Users.DTOs;
+using BlotzTask.Modules.Users.Services;
+using BlotzTask.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using BlotzTask.Services;
-using BlotzTask.Models;
-using System.Security.Claims;
 
-namespace BlotzTask.Controllers;
+namespace BlotzTask.Modules.Users;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -40,7 +41,7 @@ public class UserController : ControllerBase
     }
     [HttpPost("register")]
     [AllowAnonymous]
-    public async Task<IActionResult> Register([FromBody] RegisterRequestDTO request)
+    public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
         if (!ModelState.IsValid)
         {

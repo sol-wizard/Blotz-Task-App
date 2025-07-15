@@ -1,7 +1,9 @@
-using BlotzTask.Exceptions;
-using BlotzTask.Models.GoalToTask;
-using BlotzTask.Services.GoalPlanner;
+using BlotzTask.Modules.Chat.DTOs;
+using BlotzTask.Modules.Chat.Services;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.SignalR;
+
+namespace BlotzTask.Modules.Chat;
 
 public class ChatHub : Hub
 {
@@ -9,8 +11,8 @@ public class ChatHub : Hub
     private readonly IGoalPlannerChatService _goalPlannerChatService;
 
     public ChatHub(
-    ILogger<ChatHub> logger, 
-    IGoalPlannerChatService goalPlannerChatService)
+        ILogger<ChatHub> logger, 
+        IGoalPlannerChatService goalPlannerChatService)
     {
         _logger = logger;
         _goalPlannerChatService = goalPlannerChatService;

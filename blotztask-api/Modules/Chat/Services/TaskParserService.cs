@@ -1,10 +1,13 @@
 using System.Text.Json;
-using BlotzTask.Models;
-namespace BlotzTask.Services.GoalPlanner;
+using BlotzTask.Modules.Labels.DTOs;
+using BlotzTask.Modules.Labels.Services;
+using BlotzTask.Shared.DTOs;
+
+namespace BlotzTask.Modules.Chat.Services;
 
 public interface ITaskParserService
 {
-    bool TryParseTasks(string response, out List<ExtractedTaskDTO> tasks);
+    bool TryParseTasks(string response, out List<ExtractedTaskDto> tasks);
 }
 public class TaskParserService:ITaskParserService
 {
@@ -17,7 +20,7 @@ public class TaskParserService:ITaskParserService
         _labelService = labelService;
     }
 
-    public bool TryParseTasks(string response, out List<ExtractedTaskDTO> tasks)
+    public bool TryParseTasks(string response, out List<ExtractedTaskDto> tasks)
     {
         tasks = [];
 
@@ -113,23 +116,23 @@ public class TaskParserService:ITaskParserService
         }
     }
 
-    private ExtractedTaskDTO HandleExtractedTask(ExtractedTask? extractedTask, List<LabelDTO> labels, HashSet<string> labelNames)
+    private ExtractedTaskDto HandleExtractedTask(ExtractedTask? extractedTask, List<LabelDto> labels, HashSet<string> labelNames)
     {
         if (extractedTask is null)
             throw new ArgumentNullException(nameof(extractedTask));
 
-        if (!labelNames.Contains(extractedTask.label))
+        if (!labelNames.Contains(extractedTask.Label))
         {
-            extractedTask.label = "Others";
+            extractedTask.Label = "Others";
         }
 
-        return new ExtractedTaskDTO
+        return new ExtractedTaskDto
         {
             Title = extractedTask.Title,
             Description = extractedTask.Description,
             DueDate = extractedTask.DueDate,
             IsValidTask = extractedTask.IsValidTask,
-            Label = labels.First(x => x.Name == extractedTask.label)
+            Label = labels.First(x => x.Name == extractedTask.Label)
         };
     }
 }

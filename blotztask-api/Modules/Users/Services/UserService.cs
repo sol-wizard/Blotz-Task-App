@@ -1,15 +1,15 @@
+using BlotzTask.Modules.Users.Domain;
+using BlotzTask.Modules.Users.DTOs;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.Identity;
-using BlotzTask.Models;
-using BlotzTask.Models.CustomError;
-using BlotzTask.Data.Entities;
 
-namespace BlotzTask.Services;
+namespace BlotzTask.Modules.Users.Services;
 
 public interface IUserService
 {
     public Task<UserInfoDto> GetCurrentUserInfoAsync(string userId);
 
-    public Task<IdentityResult> RegisterUserAsync(RegisterRequestDTO request);
+    public Task<IdentityResult> RegisterUserAsync(RegisterRequestDto request);
 }
 
 public class UserService : IUserService
@@ -51,7 +51,7 @@ public class UserService : IUserService
             throw;
         }
     }
-    public async Task<IdentityResult> RegisterUserAsync(RegisterRequestDTO request)
+    public async Task<IdentityResult> RegisterUserAsync(RegisterRequestDto request)
     {
 
         var user = new User

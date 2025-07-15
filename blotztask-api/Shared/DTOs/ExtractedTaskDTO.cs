@@ -1,8 +1,9 @@
-namespace BlotzTask.Models;
-
 using System.Text.Json.Serialization;
+using BlotzTask.Modules.Labels.DTOs;
 
-public class ExtractedTaskDTO
+namespace BlotzTask.Shared.DTOs;
+
+public class ExtractedTaskDto
 {
     public string Title { get; set; }
 
@@ -13,5 +14,5 @@ public class ExtractedTaskDTO
     
     public bool IsValidTask { get; set; }
 
-    public LabelDTO Label { get; set; }
+    public LabelDto Label { get; set; }
 }
