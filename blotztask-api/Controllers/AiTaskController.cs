@@ -7,11 +7,11 @@ namespace BlotzTask.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class AzureAiController : ControllerBase
+    public class AiTaskController : ControllerBase
     {
         private readonly TaskGenerationAIService _aiService;
 
-        public AzureAiController(TaskGenerationAIService aiService)
+        public AiTaskController(TaskGenerationAIService aiService)
         {
             _aiService = aiService;
         }
