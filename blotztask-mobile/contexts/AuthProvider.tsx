@@ -1,35 +1,30 @@
-import React, { useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router } from 'expo-router';
-import AuthContext, { AuthContextType, User } from './AuthContext';
-import { login as loginService } from '../services/auth';
+import React, { useState, useEffect, ReactNode } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+import AuthContext, { AuthContextType } from "./AuthContext";
+import { LoginResponse, login as loginService } from "../services/auth";
+import * as SecureStore from "expo-secure-store";
+import { AUTH_TOKEN_KEY } from "@/src/util/token-key";
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-const AUTH_TOKEN_KEY = '@blotz_auth_token';
-const USER_DATA_KEY = '@blotz_user_data';
-
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const isAuthenticated = !!user;
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Check authentication state on app start
   const checkAuthState = async () => {
     try {
       setIsLoading(true);
       const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
-      const userData = await AsyncStorage.getItem(USER_DATA_KEY);
 
-      if (token && userData) {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
+      if (token) {
+        setIsAuthenticated(true);
       }
     } catch (error) {
-      console.error('Error checking auth state:', error);
+      console.error("Error checking auth state:", error);
       // Clear any corrupted data
       await logout();
     } finally {
@@ -40,33 +35,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Login function
   const login = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
-      
-      // Call the login service
-      const response = await loginService({ email, password });
-      
-      // Create user object from email (since API doesn't return user details)
-      const userData: User = {
-        id: Date.now().toString(), // Generate a temporary ID
-        email: email,
-        name: email.split('@')[0] // Use email prefix as name
-      };
-
-      // Store token and user data
-      if (response.accessToken) {
-        await AsyncStorage.setItem(AUTH_TOKEN_KEY, response.accessToken);
+      const response: LoginResponse = await loginService({ email, password });
+      if (!response.accessToken) {
+        throw new Error("No access token returned");
       }
-      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
-      
-      // Update state
-      setUser(userData);
-      
-      // Redirect to home page
-      router.replace('/');
-      
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error; // Re-throw to handle in UI
+
+      try {
+        await SecureStore.setItemAsync(AUTH_TOKEN_KEY, response.accessToken);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Failed to save token:", error);
+      }
+    } catch (err) {
+      console.error("Login failed:", err);
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -76,18 +58,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     try {
       setIsLoading(true);
-      
+
       // Clear stored data
-      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY, USER_DATA_KEY]);
-      
+      await AsyncStorage.multiRemove([AUTH_TOKEN_KEY]);
+
       // Clear state
-      setUser(null);
-      
+      setIsAuthenticated(false);
+
       // Redirect to login
-      router.replace('/login');
-      
+      router.replace("/login");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +80,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const value: AuthContextType = {
-    user,
     isLoading,
     isAuthenticated,
     login,
@@ -107,9 +87,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuthState,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-}; 
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
