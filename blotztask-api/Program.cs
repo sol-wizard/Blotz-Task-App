@@ -1,11 +1,17 @@
 using Azure.Identity;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Security.KeyVault.Secrets;
-using BlotzTask.Data;
-using BlotzTask.Data.Entities;
 using BlotzTask.Extension;
-using BlotzTask.Services;
-using BlotzTask.Services.GoalPlanner;
+using BlotzTask.Infrastructure.Data;
+using BlotzTask.Infrastructure.Data.Seeding;
+using BlotzTask.Middleware;
+using BlotzTask.Modules.AiTask.Services;
+using BlotzTask.Modules.Chat;
+using BlotzTask.Modules.Chat.Services;
+using BlotzTask.Modules.Labels.Services;
+using BlotzTask.Modules.Tasks.Services;
+using BlotzTask.Modules.Users.Domain;
+using BlotzTask.Modules.Users.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -91,7 +97,7 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddAzureOpenAi();
 
-builder.Services.AddScoped<TaskGenerationAIService>();
+builder.Services.AddScoped<TaskGenerationAiService>();
 
 if (builder.Environment.IsProduction())
 {
