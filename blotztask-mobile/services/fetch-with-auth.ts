@@ -1,3 +1,4 @@
+import { AUTH_TOKEN_KEY } from "@/src/util/token-key";
 import * as SecureStore from "expo-secure-store";
 
 export async function fetchWithAuth(
@@ -5,7 +6,7 @@ export async function fetchWithAuth(
   options: RequestInit = {}
 ): Promise<Response> {
   try {
-    const token = await SecureStore.getItemAsync("blotz_auth_token");
+    const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
     console.log("Fetched token:", token);
 
     if (!token) {

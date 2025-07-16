@@ -5,6 +5,7 @@ import TaskSelection from "@/src/components/task-selection";
 import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, Button } from "react-native";
 import * as SecureStore from "expo-secure-store";
+import { AUTH_TOKEN_KEY } from "@/src/util/token-key";
 
 export default function Generate() {
   const { logout } = useAuth();
@@ -32,7 +33,7 @@ export default function Generate() {
 
   useEffect(() => {
     const checkToken = async () => {
-      const token = await SecureStore.getItemAsync("blotz_auth_token");
+      const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
       console.log("Token before fetch:", token);
     };
 

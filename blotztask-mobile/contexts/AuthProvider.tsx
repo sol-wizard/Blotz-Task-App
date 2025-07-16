@@ -4,12 +4,11 @@ import { router } from "expo-router";
 import AuthContext, { AuthContextType } from "./AuthContext";
 import { LoginResponse, login as loginService } from "../services/auth";
 import * as SecureStore from "expo-secure-store";
+import { AUTH_TOKEN_KEY } from "@/src/util/token-key";
 
 interface AuthProviderProps {
   children: ReactNode;
 }
-
-const AUTH_TOKEN_KEY = "blotz_auth_token";
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -42,10 +41,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       try {
-        await SecureStore.setItemAsync(
-          "blotz_auth_token",
-          response.accessToken
-        );
+        await SecureStore.setItemAsync(AUTH_TOKEN_KEY, response.accessToken);
         setIsAuthenticated(true);
       } catch (error) {
         console.error("Failed to save token:", error);
