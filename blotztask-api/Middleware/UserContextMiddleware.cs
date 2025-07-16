@@ -1,5 +1,7 @@
 using System.Security.Claims;
 
+namespace BlotzTask.Middleware;
+
 public class UserContextMiddleware
 {
     private readonly RequestDelegate _next;
