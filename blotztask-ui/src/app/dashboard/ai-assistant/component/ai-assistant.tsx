@@ -27,18 +27,15 @@ const AiAssistant: React.FC<AiAssistantProps> = ({ onAddTask }) => {
       setAiMessage(aiResponse.message);
       setTasks(aiResponse.tasks);
     } catch (error) {
-      console.error('Failed to generate task:', error);
+      console.error('Failed to generate task--:', error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className='p-2 flex flex-col gap-4'>
-      <PromptInputSection
-        loading={loading}
-        onGenerate={handleGenerateTasksFromPrompt}
-      />
+    <div className="p-2 flex flex-col gap-4">
+      <PromptInputSection loading={loading} onGenerate={handleGenerateTasksFromPrompt} />
       <AiGeneratedTasksList
         loading={loading}
         aiMessage={aiMessage}
@@ -50,4 +47,4 @@ const AiAssistant: React.FC<AiAssistantProps> = ({ onAddTask }) => {
   );
 };
 
-export default AiAssistant; 
+export default AiAssistant;
