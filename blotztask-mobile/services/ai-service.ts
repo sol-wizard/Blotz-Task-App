@@ -3,7 +3,7 @@ import { fetchWithAuth } from "./fetch-with-auth";
 export const generateAiTask = async (prompt: string) => {
   const payload = {
     prompt,
-    timeZoneId: "Australia/Sydney",
+    timeZoneId: "Australia/Sydney", //TODO: Get from device settings
   };
 
   const result = await fetchWithAuth(
