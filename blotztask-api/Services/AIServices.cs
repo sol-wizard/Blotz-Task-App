@@ -3,7 +3,7 @@ using BlotzTask.Services;
 using OpenAI.Chat;
 using BlotzTask.Models.GoalToTask;
 
-
+//TODO: Extract this to an service with interface like other services
 public class TaskGenerationAIService
 {
     private readonly ChatClient _chatClient;
@@ -17,7 +17,7 @@ public class TaskGenerationAIService
         _labelService = labelService;
     }
 
-    public async Task<ExtractedTasksWrapperDTO> GenerateResponseAsync(string prompt, string timezoneId)
+    public async Task<ExtractedTasksWrapperDTO> GenerateResponseAsync(string prompt, string timezoneId, CancellationToken ct)
     {
         var (labels, labelNames) = await GetLabelInfoAsync();
 
@@ -70,15 +70,15 @@ public class TaskGenerationAIService
 
         // tool schema -- what structure AI must follow
         var tool = CreateExtractedTasksTool(labelNames);
-
-        // 
+        
         var resultWrapper = await CallToolAndDeserializeAsync<ExtractedTasksWrapper>(
             toolFunctionName: "extract_tasks",
             messages: messages,
-            tool: tool);
+            tool: tool,
+            cancellationToken: ct
+            );
 
         return ConvertToWrapperDTO(resultWrapper, labels, labelNames);
-
     }
 
 
@@ -136,6 +136,7 @@ public class TaskGenerationAIService
         string toolFunctionName,
         List<ChatMessage> messages,
         ChatTool tool,
+        CancellationToken cancellationToken,
         // pass-in fallbackDeserializer function as backup when json converter fails
         Func<string, T?>? fallbackDeserializer = null) where T : class
     {
@@ -147,7 +148,7 @@ public class TaskGenerationAIService
 
         try
         {
-            ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, options);
+            ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, options, cancellationToken);
 
             // no tool is called
             if (completion.ToolCalls.Count == 0)
@@ -237,7 +238,7 @@ public class TaskGenerationAIService
         };
     }
 
-        private DateTime GetLocalDate(string timezoneId)
+    private DateTime GetLocalDate(string timezoneId)
     {
         var timezone = TimeZoneInfo.FindSystemTimeZoneById(timezoneId);
         return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timezone);

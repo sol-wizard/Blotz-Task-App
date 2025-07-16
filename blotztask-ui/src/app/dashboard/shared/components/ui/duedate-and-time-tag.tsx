@@ -20,6 +20,7 @@ const DateAndTimeTag = ({ task, taskStatus }: { task: TaskDetailDTO; taskStatus?
         </span>
       )}
       <span className="pl-1">{format(new Date(task.dueDate), 'MM/dd/yyyy')}</span>
+
     </div>
   );
 };

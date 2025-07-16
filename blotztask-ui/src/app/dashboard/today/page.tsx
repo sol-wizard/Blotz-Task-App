@@ -52,19 +52,19 @@ export default function Today() {
   return (
     <div className="flex flex-col gap-12 h-full">
       <div className="flex flex-col gap-6 h-full">
-        {todayTasksIsLoading ? (
-          <div className="flex justify-center items-center min-h-screen">
-            <div>
-              <LoadingSpinner variant="blue" className="mb-12 ml-8 text-[10px]" />
-              <p className="font-semibold text-zinc-600">Loading...</p>
-            </div>
-          </div>
-        ) : (
-          <>
-            <TodayHeader tasks={todayTasks} />
-            <AddTaskCardContainer onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
+        <TodayHeader tasks={todayTasks} />
+        <AddTaskCardContainer onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
 
-            <div className="flex items-start h-full">
+        <div className="flex items-start h-full">
+          {todayTasksIsLoading ? (
+            <div className="flex justify-center items-center w-full min-h-[200px]">
+              <div>
+                <LoadingSpinner variant="blue" className="mb-12 ml-8 text-[10px]" />
+                <p className="font-semibold text-zinc-600">Loading...</p>
+              </div>
+            </div>
+          ) : (
+            <>
               {incompleteTodayTasks.length > 0 || completedTodayTasks.length > 0 || overdueTasks.length > 0 ? (
                 <div className="flex flex-col gap-4 w-full">
                   {overdueTasks.length > 0 && (
@@ -112,9 +112,9 @@ export default function Today() {
               ) : (
                 <DisplayNoTask />
               )}
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
