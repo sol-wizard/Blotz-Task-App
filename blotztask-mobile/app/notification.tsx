@@ -11,7 +11,7 @@ export default function notificationPage() {
 
       <View style={styles.buttonContainer}>
         <Button
-          title="Trigger Local Notification"
+          title="Trigger Remote Notification"
           onPress={async () => {
             await schedulePushNotification();
           }}
