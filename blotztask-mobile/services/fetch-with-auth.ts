@@ -7,7 +7,6 @@ export async function fetchWithAuth(
 ): Promise<Response> {
   try {
     const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
-    console.log("Fetched token:", token);
 
     if (!token) {
       throw new Error("No access token found.");

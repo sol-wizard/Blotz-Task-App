@@ -53,7 +53,6 @@ export default function Login() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data.email, data.password);
-      // Success message and redirect handled by AuthProvider
     } catch (error) {
       console.error("Login error:", error);
       setSnackbarMessage("Invalid credentials. Please try again.");

@@ -34,7 +34,6 @@ export default function Generate() {
   useEffect(() => {
     const checkToken = async () => {
       const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
-      console.log("Token before fetch:", token);
     };
 
     checkToken();

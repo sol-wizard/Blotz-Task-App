@@ -7,7 +7,7 @@ export const generateAiTask = async (prompt: string) => {
   };
 
   const result = await fetchWithAuth(
-    "https://wapp-blotztaskapp.azurewebsites.net/api/azureai/generate",
+    `${process.env.EXPO_PUBLIC_URL_WITH_API}/azureai/generate`,
     {
       method: "POST",
       headers: {
@@ -30,8 +30,6 @@ export const generateAiTask = async (prompt: string) => {
     title: task.title,
     dueDate: new Date(task.due_date),
   }));
-
-  console.log("AI response:", data.response);
 
   return {
     message: data.response.message,
