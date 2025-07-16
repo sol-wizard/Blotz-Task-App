@@ -47,6 +47,14 @@ export default function Index() {
         Go to AI Task Generator
       </Button>
 
+      <Button
+        mode="contained"
+        onPress={() => router.push("/notification" as any)}
+        style={{ marginTop: 16 }}
+      >
+        Go get a notification
+      </Button>
+
       <Button mode="outlined" onPress={logout} style={{ marginTop: 16 }}>
         Sign Out
       </Button>
