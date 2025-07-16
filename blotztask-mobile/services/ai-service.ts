@@ -24,12 +24,21 @@ export const generateAiTask = async (prompt: string) => {
 
   const data = await result.json();
 
-  const tasks = data.response.tasks.map((task: any, index: number) => ({
-    id: index,
-    description: task.description,
-    title: task.title,
-    dueDate: new Date(task.due_date),
-  }));
+  interface TaskDetailDTO {
+    id: number;
+    description: string;
+    title: string;
+    due_date: Date;
+  }
+
+  const tasks = data.response.tasks.map(
+    (task: TaskDetailDTO, index: number) => ({
+      id: index,
+      description: task.description,
+      title: task.title,
+      dueDate: new Date(task.due_date),
+    })
+  );
 
   return {
     message: data.response.message,
