@@ -1,5 +1,7 @@
-using BlotzTask.Models.ApiResponse;
-using BlotzTask.Models.CustomError;
+using BlotzTask.Shared.Exceptions;
+using BlotzTask.Shared.Responses;
+
+namespace BlotzTask.Middleware;
 
 public class ErrorHandlingMiddleware
 { 
