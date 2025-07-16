@@ -6,8 +6,6 @@ namespace BlotzTask.Services.GoalPlanner;
 
 public interface ISafeChatCompletionService
 {
-    //TODO: remove if not use
-    Task<string> GetSafeContentAsync(string prompt);
     Task<string> GetSafeContentAsync(ChatHistory history);
 }
 
@@ -18,19 +16,6 @@ public class SafeChatCompletionService : ISafeChatCompletionService
     public SafeChatCompletionService(IChatCompletionService chatCompletionService)
     {
         _chatCompletionService = chatCompletionService;
-    }
-
-    public async Task<string> GetSafeContentAsync(string prompt)
-    {
-        try
-        {
-            var result = await _chatCompletionService.GetChatMessageContentAsync(prompt);
-            return result?.Content ?? string.Empty;
-        }
-        catch (Exception ex) when (IsTokenOrRateLimitError(ex))
-        {
-            throw new TokenLimitExceededException();
-        }
     }
 
     public async Task<string> GetSafeContentAsync(ChatHistory history)
