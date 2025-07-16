@@ -10,20 +10,20 @@ export interface LoginResponse {
   refreshToken?: string;
 }
 
-const API_BASE_URL = 'https://wapp-blotztaskapp.azurewebsites.net';
-
-export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
-  const response = await fetch(`${API_BASE_URL}/login`, {
-    method: 'POST',
+export const login = async (
+  credentials: LoginCredentials
+): Promise<LoginResponse> => {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_URL}/login`, {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(credentials),
   });
 
   if (!response.ok) {
-    throw new Error('Login failed');
+    throw new Error("Login failed");
   }
 
   return response.json();
-}; 
+};
