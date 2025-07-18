@@ -215,38 +215,38 @@ public class TaskService : ITaskService
     }
 
     public async Task<List<TaskItemDto>> GetTodayDoneTasks(string userId)
+    {
+        try
         {
-            try
-            {
-                var todayUtc = DateTime.UtcNow.Date;
-                var tomorrowUtc = todayUtc.AddDays(1);
+            var todayUtc = DateTime.UtcNow.Date;
+            var tomorrowUtc = todayUtc.AddDays(1);
                 
-                return await _dbContext.TaskItems
-                    .Where(task => task.UserId == userId)
-                    .Where(task => task.IsDone == true)
-                    .Where(task => task.DueDate >= todayUtc && task.DueDate < tomorrowUtc)
-                    .Select(task => new TaskItemDto
+            return await _dbContext.TaskItems
+                .Where(task => task.UserId == userId)
+                .Where(task => task.IsDone == true)
+                .Where(task => task.DueDate >= todayUtc && task.DueDate < tomorrowUtc)
+                .Select(task => new TaskItemDto
+                {
+                    Id = task.Id,
+                    Title = task.Title,
+                    Description = task.Description,
+                    DueDate = task.DueDate,
+                    IsDone = task.IsDone,
+                    Label = new LabelDto
                     {
-                        Id = task.Id,
-                        Title = task.Title,
-                        Description = task.Description,
-                        DueDate = task.DueDate,
-                        IsDone = task.IsDone,
-                        Label = new LabelDto
-                        {
-                            LabelId = task.Label.LabelId,
-                            Name = task.Label.Name,
-                            Color = task.Label.Color
-                        },
-                        HasTime = task.HasTime
-                    })
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Unhandled exception: {ex.Message}");
-            }
+                        LabelId = task.Label.LabelId,
+                        Name = task.Label.Name,
+                        Color = task.Label.Color
+                    },
+                    HasTime = task.HasTime
+                })
+                .ToListAsync();
         }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unhandled exception: {ex.Message}");
+        }
+    }
 
     public async Task<MonthlyStatDto> GetMonthlyStats(string userId, int year, int month)
     {
