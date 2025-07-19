@@ -219,9 +219,10 @@ public class TaskService : ITaskService
     {
         try
         {
-            var todayUtc = DateTime.UtcNow.Date;
+            var today = DateTime.Today;
+            var todayUtc = today.ToUniversalTime();
             var tomorrowUtc = todayUtc.AddDays(1);
-                
+
             return await _dbContext.TaskItems
                 .Where(task => task.UserId == userId)
                 .Where(task => task.IsDone == true)
