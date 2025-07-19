@@ -16,7 +16,6 @@ public interface ITaskService
     public Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id);
     public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDto addTaskItem, string userId);
     public Task<TaskStatusResultDto> TaskStatusUpdate(int id, bool? isDone = null);
-    public Task<List<TaskItemDto>> GetTaskByDate(DateTime startDateUtc, DateTime endDateUtc, string userId);
     public Task<List<TaskItemDto>> GetTodayDoneTasks(string userId);
     public Task<MonthlyStatDto> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
@@ -227,36 +226,6 @@ public class TaskService : ITaskService
                 .Where(task => task.UserId == userId)
                 .Where(task => task.IsDone == true)
                 .Where(task => task.DueDate >= todayUtc && task.DueDate < tomorrowUtc)
-                .Select(task => new TaskItemDto
-                {
-                    Id = task.Id,
-                    Title = task.Title,
-                    Description = task.Description,
-                    DueDate = task.DueDate,
-                    IsDone = task.IsDone,
-                    Label = new LabelDto
-                    {
-                        LabelId = task.Label.LabelId,
-                        Name = task.Label.Name,
-                        Color = task.Label.Color
-                    },
-                    HasTime = task.HasTime
-                })
-                .ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Unhandled exception: {ex.Message}");
-        }
-    }
-
-    public async Task<List<TaskItemDto>> GetTaskByDate(DateTime startDateUtc, DateTime endDateUtc, string userId)
-    {
-        try
-        {
-            return await _dbContext.TaskItems
-                .Where(task => task.UserId == userId)
-                .Where(task => task.DueDate >= startDateUtc && task.DueDate < endDateUtc)
                 .Select(task => new TaskItemDto
                 {
                     Id = task.Id,

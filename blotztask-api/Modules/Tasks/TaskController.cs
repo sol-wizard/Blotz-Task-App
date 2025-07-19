@@ -52,21 +52,6 @@ public class TaskController : ControllerBase
     {
         return Ok(await _taskService.GetTaskById(id));
     }
-        
-    //TODO: change the route "due-date" to "by-date"
-    [HttpGet("due-date")]
-    public async Task<IActionResult> GetTaskByDate([FromQuery] DateTime startDateUtc)
-    {
-        var userId = HttpContext.Items["UserId"] as string;
-
-        if (userId == null)
-        {
-            throw new UnauthorizedAccessException("Could not find user id from Http Context");
-        }
-            
-        DateTime endDateUtc = startDateUtc.AddDays(1);
-        return Ok(await _taskService.GetTaskByDate(startDateUtc, endDateUtc, userId));
-    }
 
     [HttpGet("today-done")]
     public async Task<IActionResult> GetTodayDoneTasks()
