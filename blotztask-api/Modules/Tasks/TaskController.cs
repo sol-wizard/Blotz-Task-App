@@ -68,6 +68,18 @@ public class TaskController : ControllerBase
         return Ok(await _taskService.GetTaskByDate(startDateUtc, endDateUtc, userId));
     }
 
+    [HttpGet("today-done")]
+    public async Task<IActionResult> GetTodayDoneTasks()
+    {
+        var userId = HttpContext.Items["UserId"] as string;
+
+        if (userId == null)
+        {
+            throw new UnauthorizedAccessException("Could not find user id from Http Context");
+        }
+
+        return Ok(await _taskService.GetTodayDoneTasks(userId));
+    }
 
     [HttpPost]
     [Tags("MigratedToCleanArchitecture")]
