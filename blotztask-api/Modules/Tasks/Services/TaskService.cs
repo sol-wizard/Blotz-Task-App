@@ -17,6 +17,7 @@ public interface ITaskService
     public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDto addTaskItem, string userId);
     public Task<TaskStatusResultDto> TaskStatusUpdate(int id, bool? isDone = null);
     public Task<List<TaskItemDto>> GetTaskByDate(DateTime startDateUtc, DateTime endDateUtc, string userId);
+    public Task<List<TaskItemDto>> GetTodayDoneTasks(string userId);
     public Task<MonthlyStatDto> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
     public Task<List<TaskItemDto>> SearchTasksAsync(string query);
@@ -212,6 +213,41 @@ public class TaskService : ITaskService
             UpdatedAt = task.UpdatedAt,
             Message = task.IsDone ? "Task marked as completed." : "Task marked as incomplete."
         };
+    }
+
+    public async Task<List<TaskItemDto>> GetTodayDoneTasks(string userId)
+    {
+        try
+        {
+            var today = DateTime.Today;
+            var todayUtc = today.ToUniversalTime();
+            var tomorrowUtc = todayUtc.AddDays(1);
+
+            return await _dbContext.TaskItems
+                .Where(task => task.UserId == userId)
+                .Where(task => task.IsDone == true)
+                .Where(task => task.DueDate >= todayUtc && task.DueDate < tomorrowUtc)
+                .Select(task => new TaskItemDto
+                {
+                    Id = task.Id,
+                    Title = task.Title,
+                    Description = task.Description,
+                    DueDate = task.DueDate,
+                    IsDone = task.IsDone,
+                    Label = new LabelDto
+                    {
+                        LabelId = task.Label.LabelId,
+                        Name = task.Label.Name,
+                        Color = task.Label.Color
+                    },
+                    HasTime = task.HasTime
+                })
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unhandled exception: {ex.Message}");
+        }
     }
 
     public async Task<List<TaskItemDto>> GetTaskByDate(DateTime startDateUtc, DateTime endDateUtc, string userId)
