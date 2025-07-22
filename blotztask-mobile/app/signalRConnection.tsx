@@ -1,6 +1,14 @@
 import { signalRService } from "@/services/signalr-service";
+import signalR from "@microsoft/signalr";
 import { FC, useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Button } from "react-native";
+
+// Define interface for message type (kept for completeness, though not used in simplified App)
+interface ChatMessage {
+  user: string;
+  message: string;
+  id: number;
+}
 
 // --- Example React Native Component Usage ---
 const App: FC = () => { // Added FC type for App component
@@ -41,11 +49,30 @@ const App: FC = () => { // Added FC type for App component
     };
   }, []); // Empty dependency array means this runs once on mount and cleans up on unmount
 
+  // New function to manually invoke a test method
+  const sendTestMessage = async (): Promise<void> => {
+    if (connection) {
+      try {
+        console.log("test sending messages")
+        await signalRService.invoke(connection, 'SendMessage', 'User', 'Hello from React Native!', 'aConversationId');
+        console.log('Invoked SendMessage on hub.');
+      } catch (error: any) {
+        console.error('Error invoking SendMessage:', error);
+      }
+    } else {
+      console.warn('Cannot send test message: Not connected.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>SignalR Connection Test</Text>
       <Text style={styles.status}>Status: {connectionStatus}</Text>
-      {/* Removed chat-related UI elements */}
+      <Button
+        title="Send Test Message"
+        onPress={sendTestMessage}
+        disabled={connectionStatus !== 'Connected'}
+      />
     </View>
   );
 };
