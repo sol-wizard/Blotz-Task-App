@@ -19,6 +19,7 @@ export default function RootLayout() {
               name="notification"
               options={{ headerShown: false }}
             />
+            <Stack.Screen name="signalRConnection" options={{headerShown: false}}/>
           </Stack>
         </AuthProvider>
       </PaperProvider>
