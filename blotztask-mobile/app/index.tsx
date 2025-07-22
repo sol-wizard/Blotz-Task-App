@@ -3,6 +3,17 @@ import { ActivityIndicator, View } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
+import * as Notifications from "expo-notifications";
+
+// Show notifications when the app is in the foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export default function Index() {
   const { isLoading, isAuthenticated, logout } = useAuth();
@@ -45,6 +56,14 @@ export default function Index() {
         style={{ marginTop: 16 }}
       >
         Go to AI Task Generator
+      </Button>
+
+      <Button
+        mode="contained"
+        onPress={() => router.push("/notification" as any)}
+        style={{ marginTop: 16 }}
+      >
+        Go get a notification
       </Button>
 
       <Button mode="outlined" onPress={logout} style={{ marginTop: 16 }}>
