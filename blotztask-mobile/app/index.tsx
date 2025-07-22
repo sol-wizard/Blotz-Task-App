@@ -66,6 +66,14 @@ export default function Index() {
         Go get a notification
       </Button>
 
+      <Button
+        mode="contained"
+        onPress={() => router.push("/signalRConnection" as any)}
+        style={{ marginTop: 16 }}
+      >
+        Test signalr connection
+      </Button>
+
       <Button mode="outlined" onPress={logout} style={{ marginTop: 16 }}>
         Sign Out
       </Button>
