@@ -1,20 +1,81 @@
-// src/features/ai/AIScreen.tsx
-import { View } from "react-native";
-import { Text, Button } from "react-native-paper";
-import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { View, Text, TextInput, Pressable } from "react-native";
+import * as SecureStore from "expo-secure-store";
+import { useAuth } from "../../../contexts/AuthContext";
+import { TaskDetailDTO } from "../task/components/single-task";
+import { generateAiTask } from "../../../services/ai-service";
+import { AUTH_TOKEN_KEY } from "../../util/token-key";
+import TaskSelection from "../task/components/task-selection";
 
 export default function AIScreen() {
+  const { logout } = useAuth();
+  const [text, setText] = useState("");
+  const [aiMessage, setAiMessage] = useState("");
+  const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
+  const [showTasks, setShowTasks] = useState(false);
+
+  const handleGenerateTasksFromPrompt = async (prompt: string) => {
+    if (!prompt.trim()) return;
+
+    setAiMessage("");
+    setTasks([]);
+
+    try {
+      const aiResponse = await generateAiTask(prompt);
+      setAiMessage(aiResponse.message);
+      setTasks(aiResponse.tasks);
+    } catch (error) {
+      console.error("Failed to generate task:", error);
+    }
+
+    setShowTasks(true);
+  };
+
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+    };
+
+    checkToken();
+  }, []);
+
   return (
     <View className="flex-1 justify-center items-center p-6">
-      <Text variant="headlineMedium" style={{ marginBottom: 16 }}>
-        AI Task Generator
+      <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
+        Generate Tasks with AI
       </Text>
-      <Text className="text-center text-gray-500 mb-4">
-        Generate your next task with AI assistance
+
+      <Text className="text-gray-500 mb-4">
+        Talk to AI to generate your next task.
       </Text>
-      <Button mode="contained" onPress={() => router.push("/aigenerate")} style={{ marginTop: 16 }}>
-        Open AI Generator
-      </Button>
+
+      <TextInput
+        className="border-2 border-gray-400 rounded-lg p-2 w-64"
+        onChangeText={setText}
+        value={text}
+        placeholder="Type your task idea..."
+      />
+
+      <Pressable
+        onPress={() => handleGenerateTasksFromPrompt(text)}
+        className="bg-blue-500 p-2 rounded-lg mt-4"
+      >
+        <Text className="text-white">Submit</Text>
+      </Pressable>
+
+      {showTasks && <TaskSelection tasks={tasks} aiMessage={aiMessage} />}
+
+      <Pressable
+        onPress={logout}
+        style={{
+          marginTop: 32,
+          padding: 10,
+          backgroundColor: "#e0e0e0",
+          borderRadius: 8,
+        }}
+      >
+        <Text style={{ color: "#333", textAlign: "center" }}>Sign Out</Text>
+      </Pressable>
     </View>
   );
 }
