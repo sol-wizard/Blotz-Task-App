@@ -1,7 +1,7 @@
 import * as signalR from "@microsoft/signalr";
 
 const config = {
-  API_BASE_URL: process.env.EXPO_BASE_URL,
+  API_BASE_URL: process.env.EXPO_PUBLIC_URL,
 };
 
 const SIGNALR_HUBS_CHAT = `${config.API_BASE_URL}/chatHub`;
