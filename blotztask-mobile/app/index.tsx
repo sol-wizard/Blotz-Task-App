@@ -21,7 +21,32 @@ const renderScene = BottomNavigation.SceneMap({
 });
 
 export default function Index() {
+  // const { isLoading, isAuthenticated } = useAuth();
   const [index, setIndex] = useState(0);
+
+  // // Authentication check - redirects to login if not authenticated
+  // useEffect(() => {
+  //   if (!isLoading && !isAuthenticated) {
+  //     router.replace("/login");
+  //   }
+  // }, [isLoading, isAuthenticated]);
+
+  // // Show loading spinner while checking authentication
+  // if (isLoading) {
+  //   return (
+  //     <View className="flex-1 justify-center items-center">
+  //       <ActivityIndicator size="large" />
+  //       <Text variant="bodyMedium" style={{ marginTop: 16 }}>
+  //         Loading...
+  //       </Text>
+  //     </View>
+  //   );
+  // }
+
+  // // Don't render anything if not authenticated (while redirecting)
+  // if (!isAuthenticated) {
+  //   return null;
+  // }
 
   return (
     <BottomNavigation
