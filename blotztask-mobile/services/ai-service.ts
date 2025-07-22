@@ -7,7 +7,7 @@ export const generateAiTask = async (prompt: string) => {
   };
 
   const result = await fetchWithAuth(
-    `${process.env.EXPO_PUBLIC_URL_WITH_API}/azureai/generate`,
+    `${process.env.EXPO_PUBLIC_URL_WITH_API}/ai/generate`,
     {
       method: "POST",
       headers: {

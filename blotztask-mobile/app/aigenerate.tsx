@@ -1,11 +1,12 @@
-import { useAuth } from "@/contexts/AuthContext";
-import { generateAiTask } from "@/services/ai-service";
-import { TaskDetailDTO } from "@/src/components/single-task";
-import TaskSelection from "@/src/components/task-selection";
+
 import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, Button } from "react-native";
 import * as SecureStore from "expo-secure-store";
+import { useAuth } from "@/contexts/AuthContext";
+import { TaskDetailDTO } from "@/src/feature/task/components/single-task";
+import { generateAiTask } from "@/services/ai-service";
 import { AUTH_TOKEN_KEY } from "@/src/util/token-key";
+import TaskSelection from "@/src/feature/task/components/task-selection";
 
 export default function Generate() {
   const { logout } = useAuth();
