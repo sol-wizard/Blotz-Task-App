@@ -50,7 +50,8 @@
     "tailwindcss": "^3.4.17",
     "zod": "^4.0.5",
     "expo-notifications": "~0.31.4",
-    "expo-device": "~7.1.4"
+    "expo-device": "~7.1.4",
+    "expo-audio": "~0.4.8"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
