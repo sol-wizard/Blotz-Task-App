@@ -1,16 +1,17 @@
 {
   "expo": {
-    "name": "ADHDproject",
-    "slug": "ADHDproject",
+    "name": "BlotzTask",
+    "slug": "BlotzTask",
+    "owner": "blotztask",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "adhdproject",
+    "scheme": "blotztask",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nicolenxn.ADHDproject",
+      "bundleIdentifier": "com.Blotz.BlotzTask",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -21,7 +22,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.nicolenxn.ADHDproject"
+      "package": "com.Blotz.BlotzTask"
     },
     "web": {
       "bundler": "metro",
@@ -47,7 +48,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "99062285-944a-4758-ab2c-641d3733c0ca"
+        "projectId": "8e8ffbf2-206b-4d9b-b11c-a387b49a3126"
       }
     },
     "runtimeVersion": {
