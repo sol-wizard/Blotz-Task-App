@@ -5,13 +5,10 @@ import {
   View,
   Image,
   TouchableHighlight,
+  Platform,
 } from "react-native";
 
-import Voice, {
-  type SpeechRecognizedEvent,
-  type SpeechResultsEvent,
-  type SpeechErrorEvent,
-} from "@react-native-voice/voice";
+let Voice: any = null;
 
 function VoiceTest() {
   const [recognized, setRecognized] = useState("");
@@ -21,90 +18,69 @@ function VoiceTest() {
   const [started, setStarted] = useState("");
   const [results, setResults] = useState<string[]>([]);
   const [partialResults, setPartialResults] = useState<string[]>([]);
-
-  const onSpeechStart = (e: any) => {
-    console.log("onSpeechStart: ", e);
-    setStarted("√");
-  };
-
-  const onSpeechRecognized = (e: SpeechRecognizedEvent) => {
-    console.log("onSpeechRecognized: ", e);
-    setRecognized("√");
-  };
-
-  const onSpeechEnd = (e: any) => {
-    console.log("onSpeechEnd: ", e);
-    setEnd("√");
-  };
-
-  const onSpeechError = (e: SpeechErrorEvent) => {
-    console.log("onSpeechError: ", e);
-    setError(JSON.stringify(e.error));
-  };
-
-  const onSpeechResults = (e: SpeechResultsEvent) => {
-    console.log("onSpeechResults: ", e);
-    setResults(e.value && e.value?.length > 0 ? e.value : []);
-  };
-
-  const onSpeechPartialResults = (e: SpeechResultsEvent) => {
-    console.log("onSpeechPartialResults: ", e);
-    setPartialResults(e.value && e.value?.length > 0 ? e.value : []);
-  };
-
-  const onSpeechVolumeChanged = (e: any) => {
-    console.log("onSpeechVolumeChanged: ", e);
-    setVolume(e.value);
-  };
+  const [isVoiceAvailable, setIsVoiceAvailable] = useState(false);
 
   useEffect(() => {
-    Voice.onSpeechStart = onSpeechStart;
-    Voice.onSpeechRecognized = onSpeechRecognized;
-    Voice.onSpeechEnd = onSpeechEnd;
-    Voice.onSpeechError = onSpeechError;
-    Voice.onSpeechResults = onSpeechResults;
-    Voice.onSpeechPartialResults = onSpeechPartialResults;
-    Voice.onSpeechVolumeChanged = onSpeechVolumeChanged;
+    const loadVoice = async () => {
+      try {
+        const voiceModule = await import("@react-native-voice/voice");
+        Voice = voiceModule.default;
+
+        Voice.onSpeechStart = (e: any) => {
+          console.log("onSpeechStart: ", e);
+          setStarted("√");
+        };
+
+        Voice.onSpeechRecognized = (e: any) => {
+          console.log("onSpeechRecognized: ", e);
+          setRecognized("√");
+        };
+
+        Voice.onSpeechEnd = (e: any) => {
+          console.log("onSpeechEnd: ", e);
+          setEnd("√");
+        };
+
+        Voice.onSpeechError = (e: any) => {
+          console.log("onSpeechError: ", e);
+          setError(JSON.stringify(e.error));
+        };
+
+        Voice.onSpeechResults = (e: any) => {
+          console.log("onSpeechResults: ", e);
+          setResults(e.value && e.value.length > 0 ? e.value : []);
+        };
+
+        Voice.onSpeechPartialResults = (e: any) => {
+          console.log("onSpeechPartialResults: ", e);
+          setPartialResults(e.value && e.value.length > 0 ? e.value : []);
+        };
+
+        Voice.onSpeechVolumeChanged = (e: any) => {
+          console.log("onSpeechVolumeChanged: ", e);
+          setVolume(e.value);
+        };
+
+        setIsVoiceAvailable(true);
+      } catch (err) {
+        console.warn(
+          "Voice module not available (likely running in Expo Go):",
+          err
+        );
+      }
+    };
+
+    // Only attempt to load voice module in native platforms
+    if (Platform.OS === "ios" || Platform.OS === "android") {
+      loadVoice();
+    }
 
     return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
+      if (Voice && Voice.destroy) {
+        Voice.destroy().then(() => Voice.removeAllListeners());
+      }
     };
   }, []);
-
-  const _startRecognizing = async () => {
-    _clearState();
-    try {
-      await Voice.start("en-US");
-      console.log("called start");
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const _stopRecognizing = async () => {
-    try {
-      await Voice.stop();
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const _cancelRecognizing = async () => {
-    try {
-      await Voice.cancel();
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const _destroyRecognizer = async () => {
-    try {
-      await Voice.destroy();
-    } catch (e) {
-      console.error(e);
-    }
-    _clearState();
-  };
 
   const _clearState = () => {
     setRecognized("");
@@ -115,6 +91,53 @@ function VoiceTest() {
     setResults([]);
     setPartialResults([]);
   };
+
+  const _startRecognizing = async () => {
+    _clearState();
+    try {
+      await Voice?.start("en-US");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const _stopRecognizing = async () => {
+    try {
+      await Voice?.stop();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const _cancelRecognizing = async () => {
+    try {
+      await Voice?.cancel();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const _destroyRecognizer = async () => {
+    try {
+      await Voice?.destroy();
+    } catch (e) {
+      console.error(e);
+    }
+    _clearState();
+  };
+
+  if (!isVoiceAvailable) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.welcome}>
+          Voice not available on this platform.
+        </Text>
+        <Text style={styles.instructions}>
+          Please use a development build or physical device with native support.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -127,21 +150,17 @@ function VoiceTest() {
       <Text style={styles.stat}>{`Volume: ${volume}`}</Text>
       <Text style={styles.stat}>{`Error: ${error}`}</Text>
       <Text style={styles.stat}>Results</Text>
-      {results.map((result, index) => {
-        return (
-          <Text key={`result-${index}`} style={styles.stat}>
-            {result}
-          </Text>
-        );
-      })}
+      {results.map((result, index) => (
+        <Text key={`result-${index}`} style={styles.stat}>
+          {result}
+        </Text>
+      ))}
       <Text style={styles.stat}>Partial Results</Text>
-      {partialResults.map((result, index) => {
-        return (
-          <Text key={`partial-result-${index}`} style={styles.stat}>
-            {result}
-          </Text>
-        );
-      })}
+      {partialResults.map((result, index) => (
+        <Text key={`partial-result-${index}`} style={styles.stat}>
+          {result}
+        </Text>
+      ))}
       <Text style={styles.stat}>{`End: ${end}`}</Text>
       <TouchableHighlight onPress={_startRecognizing}>
         <Image style={styles.button} source={require("./voicebutton.png")} />
