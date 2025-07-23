@@ -87,13 +87,13 @@ export default function AIScreen() {
           </Text>
         </Pressable>
       </View>
+      <VoiceTest onResult={(text) => setText(text)} />
 
       {showTasks && (
         <View style={styles.resultsSection}>
           <TaskSelection tasks={tasks} aiMessage={aiMessage} />
         </View>
       )}
-      <VoiceTest onResult={(text) => setText(text)} />
     </ScrollView>
   );
 }
