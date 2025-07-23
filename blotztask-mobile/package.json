@@ -51,7 +51,8 @@
     "zod": "^4.0.5",
     "expo-notifications": "~0.31.4",
     "expo-device": "~7.1.4",
-    "expo-audio": "~0.4.8"
+    "expo-audio": "~0.4.8",
+    "expo-dev-client": "~5.2.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
