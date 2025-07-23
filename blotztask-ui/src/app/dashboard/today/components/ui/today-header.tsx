@@ -1,8 +1,6 @@
 import { H1 } from '@/components/ui/heading-with-anchor';
 import React from 'react';
-import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
-import { TaskDetailDTO } from '@/model/task-detail-dto';
 
 // type TodayHeaderProps = {
 //   tasks: TaskDetailDTO[]; // All tasks
