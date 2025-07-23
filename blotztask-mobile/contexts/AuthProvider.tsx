@@ -2,9 +2,10 @@ import React, { useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import AuthContext, { AuthContextType } from "./AuthContext";
-import { LoginResponse, login as loginService } from "../services/auth";
 import * as SecureStore from "expo-secure-store";
-import { AUTH_TOKEN_KEY } from "@/src/util/token-key";
+import { AUTH_TOKEN_KEY } from "../src/util/token-key";
+import { login as loginService } from "../src/feature/auth/auth-service";
+import { LoginResponse } from "../src/feature/auth/auth-service";
 
 interface AuthProviderProps {
   children: ReactNode;
