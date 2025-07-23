@@ -8,7 +8,6 @@ import {
   useCompletedTodayTasks,
   useIncompleteTodayTasks,
   useTodayTaskActions,
-  //useTodayTasks,
   useTodayTasksIsLoading,
   useOverdueTasks,
 } from '../../store/today-task-store';
@@ -21,7 +20,6 @@ import { useScheduleTaskActions } from '@/app/store/schedule-task-store';
 import TodayHeader from './components/ui/today-header';
 
 export default function Today() {
-  //const todayTasks = useTodayTasks();
   const overdueTasks = useOverdueTasks();
   const incompleteTodayTasks = useIncompleteTodayTasks();
   const completedTodayTasks = useCompletedTodayTasks();
