@@ -9,7 +9,7 @@ import {
   useCompletedTodayTasks,
   useIncompleteTodayTasks,
   useTodayTaskActions,
-  useTodayTasks,
+  //useTodayTasks,
   useTodayTasksIsLoading,
   useOverdueTasks,
 } from '../../store/today-task-store';
@@ -21,7 +21,7 @@ import { OverdueTaskViewer } from '../shared/components/taskcard/overdue-task-vi
 import { useScheduleTaskActions } from '@/app/store/schedule-task-store';
 
 export default function Today() {
-  const todayTasks = useTodayTasks();
+  //const todayTasks = useTodayTasks();
   const overdueTasks = useOverdueTasks();
   const incompleteTodayTasks = useIncompleteTodayTasks();
   const completedTodayTasks = useCompletedTodayTasks();
@@ -52,7 +52,7 @@ export default function Today() {
   return (
     <div className="flex flex-col gap-12 h-full">
       <div className="flex flex-col gap-6 h-full">
-        <TodayHeader tasks={todayTasks} />
+        {/* <TodayHeader tasks={todayTasks} /> */}
         <AddTaskCardContainer onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
 
         <div className="flex items-start h-full">
