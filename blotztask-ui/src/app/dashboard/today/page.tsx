@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import TodayHeader from './components/ui/today-header';
 import AddTaskCardContainer from '../shared/components/taskcard/add-task-card-container';
 import { CompletedTaskViewer } from './components/viewer/completed-task-viewer';
 import LoadingSpinner from '../../../components/ui/loading-spinner';
@@ -19,6 +18,7 @@ import SectionHeading from './components/ui/divider';
 import { TodoTaskViewer } from './components/viewer/todo-task-viewer';
 import { OverdueTaskViewer } from '../shared/components/taskcard/overdue-task-viewer';
 import { useScheduleTaskActions } from '@/app/store/schedule-task-store';
+import TodayHeader from './components/ui/today-header';
 
 export default function Today() {
   //const todayTasks = useTodayTasks();
@@ -52,7 +52,7 @@ export default function Today() {
   return (
     <div className="flex flex-col gap-12 h-full">
       <div className="flex flex-col gap-6 h-full">
-        {/* <TodayHeader tasks={todayTasks} /> */}
+        <TodayHeader />
         <AddTaskCardContainer onAddTask={(newTaskData) => handleAddTask(newTaskData)} />
 
         <div className="flex items-start h-full">
