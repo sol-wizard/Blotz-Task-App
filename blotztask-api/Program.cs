@@ -98,6 +98,7 @@ if (builder.Environment.IsProduction())
 builder.Services.AddAzureOpenAi();
 
 builder.Services.AddScoped<TaskGenerationAiService>();
+builder.Services.AddScoped<BreakdownService>();
 
 if (builder.Environment.IsProduction())
 {

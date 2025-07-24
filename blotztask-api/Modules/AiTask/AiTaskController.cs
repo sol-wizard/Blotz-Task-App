@@ -11,10 +11,12 @@ namespace BlotzTask.Modules.AiTask;
 public class AiTaskController : ControllerBase
 {
     private readonly TaskGenerationAiService _aiService;
+    private readonly BreakdownService _breakdownService;
 
-    public AiTaskController(TaskGenerationAiService aiService)
+    public AiTaskController(TaskGenerationAiService aiService, BreakdownService breakdownService)
     {
         _aiService = aiService;
+        _breakdownService = breakdownService;
     }
 
     [HttpPost("generate")]
@@ -29,4 +31,16 @@ public class AiTaskController : ControllerBase
         return Ok(new { Response = response });
     }
    
+    [HttpPost("todos/breakdown")]
+    public async Task<IActionResult> BreakdownGoal([FromBody] BreakdownRequestDto request, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request?.Title) || string.IsNullOrWhiteSpace(request?.Description))
+        {
+            return BadRequest("Title and Description are required.");
+        }
+
+        var response = await _breakdownService.BreakdownTodoAsync(request.Title, request.Description, cancellationToken);
+
+        return Ok(new { Response = response });
+    }
 }
