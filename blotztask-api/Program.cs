@@ -200,6 +200,7 @@ app.UseAuthorization();
 
 app.MapSwagger().RequireAuthorization();
 app.MapControllers().RequireAuthorization();
+app.MapHub<AiTaskChatHub>("/ai-task-chathub");
 app.MapHub<ChatHub>("/chatHub");
 
 app.Run();
