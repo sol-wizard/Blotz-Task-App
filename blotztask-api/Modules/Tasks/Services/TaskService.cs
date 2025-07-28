@@ -10,7 +10,7 @@ namespace BlotzTask.Modules.Tasks.Services;
 
 public interface ITaskService
 {
-    public Task<List<TaskItemDto>> GetTodoItemsByUser(string userId);
+    public Task<List<TaskItemDto>> GetTodoItemsByUser(string userId, CancellationToken cancellationToken);
     public Task<TaskItemDto> GetTaskById(int id);
     public Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDto editTaskItem);
     public Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id);
@@ -34,7 +34,7 @@ public class TaskService : ITaskService
         _dbContext = dbContext;
     }
 
-    public async Task<List<TaskItemDto>> GetTodoItemsByUser(string userId)
+    public async Task<List<TaskItemDto>> GetTodoItemsByUser(string userId, CancellationToken cancellationToken)
     {
         return await _dbContext.TaskItems
             .Where(x => x.UserId == userId)
@@ -50,7 +50,7 @@ public class TaskService : ITaskService
                 Label = new LabelDto { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color },
                 HasTime = x.HasTime,
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<TaskItemDto> GetTaskById(int id)
