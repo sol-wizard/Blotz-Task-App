@@ -21,7 +21,7 @@ public class TaskController : ControllerBase
 
     [HttpGet]
     [Tags("MigratedToCleanArchitecture")]
-    public async Task<IActionResult> GetAllTask(CancellationToken cancellationToken)
+    public async Task<ActionResult<List<TaskItemDto>>> GetAllTask(CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         
