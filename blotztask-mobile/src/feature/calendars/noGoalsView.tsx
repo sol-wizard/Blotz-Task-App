@@ -1,14 +1,9 @@
-// src/feature/calendars/NoGoalsView.tsx
-
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-// 建议安装 `expo-constants` 来获取一个好看的占位图，或者用你自己的图片
-// import { Ionicons } from '@expo/vector-icons'; // 如果需要图标
 
 export default function NoGoalsView() {
   return (
     <View style={styles.container}>
-      {/* 这是一个占位图，您可以换成自己的 Image 组件 */}
       <View style={styles.imagePlaceholder}>
         <Text style={styles.imageText}>🎨</Text>
       </View>

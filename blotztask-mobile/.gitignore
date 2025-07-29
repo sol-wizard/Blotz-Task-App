@@ -22,6 +22,11 @@ expo-env.d.ts
 # misc
 .DS_Store
 
+# vscode
+.vscode/
+.vscode/settings.json
+
+
 # ========== iOS-specific ignores ==========
 
 # 1. Xcode build artifacts

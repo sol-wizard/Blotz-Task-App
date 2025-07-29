@@ -7,7 +7,8 @@ interface CustomMarking extends MarkingProps {
   marked?: boolean;
 }
 
-// 我们的组件会接收和官方 Day 组件一样的 props
+// custom day component
+// haven't used this yet, but we can use this to customize the day view in calendar later
 export default function CustomDayComponent({ date, state, marking, onPress }: DayProps) {
   const isSelected = state === 'selected';
   const isToday = state === 'today';
@@ -23,16 +24,16 @@ export default function CustomDayComponent({ date, state, marking, onPress }: Da
     <TouchableOpacity onPress={() => onPress?.(date)} style={styles.container} disabled={isDisabled}>
       <View style={styles.contentContainer}>
         
-        {/* 小点 */}
+        {/* dot */}
         {hasDot && <View style={[styles.dot, isSelected && styles.dotSelected]} />}
         
         <View style={styles.dateAndDayWrapper}>
-            {/* 日期数字 (date.day) */}
+            {/* day */}
             <Text style={[styles.dateText, isSelected && styles.dateTextSelected, isDisabled && styles.dateTextDisabled]}>
               {date?.day}
             </Text>
             
-            {/* 星期 (通过我们安全的映射获取) */}
+            {/* weekday */}
             <Text style={[styles.dayText, isSelected && styles.dayTextSelected, isDisabled && styles.dateTextDisabled]}>
                 {dayOfWeek}
             </Text>
@@ -52,11 +53,9 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     alignItems: 'center',
-    // --- 关键修复 4: 调整布局以实现“先点，后日期和星期” ---
-    // 我们让内容垂直排列
     flexDirection: 'column',
-    justifyContent: 'space-between', // 让元素之间有一些空间
-    height: 50, // 给一个固定的高度，让布局更稳定
+    justifyContent: 'space-between',
+    height: 50,
   },
   dot: {
     width: 5,
@@ -67,7 +66,6 @@ const styles = StyleSheet.create({
   dotSelected: {
     backgroundColor: 'white',
   },
-  // 新增一个包裹容器来控制日期和星期的布局
   dateAndDayWrapper: {
     alignItems: 'center',
   },

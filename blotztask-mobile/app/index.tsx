@@ -40,7 +40,7 @@ export default function Index() {
   //     <View className="flex-1 justify-center items-center">
   //       <ActivityIndicator size="large" />
   //       <Text variant="bodyMedium" style={{ marginTop: 16 }}>
-  //         Loading...D
+  //         Loading...
   //       </Text>
   //     </View>
   //   );
