@@ -2,9 +2,9 @@ import { Stack } from "expo-router";
 import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css"; // If using Expo Web / Tailwind
-import { theme } from "../constants/theme";
 import React from "react";
 import { AuthProvider } from "../contexts/AuthProvider";
+import { MD3LightTheme } from "react-native-paper";
 
 export default function RootLayout() {
   return (
@@ -19,10 +19,21 @@ export default function RootLayout() {
               name="notification"
               options={{ headerShown: false }}
             />
-            <Stack.Screen name="signalRConnection" options={{headerShown: false}}/>
+            <Stack.Screen
+              name="signalRConnection"
+              options={{ headerShown: false }}
+            />
           </Stack>
         </AuthProvider>
       </PaperProvider>
     </SafeAreaProvider>
   );
 }
+
+const theme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: "#6200ee",
+  },
+};

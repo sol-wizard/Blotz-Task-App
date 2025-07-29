@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { TaskDetailDTO } from "../task/components/single-task";
 import { generateAiTask } from "../../../services/ai-service";
 import { AUTH_TOKEN_KEY } from "../../util/token-key";
 import TaskSelection from "../task/components/task-selection";
+import VoiceTest from "./components/voicetest";
 
 export default function AIScreen() {
   const [text, setText] = useState("");
@@ -41,11 +49,15 @@ export default function AIScreen() {
   }, []);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>✨ AI Task Generator</Text>
         <Text style={styles.subtitle}>
-          Describe what you want to accomplish and let AI create organized tasks for you
+          Describe what you want to accomplish and let AI create organized tasks
+          for you
         </Text>
       </View>
 
@@ -64,7 +76,10 @@ export default function AIScreen() {
 
         <Pressable
           onPress={() => handleGenerateTasksFromPrompt(text)}
-          style={[styles.submitButton, (!text.trim() || isLoading) && styles.submitButtonDisabled]}
+          style={[
+            styles.submitButton,
+            (!text.trim() || isLoading) && styles.submitButtonDisabled,
+          ]}
           disabled={!text.trim() || isLoading}
         >
           <Text style={styles.submitButtonText}>
@@ -72,6 +87,7 @@ export default function AIScreen() {
           </Text>
         </Pressable>
       </View>
+      <VoiceTest onResult={(text) => setText(text)} />
 
       {showTasks && (
         <View style={styles.resultsSection}>

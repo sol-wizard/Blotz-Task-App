@@ -4,6 +4,7 @@
     "slug": "BlotzTask",
     "owner": "blotztask",
     "version": "1.0.0",
+    "runtimeVersion": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "blotztask",
@@ -40,7 +41,20 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-dev-client",
+        {
+          "launchMode": "most-recent"
+        }
+      ],
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "CUSTOM: Allow BlotzTask to access the microphone",
+          "speechRecognitionPermission": "CUSTOM: Allow BlotzTask to securely recognize user speech"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -50,9 +64,6 @@
       "eas": {
         "projectId": "8e8ffbf2-206b-4d9b-b11c-a387b49a3126"
       }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
     },
     "updates": {
       "url": "https://u.expo.dev/99062285-944a-4758-ab2c-641d3733c0ca"
