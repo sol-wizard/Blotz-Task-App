@@ -1,10 +1,9 @@
 import { Stack } from "expo-router";
 import { MD3LightTheme, PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import "../global.css"; // If using Expo Web / Tailwind
+import "../../../global.css"; // Ensure global styles are imported
 import React from "react";
-import { AuthProvider } from "../contexts/AuthProvider";
-import { MD3LightTheme } from "react-native-paper";
+import { AuthProvider } from "@/feature/auth/components/auth-provider";
 
 export default function RootLayout() {
   return (

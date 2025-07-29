@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   View,
+  Text,
   TextInput,
   Pressable,
   ScrollView,
@@ -12,9 +13,7 @@ import TaskSelection from "@/feature/ai/components/task-selection";
 import { generateAiTask } from "../sever/ai-service";
 import { AUTH_TOKEN_KEY } from "@/util/token-key";
 import { TaskDetailDTO } from "../schemas/tasks";
-import { verifyInstallation } from "nativewind";
 import VoiceTest from "../components/voicetest";
-
 
 export default function AIScreen() {
   const [text, setText] = useState("");
@@ -45,6 +44,7 @@ export default function AIScreen() {
   useEffect(() => {
     const checkToken = async () => {
       const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+      // 可以加入 token 验证逻辑
     };
 
     checkToken();
@@ -55,17 +55,9 @@ export default function AIScreen() {
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
     >
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-    >
       <View style={styles.header}>
-        <Text className="text-2xl font-bold text-green-800 mb-2 text-center">
-          ✨ AI Task Generator
-        </Text>
+        <Text style={styles.title}>✨ AI Task Generator</Text>
         <Text style={styles.subtitle}>
-          Describe what you want to accomplish and let AI create organized tasks
-          for you
           Describe what you want to accomplish and let AI create organized tasks
           for you
         </Text>
@@ -97,6 +89,7 @@ export default function AIScreen() {
           </Text>
         </Pressable>
       </View>
+
       <VoiceTest onResult={(text) => setText(text)} />
 
       {showTasks && (
