@@ -12,7 +12,6 @@ import TaskSelection from "@/feature/ai/components/task-selection";
 import { generateAiTask } from "../services/ai-service";
 import { AUTH_TOKEN_KEY } from "@/constants/token-key";
 import { TaskDetailDTO } from "../schemas/tasks";
-import VoiceTest from "../components/voicetest";
 
 export default function AIScreen() {
   const [text, setText] = useState("");
@@ -91,7 +90,7 @@ export default function AIScreen() {
         </Pressable>
       </View>
 
-      <VoiceTest onResult={(text) => setText(text)} />
+      {/* <VoiceTest onResult={(text) => setText(text)} /> */}
 
       {showTasks && (
         <View style={styles.resultsSection}>
