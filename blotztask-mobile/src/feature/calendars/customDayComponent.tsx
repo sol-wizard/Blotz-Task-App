@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { DayProps } from 'react-native-calendars/src/calendar/day'; // 导入官方的 Day 类型
+import { DayProps } from 'react-native-calendars/src/calendar/day';
 import { MarkingProps } from 'react-native-calendars/src/calendar/day/marking';
 
 interface CustomMarking extends MarkingProps {

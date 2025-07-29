@@ -1,10 +1,9 @@
-import React, { useState, useCallback, useMemo, useRef, SetStateAction } from 'react';
-import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, Alert, FlatList, Animated, Easing } from 'react-native';
-import { CalendarProvider, ExpandableCalendar, AgendaList, WeekCalendar, Calendar, DateData, Agenda, AgendaEntry } from 'react-native-calendars';
+import React, { useState, useCallback, useMemo } from 'react';
+import { SafeAreaView, Text, View, FlatList } from 'react-native';
+import { CalendarProvider, WeekCalendar, DateData, AgendaEntry } from 'react-native-calendars';
 import { Checkbox } from 'react-native-paper';
 import CalendarHeader from './calendar-header';
 import NoGoalsView from './noGoalsView';
-import CustomDayComponent from './customDayComponent';
 
 interface AgendaItem extends AgendaEntry {
   name: string;
