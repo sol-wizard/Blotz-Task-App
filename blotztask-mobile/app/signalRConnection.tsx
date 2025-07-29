@@ -4,11 +4,9 @@ import { FC, useEffect, useState } from "react";
 import { View, Text, StyleSheet, Button } from "react-native";
 
 // Define interface for message type (kept for completeness, though not used in simplified App)
-interface ChatMessage {
-  user: string;
-  message: string;
-  id: number;
-}
+const receiveMessageHandler = (msg: string) => {
+  console.log("[SignalR] Received message:", msg);
+};
 
 // --- Example React Native Component Usage ---
 const App: FC = () => {
@@ -36,6 +34,7 @@ const App: FC = () => {
       try {
         await newConnection.start();
         setConnectionStatus("Connected");
+        newConnection.on("ReceiveMessage", receiveMessageHandler);
         console.log("Connected to SignalR hub!"); // Added success message
       } catch (error: any) {
         // Catch error as any or Error
@@ -51,7 +50,10 @@ const App: FC = () => {
       if (newConnection) {
         newConnection
           .stop()
-          .then(() => console.log("SignalR Connection Stopped."))
+          .then(() => {
+            console.log("SignalR Connection Stopped.");
+            newConnection.off("ReceiveMessage", receiveMessageHandler);
+          })
           .catch((error: any) =>
             console.error("Error stopping SignalR connection:", error)
           ); // Type for error
@@ -67,9 +69,7 @@ const App: FC = () => {
         await signalRService.invoke(
           connection,
           "SendMessage",
-          "User",
-          "Hello from React Native!",
-          "aConversationId"
+          "Hello from React Native!"
         );
         console.log("Invoked SendMessage on hub.");
       } catch (error: any) {
