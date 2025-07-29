@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import {
   View,
-  Text,
   TextInput,
   Pressable,
   ScrollView,
   StyleSheet,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
-
+import { Text } from "react-native-paper";
 import TaskSelection from "@/feature/ai/components/task-selection";
 import { generateAiTask } from "../sever/ai-service";
 import { AUTH_TOKEN_KEY } from "@/util/token-key";
 import { TaskDetailDTO } from "../schemas/tasks";
+import { verifyInstallation } from "nativewind";
 
 export default function AIScreen() {
   const [text, setText] = useState("");
@@ -54,7 +54,9 @@ export default function AIScreen() {
       contentContainerStyle={styles.contentContainer}
     >
       <View style={styles.header}>
-        <Text style={styles.title}>✨ AI Task Generator</Text>
+        <Text className="text-2xl font-bold text-green-800 mb-2 text-center">
+          ✨ AI Task Generator
+        </Text>
         <Text style={styles.subtitle}>
           Describe what you want to accomplish and let AI create organized tasks
           for you

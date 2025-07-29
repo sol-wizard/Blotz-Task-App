@@ -4,7 +4,7 @@ import HomeScreen from "@/feature/home/page/home-screen";
 import NotificationsScreen from "@/feature/settings/page/settings-screen";
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
-
+import "../../global.css";
 import ProfileScreen from "../feature/profile/page/profile-screen";
 import AIScreen from "@/feature/ai/page/ai-screen";
 

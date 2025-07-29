@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet } from "react-native";
-import { SingleTask, TaskDetailDTO } from "./single-task";
+import { View, Text } from "react-native";
+import { SingleTask } from "./single-task";
+import { TaskDetailDTO } from "../schemas/tasks";
 
 export default function TaskSelection({
   tasks,
@@ -9,46 +10,24 @@ export default function TaskSelection({
   aiMessage: string;
 }) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>✅ Tasks Generated</Text>
+    <View className="w-full bg-gray-50 p-4 pt-5 rounded-xl mt-6">
+      <Text className="text-xl font-semibold mb-3 text-gray-900 text-center">
+        ✅ Tasks Generated
+      </Text>
 
-      {aiMessage ? <Text style={styles.aiMessage}>{aiMessage}</Text> : null}
+      {aiMessage ? (
+        <Text className="text-sm text-gray-600 mb-4 text-left">
+          {aiMessage}
+        </Text>
+      ) : null}
 
       {tasks && tasks.length > 0 ? (
         tasks.map((task) => <SingleTask key={task.id} task={task} />)
       ) : (
-        <Text style={styles.emptyText}>No tasks generated yet.</Text>
+        <Text className="text-sm text-gray-500 text-center mt-2">
+          No tasks generated yet.
+        </Text>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    width: "100%",
-    backgroundColor: "#f9fafb", // gray-50
-    borderRadius: 12,
-    marginTop: 24,
-  },
-  heading: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 12,
-    color: "#111827", // gray-900
-    textAlign: "center",
-  },
-  aiMessage: {
-    fontSize: 14,
-    color: "#5a5e63", // blue-500
-    marginBottom: 16,
-    textAlign: "left",
-  },
-  emptyText: {
-    fontSize: 14,
-    color: "#6b7280", // gray-500
-    textAlign: "center",
-    marginTop: 8,
-  },
-});
