@@ -31,30 +31,3 @@ export default function CalendarHeader({ date }: CalendarHeaderProps) {
     </View>
   );
 }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     paddingHorizontal: 20,
-//     paddingVertical: 15,
-//     backgroundColor: '#ffffff',
-//   },
-//   dayOfWeekText: {
-//     fontSize: 32,
-//     fontWeight: 'bold',
-//     color: '#2d2d2d',
-//   },
-//   monthDayText: {
-//     fontSize: 16,
-//     color: '#888888',
-//     textAlign: 'right',
-//     fontWeight: 'bold',
-//   },
-//   yearText: {
-//     fontSize: 24,
-//     color: '#888888',
-//     fontWeight: 'bold',
-//   }
-// }); 
