@@ -11,11 +11,6 @@ interface AgendaItem extends AgendaEntry {
   checked: boolean;
 }
 
-interface Props {
-  weekView?: boolean;
-}
-
-
 const INITIAL_ITEMS: {[key: string]: AgendaItem[]} = {
   '2025-07-24': [
     { name: 'Team Meeting', time: '10:00am-11:00am', checked: true, height: 80, day: '2025-07-24' },
