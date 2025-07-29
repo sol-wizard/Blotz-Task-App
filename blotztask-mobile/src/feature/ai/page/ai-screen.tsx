@@ -8,10 +8,9 @@ import {
   StyleSheet,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
-
 import TaskSelection from "@/feature/ai/components/task-selection";
-import { generateAiTask } from "../sever/ai-service";
-import { AUTH_TOKEN_KEY } from "@/util/token-key";
+import { generateAiTask } from "../services/ai-service";
+import { AUTH_TOKEN_KEY } from "@/constants/token-key";
 import { TaskDetailDTO } from "../schemas/tasks";
 import VoiceTest from "../components/voicetest";
 
@@ -56,7 +55,9 @@ export default function AIScreen() {
       contentContainerStyle={styles.contentContainer}
     >
       <View style={styles.header}>
-        <Text style={styles.title}>✨ AI Task Generator</Text>
+        <Text className="text-2xl font-bold text-gray-800 mb-2 text-center">
+          ✨ AI Task Generator
+        </Text>
         <Text style={styles.subtitle}>
           Describe what you want to accomplish and let AI create organized tasks
           for you

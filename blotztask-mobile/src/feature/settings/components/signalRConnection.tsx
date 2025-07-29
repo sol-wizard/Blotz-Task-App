@@ -1,7 +1,7 @@
 import signalR from "@microsoft/signalr";
 import { FC, useEffect, useState } from "react";
 import { View, Text, StyleSheet, Button } from "react-native";
-import { signalRService } from "../sever/signalr-service";
+import { signalRService } from "../services/signalr-service";
 
 // Define interface for message type (kept for completeness, though not used in simplified App)
 const receiveMessageHandler = (msg: string) => {

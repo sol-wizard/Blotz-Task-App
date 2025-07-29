@@ -1,5 +1,5 @@
 import { usePushNotificationSetup } from "@/feature/settings/hooks/usePushNotificationSetup";
-import { schedulePushNotification } from "@/feature/settings/sever/notifications";
+import { schedulePushNotification } from "@/feature/settings/services/notifications";
 import { Text, View, Button, StyleSheet } from "react-native";
 
 export default function notificationPage() {
