@@ -13,6 +13,14 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="login" options={{ headerShown: false }} />
             <Stack.Screen
+              name="notification"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="signalRConnection"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="chatScreen"
               options={{
                 headerShown: true,
