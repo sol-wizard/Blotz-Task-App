@@ -5,7 +5,9 @@
     "jsx": "react-native",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "types": ["expo-router"],
+    "baseUrl": "./src"
   },
   "include": [
     "**/*.ts",
