@@ -5,7 +5,7 @@ import { Avatar, Text } from "react-native-paper";
 import { useEffect } from "react";
 import { router } from "expo-router";
 import LoginForm from "@/feature/auth/components/login-form";
-import { useAuth } from "../../feature/auth/components/auth-context";
+import { useAuth } from "@/feature/auth/auth-context";
 
 const { height } = Dimensions.get("window");
 

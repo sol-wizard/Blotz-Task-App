@@ -3,7 +3,7 @@ import { MD3LightTheme, PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../../global.css";
 import React from "react";
-import { AuthProvider } from "@/feature/auth/components/auth-provider";
+import { AuthProvider } from "@/feature/auth/auth-provider";
 
 export default function RootLayout() {
   return (

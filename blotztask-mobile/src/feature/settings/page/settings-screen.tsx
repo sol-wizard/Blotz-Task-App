@@ -2,7 +2,7 @@
 import { View } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { router } from "expo-router";
-import { useAuth } from "@/feature/auth/components/auth-context";
+import { useAuth } from "@/feature/auth/auth-context";
 
 export default function SettingsScreen() {
   const { logout } = useAuth();

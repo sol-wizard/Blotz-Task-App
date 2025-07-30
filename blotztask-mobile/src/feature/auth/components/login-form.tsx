@@ -5,7 +5,7 @@ import { Button, Card, TextInput, Text, Snackbar } from "react-native-paper";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/feature/auth/components/auth-context";
+import { useAuth } from "../auth-context";
 
 // Validation schema
 const loginSchema = z.object({
