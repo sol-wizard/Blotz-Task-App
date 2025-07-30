@@ -5,12 +5,14 @@ import NotificationsScreen from "@/src/feature/notification/notification-screen"
 import ProfileScreen from "@/src/feature/profile/profile-screen";
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
+import CalendarPage from "@/src/feature/calendars/calendar-screen";
 
 const routes = [
   { key: "home", title: "Home", focusedIcon: "home", unfocusedIcon: "home-outline" },
   { key: "ai", title: "AI Tasks", focusedIcon: "robot", unfocusedIcon: "robot-outline" },
   { key: "notifications", title: "Settings", focusedIcon: "bell", unfocusedIcon: "bell-outline" },
   { key: "profile", title: "Profile", focusedIcon: "account", unfocusedIcon: "account-outline" },
+  { key: "calendar", title: "Calendar", focusedIcon: "calendar", unfocusedIcon: "calendar-outline" },
 ];
 
 const renderScene = BottomNavigation.SceneMap({
@@ -18,6 +20,7 @@ const renderScene = BottomNavigation.SceneMap({
   ai: AIScreen,
   notifications: NotificationsScreen,
   profile: ProfileScreen,
+  calendar: CalendarPage,
 });
 
 export default function Index() {
