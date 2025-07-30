@@ -9,7 +9,7 @@ on:
       - synchronize
 
 jobs:
-  lint-mobile:
+  build-and-test-mobile-frontend:
     runs-on: ubuntu-latest
 
     steps:
