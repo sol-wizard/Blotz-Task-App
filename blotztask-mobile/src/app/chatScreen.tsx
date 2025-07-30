@@ -1,6 +1,7 @@
 import BotMessage from "@/feature/ai/components/bot-message";
 import UserMessage from "@/feature/ai/components/user-message";
-import React, { useState } from "react";
+import { useSignalRChat } from "@/feature/ai/hooks/useSignalRChat";
+import React, { useCallback, useState } from "react";
 import {
   View,
   ScrollView,
@@ -32,6 +33,19 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [text, setText] = useState("");
 
+  const handleReceive = useCallback((msg: string) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: prev.length + 1,
+        text: msg,
+        from: "bot",
+      },
+    ]);
+  }, []);
+
+  const { sendMessage } = useSignalRChat(handleReceive);
+
   const handleSend = () => {
     if (!text.trim()) return;
 
@@ -41,18 +55,8 @@ export default function ChatScreen() {
       from: "user",
     };
 
-    const botReply: Message = {
-      id: messages.length + 2,
-      text: "I have some suggestions for you ...",
-      from: "bot",
-      tasks: [
-        { id: 1, title: "Drink a glass of water" },
-        { id: 2, title: "Take a short walk" },
-        { id: 3, title: "Write down your top 3 priorities" },
-      ],
-    };
-
-    setMessages([...messages, userMessage, botReply]);
+    setMessages([...messages, userMessage]);
+    sendMessage(text.trim());
     setText("");
   };
 
