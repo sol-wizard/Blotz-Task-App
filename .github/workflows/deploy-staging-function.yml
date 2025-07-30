@@ -12,12 +12,14 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: './blotztask-function' # set this to the path to your web app project, defaults to the repository root
   DOTNET_VERSION: '8.0.x' # set this to the dotnet version to use
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest      
+    environment:
+        name: 'Staging'
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read #This is required for actions/checkout
@@ -41,9 +43,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_28700E0E87574E90B050E2EC109EDAB6 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E19E1AC94FF84F0D91B5EF5CB3976F84 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E08F65EED1BC4A6FA0CB73F7610A1A0F }}
+          client-id: ${{ secrets.AZURE_UAI_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_UAI_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
