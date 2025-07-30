@@ -11,16 +11,15 @@ export default function RootLayout() {
       <PaperProvider theme={theme}>
         <AuthProvider>
           <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="aigenerate" options={{ headerShown: false }} />
             <Stack.Screen
-              name="notification"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="signalRConnection"
-              options={{ headerShown: false }}
+              name="chatScreen"
+              options={{
+                headerShown: true,
+                title: "AIChat",
+                headerBackVisible: true,
+                headerBackTitle: "Back",
+              }}
             />
           </Stack>
         </AuthProvider>

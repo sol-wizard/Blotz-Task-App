@@ -12,6 +12,7 @@ import TaskSelection from "@/feature/ai/components/task-selection";
 import { generateAiTask } from "../services/ai-service";
 import { AUTH_TOKEN_KEY } from "@/constants/token-key";
 import { TaskDetailDTO } from "../schemas/tasks";
+import { router } from "expo-router";
 
 export default function AIScreen() {
   const [text, setText] = useState("");
@@ -87,6 +88,10 @@ export default function AIScreen() {
           <Text style={styles.submitButtonText}>
             {isLoading ? "🤖 Generating..." : "🚀 Generate Tasks"}
           </Text>
+        </Pressable>
+
+        <Pressable onPress={() => router.push("/chatScreen" as any)}>
+          <Text>Go to chat screen.</Text>
         </Pressable>
       </View>
 
