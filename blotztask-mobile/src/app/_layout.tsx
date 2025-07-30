@@ -1,10 +1,9 @@
 import { Stack } from "expo-router";
-import { PaperProvider } from "react-native-paper";
+import { MD3LightTheme, PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import "../global.css"; // If using Expo Web / Tailwind
+import "../../global.css";
 import React from "react";
-import { AuthProvider } from "../contexts/AuthProvider";
-import { MD3LightTheme } from "react-native-paper";
+import { AuthProvider } from "@/feature/auth/auth-provider";
 
 export default function RootLayout() {
   return (
@@ -13,15 +12,30 @@ export default function RootLayout() {
         <AuthProvider>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="aigenerate" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="chatScreen"
+              options={{
+                headerShown: true,
+                title: "AIChat",
+                headerBackVisible: true,
+                headerBackTitle: "Back",
+              }}
+            />
             <Stack.Screen
               name="notification"
-              options={{ headerShown: false }}
+              options={{
+                headerShown: true,
+                headerBackVisible: true,
+                headerBackTitle: "Back",
+              }}
             />
             <Stack.Screen
               name="signalRConnection"
-              options={{ headerShown: false }}
+              options={{
+                headerShown: true,
+                headerBackVisible: true,
+                headerBackTitle: "Back",
+              }}
             />
           </Stack>
         </AuthProvider>

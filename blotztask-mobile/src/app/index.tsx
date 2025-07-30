@@ -1,26 +1,35 @@
-// app/index.tsx
-import AIScreen from "@/src/feature/ai/ai-screen";
-import HomeScreen from "@/src/feature/home/home-screen";
-import NotificationsScreen from "@/src/feature/notification/notification-screen";
-import ProfileScreen from "@/src/feature/profile/profile-screen";
+import AIScreen from "@/feature/ai/page/ai-screen";
+import CalendarPage from "@/feature/calendars/calendar-screen";
+import SettingsScreen from "@/feature/settings/page/settings-screen";
+
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
-import CalendarPage from "@/src/feature/calendars/calendar-screen";
 
 const routes = [
-  { key: "home", title: "Home", focusedIcon: "home", unfocusedIcon: "home-outline" },
-  { key: "ai", title: "AI Tasks", focusedIcon: "robot", unfocusedIcon: "robot-outline" },
-  { key: "notifications", title: "Settings", focusedIcon: "bell", unfocusedIcon: "bell-outline" },
-  { key: "profile", title: "Profile", focusedIcon: "account", unfocusedIcon: "account-outline" },
-  { key: "calendar", title: "Calendar", focusedIcon: "calendar", unfocusedIcon: "calendar-outline" },
+  {
+    key: "calendar",
+    title: "Calendar",
+    focusedIcon: "calendar",
+    unfocusedIcon: "calendar-outline",
+  },
+  {
+    key: "ai",
+    title: "AI Tasks",
+    focusedIcon: "robot",
+    unfocusedIcon: "robot-outline",
+  },
+  {
+    key: "settings",
+    title: "Settings",
+    focusedIcon: "bell",
+    unfocusedIcon: "bell-outline",
+  },
 ];
 
 const renderScene = BottomNavigation.SceneMap({
-  home: HomeScreen,
-  ai: AIScreen,
-  notifications: NotificationsScreen,
-  profile: ProfileScreen,
   calendar: CalendarPage,
+  ai: AIScreen,
+  settings: SettingsScreen,
 });
 
 export default function Index() {
