@@ -37,7 +37,8 @@ export default function LoginForm() {
     try {
       await login(data.email, data.password);
     } catch (error) {
-      setSnackbarMessage("Invalid credentials. Please try again.");
+      console.error("Login error:", error);
+      setSnackbarMessage(`Invalid credentials. Please try again.`);
       setSnackbarVisible(true);
     }
   };

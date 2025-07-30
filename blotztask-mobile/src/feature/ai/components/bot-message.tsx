@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { Avatar, Checkbox } from "react-native-paper";
+import { Avatar } from "react-native-paper";
 import ReturnedTasksList from "./returned-tasks-list";
 
 type Task = {
@@ -15,16 +15,6 @@ export default function BotMessage({
   text: string;
   tasks?: Task[];
 }) {
-  const [checkedTasks, setCheckedTasks] = React.useState<number[]>([]);
-
-  const toggleTask = (taskId: number) => {
-    setCheckedTasks((prev) =>
-      prev.includes(taskId)
-        ? prev.filter((id) => id !== taskId)
-        : [...prev, taskId]
-    );
-  };
-
   return (
     <View className="flex-col mb-3">
       <View className="flex-row items-end justify-start">
