@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import { MD3LightTheme, PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import "../../global.css"; // Ensure global styles are imported
+import "../../global.css";
 import React from "react";
 import { AuthProvider } from "@/feature/auth/components/auth-provider";
 

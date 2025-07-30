@@ -5,8 +5,7 @@ const tsPlugin = require("@typescript-eslint/eslint-plugin");
 const tsParser = require("@typescript-eslint/parser");
 
 module.exports = defineConfig([
-  ...expoConfig, // 引入 expo 默认规则
-
+  ...expoConfig,
   {
     files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {

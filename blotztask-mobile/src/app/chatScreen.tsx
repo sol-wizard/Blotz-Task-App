@@ -11,7 +11,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
-import { IconButton } from "react-native-paper";
+import { IconButton, Card } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Message = {
