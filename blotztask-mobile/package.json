@@ -60,7 +60,9 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.0.10",
-    "eslint": "^9.25.0",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "eslint": "^9.32.0",
     "eslint-config-expo": "~9.2.0",
     "prettier-plugin-tailwindcss": "^0.6.13",
     "typescript": "~5.8.3"

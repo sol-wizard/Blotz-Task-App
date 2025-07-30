@@ -1,5 +1,3 @@
-// app/index.tsx
-
 import AIScreen from "@/feature/ai/page/ai-screen";
 import CalendarPage from "@/feature/calendars/calendar-screen";
 import SettingsScreen from "@/feature/settings/page/settings-screen";

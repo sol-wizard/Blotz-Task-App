@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,10 +8,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import * as SecureStore from "expo-secure-store";
 import TaskSelection from "@/feature/ai/components/task-selection";
 import { generateAiTask } from "../services/ai-service";
-import { AUTH_TOKEN_KEY } from "@/constants/token-key";
 import { TaskDetailDTO } from "../schemas/tasks";
 import { router } from "expo-router";
 
@@ -40,15 +38,6 @@ export default function AIScreen() {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    const checkToken = async () => {
-      const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
-      // 可以加入 token 验证逻辑
-    };
-
-    checkToken();
-  }, []);
 
   return (
     <KeyboardAvoidingView
