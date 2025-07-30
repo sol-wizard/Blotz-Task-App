@@ -1,4 +1,4 @@
-import { AUTH_TOKEN_KEY } from "@/src/util/token-key";
+import { AUTH_TOKEN_KEY } from "@/constants/token-key";
 import * as SecureStore from "expo-secure-store";
 
 export async function fetchWithAuth(
