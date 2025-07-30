@@ -1,11 +1,11 @@
 import React, { useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import AuthContext, { AuthContextType } from "./AuthContext";
 import * as SecureStore from "expo-secure-store";
-import { AUTH_TOKEN_KEY } from "../src/util/token-key";
-import { login as loginService } from "../src/feature/auth/auth-service";
-import { LoginResponse } from "../src/feature/auth/auth-service";
+
+import AuthContext, { AuthContextType } from "./auth-context";
+import { AUTH_TOKEN_KEY } from "@/constants/token-key";
+import { LoginResponse } from "./services/auth-service";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -90,3 +90,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+function loginService(arg0: {
+  email: string;
+  password: string;
+}): LoginResponse | PromiseLike<LoginResponse> {
+  throw new Error("Function not implemented.");
+}
