@@ -21,6 +21,22 @@ export default function RootLayout() {
                 headerBackTitle: "Back",
               }}
             />
+            <Stack.Screen
+              name="notification"
+              options={{
+                headerShown: true,
+                headerBackVisible: true,
+                headerBackTitle: "Back",
+              }}
+            />
+            <Stack.Screen
+              name="signalRConnection"
+              options={{
+                headerShown: true,
+                headerBackVisible: true,
+                headerBackTitle: "Back",
+              }}
+            />
           </Stack>
         </AuthProvider>
       </PaperProvider>

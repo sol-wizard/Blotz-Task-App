@@ -90,8 +90,13 @@ export default function AIScreen() {
           </Text>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/chatScreen" as any)}>
-          <Text>Go to chat screen.</Text>
+        <Pressable
+          onPress={() => router.push("/chatScreen" as any)}
+          className="bg-blue-600 px-4 py-2 mt-3 rounded-lg active:bg-blue-700"
+        >
+          <Text className="text-white font-semibold text-base text-center">
+            Go to chat screen
+          </Text>
         </Pressable>
       </View>
 
