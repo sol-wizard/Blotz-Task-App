@@ -22,10 +22,6 @@ expo-env.d.ts
 # misc
 .DS_Store
 
-# vscode
-.vscode/
-.vscode/settings.json
-
 
 # ========== iOS-specific ignores ==========
 
@@ -49,5 +45,3 @@ ios/.DS_Store
 ios/.idea/
 ios/.vscode/
 ios/.xcode.env.local
-
-
