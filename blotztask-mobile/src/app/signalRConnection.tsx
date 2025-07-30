@@ -1,4 +1,4 @@
-import { signalRService } from "@/feature/settings/services/signalr-service";
+import { signalRService } from "@/services/signalr-service";
 import signalR from "@microsoft/signalr";
 import { FC, useEffect, useState } from "react";
 import { View, Text, StyleSheet, Button } from "react-native";

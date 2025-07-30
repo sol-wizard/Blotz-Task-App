@@ -1,4 +1,4 @@
-import { fetchWithAuth } from "@/feature/auth/services/fetch-with-auth";
+import { fetchWithAuth } from "@/services/fetch-with-auth";
 
 export const generateAiTask = async (prompt: string) => {
   const payload = {

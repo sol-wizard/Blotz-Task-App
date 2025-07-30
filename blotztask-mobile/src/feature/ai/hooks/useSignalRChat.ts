@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { signalRService } from "../../settings/services/signalr-service";
+import { signalRService } from "../../../services/signalr-service";
 
 export function useSignalRChat(onReceive: (message: string) => void) {
   const [status, setStatus] = useState<

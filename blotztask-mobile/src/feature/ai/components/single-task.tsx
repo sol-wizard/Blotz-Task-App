@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import { TaskDetailDTO } from "../schemas/tasks";
+import { TaskDetailDTO } from "../models/tasks";
 
 interface SingleTaskProps {
   task: TaskDetailDTO;

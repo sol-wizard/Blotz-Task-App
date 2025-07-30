@@ -1,6 +1,6 @@
 import { View, Text } from "react-native";
 import { SingleTask } from "./single-task";
-import { TaskDetailDTO } from "../schemas/tasks";
+import { TaskDetailDTO } from "../models/tasks";
 
 export default function TaskSelection({
   tasks,

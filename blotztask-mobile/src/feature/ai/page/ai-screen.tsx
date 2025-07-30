@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import TaskSelection from "@/feature/ai/components/task-selection";
 import { generateAiTask } from "../services/ai-service";
-import { TaskDetailDTO } from "../schemas/tasks";
+import { TaskDetailDTO } from "../models/tasks";
 import { router } from "expo-router";
 
 export default function AIScreen() {
