@@ -1,12 +1,12 @@
 // app/index.tsx
 
+import AIScreen from "@/feature/ai/page/ai-screen";
+import CalendarPage from "@/feature/calendars/calendar-screen";
 import HomeScreen from "@/feature/home/page/home-screen";
+import ProfileScreen from "@/feature/profile/page/profile-screen";
 import NotificationsScreen from "@/feature/settings/page/settings-screen";
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
-import "../../global.css";
-import ProfileScreen from "../feature/profile/page/profile-screen";
-import AIScreen from "@/feature/ai/page/ai-screen";
 
 const routes = [
   {
@@ -22,7 +22,7 @@ const routes = [
     unfocusedIcon: "robot-outline",
   },
   {
-    key: "settings",
+    key: "notifications",
     title: "Settings",
     focusedIcon: "bell",
     unfocusedIcon: "bell-outline",
@@ -33,6 +33,12 @@ const routes = [
     focusedIcon: "account",
     unfocusedIcon: "account-outline",
   },
+  {
+    key: "calendar",
+    title: "Calendar",
+    focusedIcon: "calendar",
+    unfocusedIcon: "calendar-outline",
+  },
 ];
 
 const renderScene = BottomNavigation.SceneMap({
@@ -40,6 +46,7 @@ const renderScene = BottomNavigation.SceneMap({
   ai: AIScreen,
   settings: NotificationsScreen,
   profile: ProfileScreen,
+  calendar: CalendarPage,
 });
 
 export default function Index() {
