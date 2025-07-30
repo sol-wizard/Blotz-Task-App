@@ -62,26 +62,27 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View className="flex-1">
-          <ScrollView
-            contentContainerStyle={{ paddingBottom: 100 }}
-            keyboardShouldPersistTaps="handled"
-            className="px-4 pt-4"
-          >
-            {messages.map((msg) =>
-              msg.from === "bot" ? (
-                <BotMessage key={msg.id} text={msg.text} tasks={msg.tasks} />
-              ) : (
-                <UserMessage key={msg.id} text={msg.text} />
-              )
-            )}
-          </ScrollView>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={100}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View className="flex-1">
+            <ScrollView
+              className="px-4 pt-4"
+              contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
+              keyboardShouldPersistTaps="handled"
+            >
+              {messages.map((msg) =>
+                msg.from === "bot" ? (
+                  <BotMessage key={msg.id} text={msg.text} tasks={msg.tasks} />
+                ) : (
+                  <UserMessage key={msg.id} text={msg.text} />
+                )
+              )}
+            </ScrollView>
 
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
-            keyboardVerticalOffset={80}
-          >
             <View className="flex-row items-center px-3 py-2 border-t border-gray-200 bg-white">
               <TextInput
                 className="flex-1 text-base text-gray-900"
@@ -95,9 +96,9 @@ export default function ChatScreen() {
               <IconButton icon="send" size={20} onPress={handleSend} />
               <IconButton icon="microphone" size={20} onPress={() => {}} />
             </View>
-          </KeyboardAvoidingView>
-        </View>
-      </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

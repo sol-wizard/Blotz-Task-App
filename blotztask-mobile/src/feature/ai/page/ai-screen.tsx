@@ -5,7 +5,8 @@ import {
   TextInput,
   Pressable,
   ScrollView,
-  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import TaskSelection from "@/feature/ai/components/task-selection";
@@ -50,167 +51,72 @@ export default function AIScreen() {
   }, []);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
+    <KeyboardAvoidingView
+      className="flex-1 bg-gray-50"
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={100}
     >
-      <View style={styles.header}>
-        <Text className="text-2xl font-bold text-gray-800 mb-2 text-center">
-          ✨ AI Task Generator
-        </Text>
-        <Text style={styles.subtitle}>
-          Describe what you want to accomplish and let AI create organized tasks
-          for you
-        </Text>
-      </View>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.inputLabel}>What would you like to work on?</Text>
-        <TextInput
-          style={styles.textInput}
-          onChangeText={setText}
-          value={text}
-          placeholder="e.g., Plan a birthday party, Learn React Native, Organize my workspace..."
-          placeholderTextColor="#9CA3AF"
-          multiline
-          numberOfLines={4}
-          textAlignVertical="top"
-        />
-
-        <Pressable
-          onPress={() => handleGenerateTasksFromPrompt(text)}
-          style={[
-            styles.submitButton,
-            (!text.trim() || isLoading) && styles.submitButtonDisabled,
-          ]}
-          disabled={!text.trim() || isLoading}
-        >
-          <Text style={styles.submitButtonText}>
-            {isLoading ? "🤖 Generating..." : "🚀 Generate Tasks"}
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ alignItems: "center", paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="items-center mt-10 mb-8 px-4">
+          <Text className="text-2xl font-bold text-gray-800 mb-2 text-center">
+            ✨ AI Task Generator
           </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => router.push("/chatScreen" as any)}
-          className="bg-blue-600 px-4 py-2 mt-3 rounded-lg active:bg-blue-700"
-        >
-          <Text className="text-white font-semibold text-base text-center">
-            Go to chat screen
+          <Text className="text-base text-gray-500 text-center leading-6">
+            Describe what you want to accomplish and let AI create organized
+            tasks for you
           </Text>
-        </Pressable>
-      </View>
-
-      {/* <VoiceTest onResult={(text) => setText(text)} /> */}
-
-      {showTasks && (
-        <View style={styles.resultsSection}>
-          <TaskSelection tasks={tasks} aiMessage={aiMessage} />
         </View>
-      )}
-    </ScrollView>
+
+        <View className="w-full max-w-md px-4">
+          <Text className="text-lg font-semibold text-gray-700 mb-3 text-center">
+            What would you like to work on?
+          </Text>
+
+          <TextInput
+            className="border-2 border-gray-200 rounded-xl p-4 text-base bg-white text-gray-800 mb-4 min-h-[100px]"
+            onChangeText={setText}
+            value={text}
+            placeholder="e.g., Plan a birthday party, Learn React Native, Organize my workspace..."
+            placeholderTextColor="#9CA3AF"
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
+
+          <Pressable
+            onPress={() => handleGenerateTasksFromPrompt(text)}
+            className={`rounded-xl px-6 py-4 mb-3 shadow ${
+              !text.trim() || isLoading
+                ? "bg-gray-400"
+                : "bg-blue-500 active:bg-blue-600"
+            }`}
+            disabled={!text.trim() || isLoading}
+          >
+            <Text className="text-white text-lg font-semibold text-center">
+              {isLoading ? "🤖 Generating..." : "🚀 Generate Tasks"}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push("/chatScreen" as any)}
+            className="bg-blue-600 px-4 py-2 mt-2 rounded-lg active:bg-blue-700"
+          >
+            <Text className="text-white font-semibold text-base text-center">
+              Go to chat screen
+            </Text>
+          </Pressable>
+        </View>
+
+        {showTasks && (
+          <View className="mt-6 bg-white rounded-xl p-4 shadow w-full max-w-md">
+            <TaskSelection tasks={tasks} aiMessage={aiMessage} />
+          </View>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
-  },
-  contentContainer: {
-    flexGrow: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 32,
-    paddingTop: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#1F2937",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 24,
-    paddingHorizontal: 16,
-  },
-  inputSection: {
-    marginBottom: 24,
-    width: "100%",
-    maxWidth: 400,
-  },
-  inputLabel: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  textInput: {
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    backgroundColor: "#FFFFFF",
-    color: "#1F2937",
-    marginBottom: 20,
-    minHeight: 100,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  submitButton: {
-    backgroundColor: "#3B82F6",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    shadowColor: "#3B82F6",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#9CA3AF",
-    shadowOpacity: 0.1,
-  },
-  submitButtonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  resultsSection: {
-    marginTop: 20,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    width: "100%",
-    maxWidth: 400,
-  },
-});
