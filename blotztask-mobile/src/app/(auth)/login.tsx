@@ -4,8 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Avatar, Text } from "react-native-paper";
 import { useEffect } from "react";
 import { router } from "expo-router";
-import { useAuth } from "@/contexts/AuthContext";
-import LoginForm from "@/src/feature/auth/login-form";
+import LoginForm from "@/feature/auth/components/login-form";
+import { useAuth } from "@/feature/auth/auth-context";
 
 const { height } = Dimensions.get("window");
 
@@ -73,7 +73,7 @@ export default function LoginPage() {
                 fontWeight: "400",
               }}
             >
-              Sign in to your Blotz account 
+              Sign in to your Blotz account
             </Text>
           </View>
 
