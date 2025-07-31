@@ -5,13 +5,14 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace BlotzTask.Modules.Chat;
 
+//TODO: Rename this to Goal Planner ChatHub
 public class ChatHub : Hub
 {
     private readonly ILogger<ChatHub> _logger;
     private readonly IGoalPlannerChatService _goalPlannerChatService;
 
     public ChatHub(
-        ILogger<ChatHub> logger, 
+        ILogger<ChatHub> logger,
         IGoalPlannerChatService goalPlannerChatService)
     {
         _logger = logger;
