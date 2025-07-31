@@ -52,6 +52,5 @@ jobs:
         id: fa
         with:
           app-name: 'blotz-task-recurring-trigger'
-          slot-name: 'Production'
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
           
