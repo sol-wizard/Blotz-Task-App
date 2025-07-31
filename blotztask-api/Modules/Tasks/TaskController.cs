@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using BlotzTask.Modules.Tasks.DTOs;
 using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Shared.DTOs;
@@ -18,18 +19,18 @@ public class TaskController : ControllerBase
         _taskService = taskService;
     }
 
-    [HttpGet("alltask")]
+    [HttpGet]
     [Tags("MigratedToCleanArchitecture")]
-    public async Task<IActionResult> GetAllTask()
+    public async Task<ActionResult<List<TaskItemDto>>> GetAllTask(CancellationToken cancellationToken)
     {
-        var userId = HttpContext.Items["UserId"] as string;
-
-        if (userId == null)
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        if (string.IsNullOrEmpty(userId))
         {
-            throw new UnauthorizedAccessException("Could not find user id from Http Context");
+            throw new UnauthorizedAccessException("Could not find user id from token");
         }
 
-        return Ok(await _taskService.GetTodoItemsByUser(userId));
+        return Ok(await _taskService.GetTodoItemsByUser(userId, cancellationToken));
     }
 
     [HttpGet("monthly-stats/{year}-{month}")]
