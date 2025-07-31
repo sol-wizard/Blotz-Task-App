@@ -7,7 +7,7 @@ import { ScheduledTasksDTO } from '@/model/scheduled-tasks-dto';
 
 export const fetchAllTaskItems = async (): Promise<TaskDetailDTO[]> => {
   const result = await fetchWithAuth<TaskDetailDTO[]>(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/alltask`,
+    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/task`,
     {
       method: 'GET',
       headers: {
