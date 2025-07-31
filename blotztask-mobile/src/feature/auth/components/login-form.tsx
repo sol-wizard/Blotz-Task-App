@@ -5,7 +5,7 @@ import { Button, Card, TextInput, Text, Snackbar } from "react-native-paper";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../auth-context";
 
 // Validation schema
 const loginSchema = z.object({
@@ -37,7 +37,8 @@ export default function LoginForm() {
     try {
       await login(data.email, data.password);
     } catch (error) {
-      setSnackbarMessage("Invalid credentials. Please try again.");
+      console.error("Login error:", error);
+      setSnackbarMessage(`Invalid credentials. Please try again.`);
       setSnackbarVisible(true);
     }
   };
