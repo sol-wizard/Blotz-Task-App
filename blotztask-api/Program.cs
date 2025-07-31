@@ -158,6 +158,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IConversationStateService, ConversationStateServiceV2>();
 builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
 builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
+builder.Services.AddScoped<IRecurringTaskService, RecurringTaskService>();
 builder.Services.AddScoped<ITaskParserService, TaskParserService>();
 builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
 
@@ -199,7 +200,7 @@ app.UseCors("AllowSpecificOrigin");
 app.UseAuthorization();
 
 app.MapSwagger().RequireAuthorization();
-app.MapControllers().RequireAuthorization();
+app.MapControllers();
 app.MapHub<AiTaskChatHub>("/ai-task-chathub");
 app.MapHub<ChatHub>("/chatHub");
 
