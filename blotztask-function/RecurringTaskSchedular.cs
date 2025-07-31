@@ -1,16 +1,53 @@
 using System;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace BlotzTask.Functions;
 
-public class RecurringTaskSchedular
+public class RecurringTaskScheduler
 {
-    [FunctionName("RecurringTaskScheduler")]
-    public void Run([TimerTrigger("0 */5 * * * *")]TimerInfo myTimer, ILogger log)
+    private readonly ILogger<RecurringTaskScheduler> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IConfiguration _configuration;
+
+    public RecurringTaskScheduler(
+        ILogger<RecurringTaskScheduler> logger,
+        IHttpClientFactory httpClientFactory,
+        IConfiguration configuration)
     {
-        log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+        _logger = logger;
+        _httpClientFactory = httpClientFactory; 
+        _configuration = configuration;
+    }
+
+    [Function("RecurringTaskScheduler")]
+    public async Task Run([TimerTrigger("*/10 * * * * *")] TimerInfo myTimer)
+    {
+        _logger.LogInformation($"Isolated function triggered at: {DateTime.UtcNow}");
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+
+            var endpoint = _configuration["RecurringTaskTriggerUrl"];
+            var response = await client.PostAsync(endpoint, new StringContent(""));
+            
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Successfully triggered API endpoint.");
+                Console.WriteLine(response);
+            }
+            else
+            {
+                _logger.LogWarning($"API call failed. Status code: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error calling API endpoint.");
+        }
     }
 }
-
