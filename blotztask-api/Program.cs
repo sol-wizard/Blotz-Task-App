@@ -5,7 +5,6 @@ using BlotzTask.Extension;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Infrastructure.Data.Seeding;
 using BlotzTask.Middleware;
-using BlotzTask.Modules.AiTask.Services;
 using BlotzTask.Modules.Chat;
 using BlotzTask.Modules.Chat.Services;
 using BlotzTask.Modules.Labels.Services;
@@ -97,7 +96,6 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddAzureOpenAi();
 
-builder.Services.AddScoped<TaskGenerationAiService>();
 
 if (builder.Environment.IsProduction())
 {
