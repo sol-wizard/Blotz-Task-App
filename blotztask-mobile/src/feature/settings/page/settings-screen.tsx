@@ -3,13 +3,15 @@ import { Text, Button } from "react-native-paper";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { AUTH_TOKEN_KEY } from "@/constants/token-key";
+import { AUTH_TOKEN_KEY } from "../../../constants/token-key";
 import NotificationTester from "../components/notification-tester";
 import SignalRConnectionTester from "../components/signalr-connection-tester";
+import AITaskGenerator from "../../ai/components/ai-task-generator";
 
 export default function SettingsScreen() {
   const [showNotificationTester, setShowNotificationTester] = useState(false);
   const [showSignalRTester, setShowSignalRTester] = useState(false);
+  const [showAITaskGenerator, setShowAITaskGenerator] = useState(false);
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -56,6 +58,20 @@ export default function SettingsScreen() {
         {showSignalRTester && (
           <View style={{ width: "100%", marginTop: 16 }}>
             <SignalRConnectionTester />
+          </View>
+        )}
+
+        <Button
+          mode="contained"
+          onPress={() => setShowAITaskGenerator(!showAITaskGenerator)}
+          style={{ marginTop: 16 }}
+        >
+          {showAITaskGenerator ? "Hide" : "Show"} AI Task Generator
+        </Button>
+
+        {showAITaskGenerator && (
+          <View style={{ width: "100%", marginTop: 16 }}>
+            <AITaskGenerator />
           </View>
         )}
 

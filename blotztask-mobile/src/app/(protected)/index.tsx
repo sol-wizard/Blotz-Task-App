@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
-import CalendarPage from "@/feature/calendars/calendar-screen";
-import AIScreen from "@/feature/ai/page/ai-screen";
-import SettingsScreen from "@/feature/settings/page/settings-screen";
+import { View } from "react-native";
+import CalendarPage from "../../feature/calendars/calendar-screen";
+import SettingsScreen from "../../feature/settings/page/settings-screen";
 
 const routes = [
   {
@@ -12,32 +12,46 @@ const routes = [
     unfocusedIcon: "calendar-outline",
   },
   {
-    key: "ai",
-    title: "AI Tasks",
-    focusedIcon: "robot",
-    unfocusedIcon: "robot-outline",
+    key: "create",
+    title: "Create",
+    focusedIcon: "pencil",
+    unfocusedIcon: "pencil-outline",
   },
   {
     key: "settings",
-    title: "Settings",
+    title: "Setting",
     focusedIcon: "bell",
     unfocusedIcon: "bell-outline",
   },
 ];
 
+const EmptyScreen = () => <View style={{ flex: 1 }} />;
+
 const renderScene = BottomNavigation.SceneMap({
   calendar: CalendarPage,
-  ai: AIScreen,
+  create: EmptyScreen,
   settings: SettingsScreen,
 });
 
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
 
+  const handleIndexChange = (newIndex: number) => {
+    const selectedRoute = routes[newIndex];
+    
+    // If create button is clicked, do nothing
+    if (selectedRoute.key === "create") {
+      return; // Don't change the tab index
+    }
+    
+    // Otherwise, change tabs normally
+    setIndex(newIndex);
+  };
+
   return (
     <BottomNavigation
       navigationState={{ index, routes }}
-      onIndexChange={setIndex}
+      onIndexChange={handleIndexChange}
       renderScene={renderScene}
     />
   );
