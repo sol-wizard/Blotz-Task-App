@@ -7,7 +7,7 @@ export default function OnboardingScreen() {
   const router = useRouter();
 
   const handleGetStarted = () => {
-    router.push("/(auth)/login");
+    router.replace("/(auth)/login");
   };
 
   return (
