@@ -1,14 +1,14 @@
 // src/features/auth/LoginForm.tsx
 import React, { useState } from "react";
 import { View } from "react-native";
-import { Button, Card, TextInput, Text, Snackbar } from "react-native-paper";
+import { Button, TextInput, Text, Snackbar } from "react-native-paper";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { loginService } from "../services/auth-service";
-import { AUTH_TOKEN_KEY } from "@/constants/token-key";
+import { AUTH_TOKEN_KEY } from "../../../constants/token-key";
 
 // Validation schema
 const loginSchema = z.object({
@@ -92,131 +92,132 @@ export default function LoginForm() {
 
   return (
     <>
-      <Card
-        style={{
-          marginHorizontal: 4,
-          borderRadius: 16,
-          elevation: 8,
-          backgroundColor: "white",
-        }}
-        contentStyle={{ padding: 32 }}
-      >
-        <Text
-          variant="headlineSmall"
-          style={{
-            textAlign: "center",
-            marginBottom: 32,
-            color: "#1a1a1a",
-            fontWeight: "600",
-          }}
-        >
-          Sign In
-        </Text>
+      <View style={{ padding: 16 }}>
 
         {/* Email Field */}
-        <Controller
-          control={control}
-          name="email"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <View style={{ marginBottom: 20 }}>
-              <TextInput
-                label="Email Address"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                mode="outlined"
-                disabled={isLoading}
-                error={!!errors.email}
-                left={<TextInput.Icon icon="email" />}
-                style={{
-                  backgroundColor: "white",
-                  fontSize: 16,
-                }}
-                outlineStyle={{
-                  borderRadius: 12,
-                  borderWidth: 1.5,
-                }}
-                theme={{
-                  colors: {
-                    primary: "#667eea",
-                    error: "#ef4444",
-                  },
-                }}
-              />
-              {errors.email && (
-                <Text
-                  variant="bodySmall"
+        <View style={{ marginBottom: 24 }}>
+          <Text
+            variant="labelLarge"
+            style={{
+              color: "#374151",
+              marginBottom: 8,
+              fontWeight: "500",
+            }}
+          >
+            Email
+          </Text>
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View>
+                <TextInput
+                  value={value}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  mode="outlined"
+                  disabled={isLoading}
+                  error={!!errors.email}
                   style={{
-                    color: "#ef4444",
-                    marginTop: 4,
-                    marginLeft: 16,
+                    backgroundColor: "transparent",
+                    fontSize: 16,
                   }}
-                >
-                  {errors.email?.message}
-                </Text>
-              )}
-            </View>
-          )}
-        />
+                  outlineStyle={{
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: "#D1D5DB",
+                  }}
+                  theme={{
+                    colors: {
+                      primary: "#9CA3AF",
+                      error: "#ef4444",
+                    },
+                  }}
+                />
+                {errors.email && (
+                  <Text
+                    variant="bodySmall"
+                    style={{
+                      color: "#ef4444",
+                      marginTop: 4,
+                    }}
+                  >
+                    {errors.email?.message}
+                  </Text>
+                )}
+              </View>
+            )}
+          />
+        </View>
 
         {/* Password Field */}
-        <Controller
-          control={control}
-          name="password"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <View style={{ marginBottom: 32 }}>
-              <TextInput
-                label="Password"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                secureTextEntry={!showPassword}
-                autoComplete="password"
-                mode="outlined"
-                disabled={isLoading}
-                error={!!errors.password}
-                left={<TextInput.Icon icon="lock" />}
-                right={
-                  <TextInput.Icon
-                    icon={showPassword ? "eye-off" : "eye"}
-                    onPress={() => setShowPassword(!showPassword)}
-                  />
-                }
-                style={{
-                  backgroundColor: "white",
-                  fontSize: 16,
-                }}
-                outlineStyle={{
-                  borderRadius: 12,
-                  borderWidth: 1.5,
-                }}
-                theme={{
-                  colors: {
-                    primary: "#667eea",
-                    error: "#ef4444",
-                  },
-                }}
-              />
-              {errors.password && (
-                <Text
-                  variant="bodySmall"
+        <View style={{ marginBottom: 32 }}>
+          <Text
+            variant="labelLarge"
+            style={{
+              color: "#374151",
+              marginBottom: 8,
+              fontWeight: "500",
+            }}
+          >
+            Password
+          </Text>
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View>
+                <TextInput
+                  value={value}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  secureTextEntry={!showPassword}
+                  autoComplete="password"
+                  mode="outlined"
+                  disabled={isLoading}
+                  error={!!errors.password}
+                  right={
+                    <TextInput.Icon
+                      icon={showPassword ? "eye-off" : "eye"}
+                      onPress={() => setShowPassword(!showPassword)}
+                    />
+                  }
                   style={{
-                    color: "#ef4444",
-                    marginTop: 4,
-                    marginLeft: 16,
+                    backgroundColor: "transparent",
+                    fontSize: 16,
                   }}
-                >
-                  {errors.password?.message}
-                </Text>
-              )}
-            </View>
-          )}
-        />
+                  outlineStyle={{
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: "#D1D5DB",
+                  }}
+                  theme={{
+                    colors: {
+                      primary: "#9CA3AF",
+                      error: "#ef4444",
+                    },
+                  }}
+                />
+                {errors.password && (
+                  <Text
+                    variant="bodySmall"
+                    style={{
+                      color: "#ef4444",
+                      marginTop: 4,
+                    }}
+                  >
+                    {errors.password?.message}
+                  </Text>
+                )}
+              </View>
+            )}
+          />
+        </View>
 
-        {/* Sign In Button */}
+        {/* Login Button */}
         <Button
           mode="contained"
           onPress={handleSubmit(onSubmit)}
@@ -224,17 +225,21 @@ export default function LoginForm() {
           disabled={isLoading}
           style={{
             borderRadius: 12,
-            paddingVertical: 8,
-            marginBottom: 16,
+            paddingVertical: 4,
+            marginBottom: 24,
+            backgroundColor: "#D1D5DB",
           }}
-          buttonColor="#667eea"
           labelStyle={{
             fontSize: 16,
-            fontWeight: "600",
-            letterSpacing: 0.5,
+            fontWeight: "500",
+            color: "#374151",
+            letterSpacing: 0.3,
+          }}
+          contentStyle={{
+            paddingVertical: 8,
           }}
         >
-          {isLoading ? "Signing In..." : "Sign In"}
+          {isLoading ? "Logging In..." : "Login"}
         </Button>
 
         {/* Test Account Button */}
@@ -244,19 +249,20 @@ export default function LoginForm() {
           disabled={isLoading}
           style={{
             borderRadius: 12,
-            paddingVertical: 4,
-            borderColor: "#667eea",
+            paddingVertical: 2,
+            borderColor: "#9CA3AF",
+            backgroundColor: "transparent",
           }}
           labelStyle={{
             fontSize: 14,
             fontWeight: "500",
-            color: "#667eea",
+            color: "#6B7280",
           }}
         >
           Use Test Account
         </Button>
 
-      </Card>
+      </View>
 
       {/* Snackbar */}
       <Snackbar
