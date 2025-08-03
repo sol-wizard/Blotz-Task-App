@@ -1,45 +1,56 @@
 {
   "expo": {
-    "name": "ADHDproject",
-    "slug": "ADHDproject",
+    "name": "BlotzTask",
+    "slug": "BlotzTask",
+    "owner": "blotztask",
     "version": "1.0.0",
+    "runtimeVersion": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "adhdproject",
+    "scheme": "blotztask",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nicolenxn.ADHDproject",
+      "bundleIdentifier": "com.Blotz.BlotzTask",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.nicolenxn.ADHDproject"
+      "package": "com.Blotz.BlotzTask"
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "output": "static"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-dev-client",
+        {
+          "launchMode": "most-recent"
+        }
+      ],
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "CUSTOM: Allow BlotzTask to access the microphone",
+          "speechRecognitionPermission": "CUSTOM: Allow BlotzTask to securely recognize user speech"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -47,11 +58,8 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "99062285-944a-4758-ab2c-641d3733c0ca"
+        "projectId": "8e8ffbf2-206b-4d9b-b11c-a387b49a3126"
       }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
     },
     "updates": {
       "url": "https://u.expo.dev/99062285-944a-4758-ab2c-641d3733c0ca"
