@@ -84,9 +84,9 @@ export default function TaskCard({
       form.reset({
         title: task.title,
         description: task.description,
-        date: new Date(task.dueDate),
+        date: new Date(task.endTime),
         labelId: task.label.labelId,
-        time: task.hasTime ? format(new Date(task.dueDate), 'h:mm a') : undefined,
+        time: task.hasTime ? format(new Date(task.endTime), 'h:mm a') : undefined,
       });
     }
   }, [task, form]);

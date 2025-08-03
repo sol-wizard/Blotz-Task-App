@@ -1,7 +1,7 @@
 export interface AddTaskItemDTO {
   title: string;
   description: string;
-  dueDate: string;
+  endTime: string;
   labelId: number;
   hasTime: boolean;
 }

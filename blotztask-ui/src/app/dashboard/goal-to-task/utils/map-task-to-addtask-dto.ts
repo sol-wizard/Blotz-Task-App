@@ -6,7 +6,7 @@ export function mapTaskToAddTask(task: TaskDetailDTO): RawAddTaskDTO {
     title: task.title,
     description: task.description,
     labelId: task.label.labelId,
-    date: task.dueDate,
+    date: task.endTime,
     time: undefined,
   };
 }

@@ -10,7 +10,9 @@ public class TaskItem
     public int Id { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
-    public DateTimeOffset DueDate { get; set; }
+    
+    public DateTimeOffset StartTime { get; set; }
+    public DateTimeOffset EndTime { get; set; }
     public bool IsDone { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

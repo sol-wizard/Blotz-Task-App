@@ -55,7 +55,7 @@ export default function TaskCardToAdd({
         <strong>Description:</strong> {taskToAdd.description ?? 'None'}
       </p>
       <p className="text-sm text-zinc-600">
-        <strong>Due Date:</strong> {taskToAdd.dueDate.toLocaleDateString()}
+        <strong>Due Date:</strong> {taskToAdd.endTime.toLocaleDateString()}
       </p>
       <p className="text-sm text-zinc-600 flex items-center">
         <span
