@@ -3,31 +3,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BlotzTask.Modules.AiTask.DTOs;
-using BlotzTask.Modules.Labels.Services;
-using BlotzTask.Modules.Tasks.DTOs;
 using OpenAI.Chat;
 
 namespace BlotzTask.Modules.AiTask.Services;
 
-public class BreakdownService
+public interface IAiBreakdownService
 {
-    private readonly ILabelService _labelService;
-    private readonly ChatClient _chatClient;
-    private readonly ILogger<BreakdownService> _logger;
+    Task<BreakdownResponseDto> BreakdownTaskAsync(AiBreakdownTaskInputDto task, CancellationToken ct = default);
+}
 
-    public BreakdownService(ChatClient chatClient, ILabelService labelService, ILogger<BreakdownService> logger)
+public class AiBreakdownService : IAiBreakdownService
+{
+    private readonly ChatClient _chatClient;
+    private readonly ILogger<AiBreakdownService> _logger;
+
+    public AiBreakdownService(ChatClient chatClient, ILogger<AiBreakdownService> logger)
     {
         _chatClient = chatClient;
-        _labelService = labelService;
         _logger = logger;
     }
 
-    public async Task<BreakdownResponseDto> BreakdownTodoAsync(string title, string? description, CancellationToken ct)
+    public async Task<BreakdownResponseDto> BreakdownTaskAsync(AiBreakdownTaskInputDto originalTask, CancellationToken ct)
     {
-        _logger.LogInformation("Starting task breakdown for: {Title}", title);
-        // Get Label
-        var (labels, labelNames) = await AiLabelHelper.GetLabelInfoAsync(_labelService);
-        var labelPrompt = AiLabelHelper.GetLabelPromptString(labelNames);
+        _logger.LogInformation("Starting task breakdown for: {Title}", originalTask.Title);
 
         // Pass Label to System Prompt
         var systemPrompt = @$"
@@ -39,19 +37,19 @@ public class BreakdownService
         - Keeping subtasks concise, actionable, and easy to follow
 
         Rules:
-        - If the task is simple (e.g., one action or very short), reply:
-        {{ ""action"": ""no_split"" }}
-
-        - If the task contains multiple steps, reply:
+        - If the task is simple and doesn't need splitting, reply with:
         {{
-            ""action"": ""split"",
-            ""subtasks"": [
+        ""action"": ""no_split""
+        }}
+        - If splitting helps, reply with:
+        {{
+        ""action"": ""split""
+        ""subtasks"": [
             {{
-                ""title"": string,               // Subtask title (short and clear)
-                ""description"": string,         // Optional detail, can match original description
-                ""label"": string                // Must be one of: {labelPrompt}
+            ""title"": string,
+            ""description"": string
             }}
-            ]
+        ]
         }}
 
         Examples:
@@ -68,17 +66,17 @@ public class BreakdownService
         {{
         ""action"": ""split"",
         ""subtasks"": [
-            {{ ""title"": ""Book a venue"", ""description"": ""Reserve a place for the party."", ""label"": ""Event Planning"" }},
-            {{ ""title"": ""Send invitations"", ""description"": ""Notify friends and family."", ""label"": ""Communication"" }},
-            {{ ""title"": ""Order a cake"", ""description"": ""Get a unicorn-themed cake."", ""label"": ""Shopping"" }},
-            {{ ""title"": ""Arrange decorations"", ""description"": ""Buy and set up decorations."", ""label"": ""Event Planning"" }}
+            {{ ""title"": ""Book a venue"", ""description"": ""Reserve a place for the party.""}},
+            {{ ""title"": ""Send invitations"", ""description"": ""Notify friends and family.""}},
+            {{ ""title"": ""Order a cake"", ""description"": ""Get a unicorn-themed cake.""}},
+            {{ ""title"": ""Arrange decorations"", ""description"": ""Buy and set up decorations.""}}
         ]
         }}
 
         Now assess the following task:
 
-        Title: {title}
-        Description: {description ?? "None"}
+        Title: {originalTask.Title}
+        Description: {originalTask.Description}
         ";
 
         var messages = new List<ChatMessage>
@@ -108,10 +106,9 @@ public class BreakdownService
                             properties = new
                             {
                                 title = new { type = "string", description = "Subtask title" },
-                                description = new { type = "string", description = "Subtask description" },
-                                label = new { type = "string", description = $"Label name, must be one of: {labelPrompt}" }
+                                description = new { type = "string", description = "Subtask description" }
                             },
-                            required = new[] { "title", "description", "label" }
+                            required = new[] { "title", "description" }
                         }
                     }
                 },
@@ -141,18 +138,26 @@ public class BreakdownService
         if (toolCall == null)
         {
             _logger.LogWarning("No tool call returned by AI.");
-            return new BreakdownResponseDto { IsSplit = false };
+            return new BreakdownResponseDto
+            {
+                Subtasks = null,
+                message = "AI could not process the task. Please try rephrasing it."
+            };
         }
 
         _logger.LogInformation("Tool call received: {ToolCall}", toolCall.FunctionArguments.ToString());
 
         // Deserialise
-        var aiResult = toolCall.FunctionArguments.ToObjectFromJson<BreakdownAiResult>();
+        var aiResult = toolCall.FunctionArguments.ToObjectFromJson<AiBreakdownResult>();
 
         if (aiResult == null)
         {
             _logger.LogWarning("Failed to deserialize FunctionArguments.");
-            return new BreakdownResponseDto { IsSplit = false };
+            return new BreakdownResponseDto
+            {
+                Subtasks = null,
+                message = "AI response could not be understood. Please try again or simplify the task description."
+            };
         }
 
         _logger.LogInformation("AI result: Action={Action}, SubtaskCount={Count}",
@@ -161,43 +166,23 @@ public class BreakdownService
         if (!string.Equals(aiResult.Action, "split", StringComparison.OrdinalIgnoreCase)
             || aiResult.Subtasks == null || aiResult.Subtasks.Count == 0)
         {
-            _logger.LogInformation("AI chose not to split the task. Returning original.");
+            _logger.LogInformation("AI chose not to split the task.");
             return new BreakdownResponseDto
             {
-                IsSplit = false,
-                Subtasks = new List<TaskItemDto>
-                {
-                    new TaskItemDto
-                    {
-                        Id = 0,
-                        Title = title,
-                        Description = description ?? "",
-                        IsDone = false,
-                        DueDate = DateTime.UtcNow,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow,
-                        HasTime = false,
-                        Label = null
-                    }
-                }
+                message = "This task seems simple enough and doesn't need to be split.",
+                Subtasks = []
             };
         }
 
         // Map to DTO
         var subtasks = aiResult.Subtasks.Select(s =>
         {
-            var validatedLabel = AiLabelHelper.ValidateLabel(s.Label, labelNames);
-            return new TaskItemDto
+            return new AiBreakdownSubtask
             {
-                Id = 0,
                 Title = s.Title,
                 Description = s.Description,
-                IsDone = false,
                 DueDate = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
                 HasTime = false,
-                Label = AiLabelHelper.ResolveLabel(validatedLabel, labels)
             };
         }).ToList();
 
@@ -205,7 +190,7 @@ public class BreakdownService
 
         return new BreakdownResponseDto
         {
-            IsSplit = true,
+            message = "The task has been successfully split into subtasks.",
             Subtasks = subtasks
         };
     }

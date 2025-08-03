@@ -7,12 +7,12 @@ using OpenAI.Chat;
 namespace BlotzTask.Modules.AiTask.Services;
 
 //TODO: Extract this to an service with interface like other services
-public class TaskGenerationAiService
+public class AiTaskGenerationService
 {
     private readonly ChatClient _chatClient;
     private readonly ILabelService _labelService;
     
-    public TaskGenerationAiService(
+    public AiTaskGenerationService(
         ILabelService labelService,
         ChatClient chatClient)
     {
@@ -22,7 +22,7 @@ public class TaskGenerationAiService
 
     public async Task<ExtractedTasksWrapperDto> GenerateResponseAsync(string prompt, string timezoneId, CancellationToken ct)
     {
-        var (labels, labelNames) = await AiLabelHelper.GetLabelInfoAsync(_labelService);
+        var (labels, labelNames) = await GetLabelInfoAsync();
 
         var messages = new List<ChatMessage>
         {
@@ -84,6 +84,14 @@ public class TaskGenerationAiService
         return ConvertToWrapperDto(resultWrapper, labels, labelNames);
     }
 
+
+    private async Task<(List<LabelDto> labels, HashSet<string> labelNames)> GetLabelInfoAsync()
+    {
+        var labels = await _labelService.GetAllLabelsAsync();
+        var labelNames = labels.Select(label => label.Name).ToHashSet();
+        return (labels, labelNames);
+    }
+
     // give AI a standard structure to follow
     private ChatTool CreateExtractedTasksTool(HashSet<string> labelNames)
     {
@@ -106,7 +114,7 @@ public class TaskGenerationAiService
                                     title = new { type = "string", description = "Title of the task extracted from the user's input." },
                                     description = new { type = "string", description = "Description of the task extracted from or generated based on user's input."},
                                     due_date = new { type = "string", format = "date", description = "Due date of the task in YYYY-MM-DD format." },
-                                    label = new { type = "string", description = $@"Category label for the task, which must correspond to one of the {AiLabelHelper.GetLabelPromptString(labelNames)}." },
+                                    label = new { type = "string", description = $@"Category label for the task, which must correspond to one of the {string.Join(", ", labelNames)}." },
                                     isValidTask = new
                                     {
                                         type = "boolean",
@@ -191,7 +199,10 @@ public class TaskGenerationAiService
         if (extractedTask is null)
             throw new ArgumentNullException(nameof(extractedTask));
 
-        var validatedLabel = AiLabelHelper.ValidateLabel(extractedTask.Label, labelNames);
+        if (!labelNames.Contains(extractedTask.Label))
+        {
+            extractedTask.Label = "Others";
+        }
 
         return new ExtractedTaskDto
         {
@@ -199,7 +210,7 @@ public class TaskGenerationAiService
             Description = extractedTask.Description,
             DueDate = extractedTask.DueDate,
             IsValidTask = extractedTask.IsValidTask,
-            Label = AiLabelHelper.ResolveLabel(validatedLabel, labels)
+            Label = labels.First(x => x.Name == extractedTask.Label)
         };
     }
 

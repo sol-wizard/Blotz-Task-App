@@ -2,16 +2,16 @@ using System.Text.Json.Serialization;
 
 namespace BlotzTask.Modules.AiTask.DTOs;
 
-public class BreakdownAiResult
+public class AiBreakdownResult
 {
     [JsonPropertyName("action")]
     public string Action { get; set; } = default!;
 
     [JsonPropertyName("subtasks")]
-    public List<BreakdownAiSubtask>? Subtasks { get; set; }
+    public List<AiBreakdownSubtask>? Subtasks { get; set; }
 }
 
-public class BreakdownAiSubtask
+public class AiBreakdownSubtask
 {
     [JsonPropertyName("title")]
     public string Title { get; set; } = default!;
@@ -19,6 +19,6 @@ public class BreakdownAiSubtask
     [JsonPropertyName("description")]
     public string Description { get; set; } = default!;
 
-    [JsonPropertyName("label")]
-    public string Label { get; set; } = default!;
+    public DateTimeOffset DueDate { get; set; }
+    public bool HasTime { get; set; }
 }

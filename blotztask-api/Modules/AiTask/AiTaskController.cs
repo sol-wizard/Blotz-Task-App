@@ -10,13 +10,13 @@ namespace BlotzTask.Modules.AiTask;
 [Route("api/[controller]")]
 public class AiTaskController : ControllerBase
 {
-    private readonly TaskGenerationAiService _aiService;
-    private readonly BreakdownService _breakdownService;
+    private readonly AiTaskGenerationService _aiTaskGenerationService;
+    private readonly AiBreakdownService _aiBreakdownService;
 
-    public AiTaskController(TaskGenerationAiService aiService, BreakdownService breakdownService)
+    public AiTaskController(AiTaskGenerationService aiTaskGenerationService, AiBreakdownService aiBreakdownService)
     {
-        _aiService = aiService;
-        _breakdownService = breakdownService;
+        _aiTaskGenerationService = aiTaskGenerationService;
+        _aiBreakdownService = aiBreakdownService;
     }
 
     [HttpPost("generate")]
@@ -27,19 +27,14 @@ public class AiTaskController : ControllerBase
             return BadRequest("Prompt cannot be empty.");
         }
 
-        var response = await _aiService.GenerateResponseAsync(request.Prompt, request.TimeZoneId, cancellationToken);
+        var response = await _aiTaskGenerationService.GenerateResponseAsync(request.Prompt, request.TimeZoneId, cancellationToken);
         return Ok(new { Response = response });
     }
    
     [HttpPost("todos/breakdown")]
-    public async Task<IActionResult> BreakdownGoal([FromBody] BreakdownRequestDto request, CancellationToken cancellationToken)
+    public async Task<IActionResult> BreakdownGoal([FromBody] AiBreakdownTaskInputDto originalTask, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request?.Title) || string.IsNullOrWhiteSpace(request?.Description))
-        {
-            return BadRequest("Title and Description are required.");
-        }
-
-        var response = await _breakdownService.BreakdownTodoAsync(request.Title, request.Description, cancellationToken);
+        var response = await _aiBreakdownService.BreakdownTaskAsync(originalTask, cancellationToken);
 
         return Ok(new { Response = response });
     }
