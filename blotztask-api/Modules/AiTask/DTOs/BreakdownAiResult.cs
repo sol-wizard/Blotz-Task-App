@@ -11,6 +11,7 @@ public class AiBreakdownResult
     public List<AiBreakdownSubtask>? Subtasks { get; set; }
 }
 
+// TODO: need to be changed based on actual subtask table
 public class AiBreakdownSubtask
 {
     [JsonPropertyName("title")]
