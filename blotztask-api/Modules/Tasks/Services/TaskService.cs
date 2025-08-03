@@ -38,13 +38,13 @@ public class TaskService : ITaskService
     {
         return await _dbContext.TaskItems
             .Where(x => x.UserId == userId)
-            .OrderBy(x => x.DueDate)
+            .OrderBy(x => x.EndTime)
             .Select(x => new TaskItemDto
             {
                 Id = x.Id,
                 Title = x.Title,
                 Description = x.Description,
-                DueDate = x.DueDate,
+                EndTime = x.EndTime,
                 IsDone = x.IsDone,
                 Label = new LabelDto { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color },
                 HasTime = x.HasTime,
@@ -66,7 +66,7 @@ public class TaskService : ITaskService
             Id = task.Id,
             Title = task.Title,
             Description = task.Description,
-            DueDate = task.DueDate,
+            EndTime = task.EndTime,
             IsDone = task.IsDone,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
@@ -90,7 +90,7 @@ public class TaskService : ITaskService
             Id = taskItem.Id,
             Title = taskItem.Title,
             Description = taskItem.Description,
-            DueDate = taskItem.DueDate,
+            EndTime = taskItem.EndTime,
             IsDone = taskItem.IsDone,
             CreatedAt = taskItem.CreatedAt,
             UpdatedAt = taskItem.UpdatedAt,
@@ -130,7 +130,7 @@ public class TaskService : ITaskService
             {
                 Title = addTaskItem.Title,
                 Description = addTaskItem.Description,
-                DueDate = addTaskItem.DueDate,
+                EndTime = addTaskItem.EndTime,
                 LabelId = addTaskItem.LabelId,
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
@@ -168,7 +168,7 @@ public class TaskService : ITaskService
         {
             task.Title = editTaskItem.Title;
             task.Description = editTaskItem.Description;
-            task.DueDate = editTaskItem.DueDate;
+            task.EndTime = editTaskItem.EndTime;
             task.UpdatedAt = DateTime.UtcNow;
             task.LabelId = editTaskItem.LabelId;
             task.HasTime = editTaskItem.HasTime;
@@ -225,13 +225,13 @@ public class TaskService : ITaskService
             return await _dbContext.TaskItems
                 .Where(task => task.UserId == userId)
                 .Where(task => task.IsDone == true)
-                .Where(task => task.DueDate >= todayUtc && task.DueDate < tomorrowUtc)
+                .Where(task => task.EndTime >= todayUtc && task.EndTime < tomorrowUtc)
                 .Select(task => new TaskItemDto
                 {
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
-                    DueDate = task.DueDate,
+                    EndTime = task.EndTime,
                     IsDone = task.IsDone,
                     Label = new LabelDto
                     {
@@ -255,13 +255,13 @@ public class TaskService : ITaskService
         {
             return await _dbContext.TaskItems
                 .Where(task => task.UserId == userId)
-                .Where(task => task.DueDate >= startDateUtc && task.DueDate < endDateUtc)
+                .Where(task => task.EndTime >= startDateUtc && task.EndTime < endDateUtc)
                 .Select(task => new TaskItemDto
                 {
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
-                    DueDate = task.DueDate,
+                    EndTime = task.EndTime,
                     IsDone = task.IsDone,
                     Label = new LabelDto
                     {
@@ -284,7 +284,7 @@ public class TaskService : ITaskService
         try
         {
             var filteredTasks = await _dbContext.TaskItems
-                .Where(x => x.UserId == userId && x.DueDate.Month == month && x.DueDate.Year == year)
+                .Where(x => x.UserId == userId && x.EndTime.Month == month && x.EndTime.Year == year)
                 .GroupBy(x => new { x.Label.Name, x.IsDone })
                 .Select(g => new
                 {
@@ -328,7 +328,7 @@ public class TaskService : ITaskService
         {
             Title = deletedTask.Title,
             Description = deletedTask.Description,
-            DueDate = deletedTask.DueDate,
+            EndTime = deletedTask.EndTime,
             IsDone = deletedTask.IsDone,
             CreatedAt = deletedTask.CreatedAt,
             UpdatedAt = DateTime.UtcNow,
@@ -370,7 +370,7 @@ public class TaskService : ITaskService
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
-                    DueDate = task.DueDate,
+                    EndTime = task.EndTime,
                     IsDone = task.IsDone,
                     Label = new LabelDto
                     {
@@ -403,15 +403,15 @@ public class TaskService : ITaskService
             DateTime endOfYearUtc = TimeZoneInfo.ConvertTimeToUtc(endOfYearLocal, timeZoneInfo);
 
             var tasks = await _dbContext.TaskItems
-                .Where(t => t.UserId == userId && t.DueDate != null
-                                               && t.DueDate >= startOfYearUtc && t.DueDate <= endOfYearUtc
+                .Where(t => t.UserId == userId && t.EndTime != null
+                                               && t.EndTime >= startOfYearUtc && t.EndTime <= endOfYearUtc
                                                && (!t.IsDone))
                 .Select(task => new TaskItemDto
                 {
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
-                    DueDate = task.DueDate,
+                    EndTime = task.EndTime,
                     IsDone = task.IsDone,
                     Label = new LabelDto
                     {
@@ -421,7 +421,7 @@ public class TaskService : ITaskService
                     },
                     HasTime = task.HasTime
                 })
-                .OrderBy(t => t.DueDate)
+                .OrderBy(t => t.EndTime)
                 .ToListAsync();
 
             if (tasks is null)
@@ -462,7 +462,7 @@ public class TaskService : ITaskService
 
         foreach (var task in tasks)
         {
-            DateTime localDueDate = TimeZoneInfo.ConvertTime(task.DueDate, timeZoneInfo).Date;
+            DateTime localDueDate = TimeZoneInfo.ConvertTime(task.EndTime, timeZoneInfo).Date;
 
             if (localDueDate < startOfToday && !task.IsDone)
             {
@@ -495,15 +495,15 @@ public class TaskService : ITaskService
         try
         {
             return await _dbContext.TaskItems
-                .Where(t => t.UserId == userId && t.DueDate < DateTime.UtcNow && !t.IsDone)
+                .Where(t => t.UserId == userId && t.EndTime < DateTime.UtcNow && !t.IsDone)
                 .Include(t => t.Label)
-                .OrderBy(t => t.DueDate)
+                .OrderBy(t => t.EndTime)
                 .Select(t => new TaskItemDto
                 {
                     Id = t.Id,
                     Title = t.Title,
                     Description = t.Description,
-                    DueDate = t.DueDate,
+                    EndTime = t.EndTime,
                     IsDone = t.IsDone,
                     Label = new LabelDto
                     {

@@ -13,7 +13,7 @@ export const SingleTask = ({ task }: SingleTaskProps) => {
       </Text>
       <Text className="text-sm text-gray-600 mb-2">{task.description}</Text>
       <Text className="text-xs text-blue-500">
-        📅 Due: {task.dueDate.toDateString()}
+        📅 Due: {task.endTime.toDateString()}
       </Text>
     </View>
   );

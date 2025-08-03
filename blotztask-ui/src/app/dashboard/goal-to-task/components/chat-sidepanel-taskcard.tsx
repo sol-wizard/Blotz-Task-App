@@ -30,7 +30,7 @@ const ChatSidePanelTaskcard = ({ task }: ChatSidePanelTaskcardProps) => {
             <div className="text-xs text-zinc-600 flex flex-row justify-between items-center">
               <span className="flex flex-row justify-start gap-1">
                 <CalendarDaysIcon size={14} stroke="#52525b" />
-                {task.dueDate.toLocaleDateString()}
+                {task.endTime.toLocaleDateString()}
               </span>
               {/* <ChatTaskEditActions
                 isEditing={isEditing}

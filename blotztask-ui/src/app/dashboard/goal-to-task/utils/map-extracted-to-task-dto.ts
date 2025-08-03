@@ -9,7 +9,7 @@ export function mapExtractedToTaskDetail(extractedTask: ExtractedTask): TaskDeta
       title: extractedTask.title,
       isDone: false,
       label: extractedTask.label,
-      dueDate: new Date(extractedTask.due_date),
+      endTime: new Date(extractedTask.due_date),
       hasTime: false,
   };
 }

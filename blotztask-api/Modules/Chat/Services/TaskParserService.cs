@@ -130,7 +130,7 @@ public class TaskParserService:ITaskParserService
         {
             Title = extractedTask.Title,
             Description = extractedTask.Description,
-            DueDate = extractedTask.DueDate,
+            EndTime = extractedTask.EndTime,
             IsValidTask = extractedTask.IsValidTask,
             Label = labels.First(x => x.Name == extractedTask.Label)
         };
