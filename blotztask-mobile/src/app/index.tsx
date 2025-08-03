@@ -36,5 +36,6 @@ export default function Index() {
     return <Redirect href="/(protected)" />;
   }
 
-  return <Redirect href="/(auth)/login" />;
+  // Show onboarding screen for unauthenticated users
+  return <Redirect href="/onboarding" />;
 }
