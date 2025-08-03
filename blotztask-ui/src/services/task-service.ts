@@ -19,10 +19,10 @@ export const fetchAllTaskItems = async (): Promise<TaskDetailDTO[]> => {
   return result;
 };
 
-export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
-  const startDateUTC = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
-  const result = await fetchWithAuth<TaskDetailDTO[]>(
+export const fetchTaskItemsTodoToday = async (): Promise<TaskDetailDTO[]> => {
+const startDateUTC = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
+const result = await fetchWithAuth<TaskDetailDTO[]>(
     `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/due-date?startDateUTC=${encodeURIComponent(startDateUTC)}`,
     {
       method: 'GET',
@@ -34,6 +34,23 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
 
   return result;
 };
+
+
+export const fetchTaskItemsDoneToday = async (): Promise<TaskDetailDTO[]> => {
+
+  const result = await fetchWithAuth<TaskDetailDTO[]>(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/today-done`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  return result;
+};
+
 
 export const addTaskItem = async (taskDetails: RawAddTaskDTO): Promise<TaskDetailDTO> => {
   const addTaskForm = prepareAddTaskItemDTO(taskDetails);
