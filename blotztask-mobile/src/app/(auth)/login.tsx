@@ -1,22 +1,11 @@
-// app/login.tsx (or app/(auth)/login.tsx)
 import { StatusBar, View, ScrollView, Dimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Avatar, Text } from "react-native-paper";
-import { useEffect } from "react";
-import { router } from "expo-router";
 import LoginForm from "@/feature/auth/components/login-form";
-import { useAuth } from "@/feature/auth/auth-context";
 
 const { height } = Dimensions.get("window");
 
 export default function LoginPage() {
-  const { isAuthenticated } = useAuth();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace("/");
-    }
-  }, [isAuthenticated]);
 
   return (
     <>
@@ -78,6 +67,7 @@ export default function LoginPage() {
           </View>
 
           <LoginForm />
+          
         </ScrollView>
       </LinearGradient>
     </>
