@@ -44,7 +44,7 @@ public class TaskService : ITaskService
                 Id = x.Id,
                 Title = x.Title,
                 Description = x.Description,
-                DueDate = x.EndTime,
+                EndTime = x.EndTime,
                 IsDone = x.IsDone,
                 Label = new LabelDto { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color },
                 HasTime = x.HasTime,
@@ -66,7 +66,7 @@ public class TaskService : ITaskService
             Id = task.Id,
             Title = task.Title,
             Description = task.Description,
-            DueDate = task.EndTime,
+            EndTime = task.EndTime,
             IsDone = task.IsDone,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
@@ -90,7 +90,7 @@ public class TaskService : ITaskService
             Id = taskItem.Id,
             Title = taskItem.Title,
             Description = taskItem.Description,
-            DueDate = taskItem.EndTime,
+            EndTime = taskItem.EndTime,
             IsDone = taskItem.IsDone,
             CreatedAt = taskItem.CreatedAt,
             UpdatedAt = taskItem.UpdatedAt,
@@ -130,7 +130,7 @@ public class TaskService : ITaskService
             {
                 Title = addTaskItem.Title,
                 Description = addTaskItem.Description,
-                EndTime = addTaskItem.DueDate,
+                EndTime = addTaskItem.EndTime,
                 LabelId = addTaskItem.LabelId,
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
@@ -168,7 +168,7 @@ public class TaskService : ITaskService
         {
             task.Title = editTaskItem.Title;
             task.Description = editTaskItem.Description;
-            task.EndTime = editTaskItem.DueDate;
+            task.EndTime = editTaskItem.EndTime;
             task.UpdatedAt = DateTime.UtcNow;
             task.LabelId = editTaskItem.LabelId;
             task.HasTime = editTaskItem.HasTime;
@@ -231,7 +231,7 @@ public class TaskService : ITaskService
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
-                    DueDate = task.EndTime,
+                    EndTime = task.EndTime,
                     IsDone = task.IsDone,
                     Label = new LabelDto
                     {
@@ -261,7 +261,7 @@ public class TaskService : ITaskService
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
-                    DueDate = task.EndTime,
+                    EndTime = task.EndTime,
                     IsDone = task.IsDone,
                     Label = new LabelDto
                     {
@@ -328,7 +328,7 @@ public class TaskService : ITaskService
         {
             Title = deletedTask.Title,
             Description = deletedTask.Description,
-            EndTime = deletedTask.DueDate,
+            EndTime = deletedTask.EndTime,
             IsDone = deletedTask.IsDone,
             CreatedAt = deletedTask.CreatedAt,
             UpdatedAt = DateTime.UtcNow,
@@ -370,7 +370,7 @@ public class TaskService : ITaskService
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
-                    DueDate = task.EndTime,
+                    EndTime = task.EndTime,
                     IsDone = task.IsDone,
                     Label = new LabelDto
                     {
@@ -411,7 +411,7 @@ public class TaskService : ITaskService
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
-                    DueDate = task.EndTime,
+                    EndTime = task.EndTime,
                     IsDone = task.IsDone,
                     Label = new LabelDto
                     {
@@ -421,7 +421,7 @@ public class TaskService : ITaskService
                     },
                     HasTime = task.HasTime
                 })
-                .OrderBy(t => t.DueDate)
+                .OrderBy(t => t.EndTime)
                 .ToListAsync();
 
             if (tasks is null)
@@ -462,7 +462,7 @@ public class TaskService : ITaskService
 
         foreach (var task in tasks)
         {
-            DateTime localDueDate = TimeZoneInfo.ConvertTime(task.DueDate, timeZoneInfo).Date;
+            DateTime localDueDate = TimeZoneInfo.ConvertTime(task.EndTime, timeZoneInfo).Date;
 
             if (localDueDate < startOfToday && !task.IsDone)
             {
@@ -503,7 +503,7 @@ public class TaskService : ITaskService
                     Id = t.Id,
                     Title = t.Title,
                     Description = t.Description,
-                    DueDate = t.EndTime,
+                    EndTime = t.EndTime,
                     IsDone = t.IsDone,
                     Label = new LabelDto
                     {
