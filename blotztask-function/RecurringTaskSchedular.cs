@@ -24,7 +24,7 @@ public class RecurringTaskScheduler
     }
 
     [Function("RecurringTaskScheduler")]
-    public async Task Run([TimerTrigger("*/10 * * * * *")] TimerInfo myTimer)
+    public async Task Run([TimerTrigger("0 0 0 * * *")] TimerInfo myTimer)
     {
         _logger.LogInformation($"Isolated function triggered at: {DateTime.UtcNow}");
 
