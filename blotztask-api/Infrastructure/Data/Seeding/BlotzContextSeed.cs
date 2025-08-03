@@ -35,8 +35,8 @@ public static class BlotzContextSeed
     {
         var defaultUser = new User
         {
-            FirstName = "Blotz",
-            LastName = "Test",
+            FirstName = "Guest",
+            LastName = "User",
             UserName = "blotztest1@gmail.com",
             Email = "blotztest1@gmail.com",
             EmailConfirmed = true,
@@ -45,7 +45,17 @@ public static class BlotzContextSeed
         var user = await userManager.FindByEmailAsync(defaultUser.Email);
         if (user != null)
         {
-            Console.WriteLine($"User with email {defaultUser.Email} already exists.");
+            bool needsUpdate = user.FirstName != "Guest" || user.LastName != "User";
+            if (needsUpdate)
+            {
+                user.FirstName = "Guest";
+                user.LastName = "User";
+                await userManager.UpdateAsync(user);
+                Console.WriteLine($"Updated existing user to: {user.FirstName} {user.LastName}");
+            }
+            else {
+                Console.WriteLine($"User with email {defaultUser.Email} already exists.");
+            }
             return user;
         }
 
