@@ -28,7 +28,7 @@ export const generateAiTask = async (prompt: string) => {
     id: number;
     description: string;
     title: string;
-    due_date: Date;
+    endTime: Date;
   }
 
   const tasks = data.response.tasks.map(
@@ -36,7 +36,7 @@ export const generateAiTask = async (prompt: string) => {
       id: index,
       description: task.description,
       title: task.title,
-      dueDate: new Date(task.due_date),
+      endTime: new Date(task.endTime),
     })
   );
 
