@@ -42,7 +42,7 @@ const ChatInlineTaskcard = ({ task, onTaskAdded }: ChatInlineTaskcardProps) => {
         {/* TODO: Add due time */}
           <span className="text-xs text-zinc-600 flex flex-row justify-start gap-1">
             <CalendarDaysIcon size={14} stroke="#52525b" />
-            {(task.dueDate as Date).toLocaleDateString()}
+            {(task.endTime as Date).toLocaleDateString()}
           </span>
         </div>
         </div>
