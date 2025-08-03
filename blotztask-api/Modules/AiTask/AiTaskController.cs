@@ -11,9 +11,9 @@ namespace BlotzTask.Modules.AiTask;
 public class AiTaskController : ControllerBase
 {
     private readonly AiTaskGenerationService _aiTaskGenerationService;
-    private readonly AiBreakdownService _aiBreakdownService;
+    private readonly IAiBreakdownService _aiBreakdownService;
 
-    public AiTaskController(AiTaskGenerationService aiTaskGenerationService, AiBreakdownService aiBreakdownService)
+    public AiTaskController(AiTaskGenerationService aiTaskGenerationService, IAiBreakdownService aiBreakdownService)
     {
         _aiTaskGenerationService = aiTaskGenerationService;
         _aiBreakdownService = aiBreakdownService;
