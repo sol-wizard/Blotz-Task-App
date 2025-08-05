@@ -1,32 +1,14 @@
-// app/login.tsx (or app/(auth)/login.tsx)
 import { StatusBar, View, ScrollView, Dimensions } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Avatar, Text } from "react-native-paper";
-import { useEffect } from "react";
-import { router } from "expo-router";
-import LoginForm from "@/feature/auth/components/login-form";
-import { useAuth } from "@/feature/auth/auth-context";
+import LoginForm from "../../feature/auth/components/login-form";
 
 const { height } = Dimensions.get("window");
 
 export default function LoginPage() {
-  const { isAuthenticated } = useAuth();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace("/");
-    }
-  }, [isAuthenticated]);
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#667eea" />
-      <LinearGradient
-        colors={["#667eea", "#764ba2"]}
-        style={{ flex: 1 }}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{
@@ -39,47 +21,9 @@ export default function LoginPage() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
-          <View style={{ alignItems: "center", marginBottom: 48 }}>
-            <Avatar.Text
-              size={72}
-              label="BT"
-              style={{
-                backgroundColor: "rgba(255,255,255,0.2)",
-                marginBottom: 24,
-              }}
-              labelStyle={{
-                color: "white",
-                fontSize: 24,
-                fontWeight: "bold",
-              }}
-            />
-            <Text
-              variant="headlineLarge"
-              style={{
-                color: "white",
-                fontWeight: "bold",
-                textAlign: "center",
-                marginBottom: 8,
-              }}
-            >
-              Welcome Back
-            </Text>
-            <Text
-              variant="titleMedium"
-              style={{
-                color: "rgba(255,255,255,0.8)",
-                textAlign: "center",
-                fontWeight: "400",
-              }}
-            >
-              Sign in to your Blotz account
-            </Text>
-          </View>
-
           <LoginForm />
         </ScrollView>
-      </LinearGradient>
+      </View>
     </>
   );
 }
