@@ -1,26 +1,25 @@
 import { signalRService } from "@/services/signalr-service";
 import signalR from "@microsoft/signalr";
-import { FC, useEffect, useState } from "react";
-import { View, Text, StyleSheet, Button } from "react-native";
+import { useEffect, useState } from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { Button } from "react-native-paper";
 
-// Define interface for message type (kept for completeness, though not used in simplified App)
+// Define interface for message type
 const receiveMessageHandler = (msg: string) => {
   console.log("[SignalR] Received message:", msg);
 };
 
-// --- Example React Native Component Usage ---
-const App: FC = () => {
-  // Added FC type for App component
+export default function SignalRConnectionTester() {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(
     null
-  ); // Type for connection state
+  );
   const [connectionStatus, setConnectionStatus] =
-    useState<string>("Disconnected"); // Type for connectionStatus state
+    useState<string>("Disconnected");
 
   useEffect(() => {
     // 1. Create the connection
     const newConnection: signalR.HubConnection =
-      signalRService.createConnection(); // Explicit type
+      signalRService.createConnection();
     setConnection(newConnection);
 
     // Handle connection state changes for UI feedback
@@ -30,15 +29,13 @@ const App: FC = () => {
 
     // 2. Start the connection
     const startConnection = async (): Promise<void> => {
-      // Explicit return type
       try {
         await newConnection.start();
         setConnectionStatus("Connected");
         newConnection.on("ReceiveMessage", receiveMessageHandler);
-        console.log("Connected to SignalR hub!"); // Added success message
+        console.log("Connected to SignalR hub!");
       } catch (error: any) {
-        // Catch error as any or Error
-        setConnectionStatus(`Error: ${(error as Error).message}`); // Type assertion for error
+        setConnectionStatus(`Error: ${(error as Error).message}`);
         console.error("Error connecting to SignalR:", error);
       }
     };
@@ -56,12 +53,12 @@ const App: FC = () => {
           })
           .catch((error: any) =>
             console.error("Error stopping SignalR connection:", error)
-          ); // Type for error
+          );
       }
     };
-  }, []); // Empty dependency array means this runs once on mount and cleans up on unmount
+  }, []);
 
-  // New function to manually invoke a test method
+  // Function to manually invoke a test method
   const sendTestMessage = async (): Promise<void> => {
     if (connection) {
       try {
@@ -80,43 +77,74 @@ const App: FC = () => {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    if (status === "Connected") return "#22c55e";
+    if (status.includes("Error")) return "#ef4444";
+    if (status === "Reconnecting...") return "#f59e0b";
+    return "#6b7280";
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>SignalR Connection Test</Text>
-      <Text style={styles.status}>Status: {connectionStatus}</Text>
+      <Text style={styles.header}>🔗 SignalR Connection Test</Text>
+      <View style={styles.statusContainer}>
+        <Text style={styles.statusLabel}>Status:</Text>
+        <Text style={[styles.status, { color: getStatusColor(connectionStatus) }]}>
+          {connectionStatus}
+        </Text>
+      </View>
       <Button
-        title="Send Test Message"
+        mode="contained"
         onPress={sendTestMessage}
         disabled={connectionStatus !== "Connected"}
-      />
+        style={[
+          styles.testButton,
+          connectionStatus !== "Connected" && styles.disabledButton,
+        ]}
+      >
+        Send Test Message
+      </Button>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#f0f2f5",
-    paddingTop: 50, // Adjust for status bar on mobile
-    alignItems: "center", // Center content horizontally
-    justifyContent: "center", // Center content vertically
+    padding: 16,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   header: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 20,
+    marginBottom: 16,
     textAlign: "center",
-    color: "#333",
+    color: "#1e293b",
+  },
+  statusContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  statusLabel: {
+    fontSize: 16,
+    color: "#475569",
+    marginRight: 8,
   },
   status: {
-    fontSize: 18, // Slightly larger for emphasis
-    marginBottom: 15,
-    textAlign: "center",
-    color: "#555",
+    fontSize: 16,
     fontWeight: "600",
   },
-  // Removed styles related to messages and input
+  testButton: {
+    backgroundColor: "#4f46e5",
+  },
+  disabledButton: {
+    backgroundColor: "#9ca3af",
+  },
 });
-
-export default App;
