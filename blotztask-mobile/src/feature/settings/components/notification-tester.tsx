@@ -1,8 +1,9 @@
 import { usePushNotificationSetup } from "@/hooks/usePushNotificationSetup";
 import { schedulePushNotification } from "@/services/notifications";
-import { Text, View, Button, StyleSheet } from "react-native";
+import { Text, View, StyleSheet } from "react-native";
+import { Button } from "react-native-paper";
 
-export default function NotificationPage() {
+export default function NotificationTester() {
   const { notification } = usePushNotificationSetup();
 
   return (
@@ -11,12 +12,14 @@ export default function NotificationPage() {
 
       <View style={styles.buttonContainer}>
         <Button
-          title="Trigger Remote Notification"
+          mode="contained"
           onPress={async () => {
             await schedulePushNotification();
           }}
-          color="#4f46e5"
-        />
+          style={styles.testButton}
+        >
+          Trigger Remote Notification
+        </Button>
       </View>
 
       <View style={styles.card}>
@@ -48,26 +51,27 @@ export default function NotificationPage() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 24,
+    padding: 16,
     backgroundColor: "#f8fafc",
-    justifyContent: "center",
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "600",
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: 16,
     color: "#1e293b",
   },
   buttonContainer: {
-    marginBottom: 32,
+    marginBottom: 24,
     alignSelf: "center",
     width: "80%",
   },
+  testButton: {
+    backgroundColor: "#4f46e5",
+  },
   card: {
     backgroundColor: "#ffffff",
-    padding: 20,
+    padding: 16,
     borderRadius: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -76,7 +80,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     marginBottom: 12,
     color: "#334155",
