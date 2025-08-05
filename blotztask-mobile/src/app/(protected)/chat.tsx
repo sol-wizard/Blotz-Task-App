@@ -125,7 +125,7 @@ export default function ChatScreen() {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View className="flex-1">
             <ScrollView
-              className="px-4 pt-4"
+              className="px-4"
               contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
               keyboardShouldPersistTaps="handled"
             >

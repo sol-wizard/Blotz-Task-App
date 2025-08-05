@@ -24,11 +24,11 @@ export default function ReturnedTasksList({
   return (
     <View className="items-start mt-2">
       {tasks.map((task) => (
-        <View className="flex-row w-full items-center justify-between">
-          <View
-            key={task.id}
-            className="flex-row items-center rounded-lg bg-white mb-3 px-3 py-2 flex-1"
-          >
+        <View
+          className="flex-row w-full items-center justify-between"
+          key={task.id}
+        >
+          <View className="flex-row items-center rounded-2xl bg-white mb-3 px-3 py-2 flex-1">
             <View className="w-[3px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
             <View className="flex-col">
               <Text className="text-base font-semibold">{task.title}</Text>
@@ -45,6 +45,7 @@ export default function ReturnedTasksList({
             mode="outlined"
             size={20}
             iconColor="#8E8E93"
+            containerColor="transparent"
             style={{
               borderColor: "#8E8E93",
             }}
