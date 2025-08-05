@@ -125,8 +125,8 @@ export default function ChatScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={100}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View className="flex-1">
+        <View className="flex-1">
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <ScrollView
               className="px-4"
               contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
@@ -140,22 +140,22 @@ export default function ChatScreen() {
                 )
               )}
             </ScrollView>
+          </TouchableWithoutFeedback>
 
-            <View className="flex-row items-center px-3 py-2 border-t border-gray-200 bg-white">
-              <TextInput
-                className="flex-1 text-base text-gray-900"
-                placeholder="Remind me 10 mins before my interview..."
-                value={text}
-                onChangeText={setText}
-                onSubmitEditing={handleSend}
-                placeholderTextColor="#aaa"
-                returnKeyType="send"
-              />
-              <IconButton icon="send" size={20} onPress={handleSend} />
-              <IconButton icon="microphone" size={20} onPress={() => {}} />
-            </View>
+          <View className="flex-row items-center px-3 py-2 border-t border-gray-200 bg-white">
+            <TextInput
+              className="flex-1 text-base text-gray-900"
+              placeholder="Remind me 10 mins before my interview..."
+              value={text}
+              onChangeText={setText}
+              onSubmitEditing={handleSend}
+              placeholderTextColor="#aaa"
+              returnKeyType="send"
+            />
+            <IconButton icon="send" size={20} onPress={handleSend} />
+            <IconButton icon="microphone" size={20} onPress={() => {}} />
           </View>
-        </TouchableWithoutFeedback>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
