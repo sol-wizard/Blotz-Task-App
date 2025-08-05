@@ -5,13 +5,13 @@ import { Checkbox } from 'react-native-paper';
 import CalendarHeader from './calendar-header';
 import NoGoalsView from './noGoalsView';
 
-interface AgendaItem extends AgendaEntry {
+interface AgendaTask extends AgendaEntry {
   name: string;
   time: string;
   checked: boolean;
 }
 
-const INITIAL_ITEMS: {[key: string]: AgendaItem[]} = {
+const INITIAL_TASKS: {[key: string]: AgendaTask[]} = {
   '2025-07-24': [
     { name: 'Team Meeting', time: '10:00am-11:00am', checked: true, height: 80, day: '2025-07-24' },
     { name: 'Swimming', time: '11:00am-11:30am', checked: false, height: 80, day: '2025-07-24' },
@@ -27,15 +27,15 @@ const INITIAL_ITEMS: {[key: string]: AgendaItem[]} = {
 export default function CalendarPage() {
 
   const [selectedDay, setSelectedDay] = useState(new Date().toISOString().split('T')[0]);
-  const [allItems, setAllItems] = useState(INITIAL_ITEMS);
-  const itemsForSelectedDay = allItems[selectedDay] || [];
+  const [allTasks, setAllTasks] = useState(INITIAL_TASKS);
+  const tasksForSelectedDay = allTasks[selectedDay] || [];
 
   const marked = useMemo(() => {
     const markedDates: { [key: string]: any } = {};
 
-    // iterate through all items to mark dates
-    for (const date in allItems) {
-      if (allItems[date] && allItems[date].length > 0) {
+    // iterate through all tasks to mark dates
+    for (const date in allTasks) {
+      if (allTasks[date] && allTasks[date].length > 0) {
         markedDates[date] = { marked: true, dotColor: '#2d4150' };
       }
     }
@@ -50,43 +50,43 @@ export default function CalendarPage() {
     };
 
     return markedDates;
-  }, [allItems, selectedDay]);
+  }, [allTasks, selectedDay]);
 
-  const toggleItemChecked = useCallback((itemToToggle: AgendaItem) => {
-    const dayItems = allItems[itemToToggle.day] || [];
-    const newDayItems = dayItems.map(item =>
-      item.name === itemToToggle.name ? { ...item, checked: !item.checked } : item
+  const toggleTaskChecked = useCallback((taskToToggle: AgendaTask) => {
+    const dayTasks = allTasks[taskToToggle.day] || [];
+    const newDayTasks = dayTasks.map(task =>
+      task.name === taskToToggle.name ? { ...task, checked: !task.checked } : task
     );
-    setAllItems(prevItems => ({
-      ...prevItems,
-      [itemToToggle.day]: newDayItems
+    setAllTasks(prevTasks => ({
+      ...prevTasks,
+      [taskToToggle.day]: newDayTasks
     }));
-  }, [allItems]);
+  }, [allTasks]);
 
-  // // Render items for a specific day
-  const renderItem = useCallback(({ item }: { item: AgendaItem }) => {
-    const agendaItem = item as AgendaItem;
+  // // Render tasks for a specific day
+  const renderTask = useCallback(({ item }: { item: AgendaTask }) => {
+    const agendaTask = item as AgendaTask;
     
     return (
       <View className="bg-white flex-row items-center px-2.5 py-2.5 mr-2.5 mt-4 rounded-lg">
         <Checkbox
-          status={agendaItem.checked ? 'checked' : 'unchecked'}
-          onPress={() => toggleItemChecked(agendaItem)}
+          status={agendaTask.checked ? 'checked' : 'unchecked'}
+          onPress={() => toggleTaskChecked(agendaTask)}
           color="#2d4150"
         />
         <View className="w-[2px] self-stretch bg-gray-200 mx-3" />
         <Text 
-          className={`text-gray-800 text-base ${agendaItem.checked ? 'line-through text-gray-400' : ''}`}
+          className={`text-gray-800 text-base ${agendaTask.checked ? 'line-through text-gray-400' : ''}`}
         >
-          {agendaItem.name}
+          {agendaTask.name}
         </Text>
         <View className="flex-1" />
         <Text className="text-gray-500 text-sm">
-          {agendaItem.time}
+          {agendaTask.time}
         </Text>
       </View>
     );
-  }, [toggleItemChecked]);
+  }, [toggleTaskChecked]);
 
   return (
     <SafeAreaView className="flex-1">
@@ -132,12 +132,12 @@ export default function CalendarPage() {
             hideKnob={true}
           /> */}
 
-        {itemsForSelectedDay.length > 0 ? (
+        {tasksForSelectedDay.length > 0 ? (
           <FlatList
             className="flex-1"
-            data={itemsForSelectedDay}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.name}
+            data={tasksForSelectedDay}
+            renderItem={renderTask}
+            keyExtractor={(task) => task.name}
           />
         ) : (
           <NoGoalsView />
