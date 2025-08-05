@@ -22,7 +22,9 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarType, setSnackbarType] = useState<"error" | "success" | "warning">("error");
+  const [snackbarType, setSnackbarType] = useState<
+    "error" | "success" | "warning"
+  >("error");
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
@@ -42,8 +44,7 @@ export default function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true);
-      console.log("Form submitted with:", data);
-      
+
       // Call the login service
       const response = await loginService({
         email: data.email,
@@ -53,8 +54,7 @@ export default function LoginForm() {
       // Store the token securely
       if (response.accessToken) {
         await SecureStore.setItemAsync(AUTH_TOKEN_KEY, response.accessToken);
-        console.log("Login successful, token stored");
-        
+
         // Navigate to protected routes
         router.replace("/(protected)");
       } else {
@@ -62,10 +62,11 @@ export default function LoginForm() {
         setSnackbarType("error");
         setSnackbarVisible(true);
       }
-      
     } catch (error) {
       console.error("Login error:", error);
-      setSnackbarMessage("Login failed. Please check your credentials and try again.");
+      setSnackbarMessage(
+        "Login failed. Please check your credentials and try again."
+      );
       setSnackbarType("error");
       setSnackbarVisible(true);
     } finally {
@@ -76,7 +77,7 @@ export default function LoginForm() {
   const handleTestAccount = () => {
     const testEmail = process.env.EXPO_PUBLIC_TEST_EMAIL;
     const testPassword = process.env.EXPO_PUBLIC_TEST_PASSWORD;
-    
+
     if (testEmail && testPassword) {
       setValue("email", testEmail);
       setValue("password", testPassword);
@@ -84,7 +85,9 @@ export default function LoginForm() {
       setSnackbarType("success");
       setSnackbarVisible(true);
     } else {
-      setSnackbarMessage("Test account credentials not configured in environment.");
+      setSnackbarMessage(
+        "Test account credentials not configured in environment."
+      );
       setSnackbarType("warning");
       setSnackbarVisible(true);
     }
@@ -93,7 +96,6 @@ export default function LoginForm() {
   return (
     <>
       <View style={{ padding: 16 }}>
-
         {/* Email Field */}
         <View style={{ marginBottom: 24 }}>
           <Text
@@ -261,7 +263,6 @@ export default function LoginForm() {
         >
           Use Test Account
         </Button>
-
       </View>
 
       {/* Snackbar */}
@@ -270,10 +271,12 @@ export default function LoginForm() {
         onDismiss={() => setSnackbarVisible(false)}
         duration={4000}
         style={{
-          backgroundColor: 
-            snackbarType === "success" ? "#10b981" : 
-            snackbarType === "warning" ? "#f59e0b" : 
-            "#ef4444",
+          backgroundColor:
+            snackbarType === "success"
+              ? "#10b981"
+              : snackbarType === "warning"
+                ? "#f59e0b"
+                : "#ef4444",
           marginBottom: 16,
           marginHorizontal: 16,
           borderRadius: 12,

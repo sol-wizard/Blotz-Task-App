@@ -18,8 +18,7 @@ export default function SettingsScreen() {
     try {
       // Remove the token from secure storage
       await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
-      console.log("User signed out, token removed");
-      
+
       // Navigate back to login
       router.replace("/(auth)/login");
     } catch (error) {
@@ -28,60 +27,56 @@ export default function SettingsScreen() {
   };
 
   return (
-      <View className="flex-1 justify-center items-center p-6">
-        <Text variant="headlineMedium" style={{ marginBottom: 16 }}>
-          Notifications & Settings
-        </Text>
+    <View className="flex-1 justify-center items-center p-6">
+      <Text variant="headlineMedium" style={{ marginBottom: 16 }}>
+        Notifications & Settings
+      </Text>
 
-        <Button
-          mode="contained"
-          onPress={() => setShowNotificationTester(!showNotificationTester)}
-          style={{ marginTop: 16 }}
-        >
-          {showNotificationTester ? "Hide" : "Show"} Notification Tester
-        </Button>
+      <Button
+        mode="contained"
+        onPress={() => setShowNotificationTester(!showNotificationTester)}
+        style={{ marginTop: 16 }}
+      >
+        {showNotificationTester ? "Hide" : "Show"} Notification Tester
+      </Button>
 
-        {showNotificationTester && (
-          <View style={{ width: "100%", marginTop: 16 }}>
-            <NotificationTester />
-          </View>
-        )}
+      {showNotificationTester && (
+        <View style={{ width: "100%", marginTop: 16 }}>
+          <NotificationTester />
+        </View>
+      )}
 
-        <Button
-          mode="contained"
-          onPress={() => setShowSignalRTester(!showSignalRTester)}
-          style={{ marginTop: 16 }}
-        >
-          {showSignalRTester ? "Hide" : "Show"} SignalR Connection Tester
-        </Button>
+      <Button
+        mode="contained"
+        onPress={() => setShowSignalRTester(!showSignalRTester)}
+        style={{ marginTop: 16 }}
+      >
+        {showSignalRTester ? "Hide" : "Show"} SignalR Connection Tester
+      </Button>
 
-        {showSignalRTester && (
-          <View style={{ width: "100%", marginTop: 16 }}>
-            <SignalRConnectionTester />
-          </View>
-        )}
+      {showSignalRTester && (
+        <View style={{ width: "100%", marginTop: 16 }}>
+          <SignalRConnectionTester />
+        </View>
+      )}
 
-        <Button
-          mode="contained"
-          onPress={() => setShowAITaskGenerator(!showAITaskGenerator)}
-          style={{ marginTop: 16 }}
-        >
-          {showAITaskGenerator ? "Hide" : "Show"} AI Task Generator
-        </Button>
+      <Button
+        mode="contained"
+        onPress={() => setShowAITaskGenerator(!showAITaskGenerator)}
+        style={{ marginTop: 16 }}
+      >
+        {showAITaskGenerator ? "Hide" : "Show"} AI Task Generator
+      </Button>
 
-        {showAITaskGenerator && (
-          <View style={{ width: "100%", marginTop: 16 }}>
-            <AITaskGenerator />
-          </View>
-        )}
+      {showAITaskGenerator && (
+        <View style={{ width: "100%", marginTop: 16 }}>
+          <AITaskGenerator />
+        </View>
+      )}
 
-        <Button 
-          mode="outlined" 
-          style={{ marginTop: 16 }}
-          onPress={handleSignOut}
-        >
-          Sign Out
-        </Button>
-      </View>
+      <Button mode="outlined" style={{ marginTop: 16 }} onPress={handleSignOut}>
+        Sign Out
+      </Button>
+    </View>
   );
 }
