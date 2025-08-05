@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Text, View } from "react-native";
-import { Checkbox } from "react-native-paper";
+import { MaterialIcons } from "@expo/vector-icons"; // Ensure you have this package installed
+import { TaskDetailDTO } from "../models/tasks";
+import { IconButton } from "react-native-paper";
 
-type Task = {
-  id: number;
-  title: string;
-};
-
-export default function ReturnedTasksList({ tasks }: { tasks: Task[] }) {
+export default function ReturnedTasksList({
+  tasks,
+}: {
+  tasks: TaskDetailDTO[];
+}) {
   const [checkedTasks, setCheckedTasks] = useState<number[]>([]);
 
   const toggleTask = (taskId: number) => {
@@ -21,19 +22,33 @@ export default function ReturnedTasksList({ tasks }: { tasks: Task[] }) {
   if (tasks.length === 0) return null;
 
   return (
-    <View className="mt-3 ml-10 bg-white rounded-xl shadow px-4 py-3 space-y-2">
+    <View className="items-start mt-2">
       {tasks.map((task) => (
-        <View key={task.id} className="flex-row items-center ">
-          <View className="border border-[#898c91] rounded-full p-0.2 my-1 bg-gray-100">
-            <Checkbox
-              status={checkedTasks.includes(task.id) ? "checked" : "unchecked"}
-              onPress={() => toggleTask(task.id)}
-              color="#3b82f6"
-              uncheckedColor="#898c91"
-            />
+        <View className="flex-row w-full items-center justify-between">
+          <View
+            key={task.id}
+            className="flex-row items-center rounded-lg bg-white mb-3 px-3 py-2 flex-1"
+          >
+            <View className="w-[3px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
+            <View className="flex-col">
+              <Text className="text-base font-semibold">{task.title}</Text>
+              <View className="flex-row my-1">
+                <MaterialIcons name="schedule" size={20} color="#AEAEB2" />
+                <Text className="text-base text-[#AEAEB2] ml-2">
+                  10:00am-11:00am
+                </Text>
+              </View>
+            </View>
           </View>
-
-          <Text className="text-gray-600 text-sm ml-3">{task.title}</Text>
+          <IconButton
+            icon="trash-can-outline"
+            mode="outlined"
+            size={20}
+            iconColor="#8E8E93"
+            style={{
+              borderColor: "#8E8E93",
+            }}
+          />
         </View>
       ))}
     </View>

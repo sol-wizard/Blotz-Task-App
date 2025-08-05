@@ -1,6 +1,8 @@
 import BotMessage from "@/feature/ai/components/bot-message";
 import UserMessage from "@/feature/ai/components/user-message";
 import { useSignalRChat } from "@/feature/ai/hooks/useSignalRChat";
+import { TaskDetailDTO } from "@/feature/ai/models/tasks";
+import { generateAiTask } from "@/feature/ai/services/ai-service";
 import React, { useCallback, useState } from "react";
 import {
   View,
@@ -18,7 +20,7 @@ type Message = {
   id: number;
   text: string;
   from: "user" | "bot";
-  tasks?: { id: number; title: string }[];
+  tasks?: TaskDetailDTO[];
 };
 
 const initialMessages: Message[] = [
@@ -33,6 +35,57 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [text, setText] = useState("");
 
+  // const handleReceive = useCallback(async (msg: string) => {
+  //   try {
+  //     const { message, tasks } = await generateAiTask(msg);
+
+  //     setMessages((prev) => [
+  //       ...prev,
+  //       {
+  //         id: prev.length + 1,
+  //         text: message,
+  //         from: "bot",
+  //         tasks: tasks,
+  //       },
+  //     ]);
+  //   } catch (error) {
+  //     console.error("Failed to generate AI task:", error);
+
+  //     setMessages((prev) => [
+  //       ...prev,
+  //       {
+  //         id: prev.length + 1,
+  //         text: "Sorry, something went wrong while generating tasks.",
+  //         from: "bot",
+  //       },
+  //     ]);
+  //   }
+  // }, []);
+
+  const sampleTasks: TaskDetailDTO[] = [
+    {
+      id: 1,
+      description:
+        "Write a detailed project proposal for the new mobile app, including scope, timeline, and budget.",
+      title: "Draft Project Proposal",
+      endTime: new Date("2025-08-06T17:00:00Z"),
+    },
+    {
+      id: 2,
+      description:
+        "Review the pull requests for the latest feature branch and provide feedback to the development team.",
+      title: "Code Review for Feature Branch",
+      endTime: new Date("2025-08-07T12:00:00Z"),
+    },
+    {
+      id: 3,
+      description:
+        "Prepare the presentation slides for next week's client meeting, focusing on the new AI-powered features.",
+      title: "Prepare Client Presentation",
+      endTime: new Date("2025-08-08T09:30:00Z"),
+    },
+  ];
+
   const handleReceive = useCallback((msg: string) => {
     setMessages((prev) => [
       ...prev,
@@ -40,6 +93,7 @@ export default function ChatScreen() {
         id: prev.length + 1,
         text: msg,
         from: "bot",
+        tasks: sampleTasks,
       },
     ]);
   }, []);
@@ -53,6 +107,7 @@ export default function ChatScreen() {
       id: messages.length + 1,
       text: text.trim(),
       from: "user",
+      tasks: sampleTasks,
     };
 
     setMessages([...messages, userMessage]);

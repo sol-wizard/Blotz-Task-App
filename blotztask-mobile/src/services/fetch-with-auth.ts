@@ -22,6 +22,7 @@ export async function fetchWithAuth(
       ...options,
       headers,
     });
+    console.log("fetchWithAuth response:", response);
 
     if (!response.ok) {
       console.error("API error:", response.status);

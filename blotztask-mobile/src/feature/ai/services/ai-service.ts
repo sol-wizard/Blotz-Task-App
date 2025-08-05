@@ -1,4 +1,5 @@
 import { fetchWithAuth } from "@/services/fetch-with-auth";
+import { TaskDetailDTO } from "../models/tasks";
 
 export const generateAiTask = async (prompt: string) => {
   const payload = {
@@ -23,13 +24,6 @@ export const generateAiTask = async (prompt: string) => {
   }
 
   const data = await result.json();
-
-  interface TaskDetailDTO {
-    id: number;
-    description: string;
-    title: string;
-    endTime: Date;
-  }
 
   const tasks = data.response.tasks.map(
     (task: TaskDetailDTO, index: number) => ({
