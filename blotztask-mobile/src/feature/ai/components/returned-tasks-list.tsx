@@ -1,24 +1,18 @@
-import React, { useState } from "react";
-import { Text, View } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons"; // Ensure you have this package installed
-import { TaskDetailDTO } from "../models/tasks";
+import React from "react";
+import { View, Text, TextInput } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 import { IconButton } from "react-native-paper";
+import { TaskDetailDTO } from "../models/task-detail-dto";
 
 export default function ReturnedTasksList({
   tasks,
+  onDeleteTask,
+  onEditTask,
 }: {
   tasks: TaskDetailDTO[];
+  onDeleteTask: (taskId: number) => void;
+  onEditTask: (taskId: number, newTitle: string) => void;
 }) {
-  const [checkedTasks, setCheckedTasks] = useState<number[]>([]);
-
-  const toggleTask = (taskId: number) => {
-    setCheckedTasks((prev) =>
-      prev.includes(taskId)
-        ? prev.filter((id) => id !== taskId)
-        : [...prev, taskId]
-    );
-  };
-
   if (tasks.length === 0) return null;
 
   return (
@@ -31,7 +25,13 @@ export default function ReturnedTasksList({
           <View className="flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1">
             <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
             <View className="flex-col">
-              <Text className="text-base font-semibold">{task.title}</Text>
+              <TextInput
+                value={task.title}
+                onChangeText={(text) => onEditTask(task.id, text)}
+                style={{ fontSize: 16, fontWeight: "600" }}
+                multiline={true}
+                scrollEnabled={false}
+              />
               <View className="flex-row my-1">
                 <MaterialIcons name="schedule" size={20} color="#AEAEB2" />
                 <Text className="text-base text-[#AEAEB2] ml-2">
@@ -40,6 +40,7 @@ export default function ReturnedTasksList({
               </View>
             </View>
           </View>
+
           <IconButton
             icon="trash-can-outline"
             mode="outlined"
@@ -49,6 +50,7 @@ export default function ReturnedTasksList({
             style={{
               borderColor: "#AEAEB2",
             }}
+            onPress={() => onDeleteTask(task.id)}
           />
         </View>
       ))}

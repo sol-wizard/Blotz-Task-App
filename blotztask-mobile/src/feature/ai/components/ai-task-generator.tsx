@@ -1,13 +1,8 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-} from "react-native";
+import { View, Text, TextInput, Pressable } from "react-native";
 import TaskSelection from "./task-selection";
 import { generateAiTask } from "../services/ai-service";
-import { TaskDetailDTO } from "../models/tasks";
+import { TaskDetailDTO } from "../models/task-detail-dto";
 import { router } from "expo-router";
 
 export default function AITaskGenerator() {
@@ -38,14 +33,37 @@ export default function AITaskGenerator() {
 
   return (
     <View style={{ backgroundColor: "#f9fafb", padding: 16, borderRadius: 12 }}>
-      <Text style={{ fontSize: 18, fontWeight: "bold", color: "#374151", marginBottom: 8, textAlign: "center" }}>
+      <Text
+        style={{
+          fontSize: 18,
+          fontWeight: "bold",
+          color: "#374151",
+          marginBottom: 8,
+          textAlign: "center",
+        }}
+      >
         ✨ AI Task Generator
       </Text>
-      <Text style={{ fontSize: 14, color: "#6b7280", textAlign: "center", marginBottom: 16 }}>
-        Describe what you want to accomplish and let AI create organized tasks for you
+      <Text
+        style={{
+          fontSize: 14,
+          color: "#6b7280",
+          textAlign: "center",
+          marginBottom: 16,
+        }}
+      >
+        Describe what you want to accomplish and let AI create organized tasks
+        for you
       </Text>
 
-      <Text style={{ fontSize: 16, fontWeight: "600", color: "#374151", marginBottom: 8 }}>
+      <Text
+        style={{
+          fontSize: 16,
+          fontWeight: "600",
+          color: "#374151",
+          marginBottom: 8,
+        }}
+      >
         What would you like to work on?
       </Text>
 
@@ -81,7 +99,14 @@ export default function AITaskGenerator() {
         }}
         disabled={!text.trim() || isLoading}
       >
-        <Text style={{ color: "#ffffff", fontSize: 16, fontWeight: "600", textAlign: "center" }}>
+        <Text
+          style={{
+            color: "#ffffff",
+            fontSize: 16,
+            fontWeight: "600",
+            textAlign: "center",
+          }}
+        >
           {isLoading ? "Generating..." : "Generate Tasks"}
         </Text>
       </Pressable>
@@ -95,7 +120,14 @@ export default function AITaskGenerator() {
           borderRadius: 8,
         }}
       >
-        <Text style={{ color: "#ffffff", fontWeight: "600", fontSize: 14, textAlign: "center" }}>
+        <Text
+          style={{
+            color: "#ffffff",
+            fontWeight: "600",
+            fontSize: 14,
+            textAlign: "center",
+          }}
+        >
           Go to chat screen
         </Text>
       </Pressable>

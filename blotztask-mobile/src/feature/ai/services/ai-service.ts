@@ -1,5 +1,5 @@
 import { fetchWithAuth } from "@/services/fetch-with-auth";
-import { TaskDetailDTO } from "../models/tasks";
+import { TaskDetailDTO } from "../models/task-detail-dto";
 
 export const generateAiTask = async (prompt: string) => {
   const payload = {

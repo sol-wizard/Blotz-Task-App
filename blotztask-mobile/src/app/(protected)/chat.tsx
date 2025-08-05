@@ -1,7 +1,8 @@
 import BotMessage from "@/feature/ai/components/bot-message";
 import UserMessage from "@/feature/ai/components/user-message";
 import { useSignalRChat } from "@/feature/ai/hooks/useSignalRChat";
-import { TaskDetailDTO } from "@/feature/ai/models/tasks";
+import { Message } from "@/feature/ai/models/message-dto";
+import { TaskDetailDTO } from "@/feature/ai/models/task-detail-dto";
 import { generateAiTask } from "@/feature/ai/services/ai-service";
 import React, { useCallback, useState } from "react";
 import {
@@ -15,13 +16,6 @@ import {
 } from "react-native";
 import { IconButton } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-type Message = {
-  id: number;
-  text: string;
-  from: "user" | "bot";
-  tasks?: TaskDetailDTO[];
-};
 
 const initialMessages: Message[] = [
   {
@@ -86,6 +80,36 @@ export default function ChatScreen() {
     },
   ];
 
+  const handleDeleteTask = (messageId: number, taskId: number) => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === messageId
+          ? { ...msg, tasks: msg.tasks?.filter((t) => t.id !== taskId) || [] }
+          : msg
+      )
+    );
+  };
+
+  const handleEditTask = (
+    messageId: number,
+    taskId: number,
+    newTitle: string
+  ) => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === messageId
+          ? {
+              ...msg,
+              tasks:
+                msg.tasks?.map((t) =>
+                  t.id === taskId ? { ...t, title: newTitle } : t
+                ) || [],
+            }
+          : msg
+      )
+    );
+  };
+
   const handleReceive = useCallback((msg: string) => {
     setMessages((prev) => [
       ...prev,
@@ -134,7 +158,15 @@ export default function ChatScreen() {
             >
               {messages.map((msg) =>
                 msg.from === "bot" ? (
-                  <BotMessage key={msg.id} text={msg.text} tasks={msg.tasks} />
+                  <BotMessage
+                    key={msg.id}
+                    text={msg.text}
+                    tasks={msg.tasks}
+                    onDeleteTask={(taskId) => handleDeleteTask(msg.id, taskId)}
+                    onEditTask={(taskId, newTitle) =>
+                      handleEditTask(msg.id, taskId, newTitle)
+                    }
+                  />
                 ) : (
                   <UserMessage key={msg.id} text={msg.text} />
                 )
