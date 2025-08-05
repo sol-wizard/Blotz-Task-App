@@ -1,107 +1,65 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { SafeAreaView, Text, View, FlatList } from 'react-native';
-import { CalendarProvider, WeekCalendar, DateData, AgendaEntry } from 'react-native-calendars';
-import { Checkbox } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView, FlatList } from 'react-native';
+import { CalendarProvider, WeekCalendar, DateData } from 'react-native-calendars';
+import { format } from 'date-fns';
 import CalendarHeader from './calendar-header';
 import NoGoalsView from './noGoalsView';
-
-interface AgendaTask extends AgendaEntry {
-  name: string;
-  time: string;
-  checked: boolean;
-}
-
-const INITIAL_TASKS: {[key: string]: AgendaTask[]} = {
-  '2025-07-24': [
-    { name: 'Team Meeting', time: '10:00am-11:00am', checked: true, height: 80, day: '2025-07-24' },
-    { name: 'Swimming', time: '11:00am-11:30am', checked: false, height: 80, day: '2025-07-24' },
-    { name: 'Grocery', time: '15:00am', checked: false, height: 80, day: '2025-07-24' },
-    { name: 'Update Portfolio', time: '15/07/2025 - 25/07/2025', checked: false, height: 80, day: '2025-07-25' },
-  ],
-  '2025-07-25': [
-    { name: 'Update Portfolio', time: '15/07/2025 - 25/07/2025', checked: false, height: 80, day: '2025-07-25' },
-    { name: 'Clean up the house', time: '', checked: false, height: 80, day: '2025-07-25' },
-  ]
-};
+import TaskCard from '../components/task-card';
+import { TaskDTO } from '../models/task-dto';
+import { fetchTasksForDate, toggleTaskCompletion } from '../services/task-service';
 
 export default function CalendarPage() {
+  const [selectedDay, setSelectedDay] = useState(new Date());
+  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDTO[]>([]);
 
-  const [selectedDay, setSelectedDay] = useState(new Date().toISOString().split('T')[0]);
-  const [allTasks, setAllTasks] = useState(INITIAL_TASKS);
-  const tasksForSelectedDay = allTasks[selectedDay] || [];
-
-  const marked = useMemo(() => {
-    const markedDates: { [key: string]: any } = {};
-
-    // iterate through all tasks to mark dates
-    for (const date in allTasks) {
-      if (allTasks[date] && allTasks[date].length > 0) {
-        markedDates[date] = { marked: true, dotColor: '#2d4150' };
-      }
-    }
-
-    // 2. Mark the currently selected date and keep any existing dot markings
-    const selectedDateMarking = markedDates[selectedDay] || {};
-    markedDates[selectedDay] = {
-      ...selectedDateMarking, 
-      selected: true,
-      disableTouchEvent: true,
-      selectedColor: '#2d4150'
+  useEffect(() => {
+    const loadTasksForDate = async () => {
+      const tasks = await fetchTasksForDate(selectedDay);
+      setTasksForSelectedDay(tasks);
     };
+    
+    loadTasksForDate();
+  }, [selectedDay]);
 
-    return markedDates;
-  }, [allTasks, selectedDay]);
+  const handleToggleTask = async (task: TaskDTO) => {
+    await toggleTaskCompletion(task.id);
 
-  const toggleTaskChecked = useCallback((taskToToggle: AgendaTask) => {
-    const dayTasks = allTasks[taskToToggle.day] || [];
-    const newDayTasks = dayTasks.map(task =>
-      task.name === taskToToggle.name ? { ...task, checked: !task.checked } : task
-    );
-    setAllTasks(prevTasks => ({
-      ...prevTasks,
-      [taskToToggle.day]: newDayTasks
-    }));
-  }, [allTasks]);
+    const updatedTasks = await fetchTasksForDate(selectedDay);
+    setTasksForSelectedDay(updatedTasks);
+  };
 
-  // // Render tasks for a specific day
-  const renderTask = useCallback(({ item }: { item: AgendaTask }) => {
-    const agendaTask = item as AgendaTask;
+  const renderTask = ({ item }: { item: TaskDTO }) => {
+    const task = item as TaskDTO;
     
     return (
-      <View className="bg-white flex-row items-center px-2.5 py-2.5 mr-2.5 mt-4 rounded-lg">
-        <Checkbox
-          status={agendaTask.checked ? 'checked' : 'unchecked'}
-          onPress={() => toggleTaskChecked(agendaTask)}
-          color="#2d4150"
-        />
-        <View className="w-[2px] self-stretch bg-gray-200 mx-3" />
-        <Text 
-          className={`text-gray-800 text-base ${agendaTask.checked ? 'line-through text-gray-400' : ''}`}
-        >
-          {agendaTask.name}
-        </Text>
-        <View className="flex-1" />
-        <Text className="text-gray-500 text-sm">
-          {agendaTask.time}
-        </Text>
-      </View>
+      <TaskCard
+        id={task.id}
+        title={task.name}
+        startTime="10:00am"
+        endTime="11:00am"
+        isCompleted={task.checked}
+        onToggleComplete={(id, completed) => {
+          handleToggleTask(task);
+        }}
+        onPress={() => {
+          console.log('Task card pressed:', task.name);
+        }}
+      />
     );
-  }, [toggleTaskChecked]);
+  };
 
   return (
     <SafeAreaView className="flex-1">
-      <CalendarHeader date={selectedDay} />
+      <CalendarHeader date={format(selectedDay, 'yyyy-MM-dd')} />
         <CalendarProvider
-          date={selectedDay}
-          onDateChanged={(date: string) => setSelectedDay(date)}
+          date={format(selectedDay, 'yyyy-MM-dd')}
+          onDateChanged={(date: string) => setSelectedDay(new Date(date))}
           showTodayButton={false}
         >
           {/* week Calenda */}
           <WeekCalendar
-            onDayPress={(day: DateData) => setSelectedDay(day.dateString)}
-            markedDates={marked}
-            // markingType={'multi-dot'}
-            current={selectedDay}
+            onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
+            current={format(selectedDay, 'yyyy-MM-dd')}
             theme={{
               selectedDayBackgroundColor: '#2d4150',
               todayTextColor: '#2d4150',
@@ -137,7 +95,7 @@ export default function CalendarPage() {
             className="flex-1"
             data={tasksForSelectedDay}
             renderItem={renderTask}
-            keyExtractor={(task) => task.name}
+            keyExtractor={(task) => task.id}
           />
         ) : (
           <NoGoalsView />
