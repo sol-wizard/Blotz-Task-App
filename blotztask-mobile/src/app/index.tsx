@@ -1,70 +1,41 @@
-import AIScreen from "@/feature/ai/page/ai-screen";
-import CalendarPage from "@/feature/calendars/calendar-screen";
-import SettingsScreen from "@/feature/settings/page/settings-screen";
-
-import { useState } from "react";
-import { BottomNavigation } from "react-native-paper";
-
-const routes = [
-  {
-    key: "calendar",
-    title: "Calendar",
-    focusedIcon: "calendar",
-    unfocusedIcon: "calendar-outline",
-  },
-  {
-    key: "ai",
-    title: "AI Tasks",
-    focusedIcon: "robot",
-    unfocusedIcon: "robot-outline",
-  },
-  {
-    key: "settings",
-    title: "Settings",
-    focusedIcon: "bell",
-    unfocusedIcon: "bell-outline",
-  },
-];
-
-const renderScene = BottomNavigation.SceneMap({
-  calendar: CalendarPage,
-  ai: AIScreen,
-  settings: SettingsScreen,
-});
+import { Redirect } from "expo-router";
+import { useEffect, useState } from "react";
+import { View, ActivityIndicator } from "react-native";
+import * as SecureStore from "expo-secure-store";
+import { AUTH_TOKEN_KEY } from "@/constants/token-key";
 
 export default function Index() {
-  // const { isLoading, isAuthenticated } = useAuth();
-  const [index, setIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // // Authentication check - redirects to login if not authenticated
-  // useEffect(() => {
-  //   if (!isLoading && !isAuthenticated) {
-  //     router.replace("/login");
-  //   }
-  // }, [isLoading, isAuthenticated]);
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
 
-  // // Show loading spinner while checking authentication
-  // if (isLoading) {
-  //   return (
-  //     <View className="flex-1 justify-center items-center">
-  //       <ActivityIndicator size="large" />
-  //       <Text variant="bodyMedium" style={{ marginTop: 16 }}>
-  //         Loading...
-  //       </Text>
-  //     </View>
-  //   );
-  // }
+  const checkAuthStatus = async () => {
+    try {
+      const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+      setIsAuthenticated(!!token);
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // // Don't render anything if not authenticated (while redirecting)
-  // if (!isAuthenticated) {
-  //   return null;
-  // }
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#667eea" />
+      </View>
+    );
+  }
 
-  return (
-    <BottomNavigation
-      navigationState={{ index, routes }}
-      onIndexChange={setIndex}
-      renderScene={renderScene}
-    />
-  );
+  if (isAuthenticated) {
+    return <Redirect href="/(protected)" />;
+  }
+
+  // Show onboarding screen for unauthenticated users
+  return <Redirect href="/onboarding" />;
 }
