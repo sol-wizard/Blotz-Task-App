@@ -3,7 +3,6 @@ import UserMessage from "@/feature/ai/components/user-message";
 import { useSignalRChat } from "@/feature/ai/hooks/useSignalRChat";
 import { Message } from "@/feature/ai/models/message-dto";
 import { TaskDetailDTO } from "@/feature/ai/models/task-detail-dto";
-import { generateAiTask } from "@/feature/ai/services/ai-service";
 import React, { useCallback, useState } from "react";
 import {
   View,

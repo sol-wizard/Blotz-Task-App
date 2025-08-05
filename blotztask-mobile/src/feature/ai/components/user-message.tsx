@@ -1,5 +1,4 @@
 import { Text, View } from "react-native";
-import { Avatar } from "react-native-paper";
 
 export default function UserMessage({ text }: { text: string }) {
   return (

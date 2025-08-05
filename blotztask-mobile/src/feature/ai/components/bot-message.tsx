@@ -1,5 +1,5 @@
 import React from "react";
-import { Task, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import ReturnedTasksList from "./returned-tasks-list";
 import { TaskDetailDTO } from "../models/task-detail-dto";
 
