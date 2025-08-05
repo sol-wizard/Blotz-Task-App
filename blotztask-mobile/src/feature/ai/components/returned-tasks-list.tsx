@@ -3,6 +3,7 @@ import { View, Text, TextInput } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { IconButton } from "react-native-paper";
 import { TaskDetailDTO } from "../models/task-detail-dto";
+import { COLORS } from "@/constants/colors";
 
 export default function ReturnedTasksList({
   tasks,
@@ -33,8 +34,12 @@ export default function ReturnedTasksList({
                 scrollEnabled={false}
               />
               <View className="flex-row my-1">
-                <MaterialIcons name="schedule" size={20} color="#AEAEB2" />
-                <Text className="text-base text-[#AEAEB2] ml-2">
+                <MaterialIcons
+                  name="schedule"
+                  size={20}
+                  color={COLORS.primary}
+                />
+                <Text className="text-base text-primary ml-2">
                   10:00am-11:00am
                 </Text>
               </View>
