@@ -12,7 +12,7 @@ export default function BotMessage({
 }) {
   return (
     <View className="flex-row items-end justify-start mb-3">
-      <View className="bg-[#F2F2F7] px-3 py-2 rounded-t-lg rounded-br-lg max-w-[80%]">
+      <View className="bg-[#F2F2F7] px-3 py-2 rounded-t-2xl rounded-br-2xl max-w-[80%]">
         <Text className="text-black text-base">{text}</Text>
         {tasks.length > 0 && <ReturnedTasksList tasks={tasks} />}
       </View>

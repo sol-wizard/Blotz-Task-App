@@ -28,8 +28,8 @@ export default function ReturnedTasksList({
           className="flex-row w-full items-center justify-between"
           key={task.id}
         >
-          <View className="flex-row items-center rounded-2xl bg-white mb-3 px-3 py-2 flex-1">
-            <View className="w-[3px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
+          <View className="flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1">
+            <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
             <View className="flex-col">
               <Text className="text-base font-semibold">{task.title}</Text>
               <View className="flex-row my-1">
@@ -47,7 +47,7 @@ export default function ReturnedTasksList({
             iconColor="#8E8E93"
             containerColor="transparent"
             style={{
-              borderColor: "#8E8E93",
+              borderColor: "#AEAEB2",
             }}
           />
         </View>
