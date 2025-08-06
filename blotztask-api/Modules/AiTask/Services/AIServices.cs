@@ -194,7 +194,7 @@ public class TaskGenerationAiService
         }
     }
 
-    private ExtractedTaskDto HandleExtractedTask(ExtractedTask? extractedTask, List<LabelDto> labels, HashSet<string> labelNames)
+    private ExtractedTaskDto HandleExtractedTask(RawExtractedTask? extractedTask, List<LabelDto> labels, HashSet<string> labelNames)
     {
         if (extractedTask is null)
             throw new ArgumentNullException(nameof(extractedTask));

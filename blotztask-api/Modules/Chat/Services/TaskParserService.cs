@@ -89,10 +89,11 @@ public class TaskParserService:ITaskParserService
 
                 try
                 {
-                    var extractedTask = JsonSerializer.Deserialize<ExtractedTask>(taskElement.GetRawText(), options);
-                    if (extractedTask != null)
+                    var rawExtractedTask = JsonSerializer.Deserialize<RawExtractedTask>(taskElement.GetRawText(), options);
+                    if (rawExtractedTask != null)
                     {
-                        tasks.Add(HandleExtractedTask(extractedTask, labels, labelNames));
+                        var task = MapRawExtractedTask(rawExtractedTask, labels, labelNames);
+                        tasks.Add(task);
                     }
                 }
                 catch (JsonException ex)
@@ -116,7 +117,7 @@ public class TaskParserService:ITaskParserService
         }
     }
 
-    private ExtractedTaskDto HandleExtractedTask(ExtractedTask? extractedTask, List<LabelDto> labels, HashSet<string> labelNames)
+    private ExtractedTaskDto MapRawExtractedTask(RawExtractedTask? extractedTask, List<LabelDto> labels, HashSet<string> labelNames)
     {
         if (extractedTask is null)
             throw new ArgumentNullException(nameof(extractedTask));

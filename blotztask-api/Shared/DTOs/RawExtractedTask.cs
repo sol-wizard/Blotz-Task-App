@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace BlotzTask.Shared.DTOs;
 
-public class ExtractedTask
+public class RawExtractedTask
 {
     [JsonPropertyName("title")]
     public string Title { get; set; }
