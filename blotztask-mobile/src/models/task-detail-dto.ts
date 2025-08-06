@@ -1,4 +1,4 @@
-import { LabelDTO } from "../../../models/label-dto";
+import { LabelDTO } from "./label-dto";
 
 export interface TaskDetailDTO {
   id: number;

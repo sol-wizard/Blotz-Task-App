@@ -1,4 +1,4 @@
-import { TaskDetailDTO } from "./task-detail-dto";
+import { TaskDetailDTO } from "@/models/task-detail-dto";
 
 export type Message = {
   id: number;

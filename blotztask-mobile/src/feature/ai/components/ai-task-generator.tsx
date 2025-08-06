@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Pressable } from "react-native";
 import TaskSelection from "./task-selection";
 import { generateAiTask } from "../services/ai-service";
-import { TaskDetailDTO } from "../models/task-detail-dto";
 import { router } from "expo-router";
+import { TaskDetailDTO } from "@/models/task-detail-dto";
 
 export default function AITaskGenerator() {
   const [text, setText] = useState("");

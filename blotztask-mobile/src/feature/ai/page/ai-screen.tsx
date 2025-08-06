@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import TaskSelection from "@/feature/ai/components/task-selection";
 import { generateAiTask } from "../services/ai-service";
-import { TaskDetailDTO } from "../models/task-detail-dto";
 import { router } from "expo-router";
+import { TaskDetailDTO } from "@/models/task-detail-dto";
 
 export default function AIScreen() {
   const [text, setText] = useState("");
