@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, FlatList, Task } from "react-native";
+import { SafeAreaView, FlatList } from "react-native";
 import {
   CalendarProvider,
   WeekCalendar,
