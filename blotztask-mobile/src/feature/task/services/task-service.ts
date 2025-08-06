@@ -1,19 +1,5 @@
 import { TaskDetailDTO } from "@/models/task-detail-dto";
 import { isSameDay } from "date-fns";
-import { Task } from "react-native";
-
-// Helper function to get dates relative to today
-const getToday = () => new Date();
-const getYesterday = () => {
-  const date = new Date();
-  date.setDate(date.getDate() - 1);
-  return date;
-};
-const getTomorrow = () => {
-  const date = new Date();
-  date.setDate(date.getDate() + 1);
-  return date;
-};
 
 // Mock data - will be replaced with API calls later
 let MOCK_TASKS: TaskDetailDTO[] = [
