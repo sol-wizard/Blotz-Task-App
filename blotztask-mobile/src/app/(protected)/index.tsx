@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import { View } from "react-native";
-import CalendarPage from "../../feature/calendars/calendar-screen";
+import CalendarPage from "../../feature/task/calendars/calendar-screen";
 import SettingsScreen from "../../feature/settings/page/settings-screen";
 
 const routes = [
