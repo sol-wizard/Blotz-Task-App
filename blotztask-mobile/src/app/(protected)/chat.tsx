@@ -1,9 +1,11 @@
 import BotMessage from "@/feature/ai/components/bot-message";
 import UserMessage from "@/feature/ai/components/user-message";
-import { useSignalRChat } from "@/feature/ai/hooks/useSignalRChat";
-import { Message } from "@/feature/ai/models/message-dto";
-import { TaskDetailDTO } from "@/feature/ai/models/task-detail-dto";
-import React, { useCallback, useState } from "react";
+import { ConversationMessage } from "@/feature/ai/models/conversation-message";
+import { ExtractedTask } from "@/feature/ai/models/extracted-task.dto";
+import { mapExtractedToTaskDetail } from "@/feature/ai/services/map-extracted-to-task-dto";
+import { signalRService } from "@/services/signalr-service";
+
+import React, { useEffect, useState } from "react";
 import {
   View,
   ScrollView,
@@ -15,127 +17,128 @@ import {
 } from "react-native";
 import { IconButton } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const initialMessages: Message[] = [
-  {
-    id: 1,
-    text: "How can I help you today?",
-    from: "bot",
-  },
-];
+import uuid from "react-native-uuid";
 
 export default function ChatScreen() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [text, setText] = useState("");
+  const [conversationId] = useState<string>(() => uuid.v4());
+  const userName = "User";
 
-  // const handleReceive = useCallback(async (msg: string) => {
-  //   try {
-  //     const { message, tasks } = await generateAiTask(msg);
-
-  //     setMessages((prev) => [
-  //       ...prev,
-  //       {
-  //         id: prev.length + 1,
-  //         text: message,
-  //         from: "bot",
-  //         tasks: tasks,
-  //       },
-  //     ]);
-  //   } catch (error) {
-  //     console.error("Failed to generate AI task:", error);
-
-  //     setMessages((prev) => [
-  //       ...prev,
-  //       {
-  //         id: prev.length + 1,
-  //         text: "Sorry, something went wrong while generating tasks.",
-  //         from: "bot",
-  //       },
-  //     ]);
-  //   }
-  // }, []);
-
-  const sampleTasks: TaskDetailDTO[] = [
+  const initialMessages: ConversationMessage[] = [
     {
-      id: 1,
-      description:
-        "Write a detailed project proposal for the new mobile app, including scope, timeline, and budget.",
-      title: "Draft Project Proposal",
-      endTime: new Date("2025-08-06T17:00:00Z"),
-    },
-    {
-      id: 2,
-      description:
-        "Review the pull requests for the latest feature branch and provide feedback to the development team.",
-      title: "Code Review for Feature Branch",
-      endTime: new Date("2025-08-07T12:00:00Z"),
-    },
-    {
-      id: 3,
-      description:
-        "Prepare the presentation slides for next week's client meeting, focusing on the new AI-powered features.",
-      title: "Prepare Client Presentation",
-      endTime: new Date("2025-08-08T09:30:00Z"),
+      content: "Hello! How can I assist you today?",
+      conversationId: conversationId,
+      isBot: true,
+      sender: "Bot",
+      timestamp: new Date().toISOString(),
     },
   ];
 
-  const handleDeleteTask = (messageId: number, taskId: number) => {
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === messageId
-          ? { ...msg, tasks: msg.tasks?.filter((t) => t.id !== taskId) || [] }
-          : msg
-      )
-    );
+  const [messages, setMessages] =
+    useState<ConversationMessage[]>(initialMessages);
+
+  const [text, setText] = useState("");
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(
+    null
+  );
+
+  const handleSend = async () => {
+    if (!text.trim()) return;
+    const userMessage: ConversationMessage = {
+      content: text.trim(),
+      conversationId: conversationId + 1,
+      isBot: false,
+      sender: userName,
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages((prev) => (prev ? [...prev, userMessage] : [userMessage]));
+    setText("");
+
+    if (connection) {
+      try {
+        await signalRService.invoke(
+          connection,
+          "SendMessage",
+          userName,
+          text.trim(),
+          conversationId
+        );
+      } catch (error: any) {
+        console.error("Error invoking SendMessage:", error);
+      }
+    } else {
+      console.warn("Cannot send message: Not connected.");
+    }
   };
 
-  const handleEditTask = (
-    messageId: number,
-    taskId: number,
-    newTitle: string
-  ) => {
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === messageId
-          ? {
-              ...msg,
-              tasks:
-                msg.tasks?.map((t) =>
-                  t.id === taskId ? { ...t, title: newTitle } : t
-                ) || [],
-            }
-          : msg
-      )
-    );
+  const receiveMessageHandler = (msg: ConversationMessage) => {
+    if (msg.sender === userName) return;
+    setMessages((prev) => (prev ? [...prev, msg] : [msg]));
+    console.log("from receiveMessageHandler:", msg);
   };
 
-  const handleReceive = useCallback((msg: string) => {
+  const receiveTasksHandler = (receivedTasks: ExtractedTask[]) => {
+    if (!receivedTasks || receivedTasks.length === 0) return;
+
+    const mappedTasks = receivedTasks.map((task) =>
+      mapExtractedToTaskDetail(task)
+    );
+
+    console.log("from receiveTasksHandler:", mappedTasks);
+
     setMessages((prev) => [
       ...prev,
       {
-        id: prev.length + 1,
-        text: msg,
-        from: "bot",
-        tasks: sampleTasks,
+        content: "Here are the tasks I generated for you :)",
+        conversationId: conversationId,
+        isBot: true,
+        sender: "Bot",
+        timestamp: new Date().toISOString(),
+        tasks: mappedTasks,
       },
     ]);
-  }, []);
+  };
 
-  const { sendMessage } = useSignalRChat(handleReceive);
+  useEffect(() => {
+    const newConnection: signalR.HubConnection =
+      signalRService.createConnection();
+    setConnection(newConnection);
 
-  const handleSend = () => {
-    if (!text.trim()) return;
-
-    const userMessage: Message = {
-      id: messages.length + 1,
-      text: text.trim(),
-      from: "user",
-      tasks: sampleTasks,
+    const startConnection = async (): Promise<void> => {
+      try {
+        await newConnection.start();
+        newConnection.on("ReceiveMessage", receiveMessageHandler);
+        newConnection.on("ReceiveTasks", receiveTasksHandler);
+        console.log("Connected to SignalR hub!");
+      } catch (error: any) {
+        console.error("Error connecting to SignalR:", error);
+      }
     };
 
-    setMessages([...messages, userMessage]);
-    sendMessage(text.trim());
-    setText("");
+    startConnection();
+
+    return () => {
+      if (newConnection) {
+        newConnection
+          .stop()
+          .then(() => {
+            console.log("SignalR Connection Stopped.");
+            newConnection.off("ReceiveMessage", receiveMessageHandler);
+            newConnection.off("ReceiveTasks", receiveTasksHandler);
+          })
+          .catch((error: any) =>
+            console.error("Error stopping SignalR connection:", error)
+          );
+      }
+    };
+  }, []);
+
+  const handleDeleteTask = (msgId: string) => {
+    console.log("Delete task:", "from message:", msgId);
+  };
+
+  const handleEditTask = (msgId: string) => {
+    console.log("Edit task:", "from message:", msgId);
   };
 
   return (
@@ -156,18 +159,18 @@ export default function ChatScreen() {
               keyboardShouldPersistTaps="handled"
             >
               {messages.map((msg) =>
-                msg.from === "bot" ? (
+                msg.isBot ? (
                   <BotMessage
-                    key={msg.id}
-                    text={msg.text}
+                    key={uuid.v4().toString()}
+                    text={msg.content}
                     tasks={msg.tasks}
-                    onDeleteTask={(taskId) => handleDeleteTask(msg.id, taskId)}
-                    onEditTask={(taskId, newTitle) =>
-                      handleEditTask(msg.id, taskId, newTitle)
+                    onDeleteTask={(taskId) =>
+                      handleDeleteTask(msg.conversationId)
                     }
+                    onEditTask={() => handleEditTask(msg.conversationId)}
                   />
                 ) : (
-                  <UserMessage key={msg.id} text={msg.text} />
+                  <UserMessage key={uuid.v4().toString()} text={msg.content} />
                 )
               )}
             </ScrollView>

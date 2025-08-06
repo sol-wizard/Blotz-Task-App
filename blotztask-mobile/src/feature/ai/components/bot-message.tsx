@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import ReturnedTasksList from "./returned-tasks-list";
-import { TaskDetailDTO } from "../models/task-detail-dto";
+import { TaskDetailDTO } from "@/models/task-detail-dto";
 
 export default function BotMessage({
   text,

@@ -2,8 +2,10 @@ import React from "react";
 import { View, Text, TextInput } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { IconButton } from "react-native-paper";
-import { TaskDetailDTO } from "../models/task-detail-dto";
+
 import { COLORS } from "@/constants/colors";
+import uuid from "react-native-uuid";
+import { TaskDetailDTO } from "@/models/task-detail-dto";
 
 export default function ReturnedTasksList({
   tasks,
@@ -21,7 +23,7 @@ export default function ReturnedTasksList({
       {tasks.map((task) => (
         <View
           className="flex-row w-full items-center justify-between"
-          key={task.id}
+          key={uuid.v4().toString()}
         >
           <View className="flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1">
             <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />

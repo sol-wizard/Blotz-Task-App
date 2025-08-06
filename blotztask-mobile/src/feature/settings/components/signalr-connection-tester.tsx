@@ -3,6 +3,7 @@ import signalR from "@microsoft/signalr";
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
+import uuid from "react-native-uuid";
 
 // Define interface for message type
 const receiveMessageHandler = (msg: string) => {
@@ -10,11 +11,14 @@ const receiveMessageHandler = (msg: string) => {
 };
 
 export default function SignalRConnectionTester() {
+  const userName = "User";
   const [connection, setConnection] = useState<signalR.HubConnection | null>(
     null
   );
   const [connectionStatus, setConnectionStatus] =
     useState<string>("Disconnected");
+
+  const [conversationId] = useState<string>(() => uuid.v4());
 
   useEffect(() => {
     // 1. Create the connection
@@ -66,7 +70,9 @@ export default function SignalRConnectionTester() {
         await signalRService.invoke(
           connection,
           "SendMessage",
-          "Hello from React Native!"
+          userName,
+          "hello",
+          conversationId
         );
         console.log("Invoked SendMessage on hub.");
       } catch (error: any) {
@@ -89,7 +95,9 @@ export default function SignalRConnectionTester() {
       <Text style={styles.header}>🔗 SignalR Connection Test</Text>
       <View style={styles.statusContainer}>
         <Text style={styles.statusLabel}>Status:</Text>
-        <Text style={[styles.status, { color: getStatusColor(connectionStatus) }]}>
+        <Text
+          style={[styles.status, { color: getStatusColor(connectionStatus) }]}
+        >
           {connectionStatus}
         </Text>
       </View>
