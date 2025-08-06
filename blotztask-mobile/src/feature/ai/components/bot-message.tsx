@@ -11,7 +11,7 @@ export default function BotMessage({
 }: {
   text: string;
   tasks?: TaskDetailDTO[];
-  onDeleteTask: (taskId: number) => void;
+  onDeleteTask: (taskId?: number) => void;
   onEditTask: (taskId: number, newTitle: string) => void;
 }) {
   return (
