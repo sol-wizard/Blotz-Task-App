@@ -1,10 +1,7 @@
-import { TaskDetailDTO } from "@/models/task-detail-dto";
+import { AiTaskDTO } from "./ai-task-dto";
 
 export interface ConversationMessage {
   content: string;
-  conversationId: string;
   isBot: boolean;
-  sender: string;
-  timestamp: string;
-  tasks?: TaskDetailDTO[];
+  tasks?: AiTaskDTO[];
 }

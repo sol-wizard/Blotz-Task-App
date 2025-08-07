@@ -1,4 +1,4 @@
-import { LabelDTO } from "../../../models/label-dto";
+import { LabelDTO } from "../../../shared/models/label-dto";
 
 export interface ExtractedTask {
   title: string;

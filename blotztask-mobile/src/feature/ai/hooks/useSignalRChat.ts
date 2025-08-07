@@ -1,89 +1,65 @@
-import { useEffect, useState, useCallback } from "react";
-import uuid from "react-native-uuid";
+import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { ConversationMessage } from "@/feature/ai/models/conversation-message";
-import { ExtractedTask } from "@/feature/ai/models/extracted-task.dto";
+import { ExtractedTask } from "@/feature/ai/models/extracted-task-dto";
 import { mapExtractedToTaskDetail } from "@/feature/ai/services/map-extracted-to-task-dto";
-import { signalRService } from "@/services/signalr-service";
-import { TaskDetailDTO } from "@/models/task-detail-dto";
+import { signalRService } from "@/shared/services/signalr-service";
+import { AiTaskDTO } from "../models/ai-task-dto";
 
 export function useSignalRChat(userName: string, conversationId: string) {
-  const initialMessages: ConversationMessage[] = [
-    {
-      content: "Hello! How can I assist you today?",
-      conversationId,
-      isBot: true,
-      sender: "Bot",
-      timestamp: new Date().toISOString(),
-    },
-  ];
-
-  const [messages, setMessages] =
-    useState<ConversationMessage[]>(initialMessages);
+  const [messages, setMessages] = useState<ConversationMessage[]>();
   const [connection, setConnection] = useState<signalR.HubConnection | null>(
     null
   );
 
-  const sendMessage = useCallback(
-    async (text: string) => {
-      if (!text.trim()) return;
+  const sendMessage = async (text: string) => {
+    if (!text.trim()) return;
 
-      const userMessage: ConversationMessage = {
-        content: text.trim(),
-        conversationId: uuid.v4().toString(),
-        isBot: false,
-        sender: userName,
-        timestamp: new Date().toISOString(),
-      };
+    const userMessage: ConversationMessage = {
+      content: text.trim(),
+      isBot: false,
+    };
 
-      setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev = []) => [...prev, userMessage]);
 
-      if (connection) {
-        try {
-          await signalRService.invoke(
-            connection,
-            "SendMessage",
-            userName,
-            text.trim(),
-            conversationId
-          );
-        } catch (error) {
-          console.error("Error invoking SendMessage:", error);
-        }
-      } else {
-        console.warn("Cannot send message: Not connected.");
+    if (connection) {
+      try {
+        await signalRService.invoke(
+          connection,
+          "SendMessage",
+          userName,
+          text.trim(),
+          conversationId
+        );
+      } catch (error) {
+        console.error("Error invoking SendMessage:", error);
       }
-    },
-    [connection, conversationId, userName]
-  );
+    } else {
+      console.warn("Cannot send message: Not connected.");
+    }
+  };
 
-  const receiveMessageHandler = useCallback(
-    (msg: ConversationMessage) => {
-      if (msg.sender === userName) return;
-      setMessages((prev) => [...prev, msg]);
-    },
-    [userName]
-  );
+  const receiveMessageHandler = (msg: ConversationMessage) => {
+    if (msg.isBot === false) return;
+    setMessages((prev = []) => [...prev, msg]);
+  };
 
-  const receiveTasksHandler = useCallback((receivedTasks: ExtractedTask[]) => {
+  const receiveTasksHandler = (receivedTasks: ExtractedTask[]) => {
     if (!receivedTasks || receivedTasks.length === 0) return;
 
-    const mappedTasks: TaskDetailDTO[] = receivedTasks.map(
+    const mappedTasks: AiTaskDTO[] = receivedTasks.map(
       mapExtractedToTaskDetail
     );
 
-    setMessages((prev) => [
+    setMessages((prev = []) => [
       ...prev,
       {
-        content: "Here are the tasks I generated for you :)",
-        conversationId: uuid.v4().toString(),
+        content: "Here are the tasks I generated for you :)", //TODO: delete after new endpoint ready. move to chat backend
         isBot: true,
-        sender: "Bot",
-        timestamp: new Date().toISOString(),
         tasks: mappedTasks,
       },
     ]);
-  }, []);
+  };
 
   useEffect(() => {
     const newConnection = signalRService.createConnection();

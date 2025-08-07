@@ -1,5 +1,18 @@
-import { TaskDetailDTO } from "@/models/task-detail-dto";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { isSameDay } from "date-fns";
+
+// Helper function to get dates relative to today
+const getToday = () => new Date();
+const getYesterday = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 1);
+  return date;
+};
+const getTomorrow = () => {
+  const date = new Date();
+  date.setDate(date.getDate() + 1);
+  return date;
+};
 
 // Mock data - will be replaced with API calls later
 let MOCK_TASKS: TaskDetailDTO[] = [
@@ -10,7 +23,7 @@ let MOCK_TASKS: TaskDetailDTO[] = [
     title: "Monthly Sales Report",
     isDone: false,
     label: { labelId: 1, name: "Work", color: "#1E90FF" },
-    endTime: new Date("2025-08-10T17:00:00Z"),
+    endTime: getToday(),
     hasTime: true,
   },
   {
@@ -20,7 +33,7 @@ let MOCK_TASKS: TaskDetailDTO[] = [
     title: "Grocery Shopping",
     isDone: true,
     label: { labelId: 2, name: "Personal", color: "#32CD32" },
-    endTime: new Date("2025-08-06T10:00:00Z"),
+    endTime: getToday(),
     hasTime: true,
   },
   {
@@ -30,7 +43,7 @@ let MOCK_TASKS: TaskDetailDTO[] = [
     title: "Product Team Meeting",
     isDone: false,
     label: { labelId: 3, name: "Meeting", color: "#FFD700" },
-    endTime: new Date("2025-08-08T14:30:00Z"),
+    endTime: getYesterday(),
     hasTime: true,
   },
   {
@@ -39,7 +52,7 @@ let MOCK_TASKS: TaskDetailDTO[] = [
     title: "Gym Membership Renewal",
     isDone: false,
     label: { labelId: 4, name: "Health", color: "#FF4500" },
-    endTime: new Date("2025-08-12T12:00:00Z"),
+    endTime: getTomorrow(),
     hasTime: false,
   },
 ];
@@ -58,33 +71,6 @@ export const toggleTaskCompletion = async (
 
   MOCK_TASKS = MOCK_TASKS.map((task) =>
     task.id === taskId ? { ...task, checked: !task.isDone } : task
-  );
-
-  return [...MOCK_TASKS];
-};
-
-export const addTask = async (
-  taskData: Omit<TaskDetailDTO, "id">
-): Promise<TaskDetailDTO[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 100));
-
-  const newTask: TaskDetailDTO = {
-    ...taskData,
-    id: Date.now() + Math.floor(Math.random() * 1000), // Simple ID generation for mock
-  };
-
-  MOCK_TASKS.push(newTask);
-  return [...MOCK_TASKS];
-};
-
-export const updateTask = async (
-  taskId: number,
-  updates: Partial<Omit<TaskDetailDTO, "id">>
-): Promise<TaskDetailDTO[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 100));
-
-  MOCK_TASKS = MOCK_TASKS.map((task) =>
-    task.id === taskId ? { ...task, ...updates } : task
   );
 
   return [...MOCK_TASKS];

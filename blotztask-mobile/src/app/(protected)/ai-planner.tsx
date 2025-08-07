@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import uuid from "react-native-uuid";
 
-export default function ChatScreen() {
+export default function AiPlannerScreen() {
   const [conversationId] = useState<string>(() => uuid.v4());
   const userName = "User";
 
@@ -26,12 +26,12 @@ export default function ChatScreen() {
     setText("");
   };
 
-  const handleDeleteTask = (taskId?: number) => {
+  const handleDeleteTask = (taskId?: string) => {
     console.log("Delete task:", taskId);
   };
 
-  const handleEditTask = (taskId: string) => {
-    console.log("Edit task:", taskId);
+  const handleEditTask = (taskId: string, newTitle: string) => {
+    console.log("Edit task:", taskId, "New title:", newTitle);
   };
 
   return (
@@ -51,19 +51,23 @@ export default function ChatScreen() {
               contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
               keyboardShouldPersistTaps="handled"
             >
-              {messages.map((msg) =>
-                msg.isBot ? (
-                  <BotMessage
-                    key={uuid.v4().toString()}
-                    text={msg.content}
-                    tasks={msg.tasks}
-                    onDeleteTask={handleDeleteTask}
-                    onEditTask={() => handleEditTask(msg.conversationId)}
-                  />
-                ) : (
-                  <UserMessage key={uuid.v4().toString()} text={msg.content} />
-                )
-              )}
+              {messages &&
+                messages.map((msg) =>
+                  msg.isBot ? (
+                    <BotMessage
+                      key={uuid.v4().toString()}
+                      text={msg.content}
+                      tasks={msg.tasks}
+                      onDeleteTask={handleDeleteTask}
+                      onEditTask={handleEditTask}
+                    />
+                  ) : (
+                    <UserMessage
+                      key={uuid.v4().toString()}
+                      text={msg.content}
+                    />
+                  )
+                )}
             </ScrollView>
           </TouchableWithoutFeedback>
 

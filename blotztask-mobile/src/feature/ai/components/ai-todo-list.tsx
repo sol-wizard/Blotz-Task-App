@@ -2,19 +2,18 @@ import React from "react";
 import { View, Text, TextInput } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { IconButton } from "react-native-paper";
-
-import { COLORS } from "@/constants/colors";
+import { COLORS } from "@/shared/constants/colors";
 import uuid from "react-native-uuid";
-import { TaskDetailDTO } from "@/models/task-detail-dto";
+import { AiTaskDTO } from "../models/ai-task-dto";
 
-export default function ReturnedTasksList({
+export default function AiToDoList({
   tasks,
   onDeleteTask,
   onEditTask,
 }: {
-  tasks: TaskDetailDTO[];
-  onDeleteTask: (taskId: number) => void;
-  onEditTask: (taskId: number, newTitle: string) => void;
+  tasks: AiTaskDTO[];
+  onDeleteTask: (taskId: string) => void;
+  onEditTask: (taskId: string, newTitle: string) => void;
 }) {
   if (tasks.length === 0) return null;
 

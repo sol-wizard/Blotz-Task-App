@@ -13,7 +13,7 @@ import {
   fetchTasksForDate,
   toggleTaskCompletion,
 } from "../services/task-service";
-import { TaskDetailDTO } from "@/models/task-detail-dto";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());

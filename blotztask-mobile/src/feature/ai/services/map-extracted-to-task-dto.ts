@@ -1,17 +1,16 @@
-import { TaskDetailDTO } from "@/models/task-detail-dto";
-import { ExtractedTask } from "../models/extracted-task.dto";
+import { ExtractedTask } from "../models/extracted-task-dto";
+import { AiTaskDTO } from "../models/ai-task-dto";
+import uuid from "react-native-uuid";
 
 export function mapExtractedToTaskDetail(
   extractedTask: ExtractedTask
-): TaskDetailDTO {
+): AiTaskDTO {
   return {
     //TODO: This is just a temporary id, we not using id for now, just to fulfill the DTO, we will need new dto for it
-    id: Date.now() + Math.floor(Math.random() * 10),
+    id: uuid.v4().toString(),
     description: extractedTask.description ?? "",
     title: extractedTask.title,
-    isDone: false,
-    label: extractedTask.label ?? { labelId: 0, name: "", color: "" },
+    isAdded: false,
     endTime: new Date(extractedTask.due_date ?? ""),
-    hasTime: false,
   };
 }
