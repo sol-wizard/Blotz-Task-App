@@ -6,7 +6,7 @@ import { mapExtractedToTaskDetail } from "@/feature/ai/services/map-extracted-to
 import { signalRService } from "@/shared/services/signalr-service";
 import { AiTaskDTO } from "../models/ai-task-dto";
 
-export function useSignalRChat(userName: string, conversationId: string) {
+export function useSignalRChat(conversationId: string) {
   const [messages, setMessages] = useState<ConversationMessage[]>();
   const [connection, setConnection] = useState<signalR.HubConnection | null>(
     null
@@ -27,7 +27,7 @@ export function useSignalRChat(userName: string, conversationId: string) {
         await signalRService.invoke(
           connection,
           "SendMessage",
-          userName,
+          "User",
           text.trim(),
           conversationId
         );
@@ -90,7 +90,7 @@ export function useSignalRChat(userName: string, conversationId: string) {
           console.error("Error stopping SignalR connection:", error)
         );
     };
-  }, [receiveMessageHandler, receiveTasksHandler]);
+  }, []);
 
   return { messages, sendMessage };
 }

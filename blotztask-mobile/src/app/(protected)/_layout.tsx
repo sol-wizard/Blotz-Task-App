@@ -5,7 +5,7 @@ export default function ProtectedLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen
-        name="chat"
+        name="ai-planner"
         options={{
           headerShown: true,
           headerShadowVisible: false,

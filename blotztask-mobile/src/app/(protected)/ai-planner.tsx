@@ -16,9 +16,7 @@ import uuid from "react-native-uuid";
 
 export default function AiPlannerScreen() {
   const [conversationId] = useState<string>(() => uuid.v4());
-  const userName = "User";
-
-  const { messages, sendMessage } = useSignalRChat(userName, conversationId);
+  const { messages, sendMessage } = useSignalRChat(conversationId);
   const [text, setText] = useState("");
 
   const handleSend = () => {
