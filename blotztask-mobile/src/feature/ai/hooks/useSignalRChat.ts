@@ -46,7 +46,6 @@ export function useSignalRChat(conversationId: string) {
 
   const receiveTasksHandler = (receivedTasks: ExtractedTask[]) => {
     if (!receivedTasks || receivedTasks.length === 0) return;
-
     const mappedTasks: AiTaskDTO[] = receivedTasks.map(
       mapExtractedToTaskDetail
     );
