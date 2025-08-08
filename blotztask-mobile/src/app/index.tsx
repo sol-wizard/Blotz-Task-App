@@ -2,7 +2,7 @@ import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import { AUTH_TOKEN_KEY } from "@/constants/token-key";
+import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);

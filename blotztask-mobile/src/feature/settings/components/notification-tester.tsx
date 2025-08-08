@@ -1,5 +1,5 @@
-import { usePushNotificationSetup } from "@/hooks/usePushNotificationSetup";
-import { schedulePushNotification } from "@/services/notifications";
+import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
+import { schedulePushNotification } from "@/shared/services/notifications";
 import { Text, View, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
 

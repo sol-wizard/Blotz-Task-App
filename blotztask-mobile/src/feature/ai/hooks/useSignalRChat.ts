@@ -1,56 +1,95 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { signalRService } from "../../../services/signalr-service";
+import { ConversationMessage } from "@/feature/ai/models/conversation-message";
+import { ExtractedTask } from "@/feature/ai/models/extracted-task-dto";
+import { mapExtractedToTaskDetail } from "@/feature/ai/services/map-extracted-to-task-dto";
+import { signalRService } from "@/shared/services/signalr-service";
+import { AiTaskDTO } from "../models/ai-task-dto";
 
-export function useSignalRChat(onReceive: (message: string) => void) {
-  const [status, setStatus] = useState<
-    "Disconnected" | "Connected" | "Reconnecting" | string
-  >("Disconnected");
-  const connectionRef = useRef<signalR.HubConnection | null>(null);
+export function useSignalRChat(conversationId: string) {
+  const [messages, setMessages] = useState<ConversationMessage[]>();
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(
+    null
+  );
 
-  useEffect(() => {
-    const connection = signalRService.createConnection();
-    connectionRef.current = connection;
+  const sendMessage = async (text: string) => {
+    if (!text.trim()) return;
 
-    connection.onclose(() => setStatus("Disconnected"));
-    connection.onreconnecting(() => setStatus("Reconnecting"));
-    connection.onreconnected(() => setStatus("Connected"));
-
-    connection.on("ReceiveMessage", onReceive);
-
-    connection
-      .start()
-      .then(() => {
-        setStatus("Connected");
-        console.log("[SignalR] Connected");
-      })
-      .catch((err) => {
-        console.error("[SignalR] Connection error:", err);
-        setStatus("Error: " + err.message);
-      });
-
-    return () => {
-      connection.stop().then(() => {
-        connection.off("ReceiveMessage", onReceive);
-        console.log("[SignalR] Disconnected");
-      });
+    const userMessage: ConversationMessage = {
+      content: text.trim(),
+      isBot: false,
     };
-  }, [onReceive]);
 
-  const sendMessage = async (message: string) => {
-    if (connectionRef.current && status === "Connected") {
+    setMessages((prev = []) => [...prev, userMessage]);
+
+    if (connection) {
       try {
         await signalRService.invoke(
-          connectionRef.current,
+          connection,
           "SendMessage",
-          message
+          "User",
+          text.trim(),
+          conversationId
         );
-        console.log("[SignalR] Sent message:", message);
-      } catch (err) {
-        console.error("[SignalR] Send failed:", err);
+      } catch (error) {
+        console.error("Error invoking SendMessage:", error);
       }
+    } else {
+      console.warn("Cannot send message: Not connected.");
     }
   };
 
-  return { status, sendMessage };
+  const receiveMessageHandler = (msg: ConversationMessage) => {
+    if (msg.isBot === false) return;
+    setMessages((prev = []) => [...prev, msg]);
+  };
+
+  const receiveTasksHandler = (receivedTasks: ExtractedTask[]) => {
+    if (!receivedTasks || receivedTasks.length === 0) return;
+    const mappedTasks: AiTaskDTO[] = receivedTasks.map(
+      mapExtractedToTaskDetail
+    );
+
+    setMessages((prev = []) => [
+      ...prev,
+      {
+        content: "Here are the tasks I generated for you :)", //TODO: delete after new endpoint ready. move to chat backend
+        isBot: true,
+        tasks: mappedTasks,
+      },
+    ]);
+  };
+
+  useEffect(() => {
+    const newConnection = signalRService.createConnection();
+    setConnection(newConnection);
+
+    const startConnection = async () => {
+      try {
+        await newConnection.start();
+        newConnection.on("ReceiveMessage", receiveMessageHandler);
+        newConnection.on("ReceiveTasks", receiveTasksHandler);
+        console.log("Connected to SignalR hub!");
+      } catch (error) {
+        console.error("Error connecting to SignalR:", error);
+      }
+    };
+
+    startConnection();
+
+    return () => {
+      newConnection
+        .stop()
+        .then(() => {
+          console.log("SignalR Connection Stopped.");
+          newConnection.off("ReceiveMessage", receiveMessageHandler);
+          newConnection.off("ReceiveTasks", receiveTasksHandler);
+        })
+        .catch((error) =>
+          console.error("Error stopping SignalR connection:", error)
+        );
+    };
+  }, []);
+
+  return { messages, sendMessage };
 }

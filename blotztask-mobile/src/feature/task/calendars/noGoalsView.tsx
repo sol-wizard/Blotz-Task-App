@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import React from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 
 export default function NoGoalsView() {
   const router = useRouter();
 
   const handleCreateNew = () => {
-    router.push('/(protected)/chat');
+    router.push("/(protected)/ai-planner");
   };
 
   return (
@@ -15,21 +15,27 @@ export default function NoGoalsView() {
         <Text className="text-6xl">🎨</Text>
       </View>
 
-      <Text className="text-xl font-bold text-zinc-800 mb-2">No Goals right now!</Text>
-      <Text className="text-base text-zinc-600 text-center mb-5">Your to do list is empty. Wanna Create new?</Text>
+      <Text className="text-xl font-bold text-zinc-800 mb-2">
+        No Goals right now!
+      </Text>
+      <Text className="text-base text-zinc-600 text-center mb-5">
+        Your to do list is empty. Wanna Create new?
+      </Text>
 
       <TouchableOpacity className="flex-row items-center bg-zinc-100 p-4 rounded-lg mb-4">
-        {/* <Ionicons name="checkmark-circle-outline" size={20} color="#2d2d2d" /> */}
-        <Text className="text-base font-semibold text-zinc-800 ml-2">Check Sample</Text>
+        <Text className="text-base font-semibold text-zinc-800 ml-2">
+          Check Sample
+        </Text>
         <Text className="ml-auto text-zinc-800">→</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         className="flex-row items-center bg-zinc-100 p-4 rounded-lg mb-4"
         onPress={handleCreateNew}
       >
-        {/* <Ionicons name="add-circle-outline" size={20} color="#2d2d2d" /> */}
-        <Text className="text-base font-semibold text-zinc-800 ml-2">Go to Chat Page</Text>
+        <Text className="text-base font-semibold text-zinc-800 ml-2">
+          Go to Chat Page
+        </Text>
         <Text className="ml-auto text-zinc-800">→</Text>
       </TouchableOpacity>
     </View>
