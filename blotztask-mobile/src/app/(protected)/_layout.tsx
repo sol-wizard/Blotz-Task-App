@@ -3,18 +3,17 @@ import { Stack } from "expo-router";
 export default function ProtectedLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen 
-        name="index" 
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen 
-        name="chat" 
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="ai-planner"
         options={{
           headerShown: true,
-          title: "AI Chat",
+          headerShadowVisible: false,
+          headerTitle: "",
           headerBackVisible: true,
-          headerBackTitle: "Back",
-        }} 
+          headerTintColor: "#8E8E93",
+          headerBackButtonDisplayMode: "minimal",
+        }}
       />
     </Stack>
   );
