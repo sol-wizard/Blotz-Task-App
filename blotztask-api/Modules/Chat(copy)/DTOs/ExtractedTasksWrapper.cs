@@ -9,5 +9,5 @@ public class ExtractedTasksWrapper
     public string? Message { get; set; }
         
     [JsonPropertyName("tasks")]
-    public List<RawExtractedTask> Tasks { get; set; } = new List<RawExtractedTask>();
+    public List<GoalPlannerRawExtractedTask> Tasks { get; set; } = new List<GoalPlannerRawExtractedTask>();
 }

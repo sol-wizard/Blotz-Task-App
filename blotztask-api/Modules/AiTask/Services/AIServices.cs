@@ -194,7 +194,7 @@ public class TaskGenerationAiService
         }
     }
 
-    private ExtractedTaskDto HandleExtractedTask(RawExtractedTask? extractedTask, List<LabelDto> labels, HashSet<string> labelNames)
+    private GoalPlannerExtractedTaskDto HandleExtractedTask(GoalPlannerRawExtractedTask? extractedTask, List<LabelDto> labels, HashSet<string> labelNames)
     {
         if (extractedTask is null)
             throw new ArgumentNullException(nameof(extractedTask));
@@ -204,7 +204,7 @@ public class TaskGenerationAiService
             extractedTask.Label = "Others";
         }
 
-        return new ExtractedTaskDto
+        return new GoalPlannerExtractedTaskDto
         {
             Title = extractedTask.Title,
             Description = extractedTask.Description,

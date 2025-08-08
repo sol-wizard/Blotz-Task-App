@@ -7,7 +7,7 @@ namespace BlotzTask.Modules.AIChat.Services;
 
 public interface ITaskParserService
 {
-    bool TryParseTasks(string response, out List<ExtractedTaskDto> tasks);
+    bool TryParseTasks(string response, out List<GoalPlannerExtractedTaskDto> tasks);
 }
 public class TaskParserService:ITaskParserService
 {
@@ -20,7 +20,7 @@ public class TaskParserService:ITaskParserService
         _labelService = labelService;
     }
 
-    public bool TryParseTasks(string response, out List<ExtractedTaskDto> tasks)
+    public bool TryParseTasks(string response, out List<GoalPlannerExtractedTaskDto> tasks)
     {
         tasks = [];
 
@@ -89,7 +89,7 @@ public class TaskParserService:ITaskParserService
 
                 try
                 {
-                    var rawExtractedTask = JsonSerializer.Deserialize<RawExtractedTask>(taskElement.GetRawText(), options);
+                    var rawExtractedTask = JsonSerializer.Deserialize<GoalPlannerRawExtractedTask>(taskElement.GetRawText(), options);
                     if (rawExtractedTask != null)
                     {
                         var task = MapRawExtractedTask(rawExtractedTask, labels, labelNames);
@@ -117,7 +117,7 @@ public class TaskParserService:ITaskParserService
         }
     }
 
-    private ExtractedTaskDto MapRawExtractedTask(RawExtractedTask? extractedTask, List<LabelDto> labels, HashSet<string> labelNames)
+    private GoalPlannerExtractedTaskDto MapRawExtractedTask(GoalPlannerRawExtractedTask? extractedTask, List<LabelDto> labels, HashSet<string> labelNames)
     {
         if (extractedTask is null)
             throw new ArgumentNullException(nameof(extractedTask));
@@ -127,7 +127,7 @@ public class TaskParserService:ITaskParserService
             extractedTask.Label = "Others";
         }
 
-        return new ExtractedTaskDto
+        return new GoalPlannerExtractedTaskDto
         {
             Title = extractedTask.Title,
             Description = extractedTask.Description,

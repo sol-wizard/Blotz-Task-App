@@ -3,7 +3,7 @@ using BlotzTask.Modules.Labels.DTOs;
 
 namespace BlotzTask.Shared.DTOs;
 
-public class ExtractedTaskDto
+public class GoalPlannerExtractedTaskDto
 {
     public string Title { get; set; }
 
@@ -11,7 +11,7 @@ public class ExtractedTaskDto
     
     public string? EndTime { get; set; }
     
-    // public bool IsValidTask { get; set; }
-    //
-    // public LabelDto Label { get; set; }
+    public bool IsValidTask { get; set; }
+
+    public LabelDto Label { get; set; }
 }

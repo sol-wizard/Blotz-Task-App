@@ -8,10 +8,10 @@ namespace BlotzTask.Modules.Chat.Services;
 
 public interface IGoalPlannerAiService
 {
-    Task<List<ExtractedTaskDto>> GenerateAiResponse(ChatHistory chatHistory);
+    Task<List<GoalPlannerExtractedTaskDto>> GenerateAiResponse(ChatHistory chatHistory);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
     Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory);
-    Task<List<ExtractedTaskDto>> ReviseGeneratedTasksAsync(List<ExtractedTaskDto> rawTasks, ChatHistory chatHistory);
+    Task<List<GoalPlannerExtractedTaskDto>> ReviseGeneratedTasksAsync(List<GoalPlannerExtractedTaskDto> rawTasks, ChatHistory chatHistory);
     Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory);
 }
 
@@ -31,7 +31,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         _taskParser = taskParser;
         _safeChatCompletionService = safeChatCompletionService;
     }
-    public async Task<List<ExtractedTaskDto>> GenerateAiResponse(
+    public async Task<List<GoalPlannerExtractedTaskDto>> GenerateAiResponse(
     ChatHistory chatHistory)
     {
         var tempHistory = new ChatHistory(chatHistory);
@@ -148,7 +148,7 @@ Consider:
         return response ?? "Can you clarify your goal a bit more?";
     }
     
-    public async Task<List<ExtractedTaskDto>> ReviseGeneratedTasksAsync(List<ExtractedTaskDto> rawTasks, ChatHistory chatHistory)
+    public async Task<List<GoalPlannerExtractedTaskDto>> ReviseGeneratedTasksAsync(List<GoalPlannerExtractedTaskDto> rawTasks, ChatHistory chatHistory)
     {
 
         string taskListText = string.Join("\n", rawTasks.Select(t => $"- {t.Description}"));
