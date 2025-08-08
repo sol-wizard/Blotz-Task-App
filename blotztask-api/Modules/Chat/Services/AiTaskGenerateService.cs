@@ -14,13 +14,13 @@ public interface IAiTaskGenerateService
     Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory);
 }
 
-public class AiTaskGenerateTaskGenerateService : IAiTaskGenerateService
+public class AiTaskGenerateService : IAiTaskGenerateService
 {
     private readonly IConversationStateService _conversationStateService;
     private readonly TaskParsingService _taskParser;
     private readonly ISafeChatCompletionService _safeChatCompletionService;
 
-    public AiTaskGenerateTaskGenerateService(
+    public AiTaskGenerateService(
         IConversationStateService conversationStateService,
         TaskParsingService taskParser,
         ISafeChatCompletionService safeChatCompletionService)
