@@ -4,7 +4,7 @@ const config = {
   API_BASE_URL: process.env.EXPO_PUBLIC_URL,
 };
 
-const SIGNALR_HUBS_CHAT = `${config.API_BASE_URL}/ai-task-chathub`;
+const SIGNALR_HUBS_CHAT = `${config.API_BASE_URL}/chatHub`;
 
 export const signalRService = {
   createConnection: () => {

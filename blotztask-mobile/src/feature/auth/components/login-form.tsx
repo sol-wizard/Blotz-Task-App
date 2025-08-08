@@ -8,7 +8,7 @@ import { z } from "zod";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { loginService } from "../services/auth-service";
-import { AUTH_TOKEN_KEY } from "../../../constants/token-key";
+import { AUTH_TOKEN_KEY } from "../../../shared/constants/token-key";
 
 // Validation schema
 const loginSchema = z.object({

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
-import { registerForPushNotificationsAsync } from "@/services/notifications";
+import { registerForPushNotificationsAsync } from "@/shared/services/notifications";
 
 export function usePushNotificationSetup() {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
