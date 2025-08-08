@@ -3,16 +3,16 @@ using BlotzTask.Modules.AIChat.Services;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.SignalR;
 
-namespace BlotzTask.Modules.AIChat;
+namespace BlotzTask.Modules.Chat;
 
 //TODO: Rename this to Goal Planner ChatHub
-public class AIChatHub : Hub
+public class ChatHub : Hub
 {
-    private readonly ILogger<AIChatHub> _logger;
+    private readonly ILogger<ChatHub> _logger;
     private readonly IGoalPlannerChatService _goalPlannerChatService;
 
-    public AIChatHub(
-        ILogger<AIChatHub> logger,
+    public ChatHub(
+        ILogger<ChatHub> logger,
         IGoalPlannerChatService goalPlannerChatService)
     {
         _logger = logger;

@@ -11,7 +11,7 @@ public class ExtractedTaskDto
     
     public string? EndTime { get; set; }
     
-    public bool IsValidTask { get; set; }
-
-    public LabelDto Label { get; set; }
+    // public bool IsValidTask { get; set; }
+    //
+    // public LabelDto Label { get; set; }
 }

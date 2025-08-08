@@ -10,12 +10,12 @@ public class RawExtractedTask
     [JsonPropertyName("description")]
     public string Description { get; set; } = "";
 
-    [JsonPropertyName("due_date")]
+    [JsonPropertyName("end_time")]
     public string? EndTime { get; set; }
     
-    [JsonPropertyName("isValidTask")]
-    public bool IsValidTask { get; set; }
-
-    [JsonPropertyName("label")]
-    public string Label { get; set; }
+    // [JsonPropertyName("isValidTask")]
+    // public bool IsValidTask { get; set; }
+    //
+    // [JsonPropertyName("label")]
+    // public string Label { get; set; }
 }

@@ -17,7 +17,6 @@ public interface IGoalPlannerAiService
 
 public class GoalPlannerAiService : IGoalPlannerAiService
 {
-    private readonly ILabelService _labelService;
     private readonly IConversationStateService _conversationStateService;
     private readonly ITaskParserService _taskParser;
     private readonly ISafeChatCompletionService _safeChatCompletionService;
@@ -28,7 +27,6 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         ITaskParserService taskParser,
         ISafeChatCompletionService safeChatCompletionService)
     {
-        _labelService = labelService;
         _conversationStateService = conversationStateService;
         _taskParser = taskParser;
         _safeChatCompletionService = safeChatCompletionService;
@@ -61,11 +59,9 @@ public class GoalPlannerAiService : IGoalPlannerAiService
     /// </returns>
     public async Task<ChatHistory> InitializeNewConversation(string conversationId)
     {
-        var labelNames = await GetLabelNamesAsync();
-
         var chatHistory = new ChatHistory();
-        chatHistory.AddSystemMessage(string.Format(GoalPlannerPrompts.SystemMessageTemplate,
-            DateTime.UtcNow, string.Join(", ", labelNames)));
+        chatHistory.AddSystemMessage(string.Format(AiTaskGeneratorPrompts.SystemMessageTemplate,
+            DateTime.UtcNow));
 
         // Setting initial state needed for goal planner AI to work properly
         _conversationStateService.SetChatHistory(conversationId, chatHistory);
@@ -180,12 +176,6 @@ Consider:
         // fallback to original if parse fails
         return rawTasks;
     }
-
-    private async Task<List<string>> GetLabelNamesAsync()
-    {
-        var labels = await _labelService.GetAllLabelsAsync();
-        return [.. labels.Select(label => label.Name)];
-    }
-
+    
 }
 
