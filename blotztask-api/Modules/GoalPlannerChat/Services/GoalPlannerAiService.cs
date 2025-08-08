@@ -1,16 +1,17 @@
 using BlotzTask.Modules.GoalPlannerChat.Constants;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
+using BlotzTask.Shared.Services;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace BlotzTask.Modules.GoalPlannerChat.Services;
 
 public interface IGoalPlannerAiService
 {
-    Task<List<GoalPlannerExtractedTaskDto>> GenerateAiResponse(ChatHistory chatHistory);
+    Task<List<GoalPlannerExtractedTaskDto>?> GenerateAiResponse(ChatHistory chatHistory);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
     Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory);
-    Task<List<GoalPlannerExtractedTaskDto>> ReviseGeneratedTasksAsync(List<GoalPlannerExtractedTaskDto> rawTasks, ChatHistory chatHistory);
+    Task<List<GoalPlannerExtractedTaskDto>?> ReviseGeneratedTasksAsync(List<GoalPlannerExtractedTaskDto>? rawTasks, ChatHistory chatHistory);
     Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory);
 }
 
@@ -18,13 +19,13 @@ public class GoalPlannerAiService : IGoalPlannerAiService
 {
     private readonly ILabelService _labelService;
     private readonly IConversationStateService _conversationStateService;
-    private readonly ITaskParserService _taskParser;
+    private readonly TaskParsingService _taskParser;
     private readonly ISafeChatCompletionService _safeChatCompletionService;
 
     public GoalPlannerAiService(
         ILabelService labelService,
         IConversationStateService conversationStateService,
-        ITaskParserService taskParser,
+        TaskParsingService taskParser,
         ISafeChatCompletionService safeChatCompletionService)
     {
         _labelService = labelService;
@@ -32,7 +33,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         _taskParser = taskParser;
         _safeChatCompletionService = safeChatCompletionService;
     }
-    public async Task<List<GoalPlannerExtractedTaskDto>> GenerateAiResponse(
+    public async Task<List<GoalPlannerExtractedTaskDto>?> GenerateAiResponse(
     ChatHistory chatHistory)
     {
         var tempHistory = new ChatHistory(chatHistory);
@@ -40,7 +41,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
 
         var answer = await _safeChatCompletionService.GetSafeContentAsync(tempHistory);
 
-        if (!string.IsNullOrEmpty(answer) && _taskParser.TryParseTasks(answer, out var tasks))
+        if (!string.IsNullOrEmpty(answer) && _taskParser.TryParseTasks(answer, out List<GoalPlannerExtractedTaskDto>? tasks))
         {
             chatHistory.AddAssistantMessage(answer);
             return tasks;
@@ -151,7 +152,7 @@ Consider:
         return response ?? "Can you clarify your goal a bit more?";
     }
     
-    public async Task<List<GoalPlannerExtractedTaskDto>> ReviseGeneratedTasksAsync(List<GoalPlannerExtractedTaskDto> rawTasks, ChatHistory chatHistory)
+    public async Task<List<GoalPlannerExtractedTaskDto>?> ReviseGeneratedTasksAsync(List<GoalPlannerExtractedTaskDto>? rawTasks, ChatHistory chatHistory)
     {
 
         string taskListText = string.Join("\n", rawTasks.Select(t => $"- {t.Description}"));
@@ -171,7 +172,7 @@ Consider:
 
         var revisionResult = await _safeChatCompletionService.GetSafeContentAsync(chatHistory);
 
-        if (!string.IsNullOrEmpty(revisionResult) && _taskParser.TryParseTasks(revisionResult, out var revisedTasks))
+        if (!string.IsNullOrEmpty(revisionResult) && _taskParser.TryParseTasks(revisionResult, out List<GoalPlannerExtractedTaskDto>? revisedTasks))
         {
             return revisedTasks;
         }

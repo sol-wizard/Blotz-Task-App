@@ -13,6 +13,7 @@ using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Services;
+using BlotzTask.Shared.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -160,8 +161,9 @@ builder.Services.AddScoped<IConversationStateService, ConversationStateService>(
 builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
 builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
 builder.Services.AddScoped<IRecurringTaskService, RecurringTaskService>();
-builder.Services.AddScoped<ITaskParserService, TaskParserService>();
 builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
+
+builder.Services.AddScoped<TaskParsingService>();
 
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();

@@ -4,23 +4,23 @@ using BlotzTask.Shared.DTOs;
 namespace BlotzTask.Modules.Chat.Services;
 public interface IGoalPlannerChatService
 {
-    Task<GoalPlanningChatResult> HandleUserMessageAsync(ConversationMessage userMessage);
+    Task<AiTaskGenerateChatResult> HandleUserMessageAsync(ConversationMessage userMessage);
 }
 
 public class GoalPlannerChatService : IGoalPlannerChatService
 {
-    private readonly IGoalPlannerAiService _goalPlannerAiService;
+    private readonly IAiTaskGenerateService _aiTaskGenerateService;
     private readonly IConversationStateService _conversationStateService;
 
     public GoalPlannerChatService(
-        IGoalPlannerAiService goalPlannerAiService,
+        IAiTaskGenerateService aiTaskGenerateService,
         IConversationStateService conversationStateService)
     {
-        _goalPlannerAiService = goalPlannerAiService;
+        _aiTaskGenerateService = aiTaskGenerateService;
         _conversationStateService = conversationStateService;
     }
 
-    public async Task<GoalPlanningChatResult> HandleUserMessageAsync(ConversationMessage userMessage)
+    public async Task<AiTaskGenerateChatResult> HandleUserMessageAsync(ConversationMessage userMessage)
     {
         var conversationId = userMessage.ConversationId;
 
@@ -32,27 +32,27 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         // If there's no chathistory, create a new converstaion
         if (!_conversationStateService.TryGetChatHistory(conversationId, out var chatHistory))
         {
-            chatHistory = await _goalPlannerAiService.InitializeNewConversation(conversationId);
+            chatHistory = await _aiTaskGenerateService.InitializeNewConversation(conversationId);
             _conversationStateService.SetChatHistory(conversationId, chatHistory);
         }
 
         chatHistory.AddUserMessage(userMessage.Content);
         
-        var isReady = await _goalPlannerAiService.IsReadyToGeneratePlanAsync(chatHistory);
+        var isReady = await _aiTaskGenerateService.IsReadyToGeneratePlanAsync(chatHistory);
 
         string botContent;
-        List<GoalPlannerExtractedTaskDto>? tasks = null;
+        List<ExtractedTaskDto>? tasks = null;
         
         if (!isReady)
         {
-            botContent = await _goalPlannerAiService.GenerateClarifyingQuestionAsync(chatHistory);
+            botContent = await _aiTaskGenerateService.GenerateClarifyingQuestionAsync(chatHistory);
         }
         else
         {
-            var aiResponseTasks = await _goalPlannerAiService.GenerateAiResponse(chatHistory);
+            var aiResponseTasks = await _aiTaskGenerateService.GenerateAiResponse(chatHistory);
             if (aiResponseTasks != null && aiResponseTasks.Count > 0)
             {
-                var revisedTasks = await _goalPlannerAiService.ReviseGeneratedTasksAsync(aiResponseTasks, chatHistory);
+                var revisedTasks = await _aiTaskGenerateService.ReviseGeneratedTasksAsync(aiResponseTasks, chatHistory);
 
                 tasks = revisedTasks;
                 botContent = "If you're happy with these tasks, you can type **end this** to end the conversation.";
@@ -64,7 +64,7 @@ public class GoalPlannerChatService : IGoalPlannerChatService
             
         }
 
-        return new GoalPlanningChatResult
+        return new AiTaskGenerateChatResult
         {
             BotMessage = new ConversationMessage
             {
@@ -79,11 +79,11 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         };
     }
 
-    private GoalPlanningChatResult EndConversation(string conversationId)
+    private AiTaskGenerateChatResult EndConversation(string conversationId)
     {
         _conversationStateService.RemoveConversation(conversationId);
 
-        return new GoalPlanningChatResult
+        return new AiTaskGenerateChatResult
         {
             BotMessage = new ConversationMessage
             {

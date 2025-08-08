@@ -1,37 +1,35 @@
-using BlotzTask.Modules.Chat.Constants;
-using BlotzTask.Modules.Chat.DTOs;
-using BlotzTask.Modules.Labels.Services;
+using BlotzTask.Modules.Chat.Constants; using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
+using BlotzTask.Shared.Services;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace BlotzTask.Modules.Chat.Services;
 
-public interface IGoalPlannerAiService
+public interface IAiTaskGenerateService
 {
-    Task<List<GoalPlannerExtractedTaskDto>> GenerateAiResponse(ChatHistory chatHistory);
+    Task<List<ExtractedTaskDto>?> GenerateAiResponse(ChatHistory chatHistory);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
     Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory);
-    Task<List<GoalPlannerExtractedTaskDto>> ReviseGeneratedTasksAsync(List<GoalPlannerExtractedTaskDto> rawTasks, ChatHistory chatHistory);
+    Task<List<ExtractedTaskDto>?> ReviseGeneratedTasksAsync(List<ExtractedTaskDto>? rawTasks, ChatHistory chatHistory);
     Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory);
 }
 
-public class GoalPlannerAiService : IGoalPlannerAiService
+public class AiTaskGenerateTaskGenerateService : IAiTaskGenerateService
 {
     private readonly IConversationStateService _conversationStateService;
-    private readonly ITaskParserService _taskParser;
+    private readonly TaskParsingService _taskParser;
     private readonly ISafeChatCompletionService _safeChatCompletionService;
 
-    public GoalPlannerAiService(
-        ILabelService labelService,
+    public AiTaskGenerateTaskGenerateService(
         IConversationStateService conversationStateService,
-        ITaskParserService taskParser,
+        TaskParsingService taskParser,
         ISafeChatCompletionService safeChatCompletionService)
     {
         _conversationStateService = conversationStateService;
         _taskParser = taskParser;
         _safeChatCompletionService = safeChatCompletionService;
     }
-    public async Task<List<GoalPlannerExtractedTaskDto>> GenerateAiResponse(
+    public async Task<List<ExtractedTaskDto>?> GenerateAiResponse(
     ChatHistory chatHistory)
     {
         var tempHistory = new ChatHistory(chatHistory);
@@ -39,7 +37,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
 
         var answer = await _safeChatCompletionService.GetSafeContentAsync(tempHistory);
 
-        if (!string.IsNullOrEmpty(answer) && _taskParser.TryParseTasks(answer, out var tasks))
+        if (!string.IsNullOrEmpty(answer) && _taskParser.TryParseTasks(answer, out List<ExtractedTaskDto>? tasks))
         {
             chatHistory.AddAssistantMessage(answer);
             return tasks;
@@ -57,7 +55,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
     /// <returns>
     /// A <see cref="ChatHistory"/> object containing the initialized system message.
     /// </returns>
-    public async Task<ChatHistory> InitializeNewConversation(string conversationId)
+    public Task<ChatHistory> InitializeNewConversation(string conversationId)
     {
         var chatHistory = new ChatHistory();
         chatHistory.AddSystemMessage(string.Format(AiTaskGeneratorPrompts.SystemMessageTemplate,
@@ -66,7 +64,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         // Setting initial state needed for goal planner AI to work properly
         _conversationStateService.SetChatHistory(conversationId, chatHistory);
 
-        return chatHistory;
+        return Task.FromResult(chatHistory);
     }
 
     /// <summary>
@@ -148,27 +146,29 @@ Consider:
         return response ?? "Can you clarify your goal a bit more?";
     }
     
-    public async Task<List<GoalPlannerExtractedTaskDto>> ReviseGeneratedTasksAsync(List<GoalPlannerExtractedTaskDto> rawTasks, ChatHistory chatHistory)
+    public async Task<List<ExtractedTaskDto>?> ReviseGeneratedTasksAsync(List<ExtractedTaskDto>? rawTasks, ChatHistory chatHistory)
     {
+        if (rawTasks != null)
+        {
+            string taskListText = string.Join("\n", rawTasks.Select(t => $"- {t.Description}"));
 
-        string taskListText = string.Join("\n", rawTasks.Select(t => $"- {t.Description}"));
+            chatHistory.AddSystemMessage($"""
+                                          You previously generated the following tasks based on the user's goal:
+                                          {taskListText}
 
-        chatHistory.AddSystemMessage($"""
-                                      You previously generated the following tasks based on the user's goal:
-                                      {taskListText}
+                                          Please review and revise this task list if:
+                                          - The tasks are too generic or vague
+                                          - Important steps are missing
+                                          - Tasks are not actionable or clear
 
-                                      Please review and revise this task list if:
-                                      - The tasks are too generic or vague
-                                      - Important steps are missing
-                                      - Tasks are not actionable or clear
-
-                                      If everything is fine, simply re-list them.
-                                      Return the improved tasks in the required JSON format.
-                                      """);
+                                          If everything is fine, simply re-list them.
+                                          Return the improved tasks in the required JSON format.
+                                          """);
+        }
 
         var revisionResult = await _safeChatCompletionService.GetSafeContentAsync(chatHistory);
 
-        if (!string.IsNullOrEmpty(revisionResult) && _taskParser.TryParseTasks(revisionResult, out var revisedTasks))
+        if (!string.IsNullOrEmpty(revisionResult) && _taskParser.TryParseTasks(revisionResult, out List<ExtractedTaskDto>? revisedTasks))
         {
             return revisedTasks;
         }
