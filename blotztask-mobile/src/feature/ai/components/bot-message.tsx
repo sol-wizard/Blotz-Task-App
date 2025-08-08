@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import AiToDoList from "./ai-todo-list";
+import AiTaskList from "./ai-task-list";
 import { AiTaskDTO } from "../models/ai-task-dto";
 
 export default function BotMessage({
@@ -19,7 +19,7 @@ export default function BotMessage({
       <View className="bg-[#F2F2F7] px-3 py-2 rounded-t-2xl rounded-br-2xl max-w-[80%]">
         <Text className="text-black text-base">{text}</Text>
         {tasks.length > 0 && (
-          <AiToDoList
+          <AiTaskList
             tasks={tasks}
             onDeleteTask={onDeleteTask}
             onEditTask={onEditTask}

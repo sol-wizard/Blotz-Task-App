@@ -6,7 +6,7 @@ import { COLORS } from "@/shared/constants/colors";
 import uuid from "react-native-uuid";
 import { AiTaskDTO } from "../models/ai-task-dto";
 
-export default function AiToDoList({
+export default function AiTaskList({
   tasks,
   onDeleteTask,
   onEditTask,
