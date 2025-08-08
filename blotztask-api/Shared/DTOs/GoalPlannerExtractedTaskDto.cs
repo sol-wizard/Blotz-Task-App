@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using BlotzTask.Modules.Labels.DTOs;
 
 namespace BlotzTask.Shared.DTOs;

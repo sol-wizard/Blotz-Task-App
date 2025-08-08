@@ -1,6 +1,6 @@
 namespace BlotzTask.Shared.DTOs;
 
-public class ExtractedTskDto
+public class ExtractedTaskDto
 {
     public string Title { get; set; }
 

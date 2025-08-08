@@ -1,4 +1,4 @@
-using BlotzTask.Modules.Chat.DTOs;
+using BlotzTask.Modules.AiTask.DTOs;
 using BlotzTask.Modules.Labels.DTOs;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;

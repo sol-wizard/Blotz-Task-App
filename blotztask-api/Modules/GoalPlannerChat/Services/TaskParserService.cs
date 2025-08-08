@@ -3,7 +3,7 @@ using BlotzTask.Modules.Labels.DTOs;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
 
-namespace BlotzTask.Modules.AIChat.Services;
+namespace BlotzTask.Modules.GoalPlannerChat.Services;
 
 public interface ITaskParserService
 {

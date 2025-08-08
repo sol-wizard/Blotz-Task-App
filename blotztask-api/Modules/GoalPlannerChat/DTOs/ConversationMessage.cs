@@ -1,4 +1,4 @@
-namespace BlotzTask.Modules.AIChat.DTOs;
+namespace BlotzTask.Modules.GoalPlannerChat.Dtos;
 
 // This class is strongly typed to client end (frontend) expected messaging object
 // Any changes of structure in this class need to also change in the client end (ConversationMessage)

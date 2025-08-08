@@ -1,9 +1,9 @@
-using BlotzTask.Modules.AIChat.Constants;
+using BlotzTask.Modules.GoalPlannerChat.Constants;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace BlotzTask.Modules.AIChat.Services;
+namespace BlotzTask.Modules.GoalPlannerChat.Services;
 
 public interface IGoalPlannerAiService
 {

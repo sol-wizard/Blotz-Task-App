@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using BlotzTask.Shared.DTOs;
 
-namespace BlotzTask.Modules.Chat.DTOs;
+namespace BlotzTask.Modules.AiTask.DTOs;
 
 public class ExtractedTasksWrapper
 {

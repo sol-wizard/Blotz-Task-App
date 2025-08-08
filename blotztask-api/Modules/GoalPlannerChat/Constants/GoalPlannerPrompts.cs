@@ -1,4 +1,4 @@
-namespace BlotzTask.Modules.AIChat.Constants;
+namespace BlotzTask.Modules.GoalPlannerChat.Constants;
 
 public static class GoalPlannerPrompts
 {

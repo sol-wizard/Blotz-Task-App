@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace BlotzTask.Modules.AIChat.Services;
+namespace BlotzTask.Modules.GoalPlannerChat.Services;
 
 public interface IConversationStateService
 {
