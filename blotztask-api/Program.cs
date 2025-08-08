@@ -155,7 +155,7 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddScoped<IConversationStateService, ConversationStateServiceV2>();
+builder.Services.AddScoped<IConversationStateService, ConversationStateService>();
 builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
 builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
 builder.Services.AddScoped<IRecurringTaskService, RecurringTaskService>();
