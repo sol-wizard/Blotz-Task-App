@@ -21,7 +21,17 @@ export function RHFTextInput({
           label={label}
           value={value}
           onChangeText={onChange}
-          className={className}
+          mode="flat"
+          style={{
+            backgroundColor: "#F9FAFB",
+            borderRadius: 16,
+          }}
+          outlineStyle={{
+            borderRadius: 16,
+          }}
+          theme={{
+            roundness: 16,
+          }}
         />
       )}
     />

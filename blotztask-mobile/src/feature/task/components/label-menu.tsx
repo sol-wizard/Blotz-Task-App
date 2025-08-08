@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { View } from "react-native";
-import { Menu, Button, Provider } from "react-native-paper";
+import { Menu, Button } from "react-native-paper";
 import { Controller } from "react-hook-form";
 
-// Label 选项
 const LABEL_OPTIONS = [
   { id: 1, label: "Work" },
   { id: 2, label: "Study" },
@@ -24,8 +22,11 @@ export function LabelMenu({ control }: { control: any }) {
           anchor={
             <Button
               mode="outlined"
+              icon="label-outline"
               onPress={() => setVisible(true)}
-              style={{ borderRadius: 12 }}
+              style={{ borderRadius: 12, borderColor: "#E5E7EB" }}
+              contentStyle={{ height: 44 }}
+              labelStyle={{ fontSize: 14, color: "#444964" }}
             >
               {LABEL_OPTIONS.find((opt) => opt.id === value)?.label ||
                 "Add Label"}

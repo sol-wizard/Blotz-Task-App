@@ -17,33 +17,40 @@ export function RepeatMenu({ control }: { control: any }) {
     <Controller
       control={control}
       name="repeat"
-      render={({ field: { value, onChange } }) => (
-        <Menu
-          visible={visible}
-          onDismiss={() => setVisible(false)}
-          anchor={
-            <Button
-              mode="outlined"
-              onPress={() => setVisible(true)}
-              style={{ borderRadius: 12 }}
-            >
-              {REPEAT_OPTIONS.find((opt) => opt.value === value)?.label ||
-                "Repeat"}
-            </Button>
-          }
-        >
-          {REPEAT_OPTIONS.map((opt) => (
-            <Menu.Item
-              key={opt.value}
-              onPress={() => {
-                onChange(opt.value);
-                setVisible(false);
-              }}
-              title={opt.label}
-            />
-          ))}
-        </Menu>
-      )}
+      render={({ field: { value, onChange } }) => {
+        const current =
+          REPEAT_OPTIONS.find((opt) => opt.value === value)?.label || "Repeat";
+
+        return (
+          <Menu
+            visible={visible}
+            onDismiss={() => setVisible(false)}
+            anchor={
+              <Button
+                mode="outlined"
+                icon="repeat"
+                onPress={() => setVisible(true)}
+                style={{ borderRadius: 12, borderColor: "#E5E7EB" }}
+                contentStyle={{ height: 44 }}
+                labelStyle={{ fontSize: 14, color: "#444964" }}
+              >
+                {current}
+              </Button>
+            }
+          >
+            {REPEAT_OPTIONS.map((opt) => (
+              <Menu.Item
+                key={opt.value}
+                title={opt.label}
+                onPress={() => {
+                  onChange(opt.value);
+                  setVisible(false);
+                }}
+              />
+            ))}
+          </Menu>
+        );
+      }}
     />
   );
 }
