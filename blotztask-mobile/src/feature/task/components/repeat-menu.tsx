@@ -1,0 +1,49 @@
+import React, { useState } from "react";
+
+import { Menu, Button } from "react-native-paper";
+import { Controller } from "react-hook-form";
+
+const REPEAT_OPTIONS = [
+  { value: "none", label: "No Repeat" },
+  { value: "daily", label: "Daily" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+];
+
+export function RepeatMenu({ control }: { control: any }) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <Controller
+      control={control}
+      name="repeat"
+      render={({ field: { value, onChange } }) => (
+        <Menu
+          visible={visible}
+          onDismiss={() => setVisible(false)}
+          anchor={
+            <Button
+              mode="outlined"
+              onPress={() => setVisible(true)}
+              style={{ borderRadius: 12 }}
+            >
+              {REPEAT_OPTIONS.find((opt) => opt.value === value)?.label ||
+                "Repeat"}
+            </Button>
+          }
+        >
+          {REPEAT_OPTIONS.map((opt) => (
+            <Menu.Item
+              key={opt.value}
+              onPress={() => {
+                onChange(opt.value);
+                setVisible(false);
+              }}
+              title={opt.label}
+            />
+          ))}
+        </Menu>
+      )}
+    />
+  );
+}
