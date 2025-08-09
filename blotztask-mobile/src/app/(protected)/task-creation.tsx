@@ -41,7 +41,7 @@ export default function TaskCreationScreen() {
   return (
     <FormProvider {...form}>
       <View className="flex-1 bg-white px-5 pt-10">
-        <Text className="text-3xl font-extrabold text-center mb-6">
+        <Text className="text-3xl font-extrabold text-center mb-6 pt-10">
           Create New Task
         </Text>
 
