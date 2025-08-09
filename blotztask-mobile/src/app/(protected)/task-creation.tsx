@@ -3,6 +3,7 @@ import { RepeatMenu } from "@/feature/task/components/repeat-menu";
 import { RHFTextInput } from "@/feature/task/components/rhf-text-input";
 import taskCreationSchema from "@/feature/task/services/task-form-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
@@ -11,6 +12,9 @@ import z from "zod";
 type TaskFormField = z.infer<typeof taskCreationSchema>;
 
 export default function TaskCreationScreen() {
+  const handleAiChat = () => {
+    router.push("/(protected)/ai-planner");
+  };
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskCreationSchema),
     mode: "onSubmit",
@@ -63,7 +67,7 @@ export default function TaskCreationScreen() {
           <Button
             mode="outlined"
             icon="flash"
-            onPress={() => console.log("AI Generate")}
+            onPress={handleAiChat}
             style={{ borderRadius: 14, borderColor: "#E5E7EB" }}
             contentStyle={{ height: 48, paddingHorizontal: 14 }}
             labelStyle={{ fontSize: 14, color: "#444964" }}

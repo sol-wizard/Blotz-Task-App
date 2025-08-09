@@ -5,10 +5,6 @@ import { useRouter } from "expo-router";
 export default function NoGoalsView() {
   const router = useRouter();
 
-  const handleAiChat = () => {
-    router.push("/(protected)/ai-planner");
-  };
-
   const handleCreateNewTask = () => {
     router.push("/(protected)/task-creation");
   };
@@ -29,16 +25,6 @@ export default function NoGoalsView() {
       <TouchableOpacity className="flex-row items-center bg-zinc-100 p-4 rounded-lg mb-4">
         <Text className="text-base font-semibold text-zinc-800 ml-2">
           Check Sample
-        </Text>
-        <Text className="ml-auto text-zinc-800">→</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        className="flex-row items-center bg-zinc-100 p-4 rounded-lg mb-4"
-        onPress={handleAiChat}
-      >
-        <Text className="text-base font-semibold text-zinc-800 ml-2">
-          Go to Chat Page
         </Text>
         <Text className="ml-auto text-zinc-800">→</Text>
       </TouchableOpacity>
