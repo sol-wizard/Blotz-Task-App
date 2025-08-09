@@ -7,10 +7,14 @@ import NoGoalsView from './noGoalsView';
 import TaskCard from '../components/task-card';
 import { TaskDTO } from '../models/task-dto';
 import { fetchTasksForDate, toggleTaskCompletion } from '../services/task-service';
+import CalendarBottomSheet from './calendar-bottomsheet';
+import { Button } from 'react-native-paper';
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDTO[]>([]);
+  const [selectedTask, setSelectedTask] = useState<TaskDTO | undefined>(undefined);
+  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -28,6 +32,18 @@ export default function CalendarPage() {
     setTasksForSelectedDay(updatedTasks);
   };
 
+  const handleTaskPress = (task: TaskDTO) => {
+    console.log('Task pressed:', task.name);
+    setSelectedTask(task);
+    setIsBottomSheetVisible(true);
+    console.log('Bottom sheet should be visible now');
+  };
+
+  const handleBottomSheetClose = () => {
+    setIsBottomSheetVisible(false);
+    setSelectedTask(undefined);
+  };
+
   const renderTask = ({ item }: { item: TaskDTO }) => {
     const task = item as TaskDTO;
     
@@ -42,15 +58,16 @@ export default function CalendarPage() {
           handleToggleTask(task);
         }}
         onPress={() => {
-          console.log('Task card pressed:', task.name);
+          handleTaskPress(task);
         }}
       />
     );
   };
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView style={{ flex: 1 }}>
       <CalendarHeader date={format(selectedDay, 'yyyy-MM-dd')} />
+      
         <CalendarProvider
           date={format(selectedDay, 'yyyy-MM-dd')}
           onDateChanged={(date: string) => setSelectedDay(new Date(date))}
@@ -101,7 +118,11 @@ export default function CalendarPage() {
           <NoGoalsView />
         )}
         </CalendarProvider>
-
+        <CalendarBottomSheet 
+          task={selectedTask}
+          isVisible={isBottomSheetVisible}
+          onClose={handleBottomSheetClose}
+        />
     </SafeAreaView>
   );
 }
