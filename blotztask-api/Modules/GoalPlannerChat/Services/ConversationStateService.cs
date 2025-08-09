@@ -1,8 +1,7 @@
 using System.Collections.Concurrent;
-using BlotzTask.Modules.Chat.DTOs;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace BlotzTask.Modules.Chat.Services;
+namespace BlotzTask.Modules.GoalPlannerChat.Services;
 
 public interface IConversationStateService
 {
@@ -10,8 +9,8 @@ public interface IConversationStateService
     void SetChatHistory(string conversationId, ChatHistory chatHistory);
     void RemoveConversation(string conversationId);
 }
-//TODO: Rename this service to "ConversationStateService" without V2
-public class ConversationStateService : IConversationStateService
+
+public class ConversationStateService: IConversationStateService
 {
     private static readonly ConcurrentDictionary<string, ChatHistory> ConversationHistories = new();
     private static readonly ConcurrentDictionary<string, bool> ConversationCompletionStatus = new();

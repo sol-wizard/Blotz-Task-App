@@ -1,4 +1,4 @@
-using BlotzTask.Modules.Chat.DTOs;
+using BlotzTask.Modules.AiTask.DTOs;
 using BlotzTask.Modules.Labels.DTOs;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
@@ -194,7 +194,7 @@ public class TaskGenerationAiService
         }
     }
 
-    private ExtractedTaskDto HandleExtractedTask(ExtractedTask? extractedTask, List<LabelDto> labels, HashSet<string> labelNames)
+    private GoalPlannerExtractedTaskDto HandleExtractedTask(GoalPlannerRawExtractedTask? extractedTask, List<LabelDto> labels, HashSet<string> labelNames)
     {
         if (extractedTask is null)
             throw new ArgumentNullException(nameof(extractedTask));
@@ -204,7 +204,7 @@ public class TaskGenerationAiService
             extractedTask.Label = "Others";
         }
 
-        return new ExtractedTaskDto
+        return new GoalPlannerExtractedTaskDto
         {
             Title = extractedTask.Title,
             Description = extractedTask.Description,
