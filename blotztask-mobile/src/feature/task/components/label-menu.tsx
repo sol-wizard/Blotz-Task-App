@@ -20,7 +20,6 @@ export function LabelMenu({ control }: { control: any }) {
           visible={visible}
           onDismiss={() => setVisible(false)}
           anchorPosition="bottom"
-          contentStyle={{ marginTop: 6, borderRadius: 12 }}
           anchor={
             <Button
               mode="outlined"
@@ -43,7 +42,6 @@ export function LabelMenu({ control }: { control: any }) {
                 setVisible(false);
               }}
               title={opt.label}
-              leadingIcon={value === opt.id ? "check" : undefined}
             />
           ))}
         </Menu>
