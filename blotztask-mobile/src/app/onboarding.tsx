@@ -1,7 +1,8 @@
 import React from "react";
-import { View, StatusBar, Image } from "react-native";
+import { View, StatusBar } from "react-native";
 import { Button } from "react-native-paper";
 import { useRouter } from "expo-router";
+import LottieView from "lottie-react-native";
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -22,15 +23,13 @@ export default function OnboardingScreen() {
           paddingHorizontal: 40,
         }}
       >
-          {/* Logo/Brand */}
+          {/* Onboarding Animation */}
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <Image
-              source={require("../../assets/images/blotz-logo.png")}
-              style={{
-                width: 200,
-                height: 200,
-                resizeMode: "contain",
-              }}
+            <LottieView
+              source={require("../../assets/images/onboarding.json")}
+              autoPlay
+              loop
+              style={{ width: 240, height: 240 }}
             />
           </View>
 
