@@ -25,6 +25,7 @@ export function RepeatMenu({ control }: { control: any }) {
           <Menu
             visible={visible}
             onDismiss={() => setVisible(false)}
+            anchorPosition="bottom"
             anchor={
               <Button
                 mode="outlined"
