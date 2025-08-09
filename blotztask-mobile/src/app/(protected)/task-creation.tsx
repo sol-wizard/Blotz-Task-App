@@ -1,21 +1,22 @@
 import { LabelMenu } from "@/feature/task/components/label-menu";
 import { RepeatMenu } from "@/feature/task/components/repeat-menu";
 import { RHFTextInput } from "@/feature/task/components/rhf-text-input";
-import taskCreationSchema from "@/feature/task/services/task-form-schema";
+import AddTaskFormField, {
+  taskCreationSchema,
+} from "@/feature/task/services/task-form-schema";
+import { addTaskItem } from "@/feature/task/services/task-service";
+import { toAddTaskItemDTO } from "@/feature/task/services/util/util";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
-import z from "zod";
-
-type TaskFormField = z.infer<typeof taskCreationSchema>;
 
 export default function TaskCreationScreen() {
   const handleAiChat = () => {
     router.push("/(protected)/ai-planner");
   };
-  const form = useForm<TaskFormField>({
+  const form = useForm<AddTaskFormField>({
     resolver: zodResolver(taskCreationSchema),
     mode: "onSubmit",
     defaultValues: {
@@ -27,15 +28,22 @@ export default function TaskCreationScreen() {
     },
   });
 
-  const handleFormSubmit = (data: any) => {
-    console.log(data);
-    form.reset({
-      title: "",
-      description: "",
-      endTime: null,
-      repeat: "none",
-      labelId: null,
-    });
+  const handleFormSubmit = async (data: any) => {
+    console.log("Submitting task:", data);
+    try {
+      const dto = toAddTaskItemDTO(data);
+      console.log("Converted DTO:", dto);
+      await addTaskItem(dto);
+      form.reset({
+        title: "",
+        description: "",
+        endTime: null,
+        repeat: "none",
+        labelId: null,
+      });
+    } catch (error) {
+      console.error("Error adding action:", error);
+    }
   };
 
   return (

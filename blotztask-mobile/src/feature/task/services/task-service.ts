@@ -1,5 +1,8 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
 import { isSameDay } from "date-fns";
+import { RawAddTaskDTO } from "../models/raw-add-task-dto";
+import { AddTaskItemDTO } from "../models/add-task-item-dto";
 
 // Helper function to get dates relative to today
 const getToday = () => new Date();
@@ -24,7 +27,6 @@ let MOCK_TASKS: TaskDetailDTO[] = [
     isDone: false,
     label: { labelId: 1, name: "Work", color: "#1E90FF" },
     endTime: getToday(),
-    hasTime: true,
   },
   {
     id: 2,
@@ -34,7 +36,6 @@ let MOCK_TASKS: TaskDetailDTO[] = [
     isDone: true,
     label: { labelId: 2, name: "Personal", color: "#32CD32" },
     endTime: getToday(),
-    hasTime: true,
   },
   {
     id: 3,
@@ -44,7 +45,6 @@ let MOCK_TASKS: TaskDetailDTO[] = [
     isDone: false,
     label: { labelId: 3, name: "Meeting", color: "#FFD700" },
     endTime: getYesterday(),
-    hasTime: true,
   },
   {
     id: 4,
@@ -53,7 +53,6 @@ let MOCK_TASKS: TaskDetailDTO[] = [
     isDone: false,
     label: { labelId: 4, name: "Health", color: "#FF4500" },
     endTime: getTomorrow(),
-    hasTime: false,
   },
 ];
 
@@ -88,4 +87,26 @@ export const fetchTasksByStatus = async (
 ): Promise<TaskDetailDTO[]> => {
   await new Promise((resolve) => setTimeout(resolve, 50));
   return MOCK_TASKS.filter((task) => task.isDone === completed);
+};
+
+export const addTaskItem = async (
+  addTaskForm: AddTaskItemDTO
+): Promise<TaskDetailDTO> => {
+  try {
+    const result = await fetchWithAuth<TaskDetailDTO>(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(addTaskForm),
+      }
+    );
+
+    return result;
+  } catch (error) {
+    console.error("Error adding task:", error);
+    throw error;
+  }
 };

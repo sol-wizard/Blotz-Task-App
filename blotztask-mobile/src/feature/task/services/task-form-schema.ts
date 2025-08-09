@@ -2,7 +2,7 @@ import z from "zod";
 
 const RepeatEnum = z.enum(["none", "daily", "weekly", "monthly"]);
 
-const taskCreationSchema = z.object({
+export const taskCreationSchema = z.object({
   title: z.string().min(1, "Title is required").max(80, "Max 80 chars"),
   description: z
     .string()
@@ -20,4 +20,6 @@ const taskCreationSchema = z.object({
   labelId: z.number().optional().nullable(),
 });
 
-export default taskCreationSchema;
+type AddTaskFormField = z.infer<typeof taskCreationSchema>;
+
+export default AddTaskFormField;
