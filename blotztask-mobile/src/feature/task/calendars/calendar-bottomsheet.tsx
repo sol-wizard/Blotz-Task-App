@@ -2,10 +2,10 @@ import React, { useCallback, useMemo, useRef } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Card, Button, Text, Chip, Portal } from 'react-native-paper';
-import { TaskDTO } from '../models/task-dto';
+import { TaskDetailDTO } from '@/shared/models/task-detail-dto';
 
 interface CalendarBottomSheetProps {
-  task?: TaskDTO;
+  task?: TaskDetailDTO;
   isVisible: boolean;
   onClose: () => void;
 }
@@ -47,7 +47,7 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
         {task ? (
           <>
             <Text variant="titleLarge" style={styles.title}>
-              {task.name}
+              {task.title}
             </Text>
 
             <Card style={styles.card}>
@@ -57,16 +57,16 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
                   <Text variant="bodyMedium">Status:</Text>
                   <Chip 
                     mode="outlined" 
-                    textStyle={{ color: task.checked ? '#4CAF50' : '#FF9800' }}
+                    textStyle={{ color: task.isDone ? '#4CAF50' : '#FF9800' }}
                   >
-                    {task.checked ? 'Completed' : 'Pending'}
+                    {task.isDone ? 'Completed' : 'Pending'}
                   </Chip>
                 </View>
                 
                 <View style={styles.detailRow}>
                   <Text variant="bodyMedium">Date:</Text>
                   <Text variant="bodyMedium">
-                    {task.date.toLocaleDateString()}
+                    {task.endTime.toLocaleDateString()}
                   </Text>
                 </View>
                 
