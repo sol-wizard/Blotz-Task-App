@@ -30,10 +30,9 @@ export default function TaskCreationScreen() {
   });
 
   const handleFormSubmit = async (data: any) => {
-    console.log("Submitting task:", data);
     try {
       const dto = toAddTaskItemDTO(data);
-      console.log("Converted DTO:", dto);
+
       await addTaskItem(dto);
       form.reset({
         title: "",

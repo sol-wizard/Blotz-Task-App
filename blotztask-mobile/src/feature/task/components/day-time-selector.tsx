@@ -48,7 +48,6 @@ export const DateSelector = ({ control }: { control: any }) => {
                       0
                     );
                     onChange(newDate.toISOString());
-                    console.log("Selected date:", newDate.toISOString());
                   }}
                   markedDates={{
                     [dateSelected]: {
