@@ -1,5 +1,6 @@
 ﻿using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Tasks.Domain;
+using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,12 @@ public class BlotzTaskDbContext : IdentityDbContext<User>
     public DbSet<TaskItem> TaskItems { get; set; }
     public DbSet<Label> Labels { get; set; }
     public DbSet<DeletedTaskItem> DeletedTaskItems { get; set; }
+    public DbSet<Subtask> Subtasks => Set<Subtask>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(Modules.Tasks.Domain.Configurations.SubtaskConfiguration).Assembly);
         modelBuilder.Entity<Label>().HasData(
             new Label
             {

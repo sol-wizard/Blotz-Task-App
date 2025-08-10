@@ -1,4 +1,4 @@
-﻿using BlotzTask.Modules.Tasks.Domain;
+﻿using BlotzTask.Modules.Tasks.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace BlotzTask.Modules.Users.Domain;
