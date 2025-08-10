@@ -9,13 +9,7 @@ export const taskCreationSchema = z.object({
     .max(1000, "Max 1000 chars")
     .optional()
     .or(z.literal("")),
-  endTime: z
-    .date()
-    .optional()
-    .nullable()
-    .refine((d) => !d || d.getTime() > Date.now(), {
-      message: "Please pick a future time",
-    }),
+  endTime: z.string(),
   repeat: RepeatEnum.optional(),
   labelId: z.number().optional().nullable(),
 });

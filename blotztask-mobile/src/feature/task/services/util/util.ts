@@ -7,6 +7,6 @@ export function toAddTaskItemDTO(form: AddTaskFormField): AddTaskItemDTO {
     description: (form.description ?? "").trim(),
     endTime: "2025-08-12T00:00:00.000Z",
     hasTime: false,
-    labelId: 6,
+    labelId: form.labelId ?? 6,
   };
 }

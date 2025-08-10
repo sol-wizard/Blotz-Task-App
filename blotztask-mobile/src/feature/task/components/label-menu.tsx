@@ -1,15 +1,24 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Menu, Button } from "react-native-paper";
 import { Controller } from "react-hook-form";
-
-const LABEL_OPTIONS = [
-  { id: 1, label: "Work" },
-  { id: 2, label: "Study" },
-  { id: 3, label: "Personal" },
-];
+import { fetchAllLabel } from "../services/task-service";
+import { LabelDTO } from "@/shared/models/label-dto";
 
 export function LabelMenu({ control }: { control: any }) {
   const [visible, setVisible] = useState(false);
+  const [labels, setLabels] = useState<LabelDTO[]>([]);
+  const loadAllLabel = async () => {
+    try {
+      const labelData = await fetchAllLabel();
+      setLabels(labelData);
+    } catch (error) {
+      console.error("Error loading labels:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadAllLabel();
+  }, []);
 
   return (
     <Controller
@@ -29,19 +38,18 @@ export function LabelMenu({ control }: { control: any }) {
               contentStyle={{ height: 44 }}
               labelStyle={{ fontSize: 14, color: "#444964" }}
             >
-              {LABEL_OPTIONS.find((opt) => opt.id === value)?.label ||
-                "Add Label"}
+              {labels.find((opt) => opt.labelId === value)?.name || "Add Label"}
             </Button>
           }
         >
-          {LABEL_OPTIONS.map((opt) => (
+          {labels.map((opt) => (
             <Menu.Item
-              key={opt.id}
+              key={opt.labelId}
               onPress={() => {
-                onChange(opt.id);
+                onChange(opt.labelId);
                 setVisible(false);
               }}
-              title={opt.label}
+              title={opt.name}
             />
           ))}
         </Menu>

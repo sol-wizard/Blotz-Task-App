@@ -1,3 +1,4 @@
+import { DateSelector } from "@/feature/task/components/day-time-selector";
 import { LabelMenu } from "@/feature/task/components/label-menu";
 import { RepeatMenu } from "@/feature/task/components/repeat-menu";
 import { RHFTextInput } from "@/feature/task/components/rhf-text-input";
@@ -22,9 +23,9 @@ export default function TaskCreationScreen() {
     defaultValues: {
       title: "",
       description: "",
-      endTime: null,
+      endTime: undefined,
       repeat: "none",
-      labelId: null,
+      labelId: undefined,
     },
   });
 
@@ -37,9 +38,9 @@ export default function TaskCreationScreen() {
       form.reset({
         title: "",
         description: "",
-        endTime: null,
+        endTime: undefined,
         repeat: "none",
-        labelId: null,
+        labelId: undefined,
       });
     } catch (error) {
       console.error("Error adding action:", error);
@@ -94,16 +95,7 @@ export default function TaskCreationScreen() {
         </View>
 
         <View className="flex-row gap-3 mb-8">
-          <Button
-            mode="outlined"
-            icon="calendar"
-            onPress={() => console.log("Add Time")}
-            style={{ borderRadius: 12, borderColor: "#E5E7EB", flex: 1 }}
-            contentStyle={{ height: 44 }}
-            labelStyle={{ fontSize: 14, color: "#444964" }}
-          >
-            Add Time
-          </Button>
+          <DateSelector control={form.control} />
 
           <View className="flex-1">
             <RepeatMenu control={form.control} />
@@ -116,7 +108,9 @@ export default function TaskCreationScreen() {
 
         <Button
           mode="contained"
-          onPress={form.handleSubmit(handleFormSubmit)}
+          onPress={form.handleSubmit(handleFormSubmit, (errors) => {
+            console.log("❌ invalid form:", errors);
+          })}
           style={{
             backgroundColor: "#E5E5E5",
             borderRadius: 16,
