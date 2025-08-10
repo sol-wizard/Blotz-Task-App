@@ -1,6 +1,6 @@
 ﻿using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Labels.DTOs;
-using BlotzTask.Modules.Tasks.Domain;
+using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.DTOs;
 using BlotzTask.Shared.DTOs;
 using BlotzTask.Shared.Exceptions;
