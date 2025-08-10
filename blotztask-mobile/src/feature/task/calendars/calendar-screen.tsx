@@ -5,15 +5,14 @@ import { format } from 'date-fns';
 import CalendarHeader from './calendar-header';
 import NoGoalsView from './noGoalsView';
 import TaskCard from '../components/task-card';
-import { TaskDTO } from '../models/task-dto';
 import { fetchTasksForDate, toggleTaskCompletion } from '../services/task-service';
 import CalendarBottomSheet from './calendar-bottomsheet';
-import { Button } from 'react-native-paper';
+import { TaskDetailDTO } from '@/shared/models/task-detail-dto';
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
-  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDTO[]>([]);
-  const [selectedTask, setSelectedTask] = useState<TaskDTO | undefined>(undefined);
+  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDetailDTO[]>([]);
+  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
 
   useEffect(() => {
@@ -21,19 +20,19 @@ export default function CalendarPage() {
       const tasks = await fetchTasksForDate(selectedDay);
       setTasksForSelectedDay(tasks);
     };
-    
+
     loadTasksForDate();
   }, [selectedDay]);
 
-  const handleToggleTask = async (task: TaskDTO) => {
+  const handleToggleTask = async (task: TaskDetailDTO) => {
     await toggleTaskCompletion(task.id);
 
     const updatedTasks = await fetchTasksForDate(selectedDay);
     setTasksForSelectedDay(updatedTasks);
   };
 
-  const handleTaskPress = (task: TaskDTO) => {
-    console.log('Task pressed:', task.name);
+  const handleTaskPress = (task: TaskDetailDTO) => {
+    console.log('Task pressed:', task.title);
     setSelectedTask(task);
     setIsBottomSheetVisible(true);
     console.log('Bottom sheet should be visible now');
@@ -44,16 +43,16 @@ export default function CalendarPage() {
     setSelectedTask(undefined);
   };
 
-  const renderTask = ({ item }: { item: TaskDTO }) => {
-    const task = item as TaskDTO;
+  const renderTask = ({ item }: { item: TaskDetailDTO }) => {
+    const task = item as TaskDetailDTO;
     
     return (
       <TaskCard
-        id={task.id}
-        title={task.name}
+        id={task.id.toString()}
+        title={task.title}
         startTime="10:00am"
         endTime="11:00am"
-        isCompleted={task.checked}
+        isCompleted={task.isDone}
         onToggleComplete={(id, completed) => {
           handleToggleTask(task);
         }}
@@ -112,7 +111,7 @@ export default function CalendarPage() {
             className="flex-1"
             data={tasksForSelectedDay}
             renderItem={renderTask}
-            keyExtractor={(task) => task.id}
+            keyExtractor={(task) => task.id.toString()}
           />
         ) : (
           <NoGoalsView />
