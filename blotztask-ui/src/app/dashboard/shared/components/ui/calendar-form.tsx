@@ -53,7 +53,7 @@ export function CalendarForm({
                   selected={field.value}
                   onSelect={field.onChange}
                   initialFocus
-                  defaultMonth={task?.dueDate ? new Date(task.dueDate) : new Date()}
+                  defaultMonth={task?.endTime ? new Date(task.endTime) : new Date()}
                 />
               </PopoverContent>
             </Popover>

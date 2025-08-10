@@ -22,54 +22,7 @@ namespace BlotzTask.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BlotzTask.Data.Entities.DeletedTaskItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("DueDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("HasTime")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDone")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("LabelId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LabelId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("DeletedTaskItems");
-                });
-
-            modelBuilder.Entity("BlotzTask.Data.Entities.Label", b =>
+            modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
                     b.Property<int>("LabelId")
                         .ValueGeneratedOnAdd()
@@ -124,22 +77,22 @@ namespace BlotzTask.Migrations
                         });
                 });
 
-            modelBuilder.Entity("BlotzTask.Data.Entities.TaskItem", b =>
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.DeletedTaskItem", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DeletedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset>("DueDate")
+                    b.Property<DateTimeOffset>("EndTime")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("HasTime")
@@ -168,10 +121,101 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId");
 
+                    b.ToTable("DeletedTaskItems");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.Subtask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<TimeSpan?>("Duration")
+                        .HasColumnType("time");
+
+                    b.Property<bool>("IsDone")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ParentTaskId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentTaskId");
+
+                    b.ToTable("Subtasks", (string)null);
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("EndTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("HasTime")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDone")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LabelId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("StartTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LabelId");
+
+                    b.HasIndex("UserId");
+
                     b.ToTable("TaskItems");
                 });
 
-            modelBuilder.Entity("BlotzTask.Data.Entities.User", b =>
+            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.User", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -377,15 +421,15 @@ namespace BlotzTask.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("BlotzTask.Data.Entities.DeletedTaskItem", b =>
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.DeletedTaskItem", b =>
                 {
-                    b.HasOne("BlotzTask.Data.Entities.Label", "Label")
+                    b.HasOne("BlotzTask.Modules.Labels.Domain.Label", "Label")
                         .WithMany()
                         .HasForeignKey("LabelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BlotzTask.Data.Entities.User", "User")
+                    b.HasOne("BlotzTask.Modules.Users.Domain.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -396,15 +440,26 @@ namespace BlotzTask.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BlotzTask.Data.Entities.TaskItem", b =>
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.Subtask", b =>
                 {
-                    b.HasOne("BlotzTask.Data.Entities.Label", "Label")
+                    b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", "ParentTask")
+                        .WithMany("Subtasks")
+                        .HasForeignKey("ParentTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ParentTask");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Labels.Domain.Label", "Label")
                         .WithMany("TaskItems")
                         .HasForeignKey("LabelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BlotzTask.Data.Entities.User", "User")
+                    b.HasOne("BlotzTask.Modules.Users.Domain.User", "User")
                         .WithMany("TaskItems")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -426,7 +481,7 @@ namespace BlotzTask.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("BlotzTask.Data.Entities.User", null)
+                    b.HasOne("BlotzTask.Modules.Users.Domain.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -435,7 +490,7 @@ namespace BlotzTask.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("BlotzTask.Data.Entities.User", null)
+                    b.HasOne("BlotzTask.Modules.Users.Domain.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -450,7 +505,7 @@ namespace BlotzTask.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BlotzTask.Data.Entities.User", null)
+                    b.HasOne("BlotzTask.Modules.Users.Domain.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -459,19 +514,24 @@ namespace BlotzTask.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("BlotzTask.Data.Entities.User", null)
+                    b.HasOne("BlotzTask.Modules.Users.Domain.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("BlotzTask.Data.Entities.Label", b =>
+            modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
                     b.Navigation("TaskItems");
                 });
 
-            modelBuilder.Entity("BlotzTask.Data.Entities.User", b =>
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
+                {
+                    b.Navigation("Subtasks");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.User", b =>
                 {
                     b.Navigation("TaskItems");
                 });

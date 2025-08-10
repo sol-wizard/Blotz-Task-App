@@ -1,11 +1,28 @@
-// src/features/notifications/NotificationsScreen.tsx
 import { View } from "react-native";
 import { Text, Button } from "react-native-paper";
-import { router } from "expo-router";
-import { useAuth } from "@/feature/auth/auth-context";
+import { useState } from "react";
+import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import { AUTH_TOKEN_KEY } from "../../../shared/constants/token-key";
+import NotificationTester from "../components/notification-tester";
 
 export default function SettingsScreen() {
-  const { logout } = useAuth();
+  const [showNotificationTester, setShowNotificationTester] = useState(false);
+
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      // Remove the token from secure storage
+      await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
+
+      // Navigate back to login
+      router.replace("/(auth)/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
   return (
     <View className="flex-1 justify-center items-center p-6">
       <Text variant="headlineMedium" style={{ marginBottom: 16 }}>
@@ -14,20 +31,19 @@ export default function SettingsScreen() {
 
       <Button
         mode="contained"
-        onPress={() => router.push("/notification" as any)}
+        onPress={() => setShowNotificationTester(!showNotificationTester)}
         style={{ marginTop: 16 }}
       >
-        Test Notifications
+        {showNotificationTester ? "Hide" : "Show"} Notification Tester
       </Button>
 
-      <Button
-        mode="contained"
-        onPress={() => router.push("/signalRConnection" as any)}
-        style={{ marginTop: 16 }}
-      >
-        Test SignalR Connection
-      </Button>
-      <Button mode="outlined" onPress={logout} style={{ marginTop: 16 }}>
+      {showNotificationTester && (
+        <View style={{ width: "100%", marginTop: 16 }}>
+          <NotificationTester />
+        </View>
+      )}
+
+      <Button mode="outlined" style={{ marginTop: 16 }} onPress={handleSignOut}>
         Sign Out
       </Button>
     </View>
