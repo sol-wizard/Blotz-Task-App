@@ -94,7 +94,7 @@ export const addTaskItem = async (
 ): Promise<TaskDetailDTO> => {
   try {
     const result = await fetchWithAuth<TaskDetailDTO>(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task`,
+      `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`,
       {
         method: "POST",
         headers: {
