@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  Button,
-  Divider,
-  IconButton,
-  List,
-  Modal,
-  Portal,
-} from "react-native-paper";
+import { Button, Modal, Portal } from "react-native-paper";
 import { Calendar } from "react-native-calendars";
 import { Controller } from "react-hook-form";
 

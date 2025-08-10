@@ -108,9 +108,7 @@ export default function TaskCreationScreen() {
 
         <Button
           mode="contained"
-          onPress={form.handleSubmit(handleFormSubmit, (errors) => {
-            console.log("❌ invalid form:", errors);
-          })}
+          onPress={form.handleSubmit(handleFormSubmit)}
           style={{
             backgroundColor: "#E5E5E5",
             borderRadius: 16,

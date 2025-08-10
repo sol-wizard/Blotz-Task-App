@@ -1,7 +1,6 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
 import { isSameDay } from "date-fns";
-import { RawAddTaskDTO } from "../models/raw-add-task-dto";
 import { AddTaskItemDTO } from "../models/add-task-item-dto";
 import { LabelDTO } from "@/shared/models/label-dto";
 
