@@ -11,7 +11,6 @@ public class AiBreakdownResult
     public List<AiBreakdownSubtask>? Subtasks { get; set; }
 }
 
-// TODO: need to be changed based on actual subtask table
 public class AiBreakdownSubtask
 {
     [JsonPropertyName("title")]
@@ -20,6 +19,4 @@ public class AiBreakdownSubtask
     [JsonPropertyName("description")]
     public string Description { get; set; } = default!;
 
-    public DateTimeOffset DueDate { get; set; }
-    public bool HasTime { get; set; }
 }

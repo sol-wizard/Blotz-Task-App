@@ -180,9 +180,7 @@ public class AiBreakdownService : IAiBreakdownService
             return new AiBreakdownSubtask
             {
                 Title = s.Title,
-                Description = s.Description,
-                DueDate = DateTime.UtcNow,
-                HasTime = false,
+                Description = s.Description
             };
         }).ToList();
 
