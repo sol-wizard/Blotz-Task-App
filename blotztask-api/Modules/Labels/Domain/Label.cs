@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
-using BlotzTask.Modules.Tasks.Domain;
+using BlotzTask.Modules.Tasks.Domain.Entities;
 
 namespace BlotzTask.Modules.Labels.Domain;
 
