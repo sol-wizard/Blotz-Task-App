@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Pressable } from 'react-native';
 import { Surface, Text, Checkbox, IconButton } from 'react-native-paper';
 
@@ -22,6 +22,10 @@ export default function TaskCard({
   onPress,
 }: TaskCardProps) {
   const [checked, setChecked] = useState(isCompleted);
+
+  useEffect(() => {
+    setChecked(isCompleted);
+  }, [isCompleted]);
 
   const handleToggleComplete = () => {
     const newChecked = !checked;

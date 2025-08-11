@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, FlatList } from "react-native";
+import { SafeAreaView, FlatList, ActivityIndicator, View, Text } from "react-native";
 import {
   CalendarProvider,
   WeekCalendar,
@@ -20,21 +20,40 @@ export default function CalendarPage() {
   const [tasksForSelectedDay, setTasksForSelectedDay] = useState<
     TaskDetailDTO[]
   >([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadTasksForDate = async () => {
-      const tasks = await fetchTasksForDate(selectedDay);
-      setTasksForSelectedDay(tasks);
+      setIsLoading(true);
+      setError(null);
+      try {
+        console.log('[calendar-screen] loading tasks for', selectedDay.toISOString());
+        const tasks = await fetchTasksForDate(selectedDay);
+        console.log('[calendar-screen] loaded tasks:', tasks.length);
+        setTasksForSelectedDay(tasks);
+      } catch (e) {
+        console.log('[calendar-screen] load tasks error:', e);
+        setError("Failed to load tasks");
+        setTasksForSelectedDay([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadTasksForDate();
   }, [selectedDay]);
 
   const handleToggleTask = async (task: TaskDetailDTO) => {
-    await toggleTaskCompletion(task.id);
-
-    const updatedTasks = await fetchTasksForDate(selectedDay);
-    setTasksForSelectedDay(updatedTasks);
+    try {
+      console.log('[calendar-screen] toggle task', task.id);
+      await toggleTaskCompletion(task.id);
+      const updatedTasks = await fetchTasksForDate(selectedDay);
+      console.log('[calendar-screen] reloaded tasks after toggle:', updatedTasks.length);
+      setTasksForSelectedDay(updatedTasks);
+    } catch (e) {
+      // noop, could show toast
+    }
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => {
@@ -44,8 +63,7 @@ export default function CalendarPage() {
       <TaskCard
         id={task.id.toString()}
         title={task.title}
-        startTime="10:00am"
-        endTime="11:00am"
+        startTime={task.hasTime ? format(task.endTime, "p") : undefined}
         isCompleted={task.isDone}
         onToggleComplete={(id, completed) => {
           handleToggleTask(task);
@@ -101,7 +119,15 @@ export default function CalendarPage() {
             hideKnob={true}
           /> */}
 
-        {tasksForSelectedDay.length > 0 ? (
+        {isLoading ? (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="small" />
+          </View>
+        ) : error ? (
+          <View className="flex-1 items-center justify-center">
+            <Text>Failed to load tasks</Text>
+          </View>
+        ) : tasksForSelectedDay.length > 0 ? (
           <FlatList
             className="flex-1"
             data={tasksForSelectedDay}
