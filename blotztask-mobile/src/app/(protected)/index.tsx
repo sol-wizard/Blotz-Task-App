@@ -37,7 +37,6 @@ export default function ProtectedIndex() {
     if (selected.key === "create") {
       setIndex(calendarIndex);
       setTaskCreationBottomSheetVisible(true);
-      console.log("Create task button pressed");
       return;
     }
     setIndex(newIndex);
