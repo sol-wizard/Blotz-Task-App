@@ -1,6 +1,6 @@
 import { Portal } from "react-native-paper";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { Controller } from "react-hook-form";
 import { DatePicker } from "./date-picker";
@@ -52,6 +52,16 @@ export const DateTimeBottomSheet = ({
                   timeSelected={timeSelected}
                   setTimeSelected={setTimeSelected}
                 ></TimePicker>
+                <View className="flex-row justify-between mx-2">
+                  <Pressable className="border border-gray-400 rounded-xl px-4 py-2 w-48 items-center">
+                    <Text className="text-lg font-semibold ">Cancel</Text>
+                  </Pressable>
+                  <Pressable className="bg-black rounded-xl px-4 py-2 ml-2 w-64 items-center">
+                    <Text className="text-lg font-semibold text-white">
+                      Done
+                    </Text>
+                  </Pressable>
+                </View>
               </BottomSheetView>
             </BottomSheet>
           </Portal>
