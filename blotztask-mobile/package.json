@@ -14,7 +14,6 @@
     "@expo/vector-icons": "^14.1.0",
     "@gorhom/bottom-sheet": "^5.1.8",
     "@hookform/resolvers": "^5.1.1",
-    "@lottiefiles/dotlottie-react": "^0.6.5",
     "@microsoft/signalr": "^8.0.7",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-voice/voice": "^3.2.4",

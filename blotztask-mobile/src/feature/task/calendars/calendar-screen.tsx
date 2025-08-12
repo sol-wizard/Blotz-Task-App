@@ -1,18 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { SafeAreaView, FlatList } from 'react-native';
-import { CalendarProvider, WeekCalendar, DateData } from 'react-native-calendars';
-import { format } from 'date-fns';
-import CalendarHeader from './calendar-header';
-import NoGoalsView from './noGoalsView';
-import TaskCard from '../components/task-card';
-import { fetchTasksForDate, toggleTaskCompletion } from '../services/task-service';
-import CalendarBottomSheet from './calendar-bottomsheet';
-import { TaskDetailDTO } from '@/shared/models/task-detail-dto';
+import React, { useState, useEffect } from "react";
+import { SafeAreaView, FlatList } from "react-native";
+import {
+  CalendarProvider,
+  WeekCalendar,
+  DateData,
+} from "react-native-calendars";
+import { format } from "date-fns";
+import CalendarHeader from "./calendar-header";
+import NoGoalsView from "./noGoalsView";
+import TaskCard from "../components/task-card";
+import {
+  fetchTasksForDate,
+  toggleTaskCompletion,
+} from "../services/task-service";
+import CalendarBottomSheet from "./calendar-bottomsheet";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
-  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDetailDTO[]>([]);
-  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
+  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<
+    TaskDetailDTO[]
+  >([]);
+  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
+    undefined
+  );
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
 
   useEffect(() => {
@@ -32,10 +43,10 @@ export default function CalendarPage() {
   };
 
   const handleTaskPress = (task: TaskDetailDTO) => {
-    console.log('Task pressed:', task.title);
+    console.log("Task pressed:", task.title);
     setSelectedTask(task);
     setIsBottomSheetVisible(true);
-    console.log('Bottom sheet should be visible now');
+    console.log("Bottom sheet should be visible now");
   };
 
   const handleBottomSheetClose = () => {
@@ -45,7 +56,7 @@ export default function CalendarPage() {
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => {
     const task = item as TaskDetailDTO;
-    
+
     return (
       <TaskCard
         id={task.id.toString()}
@@ -65,30 +76,32 @@ export default function CalendarPage() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <CalendarHeader date={format(selectedDay, 'yyyy-MM-dd')} />
-      
-        <CalendarProvider
-          date={format(selectedDay, 'yyyy-MM-dd')}
-          onDateChanged={(date: string) => setSelectedDay(new Date(date))}
-          showTodayButton={false}
-        >
-          {/* week Calenda */}
-          <WeekCalendar
-            onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
-            current={format(selectedDay, 'yyyy-MM-dd')}
-            theme={{
-              selectedDayBackgroundColor: '#2d4150',
-              todayTextColor: '#2d4150',
-              arrowColor: '#2d4150',
-              monthTextColor: '#2d4150',
-              textMonthFontWeight: 'bold',
-              textDayFontWeight: 'bold',
-              textDayHeaderFontWeight: 'bold',
-            }}
-            firstDay={1} // Monday as the first day of the week
-          />
-          {/* week+month Calendar */}
-          {/* <ExpandableCalendar
+      <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
+
+      <CalendarProvider
+        date={format(selectedDay, "yyyy-MM-dd")}
+        onDateChanged={(date: string) => setSelectedDay(new Date(date))}
+        showTodayButton={false}
+      >
+        {/* week Calenda */}
+        <WeekCalendar
+          onDayPress={(day: DateData) =>
+            setSelectedDay(new Date(day.dateString))
+          }
+          current={format(selectedDay, "yyyy-MM-dd")}
+          theme={{
+            selectedDayBackgroundColor: "#2d4150",
+            todayTextColor: "#2d4150",
+            arrowColor: "#2d4150",
+            monthTextColor: "#2d4150",
+            textMonthFontWeight: "bold",
+            textDayFontWeight: "bold",
+            textDayHeaderFontWeight: "bold",
+          }}
+          firstDay={1} // Monday as the first day of the week
+        />
+        {/* week+month Calendar */}
+        {/* <ExpandableCalendar
             // initialPosition={ExpandableCalendar.positions.CLOSED}
             markedDates={marked}
             // markingType={'multi-dot'}
@@ -116,12 +129,14 @@ export default function CalendarPage() {
         ) : (
           <NoGoalsView />
         )}
-        </CalendarProvider>
-        <CalendarBottomSheet 
+      </CalendarProvider>
+      {isBottomSheetVisible && (
+        <CalendarBottomSheet
           task={selectedTask}
           isVisible={isBottomSheetVisible}
           onClose={handleBottomSheetClose}
         />
+      )}
     </SafeAreaView>
   );
 }
