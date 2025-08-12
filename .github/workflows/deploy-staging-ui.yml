@@ -31,9 +31,12 @@ jobs:
       # TODO: Temporary manual push variable to .env.local file. Fix this after figure out how to set env in app services that can use in next js app
       - name: Create .env.local file with environment variables
         run: |
-          cp .env.staging .env.local
-          echo "NEXT_PUBLIC_GUEST_EMAIL=${{ secrets.NEXT_PUBLIC_GUEST_EMAIL }}" >> .env.local
-          echo "NEXT_PUBLIC_GUEST_PASSWORD=${{ secrets.NEXT_PUBLIC_GUEST_PASSWORD }}" >> .env.local
+          {
+            cat .env.staging
+            echo
+            echo "NEXT_PUBLIC_GUEST_EMAIL=${{ secrets.NEXT_PUBLIC_GUEST_EMAIL }}"
+            echo "NEXT_PUBLIC_GUEST_PASSWORD=${{ secrets.NEXT_PUBLIC_GUEST_PASSWORD }}"
+          } > .env.local
         working-directory: blotztask-ui
         
       - name: Build Next.js app
