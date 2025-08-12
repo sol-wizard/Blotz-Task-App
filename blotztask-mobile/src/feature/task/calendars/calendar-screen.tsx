@@ -14,7 +14,7 @@ import {
   toggleTaskCompletion,
 } from "../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { CreateTaskBottomSheet } from "./create-task-bottom-sheet";
+import { CreateTaskBottomSheet } from "../task-creation/create-task-bottom-sheet";
 
 export default function CalendarPage({
   isTaskCreationBottomSheetVisible,

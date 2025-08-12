@@ -11,27 +11,38 @@ export const CreateTaskBottomSheet = ({
   isVisible: boolean;
   onClose: () => void;
 }) => {
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const taskCreationBottomSheetRef = useRef<BottomSheet>(null);
+
+  const handleTaskCreationSheetClose = () => {
+    taskCreationBottomSheetRef.current?.close();
+  };
+
+  const handleTaskCreationSheetOpen = () => {
+    taskCreationBottomSheetRef.current?.snapToIndex(0);
+  };
 
   useEffect(() => {
     if (isVisible) {
-      bottomSheetRef.current?.snapToIndex(0);
+      taskCreationBottomSheetRef.current?.snapToIndex(0);
     } else {
-      bottomSheetRef.current?.close();
+      taskCreationBottomSheetRef.current?.close();
     }
   }, [isVisible]);
 
   return (
     <Portal>
       <BottomSheet
-        ref={bottomSheetRef}
+        ref={taskCreationBottomSheetRef}
         index={-1}
-        snapPoints={["50%", "80%"]}
+        snapPoints={["80%"]}
         enablePanDownToClose
         onClose={onClose}
       >
         <BottomSheetView style={{ padding: 16 }}>
-          <TaskCreationForm />
+          <TaskCreationForm
+            handleTaskCreationSheetClose={handleTaskCreationSheetClose}
+            handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
+          />
         </BottomSheetView>
       </BottomSheet>
     </Portal>

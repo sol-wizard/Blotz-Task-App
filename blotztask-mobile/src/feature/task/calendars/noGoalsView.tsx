@@ -6,14 +6,10 @@ import LottieView from "lottie-react-native";
 export default function NoGoalsView() {
   const router = useRouter();
 
-  const handleCreateNewTask = () => {
-    router.push("/(protected)/task-creation");
-  };
-
   return (
     <View className="flex-1 justify-center items-center p-5 bg-white">
       <LottieView
-        source={require('../../../../assets/images/empty-box.json')}
+        source={require("../../../../assets/images/empty-box.json")}
         autoPlay
         loop
         style={{ width: 160, height: 160 }}
@@ -29,16 +25,6 @@ export default function NoGoalsView() {
       <TouchableOpacity className="flex-row items-center bg-zinc-100 p-4 rounded-lg mb-4">
         <Text className="text-base font-semibold text-zinc-800 ml-2">
           Check Sample
-        </Text>
-        <Text className="ml-auto text-zinc-800">→</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        className="flex-row items-center bg-zinc-100 p-4 rounded-lg mb-4"
-        onPress={handleCreateNewTask}
-      >
-        <Text className="text-base font-semibold text-zinc-800 ml-2">
-          Create New Task
         </Text>
         <Text className="ml-auto text-zinc-800">→</Text>
       </TouchableOpacity>

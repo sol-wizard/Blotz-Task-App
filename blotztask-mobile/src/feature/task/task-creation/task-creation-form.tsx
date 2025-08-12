@@ -1,4 +1,4 @@
-import { DateSelector } from "@/feature/task/task-creation/day-time-selector";
+import { DateBottomSheetTrigger } from "@/feature/task/task-creation/day-time-selector";
 import { LabelMenu } from "@/feature/task/task-creation/label-menu";
 import { RepeatMenu } from "@/feature/task/task-creation/repeat-menu";
 import { RHFTextInput } from "@/feature/task/components/rhf-text-input";
@@ -13,7 +13,13 @@ import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
 
-export default function TaskCreationForm() {
+export default function TaskCreationForm({
+  handleTaskCreationSheetClose,
+  handleTaskCreationSheetOpen,
+}: {
+  handleTaskCreationSheetClose: () => void;
+  handleTaskCreationSheetOpen: () => void;
+}) {
   const handleAiChat = () => {
     router.push("/(protected)/ai-planner");
   };
@@ -48,8 +54,8 @@ export default function TaskCreationForm() {
 
   return (
     <FormProvider {...form}>
-      <View className="flex-1 bg-white px-5 pt-10">
-        <Text className="text-3xl font-extrabold text-center mb-6 pt-10">
+      <View className="flex-1 bg-white px-5 pb-5">
+        <Text className="text-3xl font-extrabold text-center mb-6">
           Create New Task
         </Text>
 
@@ -94,7 +100,11 @@ export default function TaskCreationForm() {
         </View>
 
         <View className="flex-row gap-3 mb-8">
-          <DateSelector control={form.control} />
+          <DateBottomSheetTrigger
+            control={form.control}
+            handleTaskCreationSheetClose={handleTaskCreationSheetClose}
+            handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
+          />
 
           <View className="flex-1">
             <RepeatMenu control={form.control} />

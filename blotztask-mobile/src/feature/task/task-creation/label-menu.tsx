@@ -36,7 +36,7 @@ export function LabelMenu({ control }: { control: any }) {
               onPress={() => setVisible(true)}
               style={{ borderRadius: 12, borderColor: "#E5E7EB" }}
               contentStyle={{ height: 44 }}
-              labelStyle={{ fontSize: 14, color: "#444964" }}
+              labelStyle={{ fontSize: 12, color: "#444964" }}
             >
               {labels.find((opt) => opt.labelId === value)?.name || "Add Label"}
             </Button>
