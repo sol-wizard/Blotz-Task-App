@@ -1,8 +1,10 @@
 import { Portal } from "react-native-paper";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { Text } from "react-native";
-import { useEffect, useRef } from "react";
+import { Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
 import { Controller } from "react-hook-form";
+import { DatePicker } from "./date-picker";
+import TimePicker from "./time-picker";
 
 export const DateTimeBottomSheet = ({
   control,
@@ -16,6 +18,10 @@ export const DateTimeBottomSheet = ({
   handleCreateTaskBottomSheetOpen: () => void;
 }) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
+
+  const [dateSelected, setDateSelected] = useState<string>("");
+  const [timeSelected, setTimeSelected] = useState<string>("");
+
   useEffect(() => {
     if (isVisible) {
       bottomSheetRef.current?.snapToIndex(0);
@@ -38,9 +44,14 @@ export const DateTimeBottomSheet = ({
               onClose={onClose}
             >
               <BottomSheetView style={{ padding: 16 }}>
-                <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-                  Select Date and Time
-                </Text>
+                <DatePicker
+                  dateSelected={dateSelected}
+                  setDateSelected={setDateSelected}
+                ></DatePicker>
+                <TimePicker
+                  timeSelected={timeSelected}
+                  setTimeSelected={setTimeSelected}
+                ></TimePicker>
               </BottomSheetView>
             </BottomSheet>
           </Portal>
