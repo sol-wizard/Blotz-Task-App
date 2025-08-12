@@ -1,6 +1,5 @@
 import { View, Text, Pressable } from "react-native";
 import WheelPicker from "@quidone/react-native-wheel-picker";
-import { Button } from "react-native-paper";
 import { useEffect, useState } from "react";
 
 export const TimeWheel = ({

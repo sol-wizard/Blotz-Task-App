@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useCallback } from "react";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import TaskCreationForm from "../task-creation/task-creation-form";
 import { Portal } from "react-native-paper";

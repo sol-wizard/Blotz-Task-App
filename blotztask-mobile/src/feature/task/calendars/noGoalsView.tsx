@@ -1,11 +1,8 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
 
 export default function NoGoalsView() {
-  const router = useRouter();
-
   return (
     <View className="flex-1 justify-center items-center p-5 bg-white">
       <LottieView

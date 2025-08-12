@@ -1,9 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
-import { View } from "react-native";
 import CalendarPage from "@/feature/task/calendars/calendar-screen";
 import SettingsScreen from "@/feature/settings/page/settings-screen";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 const routes = [

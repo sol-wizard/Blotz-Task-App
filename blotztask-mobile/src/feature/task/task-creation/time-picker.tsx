@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text } from "react-native";
 import { TimeModeSegment } from "./time-mode-segment";
 import { TimeWheel } from "./time-wheel";
 
