@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useRef } from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import React, { useCallback, useRef } from "react";
+import { View, Pressable } from "react-native";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Card, Button, Text, Chip, Portal } from "react-native-paper";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
