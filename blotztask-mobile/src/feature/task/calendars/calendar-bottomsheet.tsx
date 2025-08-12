@@ -16,7 +16,7 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
   onClose 
 }) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['50%', '80%'], []);
+  const snapPoints = useMemo(() => ['25%', '50%', '80%'], []);
   
   const handleSheetChange = useCallback((index: number) => {
     if (index === -1) {
@@ -27,10 +27,10 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
 
   return (
     <Portal>
-      <View style={[StyleSheet.absoluteFillObject, styles.overlayContainer]} pointerEvents="box-none">
+      <View className="absolute inset-0 z-50">
         {isVisible && (
           <Pressable
-            style={styles.blocker}
+            className="absolute inset-0 bg-black/50"
             onPress={() => bottomSheetRef.current?.close()}
           />
         )}
@@ -40,68 +40,68 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
           snapPoints={snapPoints}
           onChange={handleSheetChange}
           enablePanDownToClose
-          backgroundStyle={styles.sheetBackground}
-          handleIndicatorStyle={styles.handleIndicator}
+          backgroundStyle={{ backgroundColor: '#FFFFFF' }}
+          handleIndicatorStyle={{ backgroundColor: '#C7C7CC' }}
         >
-          <BottomSheetView style={styles.contentContainer}>
-        {task ? (
-          <>
-            <Text variant="titleLarge" style={styles.title}>
-              {task.title}
-            </Text>
+          <BottomSheetView className="flex-1 p-4 bg-white">
+            {task ? (
+              <>
+                <Text variant="titleLarge" className="text-center mb-4 font-bold">
+                  {task.title}
+                </Text>
 
-            <Card style={styles.card}>
-              <Card.Title title="Task Details" />
-              <Card.Content>
-                <View style={styles.detailRow}>
-                  <Text variant="bodyMedium">Status:</Text>
-                  <Chip 
-                    mode="outlined" 
-                    textStyle={{ color: task.isDone ? '#4CAF50' : '#FF9800' }}
+                <Card className="my-3">
+                  <Card.Title title="Task Details" />
+                  <Card.Content>
+                    <View className="flex-row justify-between items-center my-2">
+                      <Text variant="bodyMedium">Status:</Text>
+                      <Chip 
+                        mode="outlined" 
+                        textStyle={{ color: task.isDone ? '#4CAF50' : '#FF9800' }}
+                      >
+                        {task.isDone ? 'Completed' : 'Pending'}
+                      </Chip>
+                    </View>
+                    
+                    <View className="flex-row justify-between items-center my-2">
+                      <Text variant="bodyMedium">Date:</Text>
+                      <Text variant="bodyMedium">
+                        {task.endTime.toLocaleDateString()}
+                      </Text>
+                    </View>
+                    
+                    <View className="flex-row justify-between items-center my-2">
+                      <Text variant="bodyMedium">ID:</Text>
+                      <Text variant="bodySmall" className="text-gray-500">
+                        {task.id}
+                      </Text>
+                    </View>
+                  </Card.Content>
+                </Card>
+
+                <View className="flex-row justify-around mt-4">
+                  <Button
+                    mode="contained"
+                    onPress={() => bottomSheetRef.current?.close()}
+                    className="flex-1 mx-2"
                   >
-                    {task.isDone ? 'Completed' : 'Pending'}
-                  </Chip>
+                    Close
+                  </Button>
+                  
+                  <Button
+                    mode="outlined"
+                    onPress={() => {
+                      console.log('Edit task:', task.id);
+                    }}
+                    className="flex-1 mx-2"
+                  >
+                    Edit Task
+                  </Button>
                 </View>
-                
-                <View style={styles.detailRow}>
-                  <Text variant="bodyMedium">Date:</Text>
-                  <Text variant="bodyMedium">
-                    {task.endTime.toLocaleDateString()}
-                  </Text>
-                </View>
-                
-                <View style={styles.detailRow}>
-                  <Text variant="bodyMedium">ID:</Text>
-                  <Text variant="bodySmall" style={styles.idText}>
-                    {task.id}
-                  </Text>
-                </View>
-              </Card.Content>
-            </Card>
-
-            <View style={styles.buttonContainer}>
-              <Button
-                mode="contained"
-                onPress={() => bottomSheetRef.current?.close()}
-                style={styles.button}
-              >
-                Close
-              </Button>
-              
-              <Button
-                mode="outlined"
-                onPress={() => {
-                  console.log('Edit task:', task.id);
-                }}
-                style={styles.button}
-              >
-                Edit Task
-              </Button>
-            </View>
-          </>
-        ) : (
-          <Text variant="bodyMedium">No task selected</Text>
-        )}
+              </>
+            ) : (
+              <Text variant="bodyMedium">No task selected</Text>
+            )}
           </BottomSheetView>
         </BottomSheet>
       </View>
@@ -110,53 +110,3 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
 };
 
 export default CalendarBottomSheet;
-
-const styles = StyleSheet.create({
-  overlayContainer: {
-    zIndex: 9999,
-  },
-  blocker: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  sheetBackground: {
-    backgroundColor: '#FFFFFF',
-  },
-  handleIndicator: {
-    backgroundColor: '#C7C7CC',
-  },
-  backdrop: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  contentContainer: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  title: {
-    textAlign: 'center',
-    marginBottom: 16,
-    fontWeight: 'bold',
-  },
-  card: {
-    marginVertical: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: 8,
-  },
-  idText: {
-    color: '#757575',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 16,
-  },
-  button: {
-    flex: 1,
-    marginHorizontal: 8,
-  },
-});
