@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { TimeModeSegment } from "./time-mode-segment";
+import { TimeWheel } from "./time-wheel";
 
 type Mode = "allDay" | "time" | "range";
 
@@ -15,11 +16,9 @@ export default function TimePicker({
 
   return (
     <View className="p-4">
-      <Text className="text-base font-semibold text-gray-800 mb-3">
-        Select time:
-      </Text>
+      <Text className="text-lg text-gray-800 mb-3">Select time:</Text>
 
-      <View className="flex-row bg-gray-100 rounded-full p-1 mb-4">
+      <View className="flex-row bg-gray-100 rounded-full mb-4">
         <TimeModeSegment
           label="All day"
           active={mode === "allDay"}
@@ -47,11 +46,15 @@ export default function TimePicker({
       )}
 
       {mode === "time" && (
-        <View className="bg-white rounded-xl border border-gray-200 p-4">
-          <Text className="text-gray-500 mb-2">Time</Text>
-          <Text className="text-gray-500 mt-1 text-sm">
-            Pick a specific time.
-          </Text>
+        <View className="bg-white rounded-xl border-gray-200 flex-row justify-between">
+          <View className="flex-col">
+            <Text className="mb-2 text-lg">Start</Text>
+            <TimeWheel />
+          </View>
+          <View className="flex-col">
+            <Text className="mb-2 text-lg">End</Text>
+            <TimeWheel />
+          </View>
         </View>
       )}
 

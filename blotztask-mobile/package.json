@@ -12,8 +12,10 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
+    "@gorhom/bottom-sheet": "^5.1.8",
     "@hookform/resolvers": "^5.1.1",
     "@microsoft/signalr": "^8.0.7",
+    "@quidone/react-native-wheel-picker": "^1.5.2",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.4.1",
     "@react-native-voice/voice": "^3.2.4",
@@ -63,6 +65,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@react-native-picker/picker": "^2.11.1",
     "@types/react": "~19.0.10",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
