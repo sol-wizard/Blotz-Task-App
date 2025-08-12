@@ -1,8 +1,8 @@
-import React, { useCallback, useMemo, useRef } from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Card, Button, Text, Chip, Portal } from 'react-native-paper';
-import { TaskDetailDTO } from '@/shared/models/task-detail-dto';
+import React, { useCallback, useMemo, useRef } from "react";
+import { View, StyleSheet, Pressable } from "react-native";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { Card, Button, Text, Chip, Portal } from "react-native-paper";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 interface CalendarBottomSheetProps {
   task?: TaskDetailDTO;
@@ -10,20 +10,22 @@ interface CalendarBottomSheetProps {
   onClose: () => void;
 }
 
-const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({ 
-  task, 
-  isVisible, 
-  onClose 
+const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
+  task,
+  isVisible,
+  onClose,
 }) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['50%', '80%'], []);
-  
-  const handleSheetChange = useCallback((index: number) => {
-    if (index === -1) {
-      onClose();
-      console.log('Bottom sheet closed');
-    }
-  }, [onClose]);
+
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      if (index === -1) {
+        onClose();
+        console.log("Bottom sheet closed");
+      }
+    },
+    [onClose]
+  );
 
   return (
     <Portal>
@@ -37,16 +39,19 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
         <BottomSheet
           ref={bottomSheetRef}
           index={isVisible ? 0 : -1}
-          snapPoints={snapPoints}
+          snapPoints={["50%", "80%"]}
           onChange={handleSheetChange}
           enablePanDownToClose
-          backgroundStyle={{ backgroundColor: '#FFFFFF' }}
-          handleIndicatorStyle={{ backgroundColor: '#C7C7CC' }}
+          backgroundStyle={{ backgroundColor: "#FFFFFF" }}
+          handleIndicatorStyle={{ backgroundColor: "#C7C7CC" }}
         >
           <BottomSheetView className="flex-1 p-4 bg-white">
             {task ? (
               <>
-                <Text variant="titleLarge" className="text-center mb-4 font-bold">
+                <Text
+                  variant="titleLarge"
+                  className="text-center mb-4 font-bold"
+                >
                   {task.title}
                 </Text>
 
@@ -55,21 +60,23 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
                   <Card.Content>
                     <View className="flex-row justify-between items-center my-2">
                       <Text variant="bodyMedium">Status:</Text>
-                      <Chip 
-                        mode="outlined" 
-                        textStyle={{ color: task.isDone ? '#4CAF50' : '#FF9800' }}
+                      <Chip
+                        mode="outlined"
+                        textStyle={{
+                          color: task.isDone ? "#4CAF50" : "#FF9800",
+                        }}
                       >
-                        {task.isDone ? 'Completed' : 'Pending'}
+                        {task.isDone ? "Completed" : "Pending"}
                       </Chip>
                     </View>
-                    
+
                     <View className="flex-row justify-between items-center my-2">
                       <Text variant="bodyMedium">Date:</Text>
                       <Text variant="bodyMedium">
                         {task.endTime.toLocaleDateString()}
                       </Text>
                     </View>
-                    
+
                     <View className="flex-row justify-between items-center my-2">
                       <Text variant="bodyMedium">ID:</Text>
                       <Text variant="bodySmall" className="text-gray-500">
@@ -87,11 +94,11 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
                   >
                     Close
                   </Button>
-                  
+
                   <Button
                     mode="outlined"
                     onPress={() => {
-                      console.log('Edit task:', task.id);
+                      console.log("Edit task:", task.id);
                     }}
                     className="flex-1 mx-2"
                   >
