@@ -1,10 +1,12 @@
+import "react-native-gesture-handler";
+import "react-native-reanimated";
+
 import { Stack } from "expo-router";
 import { MD3LightTheme, PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../../global.css";
 import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { NavigationContainer } from "@react-navigation/native";
 
 export default function RootLayout() {
   return (

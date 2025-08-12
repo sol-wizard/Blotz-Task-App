@@ -13,6 +13,7 @@ import {
   fetchTasksForDate,
   toggleTaskCompletion,
 } from "../services/task-service";
+import CalendarBottomSheet from "./calendar-bottomsheet";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { CreateTaskBottomSheet } from "../task-creation/create-task-bottom-sheet";
 
@@ -27,6 +28,10 @@ export default function CalendarPage({
   const [tasksForSelectedDay, setTasksForSelectedDay] = useState<
     TaskDetailDTO[]
   >([]);
+  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
+    undefined
+  );
+  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -44,6 +49,18 @@ export default function CalendarPage({
     setTasksForSelectedDay(updatedTasks);
   };
 
+  const handleTaskPress = (task: TaskDetailDTO) => {
+    console.log("Task pressed:", task.title);
+    setSelectedTask(task);
+    setIsBottomSheetVisible(true);
+    console.log("Bottom sheet should be visible now");
+  };
+
+  const handleBottomSheetClose = () => {
+    setIsBottomSheetVisible(false);
+    setSelectedTask(undefined);
+  };
+
   const renderTask = ({ item }: { item: TaskDetailDTO }) => {
     const task = item as TaskDetailDTO;
 
@@ -58,15 +75,16 @@ export default function CalendarPage({
           handleToggleTask(task);
         }}
         onPress={() => {
-          console.log("Task card pressed:", task.title);
+          handleTaskPress(task);
         }}
       />
     );
   };
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView style={{ flex: 1 }}>
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
+
       <CalendarProvider
         date={format(selectedDay, "yyyy-MM-dd")}
         onDateChanged={(date: string) => setSelectedDay(new Date(date))}
@@ -123,6 +141,13 @@ export default function CalendarPage({
         isVisible={isTaskCreationBottomSheetVisible}
         onClose={onRequestCloseTaskCreationBottomSheet}
       ></CreateTaskBottomSheet>
+      {isBottomSheetVisible && (
+        <CalendarBottomSheet
+          task={selectedTask}
+          isVisible={isBottomSheetVisible}
+          onClose={handleBottomSheetClose}
+        />
+      )}
     </SafeAreaView>
   );
 }
