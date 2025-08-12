@@ -18,7 +18,7 @@ export default function TimePicker({
     <View className="p-4">
       <Text className="text-lg text-gray-800 mb-3">Select time:</Text>
 
-      <View className="flex-row bg-gray-100 rounded-full mb-4">
+      <View className="flex-row bg-gray-100 rounded-full mb-4 h-10">
         <TimeModeSegment
           label="All day"
           active={mode === "allDay"}
@@ -48,11 +48,11 @@ export default function TimePicker({
       {mode === "time" && (
         <View className="bg-white rounded-xl border-gray-200 flex-row justify-between">
           <View className="flex-col">
-            <Text className="mb-2 text-lg">Start</Text>
+            <Text className="mb-2 text-lg text-gray-800">Start</Text>
             <TimeWheel />
           </View>
           <View className="flex-col">
-            <Text className="mb-2 text-lg">End</Text>
+            <Text className="mb-2 text-lg text-gray-800">End</Text>
             <TimeWheel />
           </View>
         </View>

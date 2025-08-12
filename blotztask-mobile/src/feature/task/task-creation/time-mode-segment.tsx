@@ -12,7 +12,7 @@ export function TimeModeSegment({
     <Pressable
       onPress={onPress}
       className={[
-        "flex-1 rounded-full px-4 py-2 items-center",
+        "flex-1 rounded-full px-4 py-2 items-center justify-center",
         active ? "bg-white shadow" : "bg-transparent",
       ].join(" ")}
     >
