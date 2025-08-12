@@ -1,7 +1,8 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import TaskCreationForm from "../task-creation/task-creation-form";
 import { Portal } from "react-native-paper";
+import { Pressable, View } from "react-native";
 
 export const CreateTaskBottomSheet = ({
   isVisible,
@@ -20,30 +21,40 @@ export const CreateTaskBottomSheet = ({
   //   taskCreationBottomSheetRef.current?.snapToIndex(0);
   // };
 
-  useEffect(() => {
-    if (isVisible) {
-      taskCreationBottomSheetRef.current?.snapToIndex(0);
-    } else {
-      taskCreationBottomSheetRef.current?.close();
-    }
-  }, [isVisible]);
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      if (index === -1) {
+        onClose();
+      }
+    },
+    [onClose]
+  );
 
   return (
     <Portal>
-      <BottomSheet
-        ref={taskCreationBottomSheetRef}
-        index={-1}
-        snapPoints={["80%"]}
-        enablePanDownToClose
-        onClose={onClose}
-      >
-        <BottomSheetView style={{ padding: 16 }}>
-          <TaskCreationForm
-          // handleTaskCreationSheetClose={handleTaskCreationSheetClose}
-          // handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
+      <View className="absolute inset-0 z-50">
+        {isVisible && (
+          <Pressable
+            className="absolute inset-0 bg-black/50"
+            onPress={() => taskCreationBottomSheetRef.current?.close()}
           />
-        </BottomSheetView>
-      </BottomSheet>
+        )}
+        <BottomSheet
+          ref={taskCreationBottomSheetRef}
+          index={isVisible ? 0 : -1}
+          snapPoints={["80%"]}
+          onChange={handleSheetChange}
+          enablePanDownToClose
+          onClose={onClose}
+        >
+          <BottomSheetView style={{ padding: 16 }}>
+            <TaskCreationForm
+            // handleTaskCreationSheetClose={handleTaskCreationSheetClose}
+            // handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
+            />
+          </BottomSheetView>
+        </BottomSheet>
+      </View>
     </Portal>
   );
 };

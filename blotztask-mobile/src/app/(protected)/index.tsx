@@ -27,8 +27,6 @@ const routes = [
   },
 ];
 
-const EmptyScreen = () => <View style={{ flex: 1 }} />;
-
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
   const [isTaskCreationBottomSheetVisible, setTaskCreationBottomSheetVisible] =
@@ -59,23 +57,35 @@ export default function ProtectedIndex() {
           />
         );
       case "create":
-        return <EmptyScreen />;
+        return (
+          <CalendarPage
+            isTaskCreationBottomSheetVisible={isTaskCreationBottomSheetVisible}
+            onRequestCloseTaskCreationBottomSheet={() =>
+              setTaskCreationBottomSheetVisible(true)
+            }
+          />
+        );
       case "settings":
         return <SettingsScreen />;
       default:
-        return <EmptyScreen />;
+        return (
+          <CalendarPage
+            isTaskCreationBottomSheetVisible={isTaskCreationBottomSheetVisible}
+            onRequestCloseTaskCreationBottomSheet={() =>
+              setTaskCreationBottomSheetVisible(false)
+            }
+          />
+        );
     }
   };
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <BottomSheetModalProvider>
-        <BottomNavigation
-          navigationState={{ index, routes }}
-          onIndexChange={handleIndexChange}
-          renderScene={renderScene}
-        />
-      </BottomSheetModalProvider>
-    </GestureHandlerRootView>
+    <BottomSheetModalProvider>
+      <BottomNavigation
+        navigationState={{ index, routes }}
+        onIndexChange={handleIndexChange}
+        renderScene={renderScene}
+      />
+    </BottomSheetModalProvider>
   );
 }

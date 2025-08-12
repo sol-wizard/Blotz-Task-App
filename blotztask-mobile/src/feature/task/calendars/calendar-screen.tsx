@@ -13,7 +13,7 @@ import {
   fetchTasksForDate,
   toggleTaskCompletion,
 } from "../services/task-service";
-import CalendarBottomSheet from "./calendar-bottomsheet";
+import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { CreateTaskBottomSheet } from "../task-creation/create-task-bottom-sheet";
 
@@ -90,7 +90,6 @@ export default function CalendarPage({
         onDateChanged={(date: string) => setSelectedDay(new Date(date))}
         showTodayButton={false}
       >
-        {/* week Calenda */}
         <WeekCalendar
           onDayPress={(day: DateData) =>
             setSelectedDay(new Date(day.dateString))
@@ -137,12 +136,16 @@ export default function CalendarPage({
           <NoGoalsView />
         )}
       </CalendarProvider>
-      <CreateTaskBottomSheet
-        isVisible={isTaskCreationBottomSheetVisible}
-        onClose={onRequestCloseTaskCreationBottomSheet}
-      ></CreateTaskBottomSheet>
+
+      {isTaskCreationBottomSheetVisible && (
+        <CreateTaskBottomSheet
+          isVisible={isTaskCreationBottomSheetVisible}
+          onClose={onRequestCloseTaskCreationBottomSheet}
+        ></CreateTaskBottomSheet>
+      )}
+
       {isBottomSheetVisible && (
-        <CalendarBottomSheet
+        <TaskDetailBottomSheet
           task={selectedTask}
           isVisible={isBottomSheetVisible}
           onClose={handleBottomSheetClose}
