@@ -14,8 +14,15 @@ import {
   toggleTaskCompletion,
 } from "../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { CreateTaskBottomSheet } from "./create-task-bottom-sheet";
 
-export default function CalendarPage() {
+export default function CalendarPage({
+  isTaskCreationBottomSheetVisible,
+  onRequestCloseTaskCreationBottomSheet,
+}: {
+  isTaskCreationBottomSheetVisible: boolean;
+  onRequestCloseTaskCreationBottomSheet: () => void;
+}) {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [tasksForSelectedDay, setTasksForSelectedDay] = useState<
     TaskDetailDTO[]
@@ -112,6 +119,10 @@ export default function CalendarPage() {
           <NoGoalsView />
         )}
       </CalendarProvider>
+      <CreateTaskBottomSheet
+        isVisible={isTaskCreationBottomSheetVisible}
+        onClose={onRequestCloseTaskCreationBottomSheet}
+      ></CreateTaskBottomSheet>
     </SafeAreaView>
   );
 }

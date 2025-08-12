@@ -13,7 +13,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
 
-export default function TaskCreationScreen() {
+export default function TaskCreationForm() {
   const handleAiChat = () => {
     router.push("/(protected)/ai-planner");
   };
@@ -48,8 +48,8 @@ export default function TaskCreationScreen() {
 
   return (
     <FormProvider {...form}>
-      <View className="flex-1 bg-white px-5">
-        <Text className="text-3xl font-extrabold text-center mb-6">
+      <View className="flex-1 bg-white px-5 pt-10">
+        <Text className="text-3xl font-extrabold text-center mb-6 pt-10">
           Create New Task
         </Text>
 
