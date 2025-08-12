@@ -21,7 +21,7 @@ export const DateTimeBottomSheet = ({
 
   const [dateSelected, setDateSelected] = useState<string>("");
   const [timeSelected, setTimeSelected] = useState<string>("");
-  const [hasTime, setHasTime] = useState<boolean>(false);
+  // const [hasTime, setHasTime] = useState<boolean>(false);
 
   const handleDateTimeSubmit = () => {
     if (!dateSelected || !timeSelected) {
@@ -29,16 +29,16 @@ export const DateTimeBottomSheet = ({
       return;
     }
 
-    if (!hasTime) {
-      const endDateISO = dateSelected;
-      console.log("✅ Choose all day, End DateTime ISO:", endDateISO);
-    } else {
-      const combined = `${dateSelected}T${timeSelected}`;
+    // if (!hasTime) {
+    //   const endDateISO = dateSelected;
+    //   console.log("✅ Choose all day, End DateTime ISO:", endDateISO);
+    // } else {
+    //   const combined = `${dateSelected}T${timeSelected}`;
 
-      const endDateISO = new Date(combined).toISOString();
+    //   const endDateISO = new Date(combined).toISOString();
 
-      console.log("✅ End DateTime ISO:", endDateISO);
-    }
+    //   console.log("✅ End DateTime ISO:", endDateISO);
+    // }
   };
 
   useEffect(() => {
@@ -67,10 +67,7 @@ export const DateTimeBottomSheet = ({
                   dateSelected={dateSelected}
                   setDateSelected={setDateSelected}
                 ></DatePicker>
-                <TimePicker
-                  setTimeSelected={setTimeSelected}
-                  hasTime={hasTime}
-                ></TimePicker>
+                <TimePicker setTimeSelected={setTimeSelected}></TimePicker>
                 <View className="flex-row justify-between mx-2 mb-2">
                   <Pressable className="border border-gray-400 rounded-xl px-4 py-2 w-48 items-center">
                     <Text className="text-lg font-semibold ">Cancel</Text>

@@ -7,10 +7,8 @@ type Mode = "allDay" | "time" | "range";
 
 export default function TimePicker({
   setTimeSelected,
-  hasTime,
 }: {
   setTimeSelected: (time: string) => void;
-  hasTime: boolean;
 }) {
   const [mode, setMode] = useState<Mode>("range");
 

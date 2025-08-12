@@ -13,13 +13,14 @@ import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
 
-export default function TaskCreationForm({
-  handleTaskCreationSheetClose,
-  handleTaskCreationSheetOpen,
-}: {
-  handleTaskCreationSheetClose: () => void;
-  handleTaskCreationSheetOpen: () => void;
-}) {
+export default function TaskCreationForm() {
+  //   {
+  //   handleTaskCreationSheetClose,
+  //   handleTaskCreationSheetOpen,
+  // }: {
+  //   handleTaskCreationSheetClose: () => void;
+  //   handleTaskCreationSheetOpen: () => void;
+  // }
   const handleAiChat = () => {
     router.push("/(protected)/ai-planner");
   };
@@ -102,8 +103,8 @@ export default function TaskCreationForm({
         <View className="flex-row gap-3 mb-8">
           <DateBottomSheetTrigger
             control={form.control}
-            handleTaskCreationSheetClose={handleTaskCreationSheetClose}
-            handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
+            // handleTaskCreationSheetClose={handleTaskCreationSheetClose}
+            // handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
           />
 
           <View className="flex-1">

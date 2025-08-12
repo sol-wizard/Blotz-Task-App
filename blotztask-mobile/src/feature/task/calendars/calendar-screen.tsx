@@ -15,8 +15,6 @@ import {
 } from "../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { CreateTaskBottomSheet } from "../task-creation/create-task-bottom-sheet";
-import { PortalHost } from "@gorhom/portal";
-import { Portal } from "react-native-paper";
 
 export default function CalendarPage({
   isTaskCreationBottomSheetVisible,
