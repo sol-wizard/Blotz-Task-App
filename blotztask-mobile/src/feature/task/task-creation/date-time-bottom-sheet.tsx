@@ -21,6 +21,25 @@ export const DateTimeBottomSheet = ({
 
   const [dateSelected, setDateSelected] = useState<string>("");
   const [timeSelected, setTimeSelected] = useState<string>("");
+  const [hasTime, setHasTime] = useState<boolean>(false);
+
+  const handleDateTimeSubmit = () => {
+    if (!dateSelected || !timeSelected) {
+      console.error("❌ Unselected date or time");
+      return;
+    }
+
+    if (!hasTime) {
+      const endDateISO = dateSelected;
+      console.log("✅ Choose all day, End DateTime ISO:", endDateISO);
+    } else {
+      const combined = `${dateSelected}T${timeSelected}`;
+
+      const endDateISO = new Date(combined).toISOString();
+
+      console.log("✅ End DateTime ISO:", endDateISO);
+    }
+  };
 
   useEffect(() => {
     if (isVisible) {
@@ -49,14 +68,17 @@ export const DateTimeBottomSheet = ({
                   setDateSelected={setDateSelected}
                 ></DatePicker>
                 <TimePicker
-                  timeSelected={timeSelected}
                   setTimeSelected={setTimeSelected}
+                  hasTime={hasTime}
                 ></TimePicker>
-                <View className="flex-row justify-between mx-2">
+                <View className="flex-row justify-between mx-2 mb-2">
                   <Pressable className="border border-gray-400 rounded-xl px-4 py-2 w-48 items-center">
                     <Text className="text-lg font-semibold ">Cancel</Text>
                   </Pressable>
-                  <Pressable className="bg-black rounded-xl px-4 py-2 ml-2 w-64 items-center">
+                  <Pressable
+                    className="bg-black rounded-xl px-4 py-2 ml-2 w-64 items-center"
+                    onPress={handleDateTimeSubmit}
+                  >
                     <Text className="text-lg font-semibold text-white">
                       Done
                     </Text>

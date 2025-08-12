@@ -8,17 +8,24 @@ export const DatePicker = ({
   setDateSelected: (date: string) => void;
 }) => {
   const handleDateSelected = (date: DateData) => {
-    console.log("Date selected");
+    const isoString = new Date(date.dateString).toISOString();
+    setDateSelected(isoString);
   };
   return (
     <>
       <Calendar
         onDayPress={handleDateSelected}
+        theme={{
+          textSectionTitleColor: "#b6c1cd",
+          selectedDayBackgroundColor: "black",
+          selectedDayTextColor: "white",
+          dayTextColor: "#2d4150",
+        }}
         markedDates={{
           [dateSelected]: {
             selected: true,
             disableTouchEvent: true,
-            selectedColor: "#7c7c80",
+            selectedColor: "grey",
           },
         }}
       />

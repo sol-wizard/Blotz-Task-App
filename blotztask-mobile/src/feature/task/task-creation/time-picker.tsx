@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { TimeModeSegment } from "./time-mode-segment";
 import { TimeWheel } from "./time-wheel";
@@ -6,14 +6,19 @@ import { TimeWheel } from "./time-wheel";
 type Mode = "allDay" | "time" | "range";
 
 export default function TimePicker({
-  timeSelected,
   setTimeSelected,
+  hasTime,
 }: {
-  timeSelected: string;
   setTimeSelected: (time: string) => void;
+  hasTime: boolean;
 }) {
-  const [mode, setMode] = useState<Mode>("time");
+  const [mode, setMode] = useState<Mode>("range");
 
+  useEffect(() => {
+    if (mode === "allDay") {
+      setTimeSelected("00:00:00");
+    }
+  }, [mode]);
   return (
     <View className="p-4">
       <Text className="text-lg text-gray-800 mb-3">Select time:</Text>
@@ -46,23 +51,21 @@ export default function TimePicker({
       )}
 
       {mode === "time" && (
-        <View className="bg-white rounded-xl border-gray-200 flex-row justify-between">
-          <View className="flex-col">
-            <Text className="mb-2 text-lg text-gray-800">Start</Text>
-            <TimeWheel />
-          </View>
-          <View className="flex-col">
-            <Text className="mb-2 text-lg text-gray-800">End</Text>
-            <TimeWheel />
-          </View>
+        <View className="bg-white rounded-xl border-gray-200 flex-row items-center justify-center">
+          <TimeWheel onChange={setTimeSelected} />
         </View>
       )}
 
       {mode === "range" && (
-        <View className="bg-white rounded-xl border border-gray-200 p-4">
-          <Text className="text-gray-500 mt-1 text-sm">
-            Pick a time period.
-          </Text>
+        <View className="flex-row bg-white rounded-xl border border-gray-200 p-4">
+          <View className="flex-col">
+            <Text className="mb-2 text-lg text-gray-800">Start</Text>
+            <TimeWheel onChange={setTimeSelected} />
+          </View>
+          <View className="flex-col">
+            <Text className="mb-2 text-lg text-gray-800">End</Text>
+            <TimeWheel onChange={setTimeSelected} />
+          </View>
         </View>
       )}
     </View>

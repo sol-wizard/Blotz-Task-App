@@ -1,10 +1,17 @@
 import { View, Text, Pressable } from "react-native";
 import WheelPicker from "@quidone/react-native-wheel-picker";
 import { Button } from "react-native-paper";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export const TimeWheel = () => {
+export const TimeWheel = ({
+  onChange,
+}: {
+  onChange: (timeISO: string) => void;
+}) => {
   const [selected, setSelected] = useState<"AM" | "PM">("AM");
+  const [hourValue, setHourValue] = useState(0);
+  const [minValue, setMinValue] = useState(0);
+
   const hourData = [...Array(12).keys()].map((index) => {
     const value = index + 1;
     return {
@@ -17,6 +24,20 @@ export const TimeWheel = () => {
     value: index,
     label: index.toString().padStart(2, "0"),
   }));
+
+  const getTimeISO = () => {
+    let h = hourValue;
+    if (selected === "PM" && h !== 12) h += 12;
+    if (selected === "AM" && h === 12) h = 0;
+    const hh = String(h).padStart(2, "0");
+    const mm = String(minValue).padStart(2, "0");
+    return `${hh}:${mm}:00`;
+  };
+
+  useEffect(() => {
+    onChange(getTimeISO());
+  }, [selected, hourValue, minValue]);
+
   return (
     <View className="flex-row mb-4 border rounded-3xl border-gray-200">
       <View className="w-24 bg-white flex-row justify-center m-2 p-2">
@@ -29,6 +50,8 @@ export const TimeWheel = () => {
           data={hourData}
           enableScrollByTapOnItem={true}
           visibleItemCount={1}
+          value={hourValue}
+          onValueChanged={({ item: { value } }) => setHourValue(value)}
         />
         <Text className="text-center font-bold text-2xl text-gray-600 mt-2 ">
           :
@@ -42,6 +65,8 @@ export const TimeWheel = () => {
           data={minData}
           enableScrollByTapOnItem={true}
           visibleItemCount={1}
+          value={minValue}
+          onValueChanged={({ item: { value } }) => setMinValue(value)}
         />
       </View>
 
