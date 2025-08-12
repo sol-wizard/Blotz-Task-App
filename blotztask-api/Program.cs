@@ -157,7 +157,8 @@ builder.Services.AddCors(options =>
         builder =>
         {
             builder.WithOrigins("http://localhost:3000" // DEV frontend origin
-                , "https://blotz-task-app.vercel.app") // Prod frontend origin    
+                , "https://blotz-task-app.vercel.app", // Prod frontend origin    
+                "https://hoppscotch.io" ) // For testing with Hoppscotch
                 .WithMethods("GET", "POST", "OPTIONS", "PUT", "DELETE") // Specify allowed methods
                 .WithHeaders("Content-Type", "Authorization", "x-signalr-user-agent", "x-requested-with") // Added SignalR headers
                 .AllowCredentials(); // TODO: anti-csrf need to be built.
@@ -172,7 +173,7 @@ builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService
 
 builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
 builder.Services.AddScoped<BlotzTask.Modules.Chat.Services.IConversationStateService, BlotzTask.Modules.Chat.Services.ConversationStateService>();
-builder.Services.AddScoped<BlotzTask.Modules.Chat.Services.IGoalPlannerChatService, BlotzTask.Modules.Chat.Services.GoalPlannerChatService>();
+builder.Services.AddScoped<BlotzTask.Modules.Chat.Services.ITaskGenerateChatService, BlotzTask.Modules.Chat.Services.TaskGenerateChatService>();
 builder.Services.AddScoped<BlotzTask.Modules.Chat.Services.ISafeChatCompletionService, BlotzTask.Modules.Chat.Services.SafeChatCompletionService>();
 
 builder.Services.AddScoped<TaskParsingService>();
