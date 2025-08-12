@@ -23,10 +23,16 @@ export default function TaskCard({
 }: TaskCardProps) {
   const [checked, setChecked] = useState(isCompleted);
 
-  const handleToggleComplete = () => {
+  const handleToggleComplete = (event: any) => {
+    event.stopPropagation();
     const newChecked = !checked;
     setChecked(newChecked);
     onToggleComplete?.(id, newChecked);
+  };
+
+  const handleIconPress = (event: any) => {
+    event.stopPropagation();
+    console.log('Time icon pressed for:', title);
   };
 
   const formatTimeRange = () => {
@@ -101,10 +107,7 @@ export default function TaskCard({
           size={20}
           iconColor="#757575"
           style={{ margin: 0 }}
-          onPress={() => {
-            // Handle time/reminder actions here
-            console.log('Time icon pressed for:', title);
-          }}
+          onPress={handleIconPress}
         />
       </Pressable>
     </Surface>
