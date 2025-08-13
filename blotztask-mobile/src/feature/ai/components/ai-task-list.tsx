@@ -6,6 +6,7 @@ import { COLORS } from "@/shared/constants/colors";
 import uuid from "react-native-uuid";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { convertAiTaskToAddTaskItemDTO } from "../services/util/util";
+import { format } from "date-fns";
 
 export default function AiTaskList({
   tasks,
@@ -58,7 +59,7 @@ export default function AiTaskList({
                   />
                   {task.endTime && (
                     <Text className="text-base text-primary ml-2">
-                      {task.endTime.toISOString()}
+                      {format(task.endTime, "yyyy-MM-dd")}
                     </Text>
                   )}
                 </View>
