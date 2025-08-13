@@ -8,15 +8,17 @@ namespace BlotzTask.Modules.Chat;
 public class AiTaskGenerateChatHub : Hub
 {
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
-    private readonly IGoalPlannerChatService _goalPlannerChatService;
+    private readonly ITaskGenerateChatService _taskGenerateChatService;
 
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
-        IGoalPlannerChatService goalPlannerChatService)
+        ITaskGenerateChatService taskGenerateChatService
+    )
     {
         _logger = logger;
-        _goalPlannerChatService = goalPlannerChatService;
+        _taskGenerateChatService = taskGenerateChatService;
     }
+
     public override async Task OnConnectedAsync()
     {
         string connectionId = Context.ConnectionId;
@@ -27,10 +29,12 @@ public class AiTaskGenerateChatHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         string connectionId = Context.ConnectionId;
-        _logger.LogInformation($"User disconnected: {connectionId}. Exception: {exception?.Message}");
+        _logger.LogInformation(
+            $"User disconnected: {connectionId}. Exception: {exception?.Message}"
+        );
         await base.OnDisconnectedAsync(exception);
     }
-    
+
     public async Task SendMessage(string user, string message, string conversationId)
     {
         var userMsg = new ConversationMessage
@@ -39,17 +43,17 @@ public class AiTaskGenerateChatHub : Hub
             Content = message,
             ConversationId = conversationId,
             Timestamp = DateTime.UtcNow,
-            IsBot = false
+            IsBot = false,
         };
 
         await Clients.Caller.SendAsync("ReceiveMessage", userMsg);
-        
+
         // Send BotTyping signal to clients
         await Clients.Caller.SendAsync("BotTyping", true);
 
         try
         {
-            var result = await _goalPlannerChatService.HandleUserMessageAsync(userMsg);
+            var result = await _taskGenerateChatService.HandleUserMessageAsync(userMsg);
 
             if (result.IsConversationComplete)
             {
@@ -73,11 +77,10 @@ public class AiTaskGenerateChatHub : Hub
 
             await Clients.Caller.SendAsync("BotTyping", false);
 
-            await Clients.Caller.SendAsync("TokenLimitExceeded", new
-            {
-                errorType = "TokenLimitExceeded",
-                message = ex.Message
-            });
+            await Clients.Caller.SendAsync(
+                "TokenLimitExceeded",
+                new { errorType = "TokenLimitExceeded", message = ex.Message }
+            );
         }
     }
 }

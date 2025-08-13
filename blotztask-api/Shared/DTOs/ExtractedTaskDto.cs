@@ -1,3 +1,5 @@
+using BlotzTask.Modules.Labels.DTOs;
+
 namespace BlotzTask.Shared.DTOs;
 
 public class ExtractedTaskDto

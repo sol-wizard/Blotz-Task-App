@@ -2,33 +2,39 @@ using BlotzTask.Modules.Chat.DTOs;
 using BlotzTask.Shared.DTOs;
 
 namespace BlotzTask.Modules.Chat.Services;
-public interface IGoalPlannerChatService
+
+public interface ITaskGenerateChatService
 {
     Task<AiTaskGenerateChatResult> HandleUserMessageAsync(ConversationMessage userMessage);
 }
 
-public class GoalPlannerChatService : IGoalPlannerChatService
+public class TaskGenerateChatService : ITaskGenerateChatService
 {
     private readonly IAiTaskGenerateService _aiTaskGenerateService;
     private readonly IConversationStateService _conversationStateService;
 
-    public GoalPlannerChatService(
+    public TaskGenerateChatService(
         IAiTaskGenerateService aiTaskGenerateService,
-        IConversationStateService conversationStateService)
+        IConversationStateService conversationStateService
+    )
     {
         _aiTaskGenerateService = aiTaskGenerateService;
         _conversationStateService = conversationStateService;
     }
 
-    public async Task<AiTaskGenerateChatResult> HandleUserMessageAsync(ConversationMessage userMessage)
+    public async Task<AiTaskGenerateChatResult> HandleUserMessageAsync(
+        ConversationMessage userMessage
+    )
     {
         var conversationId = userMessage.ConversationId;
+        string botContent;
+        List<ExtractedTaskDto>? tasks = null;
 
         if (UserExplicitlyEndedConversation(userMessage.Content))
         {
-            return EndConversation(conversationId); 
+            return EndConversation(conversationId);
         }
-        
+
         // If there's no chathistory, create a new converstaion
         if (!_conversationStateService.TryGetChatHistory(conversationId, out var chatHistory))
         {
@@ -37,31 +43,32 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         }
 
         chatHistory.AddUserMessage(userMessage.Content);
-        
-        var isReady = await _aiTaskGenerateService.IsReadyToGeneratePlanAsync(chatHistory);
 
-        string botContent;
-        List<ExtractedTaskDto>? tasks = null;
-        
-        if (!isReady)
+        // TODO: Make the bot response more dynamic when there's no tasks generated,
+        // considering getting it from the ai response
+
+        var aiResponseTasks = await _aiTaskGenerateService.GenerateAiResponse(chatHistory);
+        if (aiResponseTasks == null)
         {
-            botContent = await _aiTaskGenerateService.GenerateClarifyingQuestionAsync(chatHistory);
+            // No tasks were generated at all
+            botContent =
+                "I couldn't extract any tasks from your input. Please provide clear and actionable tasks.";
+        }
+        else if (aiResponseTasks.Count > 0)
+        {
+            var revisedTasks = await _aiTaskGenerateService.ReviseGeneratedTasksAsync(
+                aiResponseTasks,
+                chatHistory
+            );
+
+            tasks = revisedTasks;
+            botContent =
+                "If you're happy with these tasks, you can type **end this** to end the conversation.";
         }
         else
         {
-            var aiResponseTasks = await _aiTaskGenerateService.GenerateAiResponse(chatHistory);
-            if (aiResponseTasks != null && aiResponseTasks.Count > 0)
-            {
-                var revisedTasks = await _aiTaskGenerateService.ReviseGeneratedTasksAsync(aiResponseTasks, chatHistory);
-
-                tasks = revisedTasks;
-                botContent = "If you're happy with these tasks, you can type **end this** to end the conversation.";
-            }
-            else
-            {
-                botContent = "No tasks could be generated.";
-            }
-            
+            // The tasks generated are not actionable or too generic so they didn't pass the revision
+            botContent = "No tasks could be generated.";
         }
 
         return new AiTaskGenerateChatResult
@@ -97,12 +104,11 @@ public class GoalPlannerChatService : IGoalPlannerChatService
             Tasks = null,
         };
     }
-    
+
     // TODO: Change this to a more robust solution
     private bool UserExplicitlyEndedConversation(string message)
     {
         var lower = message.ToLowerInvariant();
         return lower.Contains("end this") || lower.Contains("that's all");
     }
-
 }
