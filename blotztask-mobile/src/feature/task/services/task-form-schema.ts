@@ -11,7 +11,7 @@ export const taskCreationSchema = z.object({
     .or(z.literal("")),
   endTime: z.string(),
   repeat: RepeatEnum.optional(),
-  labelId: z.number().optional().nullable(),
+  labelId: z.number(),
 });
 
 type AddTaskFormField = z.infer<typeof taskCreationSchema>;

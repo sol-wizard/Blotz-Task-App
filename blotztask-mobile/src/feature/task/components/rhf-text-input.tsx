@@ -1,7 +1,7 @@
 import { Controller } from "react-hook-form";
 import { TextInput } from "react-native-paper";
 
-export function RHFTextInput({
+export function FormTextInput({
   name,
   label,
   control,
@@ -22,16 +22,7 @@ export function RHFTextInput({
           value={value}
           onChangeText={onChange}
           mode="flat"
-          style={{
-            backgroundColor: "#F9FAFB",
-            borderRadius: 16,
-          }}
-          outlineStyle={{
-            borderRadius: 16,
-          }}
-          theme={{
-            roundness: 16,
-          }}
+          className={`bg-[#F9FAFB] rounded-2xl ${className}`}
         />
       )}
     />

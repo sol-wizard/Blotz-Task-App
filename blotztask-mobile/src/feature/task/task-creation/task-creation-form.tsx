@@ -1,7 +1,7 @@
 import { DateBottomSheetTrigger } from "@/feature/task/task-creation/day-time-selector";
 import { LabelMenu } from "@/feature/task/task-creation/label-menu";
 import { RepeatMenu } from "@/feature/task/task-creation/repeat-menu";
-import { RHFTextInput } from "@/feature/task/components/rhf-text-input";
+import { FormTextInput } from "@/feature/task/components/rhf-text-input";
 import AddTaskFormField, {
   taskCreationSchema,
 } from "@/feature/task/services/task-form-schema";
@@ -71,7 +71,7 @@ export default function TaskCreationForm() {
 
         <View className="flex-row items-center gap-3 mb-4">
           <View className="flex-1">
-            <RHFTextInput
+            <FormTextInput
               name="title"
               label="Title"
               control={form.control}
@@ -92,7 +92,7 @@ export default function TaskCreationForm() {
         </View>
 
         <View className="mb-4">
-          <RHFTextInput
+          <FormTextInput
             name="description"
             label="Description"
             control={form.control}

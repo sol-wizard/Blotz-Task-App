@@ -2,7 +2,6 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
 import { isSameDay } from "date-fns";
 import { AddTaskItemDTO } from "../models/add-task-item-dto";
-import { LabelDTO } from "@/shared/models/label-dto";
 
 // Helper function to get dates relative to today
 const getToday = () => new Date();
@@ -27,6 +26,7 @@ let MOCK_TASKS: TaskDetailDTO[] = [
     isDone: false,
     label: { labelId: 1, name: "Work", color: "#1E90FF" },
     endTime: getToday(),
+    hasTime: false,
   },
   {
     id: 2,
@@ -36,6 +36,7 @@ let MOCK_TASKS: TaskDetailDTO[] = [
     isDone: true,
     label: { labelId: 2, name: "Personal", color: "#32CD32" },
     endTime: getToday(),
+    hasTime: true,
   },
   {
     id: 3,
@@ -45,6 +46,7 @@ let MOCK_TASKS: TaskDetailDTO[] = [
     isDone: false,
     label: { labelId: 3, name: "Meeting", color: "#FFD700" },
     endTime: getYesterday(),
+    hasTime: false,
   },
   {
     id: 4,
@@ -53,6 +55,7 @@ let MOCK_TASKS: TaskDetailDTO[] = [
     isDone: false,
     label: { labelId: 4, name: "Health", color: "#FF4500" },
     endTime: getTomorrow(),
+    hasTime: true,
   },
 ];
 
@@ -109,18 +112,4 @@ export const addTaskItem = async (
     console.error("Error adding task:", error);
     throw error;
   }
-};
-
-export const fetchAllLabel = async (): Promise<LabelDTO[]> => {
-  const result = await fetchWithAuth<LabelDTO[]>(
-    `${process.env.EXPO_PUBLIC_URL_WITH_API}/label`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  return result;
 };

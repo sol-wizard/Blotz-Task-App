@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Menu, Button } from "react-native-paper";
 import { Controller } from "react-hook-form";
-import { fetchAllLabel } from "../services/task-service";
 import { LabelDTO } from "@/shared/models/label-dto";
+import { fetchAllLabel } from "@/shared/services/label-service";
 
 export function LabelMenu({ control }: { control: any }) {
   const [visible, setVisible] = useState(false);

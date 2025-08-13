@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { BottomNavigation, Button } from "react-native-paper";
+import { BottomNavigation } from "react-native-paper";
 import CalendarPage from "@/feature/task/calendars/calendar-screen";
 import SettingsScreen from "@/feature/settings/page/settings-screen";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { View } from "react-native";
 
 const routes = [
   {
@@ -22,8 +21,6 @@ const routes = [
 
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
-  const [isTaskCreationBottomSheetVisible, setTaskCreationBottomSheetVisible] =
-    useState(false);
 
   const CalendarRoute = () => <CalendarPage />;
 
@@ -41,24 +38,6 @@ export default function ProtectedIndex() {
         onIndexChange={setIndex}
         renderScene={renderScene}
       />
-      {/* <View
-        pointerEvents="box-none"
-        style={{
-          position: "absolute",
-          bottom: 60,
-          left: 10,
-          right: 10,
-          alignItems: "center",
-        }}
-      >
-        <Button
-          mode="contained"
-          icon="pencil"
-          onPress={() => setTaskCreationBottomSheetVisible(true)}
-        >
-          Create
-        </Button>
-      </View> */}
     </BottomSheetModalProvider>
   );
 }

@@ -16,7 +16,7 @@ import {
 import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { CreateTaskBottomSheet } from "../task-creation/create-task-bottom-sheet";
-import { Button, Portal } from "react-native-paper";
+import { Portal } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
