@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, FlatList, View, Pressable } from "react-native";
+import {
+  SafeAreaView,
+  FlatList,
+  View,
+  Pressable,
+  KeyboardAvoidingView,
+} from "react-native";
 import {
   CalendarProvider,
   WeekCalendar,

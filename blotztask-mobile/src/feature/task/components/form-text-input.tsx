@@ -1,14 +1,14 @@
+import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { Controller } from "react-hook-form";
-import { TextInput } from "react-native-paper";
 
 export function FormTextInput({
   name,
-  label,
+  placeholder,
   control,
   className = "",
 }: {
   name: string;
-  label: string;
+  placeholder: string;
   control: any;
   className?: string;
 }) {
@@ -17,12 +17,11 @@ export function FormTextInput({
       control={control}
       name={name}
       render={({ field: { value, onChange } }) => (
-        <TextInput
-          label={label}
+        <BottomSheetTextInput
+          placeholder={placeholder}
           value={value}
           onChangeText={onChange}
-          mode="flat"
-          className={`bg-[#F9FAFB] rounded-2xl ${className}`}
+          className={`bg-[#F9FAFB] rounded-2xl h-12 px-2 ${className}`}
         />
       )}
     />

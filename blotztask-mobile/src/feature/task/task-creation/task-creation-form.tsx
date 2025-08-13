@@ -1,7 +1,7 @@
 import { DateBottomSheetTrigger } from "@/feature/task/task-creation/day-time-selector";
 import { LabelMenu } from "@/feature/task/task-creation/label-menu";
 import { RepeatMenu } from "@/feature/task/task-creation/repeat-menu";
-import { FormTextInput } from "@/feature/task/components/rhf-text-input";
+import { FormTextInput } from "@/feature/task/components/form-text-input";
 import AddTaskFormField, {
   taskCreationSchema,
 } from "@/feature/task/services/task-form-schema";
@@ -13,14 +13,11 @@ import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
 
-export default function TaskCreationForm() {
-  //   {
-  //   handleTaskCreationSheetClose,
-  //   handleTaskCreationSheetOpen,
-  // }: {
-  //   handleTaskCreationSheetClose: () => void;
-  //   handleTaskCreationSheetOpen: () => void;
-  // }
+export default function TaskCreationForm({
+  handleTaskCreationSheetClose,
+}: {
+  handleTaskCreationSheetClose: (index: number) => void;
+}) {
   const handleAiChat = () => {
     router.push("/(protected)/ai-planner");
   };
@@ -41,6 +38,7 @@ export default function TaskCreationForm() {
       const dto = toAddTaskItemDTO(data);
 
       await addTaskItem(dto);
+      handleTaskCreationSheetClose(-1);
       form.reset({
         title: "",
         description: "",
@@ -73,7 +71,7 @@ export default function TaskCreationForm() {
           <View className="flex-1">
             <FormTextInput
               name="title"
-              label="Title"
+              placeholder="Title"
               control={form.control}
               className="bg-gray-50 rounded-2xl"
             />
@@ -94,7 +92,7 @@ export default function TaskCreationForm() {
         <View className="mb-4">
           <FormTextInput
             name="description"
-            label="Description"
+            placeholder="Description"
             control={form.control}
             className="bg-gray-50 rounded-2xl"
           />
@@ -122,7 +120,6 @@ export default function TaskCreationForm() {
           style={{
             backgroundColor: "#E5E5E5",
             borderRadius: 16,
-            paddingVertical: 8,
           }}
           labelStyle={{ color: "#111827", fontWeight: "700", fontSize: 18 }}
         >
