@@ -43,7 +43,7 @@ export const CreateTaskBottomSheet = ({
         <BottomSheet
           ref={taskCreationBottomSheetRef}
           index={isVisible ? 0 : -1}
-          snapPoints={snapPoints}
+          snapPoints={["55%"]}
           keyboardBlurBehavior="restore"
           onChange={handleSheetChange}
           enablePanDownToClose

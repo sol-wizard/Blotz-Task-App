@@ -1,7 +1,7 @@
 import { DateBottomSheetTrigger } from "@/feature/task/task-creation/day-time-selector";
 import { LabelMenu } from "@/feature/task/task-creation/label-menu";
 import { RepeatMenu } from "@/feature/task/task-creation/repeat-menu";
-import { FormTextInput } from "@/feature/task/components/form-text-input";
+import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import AddTaskFormField, {
   taskCreationSchema,
 } from "@/feature/task/services/task-form-schema";
