@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useMemo } from "react";
+import React, { useRef, useCallback } from "react";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import TaskCreationForm from "../task-creation/task-creation-form";
 import { Portal } from "react-native-paper";
@@ -20,7 +20,7 @@ export const CreateTaskBottomSheet = ({
   // const handleTaskCreationSheetOpen = () => {
   //   taskCreationBottomSheetRef.current?.snapToIndex(0);
   // };
-  const snapPoints = useMemo(() => ["50%"], []);
+
   const handleSheetChange = useCallback(
     (index: number) => {
       if (index === -1) {
