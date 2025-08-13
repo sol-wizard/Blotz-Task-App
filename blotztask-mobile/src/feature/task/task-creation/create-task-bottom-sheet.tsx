@@ -2,7 +2,7 @@ import React, { useRef, useCallback } from "react";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import TaskCreationForm from "../task-creation/task-creation-form";
 import { Portal } from "react-native-paper";
-import { KeyboardAvoidingView, Pressable, View, Platform } from "react-native";
+import { Pressable, View } from "react-native";
 
 export const CreateTaskBottomSheet = ({
   isVisible,
@@ -43,8 +43,8 @@ export const CreateTaskBottomSheet = ({
         <BottomSheet
           ref={taskCreationBottomSheetRef}
           index={isVisible ? 0 : -1}
-          snapPoints={["80%"]}
-          keyboardBehavior="fillParent"
+          snapPoints={["55%"]}
+          keyboardBlurBehavior="restore"
           onChange={handleSheetChange}
           enablePanDownToClose
           onClose={() => onClose(false)}
