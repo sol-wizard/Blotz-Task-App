@@ -11,10 +11,6 @@ public interface IAiTaskGenerateService
 {
     Task<List<ExtractedTaskDto>?> GenerateAiResponse(ChatHistory chatHistory);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
-    Task<List<ExtractedTaskDto>?> ReviseGeneratedTasksAsync(
-        List<ExtractedTaskDto>? rawTasks,
-        ChatHistory chatHistory
-    );
 }
 
 public class AiTaskGenerateService : IAiTaskGenerateService
@@ -85,54 +81,6 @@ public class AiTaskGenerateService : IAiTaskGenerateService
         _conversationStateService.SetChatHistory(conversationId, chatHistory);
 
         return Task.FromResult(chatHistory);
-    }
-
-    /// <summary>
-    ///   Revises the generated tasks based on the chat history.
-    ///  It checks if the tasks are too generic, missing important steps, or not actionable
-    /// </summary>
-    /// <param name="rawTasks"></param>
-    /// <param name="chatHistory"></param>
-    /// <returns></returns>
-    public async Task<List<ExtractedTaskDto>?> ReviseGeneratedTasksAsync(
-        List<ExtractedTaskDto>? rawTasks,
-        ChatHistory chatHistory
-    )
-    {
-        if (rawTasks != null)
-        {
-            string taskListText = string.Join("\n", rawTasks.Select(t => $"- {t.Description}"));
-
-            chatHistory.AddSystemMessage(
-                $"""
-                You previously generated the following tasks based on the user's input:
-                {taskListText}
-
-                Please review and revise this task list if:
-                - The tasks are too generic or vague
-                - Important steps are missing
-                - Tasks are not actionable or clear
-
-                If everything is fine, simply re-list them.
-                Return the improved tasks in the required JSON format.
-                """
-            );
-        }
-
-        var revisionResult = await _safeChatCompletionService.GetSafeContentAsync(chatHistory);
-
-        _logger.LogInformation("Revision result: {RevisionResult}", revisionResult);
-
-        if (
-            !string.IsNullOrEmpty(revisionResult)
-            && _taskParser.TryParseTasks(revisionResult, out List<ExtractedTaskDto>? revisedTasks)
-        )
-        {
-            return revisedTasks;
-        }
-
-        // fallback to original if parse fails
-        return rawTasks;
     }
 
     private ChatTool CreateExtractedTasksTool(HashSet<string> labelNames)

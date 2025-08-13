@@ -56,12 +56,7 @@ public class TaskGenerateChatService : ITaskGenerateChatService
         }
         else if (aiResponseTasks.Count > 0)
         {
-            var revisedTasks = await _aiTaskGenerateService.ReviseGeneratedTasksAsync(
-                aiResponseTasks,
-                chatHistory
-            );
-
-            tasks = revisedTasks;
+            tasks = aiResponseTasks;
             botContent =
                 "If you're happy with these tasks, you can type **end this** to end the conversation.";
         }
