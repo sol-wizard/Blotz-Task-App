@@ -31,6 +31,7 @@ export default function CalendarPage() {
         const tasks = await fetchTasksForDate(selectedDay);
         setTasksForSelectedDay(tasks);
       } catch (e) {
+        console.error(e);
         setError("Failed to load tasks");
         setTasksForSelectedDay([]);
       } finally {
@@ -47,6 +48,7 @@ export default function CalendarPage() {
       const updatedTasks = await fetchTasksForDate(selectedDay);
       setTasksForSelectedDay(updatedTasks);
     } catch (e) {
+      console.error(e)
       // noop, could show toast
     }
   };
