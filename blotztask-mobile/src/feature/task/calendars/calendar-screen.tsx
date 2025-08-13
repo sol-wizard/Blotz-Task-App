@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, FlatList, View, Pressable } from "react-native";
+import { SafeAreaView, FlatList } from "react-native";
 import {
   CalendarProvider,
   WeekCalendar,
@@ -15,10 +15,6 @@ import {
 } from "../services/task-service";
 import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { CreateTaskBottomSheet } from "../task-creation/create-task-bottom-sheet";
-import { Portal } from "react-native-paper";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -29,10 +25,6 @@ export default function CalendarPage() {
     undefined
   );
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
-  const insets = useSafeAreaInsets();
-
-  const [isTaskCreationSheetVisible, setIsTaskCreationSheetVisible] =
-    useState(false);
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -138,13 +130,6 @@ export default function CalendarPage() {
         )}
       </CalendarProvider>
 
-      {isTaskCreationSheetVisible && (
-        <CreateTaskBottomSheet
-          isVisible={isTaskCreationSheetVisible}
-          onClose={setIsTaskCreationSheetVisible}
-        ></CreateTaskBottomSheet>
-      )}
-
       {isBottomSheetVisible && (
         <TaskDetailBottomSheet
           task={selectedTask}
@@ -152,20 +137,6 @@ export default function CalendarPage() {
           onClose={handleBottomSheetClose}
         />
       )}
-      <Portal>
-        <View
-          className="absolute left-0 right-0 items-center"
-          style={{ bottom: insets.bottom + 20 }}
-        >
-          <Pressable
-            onPress={() => setIsTaskCreationSheetVisible(true)}
-            className="w-14 h-14 rounded-full bg-gray-200 items-center justify-center"
-            android_ripple={{ color: "#e5e7eb", borderless: true }}
-          >
-            <MaterialCommunityIcons name="plus" size={28} color="#6B7280" />
-          </Pressable>
-        </View>
-      </Portal>
     </SafeAreaView>
   );
 }

@@ -19,6 +19,7 @@ export default function TaskCreationForm({
   handleTaskCreationSheetClose: (index: number) => void;
 }) {
   const handleAiChat = () => {
+    handleTaskCreationSheetClose(-1);
     router.push("/(protected)/ai-planner");
   };
   const form = useForm<AddTaskFormField>({

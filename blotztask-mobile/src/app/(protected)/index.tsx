@@ -3,6 +3,10 @@ import { BottomNavigation } from "react-native-paper";
 import CalendarPage from "@/feature/task/calendars/calendar-screen";
 import SettingsScreen from "@/feature/settings/page/settings-screen";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { CreateTaskBottomSheet } from "@/feature/task/task-creation/create-task-bottom-sheet";
 
 const routes = [
   {
@@ -19,12 +23,15 @@ const routes = [
   },
 ];
 
+const CalendarRoute: any = () => <CalendarPage />;
+
+const SettingsRoute = () => <SettingsScreen />;
+
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
-
-  const CalendarRoute = () => <CalendarPage />;
-
-  const SettingsRoute = () => <SettingsScreen />;
+  const insets = useSafeAreaInsets();
+  const [isTaskCreationSheetVisible, setIsTaskCreationSheetVisible] =
+    useState(false);
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
@@ -38,6 +45,25 @@ export default function ProtectedIndex() {
         onIndexChange={setIndex}
         renderScene={renderScene}
       />
+
+      <View
+        className="absolute left-0 right-0 items-center"
+        style={{ bottom: insets.bottom + 20 }}
+      >
+        <Pressable
+          onPress={() => setIsTaskCreationSheetVisible(true)}
+          className="w-14 h-14 rounded-full bg-gray-200 items-center justify-center"
+          android_ripple={{ color: "#e5e7eb", borderless: true }}
+        >
+          <MaterialCommunityIcons name="plus" size={28} color="#6B7280" />
+        </Pressable>
+      </View>
+      {isTaskCreationSheetVisible && (
+        <CreateTaskBottomSheet
+          isVisible={isTaskCreationSheetVisible}
+          onClose={setIsTaskCreationSheetVisible}
+        ></CreateTaskBottomSheet>
+      )}
     </BottomSheetModalProvider>
   );
 }
