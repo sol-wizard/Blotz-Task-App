@@ -7,6 +7,7 @@ import uuid from "react-native-uuid";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { convertAiTaskToAddTaskItemDTO } from "../services/util/util";
 import { format } from "date-fns";
+import { addTaskItem } from "@/feature/task/services/task-service";
 
 export default function AiTaskList({
   tasks,
@@ -18,14 +19,19 @@ export default function AiTaskList({
   if (tasks.length === 0) return null;
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
 
-  const handleAddTask = (task: AiTaskDTO) => {
+  const handleAddTask = async (task: AiTaskDTO) => {
     setCheckedIds((prev) => {
       const next = new Set(prev);
       if (next.has(task.id)) next.delete(task.id);
       return next;
     });
     const newTask = convertAiTaskToAddTaskItemDTO(task);
-    console.log("Clicked task:", newTask);
+    try {
+      await addTaskItem(newTask);
+      console.log("task added successfully!");
+    } catch (error) {
+      console.log("add task failed", error);
+    }
   };
 
   return (
