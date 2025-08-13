@@ -38,12 +38,12 @@ export default function ProtectedIndex() {
 
   const handleIndexChange = (newIndex: number) => {
     const selectedRoute = routes[newIndex];
-    
+
     // If create button is clicked, do nothing
     if (selectedRoute.key === "create") {
       return; // Don't change the tab index
     }
-    
+
     // Otherwise, change tabs normally
     setIndex(newIndex);
   };
