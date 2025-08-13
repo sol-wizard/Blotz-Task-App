@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, FlatList, View } from "react-native";
+import { SafeAreaView, FlatList, View, Pressable } from "react-native";
 import {
   CalendarProvider,
   WeekCalendar,
@@ -18,6 +18,7 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { CreateTaskBottomSheet } from "../task-creation/create-task-bottom-sheet";
 import { Button, Portal } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -153,20 +154,16 @@ export default function CalendarPage() {
       )}
       <Portal>
         <View
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: insets.bottom + 20,
-            alignItems: "center",
-          }}
+          className="absolute left-0 right-0 items-center"
+          style={{ bottom: insets.bottom + 20 }}
         >
-          <Button
-            mode="contained"
+          <Pressable
             onPress={() => setIsTaskCreationSheetVisible(true)}
+            className="w-14 h-14 rounded-full bg-gray-200 items-center justify-center"
+            android_ripple={{ color: "#e5e7eb", borderless: true }}
           >
-            +
-          </Button>
+            <MaterialCommunityIcons name="plus" size={28} color="#6B7280" />
+          </Pressable>
         </View>
       </Portal>
     </SafeAreaView>
