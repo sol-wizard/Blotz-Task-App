@@ -2,6 +2,7 @@ import BotMessage from "@/feature/ai/components/bot-message";
 import { TypingArea } from "@/feature/ai/components/typing-area";
 import UserMessage from "@/feature/ai/components/user-message";
 import { useSignalRChat } from "@/feature/ai/hooks/useSignalRChat";
+import { AiTaskDTO } from "@/feature/ai/models/ai-task-dto";
 import React, { useState } from "react";
 import {
   View,
@@ -22,10 +23,6 @@ export default function AiPlannerScreen() {
   const handleSend = () => {
     sendMessage(text);
     setText("");
-  };
-
-  const handleDeleteTask = (taskId?: string) => {
-    console.log("Delete task:", taskId);
   };
 
   const handleEditTask = (taskId: string, newTitle: string) => {
@@ -56,7 +53,6 @@ export default function AiPlannerScreen() {
                       key={uuid.v4().toString()}
                       text={msg.content}
                       tasks={msg.tasks}
-                      onDeleteTask={handleDeleteTask}
                       onEditTask={handleEditTask}
                     />
                   ) : (
