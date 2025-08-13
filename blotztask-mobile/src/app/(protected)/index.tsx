@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { BottomNavigation } from "react-native-paper";
+import { BottomNavigation, Button } from "react-native-paper";
 import CalendarPage from "@/feature/task/calendars/calendar-screen";
 import SettingsScreen from "@/feature/settings/page/settings-screen";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { View } from "react-native";
 
 const routes = [
   {
@@ -10,12 +11,6 @@ const routes = [
     title: "Calendar",
     focusedIcon: "calendar",
     unfocusedIcon: "calendar-outline",
-  },
-  {
-    key: "create",
-    title: "Create",
-    focusedIcon: "pencil",
-    unfocusedIcon: "pencil-outline",
   },
   {
     key: "settings",
@@ -30,59 +25,40 @@ export default function ProtectedIndex() {
   const [isTaskCreationBottomSheetVisible, setTaskCreationBottomSheetVisible] =
     useState(false);
 
-  const calendarIndex = routes.findIndex((r) => r.key === "calendar");
+  const CalendarRoute = () => <CalendarPage />;
 
-  const handleIndexChange = (newIndex: number) => {
-    const selected = routes[newIndex];
-    if (selected.key === "create") {
-      setIndex(calendarIndex);
-      setTaskCreationBottomSheetVisible(true);
-      return;
-    }
-    setIndex(newIndex);
-  };
+  const SettingsRoute = () => <SettingsScreen />;
 
-  const renderScene = ({ route }: { route: (typeof routes)[number] }) => {
-    switch (route.key) {
-      case "calendar":
-        return (
-          <CalendarPage
-            isTaskCreationBottomSheetVisible={isTaskCreationBottomSheetVisible}
-            onRequestCloseTaskCreationBottomSheet={() =>
-              setTaskCreationBottomSheetVisible(false)
-            }
-          />
-        );
-      case "create":
-        return (
-          <CalendarPage
-            isTaskCreationBottomSheetVisible={isTaskCreationBottomSheetVisible}
-            onRequestCloseTaskCreationBottomSheet={() =>
-              setTaskCreationBottomSheetVisible(true)
-            }
-          />
-        );
-      case "settings":
-        return <SettingsScreen />;
-      default:
-        return (
-          <CalendarPage
-            isTaskCreationBottomSheetVisible={isTaskCreationBottomSheetVisible}
-            onRequestCloseTaskCreationBottomSheet={() =>
-              setTaskCreationBottomSheetVisible(false)
-            }
-          />
-        );
-    }
-  };
+  const renderScene = BottomNavigation.SceneMap({
+    calendar: CalendarRoute,
+    settings: SettingsRoute,
+  });
 
   return (
     <BottomSheetModalProvider>
       <BottomNavigation
         navigationState={{ index, routes }}
-        onIndexChange={handleIndexChange}
+        onIndexChange={setIndex}
         renderScene={renderScene}
       />
+      {/* <View
+        pointerEvents="box-none"
+        style={{
+          position: "absolute",
+          bottom: 60,
+          left: 10,
+          right: 10,
+          alignItems: "center",
+        }}
+      >
+        <Button
+          mode="contained"
+          icon="pencil"
+          onPress={() => setTaskCreationBottomSheetVisible(true)}
+        >
+          Create
+        </Button>
+      </View> */}
     </BottomSheetModalProvider>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, FlatList } from "react-native";
+import { SafeAreaView, FlatList, View } from "react-native";
 import {
   CalendarProvider,
   WeekCalendar,
@@ -16,14 +16,10 @@ import {
 import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { CreateTaskBottomSheet } from "../task-creation/create-task-bottom-sheet";
+import { Button, Portal } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function CalendarPage({
-  isTaskCreationBottomSheetVisible,
-  onRequestCloseTaskCreationBottomSheet,
-}: {
-  isTaskCreationBottomSheetVisible: boolean;
-  onRequestCloseTaskCreationBottomSheet: () => void;
-}) {
+export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [tasksForSelectedDay, setTasksForSelectedDay] = useState<
     TaskDetailDTO[]
@@ -32,6 +28,10 @@ export default function CalendarPage({
     undefined
   );
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
+  const insets = useSafeAreaInsets();
+
+  const [isTaskCreationSheetVisible, setIsTaskCreationSheetVisible] =
+    useState(false);
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -137,10 +137,10 @@ export default function CalendarPage({
         )}
       </CalendarProvider>
 
-      {isTaskCreationBottomSheetVisible && (
+      {isTaskCreationSheetVisible && (
         <CreateTaskBottomSheet
-          isVisible={isTaskCreationBottomSheetVisible}
-          onClose={onRequestCloseTaskCreationBottomSheet}
+          isVisible={isTaskCreationSheetVisible}
+          onClose={setIsTaskCreationSheetVisible}
         ></CreateTaskBottomSheet>
       )}
 
@@ -151,6 +151,24 @@ export default function CalendarPage({
           onClose={handleBottomSheetClose}
         />
       )}
+      <Portal>
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: insets.bottom + 20,
+            alignItems: "center",
+          }}
+        >
+          <Button
+            mode="contained"
+            onPress={() => setIsTaskCreationSheetVisible(true)}
+          >
+            +
+          </Button>
+        </View>
+      </Portal>
     </SafeAreaView>
   );
 }

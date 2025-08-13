@@ -9,7 +9,7 @@ export const CreateTaskBottomSheet = ({
   onClose,
 }: {
   isVisible: boolean;
-  onClose: () => void;
+  onClose: (isVisible: boolean) => void;
 }) => {
   const taskCreationBottomSheetRef = useRef<BottomSheet>(null);
 
@@ -24,7 +24,7 @@ export const CreateTaskBottomSheet = ({
   const handleSheetChange = useCallback(
     (index: number) => {
       if (index === -1) {
-        onClose();
+        onClose(false);
       }
     },
     [onClose]
@@ -45,7 +45,7 @@ export const CreateTaskBottomSheet = ({
           snapPoints={["80%"]}
           onChange={handleSheetChange}
           enablePanDownToClose
-          onClose={onClose}
+          onClose={() => onClose(false)}
         >
           <BottomSheetView style={{ padding: 16 }}>
             <TaskCreationForm
