@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, FlatList } from "react-native";
+import {
+  SafeAreaView,
+  FlatList,
+  ActivityIndicator,
+  View,
+  Text,
+} from "react-native";
 import {
   CalendarProvider,
   WeekCalendar,
@@ -9,6 +15,7 @@ import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
 import TaskCard from "../components/task-card";
+
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
@@ -21,37 +28,41 @@ export default function CalendarPage() {
   const [tasksForSelectedDay, setTasksForSelectedDay] = useState<
     TaskDetailDTO[]
   >([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
     undefined
   );
-  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
 
   useEffect(() => {
     const loadTasksForDate = async () => {
-      const tasks = await fetchTasksForDate(selectedDay);
-      setTasksForSelectedDay(tasks);
+      setIsLoading(true);
+      setError(null);
+      try {
+        const tasks = await fetchTasksForDate(selectedDay);
+        setTasksForSelectedDay(tasks);
+      } catch (e) {
+        console.error(e);
+        setError("Failed to load tasks");
+        setTasksForSelectedDay([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadTasksForDate();
   }, [selectedDay]);
 
   const handleToggleTask = async (task: TaskDetailDTO) => {
-    await toggleTaskCompletion(task.id);
-
-    const updatedTasks = await fetchTasksForDate(selectedDay);
-    setTasksForSelectedDay(updatedTasks);
-  };
-
-  const handleTaskPress = (task: TaskDetailDTO) => {
-    console.log("Task pressed:", task.title);
-    setSelectedTask(task);
-    setIsBottomSheetVisible(true);
-    console.log("Bottom sheet should be visible now");
-  };
-
-  const handleBottomSheetClose = () => {
-    setIsBottomSheetVisible(false);
-    setSelectedTask(undefined);
+    try {
+      await toggleTaskCompletion(task.id);
+      const updatedTasks = await fetchTasksForDate(selectedDay);
+      setTasksForSelectedDay(updatedTasks);
+    } catch (e) {
+      console.error(e);
+      // noop, could show toast
+    }
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => {
@@ -61,23 +72,22 @@ export default function CalendarPage() {
       <TaskCard
         id={task.id.toString()}
         title={task.title}
-        startTime="10:00am"
-        endTime="11:00am"
+        startTime={task.hasTime ? format(task.endTime, "p") : undefined}
         isCompleted={task.isDone}
         onToggleComplete={(id, completed) => {
           handleToggleTask(task);
         }}
         onPress={() => {
-          handleTaskPress(task);
+          setSelectedTask(task);
+          setIsBottomSheetVisible(true);
         }}
       />
     );
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView className="flex-1">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
-
       <CalendarProvider
         date={format(selectedDay, "yyyy-MM-dd")}
         onDateChanged={(date: string) => setSelectedDay(new Date(date))}
@@ -118,7 +128,15 @@ export default function CalendarPage() {
             hideKnob={true}
           /> */}
 
-        {tasksForSelectedDay.length > 0 ? (
+        {isLoading ? (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="small" />
+          </View>
+        ) : error ? (
+          <View className="flex-1 items-center justify-center">
+            <Text>Failed to load tasks</Text>
+          </View>
+        ) : tasksForSelectedDay.length > 0 ? (
           <FlatList
             className="flex-1"
             data={tasksForSelectedDay}
@@ -134,7 +152,10 @@ export default function CalendarPage() {
         <TaskDetailBottomSheet
           task={selectedTask}
           isVisible={isBottomSheetVisible}
-          onClose={handleBottomSheetClose}
+          onClose={() => {
+            setIsBottomSheetVisible(false);
+            setSelectedTask(undefined);
+          }}
         />
       )}
     </SafeAreaView>
