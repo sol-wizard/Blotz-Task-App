@@ -6,6 +6,7 @@ export interface TaskDetailDTO {
   title: string;
   isDone: boolean;
   label: LabelDTO;
-  endTime: Date;
+  startTime: string;
+  endTime: string;
   hasTime: boolean;
 }
