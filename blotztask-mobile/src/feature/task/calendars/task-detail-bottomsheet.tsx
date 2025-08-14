@@ -10,7 +10,7 @@ interface CalendarBottomSheetProps {
   onClose: () => void;
 }
 
-const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
+const TaskDetailBottomSheet: React.FC<CalendarBottomSheetProps> = ({
   task,
   isVisible,
   onClose,
@@ -21,7 +21,6 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
     (index: number) => {
       if (index === -1) {
         onClose();
-        console.log("Bottom sheet closed");
       }
     },
     [onClose]
@@ -71,10 +70,10 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
                     </View>
 
                     <View className="flex-row justify-between items-center my-2">
-                      <Text variant="bodyMedium">Date:</Text>
-                      <Text variant="bodyMedium">
-                        {task.endTime.toLocaleDateString()}
-                      </Text>
+                      <Text variant="bodyMedium">Start Date:</Text>
+                      <Text variant="bodyMedium">{task.startTime}</Text>
+                      <Text variant="bodyMedium">End Date:</Text>
+                      <Text variant="bodyMedium">{task.endTime}</Text>
                     </View>
 
                     <View className="flex-row justify-between items-center my-2">
@@ -116,4 +115,4 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
   );
 };
 
-export default CalendarBottomSheet;
+export default TaskDetailBottomSheet;
