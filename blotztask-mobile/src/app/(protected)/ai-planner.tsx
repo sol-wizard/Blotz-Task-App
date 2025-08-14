@@ -2,7 +2,6 @@ import BotMessage from "@/feature/ai/components/bot-message";
 import { TypingArea } from "@/feature/ai/components/typing-area";
 import UserMessage from "@/feature/ai/components/user-message";
 import { useSignalRChat } from "@/feature/ai/hooks/useSignalRChat";
-import { AiTaskDTO } from "@/feature/ai/models/ai-task-dto";
 import React, { useState } from "react";
 import {
   View,
