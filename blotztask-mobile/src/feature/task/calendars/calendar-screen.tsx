@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
 import TaskCard from "../components/task-card";
+import CalendarBottomSheet from "./calendar-bottomsheet";
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
@@ -22,6 +23,8 @@ export default function CalendarPage() {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -66,7 +69,8 @@ export default function CalendarPage() {
           handleToggleTask(task);
         }}
         onPress={() => {
-          console.log("Task card pressed:", task.title);
+          setSelectedTask(task);
+          setIsBottomSheetVisible(true);
         }}
       />
     );
@@ -135,6 +139,18 @@ export default function CalendarPage() {
           <NoGoalsView />
         )}
       </CalendarProvider>
+      
+      {isBottomSheetVisible && (
+        <CalendarBottomSheet
+          task={selectedTask}
+          isVisible={isBottomSheetVisible}
+          onClose={() => {
+            setIsBottomSheetVisible(false);
+            setSelectedTask(undefined);
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
+
