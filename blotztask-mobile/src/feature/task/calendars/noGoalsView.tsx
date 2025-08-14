@@ -20,7 +20,7 @@ export default function NoGoalsView() {
       />
 
       <Text className="text-xl font-bold text-zinc-800 mb-2">
-        No Goals right now!
+        No tasks for this day
       </Text>
       <Text className="text-base text-zinc-600 text-center mb-5">
         Your to do list is empty. Wanna Create new?

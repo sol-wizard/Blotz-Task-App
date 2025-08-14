@@ -71,10 +71,10 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
                     </View>
 
                     <View className="flex-row justify-between items-center my-2">
-                      <Text variant="bodyMedium">Date:</Text>
-                      <Text variant="bodyMedium">
-                        {task.endTime.toLocaleDateString()}
-                      </Text>
+                      <Text variant="bodyMedium">Start Date:</Text>
+                      <Text variant="bodyMedium">{task.startTime}</Text>
+                      <Text variant="bodyMedium">End Date:</Text>
+                      <Text variant="bodyMedium">{task.endTime}</Text>
                     </View>
 
                     <View className="flex-row justify-between items-center my-2">
