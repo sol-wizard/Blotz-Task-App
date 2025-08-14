@@ -15,6 +15,7 @@
     "@gorhom/bottom-sheet": "^5.1.8",
     "@hookform/resolvers": "^5.1.1",
     "@microsoft/signalr": "^8.0.7",
+    "@quidone/react-native-wheel-picker": "^1.5.2",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-voice/voice": "^3.2.4",
     "@react-navigation/bottom-tabs": "^7.3.10",
@@ -42,7 +43,6 @@
     "expo-web-browser": "~14.2.0",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
-    "lottie-react-native": "7.2.2",
     "nativewind": "^4.1.23",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -54,11 +54,13 @@
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
+    "react-native-svg": "^15.12.1",
     "react-native-uuid": "^2.0.3",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "tailwindcss": "^3.4.17",
-    "zod": "^4.0.5"
+    "zod": "^4.0.5",
+    "lottie-react-native": "7.2.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

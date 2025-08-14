@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, FlatList, ActivityIndicator, View, Text } from "react-native";
+import {
+  SafeAreaView,
+  FlatList,
+  ActivityIndicator,
+  View,
+  Text,
+} from "react-native";
 import {
   CalendarProvider,
   WeekCalendar,
@@ -9,11 +15,12 @@ import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
 import TaskCard from "../components/task-card";
-import CalendarBottomSheet from "./calendar-bottomsheet";
+
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
 } from "../services/task-service";
+import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 export default function CalendarPage() {
@@ -24,7 +31,9 @@ export default function CalendarPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
+  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -51,7 +60,7 @@ export default function CalendarPage() {
       const updatedTasks = await fetchTasksForDate(selectedDay);
       setTasksForSelectedDay(updatedTasks);
     } catch (e) {
-      console.error(e)
+      console.error(e);
       // noop, could show toast
     }
   };
@@ -84,7 +93,6 @@ export default function CalendarPage() {
         onDateChanged={(date: string) => setSelectedDay(new Date(date))}
         showTodayButton={false}
       >
-        {/* week Calenda */}
         <WeekCalendar
           onDayPress={(day: DateData) =>
             setSelectedDay(new Date(day.dateString))
@@ -139,9 +147,9 @@ export default function CalendarPage() {
           <NoGoalsView />
         )}
       </CalendarProvider>
-      
+
       {isBottomSheetVisible && (
-        <CalendarBottomSheet
+        <TaskDetailBottomSheet
           task={selectedTask}
           isVisible={isBottomSheetVisible}
           onClose={() => {
@@ -153,4 +161,3 @@ export default function CalendarPage() {
     </SafeAreaView>
   );
 }
-

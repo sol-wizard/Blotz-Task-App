@@ -30,8 +30,6 @@ import { RawAddTaskDTO } from '@/model/raw-add-task-dto';
 import { addTaskItem } from '@/services/task-service';
 import { Badge } from '@/components/ui/badge';
 
-
-
 const FEATURE_FLAG_KEY = 'aiEnabled';
 
 export function AppSidebar() {
@@ -39,20 +37,31 @@ export function AppSidebar() {
   const { loadTodayTasks, loadOverdueTasks } = useTodayTaskActions();
   const overdueFromTodayStore = useOverdueTasks();
   const incompleteFromTodayStore = useIncompleteTodayTasks();
-  const { overdueTasks: overdueFromScheduleStore, todayTasks: todayFromScheduleStore, tomorrowTasks: tomorrowFromScheduleStore, weekTasks: weekFromScheduleStore, monthTasks: monthFromScheduleStore } = useScheduleTaskStore();
+  const {
+    overdueTasks: overdueFromScheduleStore,
+    todayTasks: todayFromScheduleStore,
+    tomorrowTasks: tomorrowFromScheduleStore,
+    weekTasks: weekFromScheduleStore,
+    monthTasks: monthFromScheduleStore,
+  } = useScheduleTaskStore();
   const pathname = usePathname();
   const [aiEnabled, setAiEnabled] = useState(true);
   const { loadSearchTasks, setQuery } = useSearchTaskActions();
   const query = useSearchQuery();
 
   const todayBadgeCount = overdueFromTodayStore.length + incompleteFromTodayStore.length;
-  
+
   const monthTasksCount = Object.values(monthFromScheduleStore).flat().length;
-  const scheduleBadgeCount = overdueFromScheduleStore.length + todayFromScheduleStore.length + tomorrowFromScheduleStore.length + weekFromScheduleStore.length + monthTasksCount;
+  const scheduleBadgeCount =
+    overdueFromScheduleStore.length +
+    todayFromScheduleStore.length +
+    tomorrowFromScheduleStore.length +
+    weekFromScheduleStore.length +
+    monthTasksCount;
 
   const menuItems = [
     { title: 'All Tasks', url: 'task-list', icon: List },
-    { title: 'Today', url: 'today', icon: CircleCheckBig, count: todayBadgeCount},
+    { title: 'Today', url: 'today', icon: CircleCheckBig, count: todayBadgeCount },
     { title: 'Schedule', url: 'schedule', icon: Calendar, count: scheduleBadgeCount },
   ];
 
@@ -133,7 +142,7 @@ export function AppSidebar() {
                         href="goal-to-task"
                         className="flex items-center px-4 py-3 w-full rounded-md hover:bg-white"
                       >
-                        <Target size={18} className='text-red-500'/>
+                        <Target size={18} className="text-red-500" />
                         <span className="pl-3 text-base text-indigo-700 font-medium">Goal to task</span>
                       </Link>
                     </SidebarMenuButton>
@@ -152,16 +161,14 @@ export function AppSidebar() {
                     )}
                     asChild
                   >
-                    <Link href={`/dashboard/${item.url}`} className='flex justify-between '>
-                      <div className='flex items-center'>
-                        <item.icon size={18}/>
+                    <Link href={`/dashboard/${item.url}`} className="flex justify-between ">
+                      <div className="flex items-center">
+                        <item.icon size={18} />
                         <span className="pl-3 text-base">{item.title}</span>
                       </div>
 
                       {item.count !== undefined && (
-                        <Badge
-                          className="w-6 h-6 rounded-full bg-white text-primary border border-primary text-sm font-semibold flex items-center justify-center"
-                        >
+                        <Badge className="w-6 h-6 rounded-full bg-white text-primary border border-primary text-sm font-semibold flex items-center justify-center">
                           {item.count}
                         </Badge>
                       )}
