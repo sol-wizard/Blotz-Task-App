@@ -5,3 +5,5 @@
 # TODO: temporary hide power shell script
 *.ps1
 .DS_Store
+.vscode/
+.idea/
