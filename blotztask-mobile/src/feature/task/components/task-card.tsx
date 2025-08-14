@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { View, Pressable } from 'react-native';
-import { Surface, Text, Checkbox, IconButton } from 'react-native-paper';
+import React, { useEffect, useState } from "react";
+import { View, Pressable } from "react-native";
+import { Surface, Text, Checkbox, IconButton } from "react-native-paper";
 
 interface TaskCardProps {
   id: string;
@@ -35,7 +35,7 @@ export default function TaskCard({
 
   const handleIconPress = (event: any) => {
     event.stopPropagation();
-    console.log('Time icon pressed for:', title);
+    console.log("Time icon pressed for:", title);
   };
 
   const formatTimeRange = () => {
@@ -45,7 +45,7 @@ export default function TaskCard({
     if (startTime) {
       return startTime;
     }
-    return '';
+    return "";
   };
 
   return (
@@ -55,37 +55,35 @@ export default function TaskCard({
         marginVertical: 4,
         borderRadius: 12,
         elevation: 1,
-        backgroundColor: '#ffffff',
+        backgroundColor: "#ffffff",
       }}
     >
       <Pressable
         onPress={onPress}
         style={{
-          flexDirection: 'row',
-          alignItems: 'center',
+          flexDirection: "row",
+          alignItems: "center",
           paddingVertical: 16,
           paddingHorizontal: 16,
           minHeight: 72,
         }}
       >
-        {/* Checkbox */}
         <View style={{ marginRight: 12 }}>
           <Checkbox
-            status={checked ? 'checked' : 'unchecked'}
+            status={checked ? "checked" : "unchecked"}
             onPress={handleToggleComplete}
             color="#2196F3"
             uncheckedColor="#E0E0E0"
           />
         </View>
 
-        {/* Content */}
-        <View style={{ flex: 1, justifyContent: 'center' }}>
+        <View style={{ flex: 1, justifyContent: "center" }}>
           <Text
             variant="bodyLarge"
             style={{
-              fontWeight: '500',
-              color: checked ? '#9E9E9E' : '#212121',
-              textDecorationLine: checked ? 'line-through' : 'none',
+              fontWeight: "500",
+              color: checked ? "#9E9E9E" : "#212121",
+              textDecorationLine: checked ? "line-through" : "none",
               marginBottom: 2,
             }}
           >
@@ -95,7 +93,7 @@ export default function TaskCard({
             <Text
               variant="bodySmall"
               style={{
-                color: '#757575',
+                color: "#757575",
                 fontSize: 13,
               }}
             >
@@ -104,7 +102,6 @@ export default function TaskCard({
           )}
         </View>
 
-        {/* Time/Clock Icon */}
         <IconButton
           icon="clock-outline"
           size={20}
