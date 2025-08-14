@@ -1,7 +1,7 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
 import { getStartOfDayUtc } from "../util/date-utils";
-import { AddTaskItemDTO } from "../ models/add-task-item-dto";
+import { AddTaskItemDTO } from "../models/add-task-item-dto";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_URL as string;
 

@@ -13,10 +13,10 @@ export const SingleAiTask = ({ singleTask }: { singleTask: AiTaskDTO }) => {
   const [isChecked, setIsChecked] = useState<string>();
   const handleAddTask = async (task: AiTaskDTO) => {
     const newTask = convertAiTaskToAddTaskItemDTO(task);
+
     try {
       await addTaskItem(newTask);
       setIsChecked("checked");
-      console.log("task added successfully!");
     } catch (error) {
       console.log("add task failed", error);
     }

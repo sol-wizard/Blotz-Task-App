@@ -1,4 +1,4 @@
-import { AddTaskItemDTO } from "@/feature/task/ models/add-task-item-dto";
+import { AddTaskItemDTO } from "@/feature/task/models/add-task-item-dto";
 import { AiTaskDTO } from "../../models/ai-task-dto";
 
 export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {
@@ -7,7 +7,7 @@ export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {
     description: task.description,
     startTime: new Date(),
     endTime: task.endTime,
-    hasTime: task.hasTime,
-    labelId: task.labelId,
+    hasTime: false,
+    labelId: task.labelId ?? 6, // TODO: change it to ai generated task label
   };
 }
