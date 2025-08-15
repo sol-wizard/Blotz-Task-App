@@ -1,7 +1,7 @@
-using BlotzTask.Modules.Chat.DTOs;
+using BlotzTask.Modules.GoalPlannerChat.Dtos;
 using BlotzTask.Shared.DTOs;
 
-namespace BlotzTask.Modules.Chat.Services;
+namespace BlotzTask.Modules.GoalPlannerChat.Services;
 public interface IGoalPlannerChatService
 {
     Task<GoalPlanningChatResult> HandleUserMessageAsync(ConversationMessage userMessage);
@@ -9,8 +9,6 @@ public interface IGoalPlannerChatService
 
 public class GoalPlannerChatService : IGoalPlannerChatService
 {
-    private const int MaxClarificationRounds = 3;
-
     private readonly IGoalPlannerAiService _goalPlannerAiService;
     private readonly IConversationStateService _conversationStateService;
 
@@ -30,7 +28,8 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         {
             return EndConversation(conversationId); 
         }
-
+        
+        // If there's no chathistory, create a new converstaion
         if (!_conversationStateService.TryGetChatHistory(conversationId, out var chatHistory))
         {
             chatHistory = await _goalPlannerAiService.InitializeNewConversation(conversationId);
@@ -38,23 +37,15 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         }
 
         chatHistory.AddUserMessage(userMessage.Content);
-
-        var state = _conversationStateService.GetClarificationState(conversationId);
-        var isReady = await _goalPlannerAiService.IsReadyToGeneratePlanAsync(chatHistory, state.ClarificationRound);
+        
+        var isReady = await _goalPlannerAiService.IsReadyToGeneratePlanAsync(chatHistory);
 
         string botContent;
-        List<ExtractedTaskDto>? tasks = null;
-
-        if (!isReady && state.ClarificationRound >= MaxClarificationRounds)
+        List<ExtractedTaskGoalPlanner>? tasks = null;
+        
+        if (!isReady)
         {
-            botContent = "Sorry, I couldn't generate a helpful task plan based on the information provided. You can try restating your goal with more details.";
-            state.ClarificationRound = 0;
-            _conversationStateService.SetConversationComplete(conversationId, true);
-        }
-        else if (!isReady)
-        {
-            botContent = await _goalPlannerAiService.GenerateClarifyingQuestionAsync(chatHistory, state.ClarificationRound);
-            state.ClarificationRound++;
+            botContent = await _goalPlannerAiService.GenerateClarifyingQuestionAsync(chatHistory);
         }
         else
         {
@@ -70,11 +61,8 @@ public class GoalPlannerChatService : IGoalPlannerChatService
             {
                 botContent = "No tasks could be generated.";
             }
-
-            state.ClarificationRound = 0;
+            
         }
-
-        _conversationStateService.SetClarificationState(conversationId, state);
 
         return new GoalPlanningChatResult
         {
@@ -110,6 +98,7 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         };
     }
     
+    // TODO: Change this to a more robust solution
     private bool UserExplicitlyEndedConversation(string message)
     {
         var lower = message.ToLowerInvariant();
