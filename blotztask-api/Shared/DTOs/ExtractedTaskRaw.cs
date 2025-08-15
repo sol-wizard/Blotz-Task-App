@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace BlotzTask.Shared.DTOs;
 
-public class GoalPlannerRawExtractedTask
+public class ExtractedTaskRaw
 {
     [JsonPropertyName("title")]
     public string Title { get; set; }
@@ -12,10 +12,4 @@ public class GoalPlannerRawExtractedTask
 
     [JsonPropertyName("end_time")]
     public string? EndTime { get; set; }
-    
-    [JsonPropertyName("isValidTask")]
-    public bool IsValidTask { get; set; }
-
-    [JsonPropertyName("label")]
-    public string Label { get; set; }
 }

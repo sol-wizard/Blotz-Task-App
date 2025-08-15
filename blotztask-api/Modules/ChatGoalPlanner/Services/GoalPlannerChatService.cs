@@ -41,7 +41,7 @@ public class GoalPlannerChatService : IGoalPlannerChatService
         var isReady = await _goalPlannerAiService.IsReadyToGeneratePlanAsync(chatHistory);
 
         string botContent;
-        List<GoalPlannerExtractedTaskDto>? tasks = null;
+        List<ExtractedTaskGoalPlanner>? tasks = null;
         
         if (!isReady)
         {

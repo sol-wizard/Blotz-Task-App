@@ -8,10 +8,10 @@ namespace BlotzTask.Modules.GoalPlannerChat.Services;
 
 public interface IGoalPlannerAiService
 {
-    Task<List<GoalPlannerExtractedTaskDto>?> GenerateAiResponse(ChatHistory chatHistory);
+    Task<List<ExtractedTaskGoalPlanner>?> GenerateAiResponse(ChatHistory chatHistory);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
     Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory);
-    Task<List<GoalPlannerExtractedTaskDto>?> ReviseGeneratedTasksAsync(List<GoalPlannerExtractedTaskDto>? rawTasks, ChatHistory chatHistory);
+    Task<List<ExtractedTaskGoalPlanner>?> ReviseGeneratedTasksAsync(List<ExtractedTaskGoalPlanner>? rawTasks, ChatHistory chatHistory);
     Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory);
 }
 
@@ -33,7 +33,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         _taskParser = taskParser;
         _safeChatCompletionService = safeChatCompletionService;
     }
-    public async Task<List<GoalPlannerExtractedTaskDto>?> GenerateAiResponse(
+    public async Task<List<ExtractedTaskGoalPlanner>?> GenerateAiResponse(
     ChatHistory chatHistory)
     {
         var tempHistory = new ChatHistory(chatHistory);
@@ -41,7 +41,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
 
         var answer = await _safeChatCompletionService.GetSafeContentAsync(tempHistory);
 
-        if (!string.IsNullOrEmpty(answer) && _taskParser.TryParseTasks(answer, out List<GoalPlannerExtractedTaskDto>? tasks))
+        if (!string.IsNullOrEmpty(answer) && _taskParser.TryParseTasks(answer, out List<ExtractedTaskGoalPlanner>? tasks))
         {
             chatHistory.AddAssistantMessage(answer);
             return tasks;
@@ -152,7 +152,7 @@ Consider:
         return response ?? "Can you clarify your goal a bit more?";
     }
     
-    public async Task<List<GoalPlannerExtractedTaskDto>?> ReviseGeneratedTasksAsync(List<GoalPlannerExtractedTaskDto>? rawTasks, ChatHistory chatHistory)
+    public async Task<List<ExtractedTaskGoalPlanner>?> ReviseGeneratedTasksAsync(List<ExtractedTaskGoalPlanner>? rawTasks, ChatHistory chatHistory)
     {
 
         string taskListText = string.Join("\n", rawTasks.Select(t => $"- {t.Description}"));
@@ -172,7 +172,7 @@ Consider:
 
         var revisionResult = await _safeChatCompletionService.GetSafeContentAsync(chatHistory);
 
-        if (!string.IsNullOrEmpty(revisionResult) && _taskParser.TryParseTasks(revisionResult, out List<GoalPlannerExtractedTaskDto>? revisedTasks))
+        if (!string.IsNullOrEmpty(revisionResult) && _taskParser.TryParseTasks(revisionResult, out List<ExtractedTaskGoalPlanner>? revisedTasks))
         {
             return revisedTasks;
         }

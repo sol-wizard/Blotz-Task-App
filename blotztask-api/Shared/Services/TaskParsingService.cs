@@ -5,6 +5,7 @@ using BlotzTask.Shared.DTOs;
 
 namespace BlotzTask.Shared.Services;
 
+// TODO: Replace this by using function tool to parse tasks from the response
 public class TaskParsingService
 {
     private readonly ILogger<TaskParsingService> _logger;
@@ -22,13 +23,13 @@ public class TaskParsingService
     /// <param name="response">The JSON response string.</param>
     /// <param name="tasks">The parsed list of tasks.</param>
     /// <returns>True if tasks were successfully parsed, false otherwise.</returns>
-    public bool TryParseTasks(string response, out List<GoalPlannerExtractedTaskDto>? tasks)
+    public bool TryParseTasks(string response, out List<ExtractedTaskGoalPlanner>? tasks)
     {
         return TryParseTasksInternal(
             response,
             (taskElement, options, labels, labelNames) =>
             {
-                var rawExtractedTask = JsonSerializer.Deserialize<GoalPlannerRawExtractedTask>(
+                var rawExtractedTask = JsonSerializer.Deserialize<ExtractedTaskGoalPlannerRaw>(
                     taskElement.GetRawText(),
                     options
                 );
@@ -48,13 +49,13 @@ public class TaskParsingService
     /// <param name="response">The JSON response string.</param>
     /// <param name="tasks">The parsed list of tasks.</param>
     /// <returns>True if tasks were successfully parsed, false otherwise.</returns>
-    public bool TryParseTasks(string response, out List<ExtractedTaskDto>? tasks)
+    public bool TryParseTasks(string response, out List<ExtractedTask>? tasks)
     {
         return TryParseTasksInternal(
             response,
             (taskElement, options, _, _) =>
             {
-                var rawExtractedTask = JsonSerializer.Deserialize<RawExtractedTask>(
+                var rawExtractedTask = JsonSerializer.Deserialize<ExtractedTaskRaw>(
                     taskElement.GetRawText(),
                     options
                 );
@@ -148,7 +149,7 @@ public class TaskParsingService
             HashSet<string>? labelNames = null;
 
             // Only fetch labels if the taskMapper is of type GoalPlannerExtractedTaskDto
-            if (typeof(TTaskDto) == typeof(GoalPlannerExtractedTaskDto))
+            if (typeof(TTaskDto) == typeof(ExtractedTaskGoalPlanner))
             {
                 labels = _labelService.GetAllLabelsAsync().GetAwaiter().GetResult();
                 labelNames = labels.Select(label => label.Name).ToHashSet();
@@ -198,8 +199,8 @@ public class TaskParsingService
     /// <param name="labelNames"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    private GoalPlannerExtractedTaskDto MapRawExtractedTask(
-        GoalPlannerRawExtractedTask? extractedTask,
+    private ExtractedTaskGoalPlanner MapRawExtractedTask(
+        ExtractedTaskGoalPlannerRaw? extractedTask,
         List<LabelDto> labels,
         HashSet<string> labelNames
     )
@@ -212,7 +213,7 @@ public class TaskParsingService
             extractedTask.Label = "Others";
         }
 
-        return new GoalPlannerExtractedTaskDto
+        return new ExtractedTaskGoalPlanner
         {
             Title = extractedTask.Title,
             Description = extractedTask.Description,
@@ -228,12 +229,12 @@ public class TaskParsingService
     /// <param name="extractedTask"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    private ExtractedTaskDto MapRawExtractedTask(RawExtractedTask? extractedTask)
+    private ExtractedTask MapRawExtractedTask(ExtractedTaskRaw? extractedTask)
     {
         if (extractedTask is null)
             throw new ArgumentNullException(nameof(extractedTask));
 
-        return new ExtractedTaskDto
+        return new ExtractedTask
         {
             Title = extractedTask.Title,
             Description = extractedTask.Description,

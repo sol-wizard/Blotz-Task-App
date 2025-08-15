@@ -9,7 +9,7 @@ namespace BlotzTask.Modules.Chat.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<List<ExtractedTaskDto>?> GenerateAiResponse(ChatHistory chatHistory);
+    Task<List<ExtractedTask>?> GenerateAiResponse(ChatHistory chatHistory);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
 }
 
@@ -38,7 +38,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
     /// </summary>
     /// <param name="chatHistory"></param>
     /// <returns></returns>
-    public async Task<List<ExtractedTaskDto>?> GenerateAiResponse(ChatHistory chatHistory)
+    public async Task<List<ExtractedTask>?> GenerateAiResponse(ChatHistory chatHistory)
     {
         var tempHistory = new ChatHistory(chatHistory);
         tempHistory.AddSystemMessage(
@@ -49,7 +49,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
 
         if (!string.IsNullOrEmpty(answer))
         {
-            if (_taskParser.TryParseTasks(answer, out List<ExtractedTaskDto>? tasks))
+            if (_taskParser.TryParseTasks(answer, out List<ExtractedTask>? tasks))
             {
                 chatHistory.AddAssistantMessage(answer);
                 return tasks;

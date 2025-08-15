@@ -28,7 +28,7 @@ public class TaskGenerateChatService : ITaskGenerateChatService
     {
         var conversationId = userMessage.ConversationId;
         string botContent;
-        List<ExtractedTaskDto>? tasks = null;
+        List<ExtractedTask>? tasks = null;
 
         if (UserExplicitlyEndedConversation(userMessage.Content))
         {
