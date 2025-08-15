@@ -151,8 +151,8 @@ builder.Services.AddCors(options =>
         builder =>
         {
             builder.WithOrigins("http://localhost:3000" // DEV frontend origin
-                , "https://blotz-task-app.vercel.app", // Prod frontend origin    
-                "https://hoppscotch.io" ) // For testing with Hoppscotch
+                , "http://localhost:8081" // DEV mobile app origin
+                , "https://blotz-task-app.vercel.app") // Prod frontend origin    
                 .WithMethods("GET", "POST", "OPTIONS", "PUT", "DELETE") // Specify allowed methods
                 .WithHeaders("Content-Type", "Authorization", "x-signalr-user-agent", "x-requested-with") // Added SignalR headers
                 .AllowCredentials(); // TODO: anti-csrf need to be built.
