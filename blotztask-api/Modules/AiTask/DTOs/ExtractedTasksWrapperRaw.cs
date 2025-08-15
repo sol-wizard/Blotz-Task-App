@@ -1,13 +1,13 @@
 using System.Text.Json.Serialization;
 using BlotzTask.Shared.DTOs;
 
-namespace BlotzTask.Modules.Chat.DTOs;
+namespace BlotzTask.Modules.AiTask.DTOs;
 
-public class ExtractedTasksWrapper
+public class ExtractedTasksWrapperRaw
 {
     [JsonPropertyName("message")]
     public string? Message { get; set; }
         
     [JsonPropertyName("tasks")]
-    public List<ExtractedTask> Tasks { get; set; } = new List<ExtractedTask>();
+    public List<ExtractedTaskGoalPlannerRaw> Tasks { get; set; } = new List<ExtractedTaskGoalPlannerRaw>();
 }
