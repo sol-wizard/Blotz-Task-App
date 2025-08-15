@@ -39,6 +39,6 @@
 
   <ItemGroup>
     <Folder Include="Infrastructure\" />
-    <Folder Include="Modules\" />
+    <Folder Include="Modules\AiTask\Services\" />
   </ItemGroup>
 </Project>

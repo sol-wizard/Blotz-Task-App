@@ -1,4 +1,4 @@
-namespace BlotzTask.Modules.Chat.Constants;
+namespace BlotzTask.Modules.GoalPlannerChat.Constants;
 
 public static class GoalPlannerPrompts
 {
@@ -17,7 +17,7 @@ Task JSON format:
         {{
             ""title"": ""string"",
             ""description"": ""string"",
-            ""due_date"": ""YYYY-MM-DD"",
+            ""end_time"": ""YYYY-MM-DD"",
             ""label"": ""string"",
             ""isValidTask"": boolean
         }}
@@ -27,7 +27,7 @@ Task JSON format:
 Important rules:
 - ALWAYS return valid JSON
 - Include ALL fields for each task
-- due_date must be future dates
+- end_time must be future dates
 - isValidTask must be true for well-formed tasks
 - Tasks must be in chronological order
 - label must be one of: {1}
