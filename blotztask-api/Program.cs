@@ -24,12 +24,6 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Serilog;
 using Swashbuckle.AspNetCore.Filters;
-using ConversationStateService = BlotzTask.Modules.GoalPlannerChat.Services.ConversationStateService;
-using GoalPlannerChatService = BlotzTask.Modules.GoalPlannerChat.Services.GoalPlannerChatService;
-using IConversationStateService = BlotzTask.Modules.GoalPlannerChat.Services.IConversationStateService;
-using IGoalPlannerChatService = BlotzTask.Modules.GoalPlannerChat.Services.IGoalPlannerChatService;
-using ISafeChatCompletionService = BlotzTask.Modules.GoalPlannerChat.Services.ISafeChatCompletionService;
-using SafeChatCompletionService = BlotzTask.Modules.GoalPlannerChat.Services.SafeChatCompletionService;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -169,14 +163,13 @@ builder.Services.AddScoped<IConversationStateService, ConversationStateService>(
 builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
 builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
 builder.Services.AddScoped<IRecurringTaskService, RecurringTaskService>();
-builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
 
 builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
-builder.Services.AddScoped<BlotzTask.Modules.Chat.Services.IConversationStateService, BlotzTask.Modules.Chat.Services.ConversationStateService>();
-builder.Services.AddScoped<BlotzTask.Modules.Chat.Services.ITaskGenerateChatService, BlotzTask.Modules.Chat.Services.TaskGenerateChatService>();
-builder.Services.AddScoped<BlotzTask.Modules.Chat.Services.ISafeChatCompletionService, BlotzTask.Modules.Chat.Services.SafeChatCompletionService>();
+builder.Services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
+builder.Services.AddScoped<ITaskGenerateChatService, TaskGenerateChatService>();
 
 builder.Services.AddScoped<TaskParsingService>();
+builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
 
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();

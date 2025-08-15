@@ -1,7 +1,7 @@
 using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace BlotzTask.Modules.Chat.Services;
+namespace BlotzTask.Shared.Services;
 
 // This service wraps the IChatCompletionService to handle exceptions and provide a safe way to get chat content.
 public interface ISafeChatCompletionService

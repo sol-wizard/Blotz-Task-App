@@ -15,19 +15,19 @@ public interface IAiTaskGenerateService
 
 public class AiTaskGenerateService : IAiTaskGenerateService
 {
-    private readonly IConversationStateService _conversationStateService;
+    private readonly IChatHistoryManagerService _chatHistoryManagerService;
     private readonly TaskParsingService _taskParser;
     private readonly ISafeChatCompletionService _safeChatCompletionService;
     private readonly ILogger<AiTaskGenerateService> _logger;
 
     public AiTaskGenerateService(
-        IConversationStateService conversationStateService,
+        IChatHistoryManagerService chatHistoryManagerService,
         TaskParsingService taskParser,
         ISafeChatCompletionService safeChatCompletionService,
         ILogger<AiTaskGenerateService> logger
     )
     {
-        _conversationStateService = conversationStateService;
+        _chatHistoryManagerService = chatHistoryManagerService;
         _taskParser = taskParser;
         _safeChatCompletionService = safeChatCompletionService;
         _logger = logger;
@@ -78,7 +78,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
             string.Format(AiTaskGeneratorPrompts.SystemMessageTemplate, DateTime.Now)
         );
 
-        _conversationStateService.SetChatHistory(conversationId, chatHistory);
+        _chatHistoryManagerService.SetChatHistory(conversationId, chatHistory);
 
         return Task.FromResult(chatHistory);
     }

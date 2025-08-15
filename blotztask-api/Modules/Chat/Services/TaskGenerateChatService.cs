@@ -11,15 +11,15 @@ public interface ITaskGenerateChatService
 public class TaskGenerateChatService : ITaskGenerateChatService
 {
     private readonly IAiTaskGenerateService _aiTaskGenerateService;
-    private readonly IConversationStateService _conversationStateService;
+    private readonly IChatHistoryManagerService _chatHistoryManagerService;
 
     public TaskGenerateChatService(
         IAiTaskGenerateService aiTaskGenerateService,
-        IConversationStateService conversationStateService
+        IChatHistoryManagerService chatHistoryManagerService
     )
     {
         _aiTaskGenerateService = aiTaskGenerateService;
-        _conversationStateService = conversationStateService;
+        _chatHistoryManagerService = chatHistoryManagerService;
     }
 
     public async Task<AiTaskGenerateChatResult> HandleUserMessageAsync(
@@ -36,10 +36,10 @@ public class TaskGenerateChatService : ITaskGenerateChatService
         }
 
         // If there's no chathistory, create a new converstaion
-        if (!_conversationStateService.TryGetChatHistory(conversationId, out var chatHistory))
+        if (!_chatHistoryManagerService.TryGetChatHistory(conversationId, out var chatHistory))
         {
             chatHistory = await _aiTaskGenerateService.InitializeNewConversation(conversationId);
-            _conversationStateService.SetChatHistory(conversationId, chatHistory);
+            _chatHistoryManagerService.SetChatHistory(conversationId, chatHistory);
         }
 
         chatHistory.AddUserMessage(userMessage.Content);
@@ -83,7 +83,7 @@ public class TaskGenerateChatService : ITaskGenerateChatService
 
     private AiTaskGenerateChatResult EndConversation(string conversationId)
     {
-        _conversationStateService.RemoveConversation(conversationId);
+        _chatHistoryManagerService.RemoveConversation(conversationId);
 
         return new AiTaskGenerateChatResult
         {
