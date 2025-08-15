@@ -211,6 +211,6 @@ app.UseAuthorization();
 app.MapSwagger().RequireAuthorization();
 app.MapControllers();
 app.MapHub<GoalPlannerChatHub>("/chatHub");
-app.MapHub<AiTaskGenerateChatHub>("/ai-task-chathub");
+app.MapHub<AiTaskGenerateChatHub>("/ai-task-generate-chathub");
 
 app.Run();
