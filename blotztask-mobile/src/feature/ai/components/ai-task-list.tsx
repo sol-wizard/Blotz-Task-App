@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 
 import { AiTaskDTO } from "../models/ai-task-dto";
-import { SingleAiTask } from "./single-ai-task";
+import { AIChatTaskCard } from "./single-ai-task";
 import uuid from "react-native-uuid";
 
 export default function AiTaskList({ tasks }: { tasks: AiTaskDTO[] }) {
@@ -11,7 +11,7 @@ export default function AiTaskList({ tasks }: { tasks: AiTaskDTO[] }) {
   return (
     <View className="items-start mt-2">
       {tasks.map((task) => (
-        <SingleAiTask singleTask={task} key={uuid.v4().toString()} />
+        <AIChatTaskCard singleTask={task} key={uuid.v4().toString()} />
       ))}
     </View>
   );

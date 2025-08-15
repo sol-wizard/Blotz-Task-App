@@ -8,7 +8,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
 import { format } from "date-fns";
 
-export const SingleAiTask = ({ singleTask }: { singleTask: AiTaskDTO }) => {
+export const AIChatTaskCard = ({ task }: { task: AiTaskDTO }) => {
   const [isChecked, setIsChecked] = useState<string>();
   const handleAddTask = async (task: AiTaskDTO) => {
     const newTask = convertAiTaskToAddTaskItemDTO(task);
@@ -28,22 +28,22 @@ export const SingleAiTask = ({ singleTask }: { singleTask: AiTaskDTO }) => {
       <View className="flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1">
         <Checkbox
           status={isChecked ? "checked" : "unchecked"}
-          onPress={() => handleAddTask(singleTask)}
+          onPress={() => handleAddTask(task)}
         />
         <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
         <View className="flex-col">
           <TextInput
-            value={singleTask?.title}
-            onChangeText={(t) => onEditTask(singleTask.id)}
+            value={task?.title}
+            onChangeText={(t) => onEditTask(task.id)}
             style={{ fontSize: 16, fontWeight: "600" }}
             multiline={true}
             scrollEnabled={false}
           />
           <View className="flex-row my-1">
             <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
-            {singleTask.endTime && (
+            {task.endTime && (
               <Text className="text-base text-primary ml-2">
-                {format(singleTask.endTime, "yyyy-MM-dd")}
+                {format(task.endTime, "yyyy-MM-dd")}
               </Text>
             )}
           </View>
