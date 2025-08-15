@@ -6,7 +6,7 @@ export function mapExtractedTaskToAddTaskDTO(task: ExtractedTask): RawAddTaskDTO
     title: task.title,
     description: task.description ?? '',
     labelId: task.label?.labelId ?? 9, // Default to 6 if labelId is not provided. Temporary solution until ai able to extract labelId
-    date: new Date(task.due_date),
+    date: new Date(task.endTime),
     time: undefined,
   };
 }
