@@ -7,12 +7,12 @@ using OpenAI.Chat;
 namespace BlotzTask.Modules.AiTask.Services;
 
 //TODO: Extract this to an service with interface like other services
-public class TaskGenerationAiService
+public class AiTaskGenerationService
 {
     private readonly ChatClient _chatClient;
     private readonly ILabelService _labelService;
     
-    public TaskGenerationAiService(
+    public AiTaskGenerationService(
         ILabelService labelService,
         ChatClient chatClient)
     {
