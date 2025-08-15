@@ -39,6 +39,5 @@
 
   <ItemGroup>
     <Folder Include="Infrastructure\" />
-    <Folder Include="Modules\" />
   </ItemGroup>
 </Project>

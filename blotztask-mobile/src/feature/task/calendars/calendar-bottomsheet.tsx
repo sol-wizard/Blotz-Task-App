@@ -3,6 +3,7 @@ import { View, Pressable } from "react-native";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Card, Button, Text, Chip, Portal } from "react-native-paper";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { router } from "expo-router";
 
 interface CalendarBottomSheetProps {
   task?: TaskDetailDTO;
@@ -90,7 +91,7 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
                   <Button
                     mode="contained"
                     onPress={() => bottomSheetRef.current?.close()}
-                    className="flex-1 mx-2"
+                    className="flex-1 mx-1"
                   >
                     Close
                   </Button>
@@ -100,9 +101,20 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
                     onPress={() => {
                       console.log("Edit task:", task.id);
                     }}
-                    className="flex-1 mx-2"
+                    className="flex-1 mx-1"
                   >
                     Edit Task
+                  </Button>
+
+                  <Button
+                    mode="contained-tonal"
+                    onPress={() => {
+                      bottomSheetRef.current?.close();
+                      setTimeout(() => router.push("/(protected)/breakdown"), 250);
+                    }}
+                    className="flex-1 mx-1"
+                  >
+                    Breakdown
                   </Button>
                 </View>
               </>

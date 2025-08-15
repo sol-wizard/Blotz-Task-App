@@ -6,6 +6,7 @@ import { mapExtractedToTaskDetail } from "@/feature/ai/services/map-extracted-to
 import { signalRService } from "@/shared/services/signalr-service";
 import { AiTaskDTO } from "../models/ai-task-dto";
 
+//TODO: Rename to a specific name 
 export function useSignalRChat(conversationId: string) {
   const [messages, setMessages] = useState<ConversationMessage[]>();
   const [connection, setConnection] = useState<signalR.HubConnection | null>(
