@@ -11,7 +11,7 @@ interface CalendarBottomSheetProps {
   onClose: () => void;
 }
 
-const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
+const TaskDetailBottomSheet: React.FC<CalendarBottomSheetProps> = ({
   task,
   isVisible,
   onClose,
@@ -22,7 +22,6 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
     (index: number) => {
       if (index === -1) {
         onClose();
-        console.log("Bottom sheet closed");
       }
     },
     [onClose]
@@ -128,4 +127,4 @@ const CalendarBottomSheet: React.FC<CalendarBottomSheetProps> = ({
   );
 };
 
-export default CalendarBottomSheet;
+export default TaskDetailBottomSheet;
