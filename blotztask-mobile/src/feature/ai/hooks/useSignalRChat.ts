@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { ConversationMessage } from "@/feature/ai/models/conversation-message";
-import { ExtractedTask } from "@/feature/ai/models/extracted-task-dto";
 import { mapExtractedToTaskDetail } from "@/feature/ai/services/map-extracted-to-task-dto";
 import { signalRService } from "@/shared/services/signalr-service";
 import { AiTaskDTO } from "../models/ai-task-dto";
+import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 
 export function useSignalRChat(conversationId: string) {
   const [messages, setMessages] = useState<ConversationMessage[]>();
@@ -44,7 +44,7 @@ export function useSignalRChat(conversationId: string) {
     setMessages((prev = []) => [...prev, msg]);
   };
 
-  const receiveTasksHandler = (receivedTasks: ExtractedTask[]) => {
+  const receiveTasksHandler = (receivedTasks: ExtractedTaskDTO[]) => {
     if (!receivedTasks || receivedTasks.length === 0) return;
     const mappedTasks: AiTaskDTO[] = receivedTasks.map(
       mapExtractedToTaskDetail

@@ -1,9 +1,9 @@
 import { LabelDTO } from "../../../shared/models/label-dto";
 
-export interface ExtractedTask {
+export interface ExtractedTaskDTO {
   title: string;
   due_date: string | null;
-  isValidTask: boolean;
+  isValidTask: boolean; //
   description?: string;
   label?: LabelDTO;
 }
