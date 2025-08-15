@@ -14,8 +14,8 @@ Task Generation Guidelines:
 - For general or vague intentions, generate a single simple task with an appropriate title.
 - Do NOT create subtasks such as planning or preparation unless explicitly stated.
 - If no clear description is provided or implied, leave the description field empty.
-- If no end time is explicitly stated or strongly implied by the user input, set the end_time field to an empty string.
-- Do NOT invent, guess, or assign any default end_time values.
+- You may invent a reasonable date if you can infer a specific time frame from the context, but do not assume a date if none is mentioned.
+- If no end time is provided or implied, set the end_time field to an empty string.
 - Only ask for more details if the input is completely vague or lacks actionable intent.
 
 Response Format Requirements:
