@@ -3,7 +3,7 @@ export interface AiTaskDTO {
   description: string;
   title: string;
   isAdded: boolean;
-  endTime: Date;
+  endTime: string;
   hasTime: boolean;
-  labelId: number;
+  labelId?: number;
 }

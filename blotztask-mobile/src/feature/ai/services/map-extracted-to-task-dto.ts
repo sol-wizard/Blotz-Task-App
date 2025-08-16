@@ -12,7 +12,7 @@ export function mapExtractedToTaskDetail(
     title: extractedTask.title,
     isAdded: false,
     hasTime: true,
-    endTime: new Date(extractedTask.due_date ?? ""),
-    labelId: extractedTask.label?.labelId ?? 6,
+    endTime: extractedTask.endTime,
+    labelId: extractedTask.label?.labelId,
   };
 }
