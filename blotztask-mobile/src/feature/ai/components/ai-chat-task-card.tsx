@@ -9,15 +9,18 @@ import { COLORS } from "@/shared/constants/colors";
 import { format } from "date-fns";
 
 export const AIChatTaskCard = ({ task }: { task: AiTaskDTO }) => {
-  const [isChecked, setIsChecked] = useState<string>();
+  const [isTaskAdded, setTaskIsAdded] = useState(task.isAdded);
   const handleAddTask = async (task: AiTaskDTO) => {
     const newTask = convertAiTaskToAddTaskItemDTO(task);
-
-    try {
-      await addTaskItem(newTask);
-      setIsChecked("checked");
-    } catch (error) {
-      console.log("add task failed", error);
+    if (!isTaskAdded) {
+      try {
+        await addTaskItem(newTask);
+        setTaskIsAdded(true);
+      } catch (error) {
+        console.log("add task failed", error);
+      }
+    } else {
+      console.log("Task has already been added to database.");
     }
   };
   const onEditTask = (id: string) => {
@@ -27,7 +30,7 @@ export const AIChatTaskCard = ({ task }: { task: AiTaskDTO }) => {
     <View className="flex-row w-full items-center justify-between">
       <View className="flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1">
         <Checkbox
-          status={isChecked ? "checked" : "unchecked"}
+          status={isTaskAdded ? "checked" : "unchecked"}
           onPress={() => handleAddTask(task)}
         />
         <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
