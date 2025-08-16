@@ -8,10 +8,13 @@ using BlotzTask.Middleware;
 using BlotzTask.Modules.AiTask.Services;
 using BlotzTask.Modules.Chat;
 using BlotzTask.Modules.Chat.Services;
+using BlotzTask.Modules.GoalPlannerChat;
+using BlotzTask.Modules.GoalPlannerChat.Services;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Services;
+using BlotzTask.Shared.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -148,6 +151,7 @@ builder.Services.AddCors(options =>
         builder =>
         {
             builder.WithOrigins("http://localhost:3000" // DEV frontend origin
+                , "http://localhost:8081" // DEV mobile app origin
                 , "https://blotz-task-app.vercel.app") // Prod frontend origin    
                 .WithMethods("GET", "POST", "OPTIONS", "PUT", "DELETE") // Specify allowed methods
                 .WithHeaders("Content-Type", "Authorization", "x-signalr-user-agent", "x-requested-with") // Added SignalR headers
@@ -155,11 +159,16 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddScoped<IConversationStateService, ConversationStateServiceV2>();
+builder.Services.AddScoped<IConversationStateService, ConversationStateService>();
 builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
 builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
 builder.Services.AddScoped<IRecurringTaskService, RecurringTaskService>();
-builder.Services.AddScoped<ITaskParserService, TaskParserService>();
+
+builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
+builder.Services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
+builder.Services.AddScoped<ITaskGenerateChatService, TaskGenerateChatService>();
+
+builder.Services.AddScoped<TaskParsingService>();
 builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
 
 var app = builder.Build();
@@ -201,7 +210,7 @@ app.UseAuthorization();
 
 app.MapSwagger().RequireAuthorization();
 app.MapControllers();
-app.MapHub<AiTaskChatHub>("/ai-task-chathub");
-app.MapHub<ChatHub>("/chatHub");
+app.MapHub<GoalPlannerChatHub>("/chatHub");
+app.MapHub<AiTaskGenerateChatHub>("/ai-task-generate-chathub");
 
 app.Run();
