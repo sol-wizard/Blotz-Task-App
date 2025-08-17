@@ -5,6 +5,7 @@ import { Button, Text, Portal } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
+import TaskDetailTag from "../components/task-detail-tag";
 
 interface TaskDetailBottomSheetProps {
   task?: TaskDetailDTO;
@@ -30,22 +31,6 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
     [onClose]
   );
 
-  // Flat gray pill tag
-  const Tag = ({ children }: { children: React.ReactNode }) => (
-    <View className="h-7 px-3 rounded-xl bg-gray-200 items-center justify-center">
-      <Text
-        style={{ fontSize: 12, lineHeight: 18, fontWeight: "bold" }}
-        className="text-gray-600"
-      >
-        {children}
-      </Text>
-    </View>
-  );
-
-  // Safe getters
-  const startText = task?.startTime;
-  const endText = task?.endTime;
-
   const handleBreakDown = (task: TaskDetailDTO) => {
     handleTaskDetailSheetClose(-1);
     router.push({
@@ -53,7 +38,6 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
       params: { task: JSON.stringify(task) },
     });
   };
-
   return (
     <Portal>
       <View className="absolute inset-0 z-50">
@@ -82,18 +66,13 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                 {/* Header */}
                 <View className="flex-row items-center justify-between mb-2">
                   <Text
-                    className="flex-1 text-gray-900 mr-3"
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                    style={{ fontSize: 20, lineHeight: 24, fontWeight: "700" }}
+                    className="flex-1 text-gray-900 mr-3 text-xl leading-6"
+                    style={{ fontWeight: "800" }}
                   >
                     {task.title}
                   </Text>
 
-                  <View
-                    className="flex-row items-center"
-                    style={{ columnGap: 8 }}
-                  >
+                  <View className="flex-row items-center gap-2">
                     <Button
                       mode="text"
                       onPress={() => console.log("Edit task:", task.id)}
@@ -109,23 +88,14 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                     <TouchableOpacity
                       activeOpacity={0.7}
                       onPress={() => handleBreakDown(task)}
-                      className="flex-row items-center px-3 py-1.5"
-                      style={{
-                        backgroundColor: "#FFFFFF",
-                        borderWidth: 1,
-                        borderColor: "#E5E7EB",
-                        borderRadius: 16,
-                      }}
+                      className="flex-row items-center px-3 py-1.5 bg-white border border-gray-200 rounded-2xl"
                     >
                       <MaterialIcons
                         name="auto-awesome"
                         size={15}
                         color="#9CA3AF"
                       />
-                      <Text
-                        style={{ fontSize: 12, fontWeight: "bold" }}
-                        className="ml-1.5 text-gray-900"
-                      >
+                      <Text className="ml-1.5 text-gray-900 text-xs font-bold">
                         AI Breakdown
                       </Text>
                     </TouchableOpacity>
@@ -133,58 +103,43 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                 </View>
 
                 {/* Tags */}
-                <View
-                  className="flex-row items-center mb-3"
-                  style={{ columnGap: 8 }}
-                >
-                  {task.label ? <Tag>{task.label.name}</Tag> : null}
-                  <Tag>{task.isDone ? "Done" : "In progress"}</Tag>
+                <View className="flex-row items-center mb-3 gap-2 mt-1">
+                  {task.label ? (
+                    <TaskDetailTag>{task.label.name}</TaskDetailTag>
+                  ) : null}
+                  <TaskDetailTag>
+                    {task.isDone ? "Done" : "In progress"}
+                  </TaskDetailTag>
                 </View>
 
                 {/* Divider */}
                 <View className="h-px bg-gray-200 mb-3" />
 
                 {/* Dates */}
-                {startText ? (
+                {task?.startTime ? (
                   <View className="flex-row items-center mb-2">
                     <MaterialIcons name="event" size={18} color="#6B7280" />
-                    <Text
-                      className="ml-2.5"
-                      style={{ fontSize: 15, lineHeight: 20, color: "#1F2937" }}
-                    >
-                      {startText}
+                    <Text className="ml-2.5 text-base leading-5 text-gray-900">
+                      {task.startTime}
                     </Text>
-                    <Text
-                      className="ml-2.5"
-                      style={{ fontSize: 15, lineHeight: 20, color: "#6B7280" }}
-                    >
+                    <Text className="ml-2.5 text-base leading-5 text-gray-500">
                       →
                     </Text>
-                    {endText ? (
-                      <Text
-                        className="ml-2"
-                        style={{
-                          fontSize: 15,
-                          lineHeight: 20,
-                          color: "#1F2937",
-                        }}
-                      >
-                        {endText}
+                    {task?.endTime ? (
+                      <Text className="ml-2 text-base leading-5 text-gray-900">
+                        {task.endTime}
                       </Text>
                     ) : null}
                   </View>
-                ) : endText ? (
+                ) : task?.endTime ? (
                   <View className="flex-row items-center mb-2">
                     <MaterialIcons
                       name="calendar-today"
                       size={18}
                       color="#6B7280"
                     />
-                    <Text
-                      className="ml-2.5"
-                      style={{ fontSize: 15, lineHeight: 20, color: "#1F2937" }}
-                    >
-                      {endText}
+                    <Text className="ml-2.5 text-base leading-5 text-gray-900">
+                      {task.endTime}
                     </Text>
                   </View>
                 ) : null}
@@ -196,12 +151,9 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                       name="description"
                       size={18}
                       color="#6B7280"
-                      style={{ marginTop: 2 }}
+                      className="mt-0.5"
                     />
-                    <Text
-                      className="flex-1 ml-2.5"
-                      style={{ fontSize: 15, lineHeight: 20, color: "#1F2937" }}
-                    >
+                    <Text className="flex-1 ml-2.5 text-base leading-5 text-gray-900">
                       {task.description}
                     </Text>
                   </View>

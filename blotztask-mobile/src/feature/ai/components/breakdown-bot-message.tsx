@@ -20,6 +20,7 @@ export default function BreakDownBotMessage({
         tasks.map((task: AiTaskDTO) => (
           <AIChatTaskCard
             task={task}
+            key={task.id}
             className="border rounded-2xl border-gray-300"
           />
         ))}
