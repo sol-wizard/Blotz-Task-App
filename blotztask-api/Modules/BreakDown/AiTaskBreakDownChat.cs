@@ -21,18 +21,10 @@ public class AiTaskBreakDownChat : Hub
     {
         await Clients.Caller.SendAsync("BotTyping", true);
 
-        try
-        {
-            // TODO: Call your AI service to break down the task
-            var subtasks = await _taskBreakdownService.BreakdownTaskAsync(taskDetails, conversationId);
-            
-            await Clients.Caller.SendAsync("BotTyping", false);
-            await Clients.Caller.SendAsync("ReceiveBreakdown", subtasks);
-        }
-        finally
-        {
-            await Clients.Caller.SendAsync("BotTyping", false);
-        }
+        // TODO: Call your AI service to break down the task
+        var subtasks = await _taskBreakdownService.BreakdownTaskAsync(taskDetails, conversationId);
+        await Clients.Caller.SendAsync("BotTyping", false);
+        await Clients.Caller.SendAsync("ReceiveSubtasks", subtasks);
     }
 
     // User wants to modify the current breakdown
@@ -40,18 +32,10 @@ public class AiTaskBreakDownChat : Hub
     {
         await Clients.Caller.SendAsync("BotTyping", true);
 
-        try
-        {
-            // TODO: Call your AI service to modify the existing breakdown based on user request
-            var updatedSubtasks = await _taskBreakdownService.ModifyBreakdownAsync(userRequest, conversationId);
-            
-            await Clients.Caller.SendAsync("BotTyping", false);
-            await Clients.Caller.SendAsync("ReceiveBreakdown", updatedSubtasks);
-        }
-        finally
-        {
-            await Clients.Caller.SendAsync("BotTyping", false);
-        }
+        // TODO: Call your AI service to modify the existing breakdown based on user request
+        var updatedSubtasks = await _taskBreakdownService.ModifyBreakdownAsync(userRequest, conversationId);
+        await Clients.Caller.SendAsync("BotTyping", false);
+        await Clients.Caller.SendAsync("ReceiveSubtasks", updatedSubtasks);
     }
 }
 

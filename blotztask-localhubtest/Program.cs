@@ -1,98 +1,112 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Configuration;
 using System.Text.Json;
+using System.Threading;
+
+// Single‑purpose console to test BreakdownTask and ModifyBreakdown hub methods.
+// Reads HubUrl and TaskDefaults from appsettings.json and lets you send the BreakdownTask payload quickly.
 
 class Program
 {
+    private static TaskCompletionSource<bool>? _pendingResponse;
+
     static async Task Main(string[] args)
     {
-        var config = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-        var hubUrl = config["SignalR:HubUrl"];
-        if (string.IsNullOrEmpty(hubUrl))
+        // Load config (no extra config packages needed)
+        if (!File.Exists("appsettings.json"))
         {
-            Console.WriteLine("❌ No hub URL configured in appsettings.json. Exiting.");
+            Console.WriteLine("appsettings.json not found.");
             return;
         }
+
+        using var doc = JsonDocument.Parse(File.ReadAllText("appsettings.json"));
+        var root = doc.RootElement;
+        var hubUrl = root.TryGetProperty("HubUrl", out var hubEl) ? hubEl.GetString() : null;
+        if (string.IsNullOrWhiteSpace(hubUrl))
+        {
+            Console.WriteLine("HubUrl missing in appsettings.json");
+            return;
+        }
+        var taskDefaults = root.TryGetProperty("TaskDefaults", out var tdEl) ? tdEl : default;
+        var defTitle = taskDefaults.ValueKind == JsonValueKind.Object && taskDefaults.TryGetProperty("Title", out var tEl) ? tEl.GetString() ?? "Demo Task" : "Demo Task";
+        var defDesc = taskDefaults.ValueKind == JsonValueKind.Object && taskDefaults.TryGetProperty("Description", out var dEl) ? dEl.GetString() ?? "Break me down" : "Break me down";
+        var defConv = taskDefaults.ValueKind == JsonValueKind.Object && taskDefaults.TryGetProperty("ConversationId", out var cEl) ? cEl.GetString() ?? "conv-123" : "conv-123";
+        var modifyRequest = root.TryGetProperty("ModifyRequest", out var mrEl) ? mrEl.GetString() ?? "Please refine subtask." : "Please refine subtask.";
 
         var connection = new HubConnectionBuilder()
             .WithUrl(hubUrl)
             .WithAutomaticReconnect()
             .Build();
 
-        // Generic catch-all for any hub method the server invokes
-        connection.On<string, object>("*", (target, payload) =>
+        // Server -> client handlers (only ones needed for breakdown testing)
+        connection.On<bool>("BotTyping", isTyping =>
         {
-            Console.WriteLine($"📩 Received from server: [{target}] {JsonSerializer.Serialize(payload)}");
+            Console.WriteLine($"[BotTyping] {isTyping}");
+        });
+        connection.On<JsonElement>("ReceiveBreakdown", json =>
+        {
+            Console.WriteLine("================ Hub Response ================");
+            Console.WriteLine("[ReceiveBreakdown]");
+            Console.WriteLine(JsonSerializer.Serialize(json, new JsonSerializerOptions { WriteIndented = true }));
+            Console.WriteLine("==============================================");
+            _pendingResponse?.TrySetResult(true);
         });
 
-        connection.Closed += async (error) =>
+        connection.Closed += async err =>
         {
-            Console.WriteLine($"❌ Connection closed: {error?.Message}");
-            await Task.Delay(3000);
-            try
-            {
-                await connection.StartAsync();
-                Console.WriteLine("🔄 Reconnected");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠️ Reconnect failed: {ex.Message}");
-            }
+            Console.WriteLine($"Connection closed: {err?.Message}");
+            await Task.Delay(1500);
+            try { await connection.StartAsync(); Console.WriteLine("Reconnected"); } catch { }
         };
 
         try
         {
             Console.WriteLine($"Connecting to {hubUrl} ...");
             await connection.StartAsync();
-            Console.WriteLine("✅ Connected to hub");
-
-            while (true)
-            {
-                Console.WriteLine("\nEnter command (or 'exit' to quit):");
-                Console.WriteLine("Format: MethodName { \"arg1\":\"value\", \"arg2\":123 }");
-                var input = Console.ReadLine();
-
-                if (string.IsNullOrWhiteSpace(input) || input.Equals("exit", StringComparison.OrdinalIgnoreCase))
-                    break;
-
-                try
-                {
-                    var parts = input.Split(' ', 2);
-                    var method = parts[0];
-                    object[] argsArray = Array.Empty<object>();
-
-                    if (parts.Length > 1)
-                    {
-                        var json = parts[1];
-                        try
-                        {
-                            // Parse single object or array of objects
-                            if (json.TrimStart().StartsWith("["))
-                                argsArray = JsonSerializer.Deserialize<object[]>(json) ?? Array.Empty<object>();
-                            else
-                                argsArray = new object[] { JsonSerializer.Deserialize<object>(json)! };
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"⚠️ Invalid JSON args: {ex.Message}");
-                        }
-                    }
-
-                    await connection.InvokeAsync(method, argsArray);
-                    Console.WriteLine($"✅ Invoked '{method}' with args {JsonSerializer.Serialize(argsArray)}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"❌ Error invoking hub: {ex.Message}");
-                }
-            }
+            Console.WriteLine("Connected.\n");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Connection failed: {ex.Message}");
+            Console.WriteLine($"Failed to connect: {ex.Message}");
+            return;
         }
+
+        // Immediate send option (auto or prompt)
+        while (true)
+        {
+            Console.WriteLine("Menu:");
+            Console.WriteLine("  1) Send BreakdownTask (defaults from appsettings.json)");
+            Console.WriteLine("  2) ModifyBreakdown (default request)");
+            Console.WriteLine("  x) Exit");
+            Console.Write("> ");
+            var choice = Console.ReadLine()?.Trim().ToLowerInvariant();
+            if (choice is "x" or "q" or "exit") break;
+
+            try
+            {
+                switch (choice)
+                {
+                    case "1":
+                        _pendingResponse = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        await HubActions.SendBreakdown(connection, defTitle, defDesc, defConv);
+                        await _pendingResponse.Task; // wait for ReceiveBreakdown
+                        break;
+                    case "2":
+                        _pendingResponse = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        await HubActions.SendModifyBreakdown(connection, modifyRequest, defConv);
+                        await _pendingResponse.Task; // wait for ReceiveBreakdown
+                        break;
+                    default:
+                        Console.WriteLine("Unknown option");
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Invoke error: {ex.Message}");
+                _pendingResponse?.TrySetCanceled();
+            }
+        }
+
+        await connection.DisposeAsync();
     }
 }
