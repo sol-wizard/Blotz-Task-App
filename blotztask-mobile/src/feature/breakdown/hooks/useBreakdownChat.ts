@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { ConversationMessage } from "../../ai/models/conversation-message";
-import { ExtractedTask } from "../../ai/models/extracted-task-dto";
-import { mapExtractedToTaskDetail } from "../../ai/services/map-extracted-to-task-dto";
 import { AiTaskDTO } from "../../ai/models/ai-task-dto";
+import { mapExtractedTaskDTOToAiTaskDTO } from "../../ai/services/map-extracted-to-task-dto";
+import { ConversationMessage } from "../../ai/models/conversation-message";
+import { ExtractedTaskDTO } from "../../ai/models/extracted-task-dto";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_URL;
-const BREAKDOWN_HUB_URL = `${API_BASE_URL}/breakdownHub`;
+const BREAKDOWN_HUB_URL = `${API_BASE_URL}/ai-task-breakdown-chathub`;
 
 export function useBreakdownChat(conversationId: string) {
   const [messages, setMessages] = useState<ConversationMessage[]>();
@@ -45,10 +45,10 @@ export function useBreakdownChat(conversationId: string) {
     setMessages((prev = []) => [...prev, msg]);
   };
 
-  const receiveTasksHandler = (receivedTasks: ExtractedTask[]) => {
+  const receiveTasksHandler = (receivedTasks: ExtractedTaskDTO[]) => {
     if (!receivedTasks || receivedTasks.length === 0) return;
     const mappedTasks: AiTaskDTO[] = receivedTasks.map(
-      mapExtractedToTaskDetail
+      mapExtractedTaskDTOToAiTaskDTO
     );
 
     setMessages((prev = []) => [

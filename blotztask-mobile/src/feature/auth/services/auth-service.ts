@@ -13,6 +13,7 @@ export interface LoginResponse {
 export const loginService = async (
   credentials: LoginCredentials
 ): Promise<LoginResponse> => {
+  console.log(process.env.EXPO_PUBLIC_URL);
   const response = await fetch(`${process.env.EXPO_PUBLIC_URL}/login`, {
     method: "POST",
     headers: {

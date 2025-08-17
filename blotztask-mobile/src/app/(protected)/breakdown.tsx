@@ -24,13 +24,13 @@ export default function BreakdownScreen() {
     setText("");
   };
 
-  const handleDeleteTask = (taskId?: string) => {
-    console.log("Delete task:", taskId);
-  };
+  // const handleDeleteTask = (taskId?: string) => {
+  //   console.log("Delete task:", taskId);
+  // };
 
-  const handleEditTask = (taskId: string, newTitle: string) => {
-    console.log("Edit task:", taskId, "New title:", newTitle);
-  };
+  // const handleEditTask = (taskId: string, newTitle: string) => {
+  //   console.log("Edit task:", taskId, "New title:", newTitle);
+  // };
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["left", "right", "bottom"]}>
@@ -53,8 +53,8 @@ export default function BreakdownScreen() {
                       key={uuid.v4().toString()}
                       text={msg.content}
                       tasks={msg.tasks}
-                      onDeleteTask={handleDeleteTask}
-                      onEditTask={handleEditTask}
+                      // onDeleteTask={handleDeleteTask}
+                      // onEditTask={handleEditTask}
                     />
                   ) : (
                     <UserMessage key={uuid.v4().toString()} text={msg.content} />
