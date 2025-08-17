@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { ConversationMessage } from "@/feature/ai/models/conversation-message";
-import { mapExtractedToTaskDetail } from "@/feature/ai/services/map-extracted-to-task-dto";
+import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai/services/map-extracted-to-task-dto";
 import { signalRService } from "@/shared/services/signalr-service";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { ExtractedTaskDTO } from "../models/extracted-task-dto";
@@ -48,7 +48,7 @@ export function useSignalRChat(conversationId: string) {
     if (!receivedTasks || receivedTasks.length === 0) return;
     console.log("receivedTasks:", receivedTasks);
     const mappedTasks: AiTaskDTO[] = receivedTasks.map(
-      mapExtractedToTaskDetail
+      mapExtractedTaskDTOToAiTaskDTO
     );
 
     setMessages((prev = []) => [

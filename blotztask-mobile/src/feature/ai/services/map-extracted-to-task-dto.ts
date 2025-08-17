@@ -2,7 +2,7 @@ import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import uuid from "react-native-uuid";
 
-export function mapExtractedToTaskDetail(
+export function mapExtractedTaskDTOToAiTaskDTO(
   extractedTask: ExtractedTaskDTO
 ): AiTaskDTO {
   return {
@@ -11,7 +11,7 @@ export function mapExtractedToTaskDetail(
     description: extractedTask.description ?? "",
     title: extractedTask.title,
     isAdded: false,
-    hasTime: true,
+    hasTime: false,
     endTime: extractedTask.endTime,
     labelId: extractedTask.label?.labelId,
   };
