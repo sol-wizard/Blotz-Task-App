@@ -5,7 +5,8 @@ import {
   deleteTask,
   editTask,
   fetchOvedueTasks,
-  fetchTaskItemsDueToday,
+  fetchTaskItemsTodoToday,
+  fetchTaskItemsDoneToday,
   undoDeleteTask,
   updateTaskStatus,
 } from '@/services/task-service';
@@ -15,7 +16,6 @@ import { RawEditTaskDTO } from '@/model/raw-edit-task-dto';
 import { subscribeWithSelector } from 'zustand/middleware';
 
 type TodayTaskStore = {
-  todayTasks: TaskDetailDTO[];
   overdueTasks: TaskDetailDTO[];
   incompleteTodayTasks: TaskDetailDTO[];
   completedTodayTasks: TaskDetailDTO[];
@@ -44,17 +44,22 @@ export const useTodayTaskStore = create<TodayTaskStore>()(subscribeWithSelector(
     loadTodayTasks: async () => {
       const { setLoading } = get().actions;
 
-      const data = await performTaskAndRefresh(
-        () => fetchTaskItemsDueToday(),
+      const todo = await performTaskAndRefresh(
+        () => fetchTaskItemsTodoToday(),
         async () => {}, // no-op reload since it's already loading
         setLoading
       );
 
-      if (data) {
+      const done = await performTaskAndRefresh(
+        () => fetchTaskItemsDoneToday(),
+        async () => {},
+        setLoading
+      );
+
+      if (todo && done) {
         set({
-          todayTasks: data,
-          incompleteTodayTasks: data.filter((task) => !task.isDone),
-          completedTodayTasks: data.filter((task) => task.isDone),
+          incompleteTodayTasks: todo,
+          completedTodayTasks: done,
         });
       }
     },
@@ -135,9 +140,10 @@ export const useTodayTaskStore = create<TodayTaskStore>()(subscribeWithSelector(
   },
 })));
 
-export const useTodayTasks = () => useTodayTaskStore((state) => state.todayTasks);
 export const useOverdueTasks = () => useTodayTaskStore((state) => state.overdueTasks);
 export const useIncompleteTodayTasks = () => useTodayTaskStore((state) => state.incompleteTodayTasks);
 export const useCompletedTodayTasks = () => useTodayTaskStore((state) => state.completedTodayTasks);
 export const useTodayTasksIsLoading = () => useTodayTaskStore((state) => state.todayTasksIsLoading);
 export const useTodayTaskActions = () => useTodayTaskStore((state) => state.actions);
+
+
