@@ -29,7 +29,6 @@ class Program
         var taskDefaults = root.TryGetProperty("TaskDefaults", out var tdEl) ? tdEl : default;
         var defTitle = taskDefaults.ValueKind == JsonValueKind.Object && taskDefaults.TryGetProperty("Title", out var tEl) ? tEl.GetString() ?? "Demo Task" : "Demo Task";
         var defDesc = taskDefaults.ValueKind == JsonValueKind.Object && taskDefaults.TryGetProperty("Description", out var dEl) ? dEl.GetString() ?? "Break me down" : "Break me down";
-        var defConv = taskDefaults.ValueKind == JsonValueKind.Object && taskDefaults.TryGetProperty("ConversationId", out var cEl) ? cEl.GetString() ?? "conv-123" : "conv-123";
         var modifyRequest = root.TryGetProperty("ModifyRequest", out var mrEl) ? mrEl.GetString() ?? "Please refine subtask." : "Please refine subtask.";
 
         var connection = new HubConnectionBuilder()
@@ -42,7 +41,7 @@ class Program
         {
             Console.WriteLine($"[BotTyping] {isTyping}");
         });
-        connection.On<JsonElement>("ReceiveBreakdown", json =>
+        connection.On<JsonElement>("ReceiveSubtasks", json =>
         {
             Console.WriteLine("================ Hub Response ================");
             Console.WriteLine("[ReceiveBreakdown]");
@@ -87,12 +86,12 @@ class Program
                 {
                     case "1":
                         _pendingResponse = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-                        await HubActions.SendBreakdown(connection, defTitle, defDesc, defConv);
+                        await HubActions.SendBreakdown(connection, defTitle, defDesc);
                         await _pendingResponse.Task; // wait for ReceiveBreakdown
                         break;
                     case "2":
                         _pendingResponse = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-                        await HubActions.SendModifyBreakdown(connection, modifyRequest, defConv);
+                        await HubActions.SendModifyBreakdown(connection, modifyRequest);
                         await _pendingResponse.Task; // wait for ReceiveBreakdown
                         break;
                     default:

@@ -16,24 +16,39 @@ public class AiTaskBreakDownChat : Hub
         _taskBreakdownService = taskBreakdownService;
     }
 
-    // User hits button in frontend - starts breakdown with conversation ID
-    public async Task BreakdownTask(TaskDetailsDto taskDetails, string conversationId)
+    private string GenerateConversationId()
+    {
+        // Generate a new unique conversation ID (GUID)
+        return Guid.NewGuid().ToString();
+    }
+
+    public override async Task OnConnectedAsync()
+    {
+        var conversationId = GenerateConversationId();
+        //TODO: Should be a better way to do this conversation id , should not need to store in context i reckon 
+        Context.Items["ConversationId"] = conversationId;
+        await Clients.Caller.SendAsync("ReceiveConversationId", conversationId);
+        await base.OnConnectedAsync();
+    }
+    
+    public async Task BreakdownTask(TaskDetailsDto taskDetails)
     {
         await Clients.Caller.SendAsync("BotTyping", true);
 
-        // TODO: Call your AI service to break down the task
-        var subtasks = await _taskBreakdownService.BreakdownTaskAsync(taskDetails, conversationId);
+        // Retrieve the conversationId from Context.Items
+        var conversationId = Context.Items["ConversationId"] as string;
+        var subtasks = await _taskBreakdownService.BreakdownTaskAsync(taskDetails, conversationId!);
         await Clients.Caller.SendAsync("BotTyping", false);
         await Clients.Caller.SendAsync("ReceiveSubtasks", subtasks);
     }
 
     // User wants to modify the current breakdown
-    public async Task ModifyBreakdown(string userRequest, string conversationId)
+    public async Task ModifyBreakdown(string userRequest)
     {
         await Clients.Caller.SendAsync("BotTyping", true);
 
-        // TODO: Call your AI service to modify the existing breakdown based on user request
-        var updatedSubtasks = await _taskBreakdownService.ModifyBreakdownAsync(userRequest, conversationId);
+        // Pass the stored conversationId to the service
+        var updatedSubtasks = await _taskBreakdownService.ModifyBreakdownAsync(userRequest, Context.Items["ConversationId"] as string);
         await Clients.Caller.SendAsync("BotTyping", false);
         await Clients.Caller.SendAsync("ReceiveSubtasks", updatedSubtasks);
     }

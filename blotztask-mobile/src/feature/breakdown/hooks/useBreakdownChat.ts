@@ -1,64 +1,59 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { AiTaskDTO } from "../../ai/models/ai-task-dto";
-import { mapExtractedTaskDTOToAiTaskDTO } from "../../ai/services/map-extracted-to-task-dto";
-import { ConversationMessage } from "../../ai/models/conversation-message";
-import { ExtractedTaskDTO } from "../../ai/models/extracted-task-dto";
+import { BreakdownMessage } from "../models/breakdown-message";
+import { SubTask } from "../models/subtask";
+import { TaskDetailsDto } from "../models/task-details-dto";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_URL;
 const BREAKDOWN_HUB_URL = `${API_BASE_URL}/ai-task-breakdown-chathub`;
 
-export function useBreakdownChat(conversationId: string) {
-  const [messages, setMessages] = useState<ConversationMessage[]>();
+export function useBreakdownChat(taskDetails: TaskDetailsDto) {
+  const [messages, setMessages] = useState<BreakdownMessage[]>([]);
   const [connection, setConnection] = useState<signalR.HubConnection | null>(
     null
   );
+  const [isTyping, setIsTyping] = useState(false);
+  const [hasInitialBreakdown, setHasInitialBreakdown] = useState(false);
 
-  const sendMessage = async (text: string) => {
-    if (!text.trim()) return;
+  // Function to send chat messages (modify breakdown)
+  const sendMessage = async (userMessage: string) => {
+    if (!connection) {
+      console.warn("Cannot send message: Not connected.");
+      return;
+    }
 
-    const userMessage: ConversationMessage = {
-      content: text.trim(),
+    if (!userMessage.trim()) return;
+
+    const message: BreakdownMessage = {
+      content: userMessage.trim(),
       isBot: false,
     };
 
-    setMessages((prev = []) => [...prev, userMessage]);
+    setMessages((prev) => [...prev, message]);
 
-    if (connection) {
-      try {
-        await connection.invoke(
-          "SendMessage",
-          "User",
-          text.trim(),
-          conversationId
-        );
-      } catch (error) {
-        console.error("Error invoking SendMessage:", error);
-      }
-    } else {
-      console.warn("Cannot send message: Not connected.");
+    try {
+      await connection.invoke("ModifyBreakdown", userMessage.trim());
+    } catch (error) {
+      console.error("Error invoking ModifyBreakdown:", error);
     }
   };
 
-  const receiveMessageHandler = (msg: ConversationMessage) => {
-    if (msg.isBot === false) return;
-    setMessages((prev = []) => [...prev, msg]);
+  // Handler for BotTyping events
+  const handleBotTyping = (typing: boolean) => {
+    setIsTyping(typing);
   };
 
-  const receiveTasksHandler = (receivedTasks: ExtractedTaskDTO[]) => {
-    if (!receivedTasks || receivedTasks.length === 0) return;
-    const mappedTasks: AiTaskDTO[] = receivedTasks.map(
-      mapExtractedTaskDTOToAiTaskDTO
-    );
+  // Handler for receiving subtasks from the backend
+  const handleReceiveSubtasks = (subtasks: SubTask[]) => {
+    if (!subtasks || subtasks.length === 0) return;
 
-    setMessages((prev = []) => [
-      ...prev,
-      {
-        content: "Here are the tasks I generated for you :)",
-        isBot: true,
-        tasks: mappedTasks,
-      },
-    ]);
+    const botMessage: BreakdownMessage = {
+      content: "Here are the subtasks I've broken down for you:",
+      isBot: true,
+      subtasks: subtasks,
+    };
+
+    setMessages((prev) => [...prev, botMessage]);
   };
 
   useEffect(() => {
@@ -72,9 +67,22 @@ export function useBreakdownChat(conversationId: string) {
     const startConnection = async () => {
       try {
         await newConnection.start();
-        newConnection.on("ReceiveMessage", receiveMessageHandler);
-        newConnection.on("ReceiveTasks", receiveTasksHandler);
+        
+        // Register event handlers
+        newConnection.on("BotTyping", handleBotTyping);
+        newConnection.on("ReceiveSubtasks", handleReceiveSubtasks);
+        
         console.log("Connected to Breakdown SignalR hub!", BREAKDOWN_HUB_URL);
+        
+        // Automatically trigger initial breakdown once connected
+        if (!hasInitialBreakdown) {
+          try {
+            await newConnection.invoke("BreakdownTask", taskDetails);
+            setHasInitialBreakdown(true);
+          } catch (error) {
+            console.error("Error invoking BreakdownTask:", error);
+          }
+        }
       } catch (error) {
         console.error("Error connecting to Breakdown SignalR:", error);
       }
@@ -87,16 +95,21 @@ export function useBreakdownChat(conversationId: string) {
         .stop()
         .then(() => {
           console.log("Breakdown SignalR Connection Stopped.");
-          newConnection.off("ReceiveMessage", receiveMessageHandler);
-          newConnection.off("ReceiveTasks", receiveTasksHandler);
+          newConnection.off("BotTyping", handleBotTyping);
+          newConnection.off("ReceiveSubtasks", handleReceiveSubtasks);
         })
         .catch((error) =>
           console.error("Error stopping Breakdown SignalR connection:", error)
         );
     };
-  }, []);
+  }, [hasInitialBreakdown, taskDetails]);
 
-  return { messages, sendMessage };
+  return { 
+    messages, 
+    isTyping, 
+    sendMessage,
+    isConnected: connection?.state === signalR.HubConnectionState.Connected 
+  };
 }
 
 

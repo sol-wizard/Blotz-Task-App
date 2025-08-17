@@ -1,7 +1,3 @@
-import BotMessage from "../../feature/ai/components/bot-message";
-import { TypingArea } from "../../feature/ai/components/typing-area";
-import UserMessage from "../../feature/ai/components/user-message";
-import { useBreakdownChat } from "../../feature/breakdown/hooks/useBreakdownChat";
 import React, { useState } from "react";
 import {
   View,
@@ -10,27 +6,30 @@ import {
   Platform,
   Keyboard,
   TouchableWithoutFeedback,
+  Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import uuid from "react-native-uuid";
+import { useBreakdownChat } from "../../feature/breakdown/hooks/useBreakdownChat";
+import BreakdownBotMessage from "../../feature/breakdown/components/breakdown-bot-message";
+import UserMessage from "../../feature/ai/components/user-message";
+import { TypingArea } from "../../feature/ai/components/typing-area";
+import { TaskDetailsDto } from "../../feature/breakdown/models/task-details-dto";
 
 export default function BreakdownScreen() {
-  const [conversationId] = useState<string>(() => uuid.v4());
-  const { messages, sendMessage } = useBreakdownChat(conversationId);
+  // TODO: Get this from navigation params or context
+  // For now, using a default task for testing
+  const taskDetails: TaskDetailsDto = {
+    title: "Plan my weekend project",
+    description: "I want to build a small garden shed in my backyard. I need to plan all the steps from design to completion."
+  };
+  
+  const { messages, isTyping, sendMessage } = useBreakdownChat(taskDetails);
   const [text, setText] = useState("");
 
   const handleSend = () => {
     sendMessage(text);
     setText("");
   };
-
-  // const handleDeleteTask = (taskId?: string) => {
-  //   console.log("Delete task:", taskId);
-  // };
-
-  // const handleEditTask = (taskId: string, newTitle: string) => {
-  //   console.log("Edit task:", taskId, "New title:", newTitle);
-  // };
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["left", "right", "bottom"]}>
@@ -47,19 +46,25 @@ export default function BreakdownScreen() {
               keyboardShouldPersistTaps="handled"
             >
               {messages &&
-                messages.map((msg) =>
+                messages.map((msg, index) =>
                   msg.isBot ? (
-                    <BotMessage
-                      key={uuid.v4().toString()}
+                    <BreakdownBotMessage
+                      key={`bot-${index}`}
                       text={msg.content}
-                      tasks={msg.tasks}
-                      // onDeleteTask={handleDeleteTask}
-                      // onEditTask={handleEditTask}
+                      subtasks={msg.subtasks}
                     />
                   ) : (
-                    <UserMessage key={uuid.v4().toString()} text={msg.content} />
+                    <UserMessage key={`user-${index}`} text={msg.content} />
                   )
                 )}
+              
+              {isTyping && (
+                <View className="mb-4">
+                  <View className="bg-gray-100 p-3 rounded-lg mr-12">
+                    <Text className="text-gray-500">Bot is thinking...</Text>
+                  </View>
+                </View>
+              )}
             </ScrollView>
           </TouchableWithoutFeedback>
 
