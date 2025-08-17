@@ -24,14 +24,6 @@ export default function AiPlannerScreen() {
     setText("");
   };
 
-  const handleDeleteTask = (taskId?: string) => {
-    console.log("Delete task:", taskId);
-  };
-
-  const handleEditTask = (taskId: string, newTitle: string) => {
-    console.log("Edit task:", taskId, "New title:", newTitle);
-  };
-
   return (
     <SafeAreaView
       className="flex-1 bg-white"
@@ -56,8 +48,6 @@ export default function AiPlannerScreen() {
                       key={uuid.v4().toString()}
                       text={msg.content}
                       tasks={msg.tasks}
-                      onDeleteTask={handleDeleteTask}
-                      onEditTask={handleEditTask}
                     />
                   ) : (
                     <UserMessage
