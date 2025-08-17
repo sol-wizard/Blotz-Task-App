@@ -6,6 +6,7 @@ using BlotzTask.Infrastructure.Data;
 using BlotzTask.Infrastructure.Data.Seeding;
 using BlotzTask.Middleware;
 using BlotzTask.Modules.AiTask.Services;
+using BlotzTask.Modules.BreakDown;
 using BlotzTask.Modules.Chat;
 using BlotzTask.Modules.Chat.Services;
 using BlotzTask.Modules.GoalPlannerChat;
@@ -212,5 +213,6 @@ app.MapSwagger().RequireAuthorization();
 app.MapControllers();
 app.MapHub<GoalPlannerChatHub>("/chatHub");
 app.MapHub<AiTaskGenerateChatHub>("/ai-task-generate-chathub");
+app.MapHub<AiTaskBreakDownChat>("/ai-task-breakdown-chathub");
 
 app.Run();

@@ -3,13 +3,13 @@ using BlotzTask.Modules.BreakDown.Services;
 
 namespace BlotzTask.Modules.BreakDown;
 
-public class TaskBreakDownChat : Hub
+public class AiTaskBreakDownChat : Hub
 {
-    private readonly ILogger<TaskBreakDownChat> _logger;
+    private readonly ILogger<AiTaskBreakDownChat> _logger;
     private readonly ITaskBreakdownService _taskBreakdownService;
 
-    public TaskBreakDownChat(
-        ILogger<TaskBreakDownChat> logger,
+    public AiTaskBreakDownChat(
+        ILogger<AiTaskBreakDownChat> logger,
         ITaskBreakdownService taskBreakdownService)
     {
         _logger = logger;
