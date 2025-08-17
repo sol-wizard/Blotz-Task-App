@@ -1,33 +1,31 @@
-using BlotzTask.Modules.Chat.Constants;
-using BlotzTask.Modules.Chat.DTOs;
+using BlotzTask.Modules.GoalPlannerChat.Constants;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
+using BlotzTask.Shared.Services;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace BlotzTask.Modules.Chat.Services;
+namespace BlotzTask.Modules.GoalPlannerChat.Services;
 
 public interface IGoalPlannerAiService
 {
-    Task<List<ExtractedTaskDto>> GenerateAiResponse(ChatHistory chatHistory);
+    Task<List<ExtractedTaskGoalPlanner>?> GenerateAiResponse(ChatHistory chatHistory);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
-    Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory, int currentRound);
-    Task<List<ExtractedTaskDto>> ReviseGeneratedTasksAsync(List<ExtractedTaskDto> rawTasks, ChatHistory chatHistory);
-    Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory, int currentRound);
+    Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory);
+    Task<List<ExtractedTaskGoalPlanner>?> ReviseGeneratedTasksAsync(List<ExtractedTaskGoalPlanner>? rawTasks, ChatHistory chatHistory);
+    Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory);
 }
 
 public class GoalPlannerAiService : IGoalPlannerAiService
 {
     private readonly ILabelService _labelService;
     private readonly IConversationStateService _conversationStateService;
-    private readonly ITaskParserService _taskParser;
+    private readonly TaskParsingService _taskParser;
     private readonly ISafeChatCompletionService _safeChatCompletionService;
-
-    private const int MaxClarificationRounds = 3;
 
     public GoalPlannerAiService(
         ILabelService labelService,
         IConversationStateService conversationStateService,
-        ITaskParserService taskParser,
+        TaskParsingService taskParser,
         ISafeChatCompletionService safeChatCompletionService)
     {
         _labelService = labelService;
@@ -35,7 +33,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
         _taskParser = taskParser;
         _safeChatCompletionService = safeChatCompletionService;
     }
-    public async Task<List<ExtractedTaskDto>> GenerateAiResponse(
+    public async Task<List<ExtractedTaskGoalPlanner>?> GenerateAiResponse(
     ChatHistory chatHistory)
     {
         var tempHistory = new ChatHistory(chatHistory);
@@ -43,7 +41,7 @@ public class GoalPlannerAiService : IGoalPlannerAiService
 
         var answer = await _safeChatCompletionService.GetSafeContentAsync(tempHistory);
 
-        if (!string.IsNullOrEmpty(answer) && _taskParser.TryParseTasks(answer, out var tasks))
+        if (!string.IsNullOrEmpty(answer) && _taskParser.TryParseTasks(answer, out List<ExtractedTaskGoalPlanner>? tasks))
         {
             chatHistory.AddAssistantMessage(answer);
             return tasks;
@@ -71,7 +69,6 @@ public class GoalPlannerAiService : IGoalPlannerAiService
 
         // Setting initial state needed for goal planner AI to work properly
         _conversationStateService.SetChatHistory(conversationId, chatHistory);
-        _conversationStateService.SetClarificationState(conversationId, new ClarificationState());
 
         return chatHistory;
     }
@@ -85,16 +82,13 @@ public class GoalPlannerAiService : IGoalPlannerAiService
     /// <returns>
     /// <c>true</c> if the AI determines the goal is ready to be broken into tasks; otherwise, <c>false</c>.
     /// </returns>
-    public async Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory, int currentRound)
+    public async Task<bool> IsReadyToGeneratePlanAsync(ChatHistory originalChatHistory)
     {
         // Create a temporary copy
         var analysisHistory = new ChatHistory(originalChatHistory);
 
         // Add analysis-specific system prompt only to the cloned history
         const string analysisPrompt = @"Analyze if the user's latest input needs clarification considering the full conversation history.
-
-Maximum clarifying questions allowed: {0}
-Current question count: {1}/{0}
 
 Respond ONLY with:
 - ""NO"" if you need more information to create proper tasks
@@ -109,9 +103,7 @@ Consider:
 Timeline must be specific - reject vague timing like ""soon"", ""urgent"", ""ASAP"".
 Be generous with YES when goal is clear and timeline is specific.";
 
-        analysisHistory.AddSystemMessage(string.Format(analysisPrompt,
-    MaxClarificationRounds, currentRound
-    ));
+        analysisHistory.AddSystemMessage(analysisPrompt);
 
         var result = await _safeChatCompletionService.GetSafeContentAsync(analysisHistory);
         var response = result.Trim().ToUpperInvariant();
@@ -127,7 +119,7 @@ Be generous with YES when goal is clear and timeline is specific.";
     /// <returns>
     /// A friendly, AI-generated clarifying question, or a fallback prompt if the AI response is empty.
     /// </returns>
-    public async Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory, int currentRound)
+    public async Task<string> GenerateClarifyingQuestionAsync(ChatHistory originalChatHistory)
     {
         // Clone the original chat history
         var clarificationHistory = new ChatHistory(originalChatHistory);
@@ -140,7 +132,6 @@ Your role is to ask ONE clarifying question per response to help users turn vagu
 Rules:
 - Ask only ONE question per response
 - Focus on the most important missing detail that would help make their goal more specific and actionable
-- Keep track: you can ask a maximum of {1} clarifying questions total before moving to help them break down their goal
 - Be friendly, concise, and supportive
 - Once their goal is clear enough, help them create step-by-step tasks
 
@@ -150,14 +141,10 @@ Consider:
 - Is the timeline clear?
 - Are there ambiguous terms that need defining?;
 
-Current question count: {2}/{1}
 ";
-
-        // Call it like this:
+        
         clarificationHistory.AddSystemMessage(string.Format(clarifyPrompt,
-            DateTime.UtcNow,
-            MaxClarificationRounds, currentRound
-            ));
+            DateTime.UtcNow));
 
         var result = await _safeChatCompletionService.GetSafeContentAsync(clarificationHistory);
         var response = result.Trim();
@@ -165,7 +152,7 @@ Current question count: {2}/{1}
         return response ?? "Can you clarify your goal a bit more?";
     }
     
-    public async Task<List<ExtractedTaskDto>> ReviseGeneratedTasksAsync(List<ExtractedTaskDto> rawTasks, ChatHistory chatHistory)
+    public async Task<List<ExtractedTaskGoalPlanner>?> ReviseGeneratedTasksAsync(List<ExtractedTaskGoalPlanner>? rawTasks, ChatHistory chatHistory)
     {
 
         string taskListText = string.Join("\n", rawTasks.Select(t => $"- {t.Description}"));
@@ -185,7 +172,7 @@ Current question count: {2}/{1}
 
         var revisionResult = await _safeChatCompletionService.GetSafeContentAsync(chatHistory);
 
-        if (!string.IsNullOrEmpty(revisionResult) && _taskParser.TryParseTasks(revisionResult, out var revisedTasks))
+        if (!string.IsNullOrEmpty(revisionResult) && _taskParser.TryParseTasks(revisionResult, out List<ExtractedTaskGoalPlanner>? revisedTasks))
         {
             return revisedTasks;
         }
