@@ -9,6 +9,7 @@ import {
   Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams } from "expo-router";
 import { useBreakdownChat } from "../../feature/breakdown/hooks/useBreakdownChat";
 import BreakdownBotMessage from "../../feature/breakdown/components/breakdown-bot-message";
 import UserMessage from "../../feature/ai/components/user-message";
@@ -16,11 +17,12 @@ import { TypingArea } from "../../feature/ai/components/typing-area";
 import { TaskDetailsDto } from "../../feature/breakdown/models/task-details-dto";
 
 export default function BreakdownScreen() {
-  // TODO: Get this from navigation params or context
-  // For now, using a default task for testing
+  const params = useLocalSearchParams();
+  
+  // Get task details from navigation params or use default for testing
   const taskDetails: TaskDetailsDto = {
-    title: "Plan my weekend project",
-    description: "I want to build a small garden shed in my backyard. I need to plan all the steps from design to completion."
+    title: (params.title as string) || "Plan my weekend project",
+    description: (params.description as string) || "I want to build a small garden shed in my backyard. I need to plan all the steps from design to completion."
   };
   
   const { messages, isTyping, sendMessage } = useBreakdownChat(taskDetails);

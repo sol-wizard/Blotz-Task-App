@@ -56,6 +56,30 @@ export function useBreakdownChat(taskDetails: TaskDetailsDto) {
     setMessages((prev) => [...prev, botMessage]);
   };
 
+  const startConnection = async (connection: signalR.HubConnection) => {
+    try {
+      await connection.start();
+      
+      // Register event handlers
+      connection.on("BotTyping", handleBotTyping);
+      connection.on("ReceiveSubtasks", handleReceiveSubtasks);
+      
+      console.log("Connected to Breakdown SignalR hub!", BREAKDOWN_HUB_URL);
+      
+      // Automatically trigger initial breakdown once connected
+      if (!hasInitialBreakdown) {
+        try {
+          await connection.invoke("BreakdownTask", taskDetails);
+          setHasInitialBreakdown(true);
+        } catch (error) {
+          console.error("Error invoking BreakdownTask:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Error connecting to Breakdown SignalR:", error);
+    }
+  };
+
   useEffect(() => {
     const newConnection = new signalR.HubConnectionBuilder()
       .withUrl(BREAKDOWN_HUB_URL)
@@ -63,32 +87,7 @@ export function useBreakdownChat(taskDetails: TaskDetailsDto) {
       .build();
 
     setConnection(newConnection);
-
-    const startConnection = async () => {
-      try {
-        await newConnection.start();
-        
-        // Register event handlers
-        newConnection.on("BotTyping", handleBotTyping);
-        newConnection.on("ReceiveSubtasks", handleReceiveSubtasks);
-        
-        console.log("Connected to Breakdown SignalR hub!", BREAKDOWN_HUB_URL);
-        
-        // Automatically trigger initial breakdown once connected
-        if (!hasInitialBreakdown) {
-          try {
-            await newConnection.invoke("BreakdownTask", taskDetails);
-            setHasInitialBreakdown(true);
-          } catch (error) {
-            console.error("Error invoking BreakdownTask:", error);
-          }
-        }
-      } catch (error) {
-        console.error("Error connecting to Breakdown SignalR:", error);
-      }
-    };
-
-    startConnection();
+    startConnection(newConnection);
 
     return () => {
       newConnection
@@ -102,7 +101,7 @@ export function useBreakdownChat(taskDetails: TaskDetailsDto) {
           console.error("Error stopping Breakdown SignalR connection:", error)
         );
     };
-  }, [hasInitialBreakdown, taskDetails]);
+  }, []);
 
   return { 
     messages, 
