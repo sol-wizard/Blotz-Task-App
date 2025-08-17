@@ -6,25 +6,15 @@ import { AiTaskDTO } from "../models/ai-task-dto";
 export default function BotMessage({
   text,
   tasks = [],
-  onDeleteTask,
-  onEditTask,
 }: {
   text: string;
   tasks?: AiTaskDTO[];
-  onDeleteTask: (taskId?: string) => void;
-  onEditTask: (taskId: string, newTitle: string) => void;
 }) {
   return (
     <View className="flex-row items-end justify-start mb-3">
       <View className="bg-[#F2F2F7] px-3 py-2 rounded-t-2xl rounded-br-2xl max-w-[80%]">
         <Text className="text-black text-base">{text}</Text>
-        {tasks.length > 0 && (
-          <AiTaskList
-            tasks={tasks}
-            onDeleteTask={onDeleteTask}
-            onEditTask={onEditTask}
-          />
-        )}
+        {tasks.length > 0 && <AiTaskList tasks={tasks} />}
       </View>
     </View>
   );

@@ -61,7 +61,6 @@ export default function CalendarPage() {
       setTasksForSelectedDay(updatedTasks);
     } catch (e) {
       console.error(e);
-      // noop, could show toast
     }
   };
 
