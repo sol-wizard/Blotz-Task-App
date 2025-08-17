@@ -19,42 +19,16 @@ namespace BlotzTask.Modules.BreakDown.Services
 
         public async Task<List<SubTask>> BreakdownTaskAsync(TaskDetailsDto taskDetails, string conversationId)
         {
-            _logger.LogInformation("Breaking down task: {TaskTitle} for conversation: {ConversationId}", 
-                taskDetails.Title, conversationId);
-
-            // TODO: Initialize ChatHistory and conversation state management
-            // TODO: Add system prompt for task breakdown
-            // TODO: Add user message to ChatHistory
-            // TODO: Call Semantic Kernel AI service
-            // TODO: Parse AI response to extract subtasks
-            // TODO: Store conversation state
-
-            // Placeholder implementation for now
-            await Task.Delay(1000);
-            return new List<SubTask>
-            {
-                new SubTask { Title = $"Placeholder subtask 1 for {taskDetails.Title}", Duration = TimeSpan.FromHours(2) },
-                new SubTask { Title = $"Placeholder subtask 2 for {taskDetails.Title}", Duration = TimeSpan.FromHours(1) }
-            };
+            // TODO: Implement task breakdown logic using Semantic Kernel and chat history
+            // For now, return an empty list or placeholder
+            return new List<SubTask>();
         }
 
         public async Task<List<SubTask>> ModifyBreakdownAsync(string userRequest, string conversationId)
         {
-            _logger.LogInformation("Modifying breakdown for conversation: {ConversationId}, Request: {Request}", 
-                conversationId, userRequest);
-
-            // TODO: Retrieve existing ChatHistory from conversation state
-            // TODO: Add user modification request to ChatHistory
-            // TODO: Call Semantic Kernel AI service with full conversation context
-            // TODO: Parse AI response for updated subtasks
-            // TODO: Update conversation state
-
-            // Placeholder implementation for now
-            await Task.Delay(800);
-            return new List<SubTask>
-            {
-                new SubTask { Title = $"Modified subtask based on: {userRequest}", Duration = TimeSpan.FromMinutes(30) }
-            };
+            // TODO: Implement modification logic using Semantic Kernel and chat history
+            // For now, return an empty list or placeholder
+            return new List<SubTask>();
         }
     }
 }
