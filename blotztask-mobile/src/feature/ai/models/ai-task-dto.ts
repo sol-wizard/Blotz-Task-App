@@ -1,3 +1,4 @@
+// This data type is passed into AIChatTaskCard
 export interface AiTaskDTO {
   id: string;
   description: string;
