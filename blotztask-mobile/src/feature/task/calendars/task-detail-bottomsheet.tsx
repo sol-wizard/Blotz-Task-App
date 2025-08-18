@@ -1,10 +1,11 @@
-import React, { useCallback, useRef } from 'react';
-import { View, Pressable, TouchableOpacity } from 'react-native';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Button, Text, Portal } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
-import { TaskDetailDTO } from '@/shared/models/task-detail-dto';
-import TaskDetailTag from '../components/task-detail-tag';
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { MaterialIcons } from "@expo/vector-icons";
+import BottomSheet, { BottomSheetView, TouchableOpacity } from "@gorhom/bottom-sheet";
+import { useCallback, useRef } from "react";
+import { Pressable, View, Text } from "react-native";
+import { Button, Portal } from "react-native-paper";
+import { router } from "expo-router";
+import TaskDetailTag from "../components/task-detail-tag";
 
 interface TaskDetailBottomSheetProps {
   task?: TaskDetailDTO;
@@ -30,9 +31,18 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
     [onClose]
   );
 
-
-
-
+  const handleAiBreakdown = () => {
+    if (!task) return;
+    
+    onClose(); // Close the bottom sheet first
+    router.push({
+      pathname: "/(protected)/breakdown",
+      params: {
+        title: task.title,
+        description: task.description || `Break down this task: ${task.title}`
+      }
+    });
+  };
 
   return (
     <Portal>
@@ -83,7 +93,7 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                     {/* AI Breakdown capsule */}
                     <TouchableOpacity
                       activeOpacity={0.7}
-                      onPress={() => console.log('AI Breakdown:', task.id)}
+                      onPress={handleAiBreakdown}
                       className="flex-row items-center px-3 py-1.5 bg-white border border-gray-200 rounded-2xl"
                     >
                       <MaterialIcons name="auto-awesome" size={15} color="#9CA3AF" />
