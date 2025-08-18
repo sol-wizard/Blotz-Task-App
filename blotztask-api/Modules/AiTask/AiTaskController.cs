@@ -7,6 +7,7 @@ namespace BlotzTask.Modules.AiTask;
 
 [Authorize]
 [ApiController]
+[Obsolete]
 [Route("api/[controller]")]
 public class AiTaskController : ControllerBase
 {

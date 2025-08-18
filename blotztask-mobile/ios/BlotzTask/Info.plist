@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-
   <dict>
     <key>CADisableMinimumFrameDurationOnPhone</key>
     <true/>
@@ -56,6 +55,10 @@
     </dict>
     <key>NSFaceIDUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your Face ID biometric data.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>CUSTOM: Allow BlotzTask to access the microphone</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>CUSTOM: Allow BlotzTask to securely recognize user speech</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
@@ -86,9 +89,5 @@
     <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>We need access to your microphone for voice input.</string>
-    <key>NSSpeechRecognitionUsageDescription</key>
-    <string>We use speech recognition to convert your voice into text.</string>
   </dict>
 </plist>
