@@ -6,6 +6,8 @@ using BlotzTask.Infrastructure.Data;
 using BlotzTask.Infrastructure.Data.Seeding;
 using BlotzTask.Middleware;
 using BlotzTask.Modules.AiTask.Services;
+using BlotzTask.Modules.BreakDown;
+using BlotzTask.Modules.BreakDown.Services;
 using BlotzTask.Modules.Chat;
 using BlotzTask.Modules.Chat.Services;
 using BlotzTask.Modules.GoalPlannerChat;
@@ -171,6 +173,7 @@ builder.Services.AddScoped<ITaskGenerateChatService, TaskGenerateChatService>();
 builder.Services.AddScoped<TaskParsingService>();
 builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
 
+builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
@@ -212,5 +215,6 @@ app.MapSwagger().RequireAuthorization();
 app.MapControllers();
 app.MapHub<GoalPlannerChatHub>("/chatHub");
 app.MapHub<AiTaskGenerateChatHub>("/ai-task-generate-chathub");
+app.MapHub<AiTaskBreakDownChat>("/ai-task-breakdown-chathub");
 
 app.Run();
