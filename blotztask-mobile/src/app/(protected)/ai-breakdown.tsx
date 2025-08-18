@@ -1,9 +1,10 @@
-import { AIChatTaskCard } from "@/feature/ai/components/ai-chat-task-card";
 import BreakDownBotMessage from "@/feature/ai/components/breakdown-bot-message";
 import { TypingArea } from "@/feature/ai/components/typing-area";
 import UserMessage from "@/feature/ai/components/user-message";
-import { AiTaskDTO } from "@/feature/ai/models/ai-task-dto";
-import { ConversationMessage } from "@/feature/ai/models/conversation-message";
+import { useBreakdownChat } from "@/feature/breakdown/hooks/useBreakdownChat";
+import { convertSubTasksDtoToAiTaskDTO } from "@/feature/ai/services/util/util";
+
+import { TaskDetailsDto } from "@/feature/breakdown/models/task-details-dto";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
@@ -19,44 +20,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import uuid from "react-native-uuid";
 
 export default function AiBreakdownScreen() {
-  const { task } = useLocalSearchParams();
-  const parsedTask = task ? JSON.parse(task as string) : null;
+  const params = useLocalSearchParams();
 
-  const [text, setText] = useState("");
-
-  const handleSend = () => {
-    console.log("user sent something");
-    setText("");
+  const taskDetails: TaskDetailsDto = {
+    title: (params.title as string) || "Plan my weekend project",
+    description:
+      (params.description as string) ||
+      "I want to build a small garden shed in my backyard. I need to plan all the steps from design to completion.",
   };
 
-  const mockTasks: AiTaskDTO[] = [
-    {
-      id: uuid.v4().toString(),
-      description: "review classes 1-3",
-      title: "Prepare for cybersecurity quiz",
-      isAdded: false,
-      endTime: new Date().toISOString(),
-      hasTime: false,
-      labelId: 6,
-    },
-    {
-      id: uuid.v4().toString(),
-      description: "buy milk, biscuits, oat",
-      title: "Go to shopping center to buy groceries",
-      isAdded: false,
-      endTime: new Date().toISOString(),
-      hasTime: false,
-      labelId: 6,
-    },
-  ];
-
-  const mockMessages: ConversationMessage[] = [
-    {
-      content: "Let's break this down into doable steps!",
-      isBot: true,
-      tasks: mockTasks,
-    },
-  ];
+  const [text, setText] = useState("");
+  const { messages, isTyping, sendMessage } = useBreakdownChat(taskDetails);
+  const handleSend = () => {
+    sendMessage(text);
+    setText("");
+  };
 
   return (
     <SafeAreaView
@@ -75,10 +53,14 @@ export default function AiBreakdownScreen() {
               contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
               keyboardShouldPersistTaps="handled"
             >
-              {mockMessages &&
-                mockMessages.map((msg) =>
+              {messages &&
+                messages.map((msg) =>
                   msg.isBot ? (
-                    <BreakDownBotMessage text={msg.content} tasks={msg.tasks} />
+                    <BreakDownBotMessage
+                      key={uuid.v4().toString()}
+                      text={msg.content}
+                      tasks={convertSubTasksDtoToAiTaskDTO(msg.subtasks)}
+                    />
                   ) : (
                     <UserMessage
                       key={uuid.v4().toString()}
@@ -86,6 +68,13 @@ export default function AiBreakdownScreen() {
                     />
                   )
                 )}
+              {isTyping && (
+                <View className="mb-4">
+                  <View className="bg-gray-100 p-3 rounded-lg mr-12">
+                    <Text className="text-gray-500">Bot is thinking...</Text>
+                  </View>
+                </View>
+              )}
             </ScrollView>
           </TouchableWithoutFeedback>
 
