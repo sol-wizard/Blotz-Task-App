@@ -31,13 +31,19 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
     [onClose]
   );
 
-  const handleBreakDown = (task: TaskDetailDTO) => {
-    handleTaskDetailSheetClose(-1);
+  const handleAiBreakdown = () => {
+    if (!task) return;
+
+    onClose(); // Close the bottom sheet first
     router.push({
       pathname: "/(protected)/ai-breakdown",
-      params: { task: JSON.stringify(task) },
+      params: {
+        title: task.title,
+        description: task.description || `Break down this task: ${task.title}`,
+      },
     });
   };
+
   return (
     <Portal>
       <View className="absolute inset-0 z-50">
@@ -87,7 +93,7 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                     {/* AI Breakdown capsule */}
                     <TouchableOpacity
                       activeOpacity={0.7}
-                      onPress={() => handleBreakDown(task)}
+                      onPress={handleAiBreakdown}
                       className="flex-row items-center px-3 py-1.5 bg-white border border-gray-200 rounded-2xl"
                     >
                       <MaterialIcons
