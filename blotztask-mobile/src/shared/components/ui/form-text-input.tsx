@@ -8,7 +8,7 @@ export function FormTextInput({
   className = "",
 }: {
   name: string;
-  placeholder: string;
+  placeholder?: string;
   control: any;
   className?: string;
 }) {
