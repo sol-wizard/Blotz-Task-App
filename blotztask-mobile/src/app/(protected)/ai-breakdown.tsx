@@ -1,8 +1,6 @@
 import { TypingArea } from "@/feature/ai-chat-hub/components/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
 import { useBreakdownChat } from "@/feature/breakdown/hooks/useBreakdownChat";
-import { convertSubTasksDtoToAiTaskDTO } from "@/feature/ai-chat-hub/services/util/util";
-
 import { TaskDetailsDto } from "@/feature/breakdown/models/task-details-dto";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -17,7 +15,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import uuid from "react-native-uuid";
-import BreakDownBotMessage from "@/feature/ai-chat-hub/components/breakdown-bot-message";
+import BreakdownBotMessage from "@/feature/breakdown/components/breakdown-bot-message";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 export default function AiBreakdownScreen() {
   const params = useLocalSearchParams();
@@ -54,12 +53,13 @@ export default function AiBreakdownScreen() {
               keyboardShouldPersistTaps="handled"
             >
               {messages &&
-                messages.map((msg) =>
+                messages.map((msg, index) =>
                   msg.isBot ? (
-                    <BreakDownBotMessage
-                      key={uuid.v4().toString()}
+                    <BreakdownBotMessage
+                      key={index}
+                      parentTaskId={params.id as string}
                       text={msg.content}
-                      tasks={convertSubTasksDtoToAiTaskDTO(msg.subtasks)}
+                      subtasks={msg.subtasks}
                     />
                   ) : (
                     <UserMessage

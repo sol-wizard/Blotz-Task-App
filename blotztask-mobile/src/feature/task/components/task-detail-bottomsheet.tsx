@@ -38,6 +38,7 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
     router.push({
       pathname: "/(protected)/ai-breakdown",
       params: {
+        id: task.id,
         title: task.title,
         description: task.description || `Break down this task: ${task.title}`,
       },
