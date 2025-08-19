@@ -14,7 +14,6 @@ import {
   Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import uuid from "react-native-uuid";
 import BreakdownBotMessage from "@/feature/breakdown/components/breakdown-bot-message";
 
 export default function AiBreakdownScreen() {
