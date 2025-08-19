@@ -56,7 +56,9 @@ public class TaskController : ControllerBase
         
     //TODO: change the route "due-date" to "by-date"
     [HttpGet("due-date")]
-    public async Task<IActionResult> GetTaskByDate([FromQuery] DateTime startDateUtc)
+    public async Task<IActionResult> GetTaskByDate(
+        [FromQuery] DateTime startDateUtc,
+        [FromQuery] bool includeFloatingForToday = false)
     {
         var userId = HttpContext.Items["UserId"] as string;
 
@@ -66,7 +68,7 @@ public class TaskController : ControllerBase
         }
             
         DateTime endDateUtc = startDateUtc.AddDays(1);
-        return Ok(await _taskService.GetTaskByDate(startDateUtc, endDateUtc, userId));
+        return Ok(await _taskService.GetTaskByDate(startDateUtc, endDateUtc, userId, includeFloatingForToday));
     }
 
     [HttpGet("today-done")]
