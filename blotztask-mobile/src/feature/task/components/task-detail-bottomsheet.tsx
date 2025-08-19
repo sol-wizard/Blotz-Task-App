@@ -40,7 +40,7 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
       params: {
         id: task.id,
         title: task.title,
-        description: task.description || `Break down this task: ${task.title}`,
+        description: task.description,
       },
     });
   };

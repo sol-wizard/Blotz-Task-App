@@ -8,7 +8,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import EditTaskFormField, {
   taskEditFormSchema,
 } from "../services/breakdown-task-edit-form-schema";
-import { Controller, FormProvider, useForm } from "react-hook-form";
+import {
+  Controller,
+  FormProvider,
+  SubmitHandler,
+  useForm,
+} from "react-hook-form";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 
 export const BreakdownTaskCard = ({
@@ -20,9 +25,9 @@ export const BreakdownTaskCard = ({
 }) => {
   const [isChecked, setIsChecked] = useState(false);
 
-  const handleAddTask = (task: SubTask) => {
+  const handleAddTask: SubmitHandler<EditTaskFormField> = ({ title }) => {
     setIsChecked((prev) => !prev);
-    console.log("sub task added!", task, "parentTaskId:", parentTaskId);
+    console.log("sub task added!", title, "parentTaskId:", parentTaskId);
   };
 
   const form = useForm<EditTaskFormField>({
@@ -39,7 +44,7 @@ export const BreakdownTaskCard = ({
         <View className="flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1 border border-gray-300">
           <Checkbox
             status={isChecked ? "checked" : "unchecked"}
-            onPress={() => handleAddTask(subTask)}
+            onPress={form.handleSubmit(handleAddTask)}
           />
           <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
           <View className="flex-col">
