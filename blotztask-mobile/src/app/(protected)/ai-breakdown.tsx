@@ -59,10 +59,7 @@ export default function AiBreakdownScreen() {
                       subtasks={msg.subtasks}
                     />
                   ) : (
-                    <UserMessage
-                      key={uuid.v4().toString()}
-                      text={msg.content}
-                    />
+                    <UserMessage key={index} text={msg.content} />
                   )
                 )}
               {isTyping && (
