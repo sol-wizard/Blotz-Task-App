@@ -1,7 +1,9 @@
+using System.Text.Json;
 using BlotzTask.Modules.Chat.Constants;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
 using BlotzTask.Shared.Services;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.SemanticKernel.ChatCompletion;
 using OpenAI.Chat;
 
@@ -9,7 +11,7 @@ namespace BlotzTask.Modules.Chat.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<List<ExtractedTask>?> GenerateAiResponse(ChatHistory chatHistory);
+    Task<List<ExtractedTask>?> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct);
     Task<ChatHistory> InitializeNewConversation(string conversationId);
 }
 
@@ -19,47 +21,65 @@ public class AiTaskGenerateService : IAiTaskGenerateService
     private readonly TaskParsingService _taskParser;
     private readonly ISafeChatCompletionService _safeChatCompletionService;
     private readonly ILogger<AiTaskGenerateService> _logger;
+    private readonly AiChatToolService _aiChatToolService;
 
     public AiTaskGenerateService(
         IChatHistoryManagerService chatHistoryManagerService,
         TaskParsingService taskParser,
         ISafeChatCompletionService safeChatCompletionService,
-        ILogger<AiTaskGenerateService> logger
+        ILogger<AiTaskGenerateService> logger,
+        AiChatToolService aiChatToolService
     )
     {
         _chatHistoryManagerService = chatHistoryManagerService;
         _taskParser = taskParser;
         _safeChatCompletionService = safeChatCompletionService;
         _logger = logger;
+        _aiChatToolService = aiChatToolService;
     }
 
     /// <summary>
     ///    Generates a list of tasks based on the provided chat history.
     /// </summary>
     /// <param name="chatHistory"></param>
+    /// <param name="ct"></param>
     /// <returns></returns>
-    public async Task<List<ExtractedTask>?> GenerateAiResponse(ChatHistory chatHistory)
+    public async Task<List<ExtractedTask>?> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct)
     {
-        var tempHistory = new ChatHistory(chatHistory);
-        tempHistory.AddSystemMessage(
-            $"Based on these details, can you generate tasks in the required JSON format?"
-        );
+        // var tempHistory = new ChatHistory(chatHistory);
+        // tempHistory.AddSystemMessage(
+        //     $"Based on these details, can you generate tasks in the required JSON format?"
+        // );
 
-        var answer = await _safeChatCompletionService.GetSafeContentAsync(tempHistory);
+        // var answer = await _safeChatCompletionService.GetSafeContentAsync(tempHistory);
+        
+            // if (_taskParser.TryParseTasks(answer, out List<ExtractedTask>? tasks))
+            // {
+            //     chatHistory.AddAssistantMessage(answer);
+            //     return tasks;
+            // }
+            var tempHistory = new ChatHistory(chatHistory);
+            tempHistory.AddSystemMessage(
+                "Based on these details, can you generate tasks in the required JSON format?"
+            );
+            
+            var tool = CreateExtractedTasksTool();
+            
+            var tasks = await _aiChatToolService.CallToolAndDeserializeAsync<List<ExtractedTask>>(
+                toolFunctionName: "extract_tasks",
+                messages: tempHistory.ToOpenAiChatMessages(),
+                tool: tool,
+                cancellationToken: ct
+            );
 
-        if (!string.IsNullOrEmpty(answer))
-        {
-            if (_taskParser.TryParseTasks(answer, out List<ExtractedTask>? tasks))
+            if (tasks != null)
             {
-                chatHistory.AddAssistantMessage(answer);
+                chatHistory.AddAssistantMessage((JsonSerializer.Serialize(tasks)));
                 return tasks;
             }
-            else
-            {
-                _logger.LogWarning("Failed to parse tasks from AI response: {Answer}", answer);
-            }
-        }
-        return null;
+
+            _logger.LogWarning("Failed to parse tasks from AI response");
+            return null;
     }
 
     /// <summary>
@@ -83,7 +103,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
         return Task.FromResult(chatHistory);
     }
 
-    private ChatTool CreateExtractedTasksTool(HashSet<string> labelNames)
+    private ChatTool CreateExtractedTasksTool()
     {
         return ChatTool.CreateFunctionTool(
             functionName: "extract_tasks",

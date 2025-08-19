@@ -171,6 +171,8 @@ builder.Services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService
 builder.Services.AddScoped<ITaskGenerateChatService, TaskGenerateChatService>();
 
 builder.Services.AddScoped<TaskParsingService>();
+builder.Services.AddScoped<AiChatToolService>();
+
 builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
 
 builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();

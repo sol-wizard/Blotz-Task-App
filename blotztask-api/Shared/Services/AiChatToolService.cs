@@ -1,5 +1,6 @@
 using OpenAI.Chat;
-using System.Text.Json; // For improved fallback deserialization if needed
+using System.Text.Json;
+using Microsoft.SemanticKernel.ChatCompletion; // For improved fallback deserialization if needed
 
 namespace BlotzTask.Shared.Services;
 
@@ -59,7 +60,7 @@ public class AiChatToolService // Renamed to a more descriptive class name
                 Console.WriteLine($"[AI Warning] Tool function '{toolFunctionName}' was not called by the AI, or another tool was called instead.");
                 return null;
             }
-
+            
             T? result = null;
             try
             {
