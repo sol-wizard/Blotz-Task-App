@@ -25,7 +25,7 @@ export const BreakdownTaskCard = ({
 }) => {
   const [isChecked, setIsChecked] = useState(false);
 
-  const handleAddTask: SubmitHandler<EditTaskFormField> = ({ title }) => {
+  const handleAddSubTask: SubmitHandler<EditTaskFormField> = ({ title }) => {
     setIsChecked((prev) => !prev);
     console.log("sub task added!", title, "parentTaskId:", parentTaskId);
   };
@@ -44,7 +44,7 @@ export const BreakdownTaskCard = ({
         <View className="flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1 border border-gray-300">
           <Checkbox
             status={isChecked ? "checked" : "unchecked"}
-            onPress={form.handleSubmit(handleAddTask)}
+            onPress={form.handleSubmit(handleAddSubTask)}
           />
           <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
           <View className="flex-col">
