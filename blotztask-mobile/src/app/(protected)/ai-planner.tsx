@@ -25,9 +25,9 @@ export default function AiPlannerScreen() {
   const [botRound, setBotRound] = useState(0);
   const thinking = useThinkingOverlay({ delayMs: 300, timeoutMs: 20000 });
   const thinkingTokenRef = useRef<string | null>(null);
+  const prevBotCountRef = useRef<number>(0);
 
   const handleSend = () => {
-    
     if (!text.trim()) return;
     thinkingTokenRef.current = thinking.begin();
     setBotRound(prev => prev + 1);
@@ -35,21 +35,15 @@ export default function AiPlannerScreen() {
     setText("");
   };
 
-  const handleDeleteTask = (taskId?: string) => {
-    console.log("Delete task:", taskId);
-  };
-
-  const handleEditTask = (taskId: string, newTitle: string) => {
-    console.log("Edit task:", taskId, "New title:", newTitle);
-  };
-
-  const botMsgCount = messages.filter(m => m.isBot).length;
+  const botMsgCount = messages.filter((m) => m.isBot).length;
   useEffect(() => {
-    if (botMsgCount >= botRound && thinkingTokenRef.current) {
+    const prev = prevBotCountRef.current;
+    if (botMsgCount > prev && thinkingTokenRef.current) {
       thinking.end(thinkingTokenRef.current);
       thinkingTokenRef.current = null;
     }
-  }, [botMsgCount, botRound, thinking]);
+    prevBotCountRef.current = botMsgCount;
+  }, [botMsgCount]);
 
   return (
     <SafeAreaView

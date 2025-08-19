@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 type Opts = { delayMs?: number; timeoutMs?: number };
 type Token = string;
@@ -8,15 +8,19 @@ export function useThinkingOverlay(opts?: Opts) {
   const timeoutMs = opts?.timeoutMs ?? 20000;
 
   const [visible, setVisible] = useState(false);
-  const pending = useRef(0);
+
+  const pending   = useRef(0);
   const showTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const timeouts = useRef<Map<Token, ReturnType<typeof setTimeout>>>(new Map());
+  const timeouts  = useRef<Map<Token, ReturnType<typeof setTimeout>>>(new Map());
 
-  const begin = useCallback((): Token => {
+  function begin(): Token {
     pending.current += 1;
-    const token = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now() + Math.random());
 
-    // 延迟显示：避免<300ms 闪一下
+    const token: Token =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : String(Date.now() + Math.random());
+
     if (!showTimer.current && !visible) {
       showTimer.current = setTimeout(() => {
         setVisible(true);
@@ -25,15 +29,14 @@ export function useThinkingOverlay(opts?: Opts) {
     }
 
     const t = setTimeout(() => {
-      // 超时保护：自动结束，避免永远 loading
       end(token);
     }, timeoutMs);
     timeouts.current.set(token, t);
 
     return token;
-  }, [delayMs, timeoutMs, visible]);
+  }
 
-  const end = useCallback((token?: Token) => {
+  function end(token?: Token) {
     if (token && timeouts.current.has(token)) {
       clearTimeout(timeouts.current.get(token)!);
       timeouts.current.delete(token);
@@ -47,9 +50,9 @@ export function useThinkingOverlay(opts?: Opts) {
       }
       setVisible(false);
     }
-  }, []);
+  }
 
-  const resetAll = useCallback(() => {
+  function resetAll() {
     timeouts.current.forEach(clearTimeout);
     timeouts.current.clear();
     if (showTimer.current) {
@@ -58,7 +61,9 @@ export function useThinkingOverlay(opts?: Opts) {
     }
     pending.current = 0;
     setVisible(false);
-  }, []);
+  }
+
+  useEffect(() => () => resetAll(), []);
 
   return { visible, begin, end, resetAll };
 }
