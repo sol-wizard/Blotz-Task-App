@@ -1,9 +1,9 @@
-import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import React, { useCallback, useRef } from "react";
+import { View, Pressable, TouchableOpacity } from "react-native";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { Button, Text, Portal } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetView, TouchableOpacity } from "@gorhom/bottom-sheet";
-import { useCallback, useRef } from "react";
-import { Pressable, View, Text } from "react-native";
-import { Button, Portal } from "react-native-paper";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import TaskDetailTag from "../components/task-detail-tag";
 
@@ -21,10 +21,10 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   // Initial height & snap points
-  const snapPoints = ['30%', '60%'];
+  const snapPoints = ["30%", "60%"];
   const openIndex = 1;
 
-  const handleSheetChange = useCallback(
+  const handleTaskDetailSheetClose = useCallback(
     (index: number) => {
       if (index === -1) onClose();
     },
@@ -33,14 +33,15 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
 
   const handleAiBreakdown = () => {
     if (!task) return;
-    
+
     onClose(); // Close the bottom sheet first
     router.push({
-      pathname: "/(protected)/breakdown",
+      pathname: "/(protected)/ai-breakdown",
       params: {
+        id: task.id,
         title: task.title,
-        description: task.description || `Break down this task: ${task.title}`
-      }
+        description: task.description,
+      },
     });
   };
 
@@ -58,10 +59,10 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
           ref={bottomSheetRef}
           index={isVisible ? openIndex : -1}
           snapPoints={snapPoints}
-          onChange={handleSheetChange}
+          onChange={handleTaskDetailSheetClose}
           enablePanDownToClose
           backgroundStyle={{
-            backgroundColor: '#FFFFFF',
+            backgroundColor: "#FFFFFF",
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
           }}
@@ -73,7 +74,7 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                 <View className="flex-row items-center justify-between mb-2">
                   <Text
                     className="flex-1 text-gray-900 mr-3 text-xl leading-6"
-                    style={{ fontWeight: '800' }}
+                    style={{ fontWeight: "800" }}
                   >
                     {task.title}
                   </Text>
@@ -81,10 +82,10 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                   <View className="flex-row items-center gap-2">
                     <Button
                       mode="text"
-                      onPress={() => console.log('Edit task:', task.id)}
+                      onPress={() => console.log("Edit task:", task.id)}
                       textColor="#374151"
                       compact
-                      labelStyle={{ fontSize: 15, fontWeight: 'bold' }}
+                      labelStyle={{ fontSize: 15, fontWeight: "bold" }}
                       contentStyle={{ paddingHorizontal: 0 }}
                     >
                       Edit
@@ -96,7 +97,11 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                       onPress={handleAiBreakdown}
                       className="flex-row items-center px-3 py-1.5 bg-white border border-gray-200 rounded-2xl"
                     >
-                      <MaterialIcons name="auto-awesome" size={15} color="#9CA3AF" />
+                      <MaterialIcons
+                        name="auto-awesome"
+                        size={15}
+                        color="#9CA3AF"
+                      />
                       <Text className="ml-1.5 text-gray-900 text-xs font-bold">
                         AI Breakdown
                       </Text>
@@ -106,8 +111,12 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
 
                 {/* Tags */}
                 <View className="flex-row items-center mb-3 gap-2 mt-1">
-                  {task.label ? <TaskDetailTag>{task.label.name}</TaskDetailTag> : null}
-                  <TaskDetailTag>{task.isDone ? 'Done' : 'In progress'}</TaskDetailTag>
+                  {task.label ? (
+                    <TaskDetailTag>{task.label.name}</TaskDetailTag>
+                  ) : null}
+                  <TaskDetailTag>
+                    {task.isDone ? "Done" : "In progress"}
+                  </TaskDetailTag>
                 </View>
 
                 {/* Divider */}
@@ -131,7 +140,11 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                   </View>
                 ) : task?.endTime ? (
                   <View className="flex-row items-center mb-2">
-                    <MaterialIcons name="calendar-today" size={18} color="#6B7280" />
+                    <MaterialIcons
+                      name="calendar-today"
+                      size={18}
+                      color="#6B7280"
+                    />
                     <Text className="ml-2.5 text-base leading-5 text-gray-900">
                       {task.endTime}
                     </Text>
@@ -141,7 +154,12 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                 {/* Description */}
                 {task.description ? (
                   <View className="flex-row items-start">
-                    <MaterialIcons name="description" size={18} color="#6B7280" className="mt-0.5" />
+                    <MaterialIcons
+                      name="description"
+                      size={18}
+                      color="#6B7280"
+                      className="mt-0.5"
+                    />
                     <Text className="flex-1 ml-2.5 text-base leading-5 text-gray-900">
                       {task.description}
                     </Text>

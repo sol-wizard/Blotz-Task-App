@@ -4,7 +4,7 @@ import { RepeatMenu } from "@/feature/task/task-creation/repeat-menu";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import AddTaskFormField, {
   taskCreationSchema,
-} from "@/feature/task/services/task-form-schema";
+} from "@/feature/task/services/task-creation-form-schema";
 import { addTaskItem } from "@/feature/task/services/task-service";
 import { toAddTaskItemDTO } from "@/feature/task/services/util/util";
 import { zodResolver } from "@hookform/resolvers/zod";
