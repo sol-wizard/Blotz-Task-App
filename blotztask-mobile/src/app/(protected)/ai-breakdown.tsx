@@ -21,10 +21,8 @@ export default function AiBreakdownScreen() {
   const params = useLocalSearchParams();
 
   const taskDetails: TaskDetailsDto = {
-    title: (params.title as string) || "Plan my weekend project",
-    description:
-      (params.description as string) ||
-      "I want to build a small garden shed in my backyard. I need to plan all the steps from design to completion.",
+    title: params.title as string,
+    description: params.description as string,
   };
 
   const [text, setText] = useState("");
