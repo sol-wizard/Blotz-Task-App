@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { BreakdownMessage } from "../models/breakdown-message";
-import { SubTask } from "../models/subtask";
-import { TaskDetailsDto } from "../models/task-details-dto";
+import { TaskDetailsDto } from "@/feature/breakdown/models/task-details-dto";
+import { BreakdownMessage } from "@/feature/breakdown/models/breakdown-message";
+import { SubTask } from "@/feature/breakdown/models/subtask";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_URL;
 const BREAKDOWN_HUB_URL = `${API_BASE_URL}/ai-task-breakdown-chathub`;
@@ -59,13 +59,13 @@ export function useBreakdownChat(taskDetails: TaskDetailsDto) {
   const startConnection = async (connection: signalR.HubConnection) => {
     try {
       await connection.start();
-      
+
       // Register event handlers
       connection.on("BotTyping", handleBotTyping);
       connection.on("ReceiveSubtasks", handleReceiveSubtasks);
-      
+
       console.log("Connected to Breakdown SignalR hub!", BREAKDOWN_HUB_URL);
-      
+
       // Automatically trigger initial breakdown once connected
       if (!hasInitialBreakdown) {
         try {
@@ -103,12 +103,10 @@ export function useBreakdownChat(taskDetails: TaskDetailsDto) {
     };
   }, []);
 
-  return { 
-    messages, 
-    isTyping, 
+  return {
+    messages,
+    isTyping,
     sendMessage,
-    isConnected: connection?.state === signalR.HubConnectionState.Connected 
+    isConnected: connection?.state === signalR.HubConnectionState.Connected,
   };
 }
-
-
