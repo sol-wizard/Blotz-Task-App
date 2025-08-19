@@ -10,8 +10,8 @@ export default function AiTaskList({ tasks }: { tasks: AiTaskDTO[] }) {
 
   return (
     <View className="items-start mt-2">
-      {tasks.map((task) => (
-        <AIChatTaskCard task={task} key={uuid.v4().toString()} />
+      {tasks.map((task, index) => (
+        <AIChatTaskCard task={task} key={index} />
       ))}
     </View>
   );

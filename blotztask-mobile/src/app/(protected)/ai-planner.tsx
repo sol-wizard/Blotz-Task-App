@@ -42,18 +42,15 @@ export default function AiPlannerScreen() {
               keyboardShouldPersistTaps="handled"
             >
               {messages &&
-                messages.map((msg) =>
+                messages.map((msg, index) =>
                   msg.isBot ? (
                     <BotMessage
-                      key={uuid.v4().toString()}
+                      key={index}
                       text={msg.content}
                       tasks={msg.tasks}
                     />
                   ) : (
-                    <UserMessage
-                      key={uuid.v4().toString()}
-                      text={msg.content}
-                    />
+                    <UserMessage key={index} text={msg.content} />
                   )
                 )}
             </ScrollView>
