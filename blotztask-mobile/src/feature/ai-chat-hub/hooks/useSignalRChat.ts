@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { ConversationMessage } from "@/feature/ai/models/conversation-message";
-import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai/services/map-extracted-to-task-dto";
-import { signalRService } from "@/shared/services/signalr-service";
+import { ConversationMessage } from "@/feature/ai-chat-hub/models/conversation-message";
+import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-chat-hub/services/map-extracted-to-task-dto";
+import { signalRService } from "@/feature/ai-chat-hub/services/chathub-signalr-service";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 
-//TODO: Rename to a specific name 
+//TODO: Rename to a specific name
 export function useSignalRChat(conversationId: string) {
   const [messages, setMessages] = useState<ConversationMessage[]>();
   const [connection, setConnection] = useState<signalR.HubConnection | null>(

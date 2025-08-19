@@ -16,7 +16,7 @@ export default function ProtectedLayout() {
         }}
       />
       <Stack.Screen
-        name="breakdown"
+        name="ai-breakdown"
         options={{
           headerShown: true,
           headerShadowVisible: false,
