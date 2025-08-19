@@ -75,8 +75,6 @@ export default function AiPlannerScreen() {
                       key={uuid.v4().toString()}
                       text={msg.content}
                       tasks={msg.tasks}
-                      onDeleteTask={handleDeleteTask}
-                      onEditTask={handleEditTask}
                     />
                   ) : (
                     <UserMessage
