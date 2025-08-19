@@ -1,6 +1,6 @@
-using OpenAI.Chat;
 using System.Text.Json;
 using Microsoft.SemanticKernel.ChatCompletion; // For improved fallback deserialization if needed
+using OpenAI.Chat;
 
 namespace BlotzTask.Shared.Services;
 
@@ -57,24 +57,31 @@ public class AiChatToolService // Renamed to a more descriptive class name
 
             if (toolCall == null)
             {
-                Console.WriteLine($"[AI Warning] Tool function '{toolFunctionName}' was not called by the AI, or another tool was called instead.");
+                Console.WriteLine(
+                    $"[AI Warning] Tool function '{toolFunctionName}' was not called by the AI, or another tool was called instead."
+                );
                 return null;
             }
-            
+
             T? result = null;
             try
             {
                 // Attempt to deserialize the tool function arguments directly
                 result = toolCall.FunctionArguments.ToObjectFromJson<T>();
+                Console.WriteLine($"Tool JSON arguments: {toolCall.FunctionArguments}");
             }
             catch (JsonException ex) // Catch specific JSON deserialization errors
             {
-                Console.WriteLine($"[AI Error] JSON deserialization failed for '{toolFunctionName}': {ex.Message}");
+                Console.WriteLine(
+                    $"[AI Error] JSON deserialization failed for '{toolFunctionName}': {ex.Message}"
+                );
                 // Fall through to attempt fallback deserializer
             }
             catch (Exception ex) // Catch other potential deserialization errors
             {
-                Console.WriteLine($"[AI Error] An unexpected error occurred during deserialization for '{toolFunctionName}': {ex.Message}");
+                Console.WriteLine(
+                    $"[AI Error] An unexpected error occurred during deserialization for '{toolFunctionName}': {ex.Message}"
+                );
                 // Fall through to attempt fallback deserializer
             }
 
@@ -95,14 +102,18 @@ public class AiChatToolService // Renamed to a more descriptive class name
 
             if (result == null)
             {
-                Console.WriteLine($"[AI Error] Deserialization (primary and fallback if provided) returned null for '{toolFunctionName}'.");
+                Console.WriteLine(
+                    $"[AI Error] Deserialization (primary and fallback if provided) returned null for '{toolFunctionName}'."
+                );
             }
 
             return result;
         }
         catch (Exception ex) // Catch any exceptions during the API call itself
         {
-            Console.WriteLine($"[AI Error] Exception during OpenAI tool call for '{toolFunctionName}': {ex.Message}");
+            Console.WriteLine(
+                $"[AI Error] Exception during OpenAI tool call for '{toolFunctionName}': {ex.Message}"
+            );
             return null;
         }
     }

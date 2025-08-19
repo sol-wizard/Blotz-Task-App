@@ -44,42 +44,42 @@ public class AiTaskGenerateService : IAiTaskGenerateService
     /// <param name="chatHistory"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public async Task<List<ExtractedTask>?> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct)
+    public async Task<List<ExtractedTask>?> GenerateAiResponse(
+        ChatHistory chatHistory,
+        CancellationToken ct
+    )
     {
-        // var tempHistory = new ChatHistory(chatHistory);
-        // tempHistory.AddSystemMessage(
-        //     $"Based on these details, can you generate tasks in the required JSON format?"
-        // );
+        var tempHistory = new ChatHistory(chatHistory);
+        tempHistory.AddSystemMessage(
+            """
+            Reminder:  
+            - Only extract tasks from the **latest user message**.  
+            - If the user mentions multiple actions in one message, extract **all distinct tasks** separately.  
+            - Do not include tasks from earlier turns of the conversation.  
+            - Always return every valid task, not just one.
+            """
+        );
 
-        // var answer = await _safeChatCompletionService.GetSafeContentAsync(tempHistory);
-        
-            // if (_taskParser.TryParseTasks(answer, out List<ExtractedTask>? tasks))
-            // {
-            //     chatHistory.AddAssistantMessage(answer);
-            //     return tasks;
-            // }
-            var tempHistory = new ChatHistory(chatHistory);
-            tempHistory.AddSystemMessage(
-                "Based on these details, can you generate tasks in the required JSON format?"
-            );
-            
-            var tool = CreateExtractedTasksTool();
-            
-            var tasks = await _aiChatToolService.CallToolAndDeserializeAsync<List<ExtractedTask>>(
-                toolFunctionName: "extract_tasks",
-                messages: tempHistory.ToOpenAiChatMessages(),
-                tool: tool,
-                cancellationToken: ct
-            );
+        var tool = CreateExtractedTasksTool();
 
-            if (tasks != null)
-            {
-                chatHistory.AddAssistantMessage((JsonSerializer.Serialize(tasks)));
-                return tasks;
-            }
+        // Call the AI tool to extract tasks from the chat history, deserializing the response into a wrapper
+        var wrapper = await _aiChatToolService.CallToolAndDeserializeAsync<ExtractedTaskResponse>(
+            toolFunctionName: "extract_tasks",
+            messages: tempHistory.ToOpenAiChatMessages(),
+            tool: tool,
+            cancellationToken: ct
+        );
 
-            _logger.LogWarning("Failed to parse tasks from AI response");
-            return null;
+        var tasks = wrapper?.Tasks;
+
+        if (tasks != null)
+        {
+            chatHistory.AddAssistantMessage((JsonSerializer.Serialize(tasks)));
+            return tasks;
+        }
+
+        _logger.LogWarning("Failed to parse tasks from AI response");
+        return null;
     }
 
     /// <summary>
@@ -94,9 +94,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
     public Task<ChatHistory> InitializeNewConversation(string conversationId)
     {
         var chatHistory = new ChatHistory();
-        chatHistory.AddSystemMessage(
-            string.Format(AiTaskGeneratorPrompts.SystemMessageTemplate, DateTime.Now)
-        );
+        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(DateTime.Now));
 
         _chatHistoryManagerService.SetChatHistory(conversationId, chatHistory);
 
@@ -111,31 +109,39 @@ public class AiTaskGenerateService : IAiTaskGenerateService
             functionParameters: BinaryData.FromObjectAsJson(
                 new
                 {
-                    type = "array",
-                    items = new
+                    type = "object",
+                    properties = new
                     {
-                        type = "object",
-                        properties = new
+                        tasks = new
                         {
-                            title = new
+                            type = "array",
+                            items = new
                             {
-                                type = "string",
-                                description = "Title of the task extracted from the user's input.",
-                            },
-                            description = new
-                            {
-                                type = "string",
-                                description = "Description of the task extracted or generated based on the user's input.",
-                            },
-                            end_time = new
-                            {
-                                type = "string",
-                                format = "date",
-                                description = "End time of the task in YYYY-MM-DD format.",
+                                type = "object",
+                                properties = new
+                                {
+                                    title = new
+                                    {
+                                        type = "string",
+                                        description = "Title of the task extracted from the user's input.",
+                                    },
+                                    description = new
+                                    {
+                                        type = "string",
+                                        description = "Description of the task extracted or generated based on the user's input.",
+                                    },
+                                    end_time = new
+                                    {
+                                        type = "string",
+                                        format = "date",
+                                        description = "End time of the task in YYYY-MM-DD format.",
+                                    },
+                                },
+                                required = new[] { "title", "description", "end_time" },
                             },
                         },
-                        required = new[] { "title", "description", "end_time" },
                     },
+                    required = new[] { "tasks" },
                 }
             )
         );
