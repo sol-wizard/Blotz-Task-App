@@ -1,7 +1,7 @@
-import BotMessage from "@/feature/ai/components/bot-message";
-import { TypingArea } from "@/feature/ai/components/typing-area";
-import UserMessage from "@/feature/ai/components/user-message";
-import { useSignalRChat } from "@/feature/ai/hooks/useSignalRChat";
+import BotMessage from "@/feature/ai-chat-hub/components/bot-message";
+import { TypingArea } from "@/shared/components/ui/typing-area";
+import UserMessage from "@/feature/ai-chat-hub/components/user-message";
+import { useSignalRChat } from "@/feature/ai-chat-hub/hooks/useSignalRChat";
 import React, { useState } from "react";
 import {
   View,
@@ -42,18 +42,15 @@ export default function AiPlannerScreen() {
               keyboardShouldPersistTaps="handled"
             >
               {messages &&
-                messages.map((msg) =>
+                messages.map((msg, index) =>
                   msg.isBot ? (
                     <BotMessage
-                      key={uuid.v4().toString()}
+                      key={index}
                       text={msg.content}
                       tasks={msg.tasks}
                     />
                   ) : (
-                    <UserMessage
-                      key={uuid.v4().toString()}
-                      text={msg.content}
-                    />
+                    <UserMessage key={index} text={msg.content} />
                   )
                 )}
             </ScrollView>

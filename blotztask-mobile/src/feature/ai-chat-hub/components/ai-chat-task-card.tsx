@@ -8,7 +8,13 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
 import { format } from "date-fns";
 
-export const AIChatTaskCard = ({ task }: { task: AiTaskDTO }) => {
+export const AIChatTaskCard = ({
+  task,
+  className,
+}: {
+  task: AiTaskDTO;
+  className?: string;
+}) => {
   const [isTaskAdded, setTaskIsAdded] = useState(task.isAdded);
   const handleAddTask = async (task: AiTaskDTO) => {
     const newTask = convertAiTaskToAddTaskItemDTO(task);
@@ -28,7 +34,9 @@ export const AIChatTaskCard = ({ task }: { task: AiTaskDTO }) => {
   };
   return (
     <View className="flex-row w-full items-center justify-between">
-      <View className="flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1">
+      <View
+        className={`flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1 ${className}`}
+      >
         <Checkbox
           status={isTaskAdded ? "checked" : "unchecked"}
           onPress={() => handleAddTask(task)}

@@ -1,40 +1,41 @@
-import React, { useState } from "react";
+import { TypingArea } from "@/shared/components/ui/typing-area";
+import UserMessage from "@/feature/ai-chat-hub/components/user-message";
+import { useBreakdownChat } from "@/feature/breakdown/hooks/useBreakdownChat";
+import { TaskDetailsDto } from "@/feature/breakdown/models/task-details-dto";
+import { useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 import {
   View,
-  ScrollView,
+  Text,
   KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  ScrollView,
   Platform,
   Keyboard,
-  TouchableWithoutFeedback,
-  Text,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams } from "expo-router";
-import { useBreakdownChat } from "../../feature/breakdown/hooks/useBreakdownChat";
-import BreakdownBotMessage from "../../feature/breakdown/components/breakdown-bot-message";
-import UserMessage from "../../feature/ai/components/user-message";
-import { TypingArea } from "../../feature/ai/components/typing-area";
-import { TaskDetailsDto } from "../../feature/breakdown/models/task-details-dto";
+import BreakdownBotMessage from "@/feature/breakdown/components/breakdown-bot-message";
 
-export default function BreakdownScreen() {
+export default function AiBreakdownScreen() {
   const params = useLocalSearchParams();
-  
-  // Get task details from navigation params or use default for testing
-  const taskDetails: TaskDetailsDto = {
-    title: (params.title as string) || "Plan my weekend project",
-    description: (params.description as string) || "I want to build a small garden shed in my backyard. I need to plan all the steps from design to completion."
-  };
-  
-  const { messages, isTyping, sendMessage } = useBreakdownChat(taskDetails);
-  const [text, setText] = useState("");
 
+  const taskDetails: TaskDetailsDto = {
+    title: params.title as string,
+    description: params.description as string,
+  };
+
+  const [text, setText] = useState("");
+  const { messages, isTyping, sendMessage } = useBreakdownChat(taskDetails);
   const handleSend = () => {
     sendMessage(text);
     setText("");
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["left", "right", "bottom"]}>
+    <SafeAreaView
+      className="flex-1 bg-white"
+      edges={["left", "right", "bottom"]}
+    >
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -51,15 +52,15 @@ export default function BreakdownScreen() {
                 messages.map((msg, index) =>
                   msg.isBot ? (
                     <BreakdownBotMessage
-                      key={`bot-${index}`}
+                      key={index}
+                      parentTaskId={params.id as string}
                       text={msg.content}
                       subtasks={msg.subtasks}
                     />
                   ) : (
-                    <UserMessage key={`user-${index}`} text={msg.content} />
+                    <UserMessage key={index} text={msg.content} />
                   )
                 )}
-              
               {isTyping && (
                 <View className="mb-4">
                   <View className="bg-gray-100 p-3 rounded-lg mr-12">
@@ -76,5 +77,3 @@ export default function BreakdownScreen() {
     </SafeAreaView>
   );
 }
-
-
