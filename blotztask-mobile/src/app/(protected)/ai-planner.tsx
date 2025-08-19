@@ -1,5 +1,5 @@
 import BotMessage from "@/feature/ai-chat-hub/components/bot-message";
-import { TypingArea } from "@/feature/ai-chat-hub/components/typing-area";
+import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
 import { useSignalRChat } from "@/feature/ai-chat-hub/hooks/useSignalRChat";
 import React, { useState } from "react";

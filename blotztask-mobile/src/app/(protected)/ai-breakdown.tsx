@@ -1,4 +1,4 @@
-import { TypingArea } from "@/feature/ai-chat-hub/components/typing-area";
+import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
 import { useBreakdownChat } from "@/feature/breakdown/hooks/useBreakdownChat";
 import { TaskDetailsDto } from "@/feature/breakdown/models/task-details-dto";
@@ -16,7 +16,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import uuid from "react-native-uuid";
 import BreakdownBotMessage from "@/feature/breakdown/components/breakdown-bot-message";
-import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 export default function AiBreakdownScreen() {
   const params = useLocalSearchParams();
