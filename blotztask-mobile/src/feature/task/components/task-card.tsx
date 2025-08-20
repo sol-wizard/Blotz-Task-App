@@ -56,6 +56,9 @@ export default function TaskCard({
           {checked && <View style={styles.checkmark} />}
         </Pressable>
 
+        {/* Gray Vertical Line */}
+        <View style={styles.verticalLine} />
+
         {/* Content */}
         <View style={styles.textContainer}>
           <Text 
@@ -104,7 +107,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#E5E5E5',
     backgroundColor: '#FFFFFF',
-    marginRight: 16,
+    marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -117,6 +120,14 @@ const styles = StyleSheet.create({
     height: 12,
     backgroundColor: '#FFFFFF',
     borderRadius: 2,
+  },
+  verticalLine: {
+    width: 4,
+    backgroundColor: '#d9d9d9',
+    alignSelf: 'stretch',
+    marginRight: 16,
+    borderRadius: 2.5,
+    minHeight: 24,
   },
   textContainer: {
     flex: 1,
