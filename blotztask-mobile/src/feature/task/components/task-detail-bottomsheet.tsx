@@ -1,6 +1,6 @@
 import React, { useCallback, useRef } from "react";
-import { View, Pressable, TouchableOpacity } from "react-native";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { View, TouchableOpacity } from "react-native";
+import BottomSheet, { BottomSheetView, BottomSheetBackdrop, BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import { Button, Text, Portal } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -23,6 +23,19 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
   // Initial height & snap points
   const snapPoints = ["30%", "60%"];
   const openIndex = 1;
+
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        pressBehavior="close"
+        opacity={0.5}
+      />
+    ),
+    []
+  );
 
   const handleTaskDetailSheetClose = useCallback(
     (index: number) => {
@@ -48,19 +61,13 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
   return (
     <Portal>
       <View className="absolute inset-0 z-50">
-        {isVisible && (
-          <Pressable
-            className="absolute inset-0 bg-black/50"
-            onPress={() => bottomSheetRef.current?.close()}
-          />
-        )}
-
         <BottomSheet
           ref={bottomSheetRef}
           index={isVisible ? openIndex : -1}
           snapPoints={snapPoints}
           onChange={handleTaskDetailSheetClose}
           enablePanDownToClose
+          backdropComponent={renderBackdrop}
           backgroundStyle={{
             backgroundColor: "#FFFFFF",
             borderTopLeftRadius: 24,
