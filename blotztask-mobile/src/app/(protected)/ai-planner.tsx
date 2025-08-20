@@ -14,15 +14,36 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import uuid from "react-native-uuid";
 
+import TypingBubble from "@/feature/ai-chat-hub/components/typing-bubble";
+import { useThinkingOverlay } from "@/feature/ai-chat-hub/hooks/useThinkOverlay";
+import { useRef, useEffect } from "react";
+
 export default function AiPlannerScreen() {
   const [conversationId] = useState<string>(() => uuid.v4());
-  const { messages, sendMessage } = useSignalRChat(conversationId);
+  const { messages = [], sendMessage } = useSignalRChat(conversationId);
   const [text, setText] = useState("");
+  const [botRound, setBotRound] = useState(0);
+  const thinking = useThinkingOverlay({ delayMs: 300, timeoutMs: 20000 });
+  const thinkingTokenRef = useRef<string | null>(null);
+  const prevBotCountRef = useRef<number>(0);
 
   const handleSend = () => {
+    if (!text.trim()) return;
+    thinkingTokenRef.current = thinking.begin();
+    setBotRound(prev => prev + 1);
     sendMessage(text);
     setText("");
   };
+
+  const botMsgCount = messages.filter((m) => m.isBot).length;
+  useEffect(() => {
+    const prev = prevBotCountRef.current;
+    if (botMsgCount > prev && thinkingTokenRef.current) {
+      thinking.end(thinkingTokenRef.current);
+      thinkingTokenRef.current = null;
+    }
+    prevBotCountRef.current = botMsgCount;
+  }, [botMsgCount]);
 
   return (
     <SafeAreaView
@@ -53,6 +74,7 @@ export default function AiPlannerScreen() {
                     <UserMessage key={index} text={msg.content} />
                   )
                 )}
+                {thinking.visible && <TypingBubble />}
             </ScrollView>
           </TouchableWithoutFeedback>
 
