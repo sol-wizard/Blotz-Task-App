@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Pressable } from "react-native";
-import { Surface, Text, Checkbox, IconButton } from "react-native-paper";
+import { View, Pressable, StyleSheet, Text } from "react-native";
 
 interface TaskCardProps {
   id: string;
@@ -33,11 +32,6 @@ export default function TaskCard({
     onToggleComplete?.(id, newChecked);
   };
 
-  const handleIconPress = (event: any) => {
-    event.stopPropagation();
-    console.log("Time icon pressed for:", title);
-  };
-
   const formatTimeRange = () => {
     if (startTime && endTime) {
       return `${startTime}-${endTime}`;
@@ -49,67 +43,98 @@ export default function TaskCard({
   };
 
   return (
-    <Surface
-      style={{
-        marginHorizontal: 16,
-        marginVertical: 4,
-        borderRadius: 12,
-        elevation: 1,
-        backgroundColor: "#ffffff",
-      }}
-    >
-      <Pressable
-        onPress={onPress}
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingVertical: 16,
-          paddingHorizontal: 16,
-          minHeight: 72,
-        }}
-      >
-        <View style={{ marginRight: 12 }}>
-          <Checkbox
-            status={checked ? "checked" : "unchecked"}
-            onPress={handleToggleComplete}
-            color="#2196F3"
-            uncheckedColor="#E0E0E0"
-          />
-        </View>
+    <Pressable style={styles.cardContainer} onPress={onPress}>
+      <View style={styles.contentContainer}>
+        {/* Custom Checkbox */}
+        <Pressable
+          style={[
+            styles.checkbox,
+            checked && styles.checkboxCompleted
+          ]}
+          onPress={handleToggleComplete}
+        >
+          {checked && <View style={styles.checkmark} />}
+        </Pressable>
 
-        <View style={{ flex: 1, justifyContent: "center" }}>
-          <Text
-            variant="bodyLarge"
-            style={{
-              fontWeight: "500",
-              color: checked ? "#9E9E9E" : "#212121",
-              textDecorationLine: checked ? "line-through" : "none",
-              marginBottom: 2,
-            }}
+        {/* Content */}
+        <View style={styles.textContainer}>
+          <Text 
+            style={[
+              styles.title,
+              checked && styles.titleCompleted
+            ]}
           >
             {title}
           </Text>
           {formatTimeRange() && (
-            <Text
-              variant="bodySmall"
-              style={{
-                color: "#757575",
-                fontSize: 13,
-              }}
-            >
+            <Text style={styles.dateRange}>
               {formatTimeRange()}
             </Text>
           )}
         </View>
-
-        <IconButton
-          icon="clock-outline"
-          size={20}
-          iconColor="#757575"
-          style={{ margin: 0 }}
-          onPress={handleIconPress}
-        />
-      </Pressable>
-    </Surface>
+      </View>
+    </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  cardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  contentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#E5E5E5',
+    backgroundColor: '#FFFFFF',
+    marginRight: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxCompleted: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  checkmark: {
+    width: 12,
+    height: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 2,
+  },
+  textContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  titleCompleted: {
+    color: '#A0A0A0',
+    textDecorationLine: 'line-through',
+  },
+  dateRange: {
+    fontSize: 14,
+    color: '#A0A0A0',
+    fontWeight: '400',
+  },
+});
