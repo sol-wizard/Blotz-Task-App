@@ -11,6 +11,8 @@ import {
   WeekCalendar,
   DateData,
 } from "react-native-calendars";
+import { Snackbar } from "react-native-paper";
+
 import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
@@ -18,6 +20,7 @@ import TaskCard from "../components/task-card";
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
+  deleteTask,
 } from "../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import TaskDetailBottomSheet, {
@@ -35,6 +38,10 @@ export default function CalendarPage() {
     undefined
   );
   const taskDetailSheetRef = useRef<TaskDetailBottomSheetHandle>(null);
+  const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
+    visible: false,
+    text: "",
+  });
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -65,22 +72,39 @@ export default function CalendarPage() {
     }
   };
 
-  const presentSheet = (task: TaskDetailDTO) => {
-    setSelectedTask(task);
-    requestAnimationFrame(() => taskDetailSheetRef.current?.present());
+  const renderTask = ({ item }: { item: TaskDetailDTO }) => {
+    const task = item as TaskDetailDTO;
+
+    return (
+      <TaskCard
+        id={task.id.toString()}
+        title={task.title}
+        startTime={task.hasTime ? format(task.endTime, "p") : undefined}
+        isCompleted={task.isDone}
+        onToggleComplete={(id, completed) => {
+          handleToggleTask(task);
+        }}
+        onPress={() => {
+          setSelectedTask(task);
+          taskDetailSheetRef.current?.present();
+        }}
+        onDelete={async () => {
+        await handleDeleteTask(task.id); // ✅ 传给子组件
+      }}
+      />
+    );
   };
 
-  const renderTask = ({ item }: { item: TaskDetailDTO }) => (
-    <TaskCard
-      id={item.id.toString()}
-      title={item.title}
-      startTime={item.startTime}
-      endTime={item.endTime}
-      isCompleted={item.isDone}
-      onToggleComplete={() => handleToggleTask(item)}
-      onPress={() => presentSheet(item)}
-    />
-  );
+  const handleDeleteTask = async (taskId: number) => {
+    try {
+      await deleteTask(taskId);                        // 调用你的 API
+      setTasksForSelectedDay(prev => prev.filter(t => t.id !== taskId)); // 前端移除
+      setSnackbar({ visible: true, text: "Delete Successful" });
+    } catch (e) {
+      console.error(e);
+      setSnackbar({ visible: true, text: "删除失败，请稍后重试" }); // 你已有的提示
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1">
@@ -134,6 +158,14 @@ export default function CalendarPage() {
           setSelectedTask(undefined);
         }}
       />
+
+      <Snackbar
+        visible={snackbar.visible}
+        onDismiss={() => setSnackbar({ visible: false, text: "" })}
+        duration={2200}
+      >
+        {snackbar.text}
+      </Snackbar>
     </SafeAreaView>
   );
 }
