@@ -22,7 +22,6 @@ export default function AiPlannerScreen() {
   const [conversationId] = useState<string>(() => uuid.v4());
   const { messages = [], sendMessage } = useSignalRChat(conversationId);
   const [text, setText] = useState("");
-  const [botRound, setBotRound] = useState(0);
   const thinking = useThinkingOverlay({ delayMs: 300, timeoutMs: 20000 });
   const thinkingTokenRef = useRef<string | null>(null);
   const prevBotCountRef = useRef<number>(0);
@@ -30,7 +29,6 @@ export default function AiPlannerScreen() {
   const handleSend = () => {
     if (!text.trim()) return;
     thinkingTokenRef.current = thinking.begin();
-    setBotRound(prev => prev + 1);
     sendMessage(text);
     setText("");
   };
