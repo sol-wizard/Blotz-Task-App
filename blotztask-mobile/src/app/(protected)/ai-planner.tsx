@@ -20,7 +20,7 @@ import { useRef, useEffect } from "react";
 
 export default function AiPlannerScreen() {
   const [conversationId] = useState<string>(() => uuid.v4());
-  const { messages = [], sendMessage } = useSignalRChat(conversationId);
+  const { messages, sendMessage, isTyping } = useSignalRChat(conversationId);
   const [text, setText] = useState("");
   const thinking = useThinkingOverlay({ delayMs: 300, timeoutMs: 20000 });
   const thinkingTokenRef = useRef<string | null>(null);
@@ -72,7 +72,7 @@ export default function AiPlannerScreen() {
                     <UserMessage key={index} text={msg.content} />
                   )
                 )}
-                {thinking.visible && <TypingBubble />}
+                {isTyping && <TypingBubble />}
             </ScrollView>
           </TouchableWithoutFeedback>
 
