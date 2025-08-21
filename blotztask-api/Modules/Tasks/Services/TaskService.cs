@@ -284,7 +284,7 @@ public class TaskService : ITaskService
         try
         {
             var filteredTasks = await _dbContext.TaskItems
-                .Where(x => x.UserId == userId && x.EndTime.Month == month && x.EndTime.Year == year)
+                .Where(x => x.UserId == userId && x.EndTime != null && x.EndTime.Value.Month == month && x.EndTime.Value.Year == year)
                 .GroupBy(x => new { x.Label.Name, x.IsDone })
                 .Select(g => new
                 {
@@ -457,14 +457,21 @@ public class TaskService : ITaskService
             TodayTasks = new List<TaskItemDto>(),
             TomorrowTasks = new List<TaskItemDto>(),
             WeekTasks = new List<TaskItemDto>(),
+            FloatingTasks = new List<TaskItemDto>(),
             MonthTasks = new Dictionary<int, List<TaskItemDto>>()
         };
 
         foreach (var task in tasks)
         {
-            DateTime localDueDate = TimeZoneInfo.ConvertTime(task.EndTime, timeZoneInfo).Date;
+            DateTime? localDueDate = task.EndTime is null
+                ? null
+                : TimeZoneInfo.ConvertTime(task.EndTime.Value, timeZoneInfo).Date;
 
-            if (localDueDate < startOfToday && !task.IsDone)
+            if (localDueDate is null)
+            {
+                scheduledTasksDto.FloatingTasks.Add(task);
+            }
+            else if (localDueDate < startOfToday && !task.IsDone)
             {
                 scheduledTasksDto.OverdueTasks.Add(task);
             }
@@ -482,8 +489,8 @@ public class TaskService : ITaskService
             }
             else
             {
-                scheduledTasksDto.MonthTasks.TryAdd(localDueDate.Month, new List<TaskItemDto>());
-                scheduledTasksDto.MonthTasks[localDueDate.Month].Add(task);
+                scheduledTasksDto.MonthTasks.TryAdd(localDueDate.Value.Month, new List<TaskItemDto>());
+                scheduledTasksDto.MonthTasks[localDueDate.Value.Month].Add(task);
             }
         }
 
