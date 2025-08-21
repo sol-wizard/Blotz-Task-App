@@ -16,7 +16,7 @@ public interface ITaskService
     public Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id);
     public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDto addTaskItem, string userId);
     public Task<TaskStatusResultDto> TaskStatusUpdate(int id, bool? isDone = null);
-    public Task<List<TaskItemDto>> GetTaskByDate(DateTime startDateUtc, DateTime endDateUtc, string userId, bool includeFloatingForToday);
+    public Task<List<TaskItemDto>> GetTaskByDate(DateTime startDateUtc, DateTime endDateUtc, string userId);
     public Task<List<TaskItemDto>> GetTodayDoneTasks(string userId);
     public Task<MonthlyStatDto> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
@@ -249,22 +249,13 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task<List<TaskItemDto>> GetTaskByDate(DateTime startDateUtc, DateTime endDateUtc, string userId, bool includeFloatingForToday)
+    public async Task<List<TaskItemDto>> GetTaskByDate(DateTime startDateUtc, DateTime endDateUtc, string userId)
     {
         try
         {
-            var todayUtc = DateTime.UtcNow.Date;
-
             return await _dbContext.TaskItems
-                .Where(task => task.UserId == userId &&
-                    (
-                        // Tasks in date range
-                        (task.EndTime >= startDateUtc && task.EndTime < endDateUtc)
-                        ||
-                        // Floating tasks (today only, not done)
-                        (includeFloatingForToday && startDateUtc.Date == todayUtc && !task.IsDone)
-                    )
-                )
+                .Where(task => task.UserId == userId)
+                .Where(task => task.EndTime >= startDateUtc && task.EndTime < endDateUtc)
                 .Select(task => new TaskItemDto
                 {
                     Id = task.Id,
