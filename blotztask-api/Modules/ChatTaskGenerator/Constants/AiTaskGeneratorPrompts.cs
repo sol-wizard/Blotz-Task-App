@@ -1,4 +1,4 @@
-namespace BlotzTask.Modules.Chat.Constants;
+namespace BlotzTask.Modules.ChatTaskGenerator.Constants;
 
 public static class AiTaskGeneratorPrompts
 {
