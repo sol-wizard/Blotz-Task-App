@@ -32,14 +32,14 @@ export default function TaskCard({
     onToggleComplete?.(id, newChecked);
   };
 
-  const formatTimeRange = () => {
+  const formatDateRange = () => {
     if (startTime && endTime) {
-      return `${startTime}-${endTime}`;
+      return `${startTime} - ${endTime}`;
     }
     if (startTime) {
       return startTime;
     }
-    return "";
+    return ""; 
   };
 
   return (
@@ -69,9 +69,9 @@ export default function TaskCard({
           >
             {title}
           </Text>
-          {formatTimeRange() && (
+          {formatDateRange() && (
             <Text style={styles.dateRange}>
-              {formatTimeRange()}
+              {formatDateRange()}
             </Text>
           )}
         </View>
@@ -131,21 +131,22 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 2,
   },
   title: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '800',
     color: '#000000',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   titleCompleted: {
     color: '#A0A0A0',
     textDecorationLine: 'line-through',
   },
   dateRange: {
-    fontSize: 14,
-    color: '#A0A0A0',
-    fontWeight: '400',
+    fontSize: 12,
+    color: '#c2c2c7',
+    fontWeight: '600',
   },
 });
