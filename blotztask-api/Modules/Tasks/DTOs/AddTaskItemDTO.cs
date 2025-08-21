@@ -1,4 +1,4 @@
-    namespace BlotzTask.Modules.Tasks.DTOs;
+namespace BlotzTask.Modules.Tasks.DTOs;
 
 public class AddTaskItemDto
 {
