@@ -14,9 +14,3 @@ public class ExtractedTask
     [JsonPropertyName("end_time")]
     public string? EndTime { get; set; }
 }
-
-public class ExtractedTaskResponse
-{
-    [JsonPropertyName("tasks")]
-    public List<ExtractedTask> Tasks { get; set; } = new();
-}

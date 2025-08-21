@@ -9,6 +9,7 @@ public interface ISafeChatCompletionService
     Task<string> GetSafeContentAsync(ChatHistory history);
 }
 
+// TODO: Add GetChatMessageContentsAsync signature to the interface if needed
 public class SafeChatCompletionService : ISafeChatCompletionService
 {
     private readonly IChatCompletionService _chatCompletionService;

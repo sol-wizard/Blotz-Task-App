@@ -1,10 +1,13 @@
 using System.Text.Json;
 using BlotzTask.Modules.Chat.Constants;
+using BlotzTask.Modules.Chat.Plugins;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
 using BlotzTask.Shared.Services;
 using Microsoft.AspNetCore.Connections;
+using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using OpenAI.Chat;
 
 namespace BlotzTask.Modules.Chat.Services;
@@ -18,24 +21,23 @@ public interface IAiTaskGenerateService
 public class AiTaskGenerateService : IAiTaskGenerateService
 {
     private readonly IChatHistoryManagerService _chatHistoryManagerService;
-    private readonly TaskParsingService _taskParser;
-    private readonly ISafeChatCompletionService _safeChatCompletionService;
+    private readonly IChatCompletionService _chatCompletionService; // TODO: use safeChatCompletionService 
     private readonly ILogger<AiTaskGenerateService> _logger;
-    private readonly AiChatToolService _aiChatToolService;
+    private readonly Kernel _kernel;
 
     public AiTaskGenerateService(
         IChatHistoryManagerService chatHistoryManagerService,
         TaskParsingService taskParser,
+        IChatCompletionService chatCompletionService,
         ISafeChatCompletionService safeChatCompletionService,
         ILogger<AiTaskGenerateService> logger,
-        AiChatToolService aiChatToolService
+        Kernel kernel
     )
     {
         _chatHistoryManagerService = chatHistoryManagerService;
-        _taskParser = taskParser;
-        _safeChatCompletionService = safeChatCompletionService;
+        _chatCompletionService = chatCompletionService;
         _logger = logger;
-        _aiChatToolService = aiChatToolService;
+        _kernel = kernel;
     }
 
     /// <summary>
@@ -59,26 +61,61 @@ public class AiTaskGenerateService : IAiTaskGenerateService
             - Always return every valid task, not just one.
             """
         );
-
-        var tool = CreateExtractedTasksTool();
-
-        // Call the AI tool to extract tasks from the chat history, deserializing the response into a wrapper
-        var wrapper = await _aiChatToolService.CallToolAndDeserializeAsync<ExtractedTaskResponse>(
-            toolFunctionName: "extract_tasks",
-            messages: tempHistory.ToOpenAiChatMessages(),
-            tool: tool,
-            cancellationToken: ct
-        );
-
-        var tasks = wrapper?.Tasks;
-
-        if (tasks != null)
+    
+        var extractTasksFunction = _kernel.Plugins["TaskExtractionPlugin"]["ExtractTasks"];
+        var executionSettings = new PromptExecutionSettings
         {
-            chatHistory.AddAssistantMessage((JsonSerializer.Serialize(tasks)));
-            return tasks;
-        }
+            FunctionChoiceBehavior   = FunctionChoiceBehavior.Required(
+                functions: new []{extractTasksFunction},
+                autoInvoke:true
+                )
+        };
 
-        _logger.LogWarning("Failed to parse tasks from AI response");
+        try
+        {
+            var chatResults = await _chatCompletionService.GetChatMessageContentsAsync(
+                chatHistory: tempHistory,
+                executionSettings: executionSettings,
+                kernel: _kernel,
+                cancellationToken: ct
+            );
+
+            var functionResultMessage = chatResults.LastOrDefault();
+            
+
+            if (functionResultMessage != null && !string.IsNullOrEmpty(functionResultMessage.Content))
+            {
+                try
+                {
+                    _logger.LogInformation(functionResultMessage.Content);
+                    var extractedTasks = JsonSerializer.Deserialize<List<ExtractedTask>>(
+                        functionResultMessage.Content,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true } // Important for JSON deserialization
+                    );
+
+                    if (extractedTasks!= null)
+                    {
+                        chatHistory.AddAssistantMessage(JsonSerializer.Serialize(extractedTasks));
+                        return extractedTasks;
+                    }
+                    else
+                    {
+                        return new List<ExtractedTask>();
+                    }
+
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(ex, "Failed to deserialize function result content into ExtractedTaskResponse. Content: {Content}", functionResultMessage.Content);
+                    return new List<ExtractedTask>();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Semantic Kernel FunctionChoiceBehavior.Required for TaskExtraction failed.");
+            return new List<ExtractedTask>();
+        }
         return null;
     }
 
@@ -100,50 +137,5 @@ public class AiTaskGenerateService : IAiTaskGenerateService
 
         return Task.FromResult(chatHistory);
     }
-
-    private ChatTool CreateExtractedTasksTool()
-    {
-        return ChatTool.CreateFunctionTool(
-            functionName: "extract_tasks",
-            functionDescription: "Extracts tasks from the provided input and returns an array of task objects.",
-            functionParameters: BinaryData.FromObjectAsJson(
-                new
-                {
-                    type = "object",
-                    properties = new
-                    {
-                        tasks = new
-                        {
-                            type = "array",
-                            items = new
-                            {
-                                type = "object",
-                                properties = new
-                                {
-                                    title = new
-                                    {
-                                        type = "string",
-                                        description = "Title of the task extracted from the user's input.",
-                                    },
-                                    description = new
-                                    {
-                                        type = "string",
-                                        description = "Description of the task extracted or generated based on the user's input.",
-                                    },
-                                    end_time = new
-                                    {
-                                        type = "string",
-                                        format = "date",
-                                        description = "End time of the task in YYYY-MM-DD format.",
-                                    },
-                                },
-                                required = new[] { "title", "description", "end_time" },
-                            },
-                        },
-                    },
-                    required = new[] { "tasks" },
-                }
-            )
-        );
-    }
+    
 }
