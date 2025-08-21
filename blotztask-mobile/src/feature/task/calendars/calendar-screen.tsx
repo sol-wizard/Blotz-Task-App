@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import {
   CalendarProvider,
-  WeekCalendar,
+  ExpandableCalendar, // ✅ 使用 ExpandableCalendar
   DateData,
 } from "react-native-calendars";
 import { format } from "date-fns";
@@ -26,15 +26,11 @@ import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
-  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<
-    TaskDetailDTO[]
-  >([]);
+  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDetailDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
-    undefined
-  );
+  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -74,9 +70,7 @@ export default function CalendarPage() {
         title={task.title}
         startTime={task.hasTime ? format(task.endTime, "p") : undefined}
         isCompleted={task.isDone}
-        onToggleComplete={(id, completed) => {
-          handleToggleTask(task);
-        }}
+        onToggleComplete={() => handleToggleTask(task)}
         onPress={() => {
           setSelectedTask(task);
           setIsBottomSheetVisible(true);
@@ -86,18 +80,22 @@ export default function CalendarPage() {
   };
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: "white" }}>
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
+
       <CalendarProvider
         date={format(selectedDay, "yyyy-MM-dd")}
         onDateChanged={(date: string) => setSelectedDay(new Date(date))}
         showTodayButton={false}
       >
-        <WeekCalendar
-          onDayPress={(day: DateData) =>
-            setSelectedDay(new Date(day.dateString))
-          }
+        {/* ✅ 方案A：可折叠月历，一键关闭阴影 */}
+        <ExpandableCalendar
+          initialPosition={ExpandableCalendar.positions.CLOSED}
+          allowShadow={false} // 一键去掉日历阴影
+          hideKnob={true}
+          firstDay={1}
           current={format(selectedDay, "yyyy-MM-dd")}
+          onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
           theme={{
             selectedDayBackgroundColor: "#2d4150",
             todayTextColor: "#2d4150",
@@ -107,26 +105,7 @@ export default function CalendarPage() {
             textDayFontWeight: "bold",
             textDayHeaderFontWeight: "bold",
           }}
-          firstDay={1} // Monday as the first day of the week
         />
-        {/* week+month Calendar */}
-        {/* <ExpandableCalendar
-            // initialPosition={ExpandableCalendar.positions.CLOSED}
-            markedDates={marked}
-            // markingType={'multi-dot'}
-            current={selectedDay}
-            theme={{
-              selectedDayBackgroundColor: '#2d4150',
-              todayTextColor: '#2d4150',
-              arrowColor: '#2d4150',
-              monthTextColor: '#2d4150',
-              textMonthFontWeight: 'bold',
-              textDayFontWeight: 'bold',
-              textDayHeaderFontWeight: 'bold',
-            }}
-            firstDay={1} // Monday as the first day of the week
-            hideKnob={true}
-          /> */}
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
