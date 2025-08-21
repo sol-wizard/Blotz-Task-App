@@ -27,9 +27,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
 
     public AiTaskGenerateService(
         IChatHistoryManagerService chatHistoryManagerService,
-        TaskParsingService taskParser,
         IChatCompletionService chatCompletionService,
-        ISafeChatCompletionService safeChatCompletionService,
         ILogger<AiTaskGenerateService> logger,
         Kernel kernel
     )
