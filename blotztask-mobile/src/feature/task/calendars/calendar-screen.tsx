@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import {
   CalendarProvider,
-  ExpandableCalendar, // ✅ 使用 ExpandableCalendar
+  ExpandableCalendar, 
   DateData,
 } from "react-native-calendars";
 import { format } from "date-fns";
@@ -88,10 +88,10 @@ export default function CalendarPage() {
         onDateChanged={(date: string) => setSelectedDay(new Date(date))}
         showTodayButton={false}
       >
-        {/* ✅ 方案A：可折叠月历，一键关闭阴影 */}
+    
         <ExpandableCalendar
           initialPosition={ExpandableCalendar.positions.CLOSED}
-          allowShadow={false} // 一键去掉日历阴影
+          allowShadow={false} 
           hideKnob={true}
           firstDay={1}
           current={format(selectedDay, "yyyy-MM-dd")}
