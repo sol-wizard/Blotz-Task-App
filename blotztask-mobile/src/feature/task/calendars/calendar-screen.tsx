@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   SafeAreaView,
   FlatList,
@@ -36,54 +36,58 @@ export default function CalendarPage() {
     undefined
   );
 
-  useEffect(() => {
-    const loadTasksForDate = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const tasks = await fetchTasksForDate(selectedDay);
-        setTasksForSelectedDay(tasks);
-      } catch (e) {
-        console.error(e);
-        setError("Failed to load tasks");
-        setTasksForSelectedDay([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadTasksForDate();
+  const loadTasksForDate = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const tasks = await fetchTasksForDate(selectedDay);
+      setTasksForSelectedDay(tasks);
+    } catch (e) {
+      console.error(e);
+      setError("Failed to load tasks");
+      setTasksForSelectedDay([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, [selectedDay]);
+
+  useEffect(() => {
+    loadTasksForDate();
+  }, [selectedDay, loadTasksForDate]);
 
   const handleToggleTask = async (task: TaskDetailDTO) => {
     try {
       await toggleTaskCompletion(task.id);
-      const updatedTasks = await fetchTasksForDate(selectedDay);
-      setTasksForSelectedDay(updatedTasks);
+      await loadTasksForDate();
     } catch (e) {
       console.error(e);
     }
   };
 
-  const renderTask = ({ item }: { item: TaskDetailDTO }) => {
-    const task = item as TaskDetailDTO;
+  const renderTask = useCallback(
+    ({ item }: { item: TaskDetailDTO }) => {
+      const task = item as TaskDetailDTO;
 
-    return (
-      <TaskCard
-        id={task.id.toString()}
-        title={task.title}
-        startTime={task.hasTime ? format(task.endTime, "p") : undefined}
-        isCompleted={task.isDone}
-        onToggleComplete={(id, completed) => {
-          handleToggleTask(task);
-        }}
-        onPress={() => {
-          setSelectedTask(task);
-          setIsBottomSheetVisible(true);
-        }}
-      />
-    );
-  };
+      return (
+        <TaskCard
+          id={task.id.toString()}
+          title={task.title}
+          startTime={
+            task.hasTime
+              ? format(new Date(task.endTime), "p") // safer conversion
+              : undefined
+          }
+          isCompleted={task.isDone}
+          onToggleComplete={() => handleToggleTask(task)}
+          onPress={() => {
+            setSelectedTask(task);
+            setIsBottomSheetVisible(true);
+          }}
+        />
+      );
+    },
+    [handleToggleTask]
+  );
 
   return (
     <SafeAreaView className="flex-1">
@@ -107,26 +111,8 @@ export default function CalendarPage() {
             textDayFontWeight: "bold",
             textDayHeaderFontWeight: "bold",
           }}
-          firstDay={1} // Monday as the first day of the week
+          firstDay={1} // Monday
         />
-        {/* week+month Calendar */}
-        {/* <ExpandableCalendar
-            // initialPosition={ExpandableCalendar.positions.CLOSED}
-            markedDates={marked}
-            // markingType={'multi-dot'}
-            current={selectedDay}
-            theme={{
-              selectedDayBackgroundColor: '#2d4150',
-              todayTextColor: '#2d4150',
-              arrowColor: '#2d4150',
-              monthTextColor: '#2d4150',
-              textMonthFontWeight: 'bold',
-              textDayFontWeight: 'bold',
-              textDayHeaderFontWeight: 'bold',
-            }}
-            firstDay={1} // Monday as the first day of the week
-            hideKnob={true}
-          /> */}
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
@@ -142,6 +128,7 @@ export default function CalendarPage() {
             data={tasksForSelectedDay}
             renderItem={renderTask}
             keyExtractor={(task) => task.id.toString()}
+            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           />
         ) : (
           <NoGoalsView />

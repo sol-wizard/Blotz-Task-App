@@ -1,61 +1,28 @@
-import React, { useEffect, useState } from "react";
-import { View, Pressable } from "react-native";
-import { Surface, Text, Checkbox, IconButton } from "react-native-paper";
+import React from "react";
+import { Pressable, Text } from "react-native";
+import { Surface } from "react-native-paper";
+import { Ionicons } from "@expo/vector-icons";
 
-interface TaskCardProps {
-  id: string;
-  title: string;
-  startTime?: string;
-  endTime?: string;
-  isCompleted?: boolean;
-  onToggleComplete?: (id: string, completed: boolean) => void;
-  onPress?: () => void;
-}
-
-export default function TaskCard({
-  id,
-  title,
-  startTime,
-  endTime,
-  isCompleted = false,
-  onToggleComplete,
-  onPress,
-}: TaskCardProps) {
-  const [checked, setChecked] = useState(isCompleted);
-
-  useEffect(() => {
-    setChecked(isCompleted);
-  }, [isCompleted]);
-
-  const handleToggleComplete = () => {
-    const newChecked = !checked;
-    setChecked(newChecked);
-    onToggleComplete?.(id, newChecked);
-  };
-
-  const handleIconPress = (event: any) => {
-    event.stopPropagation();
-    console.log("Time icon pressed for:", title);
-  };
-
-  const formatTimeRange = () => {
-    if (startTime && endTime) {
-      return `${startTime}-${endTime}`;
-    }
-    if (startTime) {
-      return startTime;
-    }
-    return "";
-  };
-
+const MeetingReminderCard = ({ onPress }: { onPress?: () => void }) => {
   return (
     <Surface
+      mode="flat"
+      elevation={0} // No Android shadow
       style={{
         marginHorizontal: 16,
-        marginVertical: 4,
+        marginVertical: 8,
+        backgroundColor: "#ffffff", // White tile
         borderRadius: 12,
-        elevation: 1,
-        backgroundColor: "#ffffff",
+
+        // Make border same as outside (invisible)
+        borderWidth: 0,
+        borderColor: "transparent",
+
+        // Remove iOS shadow
+        shadowColor: "transparent",
+        shadowOpacity: 0,
+        shadowOffset: { width: 0, height: 0 },
+        shadowRadius: 0,
       }}
     >
       <Pressable
@@ -63,53 +30,17 @@ export default function TaskCard({
         style={{
           flexDirection: "row",
           alignItems: "center",
-          paddingVertical: 16,
-          paddingHorizontal: 16,
-          minHeight: 72,
+          justifyContent: "space-between",
+          padding: 16,
         }}
       >
-        <View style={{ marginRight: 12 }}>
-          <Checkbox
-            status={checked ? "checked" : "unchecked"}
-            onPress={handleToggleComplete}
-            color="#2196F3"
-            uncheckedColor="#E0E0E0"
-          />
-        </View>
-
-        <View style={{ flex: 1, justifyContent: "center" }}>
-          <Text
-            variant="bodyLarge"
-            style={{
-              fontWeight: "500",
-              color: checked ? "#9E9E9E" : "#212121",
-              textDecorationLine: checked ? "line-through" : "none",
-              marginBottom: 2,
-            }}
-          >
-            {title}
-          </Text>
-          {formatTimeRange() && (
-            <Text
-              variant="bodySmall"
-              style={{
-                color: "#757575",
-                fontSize: 13,
-              }}
-            >
-              {formatTimeRange()}
-            </Text>
-          )}
-        </View>
-
-        <IconButton
-          icon="clock-outline"
-          size={20}
-          iconColor="#757575"
-          style={{ margin: 0 }}
-          onPress={handleIconPress}
-        />
+        <Text style={{ fontSize: 16, fontWeight: "600", color: "#000" }}>
+          Set Meeting Reminder
+        </Text>
+        <Ionicons name="time-outline" size={22} color="#444" />
       </Pressable>
     </Surface>
   );
-}
+};
+
+export default MeetingReminderCard;
