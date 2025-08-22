@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import uuid from "react-native-uuid";
 
-import TypingBubble from "@/feature/ai-chat-hub/components/typing-bubble";
+import TypingAnimation from "@/feature/ai-chat-hub/components/typing-animation";
 
 export default function AiPlannerScreen() {
   const [conversationId] = useState<string>(() => uuid.v4());
@@ -56,7 +56,7 @@ export default function AiPlannerScreen() {
                     <UserMessage key={index} text={msg.content} />
                   )
                 )}
-                {isTyping && <TypingBubble />}
+                {isTyping && <TypingAnimation visible={isTyping} />}
             </ScrollView>
           </TouchableWithoutFeedback>
 
