@@ -53,7 +53,8 @@ public class AiTaskGenerateChatHub : Hub
 
         try
         {
-            var result = await _taskGenerateChatService.HandleUserMessageAsync(userMsg);
+            CancellationToken ct = Context.ConnectionAborted;
+            var result = await _taskGenerateChatService.HandleUserMessageAsync(userMsg, ct);
 
             if (result.IsConversationComplete)
             {
