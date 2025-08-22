@@ -14,12 +14,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import uuid from "react-native-uuid";
 
+import TypingAnimation from "@/feature/ai-chat-hub/components/typing-animation";
+
 export default function AiPlannerScreen() {
   const [conversationId] = useState<string>(() => uuid.v4());
-  const { messages, sendMessage } = useSignalRChat(conversationId);
+  const { messages, sendMessage, isTyping } = useSignalRChat(conversationId);
   const [text, setText] = useState("");
 
   const handleSend = () => {
+    if (!text.trim()) return;
     sendMessage(text);
     setText("");
   };
@@ -53,6 +56,7 @@ export default function AiPlannerScreen() {
                     <UserMessage key={index} text={msg.content} />
                   )
                 )}
+                {isTyping && <TypingAnimation visible={isTyping} />}
             </ScrollView>
           </TouchableWithoutFeedback>
 
