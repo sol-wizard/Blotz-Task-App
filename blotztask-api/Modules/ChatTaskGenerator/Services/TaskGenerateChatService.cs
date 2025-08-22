@@ -5,7 +5,7 @@ namespace BlotzTask.Modules.Chat.Services;
 
 public interface ITaskGenerateChatService
 {
-    Task<AiTaskGenerateChatResult> HandleUserMessageAsync(ConversationMessage userMessage);
+    Task<AiTaskGenerateChatResult> HandleUserMessageAsync(ConversationMessage userMessage, CancellationToken ct);
 }
 
 public class TaskGenerateChatService : ITaskGenerateChatService
@@ -23,7 +23,8 @@ public class TaskGenerateChatService : ITaskGenerateChatService
     }
 
     public async Task<AiTaskGenerateChatResult> HandleUserMessageAsync(
-        ConversationMessage userMessage
+        ConversationMessage userMessage,
+        CancellationToken ct
     )
     {
         var conversationId = userMessage.ConversationId;
@@ -47,7 +48,7 @@ public class TaskGenerateChatService : ITaskGenerateChatService
         // TODO: Make the bot response more dynamic when there's no tasks generated,
         // considering getting it from the ai response
 
-        var aiResponseTasks = await _aiTaskGenerateService.GenerateAiResponse(chatHistory);
+        var aiResponseTasks = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
         if (aiResponseTasks == null)
         {
             // No tasks were generated at all
