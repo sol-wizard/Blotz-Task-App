@@ -12,7 +12,7 @@ export default function TypingAnimation({ visible }: TypingAnimationProps) {
   return (
     <View>
         <LottieView
-        source={require("../assets/aiLoadingEffect.json")} // Lottie 文件路径
+        source={require("../../../../assets/images/aiLoadingEffect.json")}
         autoPlay
         loop
         style={{ width: 60, height: 40 }}

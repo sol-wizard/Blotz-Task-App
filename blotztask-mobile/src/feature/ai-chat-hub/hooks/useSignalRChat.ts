@@ -64,7 +64,7 @@ export function useSignalRChat(conversationId: string) {
   };
 
   const botTypingHandler = (typing: boolean) => {
-    setIsTyping(!!typing);
+    setIsTyping(typing);
   };
 
   useEffect(() => {
