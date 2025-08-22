@@ -44,32 +44,6 @@ public class TaskParsingService
     }
 
     /// <summary>
-    /// Tries to parse tasks from a JSON response into a list of ExtractedTaskDto objects.
-    /// </summary>
-    /// <param name="response">The JSON response string.</param>
-    /// <param name="tasks">The parsed list of tasks.</param>
-    /// <returns>True if tasks were successfully parsed, false otherwise.</returns>
-    public bool TryParseTasks(string response, out List<ExtractedTask>? tasks)
-    {
-        return TryParseTasksInternal(
-            response,
-            (taskElement, options, _, _) =>
-            {
-                var rawExtractedTask = JsonSerializer.Deserialize<ExtractedTaskRaw>(
-                    taskElement.GetRawText(),
-                    options
-                );
-                if (rawExtractedTask != null)
-                {
-                    return MapRawExtractedTask(rawExtractedTask);
-                }
-                return null;
-            },
-            out tasks
-        );
-    }
-
-    /// <summary>
     /// Generic internal method to parse tasks from a JSON response.
     /// </summary>
     /// <typeparam name="TTaskDto">The type of the task DTO to parse into.</typeparam>
@@ -220,25 +194,6 @@ public class TaskParsingService
             EndTime = extractedTask.EndTime,
             IsValidTask = extractedTask.IsValidTask,
             Label = labels.First(x => x.Name == extractedTask.Label),
-        };
-    }
-
-    /// <summary>
-    ///   Maps a raw extracted task to an ExtractedTaskDto.
-    /// </summary>
-    /// <param name="extractedTask"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentNullException"></exception>
-    private ExtractedTask MapRawExtractedTask(ExtractedTaskRaw? extractedTask)
-    {
-        if (extractedTask is null)
-            throw new ArgumentNullException(nameof(extractedTask));
-
-        return new ExtractedTask
-        {
-            Title = extractedTask.Title,
-            Description = extractedTask.Description,
-            EndTime = extractedTask.EndTime,
         };
     }
 }
