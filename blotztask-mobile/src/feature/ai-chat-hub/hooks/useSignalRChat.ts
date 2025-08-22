@@ -8,10 +8,11 @@ import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 
 //TODO: Rename to a specific name
 export function useSignalRChat(conversationId: string) {
-  const [messages, setMessages] = useState<ConversationMessage[]>();
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [connection, setConnection] = useState<signalR.HubConnection | null>(
     null
   );
+  const [isTyping, setIsTyping] = useState(false);
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -62,6 +63,10 @@ export function useSignalRChat(conversationId: string) {
     ]);
   };
 
+  const botTypingHandler = (typing: boolean) => {
+    setIsTyping(typing);
+  };
+
   useEffect(() => {
     const newConnection = signalRService.createConnection();
     setConnection(newConnection);
@@ -71,6 +76,8 @@ export function useSignalRChat(conversationId: string) {
         await newConnection.start();
         newConnection.on("ReceiveMessage", receiveMessageHandler);
         newConnection.on("ReceiveTasks", receiveTasksHandler);
+        newConnection.on("BotTyping", botTypingHandler);
+        newConnection.onclose(() => setIsTyping(false));
         console.log("Connected to SignalR hub!");
       } catch (error) {
         console.error("Error connecting to SignalR:", error);
@@ -86,6 +93,7 @@ export function useSignalRChat(conversationId: string) {
           console.log("SignalR Connection Stopped.");
           newConnection.off("ReceiveMessage", receiveMessageHandler);
           newConnection.off("ReceiveTasks", receiveTasksHandler);
+          newConnection.off("BotTyping", botTypingHandler);
         })
         .catch((error) =>
           console.error("Error stopping SignalR connection:", error)
@@ -93,5 +101,5 @@ export function useSignalRChat(conversationId: string) {
     };
   }, []);
 
-  return { messages, sendMessage };
+  return { messages, sendMessage, isTyping };
 }
