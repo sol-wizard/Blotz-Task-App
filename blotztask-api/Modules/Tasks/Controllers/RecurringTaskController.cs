@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
 using BlotzTask.Modules.Tasks.Services;
+using Microsoft.AspNetCore.Mvc;
 
-namespace BlotzTask.Modules.Tasks;
+namespace BlotzTask.Modules.Tasks.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

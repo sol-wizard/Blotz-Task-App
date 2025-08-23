@@ -6,7 +6,7 @@ using BlotzTask.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BlotzTask.Modules.Tasks;
+namespace BlotzTask.Modules.Tasks.Controllers;
 
 [ApiController]
 [Route("/api/[controller]")]
