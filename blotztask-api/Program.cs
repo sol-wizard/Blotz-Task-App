@@ -14,6 +14,7 @@ using BlotzTask.Modules.Chat.Plugins;
 using BlotzTask.Modules.GoalPlannerChat;
 using BlotzTask.Modules.GoalPlannerChat.Services;
 using BlotzTask.Modules.Labels.Services;
+using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Services;
@@ -58,6 +59,7 @@ builder.Services.AddIdentityCore<User>()
     .AddEntityFrameworkStores<BlotzTaskDbContext>()
     .AddDefaultTokenProviders();
 
+//TODO : Move all services to module based registration
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ILabelService, LabelService>();
@@ -180,10 +182,11 @@ builder.Services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService
 builder.Services.AddScoped<ITaskGenerateChatService, TaskGenerateChatService>();
 
 builder.Services.AddScoped<TaskParsingService>();
-
 builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
-
 builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
+
+builder.Services.AddTaskModule();
+
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
