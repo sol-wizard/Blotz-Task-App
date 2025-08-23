@@ -6,19 +6,13 @@ using BlotzTask.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BlotzTask.Modules.Tasks;
+namespace BlotzTask.Modules.Tasks.Controllers;
 
 [ApiController]
 [Route("/api/[controller]")]
 [Authorize]
-public class TaskController : ControllerBase
+public class TaskController(ITaskService taskService) : ControllerBase
 {
-    private readonly ITaskService _taskService;
-    public TaskController(ITaskService taskService)
-    {
-        _taskService = taskService;
-    }
-
     [HttpGet]
     [Tags("MigratedToCleanArchitecture")]
     public async Task<ActionResult<List<TaskItemDto>>> GetAllTask(CancellationToken cancellationToken)
@@ -30,7 +24,7 @@ public class TaskController : ControllerBase
             throw new UnauthorizedAccessException("Could not find user id from token");
         }
 
-        return Ok(await _taskService.GetTodoItemsByUser(userId, cancellationToken));
+        return Ok(await taskService.GetTodoItemsByUser(userId, cancellationToken));
     }
 
     [HttpGet("monthly-stats/{year}-{month}")]
@@ -44,14 +38,14 @@ public class TaskController : ControllerBase
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
 
-        return Ok(await _taskService.GetMonthlyStats(userId, year, month));
+        return Ok(await taskService.GetMonthlyStats(userId, year, month));
     }
 
     [HttpGet("{id}")]
     [Obsolete("This endpoint is not in use in frontend")]
     public async Task<IActionResult> GetTaskById(int id)
     {
-        return Ok(await _taskService.GetTaskById(id));
+        return Ok(await taskService.GetTaskById(id));
     }
         
     //TODO: change the route "due-date" to "by-date"
@@ -66,7 +60,7 @@ public class TaskController : ControllerBase
         }
             
         DateTime endDateUtc = startDateUtc.AddDays(1);
-        return Ok(await _taskService.GetTaskByDate(startDateUtc, endDateUtc, userId));
+        return Ok(await taskService.GetTaskByDate(startDateUtc, endDateUtc, userId));
     }
 
     [HttpGet("today-done")]
@@ -79,7 +73,7 @@ public class TaskController : ControllerBase
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
 
-        return Ok(await _taskService.GetTodayDoneTasks(userId));
+        return Ok(await taskService.GetTodayDoneTasks(userId));
     }
 
     [HttpPost]
@@ -92,13 +86,13 @@ public class TaskController : ControllerBase
         {
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
-        return Ok(await _taskService.AddTaskAsync(addtaskItem, userId));
+        return Ok(await taskService.AddTaskAsync(addtaskItem, userId));
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> EditTask(int id, [FromBody] EditTaskItemDto editTaskItem)
     {
-        var result = await _taskService.EditTaskAsync(id, editTaskItem);
+        var result = await taskService.EditTaskAsync(id, editTaskItem);
 
         return Ok(result);
     }
@@ -107,7 +101,7 @@ public class TaskController : ControllerBase
     public async Task<IActionResult> TaskStatusUpdate(int id)
     {
 
-        var taskStatusResultDto = await _taskService.TaskStatusUpdate(id);
+        var taskStatusResultDto = await taskService.TaskStatusUpdate(id);
 
         if (taskStatusResultDto == null)
         {
@@ -121,7 +115,7 @@ public class TaskController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTaskById(int id)
     {
-        var result = await _taskService.DeleteTaskByIdAsync(id);
+        var result = await taskService.DeleteTaskByIdAsync(id);
 
         return Ok(result);
     }
@@ -129,7 +123,7 @@ public class TaskController : ControllerBase
     [HttpPost("{id}/undo-delete")]
     public async Task<IActionResult> RestoreFromTrash(int id) 
     {
-        var result = await _taskService.RestoreFromTrashAsync(id);
+        var result = await taskService.RestoreFromTrashAsync(id);
         if (!result.Success)
         {
             return BadRequest(result);
@@ -140,7 +134,7 @@ public class TaskController : ControllerBase
     [HttpGet("search")]
     public async Task<IActionResult> SearchTasks([FromQuery, Required] string query)
     {
-        var tasks = await _taskService.SearchTasksAsync(query);
+        var tasks = await taskService.SearchTasksAsync(query);
         return Ok(tasks);
     }
 
@@ -154,7 +148,7 @@ public class TaskController : ControllerBase
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
             
-        return Ok(await _taskService.GetScheduledTasks(timeZone, todayDate, userId));
+        return Ok(await taskService.GetScheduledTasks(timeZone, todayDate, userId));
     }
 
     [HttpGet("due-tasks")]
@@ -167,7 +161,7 @@ public class TaskController : ControllerBase
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
 
-        var tasks = await _taskService.GetDueTasksAsync(userId);
+        var tasks = await taskService.GetDueTasksAsync(userId);
 
         return Ok(tasks);
     }
