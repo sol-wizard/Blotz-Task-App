@@ -5,19 +5,12 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class RecurringTaskController : ControllerBase
+public class RecurringTaskController(IRecurringTaskService recurringTaskService) : ControllerBase
 {
-    private readonly IRecurringTaskService _recurringTaskService;
-
-    public RecurringTaskController(IRecurringTaskService recurringTaskService)
-    {
-        _recurringTaskService = recurringTaskService;
-    }
-
     [HttpPost("generate")]
     public async Task<IActionResult> GenerateTasks()
     {
-        await _recurringTaskService.GenerateRecurringTasksAsync(DateTime.UtcNow);
+        await recurringTaskService.GenerateRecurringTasksAsync(DateTime.UtcNow);
 
         return Ok("Recurring tasks generation triggered.");
     }
