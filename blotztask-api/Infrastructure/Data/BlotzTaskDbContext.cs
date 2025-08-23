@@ -1,5 +1,5 @@
-﻿using BlotzTask.Modules.Labels.Domain;
-using BlotzTask.Modules.Tasks.Domain;
+﻿using BlotzTask.Infrastructure.Data.Configurations;
+using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -19,7 +19,7 @@ public class BlotzTaskDbContext : IdentityDbContext<User>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(Modules.Tasks.Domain.Configurations.SubtaskConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(SubtaskConfiguration).Assembly);
         modelBuilder.Entity<Label>().HasData(
             new Label
             {
