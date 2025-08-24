@@ -14,7 +14,6 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 public class TaskController(ITaskService taskService) : ControllerBase
 {
     [HttpGet]
-    [Tags("MigratedToCleanArchitecture")]
     public async Task<ActionResult<List<TaskItemDto>>> GetAllTask(CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -42,7 +41,6 @@ public class TaskController(ITaskService taskService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Obsolete("This endpoint is not in use in frontend")]
     public async Task<IActionResult> GetTaskById(int id)
     {
         return Ok(await taskService.GetTaskById(id));
@@ -77,7 +75,6 @@ public class TaskController(ITaskService taskService) : ControllerBase
     }
 
     [HttpPost]
-    [Tags("MigratedToCleanArchitecture")]
     public async Task<IActionResult> AddTask([FromBody] AddTaskItemDto addtaskItem)
     {
         var userId = HttpContext.Items["UserId"] as string;
@@ -139,6 +136,7 @@ public class TaskController(ITaskService taskService) : ControllerBase
     }
 
     [HttpGet("scheduled-tasks")]
+    [Obsolete("This endpoint not in used in mobile app.")]
     public async Task<IActionResult> GetScheduleSortTasks([FromQuery, Required] string timeZone, [FromQuery, Required] DateTime todayDate)
     {
         var userId = HttpContext.Items["UserId"] as string;

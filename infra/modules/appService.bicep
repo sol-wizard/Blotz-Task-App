@@ -26,6 +26,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
 }
 
 //TODO: Need to turn the log on
+//TODO: Add health check path
 resource appService 'Microsoft.Web/sites@2022-09-01' = {
   name: 'wapp-${webAppName}-${environment}'
   location: location
