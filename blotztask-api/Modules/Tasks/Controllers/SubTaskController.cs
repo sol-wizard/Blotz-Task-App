@@ -1,9 +1,11 @@
 using BlotzTask.Modules.Tasks.Commands.SubTasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Tasks.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class SubTaskController(UpdateSubtaskHandler updateHandler) : ControllerBase
 {
@@ -20,6 +22,6 @@ public class SubTaskController(UpdateSubtaskHandler updateHandler) : ControllerB
         }
 
         var message = await updateHandler.Handle(command, ct);
-        return Ok(new { message });
+        return Ok(message);
     }
 }

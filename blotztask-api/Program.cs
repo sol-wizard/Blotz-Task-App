@@ -19,6 +19,7 @@ using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Services;
 using BlotzTask.Shared.Services;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -29,16 +30,29 @@ using Microsoft.SemanticKernel.ChatCompletion;
 using Serilog;
 using Swashbuckle.AspNetCore.Filters;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Logging.AddConsole();
-builder.Logging.SetMinimumLevel(LogLevel.Debug);
+builder.Services.AddApplicationInsightsTelemetry();
+
+// Configure Serilog to integrate with Microsoft.Extensions.Logging
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .MinimumLevel.Debug()
+        .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+        .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
+        .WriteTo.ApplicationInsights(
+        services.GetRequiredService<TelemetryConfiguration>(),
+        TelemetryConverter.Traces);
+});
 
 // Add services to the container.
 builder.Services.AddSignalR();
-
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -51,7 +65,6 @@ builder.Services.AddSwaggerGen(options =>
     });
     options.OperationFilter<SecurityRequirementsOperationFilter>();
 });
-builder.Services.AddApplicationInsightsTelemetry();
 
 // add httpcontext and identitycore for UserInforService
 builder.Services.AddIdentityCore<User>()
@@ -59,17 +72,10 @@ builder.Services.AddIdentityCore<User>()
     .AddEntityFrameworkStores<BlotzTaskDbContext>()
     .AddDefaultTokenProviders();
 
-//TODO : Move all services to module based registration
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ITaskService, TaskService>();
-builder.Services.AddScoped<ILabelService, LabelService>();
-
 builder.Services.AddIdentityApiEndpoints<User>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<BlotzTaskDbContext>();
-
 builder.Services.AddAuthorization();
-
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.AccessDeniedPath = "/Identity/Account/AccessDenied";
@@ -81,8 +87,26 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
-builder.Host.UseSerilog((hostingContext, loggerConfiguration) =>
-    loggerConfiguration.ReadFrom.Configuration(hostingContext.Configuration));
+//TODO : Move all services to module based registration
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<ILabelService, LabelService>();
+builder.Services.AddScoped<TaskGenerationAiService>();
+
+builder.Services.AddScoped<IConversationStateService, ConversationStateService>();
+builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
+builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
+builder.Services.AddScoped<IRecurringTaskService, RecurringTaskService>();
+
+builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
+builder.Services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
+builder.Services.AddScoped<ITaskGenerateChatService, TaskGenerateChatService>();
+
+builder.Services.AddScoped<TaskParsingService>();
+builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
+builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
+
+builder.Services.AddTaskModule();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -105,8 +129,6 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddAzureOpenAi();
 
-builder.Services.AddScoped<TaskGenerationAiService>();
-
 if (builder.Environment.IsProduction())
 {
     builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
@@ -123,7 +145,7 @@ builder.Services.AddSingleton<Kernel>(sp =>
     var config = builder.Configuration;
     var secretClient = sp.GetService<SecretClient>();
     var endpoint = config["AzureOpenAI:Endpoint"];
-    var deploymentId = config["AzureOpenAI:DeploymentId"] ?? "gpt-4o-mini";
+    var deploymentId = config["AzureOpenAI:DeploymentId"];
     var apiKey = config["AzureOpenAI:ApiKey"];
 
     if (secretClient != null && builder.Environment.IsProduction())
@@ -172,32 +194,16 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddScoped<IConversationStateService, ConversationStateService>();
-builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
-builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
-builder.Services.AddScoped<IRecurringTaskService, RecurringTaskService>();
-
-builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
-builder.Services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
-builder.Services.AddScoped<ITaskGenerateChatService, TaskGenerateChatService>();
-
-builder.Services.AddScoped<TaskParsingService>();
-builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
-builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
-
-builder.Services.AddTaskModule();
-
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
 
 app.MapIdentityApi<User>();
+app.MapHealthChecks("/health");
 // Configure the HTTP request pipeline.
 
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseSerilogRequestLogging();
-
 
 using (var scope = app.Services.CreateScope())
 {
@@ -229,5 +235,5 @@ app.MapControllers();
 app.MapHub<GoalPlannerChatHub>("/chatHub");
 app.MapHub<AiTaskGenerateChatHub>("/ai-task-generate-chathub");
 app.MapHub<AiTaskBreakDownChat>("/ai-task-breakdown-chathub");
-
+app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 app.Run();
