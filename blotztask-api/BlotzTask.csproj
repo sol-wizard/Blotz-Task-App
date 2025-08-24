@@ -40,5 +40,6 @@
   <ItemGroup>
     <Folder Include="Infrastructure\" />
     <Folder Include="Modules\AiTask\Services\" />
+    <Folder Include="Modules\ChatTaskGenerator\Plugins\" />
   </ItemGroup>
 </Project>

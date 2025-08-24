@@ -10,9 +10,11 @@ using BlotzTask.Modules.BreakDown;
 using BlotzTask.Modules.BreakDown.Services;
 using BlotzTask.Modules.Chat;
 using BlotzTask.Modules.Chat.Services;
+using BlotzTask.Modules.Chat.Plugins;
 using BlotzTask.Modules.GoalPlannerChat;
 using BlotzTask.Modules.GoalPlannerChat.Services;
 using BlotzTask.Modules.Labels.Services;
+using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Services;
@@ -57,6 +59,7 @@ builder.Services.AddIdentityCore<User>()
     .AddEntityFrameworkStores<BlotzTaskDbContext>()
     .AddDefaultTokenProviders();
 
+//TODO : Move all services to module based registration
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ILabelService, LabelService>();
@@ -113,8 +116,8 @@ if (builder.Environment.IsProduction())
     });
 }
 
-// Register IChatCompletionService for Azure OpenAI
-builder.Services.AddSingleton<IChatCompletionService>(sp =>
+// Register the Kernel as a singleton service
+builder.Services.AddSingleton<Kernel>(sp =>
 {
     var logger = sp.GetRequiredService<ILogger<Program>>();
     var config = builder.Configuration;
@@ -135,15 +138,23 @@ builder.Services.AddSingleton<IChatCompletionService>(sp =>
         }
     }
 
-    if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(deploymentId))
-        throw new ArgumentException("Azure OpenAI configuration is missing or invalid.");
+    var kernelBuilder = Kernel.CreateBuilder();
+    
+    kernelBuilder.AddAzureOpenAIChatCompletion(
+        deploymentName: deploymentId,
+        endpoint: endpoint,
+        apiKey: apiKey
+    );
+    
+    kernelBuilder.Plugins.AddFromObject(new TaskExtractionPlugin(), "TaskExtractionPlugin");
 
-    logger.LogDebug("Initializing Azure OpenAI with endpoint: {Endpoint}, deployment: {DeploymentId}", endpoint, deploymentId);
+    return kernelBuilder.Build();
+});
 
-    return Kernel.CreateBuilder()
-        .AddAzureOpenAIChatCompletion(deploymentId, endpoint, apiKey)
-        .Build()
-        .GetRequiredService<IChatCompletionService>();
+builder.Services.AddScoped<IChatCompletionService>(sp =>
+{
+    var kernel = sp.GetRequiredService<Kernel>();
+    return kernel.GetRequiredService<IChatCompletionService>();
 });
 
 builder.Services.AddCors(options =>
@@ -172,8 +183,10 @@ builder.Services.AddScoped<ITaskGenerateChatService, TaskGenerateChatService>();
 
 builder.Services.AddScoped<TaskParsingService>();
 builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
-
 builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
+
+builder.Services.AddTaskModule();
+
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
