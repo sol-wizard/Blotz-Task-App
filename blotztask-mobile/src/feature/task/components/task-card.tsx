@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { View, Pressable, StyleSheet, Text } from "react-native";
+import { format } from "date-fns";
 
 interface TaskCardProps {
   id: string;
   title: string;
-  startTime?: string;
-  endTime?: string;
+  startTime?: string | null;
+  endTime?: string | null;
   isCompleted?: boolean;
   onToggleComplete?: (id: string, completed: boolean) => void;
   onPress?: () => void;
@@ -33,13 +34,19 @@ export default function TaskCard({
   };
 
   const formatDateRange = () => {
-    if (startTime && endTime) {
-      return `${startTime} - ${endTime}`;
+    const formatToken = "dd/MM/yyyy";
+    const hasStartTime = startTime && startTime !== null;
+    const hasEndTime = endTime && endTime !== null;
+    
+    if (hasStartTime && hasEndTime) {
+      return `${format(new Date(startTime), formatToken)} - ${format(new Date(endTime), formatToken)}`;
+    } else if (hasStartTime && !hasEndTime) {
+      return `${format(new Date(startTime), formatToken)} - ?`;
+    } else if (!hasStartTime && hasEndTime) {
+      return `? - ${format(new Date(endTime), formatToken)}`;
+    } else {
+      return "";
     }
-    if (startTime) {
-      return startTime;
-    }
-    return ""; 
   };
 
   return (

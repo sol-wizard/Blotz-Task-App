@@ -68,16 +68,12 @@ export default function CalendarPage() {
   const renderTask = ({ item }: { item: TaskDetailDTO }) => {
     const task = item as TaskDetailDTO;
 
-    const endDate = new Date(task.endTime);
-    const mockStartDate = new Date(endDate.getTime() - 24 * 60 * 60 * 1000); // mock 24 hour before end
-    const formatToken = task.hasTime ? "p" : "dd/MM/yyyy";
-
     return (
       <TaskCard
         id={task.id.toString()}
         title={task.title}
-        startTime={format(mockStartDate, formatToken)}
-        endTime={format(endDate, formatToken)}
+        startTime={task.startTime}
+        endTime={task.endTime}
         isCompleted={task.isDone}
         onToggleComplete={(id, completed) => {
           handleToggleTask(task);
