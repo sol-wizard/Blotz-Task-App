@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Pressable, StyleSheet, Text } from "react-native";
+import { View, Pressable, Text } from "react-native";
 import { format } from "date-fns";
 
 interface TaskCardProps {
@@ -50,34 +50,37 @@ export default function TaskCard({
   };
 
   return (
-    <Pressable style={styles.cardContainer} onPress={onPress}>
-      <View style={styles.contentContainer}>
+    <Pressable 
+      className="bg-white rounded-2xl mx-4 my-2 shadow-sm shadow-black/10 elevation-3" 
+      onPress={onPress}
+    >
+      <View className="flex-row items-center p-5">
         {/* Custom Checkbox */}
         <Pressable
-          style={[
-            styles.checkbox,
-            checked && styles.checkboxCompleted
-          ]}
+          className={`w-8 h-8 rounded-[10px] border-[3px] mr-3 items-center justify-center ${
+            checked 
+              ? 'bg-neutral-300 border-neutral-300' 
+              : 'bg-white border-gray-300'
+          }`}
           onPress={handleToggleComplete}
         >
-          {checked && <View style={styles.checkmark} />}
+          {checked && <View className="w-3 h-3 bg-white rounded-sm" />}
         </Pressable>
 
         {/* Gray Vertical Line */}
-        <View style={styles.verticalLine} />
+        <View className="w-[5px] h-[30px] bg-neutral-300 self-center mr-4 rounded-[2.5px]" />
 
         {/* Content */}
-        <View style={styles.textContainer}>
+        <View className="flex-1 justify-start pt-0">
           <Text 
-            style={[
-              styles.title,
-              checked && styles.titleCompleted
-            ]}
+            className={`text-base font-bold text-black -mt-0.5 mb-0 ${
+              checked ? 'text-neutral-400 line-through' : ''
+            }`}
           >
             {title}
           </Text>
           {formatDateRange() && (
-            <Text style={styles.dateRange}>
+            <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
               {formatDateRange()}
             </Text>
           )}
@@ -86,76 +89,3 @@ export default function TaskCard({
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  cardContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  contentContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-  },
-  checkbox: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    borderWidth: 3,
-    borderColor: '#E5E5E5',
-    backgroundColor: '#FFFFFF',
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxCompleted: {
-    backgroundColor: '#D5D5D5',
-    borderColor: '#D5D5D5',
-  },
-  checkmark: {
-    width: 12,
-    height: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 2,
-  },
-  verticalLine: {
-    width: 5,
-    backgroundColor: '#d9d9d9',
-    alignSelf: 'center',
-    marginRight: 16,
-    borderRadius: 2.5,
-    height: 30,
-  },
-  textContainer: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    paddingTop: 0,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#000000',
-    marginTop: -2,
-    marginBottom: 0,
-  },
-  titleCompleted: {
-    color: '#A0A0A0',
-    textDecorationLine: 'line-through',
-  },
-  dateRange: {
-    marginTop: 4,
-    fontSize: 13,
-    color: '#c2c2c7',
-    fontWeight: '600',
-  },
-});
