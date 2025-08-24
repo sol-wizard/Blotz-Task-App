@@ -12,6 +12,6 @@ public class TaskItemDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public LabelDto Label { get; set; }
-    public bool HasTime { get; set; } 
+    public bool HasTime { get; set; }
 
 }
