@@ -14,6 +14,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 public class TaskController(ITaskService taskService) : ControllerBase
 {
     [HttpGet]
+    [Obsolete("This endpoint is not in use and will be removed later.")]
     public async Task<ActionResult<List<TaskItemDto>>> GetAllTask(CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -27,7 +28,7 @@ public class TaskController(ITaskService taskService) : ControllerBase
     }
 
     [HttpGet("monthly-stats/{year}-{month}")]
-    [Obsolete("This endpoint is deprecated and will be removed later.")]
+    [Obsolete("This endpoint is not in use and will be removed later.")]
     public async Task<IActionResult> GetMonthlyStats(int year, int month)
     {
         var userId = HttpContext.Items["UserId"] as string;

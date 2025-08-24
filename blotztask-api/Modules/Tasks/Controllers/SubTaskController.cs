@@ -7,7 +7,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class SubTaskController(UpdateSubtaskHandler updateHandler) : ControllerBase
+public class SubTaskController(UpdateSubtaskCommandHandler updateHandler) : ControllerBase
 {
     [HttpPut("{taskId}/subtasks/{subtaskId}")]
     public async Task<IActionResult> UpdateSubtask(
