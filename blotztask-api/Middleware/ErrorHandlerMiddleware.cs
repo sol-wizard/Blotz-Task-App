@@ -55,7 +55,7 @@ public class ErrorHandlingMiddleware
             await context.Response.WriteAsJsonAsync(new ApiResponse<object> 
             { 
                 Success = false, 
-                Message = "An error occurred while processing your request." 
+                Message = ex.Message 
             });
         }
     }
