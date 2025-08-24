@@ -39,6 +39,8 @@ builder.Logging.SetMinimumLevel(LogLevel.Debug);
 builder.Services.AddSignalR();
 
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -192,6 +194,7 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
 
 app.MapIdentityApi<User>();
+app.MapHealthChecks("/health");
 // Configure the HTTP request pipeline.
 
 app.UseSwagger();
