@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Pressable } from "react-native";
-import { Surface, Text, Checkbox, IconButton } from "react-native-paper";
+import { View, Pressable, Text } from "react-native";
+import { format } from "date-fns";
 
 interface TaskCardProps {
   id: string;
   title: string;
-  startTime?: string;
-  endTime?: string;
+  startTime?: string | null;
+  endTime?: string | null;
   isCompleted?: boolean;
   onToggleComplete?: (id: string, completed: boolean) => void;
   onPress?: () => void;
@@ -33,83 +33,59 @@ export default function TaskCard({
     onToggleComplete?.(id, newChecked);
   };
 
-  const handleIconPress = (event: any) => {
-    event.stopPropagation();
-    console.log("Time icon pressed for:", title);
-  };
-
-  const formatTimeRange = () => {
-    if (startTime && endTime) {
-      return `${startTime}-${endTime}`;
+  const formatDateRange = () => {
+    const formatToken = "dd/MM/yyyy";
+    const hasStartTime = startTime && startTime !== null;
+    const hasEndTime = endTime && endTime !== null;
+    
+    if (hasStartTime && hasEndTime) {
+      return `${format(new Date(startTime), formatToken)} - ${format(new Date(endTime), formatToken)}`;
+    } else if (hasStartTime && !hasEndTime) {
+      return `${format(new Date(startTime), formatToken)} - ?`;
+    } else if (!hasStartTime && hasEndTime) {
+      return `? - ${format(new Date(endTime), formatToken)}`;
+    } else {
+      return "";
     }
-    if (startTime) {
-      return startTime;
-    }
-    return "";
   };
 
   return (
-    <Surface
-      style={{
-        marginHorizontal: 16,
-        marginVertical: 4,
-        borderRadius: 12,
-        elevation: 1,
-        backgroundColor: "#ffffff",
-      }}
+    <Pressable 
+      className="bg-white rounded-2xl mx-4 my-2 shadow-sm shadow-black/10 elevation-3" 
+      onPress={onPress}
     >
-      <Pressable
-        onPress={onPress}
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingVertical: 16,
-          paddingHorizontal: 16,
-          minHeight: 72,
-        }}
-      >
-        <View style={{ marginRight: 12 }}>
-          <Checkbox
-            status={checked ? "checked" : "unchecked"}
-            onPress={handleToggleComplete}
-            color="#2196F3"
-            uncheckedColor="#E0E0E0"
-          />
-        </View>
+      <View className="flex-row items-center p-5">
+        {/* Custom Checkbox */}
+        <Pressable
+          className={`w-8 h-8 rounded-[10px] border-[3px] mr-3 items-center justify-center ${
+            checked 
+              ? 'bg-neutral-300 border-neutral-300' 
+              : 'bg-white border-gray-300'
+          }`}
+          onPress={handleToggleComplete}
+        >
+          {checked && <View className="w-3 h-3 bg-white rounded-sm" />}
+        </Pressable>
 
-        <View style={{ flex: 1, justifyContent: "center" }}>
-          <Text
-            variant="bodyLarge"
-            style={{
-              fontWeight: "500",
-              color: checked ? "#9E9E9E" : "#212121",
-              textDecorationLine: checked ? "line-through" : "none",
-              marginBottom: 2,
-            }}
+        {/* Gray Vertical Line */}
+        <View className="w-[5px] h-[30px] bg-neutral-300 self-center mr-4 rounded-[2.5px]" />
+
+        {/* Content */}
+        <View className="flex-1 justify-start pt-0">
+          <Text 
+            className={`text-base font-bold text-black -mt-0.5 mb-0 ${
+              checked ? 'text-neutral-400 line-through' : ''
+            }`}
           >
             {title}
           </Text>
-          {formatTimeRange() && (
-            <Text
-              variant="bodySmall"
-              style={{
-                color: "#757575",
-                fontSize: 13,
-              }}
-            >
-              {formatTimeRange()}
+          {formatDateRange() && (
+            <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
+              {formatDateRange()}
             </Text>
           )}
         </View>
-
-        <IconButton
-          icon="clock-outline"
-          size={20}
-          iconColor="#757575"
-          style={{ margin: 0 }}
-          onPress={handleIconPress}
-        />
-      </Pressable>
-    </Surface>
+      </View>
+    </Pressable>
   );
 }

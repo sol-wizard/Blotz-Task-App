@@ -72,7 +72,8 @@ export default function CalendarPage() {
       <TaskCard
         id={task.id.toString()}
         title={task.title}
-        startTime={task.hasTime ? format(task.endTime, "p") : undefined}
+        startTime={task.startTime}
+        endTime={task.endTime}
         isCompleted={task.isDone}
         onToggleComplete={(id, completed) => {
           handleToggleTask(task);
