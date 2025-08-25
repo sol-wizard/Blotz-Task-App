@@ -19,7 +19,7 @@ public class UpdateSubtaskCommand
     public bool IsDone { get; set; }
 }
 
-public class UpdateSubtaskHandler(BlotzTaskDbContext db, ILogger<UpdateSubtaskHandler> logger)
+public class UpdateSubtaskCommandHandler(BlotzTaskDbContext db, ILogger<UpdateSubtaskCommandHandler> logger)
 {
     public async Task<string> Handle(UpdateSubtaskCommand command, CancellationToken ct = default)
     {
