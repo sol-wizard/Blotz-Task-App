@@ -39,7 +39,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                     Name = task.Label.Name,
                     Color = task.Label.Color
                 },
-                HasTime = task.HasTime
+                HasTime = task.HasTime ?? false
             })
             .ToListAsync(ct);
         

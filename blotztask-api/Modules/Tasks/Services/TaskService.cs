@@ -95,8 +95,8 @@ public class TaskService : ITaskService
             UpdatedAt = taskItem.UpdatedAt,
             DeletedAt = DateTime.UtcNow, // Track when it was deleted
             UserId = taskItem.UserId,
-            LabelId = taskItem.LabelId,
-            HasTime = taskItem.HasTime
+            LabelId = taskItem.LabelId ?? 0,
+            HasTime = taskItem.HasTime ?? false
         };
         try
         {
@@ -127,14 +127,17 @@ public class TaskService : ITaskService
         {
             var newTask = new TaskItem
             {
+                Id = 0, // EF will auto-generate this
                 Title = addTaskItem.Title,
                 Description = addTaskItem.Description,
+                StartTime = addTaskItem.StartTime,
                 EndTime = addTaskItem.EndTime,
+                IsDone = false,
                 LabelId = addTaskItem.LabelId,
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                HasTime = addTaskItem.HasTime
+                HasTime = addTaskItem.HasTime ?? false
             };
 
             _dbContext.TaskItems.Add(newTask);
@@ -223,7 +226,7 @@ public class TaskService : ITaskService
 
             return await _dbContext.TaskItems
                 .Where(task => task.UserId == userId)
-                .Where(task => task.IsDone == true)
+                .Where(task => task.IsDone)
                 .Where(task => task.EndTime >= todayUtc && task.EndTime < tomorrowUtc)
                 .Select(task => new TaskItemDto
                 {
@@ -295,6 +298,7 @@ public class TaskService : ITaskService
 
         var restoredTask = new TaskItem
         {
+            Id = 0, // EF will auto-generate this
             Title = deletedTask.Title,
             Description = deletedTask.Description,
             EndTime = deletedTask.EndTime,
@@ -374,7 +378,7 @@ public class TaskService : ITaskService
             var tasks = await _dbContext.TaskItems
                 .Where(t => t.UserId == userId && t.EndTime != null
                                                && t.EndTime >= startOfYearUtc && t.EndTime <= endOfYearUtc
-                                               && (!t.IsDone))
+                                               && !t.IsDone)
                 .Select(task => new TaskItemDto
                 {
                     Id = task.Id,
