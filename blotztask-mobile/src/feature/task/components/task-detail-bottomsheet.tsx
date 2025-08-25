@@ -57,16 +57,15 @@ const TaskDetailBottomSheet = forwardRef<
   const handleAiBreakdown = () => {
     if (!task) return;
     taskDetailModalRef.current?.dismiss();
-    setTimeout(() => {
-      router.push({
-        pathname: "/(protected)/ai-breakdown",
-        params: {
-          id: task.id,
-          title: task.title,
-          description: task.description,
-        },
-      });
-    }, 0);
+
+    router.push({
+      pathname: "/(protected)/ai-breakdown",
+      params: {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+      },
+    });
   };
 
   return (
@@ -185,6 +184,6 @@ const TaskDetailBottomSheet = forwardRef<
   );
 });
 
-TaskDetailBottomSheet.displayName = 'TaskDetailBottomSheet';
+TaskDetailBottomSheet.displayName = "TaskDetailBottomSheet";
 
 export default TaskDetailBottomSheet;
