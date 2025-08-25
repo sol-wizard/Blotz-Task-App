@@ -54,7 +54,7 @@ export const AIChatTaskCard = ({
             <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
             {task.endTime && (
               <Text className="text-base text-primary ml-2">
-                {format(task.endTime, "yyyy-MM-dd")}
+                {task.endTime}
               </Text>
             )}
           </View>
