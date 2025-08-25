@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   SafeAreaView,
   FlatList,
@@ -15,14 +15,14 @@ import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
 import TaskCard from "../components/task-card";
-
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
 } from "../services/task-service";
-
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
+import TaskDetailBottomSheet, {
+  TaskDetailBottomSheetHandle,
+} from "../components/task-detail-bottomsheet";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -31,10 +31,10 @@ export default function CalendarPage() {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
     undefined
   );
+  const taskDetailSheetRef = useRef<TaskDetailBottomSheetHandle>(null);
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -65,26 +65,22 @@ export default function CalendarPage() {
     }
   };
 
-  const renderTask = ({ item }: { item: TaskDetailDTO }) => {
-    const task = item as TaskDetailDTO;
-
-    return (
-      <TaskCard
-        id={task.id.toString()}
-        title={task.title}
-        startTime={task.startTime}
-        endTime={task.endTime}
-        isCompleted={task.isDone}
-        onToggleComplete={(id, completed) => {
-          handleToggleTask(task);
-        }}
-        onPress={() => {
-          setSelectedTask(task);
-          setIsBottomSheetVisible(true);
-        }}
-      />
-    );
+  const presentSheet = (task: TaskDetailDTO) => {
+    setSelectedTask(task);
+    requestAnimationFrame(() => taskDetailSheetRef.current?.present());
   };
+
+  const renderTask = ({ item }: { item: TaskDetailDTO }) => (
+    <TaskCard
+      id={item.id.toString()}
+      title={item.title}
+      startTime={item.startTime}
+      endTime={item.endTime}
+      isCompleted={item.isDone}
+      onToggleComplete={() => handleToggleTask(item)}
+      onPress={() => presentSheet(item)}
+    />
+  );
 
   return (
     <SafeAreaView className="flex-1">
@@ -108,7 +104,7 @@ export default function CalendarPage() {
             textDayFontWeight: "bold",
             textDayHeaderFontWeight: "bold",
           }}
-          firstDay={1} // Monday as the first day of the week
+          firstDay={1}
         />
 
         {isLoading ? (
@@ -131,16 +127,13 @@ export default function CalendarPage() {
         )}
       </CalendarProvider>
 
-      {isBottomSheetVisible && (
-        <TaskDetailBottomSheet
-          task={selectedTask}
-          isVisible={isBottomSheetVisible}
-          onClose={() => {
-            setIsBottomSheetVisible(false);
-            setSelectedTask(undefined);
-          }}
-        />
-      )}
+      <TaskDetailBottomSheet
+        ref={taskDetailSheetRef}
+        task={selectedTask}
+        onDismiss={() => {
+          setSelectedTask(undefined);
+        }}
+      />
     </SafeAreaView>
   );
 }
