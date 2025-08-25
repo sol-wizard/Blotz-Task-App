@@ -1,11 +1,13 @@
 using BlotzTask.Modules.Tasks.Commands.SubTasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Tasks.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
-public class SubTaskController(UpdateSubtaskHandler updateHandler) : ControllerBase
+public class SubTaskController(UpdateSubtaskCommandHandler updateSubtaskCommandHandler) : ControllerBase
 {
     [HttpPut("{taskId}/subtasks/{subtaskId}")]
     public async Task<IActionResult> UpdateSubtask(
@@ -19,7 +21,7 @@ public class SubTaskController(UpdateSubtaskHandler updateHandler) : ControllerB
             return BadRequest("TaskId or SubtaskId in route does not match request body.");
         }
 
-        var message = await updateHandler.Handle(command, ct);
-        return Ok(new { message });
+        var message = await updateSubtaskCommandHandler.Handle(command, ct);
+        return Ok(message);
     }
 }

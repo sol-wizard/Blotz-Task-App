@@ -64,10 +64,26 @@ export default function CalendarPage() {
       console.error(e);
     }
   };
+  
+  const renderTask = ({ item }: { item: TaskDetailDTO }) => {
+    const task = item as TaskDetailDTO;
 
-  const presentSheet = (task: TaskDetailDTO) => {
-    setSelectedTask(task);
-    requestAnimationFrame(() => taskDetailSheetRef.current?.present());
+    return (
+      <TaskCard
+        id={task.id.toString()}
+        title={task.title}
+        startTime={task.startTime}
+        endTime={task.endTime}
+        isCompleted={task.isDone}
+        onToggleComplete={(id, completed) => {
+          handleToggleTask(task);
+        }}
+        onPress={() => {
+          setSelectedTask(task);
+          setIsBottomSheetVisible(true);
+        }}
+      />
+    );
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (

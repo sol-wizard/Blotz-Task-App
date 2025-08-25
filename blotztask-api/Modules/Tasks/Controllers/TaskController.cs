@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using BlotzTask.Modules.Tasks.DTOs;
+using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
@@ -11,10 +12,10 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Route("/api/[controller]")]
 [Authorize]
-public class TaskController(ITaskService taskService) : ControllerBase
+public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler  getTasksByDateQueryHandler) : ControllerBase
 {
     [HttpGet]
-    [Tags("MigratedToCleanArchitecture")]
+    [Obsolete("This endpoint is not in use and will be removed later.")]
     public async Task<ActionResult<List<TaskItemDto>>> GetAllTask(CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -28,7 +29,7 @@ public class TaskController(ITaskService taskService) : ControllerBase
     }
 
     [HttpGet("monthly-stats/{year}-{month}")]
-    [Obsolete("This endpoint is deprecated and will be removed later.")]
+    [Obsolete("This endpoint is not in use and will be removed later.")]
     public async Task<IActionResult> GetMonthlyStats(int year, int month)
     {
         var userId = HttpContext.Items["UserId"] as string;
@@ -42,15 +43,13 @@ public class TaskController(ITaskService taskService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Obsolete("This endpoint is not in use in frontend")]
     public async Task<IActionResult> GetTaskById(int id)
     {
         return Ok(await taskService.GetTaskById(id));
     }
         
-    //TODO: change the route "due-date" to "by-date"
-    [HttpGet("due-date")]
-    public async Task<IActionResult> GetTaskByDate([FromQuery] DateTime startDateUtc)
+    [HttpGet("by-date")]
+    public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery] DateTime startDateUtc, CancellationToken ct)
     {
         var userId = HttpContext.Items["UserId"] as string;
 
@@ -58,9 +57,15 @@ public class TaskController(ITaskService taskService) : ControllerBase
         {
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
-            
-        DateTime endDateUtc = startDateUtc.AddDays(1);
-        return Ok(await taskService.GetTaskByDate(startDateUtc, endDateUtc, userId));
+        
+        var query = new GetTasksByDateQuery
+        {
+            UserId = userId,
+            StartDateUtc = startDateUtc
+        };
+        
+        var result = await getTasksByDateQueryHandler.Handle(query, ct);
+        return result;
     }
 
     [HttpGet("today-done")]
@@ -77,7 +82,6 @@ public class TaskController(ITaskService taskService) : ControllerBase
     }
 
     [HttpPost]
-    [Tags("MigratedToCleanArchitecture")]
     public async Task<IActionResult> AddTask([FromBody] AddTaskItemDto addtaskItem)
     {
         var userId = HttpContext.Items["UserId"] as string;
@@ -139,6 +143,7 @@ public class TaskController(ITaskService taskService) : ControllerBase
     }
 
     [HttpGet("scheduled-tasks")]
+    [Obsolete("This endpoint not in used in mobile app.")]
     public async Task<IActionResult> GetScheduleSortTasks([FromQuery, Required] string timeZone, [FromQuery, Required] DateTime todayDate)
     {
         var userId = HttpContext.Items["UserId"] as string;
