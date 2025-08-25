@@ -6,7 +6,6 @@ import { convertAiTaskToAddTaskItemDTO } from "../services/util/util";
 import { addTaskItem } from "@/feature/task/services/task-service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
-import { format } from "date-fns";
 
 export const AIChatTaskCard = ({
   task,
@@ -54,7 +53,7 @@ export const AIChatTaskCard = ({
             <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
             {task.endTime && (
               <Text className="text-base text-primary ml-2">
-                {format(task.endTime, "yyyy-MM-dd")}
+                {task.endTime}
               </Text>
             )}
           </View>

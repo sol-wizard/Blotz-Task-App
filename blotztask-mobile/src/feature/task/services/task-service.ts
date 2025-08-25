@@ -7,7 +7,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_URL as string;
 
 export async function fetchTasksForDate(date: Date): Promise<TaskDetailDTO[]> {
   const startDateUtc = getStartOfDayUtc(date).toISOString();
-  const url = `${API_BASE_URL}/api/Task/due-date?startDateUtc=${encodeURIComponent(startDateUtc)}`;
+  const url = `${API_BASE_URL}/api/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}`;
 
   const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: "GET" });
   return data;
