@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BlotzTask.Modules.Tasks;
 
 [ApiController]
-[Route("/api/[controller]")]
+[Route("api/[controller]")]
 [Authorize]
 public class TaskController : ControllerBase
 {
@@ -24,7 +24,7 @@ public class TaskController : ControllerBase
     public async Task<ActionResult<List<TaskItemDto>>> GetAllTask(CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        
+
         if (string.IsNullOrEmpty(userId))
         {
             throw new UnauthorizedAccessException("Could not find user id from token");
@@ -47,15 +47,12 @@ public class TaskController : ControllerBase
         return Ok(await _taskService.GetMonthlyStats(userId, year, month));
     }
 
-    [HttpGet("{id}")]
-    [Obsolete("This endpoint is not in use in frontend")]
-    public async Task<IActionResult> GetTaskById(int id)
-    {
-        return Ok(await _taskService.GetTaskById(id));
-    }
-        
+
+
     //TODO: change the route "due-date" to "by-date"
-    [HttpGet("due-date")]
+    // [HttpGet("due-date")]
+    [HttpGet("by-date")]
+
     public async Task<IActionResult> GetTaskByDate([FromQuery] DateTime startDateUtc)
     {
         var userId = HttpContext.Items["UserId"] as string;
@@ -64,9 +61,16 @@ public class TaskController : ControllerBase
         {
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
-            
+
         DateTime endDateUtc = startDateUtc.AddDays(1);
         return Ok(await _taskService.GetTaskByDate(startDateUtc, endDateUtc, userId));
+    }
+
+    [HttpGet("{id:int}")]
+    [Obsolete("This endpoint is not in use in frontend")]
+    public async Task<IActionResult> GetTaskById(int id)
+    {
+        return Ok(await _taskService.GetTaskById(id));
     }
 
     [HttpGet("today-done")]
@@ -127,7 +131,7 @@ public class TaskController : ControllerBase
     }
 
     [HttpPost("{id}/undo-delete")]
-    public async Task<IActionResult> RestoreFromTrash(int id) 
+    public async Task<IActionResult> RestoreFromTrash(int id)
     {
         var result = await _taskService.RestoreFromTrashAsync(id);
         if (!result.Success)
@@ -153,7 +157,7 @@ public class TaskController : ControllerBase
         {
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
-            
+
         return Ok(await _taskService.GetScheduledTasks(timeZone, todayDate, userId));
     }
 

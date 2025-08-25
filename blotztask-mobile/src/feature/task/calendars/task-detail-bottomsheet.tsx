@@ -1,15 +1,16 @@
-import React, { useCallback, useRef } from 'react';
-import { View, Pressable, TouchableOpacity } from 'react-native';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Button, Text, Portal } from 'react-native-paper';
-import { MaterialIcons } from '@expo/vector-icons';
-import { TaskDetailDTO } from '@/shared/models/task-detail-dto';
-import TaskDetailTag from '../components/task-detail-tag';
+import React, { useCallback, useRef, useState } from 'react'
+import { View, Pressable, TouchableOpacity } from 'react-native'
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
+import { Button, Text, Portal } from 'react-native-paper'
+import { MaterialIcons } from '@expo/vector-icons'
+import { TaskDetailDTO } from '@/shared/models/task-detail-dto'
+import TaskDetailTag from '../components/task-detail-tag'
+import { EditTaskBottomSheet } from '../task-edit/edit-task-bottom-sheet'
 
 interface TaskDetailBottomSheetProps {
-  task?: TaskDetailDTO;
-  isVisible: boolean;
-  onClose: () => void;
+  task?: TaskDetailDTO
+  isVisible: boolean
+  onClose: () => void
 }
 
 const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
@@ -17,22 +18,19 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
   isVisible,
   onClose,
 }) => {
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheet>(null)
+  const [isEditVisible, setIsEditVisible] = useState(false)
 
   // Initial height & snap points
-  const snapPoints = ['30%', '60%'];
-  const openIndex = 1;
+  const snapPoints = ['30%', '60%']
+  const openIndex = 1
 
   const handleSheetChange = useCallback(
     (index: number) => {
-      if (index === -1) onClose();
+      if (index === -1) onClose()
     },
     [onClose]
-  );
-
-
-
-
+  )
 
   return (
     <Portal>
@@ -71,7 +69,9 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                   <View className="flex-row items-center gap-2">
                     <Button
                       mode="text"
-                      onPress={() => console.log('Edit task:', task.id)}
+                      onPress={() => {
+                        setIsEditVisible(true)
+                      }}
                       textColor="#374151"
                       compact
                       labelStyle={{ fontSize: 15, fontWeight: 'bold' }}
@@ -86,7 +86,11 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                       onPress={() => console.log('AI Breakdown:', task.id)}
                       className="flex-row items-center px-3 py-1.5 bg-white border border-gray-200 rounded-2xl"
                     >
-                      <MaterialIcons name="auto-awesome" size={15} color="#9CA3AF" />
+                      <MaterialIcons
+                        name="auto-awesome"
+                        size={15}
+                        color="#9CA3AF"
+                      />
                       <Text className="ml-1.5 text-gray-900 text-xs font-bold">
                         AI Breakdown
                       </Text>
@@ -96,8 +100,12 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
 
                 {/* Tags */}
                 <View className="flex-row items-center mb-3 gap-2 mt-1">
-                  {task.label ? <TaskDetailTag>{task.label.name}</TaskDetailTag> : null}
-                  <TaskDetailTag>{task.isDone ? 'Done' : 'In progress'}</TaskDetailTag>
+                  {task.label ? (
+                    <TaskDetailTag>{task.label.name}</TaskDetailTag>
+                  ) : null}
+                  <TaskDetailTag>
+                    {task.isDone ? 'Done' : 'In progress'}
+                  </TaskDetailTag>
                 </View>
 
                 {/* Divider */}
@@ -121,7 +129,11 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                   </View>
                 ) : task?.endTime ? (
                   <View className="flex-row items-center mb-2">
-                    <MaterialIcons name="calendar-today" size={18} color="#6B7280" />
+                    <MaterialIcons
+                      name="calendar-today"
+                      size={18}
+                      color="#6B7280"
+                    />
                     <Text className="ml-2.5 text-base leading-5 text-gray-900">
                       {task.endTime}
                     </Text>
@@ -131,7 +143,12 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
                 {/* Description */}
                 {task.description ? (
                   <View className="flex-row items-start">
-                    <MaterialIcons name="description" size={18} color="#6B7280" className="mt-0.5" />
+                    <MaterialIcons
+                      name="description"
+                      size={18}
+                      color="#6B7280"
+                      className="mt-0.5"
+                    />
                     <Text className="flex-1 ml-2.5 text-base leading-5 text-gray-900">
                       {task.description}
                     </Text>
@@ -144,8 +161,15 @@ const TaskDetailBottomSheet: React.FC<TaskDetailBottomSheetProps> = ({
           </BottomSheetView>
         </BottomSheet>
       </View>
+      {task && (
+        <EditTaskBottomSheet
+          isVisible={isEditVisible}
+          onClose={() => setIsEditVisible(false)}
+          task={task}
+        />
+      )}
     </Portal>
-  );
-};
+  )
+}
 
-export default TaskDetailBottomSheet;
+export default TaskDetailBottomSheet

@@ -1,22 +1,25 @@
-import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
-import { getStartOfDayUtc } from "../util/date-utils";
-import { AddTaskItemDTO } from "../models/add-task-item-dto";
+import { TaskDetailDTO } from '@/shared/models/task-detail-dto'
+import { fetchWithAuth } from '@/shared/services/fetch-with-auth'
+import { getStartOfDayUtc } from '../util/date-utils'
+import { AddTaskItemDTO } from '../models/add-task-item-dto'
+import { EditTaskValues } from '../task-edit/task-form-schema'
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_URL as string;
+const API_BASE_URL = process.env.EXPO_PUBLIC_URL as string
 
 export async function fetchTasksForDate(date: Date): Promise<TaskDetailDTO[]> {
-  const startDateUtc = getStartOfDayUtc(date).toISOString();
-  const url = `${API_BASE_URL}/api/Task/due-date?startDateUtc=${encodeURIComponent(startDateUtc)}`;
+  const startDateUtc = getStartOfDayUtc(date).toISOString()
+  const url = `${API_BASE_URL}/api/Task/by-date?startDateUtc=${encodeURIComponent(
+    startDateUtc
+  )}`
 
-  const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: "GET" });
-  return data;
+  const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: 'GET' })
+  return data
 }
 
 export async function toggleTaskCompletion(taskId: number): Promise<void> {
-  const url = `${API_BASE_URL}/api/Task/task-completion-status/${taskId}`;
+  const url = `${API_BASE_URL}/api/Task/task-completion-status/${taskId}`
 
-  await fetchWithAuth<unknown>(url, { method: "PUT" });
+  await fetchWithAuth<unknown>(url, { method: 'PUT' })
 }
 
 export const addTaskItem = async (
@@ -26,17 +29,36 @@ export const addTaskItem = async (
     const result = await fetchWithAuth<TaskDetailDTO>(
       `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(addTaskForm),
       }
-    );
+    )
 
-    return result;
+    return result
   } catch (error) {
-    console.error("Error adding task:", error);
-    throw error;
+    console.error('Error adding task:', error)
+    throw error
   }
-};
+}
+
+export async function updateTaskItem(taskId: number, payload: EditTaskValues) {
+  try {
+    const result = await fetchWithAuth<TaskDetailDTO>(
+      `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      }
+    )
+    return result
+  } catch (error) {
+    console.error('Error updating task:', error)
+    throw error
+  }
+}
