@@ -52,6 +52,7 @@ export function useSignalRChat(conversationId: string) {
     const mappedTasks: AiTaskDTO[] = receivedTasks.map(
       mapExtractedTaskDTOToAiTaskDTO
     );
+    console.log("mappedTasks,", mappedTasks);
 
     setMessages((prev = []) => [
       ...prev,

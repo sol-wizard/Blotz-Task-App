@@ -23,7 +23,7 @@ export const fetchTaskItemsDueToday = async (): Promise<TaskDetailDTO[]> => {
   const startDateUTC = new Date(new Date().setHours(0, 0, 0, 0)).toISOString();
 
   const result = await fetchWithAuth<TaskDetailDTO[]>(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/due-date?startDateUTC=${encodeURIComponent(startDateUTC)}`,
+    `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/Task/by-date?startDateUTC=${encodeURIComponent(startDateUTC)}`,
     {
       method: 'GET',
       headers: {

@@ -110,24 +110,6 @@ export default function CalendarPage() {
           }}
           firstDay={1} // Monday as the first day of the week
         />
-        {/* week+month Calendar */}
-        {/* <ExpandableCalendar
-            // initialPosition={ExpandableCalendar.positions.CLOSED}
-            markedDates={marked}
-            // markingType={'multi-dot'}
-            current={selectedDay}
-            theme={{
-              selectedDayBackgroundColor: '#2d4150',
-              todayTextColor: '#2d4150',
-              arrowColor: '#2d4150',
-              monthTextColor: '#2d4150',
-              textMonthFontWeight: 'bold',
-              textDayFontWeight: 'bold',
-              textDayHeaderFontWeight: 'bold',
-            }}
-            firstDay={1} // Monday as the first day of the week
-            hideKnob={true}
-          /> */}
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
