@@ -15,7 +15,7 @@ import { Button, Text } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
-import TaskDetailTag from "../components/task-detail-tag";
+import { TaskDetailTag } from "./task-detail-tag";
 
 export type TaskDetailBottomSheetHandle = {
   present: () => void;
@@ -184,5 +184,7 @@ const TaskDetailBottomSheet = forwardRef<
     </BottomSheetModal>
   );
 });
+
+TaskDetailBottomSheet.displayName = 'TaskDetailBottomSheet';
 
 export default TaskDetailBottomSheet;
