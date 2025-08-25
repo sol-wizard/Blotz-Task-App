@@ -12,7 +12,7 @@ export function mapExtractedTaskDTOToAiTaskDTO(
     title: extractedTask.title,
     isAdded: false,
     hasTime: false,
-    endTime: extractedTask.endTime,
+    endTime: extractedTask.end_time,
     labelId: extractedTask.label?.labelId,
   };
 }
