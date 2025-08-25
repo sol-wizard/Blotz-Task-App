@@ -6,7 +6,6 @@ import { convertAiTaskToAddTaskItemDTO } from "../services/util/util";
 import { addTaskItem } from "@/feature/task/services/task-service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
-import { format } from "date-fns";
 
 export const AIChatTaskCard = ({
   task,
