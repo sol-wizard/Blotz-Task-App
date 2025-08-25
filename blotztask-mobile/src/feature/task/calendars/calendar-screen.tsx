@@ -74,7 +74,8 @@ export default function CalendarPage() {
     <TaskCard
       id={item.id.toString()}
       title={item.title}
-      startTime={item.hasTime ? format(item.endTime, "p") : undefined}
+      startTime={item.startTime}
+      endTime={item.endTime}
       isCompleted={item.isDone}
       onToggleComplete={() => handleToggleTask(item)}
       onPress={() => presentSheet(item)}

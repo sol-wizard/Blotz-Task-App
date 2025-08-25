@@ -1,6 +1,9 @@
 # OSX
-#
 .DS_Store
+
+
+# Root dir shouldn't have Xcode project
+/*.xcodeproj
 
 # Xcode
 #
@@ -28,3 +31,12 @@ project.xcworkspace
 
 # CocoaPods
 /Pods/
+
+# Android
+.idea
+.gradle
+local.properties
+*.iml
+/packages/react-native/android/*
+!/packages/react-native/android/README.md
+.kotlin/

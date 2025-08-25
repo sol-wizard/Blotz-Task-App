@@ -92,7 +92,7 @@ namespace BlotzTask.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset>("EndTime")
+                    b.Property<DateTimeOffset?>("EndTime")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("HasTime")
@@ -155,8 +155,10 @@ namespace BlotzTask.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.HasKey("Id");
 
@@ -180,7 +182,7 @@ namespace BlotzTask.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset>("EndTime")
+                    b.Property<DateTimeOffset?>("EndTime")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("HasTime")
@@ -192,7 +194,7 @@ namespace BlotzTask.Migrations
                     b.Property<int>("LabelId")
                         .HasColumnType("int");
 
-                    b.Property<DateTimeOffset>("StartTime")
+                    b.Property<DateTimeOffset?>("StartTime")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Title")
