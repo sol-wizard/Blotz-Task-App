@@ -138,7 +138,7 @@ export default function TaskCard({
             runOnJS(setActionsEnabled)(false);
           }}
           android_ripple={{ color: "#e5e7eb", borderless: true }}
-          className="w-[40px] h-[40px] rounded-full border-2 border-neutral-300 items-center justify-center"
+          className="w-[30px] h-[30px] rounded-full border-2 border-neutral-300 items-center justify-center"
         >
           <MaterialCommunityIcons name="trash-can-outline" size={22} color="#6B7280" />
         </Pressable>
