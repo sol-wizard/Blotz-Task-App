@@ -77,21 +77,17 @@ export default function CalendarPage() {
     requestAnimationFrame(() => taskDetailSheetRef.current?.present());
   };
 
-  const renderTask = ({ item }: { item: TaskDetailDTO }) => {
-    return (
-      <TaskCard
-        id={item.id.toString()}
-        title={item.title}
-        startTime={item.hasTime ? format(item.endTime, "p") : undefined}
-        isCompleted={item.isDone}
-        onToggleComplete={() => handleToggleTask(item)}
-        onPress={() => presentSheet(item)}
-        onDelete={async () => {
-          await handleDeleteTask(item.id);
-        }}
-      />
-    );
-  };
+  const renderTask = ({ item }: { item: TaskDetailDTO }) => (
+    <TaskCard
+      id={item.id.toString()}
+      title={item.title}
+      startTime={item.startTime}
+      endTime={item.endTime}
+      isCompleted={item.isDone}
+      onToggleComplete={() => handleToggleTask(item)}
+      onPress={() => presentSheet(item)}
+    />
+  );
 
   const handleDeleteTask = async (taskId: number) => {
     try {
