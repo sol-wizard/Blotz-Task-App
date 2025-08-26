@@ -1,33 +1,22 @@
 import { TextInput, View, Text } from "react-native";
-import { Checkbox } from "react-native-paper";
 import { useState } from "react";
-import { MaterialIcons } from "@expo/vector-icons";
-import { COLORS } from "@/shared/constants/colors";
 import { SubTask } from "../models/subtask";
 import { zodResolver } from "@hookform/resolvers/zod";
 import EditTaskFormField, {
   taskEditFormSchema,
 } from "../services/breakdown-task-edit-form-schema";
-import {
-  Controller,
-  FormProvider,
-  SubmitHandler,
-  useForm,
-} from "react-hook-form";
+import { Controller, FormProvider, useForm } from "react-hook-form";
+import { convertSubtaskTimeForm } from "../services/utils/convert-subtask-time-form";
+import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 
 export const BreakdownTaskCard = ({
-  parentTaskId,
   subTask,
+  openAddSubtaskBottomSheet,
 }: {
-  parentTaskId: string;
   subTask: SubTask;
+  openAddSubtaskBottomSheet: (newSubtask: SubTask) => void;
 }) => {
   const [isChecked, setIsChecked] = useState(false);
-
-  const handleAddSubTask: SubmitHandler<EditTaskFormField> = ({ title }) => {
-    setIsChecked((prev) => !prev);
-    console.log("sub task added!", title, "parentTaskId:", parentTaskId);
-  };
 
   const form = useForm<EditTaskFormField>({
     resolver: zodResolver(taskEditFormSchema),
@@ -36,17 +25,23 @@ export const BreakdownTaskCard = ({
       title: subTask.title,
     },
   });
+  const handleCheckboxPress = async () => {
+    const values = form.getValues();
+    const newSubtask: SubTask = {
+      title: values.title,
+      duration: subTask.duration,
+    };
+    openAddSubtaskBottomSheet(newSubtask);
+    setIsChecked((v) => !v);
+  };
 
   return (
     <FormProvider {...form}>
       <View className="flex-row w-full items-center justify-between">
-        <View className="flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1 border border-gray-300">
-          <Checkbox
-            status={isChecked ? "checked" : "unchecked"}
-            onPress={form.handleSubmit(handleAddSubTask)}
-          />
-          <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
-          <View className="flex-col">
+        <View className="flex-row items-center rounded-2xl bg-white mb-3 px-4 py-4 flex-1 border border-gray-300">
+          <CustomCheckbox checked={isChecked} onPress={handleCheckboxPress} />
+
+          <View className="flex-row justify-between flex-1 items-center">
             <Controller
               control={form.control}
               name="title"
@@ -61,14 +56,11 @@ export const BreakdownTaskCard = ({
               )}
             />
 
-            <View className="flex-row my-1">
-              <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
-              {subTask.duration && (
-                <Text className="text-base text-primary ml-2">
-                  {subTask.duration}
-                </Text>
-              )}
-            </View>
+            {subTask.duration && (
+              <Text className="text-base text-primary ml-2">
+                {convertSubtaskTimeForm(subTask.duration)}
+              </Text>
+            )}
           </View>
         </View>
       </View>
