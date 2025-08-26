@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { View, Pressable, Text } from "react-native";
 import { format } from "date-fns";
+
+// [ADDED] 手势与动画
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -11,22 +13,23 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { formatDateRange } from "../util/format-date-range";
-import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 
 interface TaskCardProps {
   id: string;
   title: string;
-  startTime?: string;
-  endTime?: string;
+  startTime?: string | null;
+  endTime?: string | null;
   isCompleted?: boolean;
   onToggleComplete?: (id: string, completed: boolean) => void;
   onPress?: () => void;
+
+  // [ADDED] 左滑后点击垃圾桶触发
   onDelete?: (id: string) => Promise<void> | void;
 }
 
-const ACTION_WIDTH = 72;
-const OPEN_X = -ACTION_WIDTH;                  // 最大左滑距离
+// [ADDED] 右侧动作区宽度（想让按钮更靠左，可同时把这里和 w-[64px] 一起改小到 60/56）
+const ACTION_WIDTH = 64;
+const OPEN_X = -ACTION_WIDTH;
 const OPEN_THRESHOLD = ACTION_WIDTH * 0.55;
 
 export default function TaskCard({
@@ -37,21 +40,23 @@ export default function TaskCard({
   isCompleted = false,
   onToggleComplete,
   onPress,
+
+  // [ADDED]
   onDelete,
 }: TaskCardProps) {
   const [checked, setChecked] = useState(isCompleted);
+
+  // [ADDED] 仅在滑开时允许点击右侧动作
+  const [actionsEnabled, setActionsEnabled] = useState(false);
+
+  // [ADDED] 左右位移（负值表示左滑）
+  const translateX = useSharedValue(0);
 
   useEffect(() => {
     setChecked(isCompleted);
   }, [isCompleted]);
 
-  // 右侧动作是否可点击（避免被滑动层拦截）
-  const [actionsEnabled, setActionsEnabled] = useState(false);
-
-  // 左右位移（负值表示左滑）
-  const translateX = useSharedValue(0);
-
-  // 仅允许向左滑；松手后吸附到 0 或 OPEN_X
+  // [ADDED] 手势：只允许向左滑，松手吸附到 0 或 OPEN_X
   const pan = Gesture.Pan()
     .onUpdate((e) => {
       if (e.translationX < 0) {
@@ -63,15 +68,15 @@ export default function TaskCard({
     .onEnd(() => {
       const open = Math.abs(translateX.value) > OPEN_THRESHOLD;
       translateX.value = withTiming(open ? OPEN_X : 0, { duration: 160 });
-      runOnJS(setActionsEnabled)(open); // ✅ 仅打开时允许点击右侧按钮
+      runOnJS(setActionsEnabled)(open);
     });
 
-  // 内容层平移
-  const cardContentStyle = useAnimatedStyle(() => ({
+  // [ADDED] 内容层跟随手势移动
+  const cardStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
 
-  // 右侧动作条：滑入 + 渐显
+  // [ADDED] 右侧动作条：随进度滑入 + 渐显
   const rightActionStyle = useAnimatedStyle(() => {
     const progress = interpolate(
       -translateX.value,
@@ -87,7 +92,7 @@ export default function TaskCard({
     };
   });
 
-  // 竖分隔线的显隐（与右侧动作区同进同出）
+  // [ADDED] 分隔线显隐（与动作条同进同出）
   const dividerStyle = useAnimatedStyle(() => {
     const progress = interpolate(
       -translateX.value,
@@ -98,7 +103,7 @@ export default function TaskCard({
     return { opacity: progress };
   });
 
-  // 左侧“竖灰条+勾选框”比主体多滑一点
+  // [ADDED] 左侧“竖条+勾选框”稍多滑一点，制造“被推走”感
   const leftExtrasStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value * 1.25 }],
   }));
@@ -109,59 +114,87 @@ export default function TaskCard({
     onToggleComplete?.(id, newChecked);
   };
 
-  const timePeriod = formatDateRange({ startTime, endTime });
+  const formatDateRange = () => {
+    const formatToken = "dd/MM/yyyy";
+    const hasStartTime = startTime && startTime !== null;
+    const hasEndTime = endTime && endTime !== null;
+
+    if (hasStartTime && hasEndTime) {
+      return `${format(new Date(startTime as string), formatToken)} - ${format(
+        new Date(endTime as string),
+        formatToken
+      )}`;
+    } else if (hasStartTime && !hasEndTime) {
+      return `${format(new Date(startTime as string), formatToken)} - ?`;
+    } else if (!hasStartTime && hasEndTime) {
+      return `? - ${format(new Date(endTime as string), formatToken)}`;
+    } else {
+      return "";
+    }
+  };
 
   return (
+    // [CHANGED] 用单一容器负责圆角/阴影，overflow-hidden 防止看起来像“两张卡片”
     <View className="relative mx-4 my-2 rounded-2xl bg-white shadow-sm shadow-black/10 elevation-3 overflow-hidden">
-      {/* 右侧动作条（在容器内绝对定位） */}
+      {/* [ADDED] 右侧动作区（宽度与 ACTION_WIDTH 保持一致） */}
       <Animated.View
         style={rightActionStyle}
-        // 仅打开时接收点击，否则禁用避免被上层拦截
         pointerEvents={actionsEnabled ? "auto" : "none"}
-        className="absolute right-0 top-0 bottom-0 w-[72px] items-center justify-center z-10 pl-4"
+        className="absolute right-0 top-0 bottom-0 w-[64px] flex-row items-center justify-start z-10 px-2"
       >
+        {/* [ADDED] 竖灰色分隔线：与左侧一致 6x30 */}
         <Animated.View
           pointerEvents="none"
-          style={dividerStyle}  // 复用你已有的渐隐/渐显动画
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-[6px] h-[30px] bg-neutral-300 rounded-full"
+          style={dividerStyle}
+          className="w-[6px] h-[30px] bg-neutral-300 rounded-full mr-[4px]"
         />
+
+        {/* [ADDED] 更小的垃圾桶按钮 */}
         <Pressable
           onPress={async () => {
             if (!onDelete) return;
-            await onDelete(id);                // ✅ 触发删除
-            translateX.value = withTiming(0); // 删除后收回
+            await onDelete(id);                // 触发父级删除
+            translateX.value = withTiming(0);  // 删除后收回
             runOnJS(setActionsEnabled)(false);
           }}
           android_ripple={{ color: "#e5e7eb", borderless: true }}
-          className="w-[33px] h-[33px] rounded-full border-2 border-neutral-300 items-center justify-center"
+          className="w-[40px] h-[40px] rounded-full border-2 border-neutral-300 items-center justify-center"
         >
-          <MaterialCommunityIcons name="trash-can-outline" size={22} color="#374151" />
+          <MaterialCommunityIcons name="trash-can-outline" size={18} color="#6B7280" />
         </Pressable>
       </Animated.View>
 
-      {/* 可滑动的内容层（不再有圆角/阴影，视觉上属于同一张卡片） */}
+      {/* [MOVED] 原卡片主体 → 改为手势驱动的内容层 */}
       <GestureDetector gesture={pan}>
-        <Animated.View style={cardContentStyle}>
+        <Animated.View
+          style={cardStyle}
+          className="bg-white rounded-2xl"
+        >
           <Pressable onPress={onPress}>
             <View className="flex-row items-center p-5">
-              {/* ✅ 左侧竖灰条（更靠左，形状更像设计稿）+ 勾选框 */}
+              {/* [CHANGED] 左侧组合：竖条 + 勾选框；整体加了 leftExtrasStyle */}
               <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
-                {/* 竖灰条 */}
-                <View className="w-[6px] h-[30px] bg-neutral-300 rounded-full mr-3" />
-                {/* 勾选框 */}
+                {/* [CHANGED] 竖条宽度从 5px 调到 6px，与右侧分隔线一致 */}
+                <View className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-3" />
+
+                {/* 保留你原来的自定义勾选框 */}
                 <Pressable
-                  onPress={handleToggleComplete}
-                  className={`w-8 h-8 rounded-[10px] border-[3px] items-center justify-center mr-3 ${
-                    checked ? "bg-neutral-300 border-neutral-300" : "bg-white border-gray-300"
+                  className={`w-8 h-8 rounded-[10px] border-[3px] mr-3 items-center justify-center ${
+                    checked 
+                      ? 'bg-neutral-300 border-neutral-300' 
+                      : 'bg-white border-gray-300'
                   }`}
+                  onPress={handleToggleComplete}
                 >
                   {checked && <View className="w-3 h-3 bg-white rounded-sm" />}
                 </Pressable>
               </Animated.View>
 
-              {/* Content */}
-              <View className="flex-1">
-                <Text className={`text-base font-bold ${checked ? "text-neutral-400 line-through" : "text-black"}`}>
+              {/* 内容区 */}
+              <View className="flex-1 justify-start pt-0">
+                <Text 
+                  className={`text-base font-bold ${checked ? 'text-neutral-400 line-through' : 'text-black'}`}
+                >
                   {title}
                 </Text>
                 {!!formatDateRange() && (
