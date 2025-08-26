@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   View,
   Text,
-  Task,
 } from "react-native";
 import {
   CalendarProvider,
