@@ -97,12 +97,12 @@ export default function CalendarPage() {
 
   const handleDeleteTask = async (taskId: number) => {
     try {
-      await deleteTask(taskId);                        // 调用你的 API
-      setTasksForSelectedDay(prev => prev.filter(t => t.id !== taskId)); // 前端移除
+      await deleteTask(taskId);
+      setTasksForSelectedDay(prev => prev.filter(t => t.id !== taskId)); // delete at frontend
       setSnackbar({ visible: true, text: "Delete Successful" });
     } catch (e) {
       console.error(e);
-      setSnackbar({ visible: true, text: "删除失败，请稍后重试" }); // 你已有的提示
+      setSnackbar({ visible: true, text: "Delete Failed, please try again later" });
     }
   };
 

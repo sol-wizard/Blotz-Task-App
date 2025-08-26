@@ -42,6 +42,6 @@ export const addTaskItem = async (
 };
 
 export async function deleteTask(taskId: number): Promise<void> {
-  const url = `${API_BASE_URL}/api/Task/${taskId}`; // 若你的后端路径不同，请改成实际路由
+  const url = `${API_BASE_URL}/api/Task/${taskId}`;
   await fetchWithAuth<void>(url, { method: "DELETE" });
 }
