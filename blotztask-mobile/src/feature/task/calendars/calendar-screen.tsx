@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   View,
   Text,
+  Task,
 } from "react-native";
 import {
   CalendarProvider,
@@ -72,25 +73,23 @@ export default function CalendarPage() {
     }
   };
 
-  const renderTask = ({ item }: { item: TaskDetailDTO }) => {
-    const task = item as TaskDetailDTO;
+  const presentSheet = (task: TaskDetailDTO) => {
+    setSelectedTask(task);
+    requestAnimationFrame(() => taskDetailSheetRef.current?.present());
+  };
 
+  const renderTask = ({ item }: { item: TaskDetailDTO }) => {
     return (
       <TaskCard
-        id={task.id.toString()}
-        title={task.title}
-        startTime={task.hasTime ? format(task.endTime, "p") : undefined}
-        isCompleted={task.isDone}
-        onToggleComplete={(id, completed) => {
-          handleToggleTask(task);
-        }}
-        onPress={() => {
-          setSelectedTask(task);
-          taskDetailSheetRef.current?.present();
-        }}
+        id={item.id.toString()}
+        title={item.title}
+        startTime={item.hasTime ? format(item.endTime, "p") : undefined}
+        isCompleted={item.isDone}
+        onToggleComplete={() => handleToggleTask(item)}
+        onPress={() => presentSheet(item)}
         onDelete={async () => {
-        await handleDeleteTask(task.id); // ✅ 传给子组件
-      }}
+          await handleDeleteTask(item.id);
+        }}
       />
     );
   };
