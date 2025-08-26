@@ -23,25 +23,6 @@ expo-env.d.ts
 .DS_Store
 
 
-# ========== iOS-specific ignores ==========
-
-# 1. Xcode build artifacts
-ios/build/
-ios/DerivedData/
-
-# 2. CocoaPods dependencies
-ios/Pods/
-
-# 3. Xcode workspace data
-ios/*.xcworkspace/
-ios/*.xcodeproj/project.xcworkspace/
-ios/*.xcodeproj/xcuserdata/
-ios/*.xcodeproj/xcshareddata/
-ios/*.xcodeproj/xcshareddata/xcschemes/
-ios/*.xcodeproj/xcuserdata/
-
-# 4. iOS metadata
-ios/.DS_Store
-ios/.idea/
-ios/.vscode/
-ios/.xcode.env.local
+# Expo managed native projects
+ios/
+android/
