@@ -2,17 +2,20 @@ import React from "react";
 import { View, Text } from "react-native";
 import { SubTask } from "../models/subtask";
 import { BreakdownTaskCard } from "./breakdown-task-card";
+import EditTaskFormField from "../services/breakdown-task-edit-form-schema";
 
 interface BreakdownBotMessageProps {
   text: string;
   parentTaskId: string;
   subtasks?: SubTask[];
+  openAddSubtaskBottomSheet: (subTask: SubTask) => void;
 }
 
 export default function BreakdownBotMessage({
   text,
   parentTaskId,
   subtasks,
+  openAddSubtaskBottomSheet,
 }: BreakdownBotMessageProps) {
   return (
     <View className="mb-4">
@@ -26,8 +29,8 @@ export default function BreakdownBotMessage({
             {subtasks.map((subtask, index) => (
               <BreakdownTaskCard
                 key={index}
-                parentTaskId={parentTaskId}
                 subTask={subtask}
+                openAddSubtaskBottomSheet={openAddSubtaskBottomSheet}
               />
             ))}
           </View>
