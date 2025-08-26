@@ -126,7 +126,7 @@ export default function TaskCard({
         <Animated.View
           pointerEvents="none"
           style={dividerStyle}
-          className="w-[6px] h-[30px] bg-neutral-300 rounded-full mr-[4px]"
+          className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-1.5"
         />
 
         {/* Trash icon */}
