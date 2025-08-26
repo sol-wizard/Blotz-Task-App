@@ -7,9 +7,11 @@ export type AddSubtaskBottomSheetHandle = {
   dismiss: () => void;
 };
 
+type Props = { handleAddSubtasks: () => void };
+
 export const AddSubtaskBottomSheet = forwardRef<
   AddSubtaskBottomSheetHandle,
-  { handleAddSubtasks: () => void }
+  Props
 >(({ handleAddSubtasks }, ref) => {
   const addSubtasRef = useRef<BottomSheetModal>(null);
 
