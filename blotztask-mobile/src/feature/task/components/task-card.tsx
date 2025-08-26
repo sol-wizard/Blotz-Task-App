@@ -11,12 +11,14 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { formatDateRange } from "../util/format-date-range";
+import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 
 interface TaskCardProps {
   id: string;
   title: string;
-  startTime?: string | null;
-  endTime?: string | null;
+  startTime?: string;
+  endTime?: string;
   isCompleted?: boolean;
   onToggleComplete?: (id: string, completed: boolean) => void;
   onPress?: () => void;
@@ -107,21 +109,7 @@ export default function TaskCard({
     onToggleComplete?.(id, newChecked);
   };
 
-  const formatDateRange = () => {
-    const formatToken = "dd/MM/yyyy";
-    const hasStartTime = startTime && startTime !== null;
-    const hasEndTime = endTime && endTime !== null;
-    
-    if (hasStartTime && hasEndTime) {
-      return `${format(new Date(startTime), formatToken)} - ${format(new Date(endTime), formatToken)}`;
-    } else if (hasStartTime && !hasEndTime) {
-      return `${format(new Date(startTime), formatToken)} - ?`;
-    } else if (!hasStartTime && hasEndTime) {
-      return `? - ${format(new Date(endTime), formatToken)}`;
-    } else {
-      return "";
-    }
-  };
+  const timePeriod = formatDateRange({ startTime, endTime });
 
   return (
     <View className="relative mx-4 my-2 rounded-2xl bg-white shadow-sm shadow-black/10 elevation-3 overflow-hidden">
