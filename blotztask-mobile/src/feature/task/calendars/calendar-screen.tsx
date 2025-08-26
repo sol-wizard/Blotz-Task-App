@@ -86,6 +86,7 @@ export default function CalendarPage() {
       isCompleted={item.isDone}
       onToggleComplete={() => handleToggleTask(item)}
       onPress={() => presentSheet(item)}
+      onDelete={async () => {await handleDeleteTask(item.id);}}
     />
   );
 
