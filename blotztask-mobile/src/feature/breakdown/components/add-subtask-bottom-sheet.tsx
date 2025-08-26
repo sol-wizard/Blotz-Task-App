@@ -64,3 +64,5 @@ export const AddSubtaskBottomSheet = forwardRef<
     </BottomSheetModal>
   );
 });
+
+AddSubtaskBottomSheet.displayName = "AddSubtaskBottomSheet";
