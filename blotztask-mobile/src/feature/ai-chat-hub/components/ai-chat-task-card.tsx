@@ -1,5 +1,4 @@
 import { TextInput, View, Text } from "react-native";
-import { Checkbox } from "react-native-paper";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { useState } from "react";
 import { convertAiTaskToAddTaskItemDTO } from "../services/util/util";

@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Pressable, Text } from "react-native";
-import { format } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
-import { MaterialIcons } from "@expo/vector-icons";
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 
 interface TaskCardProps {

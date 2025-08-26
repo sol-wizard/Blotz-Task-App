@@ -2,7 +2,6 @@ import React from "react";
 import { View, Text } from "react-native";
 import { SubTask } from "../models/subtask";
 import { BreakdownTaskCard } from "./breakdown-task-card";
-import EditTaskFormField from "../services/breakdown-task-edit-form-schema";
 
 interface BreakdownBotMessageProps {
   text: string;

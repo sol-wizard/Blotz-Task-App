@@ -1,20 +1,13 @@
 import { TextInput, View, Text } from "react-native";
-
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { SubTask } from "../models/subtask";
 import { zodResolver } from "@hookform/resolvers/zod";
 import EditTaskFormField, {
   taskEditFormSchema,
 } from "../services/breakdown-task-edit-form-schema";
-import {
-  Controller,
-  FormProvider,
-  SubmitHandler,
-  useForm,
-} from "react-hook-form";
+import { Controller, FormProvider, useForm } from "react-hook-form";
 import { convertSubtaskTimeForm } from "../services/utils/convert-subtask-time-form";
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
-import { AddSubtaskBottomSheetHandle } from "./add-subtask-bottom-sheet";
 
 export const BreakdownTaskCard = ({
   subTask,

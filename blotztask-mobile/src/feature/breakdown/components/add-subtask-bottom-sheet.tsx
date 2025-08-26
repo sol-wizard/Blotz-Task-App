@@ -1,7 +1,4 @@
-import BottomSheet, {
-  BottomSheetModal,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import { Pressable, View, Text } from "react-native";
 
