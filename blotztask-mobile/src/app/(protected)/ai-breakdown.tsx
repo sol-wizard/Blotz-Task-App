@@ -3,7 +3,7 @@ import UserMessage from "@/feature/ai-chat-hub/components/user-message";
 import { useBreakdownChat } from "@/feature/breakdown/hooks/useBreakdownChat";
 import { TaskDetailsDto } from "@/feature/breakdown/models/task-details-dto";
 import { useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -15,10 +15,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import BreakdownBotMessage from "@/feature/breakdown/components/breakdown-bot-message";
+import {
+  AddSubtaskBottomSheet,
+  AddSubtaskBottomSheetHandle,
+} from "@/feature/breakdown/components/add-subtask-bottom-sheet";
+import { SubTask } from "@/feature/breakdown/models/subtask";
 
 export default function AiBreakdownScreen() {
   const params = useLocalSearchParams();
-
+  const addSubtaskSheetRef = useRef<AddSubtaskBottomSheetHandle>(null);
+  const [selectedSubtasks, setSelectedSubtasks] = useState<SubTask[]>([]);
   const taskDetails: TaskDetailsDto = {
     title: params.title as string,
     description: params.description as string,
@@ -29,6 +35,31 @@ export default function AiBreakdownScreen() {
   const handleSend = () => {
     sendMessage(text);
     setText("");
+  };
+
+  const handleSelectSubtask = (subTask: SubTask) => {
+    setSelectedSubtasks((prev) => {
+      const exists = prev.some((st) => st.title === subTask.title);
+
+      let next: SubTask[];
+      if (exists) {
+        next = prev.filter((st) => st.title !== subTask.title);
+      } else {
+        next = [...prev, subTask];
+      }
+
+      if (next.length > 0) {
+        addSubtaskSheetRef.current?.present();
+      } else {
+        addSubtaskSheetRef.current?.dismiss?.();
+      }
+
+      return next;
+    });
+  };
+
+  const handleAddSubtasks = () => {
+    console.log("Adding subtasks:", selectedSubtasks);
   };
 
   return (
@@ -56,6 +87,7 @@ export default function AiBreakdownScreen() {
                       parentTaskId={params.id as string}
                       text={msg.content}
                       subtasks={msg.subtasks}
+                      openAddSubtaskBottomSheet={handleSelectSubtask}
                     />
                   ) : (
                     <UserMessage key={index} text={msg.content} />
@@ -74,6 +106,10 @@ export default function AiBreakdownScreen() {
           <TypingArea text={text} setText={setText} handleSend={handleSend} />
         </View>
       </KeyboardAvoidingView>
+      <AddSubtaskBottomSheet
+        ref={addSubtaskSheetRef}
+        handleAddSubtasks={handleAddSubtasks}
+      />
     </SafeAreaView>
   );
 }

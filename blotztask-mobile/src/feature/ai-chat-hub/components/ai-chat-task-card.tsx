@@ -1,11 +1,11 @@
 import { TextInput, View, Text } from "react-native";
-import { Checkbox } from "react-native-paper";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { useState } from "react";
 import { convertAiTaskToAddTaskItemDTO } from "../services/util/util";
 import { addTaskItem } from "@/feature/task/services/task-service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
+import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 
 export const AIChatTaskCard = ({
   task,
@@ -36,10 +36,11 @@ export const AIChatTaskCard = ({
       <View
         className={`flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1 ${className}`}
       >
-        <Checkbox
-          status={isTaskAdded ? "checked" : "unchecked"}
+        <CustomCheckbox
+          checked={isTaskAdded}
           onPress={() => handleAddTask(task)}
         />
+
         <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
         <View className="flex-col">
           <TextInput
