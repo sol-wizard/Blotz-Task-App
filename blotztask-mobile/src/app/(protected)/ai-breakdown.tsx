@@ -58,6 +58,10 @@ export default function AiBreakdownScreen() {
     });
   };
 
+  const handleAddSubtasks = () => {
+    console.log("Adding subtasks:", selectedSubtasks);
+  };
+
   return (
     <SafeAreaView
       className="flex-1 bg-white"
@@ -102,7 +106,10 @@ export default function AiBreakdownScreen() {
           <TypingArea text={text} setText={setText} handleSend={handleSend} />
         </View>
       </KeyboardAvoidingView>
-      <AddSubtaskBottomSheet ref={addSubtaskSheetRef} />
+      <AddSubtaskBottomSheet
+        ref={addSubtaskSheetRef}
+        handleAddSubtasks={handleAddSubtasks}
+      />
     </SafeAreaView>
   );
 }

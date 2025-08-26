@@ -9,8 +9,8 @@ export type AddSubtaskBottomSheetHandle = {
 
 export const AddSubtaskBottomSheet = forwardRef<
   AddSubtaskBottomSheetHandle,
-  {}
->((_, ref) => {
+  { handleAddSubtasks: () => void }
+>(({ handleAddSubtasks }, ref) => {
   const addSubtasRef = useRef<BottomSheetModal>(null);
 
   useImperativeHandle(ref, () => ({
@@ -48,7 +48,7 @@ export const AddSubtaskBottomSheet = forwardRef<
 
             <Pressable
               android_ripple={{ color: "transparent" }}
-              onPress={() => console.log("Add Selected")}
+              onPress={handleAddSubtasks}
               className="flex-1 h-11 items-center justify-center rounded-xl bg-gray-300"
               style={({ pressed }) => (pressed ? { opacity: 0.85 } : undefined)}
             >
