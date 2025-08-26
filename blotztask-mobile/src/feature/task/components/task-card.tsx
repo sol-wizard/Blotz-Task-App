@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Pressable, Text } from "react-native";
-import { format } from "date-fns";
+import { formatDateRange } from "../util/format-date-range";
+import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 
 // [ADDED] 手势与动画
 import Animated, {
@@ -17,8 +18,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 interface TaskCardProps {
   id: string;
   title: string;
-  startTime?: string | null;
-  endTime?: string | null;
+  startTime?: string;
+  endTime?: string;
   isCompleted?: boolean;
   onToggleComplete?: (id: string, completed: boolean) => void;
   onPress?: () => void;
@@ -114,24 +115,8 @@ export default function TaskCard({
     onToggleComplete?.(id, newChecked);
   };
 
-  const formatDateRange = () => {
-    const formatToken = "dd/MM/yyyy";
-    const hasStartTime = startTime && startTime !== null;
-    const hasEndTime = endTime && endTime !== null;
-
-    if (hasStartTime && hasEndTime) {
-      return `${format(new Date(startTime as string), formatToken)} - ${format(
-        new Date(endTime as string),
-        formatToken
-      )}`;
-    } else if (hasStartTime && !hasEndTime) {
-      return `${format(new Date(startTime as string), formatToken)} - ?`;
-    } else if (!hasStartTime && hasEndTime) {
-      return `? - ${format(new Date(endTime as string), formatToken)}`;
-    } else {
-      return "";
-    }
-  };
+  const timePeriod = formatDateRange({startTime, endTime});
+  
 
   return (
     // [CHANGED] 用单一容器负责圆角/阴影，overflow-hidden 防止看起来像“两张卡片”
@@ -178,16 +163,10 @@ export default function TaskCard({
                 <View className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-3" />
 
                 {/* 保留你原来的自定义勾选框 */}
-                <Pressable
-                  className={`w-8 h-8 rounded-[10px] border-[3px] mr-3 items-center justify-center ${
-                    checked 
-                      ? 'bg-neutral-300 border-neutral-300' 
-                      : 'bg-white border-gray-300'
-                  }`}
+                <CustomCheckbox
+                  checked={checked}
                   onPress={handleToggleComplete}
-                >
-                  {checked && <View className="w-3 h-3 bg-white rounded-sm" />}
-                </Pressable>
+                />
               </Animated.View>
 
               {/* 内容区 */}
@@ -197,9 +176,9 @@ export default function TaskCard({
                 >
                   {title}
                 </Text>
-                {!!formatDateRange() && (
+                {timePeriod && (
                   <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
-                    {formatDateRange()}
+                    {timePeriod}
                   </Text>
                 )}
               </View>
