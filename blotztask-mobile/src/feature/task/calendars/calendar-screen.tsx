@@ -11,6 +11,8 @@ import {
   WeekCalendar,
   DateData,
 } from "react-native-calendars";
+import { Snackbar } from "react-native-paper";
+
 import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
@@ -18,6 +20,7 @@ import TaskCard from "../components/task-card";
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
+  deleteTask,
 } from "../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import TaskDetailBottomSheet, {
@@ -35,6 +38,10 @@ export default function CalendarPage() {
     undefined
   );
   const taskDetailSheetRef = useRef<TaskDetailBottomSheetHandle>(null);
+  const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
+    visible: false,
+    text: "",
+  });
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -79,8 +86,20 @@ export default function CalendarPage() {
       isCompleted={item.isDone}
       onToggleComplete={() => handleToggleTask(item)}
       onPress={() => presentSheet(item)}
+      onDelete={async () => {await handleDeleteTask(item.id);}}
     />
   );
+
+  const handleDeleteTask = async (taskId: number) => {
+    try {
+      await deleteTask(taskId);
+      setTasksForSelectedDay(prev => prev.filter(t => t.id !== taskId)); // delete at frontend
+      setSnackbar({ visible: true, text: "Delete Successful" });
+    } catch (e) {
+      console.error(e);
+      setSnackbar({ visible: true, text: "Delete Failed, please try again later" });
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1">
@@ -134,6 +153,14 @@ export default function CalendarPage() {
           setSelectedTask(undefined);
         }}
       />
+
+      <Snackbar
+        visible={snackbar.visible}
+        onDismiss={() => setSnackbar({ visible: false, text: "" })}
+        duration={2200}
+      >
+        {snackbar.text}
+      </Snackbar>
     </SafeAreaView>
   );
 }

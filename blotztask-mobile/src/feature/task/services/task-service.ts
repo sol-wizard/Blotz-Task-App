@@ -40,3 +40,13 @@ export const addTaskItem = async (
     throw error;
   }
 };
+
+export async function deleteTask(taskId: number): Promise<void> {
+  const url = `${API_BASE_URL}/api/Task/${taskId}`;
+  try {
+    await fetchWithAuth<void>(url, { method: "DELETE" });
+  } catch (err: any) {
+    console.error("deleteTask failed:", err);
+    throw new Error("Delete task failed");
+  }
+}
