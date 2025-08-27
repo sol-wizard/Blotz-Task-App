@@ -1,6 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { View, Pressable } from "react-native";
-import { Surface, Text, Checkbox, IconButton } from "react-native-paper";
+import { View, Pressable, Text } from "react-native";
+import { formatDateRange } from "../util/format-date-range";
+import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
+
+// [ADDED] gesture and animation
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+  Extrapolation,
+  runOnJS,
+} from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface TaskCardProps {
   id: string;
@@ -10,7 +23,13 @@ interface TaskCardProps {
   isCompleted?: boolean;
   onToggleComplete?: (id: string, completed: boolean) => void;
   onPress?: () => void;
+  onDelete?: (id: string) => Promise<void> | void;
 }
+
+// The width of the right action area (further left could reduce ACTION_WIDTH)
+const ACTION_WIDTH = 64;
+const OPEN_X = -ACTION_WIDTH;
+const OPEN_THRESHOLD = ACTION_WIDTH * 0.55;
 
 export default function TaskCard({
   id,
@@ -20,12 +39,71 @@ export default function TaskCard({
   isCompleted = false,
   onToggleComplete,
   onPress,
+  onDelete,
 }: TaskCardProps) {
   const [checked, setChecked] = useState(isCompleted);
+
+  // only allow right action when sliding open
+  const [actionsEnabled, setActionsEnabled] = useState(false);
+
+  // negative value indicates left swipe
+  const translateX = useSharedValue(0);
 
   useEffect(() => {
     setChecked(isCompleted);
   }, [isCompleted]);
+
+  // Gesture: only allow left swipe, snap to 0 or OPEN_X on release
+  const pan = Gesture.Pan()
+    .onUpdate((e) => {
+      if (e.translationX < 0) {
+        translateX.value = Math.max(OPEN_X, e.translationX);
+      } else {
+        translateX.value = 0;
+      }
+    })
+    .onEnd(() => {
+      const open = Math.abs(translateX.value) > OPEN_THRESHOLD;
+      translateX.value = withTiming(open ? OPEN_X : 0, { duration: 160 });
+      runOnJS(setActionsEnabled)(open);
+    });
+
+  // Content layer follows gesture movement
+  const cardStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  // Right action area follows gesture movement
+  const rightActionStyle = useAnimatedStyle(() => {
+    const progress = interpolate(
+      -translateX.value,
+      [0, ACTION_WIDTH],
+      [0, 1],
+      Extrapolation.CLAMP
+    );
+    return {
+      transform: [
+        { translateX: interpolate(progress, [0, 1], [ACTION_WIDTH, 0]) },
+      ],
+      opacity: progress,
+    };
+  });
+
+  // Dividing line is visible and hidden with the action area
+  const dividerStyle = useAnimatedStyle(() => {
+    const progress = interpolate(
+      -translateX.value,
+      [0, ACTION_WIDTH],
+      [0, 1],
+      Extrapolation.CLAMP
+    );
+    return { opacity: progress };
+  });
+
+  // Create a sense of being pushed away
+  const leftExtrasStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value * 1.25 }],
+  }));
 
   const handleToggleComplete = () => {
     const newChecked = !checked;
@@ -33,83 +111,76 @@ export default function TaskCard({
     onToggleComplete?.(id, newChecked);
   };
 
-  const handleIconPress = (event: any) => {
-    event.stopPropagation();
-    console.log("Time icon pressed for:", title);
-  };
-
-  const formatTimeRange = () => {
-    if (startTime && endTime) {
-      return `${startTime}-${endTime}`;
-    }
-    if (startTime) {
-      return startTime;
-    }
-    return "";
-  };
+  const timePeriod = formatDateRange({startTime, endTime});
+  
 
   return (
-    <Surface
-      style={{
-        marginHorizontal: 16,
-        marginVertical: 4,
-        borderRadius: 12,
-        elevation: 1,
-        backgroundColor: "#ffffff",
-      }}
-    >
-      <Pressable
-        onPress={onPress}
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingVertical: 16,
-          paddingHorizontal: 16,
-          minHeight: 72,
-        }}
+    <View className="relative mx-4 my-2 rounded-2xl bg-white shadow-sm shadow-black/10 elevation-3 overflow-hidden">
+      {/* right action area */}
+      <Animated.View
+        style={rightActionStyle}
+        pointerEvents={actionsEnabled ? "auto" : "none"}
+        className="absolute right-0 top-0 bottom-0 w-[64px] flex-row items-center justify-start z-10 px-2"
       >
-        <View style={{ marginRight: 12 }}>
-          <Checkbox
-            status={checked ? "checked" : "unchecked"}
-            onPress={handleToggleComplete}
-            color="#2196F3"
-            uncheckedColor="#E0E0E0"
-          />
-        </View>
-
-        <View style={{ flex: 1, justifyContent: "center" }}>
-          <Text
-            variant="bodyLarge"
-            style={{
-              fontWeight: "500",
-              color: checked ? "#9E9E9E" : "#212121",
-              textDecorationLine: checked ? "line-through" : "none",
-              marginBottom: 2,
-            }}
-          >
-            {title}
-          </Text>
-          {formatTimeRange() && (
-            <Text
-              variant="bodySmall"
-              style={{
-                color: "#757575",
-                fontSize: 13,
-              }}
-            >
-              {formatTimeRange()}
-            </Text>
-          )}
-        </View>
-
-        <IconButton
-          icon="clock-outline"
-          size={20}
-          iconColor="#757575"
-          style={{ margin: 0 }}
-          onPress={handleIconPress}
+        {/* Grey dividing line */}
+        <Animated.View
+          pointerEvents="none"
+          style={dividerStyle}
+          className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-1.5"
         />
-      </Pressable>
-    </Surface>
+
+        {/* Trash icon */}
+        <Pressable
+          onPress={async () => {
+            if (!onDelete) return;
+            await onDelete(id);                // Trigger parent delete handler
+            translateX.value = withTiming(0);  // Reset position
+            runOnJS(setActionsEnabled)(false);
+          }}
+          android_ripple={{ color: "#e5e7eb", borderless: true }}
+          className="w-[30px] h-[30px] rounded-full border-2 border-neutral-300 items-center justify-center"
+        >
+          <MaterialCommunityIcons name="trash-can-outline" size={22} color="#6B7280" />
+        </Pressable>
+      </Animated.View>
+
+      {/* Gesture-driven content layer */}
+      <GestureDetector gesture={pan}>
+        <Animated.View
+          style={cardStyle}
+          className="bg-white rounded-2xl"
+        >
+          <Pressable onPress={onPress}>
+            <View className="flex-row items-center p-5">
+              {/* Left combination: vertical bar + checkbox; overall added leftExtrasStyle */}
+              <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
+                {/* Grey dividing line */}
+                <View className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-3" />
+
+                {/* Custom checkbox */}
+                <CustomCheckbox
+                  checked={checked}
+                  onPress={handleToggleComplete}
+                />
+              </Animated.View>
+
+              {/* Content */}
+              <View className="flex-1 justify-start pt-0">
+                <Text 
+                  className={`text-base font-bold ${checked ? 'text-neutral-400 line-through' : 'text-black'}`}
+                >
+                  {title}
+                </Text>
+                {timePeriod && (
+                  <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
+                    {timePeriod}
+                  </Text>
+                )}
+              </View>
+            </View>
+          </Pressable>
+        </Animated.View>
+      </GestureDetector>
+    </View>
   );
 }

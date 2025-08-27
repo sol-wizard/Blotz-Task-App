@@ -16,7 +16,6 @@ public interface ITaskService
     public Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id);
     public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDto addTaskItem, string userId);
     public Task<TaskStatusResultDto> TaskStatusUpdate(int id, bool? isDone = null);
-    public Task<List<TaskItemDto>> GetTaskByDate(DateTime startDateUtc, DateTime endDateUtc, string userId);
     public Task<List<TaskItemDto>> GetTodayDoneTasks(string userId);
     public Task<MonthlyStatDto> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
@@ -249,42 +248,12 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task<List<TaskItemDto>> GetTaskByDate(DateTime startDateUtc, DateTime endDateUtc, string userId)
-    {
-        try
-        {
-            return await _dbContext.TaskItems
-                .Where(task => task.UserId == userId)
-                .Where(task => task.EndTime >= startDateUtc && task.EndTime < endDateUtc)
-                .Select(task => new TaskItemDto
-                {
-                    Id = task.Id,
-                    Title = task.Title,
-                    Description = task.Description,
-                    EndTime = task.EndTime,
-                    IsDone = task.IsDone,
-                    Label = new LabelDto
-                    {
-                        LabelId = task.Label.LabelId,
-                        Name = task.Label.Name,
-                        Color = task.Label.Color
-                    },
-                    HasTime = task.HasTime
-                })
-                .ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Unhandled exception: {ex.Message}");
-        }
-    }
-
     public async Task<MonthlyStatDto> GetMonthlyStats(string userId, int year, int month)
     {
         try
         {
             var filteredTasks = await _dbContext.TaskItems
-                .Where(x => x.UserId == userId && x.EndTime.Month == month && x.EndTime.Year == year)
+                .Where(x => x.UserId == userId && x.EndTime != null && x.EndTime.Value.Month == month && x.EndTime.Value.Year == year)
                 .GroupBy(x => new { x.Label.Name, x.IsDone })
                 .Select(g => new
                 {
@@ -457,14 +426,21 @@ public class TaskService : ITaskService
             TodayTasks = new List<TaskItemDto>(),
             TomorrowTasks = new List<TaskItemDto>(),
             WeekTasks = new List<TaskItemDto>(),
+            FloatingTasks = new List<TaskItemDto>(),
             MonthTasks = new Dictionary<int, List<TaskItemDto>>()
         };
 
         foreach (var task in tasks)
         {
-            DateTime localDueDate = TimeZoneInfo.ConvertTime(task.EndTime, timeZoneInfo).Date;
+            DateTime? localDueDate = task.EndTime is null
+                ? null
+                : TimeZoneInfo.ConvertTime(task.EndTime.Value, timeZoneInfo).Date;
 
-            if (localDueDate < startOfToday && !task.IsDone)
+            if (localDueDate is null)
+            {
+                scheduledTasksDto.FloatingTasks.Add(task);
+            }
+            else if (localDueDate < startOfToday && !task.IsDone)
             {
                 scheduledTasksDto.OverdueTasks.Add(task);
             }
@@ -482,8 +458,8 @@ public class TaskService : ITaskService
             }
             else
             {
-                scheduledTasksDto.MonthTasks.TryAdd(localDueDate.Month, new List<TaskItemDto>());
-                scheduledTasksDto.MonthTasks[localDueDate.Month].Add(task);
+                scheduledTasksDto.MonthTasks.TryAdd(localDueDate.Value.Month, new List<TaskItemDto>());
+                scheduledTasksDto.MonthTasks[localDueDate.Value.Month].Add(task);
             }
         }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   SafeAreaView,
   FlatList,
@@ -11,17 +11,21 @@ import {
   WeekCalendar,
   DateData,
 } from "react-native-calendars";
+import { Snackbar } from "react-native-paper";
+
 import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
 import TaskCard from "../components/task-card";
-
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
+  deleteTask,
 } from "../services/task-service";
-import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import TaskDetailBottomSheet, {
+  TaskDetailBottomSheetHandle,
+} from "../components/task-detail-bottomsheet";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -30,10 +34,14 @@ export default function CalendarPage() {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
     undefined
   );
+  const taskDetailSheetRef = useRef<TaskDetailBottomSheetHandle>(null);
+  const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
+    visible: false,
+    text: "",
+  });
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -64,24 +72,33 @@ export default function CalendarPage() {
     }
   };
 
-  const renderTask = ({ item }: { item: TaskDetailDTO }) => {
-    const task = item as TaskDetailDTO;
+  const presentSheet = (task: TaskDetailDTO) => {
+    setSelectedTask(task);
+    requestAnimationFrame(() => taskDetailSheetRef.current?.present());
+  };
 
-    return (
-      <TaskCard
-        id={task.id.toString()}
-        title={task.title}
-        startTime={task.hasTime ? format(task.endTime, "p") : undefined}
-        isCompleted={task.isDone}
-        onToggleComplete={(id, completed) => {
-          handleToggleTask(task);
-        }}
-        onPress={() => {
-          setSelectedTask(task);
-          setIsBottomSheetVisible(true);
-        }}
-      />
-    );
+  const renderTask = ({ item }: { item: TaskDetailDTO }) => (
+    <TaskCard
+      id={item.id.toString()}
+      title={item.title}
+      startTime={item.startTime}
+      endTime={item.endTime}
+      isCompleted={item.isDone}
+      onToggleComplete={() => handleToggleTask(item)}
+      onPress={() => presentSheet(item)}
+      onDelete={async () => {await handleDeleteTask(item.id);}}
+    />
+  );
+
+  const handleDeleteTask = async (taskId: number) => {
+    try {
+      await deleteTask(taskId);
+      setTasksForSelectedDay(prev => prev.filter(t => t.id !== taskId)); // delete at frontend
+      setSnackbar({ visible: true, text: "Delete Successful" });
+    } catch (e) {
+      console.error(e);
+      setSnackbar({ visible: true, text: "Delete Failed, please try again later" });
+    }
   };
 
   return (
@@ -106,26 +123,8 @@ export default function CalendarPage() {
             textDayFontWeight: "bold",
             textDayHeaderFontWeight: "bold",
           }}
-          firstDay={1} // Monday as the first day of the week
+          firstDay={1}
         />
-        {/* week+month Calendar */}
-        {/* <ExpandableCalendar
-            // initialPosition={ExpandableCalendar.positions.CLOSED}
-            markedDates={marked}
-            // markingType={'multi-dot'}
-            current={selectedDay}
-            theme={{
-              selectedDayBackgroundColor: '#2d4150',
-              todayTextColor: '#2d4150',
-              arrowColor: '#2d4150',
-              monthTextColor: '#2d4150',
-              textMonthFontWeight: 'bold',
-              textDayFontWeight: 'bold',
-              textDayHeaderFontWeight: 'bold',
-            }}
-            firstDay={1} // Monday as the first day of the week
-            hideKnob={true}
-          /> */}
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
@@ -147,16 +146,21 @@ export default function CalendarPage() {
         )}
       </CalendarProvider>
 
-      {isBottomSheetVisible && (
-        <TaskDetailBottomSheet
-          task={selectedTask}
-          isVisible={isBottomSheetVisible}
-          onClose={() => {
-            setIsBottomSheetVisible(false);
-            setSelectedTask(undefined);
-          }}
-        />
-      )}
+      <TaskDetailBottomSheet
+        ref={taskDetailSheetRef}
+        task={selectedTask}
+        onDismiss={() => {
+          setSelectedTask(undefined);
+        }}
+      />
+
+      <Snackbar
+        visible={snackbar.visible}
+        onDismiss={() => setSnackbar({ visible: false, text: "" })}
+        duration={2200}
+      >
+        {snackbar.text}
+      </Snackbar>
     </SafeAreaView>
   );
 }
