@@ -49,7 +49,7 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
     }
         
     [HttpGet("by-date")]
-    public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery] DateTime startDateUtc, CancellationToken ct)
+    public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery] DateTime startDateUtc, [FromQuery] bool includeFloatingForToday, CancellationToken ct)
     {
         var userId = HttpContext.Items["UserId"] as string;
 
@@ -61,7 +61,8 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDateUtc = startDateUtc
+            StartDateUtc = startDateUtc,
+            IncludeFloatingForToday = includeFloatingForToday
         };
         
         var result = await getTasksByDateQueryHandler.Handle(query, ct);

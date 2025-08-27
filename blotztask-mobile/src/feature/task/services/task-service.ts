@@ -5,9 +5,9 @@ import { AddTaskItemDTO } from "../models/add-task-item-dto";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_URL as string;
 
-export async function fetchTasksForDate(date: Date): Promise<TaskDetailDTO[]> {
+export async function fetchTasksForDate(date: Date, includeFloatingForToday: boolean): Promise<TaskDetailDTO[]> {
   const startDateUtc = getStartOfDayUtc(date).toISOString();
-  const url = `${API_BASE_URL}/api/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}`;
+  const url = `${API_BASE_URL}/api/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}&includeFloatingForToday=${includeFloatingForToday}`;
 
   const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: "GET" });
   return data;
