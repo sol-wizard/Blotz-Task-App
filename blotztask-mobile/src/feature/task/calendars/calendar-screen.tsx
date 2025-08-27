@@ -109,21 +109,23 @@ export default function CalendarPage() {
         onDateChanged={(date: string) => setSelectedDay(new Date(date))}
         showTodayButton={false}
       >
-<WeekCalendar
-  onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
-  current={format(selectedDay, "yyyy-MM-dd")}
-  theme={{
-    selectedDayBackgroundColor: "#2d4150",
-    todayTextColor: "#2d4150",
-    arrowColor: "#2d4150",
-    monthTextColor: "#2d4150",
-    textMonthFontWeight: "bold",
-    textDayFontWeight: "bold",
-    textDayHeaderFontWeight: "bold",
-  }}
-  allowShadow={false} 
-  firstDay={1}
-/>
+        <WeekCalendar
+          onDayPress={(day: DateData) =>
+            setSelectedDay(new Date(day.dateString))
+          }
+          current={format(selectedDay, "yyyy-MM-dd")}
+          theme={{
+            selectedDayBackgroundColor: "#2d4150",
+            todayTextColor: "#2d4150",
+            arrowColor: "#2d4150",
+            monthTextColor: "#2d4150",
+            textMonthFontWeight: "bold",
+            textDayFontWeight: "bold",
+            textDayHeaderFontWeight: "bold",
+          }}
+          allowShadow={false}
+          firstDay={1}
+        />
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
