@@ -53,7 +53,9 @@ public class TaskService : ITaskService
 
     public async Task<TaskItemDto> GetTaskById(int id)
     {
-        var task = await _dbContext.TaskItems.FindAsync(id);
+        var task = await _dbContext.TaskItems
+            .Include(t => t.Label)
+            .FirstOrDefaultAsync(t => t.Id == id);
 
         if (task == null)
         {
@@ -69,7 +71,12 @@ public class TaskService : ITaskService
             IsDone = task.IsDone,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
-            Label = new LabelDto { Name = task.Label.Name, Color = task.Label.Color },
+            Label = task.Label != null ? new LabelDto
+            {
+                LabelId = task.Label.LabelId,
+                Name = task.Label.Name,
+                Color = task.Label.Color
+            } : null,
             HasTime = task.HasTime
         };
 
@@ -235,12 +242,12 @@ public class TaskService : ITaskService
                     Description = task.Description,
                     EndTime = task.EndTime,
                     IsDone = task.IsDone,
-                    Label = new LabelDto
+                    Label = task.Label != null ? new LabelDto
                     {
                         LabelId = task.Label.LabelId,
                         Name = task.Label.Name,
                         Color = task.Label.Color
-                    },
+                    } : null,
                     HasTime = task.HasTime
                 })
                 .ToListAsync();
@@ -345,12 +352,12 @@ public class TaskService : ITaskService
                     Description = task.Description,
                     EndTime = task.EndTime,
                     IsDone = task.IsDone,
-                    Label = new LabelDto
+                    Label = task.Label != null ? new LabelDto
                     {
                         LabelId = task.Label.LabelId,
                         Name = task.Label.Name,
                         Color = task.Label.Color
-                    },
+                    } : null,
                     HasTime = task.HasTime,
                 })
                 .ToListAsync();
@@ -386,12 +393,12 @@ public class TaskService : ITaskService
                     Description = task.Description,
                     EndTime = task.EndTime,
                     IsDone = task.IsDone,
-                    Label = new LabelDto
+                    Label = task.Label != null ? new LabelDto
                     {
                         LabelId = task.Label.LabelId,
                         Name = task.Label.Name,
                         Color = task.Label.Color
-                    },
+                    } : null,
                     HasTime = task.HasTime
                 })
                 .OrderBy(t => t.EndTime)
@@ -485,12 +492,12 @@ public class TaskService : ITaskService
                     Description = t.Description,
                     EndTime = t.EndTime,
                     IsDone = t.IsDone,
-                    Label = new LabelDto
+                    Label = t.Label != null ? new LabelDto
                     {
                         LabelId = t.Label.LabelId,
                         Name = t.Label.Name,
                         Color = t.Label.Color
-                    },
+                    } : null,
                     HasTime = t.HasTime
                 })
                 .ToListAsync();
