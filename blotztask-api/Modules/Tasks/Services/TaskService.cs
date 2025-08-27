@@ -129,6 +129,7 @@ public class TaskService : ITaskService
             {
                 Title = addTaskItem.Title,
                 Description = addTaskItem.Description,
+                StartTime = addTaskItem.StartTime,
                 EndTime = addTaskItem.EndTime,
                 LabelId = addTaskItem.LabelId,
                 UserId = userId,
