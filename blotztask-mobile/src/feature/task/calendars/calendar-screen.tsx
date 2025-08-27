@@ -123,6 +123,7 @@ export default function CalendarPage() {
             textDayFontWeight: "bold",
             textDayHeaderFontWeight: "bold",
           }}
+          allowShadow={false} 
           firstDay={1}
         />
 
