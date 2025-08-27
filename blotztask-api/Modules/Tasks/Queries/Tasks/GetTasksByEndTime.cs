@@ -12,15 +12,15 @@ public class GetTasksByDateQuery
     [Required]
     public DateTime StartDateUtc { get; init; }
     [Required]
-    public bool includeFloatingForToday { get; init; } = false;
+    public bool IncludeFloatingForToday { get; init; } = false;
 }
 
 public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksByDateQueryHandler> logger)
 {
     public async Task<List<TaskByDateItemDto>> Handle(GetTasksByDateQuery query, CancellationToken ct = default)
     {
-        logger.LogInformation("Fetching tasks by end time for user {UserId} up to {StartDateUtc}. Whether including floating tasks for today is {includeFloatingForToday}", 
-            query.UserId, query.StartDateUtc, query.includeFloatingForToday);
+        logger.LogInformation("Fetching tasks by end time for user {UserId} up to {StartDateUtc}. Whether including floating tasks for today is {IncludeFloatingForToday}", 
+            query.UserId, query.StartDateUtc, query.IncludeFloatingForToday);
         
         DateTime endDateUtc = query.StartDateUtc.AddDays(1);
 
@@ -30,8 +30,8 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                 // Tasks in date range
                 (t.EndTime != null && t.EndTime >= query.StartDateUtc && t.EndTime < endDateUtc)
                 ||
-                // Floating tasks (today only, not done)
-                (query.includeFloatingForToday && query.StartDateUtc.Date == DateTime.UtcNow.Date && t.EndTime == null && !t.IsDone)
+                // Floating tasks
+                (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null && !t.IsDone)
             ))
             .Select(task => new TaskByDateItemDto
             {
