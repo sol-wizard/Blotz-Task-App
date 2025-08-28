@@ -154,14 +154,13 @@ export default function TaskCard({
             <View className="flex-row items-center p-5">
               {/* Left combination: vertical bar + checkbox; overall added leftExtrasStyle */}
               <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
-                {/* Grey dividing line */}
-                <View className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-3" />
-
                 {/* Custom checkbox */}
                 <CustomCheckbox
                   checked={checked}
                   onPress={handleToggleComplete}
                 />
+                {/* Grey dividing line */}
+                <View className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-3" />
               </Animated.View>
 
               {/* Content */}
