@@ -59,6 +59,19 @@ public class AiTaskGenerateService : IAiTaskGenerateService
             - Always return every valid task, not just one.
             """
         );
+        
+        // Check if the latest user message contains Mandarin characters
+        // If so, add a note to the system message to ensure relevant task extraction is in Mandarin
+        var latestUserMessage = chatHistory.LastOrDefault()?.Content;
+        if (!string.IsNullOrEmpty(latestUserMessage) && IsMandarin(latestUserMessage))
+        {
+            tempHistory.AddSystemMessage(
+                """
+                Note: The latest user message contains Mandarin characters. Please ensure that the extracted tasks are relevant
+                to the Mandarin content and provide translations if necessary.
+                """
+            );
+        }
     
         var extractTasksFunction = _kernel.Plugins["TaskExtractionPlugin"]["ExtractTasks"];
         var executionSettings = new PromptExecutionSettings
@@ -134,6 +147,17 @@ public class AiTaskGenerateService : IAiTaskGenerateService
         _chatHistoryManagerService.SetChatHistory(conversationId, chatHistory);
 
         return Task.FromResult(chatHistory);
+    }
+    
+    /// <summary>
+    ///   Determines if the given text contains Mandarin characters.
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    private static bool IsMandarin(string text)
+    {
+        // Basic check: Chinese characters fall between \u4e00 and \u9fff
+        return text.Any(c => c >= 0x4e00 && c <= 0x9fff);
     }
     
 }
