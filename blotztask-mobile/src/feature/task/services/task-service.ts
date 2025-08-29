@@ -44,19 +44,34 @@ export const addTaskItem = async (
   }
 }
 
-export async function updateTaskItem(taskId: number, payload: EditTaskValues) {
+export async function updateTaskItem(
+  taskId: number,
+  payload: EditTaskValues
+): Promise<void> {
   try {
-    const result = await fetchWithAuth<TaskDetailDTO>(
+    const dto = {
+      id: taskId,
+      title: payload.title,
+      description: payload.description,
+      endTime: payload.endTime,
+      repeat: payload.repeat,
+      labelId: payload.labelId ? Number(payload.labelId) : 0,
+      isDone: false,
+      hasTime: !!payload.endTime,
+    }
+    // console.log('sending update dto:', dto)
+    // const result = await fetchWithAuth<TaskDetailDTO>
+    await fetchWithAuth<any>(
       `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`,
       {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(dto),
       }
     )
-    return result
+    // return result
   } catch (error) {
     console.error('Error updating task:', error)
     throw error

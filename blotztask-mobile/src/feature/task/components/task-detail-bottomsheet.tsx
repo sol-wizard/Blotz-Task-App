@@ -4,6 +4,7 @@ import {
   useRef,
   useCallback,
   useState,
+  useEffect,
 } from 'react'
 import { View, TouchableOpacity } from 'react-native'
 import {
@@ -34,10 +35,14 @@ type TaskDetailBottomSheetProps = {
 const TaskDetailBottomSheet = forwardRef<
   TaskDetailBottomSheetHandle,
   TaskDetailBottomSheetProps
->(({ task, onDismiss, onChange }, ref) => {
+>(({ task, onDismiss, onChange, onEdited }, ref) => {
   const taskDetailModalRef = useRef<BottomSheetModal>(null)
   const [isEditVisible, setIsEditVisible] = useState(false)
+  const [localTask, setLocalTask] = useState<TaskDetailDTO | undefined>(task)
   // const [editTask, setEditTask] = useState<TaskDetailDTO | undefined>(undefined)
+  useEffect(() => {
+    setLocalTask(task)
+  }, [task])
 
   useImperativeHandle(ref, () => ({
     present: () => taskDetailModalRef.current?.present(),
@@ -93,7 +98,7 @@ const TaskDetailBottomSheet = forwardRef<
         }}
       >
         <BottomSheetView className="flex-1 bg-white px-4 pt-3 pb-24">
-          {task ? (
+          {localTask ? (
             <>
               {/* Header */}
               <View className="flex-row items-center justify-between mb-2">
@@ -101,7 +106,7 @@ const TaskDetailBottomSheet = forwardRef<
                   className="flex-1 text-gray-900 mr-3 text-xl leading-6"
                   style={{ fontWeight: '800' }}
                 >
-                  {task.title}
+                  {localTask.title}
                 </Text>
 
                 <View className="flex-row items-center gap-2">
@@ -134,32 +139,32 @@ const TaskDetailBottomSheet = forwardRef<
               </View>
 
               <View className="flex-row items-center mb-3 gap-2 mt-1">
-                {task.label ? (
-                  <TaskDetailTag>{task.label.name}</TaskDetailTag>
+                {localTask.label ? (
+                  <TaskDetailTag>{localTask.label.name}</TaskDetailTag>
                 ) : null}
                 <TaskDetailTag>
-                  {task.isDone ? 'Done' : 'In progress'}
+                  {localTask.isDone ? 'Done' : 'In progress'}
                 </TaskDetailTag>
               </View>
 
               <View className="h-px bg-gray-200 mb-3" />
 
-              {task?.startTime ? (
+              {localTask?.startTime ? (
                 <View className="flex-row items-center mb-2">
                   <MaterialIcons name="event" size={18} color="#6B7280" />
                   <Text className="ml-2.5 text-base leading-5 text-gray-900">
-                    {task.startTime}
+                    {localTask.startTime}
                   </Text>
                   <Text className="ml-2.5 text-base leading-5 text-gray-500">
                     →
                   </Text>
-                  {task?.endTime ? (
+                  {localTask?.endTime ? (
                     <Text className="ml-2 text-base leading-5 text-gray-900">
-                      {task.endTime}
+                      {localTask.endTime}
                     </Text>
                   ) : null}
                 </View>
-              ) : task?.endTime ? (
+              ) : localTask?.endTime ? (
                 <View className="flex-row items-center mb-2">
                   <MaterialIcons
                     name="calendar-today"
@@ -167,12 +172,12 @@ const TaskDetailBottomSheet = forwardRef<
                     color="#6B7280"
                   />
                   <Text className="ml-2.5 text-base leading-5 text-gray-900">
-                    {task.endTime}
+                    {localTask.endTime}
                   </Text>
                 </View>
               ) : null}
 
-              {task.description ? (
+              {localTask.description ? (
                 <View className="flex-row items-start">
                   <MaterialIcons
                     name="description"
@@ -181,7 +186,7 @@ const TaskDetailBottomSheet = forwardRef<
                     className="mt-0.5"
                   />
                   <Text className="flex-1 ml-2.5 text-base leading-5 text-gray-900">
-                    {task.description}
+                    {localTask.description}
                   </Text>
                 </View>
               ) : null}
@@ -191,17 +196,14 @@ const TaskDetailBottomSheet = forwardRef<
           )}
         </BottomSheetView>
       </BottomSheetModal>
-      {task && isEditVisible && (
+      {localTask && isEditVisible && (
         <EditTaskBottomSheet
           isVisible={isEditVisible}
-          task={task!}
+          task={localTask}
           // task={task!}
-          onClose={(visible) => {
-            setIsEditVisible(visible)
-            // if (!visible) {
-            //   // taskDetailModalRef.current?.present()
-            //   setTimeout(() => taskDetailModalRef.current?.present(), 250)
-            // }
+          onClose={setIsEditVisible}
+          onEdited={(updatedTask) => {
+            setLocalTask(updatedTask)
           }}
         />
       )}

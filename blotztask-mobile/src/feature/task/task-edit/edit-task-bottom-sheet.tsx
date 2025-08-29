@@ -8,24 +8,22 @@ import {
 import { TaskDetailDTO } from '@/shared/models/task-detail-dto'
 import { EditTaskForm } from './edit-task-form'
 import { updateTaskItem } from '../services/task-service'
+import { fetchAllLabel } from '@/shared/services/label-service'
 
 // const [isEditVisible,setIsEditVisible]=useState(false);
 export const EditTaskBottomSheet = ({
   isVisible,
   onClose,
   task,
+  onEdited,
 }: {
   isVisible: boolean
   onClose: (isVisible: boolean) => void
   task: TaskDetailDTO
+  onEdited?: (updated: TaskDetailDTO) => void
 }) => {
   const sheetRef = useRef<BottomSheetModal>(null)
-  // const handleSheetChange = useCallback(
-  //   (index: number) => {
-  //     if (index === -1) onClose(false)
-  //   },
-  //   [onClose]
-  // )
+
   const renderBackdrop = useCallback(
     (props: any) => (
       <BottomSheetBackdrop
@@ -63,11 +61,37 @@ export const EditTaskBottomSheet = ({
             description: task.description,
             endTime: task.endTime,
             repeat: (task as any).repeat ?? 'none',
-            labelId: task.label?.labelId ? String(task.label.labelId) : '',
+            labelId: task.label?.labelId ?? 0,
           }}
           onSubmit={async (values) => {
-            await updateTaskItem(task.id, values)
-            onClose(false)
+            try {
+              await updateTaskItem(task.id, values)
+              const allLabels = await fetchAllLabel()
+              const selectdLabel = allLabels.find(
+                (l) => l.labelId === Number(values.labelId)
+              )
+              const updatedTask: TaskDetailDTO = {
+                ...task,
+                title: values.title,
+                description: values.description,
+                repeat: values.repeat ?? 'none',
+                label: values.labelId
+                  ? {
+                      labelId: Number(values.labelId),
+                      name: selectdLabel?.name ?? '',
+                      color: task.label?.color ?? '#FFFFFF',
+                    }
+                  : {
+                      labelId: 0,
+                      name: '',
+                      color: '#FFFFFF',
+                    },
+              }
+              onEdited?.(updatedTask)
+              onClose(false)
+            } catch (err) {
+              console.error('updateTaskItem failed', err)
+            }
           }}
           onCancel={() => onClose(false)}
         />

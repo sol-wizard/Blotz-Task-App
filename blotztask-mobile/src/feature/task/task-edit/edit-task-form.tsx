@@ -14,6 +14,7 @@ import {
 import { RepeatMenu } from '../task-creation/repeat-menu'
 import { LabelMenu } from '../task-creation/label-menu'
 import DateBottomSheetTrigger from '@/feature/task/task-edit/dateSelector'
+import { useEffect } from 'react'
 
 // const schema = z.object({
 //   title: z
@@ -42,18 +43,31 @@ export const EditTaskForm = ({
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting, isValid },
   } = useForm<EditTaskInput>({
     resolver: zodResolver(EditTaskSchema),
     mode: 'onChange',
     defaultValues: initialValues,
   })
-  const pressSubmit = () => {
-    void handleSubmit((raw: EditTaskInput) => {
-      const parsed = EditTaskSchema.parse(raw)
-      onSubmit(parsed)
-    })()
-  }
+  useEffect(() => {
+    reset(initialValues)
+  }, [initialValues, reset])
+
+  // const pressSubmit = () => {
+  //   void handleSubmit((raw: EditTaskInput) => {
+  //     const parsed = EditTaskSchema.parse(raw)
+  //     onSubmit(parsed)
+  //   })()
+  // }
+  const pressSubmit = handleSubmit(
+    (data) => {
+      onSubmit(EditTaskSchema.parse(data))
+    },
+    (errors) => {
+      console.log('❌ validation errors:', errors)
+    }
+  )
   return (
     <View className="gap-3">
       <View className="mb-3">
@@ -110,8 +124,8 @@ export const EditTaskForm = ({
       {/* button */}
       <View className="mt-2">
         <TouchableOpacity
-          className={`bg-black rounded-2xl py-5 items-center mt-4 ${
-            isValid ? 'bg-gray-300' : ' bg-gray-200'
+          className={` rounded-2xl py-5 items-center mt-4 ${
+            isValid ? 'bg-black' : ' bg-gray-200'
           }`}
           onPress={pressSubmit}
           disabled={!isValid || isSubmitting}
