@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { View, Text, TouchableOpacity } from 'react-native'
-import React from 'react'
 import { FormTextInput } from '@/shared/components/ui/form-text-input'
 import {
   EditTaskSchema,

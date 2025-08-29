@@ -1,8 +1,9 @@
-import { Portal } from 'react-native-paper'
-import React, { useCallback, useRef } from 'react'
-import BottomSheet, {
+// import { Portal } from 'react-native-paper'
+import { useCallback, useEffect, useRef } from 'react'
+import {
   BottomSheetBackdrop,
   BottomSheetView,
+  BottomSheetModal,
 } from '@gorhom/bottom-sheet'
 import { TaskDetailDTO } from '@/shared/models/task-detail-dto'
 import { EditTaskForm } from './edit-task-form'
@@ -18,13 +19,13 @@ export const EditTaskBottomSheet = ({
   onClose: (isVisible: boolean) => void
   task: TaskDetailDTO
 }) => {
-  const sheetRef = useRef<BottomSheet>(null)
-  const handleSheetChange = useCallback(
-    (index: number) => {
-      if (index === -1) onClose(false)
-    },
-    [onClose]
-  )
+  const sheetRef = useRef<BottomSheetModal>(null)
+  // const handleSheetChange = useCallback(
+  //   (index: number) => {
+  //     if (index === -1) onClose(false)
+  //   },
+  //   [onClose]
+  // )
   const renderBackdrop = useCallback(
     (props: any) => (
       <BottomSheetBackdrop
@@ -36,56 +37,41 @@ export const EditTaskBottomSheet = ({
     ),
     []
   )
-  // const initialValues: EditTaskInput = {
-  //   title: task.title,
-  //   description: task.description,
-  //   endTime: task.endTime,
-  //   labelId: task.label.labelId ? String(task.label.labelId) : '',
-  // }
-  // const handleSumbit = async (raw: EditTaskInput) => {
-  //   const values = EditTaskSchema.parse(raw)
-  //   await updateTaskItem(task.id, values as any)
-  //   onClose(false)
-  // }
+  //show/hide modal
+  useEffect(() => {
+    if (isVisible) {
+      sheetRef.current?.present()
+    } else {
+      sheetRef.current?.dismiss()
+    }
+  }, [isVisible])
 
   return (
-    // <View className="absolute insert-0 z-50">
-    <Portal>
-      <BottomSheet
-        ref={sheetRef}
-        index={isVisible ? 0 : -1}
-        snapPoints={['55%']}
-        keyboardBlurBehavior="restore"
-        backdropComponent={renderBackdrop}
-        onChange={handleSheetChange}
-        enablePanDownToClose
-        onClose={() => onClose(false)}
-      >
-        <BottomSheetView style={{ padding: 16 }}>
-          <EditTaskForm
-            initialValues={{
-              title: task.title,
-              description: task.description,
-              endTime: task.endTime,
-              repeat: (task as any).repeat ?? 'none',
-              labelId: task.label.labelId ? String(task.label.labelId) : '',
-            }}
-            onSubmit={async (values) => {
-              await updateTaskItem(task.id, values)
-              onClose(false)
-            }}
-            onCancel={() => onClose(false)}
-          />
-        </BottomSheetView>
-      </BottomSheet>
-    </Portal>
+    <BottomSheetModal
+      ref={sheetRef}
+      snapPoints={['55%']}
+      keyboardBlurBehavior="restore"
+      backdropComponent={renderBackdrop}
+      // onChange={handleSheetChange}
+      enablePanDownToClose
+      onDismiss={() => onClose(false)}
+    >
+      <BottomSheetView style={{ padding: 16 }}>
+        <EditTaskForm
+          initialValues={{
+            title: task.title,
+            description: task.description,
+            endTime: task.endTime,
+            repeat: (task as any).repeat ?? 'none',
+            labelId: task.label?.labelId ? String(task.label.labelId) : '',
+          }}
+          onSubmit={async (values) => {
+            await updateTaskItem(task.id, values)
+            onClose(false)
+          }}
+          onCancel={() => onClose(false)}
+        />
+      </BottomSheetView>
+    </BottomSheetModal>
   )
 }
-
-// interface TaskEditCardProp {
-//   id: string
-//   title: string
-//   isCompleted: boolean
-//   startTime?: string
-//   endTime?: string
-// }
