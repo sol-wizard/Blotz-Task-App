@@ -10,7 +10,6 @@ public class DeletedTaskItem
     public int Id { get; set; }
     public required string Title { get; set; }
     public string? Description { get; set; }
-    public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -19,10 +18,10 @@ public class DeletedTaskItem
 
     public required string UserId { get; set; }
     [ForeignKey("UserId")]
-    public User User { get; set; }
+    public User? User { get; set; }
 
-    public int LabelId { get; set; } // Keep as non-nullable since we convert null to 0 when deleting
+    public int? LabelId { get; set; }
     [ForeignKey("LabelId")]
-    public Label Label { get; set; }
-    public bool HasTime { get; set; }
+    public Label? Label { get; set; }
+    public bool? HasTime { get; set; }
 }

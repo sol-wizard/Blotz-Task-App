@@ -35,7 +35,6 @@ public class TaskService : ITaskService
     public async Task<List<TaskItemDto>> GetTodoItemsByUser(string userId, CancellationToken cancellationToken)
     {
         return await _dbContext.TaskItems
-            .Include(x => x.Label)
             .Where(x => x.UserId == userId)
             .OrderBy(x => x.EndTime)
             .Select(x => new TaskItemDto
@@ -43,7 +42,6 @@ public class TaskService : ITaskService
                 Id = x.Id,
                 Title = x.Title,
                 Description = x.Description,
-                StartTime = x.StartTime,
                 EndTime = x.EndTime,
                 IsDone = x.IsDone,
                 Label = x.Label != null ? new LabelDto { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color } : null,
@@ -54,9 +52,7 @@ public class TaskService : ITaskService
 
     public async Task<TaskItemDto> GetTaskById(int id)
     {
-        var task = await _dbContext.TaskItems
-            .Include(t => t.Label)
-            .FirstOrDefaultAsync(t => t.Id == id);
+        var task = await _dbContext.TaskItems.FindAsync(id);
 
         if (task == null)
         {
@@ -68,12 +64,11 @@ public class TaskService : ITaskService
             Id = task.Id,
             Title = task.Title,
             Description = task.Description,
-            StartTime = task.StartTime,
             EndTime = task.EndTime,
             IsDone = task.IsDone,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
-            Label = task.Label != null ? new LabelDto { LabelId = task.Label.LabelId, Name = task.Label.Name, Color = task.Label.Color } : null,
+            Label = task.Label != null ? new LabelDto { Name = task.Label.Name, Color = task.Label.Color } : null,
             HasTime = task.HasTime
         };
 
@@ -93,15 +88,14 @@ public class TaskService : ITaskService
             Id = taskItem.Id,
             Title = taskItem.Title,
             Description = taskItem.Description,
-            StartTime = taskItem.StartTime,
             EndTime = taskItem.EndTime,
             IsDone = taskItem.IsDone,
             CreatedAt = taskItem.CreatedAt,
             UpdatedAt = taskItem.UpdatedAt,
             DeletedAt = DateTime.UtcNow, // Track when it was deleted
             UserId = taskItem.UserId,
-            LabelId = taskItem.LabelId ?? 0,
-            HasTime = taskItem.HasTime ?? false
+            LabelId = taskItem.LabelId,
+            HasTime = taskItem.HasTime
         };
         try
         {
@@ -204,7 +198,6 @@ public class TaskService : ITaskService
             var tomorrowUtc = todayUtc.AddDays(1);
 
             return await _dbContext.TaskItems
-                .Include(task => task.Label)
                 .Where(task => task.UserId == userId)
                 .Where(task => task.IsDone == true)
                 .Where(task => task.EndTime >= todayUtc && task.EndTime < tomorrowUtc)
@@ -213,15 +206,14 @@ public class TaskService : ITaskService
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
-                    StartTime = task.StartTime,
                     EndTime = task.EndTime,
                     IsDone = task.IsDone,
-                    Label = task.Label != null ? new LabelDto
+                    Label = new LabelDto
                     {
                         LabelId = task.Label.LabelId,
                         Name = task.Label.Name,
                         Color = task.Label.Color
-                    } : null,
+                    },
                     HasTime = task.HasTime
                 })
                 .ToListAsync();
@@ -281,13 +273,12 @@ public class TaskService : ITaskService
         {
             Title = deletedTask.Title,
             Description = deletedTask.Description,
-            StartTime = deletedTask.StartTime,
             EndTime = deletedTask.EndTime,
             IsDone = deletedTask.IsDone,
             CreatedAt = deletedTask.CreatedAt,
             UpdatedAt = DateTime.UtcNow,
             UserId = deletedTask.UserId,
-            LabelId = deletedTask.LabelId == 0 ? null : deletedTask.LabelId,
+            LabelId = deletedTask.LabelId,
             HasTime = deletedTask.HasTime,
         };
         try
@@ -317,7 +308,6 @@ public class TaskService : ITaskService
         try
         {
             return await _dbContext.TaskItems
-                .Include(task => task.Label)
                 .Where(task =>
                     EF.Functions.Like(task.Title, $"%{query}%") || EF.Functions.Like(task.Description, $"%{query}%"))
                 .Select(task => new TaskItemDto
@@ -325,15 +315,14 @@ public class TaskService : ITaskService
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
-                    StartTime = task.StartTime,
                     EndTime = task.EndTime,
                     IsDone = task.IsDone,
-                    Label = task.Label != null ? new LabelDto
+                    Label = new LabelDto
                     {
                         LabelId = task.Label.LabelId,
                         Name = task.Label.Name,
                         Color = task.Label.Color
-                    } : null,
+                    },
                     HasTime = task.HasTime,
                 })
                 .ToListAsync();
@@ -359,7 +348,6 @@ public class TaskService : ITaskService
             DateTime endOfYearUtc = TimeZoneInfo.ConvertTimeToUtc(endOfYearLocal, timeZoneInfo);
 
             var tasks = await _dbContext.TaskItems
-                .Include(t => t.Label)
                 .Where(t => t.UserId == userId && t.EndTime != null
                                                && t.EndTime >= startOfYearUtc && t.EndTime <= endOfYearUtc
                                                && (!t.IsDone))
@@ -368,15 +356,14 @@ public class TaskService : ITaskService
                     Id = task.Id,
                     Title = task.Title,
                     Description = task.Description,
-                    StartTime = task.StartTime,
                     EndTime = task.EndTime,
                     IsDone = task.IsDone,
-                    Label = task.Label != null ? new LabelDto
+                    Label = new LabelDto
                     {
                         LabelId = task.Label.LabelId,
                         Name = task.Label.Name,
                         Color = task.Label.Color
-                    } : null,
+                    },
                     HasTime = task.HasTime
                 })
                 .OrderBy(t => t.EndTime)
