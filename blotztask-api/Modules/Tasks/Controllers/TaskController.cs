@@ -13,12 +13,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Route("/api/[controller]")]
 [Authorize]
-public class TaskController(
-    ITaskService taskService,
-    GetTasksByDateQueryHandler  getTasksByDateQueryHandler,
-    TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
-    AddTaskCommandHandler addTaskCommandHandler
-) : ControllerBase
+public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler  getTasksByDateQueryHandler, TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler, AddTaskCommandHandler addTaskCommandHandler) : ControllerBase
 {
     [HttpGet]
     [Obsolete("This endpoint is not in use and will be removed later.")]
