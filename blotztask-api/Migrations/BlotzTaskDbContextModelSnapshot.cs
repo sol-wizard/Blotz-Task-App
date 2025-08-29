@@ -44,7 +44,7 @@ namespace BlotzTask.Migrations
 
                     b.HasKey("LabelId");
 
-                    b.ToTable("Labels");
+                    b.ToTable("Labels", (string)null);
 
                     b.HasData(
                         new
@@ -89,18 +89,19 @@ namespace BlotzTask.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("EndTime")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<bool?>("HasTime")
+                    b.Property<bool>("HasTime")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDone")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("LabelId")
+                    b.Property<int>("LabelId")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -120,7 +121,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DeletedTaskItems");
+                    b.ToTable("DeletedTaskItems", (string)null);
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.Subtask", b =>
@@ -178,18 +179,19 @@ namespace BlotzTask.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("EndTime")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<bool?>("HasTime")
+                    b.Property<bool>("HasTime")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDone")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("LabelId")
+                    b.Property<int>("LabelId")
                         .HasColumnType("int");
 
                     b.Property<DateTimeOffset?>("StartTime")
@@ -212,7 +214,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TaskItems");
+                    b.ToTable("TaskItems", (string)null);
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Users.Domain.User", b =>
@@ -425,7 +427,9 @@ namespace BlotzTask.Migrations
                 {
                     b.HasOne("BlotzTask.Modules.Labels.Domain.Label", "Label")
                         .WithMany()
-                        .HasForeignKey("LabelId");
+                        .HasForeignKey("LabelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("BlotzTask.Modules.Users.Domain.User", "User")
                         .WithMany()
@@ -453,7 +457,9 @@ namespace BlotzTask.Migrations
                 {
                     b.HasOne("BlotzTask.Modules.Labels.Domain.Label", "Label")
                         .WithMany("TaskItems")
-                        .HasForeignKey("LabelId");
+                        .HasForeignKey("LabelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("BlotzTask.Modules.Users.Domain.User", "User")
                         .WithMany("TaskItems")
