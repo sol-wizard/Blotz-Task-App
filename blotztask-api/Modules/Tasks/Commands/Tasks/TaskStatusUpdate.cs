@@ -4,28 +4,28 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;
 
-public class TaskStatusUpdateQuery
+public class TaskStatusUpdateCommand
 {
     [Required]
     public int TaskId { get; set; }
     public bool? IsDone { get; set; }
 }
 
-public class TaskStatusUpdateQueryHandler(BlotzTaskDbContext db, ILogger<TaskStatusUpdateQueryHandler> logger)
+public class TaskStatusUpdateCommandHandler(BlotzTaskDbContext db, ILogger<TaskStatusUpdateCommandHandler> logger)
 {
-    public async Task<TaskStatusResultDto> Handle(TaskStatusUpdateQuery query, CancellationToken ct = default)
+    public async Task<TaskStatusResultDto> Handle(TaskStatusUpdateCommand command, CancellationToken ct = default)
     {
-        logger.LogInformation("Finding task {Id}", query.TaskId);
+        logger.LogInformation("Finding task {Id}", command.TaskId);
 
-        var task = await db.TaskItems.FindAsync(query.TaskId, ct);
+        var task = await db.TaskItems.FindAsync(command.TaskId, ct);
 
         if (task == null)
         {
-            throw new NotFoundException($"Task with ID {query.TaskId} was not found.");
+            throw new NotFoundException($"Task with ID {command.TaskId} was not found.");
         }
 
         // If task.IsDone is null, set it to be false, otherwise, toggle the task.IsDone
-        task.IsDone = query.IsDone ?? !task.IsDone;
+        task.IsDone = command.IsDone ?? !task.IsDone;
 
         logger.LogInformation("The completion status of task {Id} was changed to {IsDone}", task.Id, task.IsDone);
 

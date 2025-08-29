@@ -13,7 +13,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Route("/api/[controller]")]
 [Authorize]
-public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler  getTasksByDateQueryHandler, TaskStatusUpdateQueryHandler taskStatusUpdateQueryHandler) : ControllerBase
+public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler  getTasksByDateQueryHandler, TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler) : ControllerBase
 {
     [HttpGet]
     [Obsolete("This endpoint is not in use and will be removed later.")]
@@ -106,12 +106,12 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
     [HttpPut("task-completion-status/{id}")]
     public async Task<TaskStatusResultDto> TaskStatusUpdate(int id, CancellationToken ct)
     {
-        var query = new TaskStatusUpdateQuery
+        var command = new TaskStatusUpdateCommand
         {
             TaskId = id,
         };
 
-        var result = await taskStatusUpdateQueryHandler.Handle(query, ct);
+        var result = await taskStatusUpdateCommandHandler.Handle(command, ct);
 
         if (result == null)
         {
