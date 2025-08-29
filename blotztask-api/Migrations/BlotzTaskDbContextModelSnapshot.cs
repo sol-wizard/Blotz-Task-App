@@ -44,7 +44,7 @@ namespace BlotzTask.Migrations
 
                     b.HasKey("LabelId");
 
-                    b.ToTable("Labels");
+                    b.ToTable("Labels", (string)null);
 
                     b.HasData(
                         new
@@ -121,7 +121,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DeletedTaskItems");
+                    b.ToTable("DeletedTaskItems", (string)null);
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.Subtask", b =>
@@ -214,7 +214,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TaskItems");
+                    b.ToTable("TaskItems", (string)null);
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Users.Domain.User", b =>

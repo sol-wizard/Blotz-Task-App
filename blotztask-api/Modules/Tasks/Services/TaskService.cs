@@ -44,7 +44,7 @@ public class TaskService : ITaskService
                 Description = x.Description,
                 EndTime = x.EndTime,
                 IsDone = x.IsDone,
-                Label = new LabelDto { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color },
+                Label = x.Label != null ? new LabelDto { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color } : null,
                 HasTime = x.HasTime,
             })
             .ToListAsync(cancellationToken);
@@ -68,7 +68,7 @@ public class TaskService : ITaskService
             IsDone = task.IsDone,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
-            Label = new LabelDto { Name = task.Label.Name, Color = task.Label.Color },
+            Label = task.Label != null ? new LabelDto { Name = task.Label.Name, Color = task.Label.Color } : null,
             HasTime = task.HasTime
         };
 

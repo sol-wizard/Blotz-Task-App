@@ -13,14 +13,14 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Route("/api/[controller]")]
 [Authorize]
-public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler  getTasksByDateQueryHandler, TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler) : ControllerBase
+public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler getTasksByDateQueryHandler, TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler) : ControllerBase
 {
     [HttpGet]
     [Obsolete("This endpoint is not in use and will be removed later.")]
     public async Task<ActionResult<List<TaskItemDto>>> GetAllTask(CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        
+
         if (string.IsNullOrEmpty(userId))
         {
             throw new UnauthorizedAccessException("Could not find user id from token");
@@ -48,7 +48,7 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
     {
         return Ok(await taskService.GetTaskById(id));
     }
-        
+
     [HttpGet("by-date")]
     public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery] DateTime startDateUtc, [FromQuery] bool includeFloatingForToday, CancellationToken ct)
     {
@@ -58,14 +58,14 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
         {
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
-        
+
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
             StartDateUtc = startDateUtc,
             IncludeFloatingForToday = includeFloatingForToday
         };
-        
+
         var result = await getTasksByDateQueryHandler.Handle(query, ct);
         return result;
     }
@@ -86,6 +86,21 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
     [HttpPost]
     public async Task<IActionResult> AddTask([FromBody] AddTaskItemDto addtaskItem)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        if (string.IsNullOrWhiteSpace(addtaskItem.Title))
+        {
+            return BadRequest("Title is required and cannot be empty.");
+        }
+
+        if (addtaskItem.Title.Length > 200)
+        {
+            return BadRequest("Title cannot be longer than 200 characters.");
+        }
+
         var userId = HttpContext.Items["UserId"] as string;
 
         if (userId == null)
@@ -98,6 +113,21 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
     [HttpPut("{id}")]
     public async Task<IActionResult> EditTask(int id, [FromBody] EditTaskItemDto editTaskItem)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        if (string.IsNullOrWhiteSpace(editTaskItem.Title))
+        {
+            return BadRequest("Title is required and cannot be empty.");
+        }
+
+        if (editTaskItem.Title.Length > 200)
+        {
+            return BadRequest("Title cannot be longer than 200 characters.");
+        }
+
         var result = await taskService.EditTaskAsync(id, editTaskItem);
 
         return Ok(result);
@@ -130,7 +160,7 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
     }
 
     [HttpPost("{id}/undo-delete")]
-    public async Task<IActionResult> RestoreFromTrash(int id) 
+    public async Task<IActionResult> RestoreFromTrash(int id)
     {
         var result = await taskService.RestoreFromTrashAsync(id);
         if (!result.Success)
@@ -157,7 +187,7 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
         {
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
-            
+
         return Ok(await taskService.GetScheduledTasks(timeZone, todayDate, userId));
     }
 

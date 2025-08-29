@@ -19,9 +19,9 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
 {
     public async Task<List<TaskByDateItemDto>> Handle(GetTasksByDateQuery query, CancellationToken ct = default)
     {
-        logger.LogInformation("Fetching tasks by end time for user {UserId} up to {StartDateUtc}. Whether including floating tasks for today is {IncludeFloatingForToday}", 
+        logger.LogInformation("Fetching tasks by end time for user {UserId} up to {StartDateUtc}. Whether including floating tasks for today is {IncludeFloatingForToday}",
             query.UserId, query.StartDateUtc, query.IncludeFloatingForToday);
-        
+
         DateTime endDateUtc = query.StartDateUtc.AddDays(1);
 
         var tasks = await db.TaskItems
@@ -41,16 +41,16 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                 StartTime = task.StartTime,
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
-                Label = new LabelDto
+                Label = task.Label != null ? new LabelDto
                 {
                     LabelId = task.Label.LabelId,
                     Name = task.Label.Name,
                     Color = task.Label.Color
-                },
-                HasTime = task.HasTime
+                } : null,
+                HasTime = task.HasTime ?? false
             })
             .ToListAsync(ct);
-        
+
         logger.LogInformation("Successfully fetched {TaskCount} tasks for user {UserId}", tasks.Count, query.UserId);
         return tasks;
     }
@@ -64,6 +64,6 @@ public class TaskByDateItemDto
     public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
-    public required LabelDto Label { get; set; }
+    public LabelDto? Label { get; set; }
     public bool HasTime { get; set; }
 }
