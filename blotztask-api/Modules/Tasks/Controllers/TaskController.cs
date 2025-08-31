@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using BlotzTask.Modules.Tasks.DTOs;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +13,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler getTasksByDateQueryHandler) : ControllerBase
+public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler getTasksByDateQueryHandler, TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler) : ControllerBase
 {
     [HttpGet]
     [Obsolete("This endpoint is not in use and will be removed later.")]
@@ -49,7 +50,7 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
     }
 
     [HttpGet("by-date")]
-    public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery] DateTime startDateUtc, CancellationToken ct)
+    public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery] DateTime startDateUtc, [FromQuery] bool includeFloatingForToday, CancellationToken ct)
     {
         var userId = HttpContext.Items["UserId"] as string;
 
@@ -61,7 +62,8 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDateUtc = startDateUtc
+            StartDateUtc = startDateUtc,
+            IncludeFloatingForToday = includeFloatingForToday
         };
 
         var result = await getTasksByDateQueryHandler.Handle(query, ct);
@@ -109,19 +111,22 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
     }
 
     [HttpPut("task-completion-status/{id}")]
-    public async Task<IActionResult> TaskStatusUpdate(int id)
+    public async Task<TaskStatusResultDto> TaskStatusUpdate(int id, CancellationToken ct)
     {
+        var command = new TaskStatusUpdateCommand
+        {
+            TaskId = id,
+        };
 
-        var taskStatusResultDto = await taskService.TaskStatusUpdate(id);
+        var result = await taskStatusUpdateCommandHandler.Handle(command, ct);
 
-        if (taskStatusResultDto == null)
+        if (result == null)
         {
             throw new InvalidOperationException($"Task status update failed: no valid data returned for task ID {id}.");
         }
-        var message = taskStatusResultDto.Message;
-        return Ok(new ResponseWrapper<int>(id, message, true));
-    }
 
+        return result;
+    }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTaskById(int id)

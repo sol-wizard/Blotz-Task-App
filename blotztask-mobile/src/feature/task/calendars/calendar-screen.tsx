@@ -13,10 +13,11 @@ import {
 } from 'react-native-calendars'
 import { Snackbar } from 'react-native-paper'
 
-import { format } from 'date-fns'
+import { format, isSameDay } from 'date-fns'
 import CalendarHeader from './calendar-header'
 import NoGoalsView from './noGoalsView'
 import TaskCard from '../components/task-card'
+
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
@@ -48,7 +49,8 @@ export default function CalendarPage() {
       setIsLoading(true)
       setError(null)
       try {
-        const tasks = await fetchTasksForDate(selectedDay)
+        const isToday = isSameDay(selectedDay, new Date())
+        const tasks = await fetchTasksForDate(selectedDay, isToday)
         setTasksForSelectedDay(tasks)
       } catch (e) {
         console.error(e)
@@ -65,7 +67,8 @@ export default function CalendarPage() {
   const handleToggleTask = async (task: TaskDetailDTO) => {
     try {
       await toggleTaskCompletion(task.id)
-      const updatedTasks = await fetchTasksForDate(selectedDay)
+      const isToday = isSameDay(selectedDay, new Date())
+      const updatedTasks = await fetchTasksForDate(selectedDay, isToday)
       setTasksForSelectedDay(updatedTasks)
     } catch (e) {
       console.error(e)
@@ -128,6 +131,7 @@ export default function CalendarPage() {
             textDayFontWeight: 'bold',
             textDayHeaderFontWeight: 'bold',
           }}
+          allowShadow={false}
           firstDay={1}
         />
 
@@ -158,7 +162,8 @@ export default function CalendarPage() {
           setSelectedTask(undefined)
         }}
         onEdited={async (updatedTask) => {
-          const tasks = await fetchTasksForDate(selectedDay)
+          const isToday = isSameDay(selectedDay, new Date())
+          const tasks = await fetchTasksForDate(selectedDay, isToday)
           setTasksForSelectedDay(tasks)
         }}
       />
