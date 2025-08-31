@@ -1,5 +1,7 @@
-using BlotzTask.Models.ApiResponse;
-using BlotzTask.Models.CustomError;
+using BlotzTask.Shared.Exceptions;
+using BlotzTask.Shared.Responses;
+
+namespace BlotzTask.Middleware;
 
 public class ErrorHandlingMiddleware
 { 
@@ -53,7 +55,7 @@ public class ErrorHandlingMiddleware
             await context.Response.WriteAsJsonAsync(new ApiResponse<object> 
             { 
                 Success = false, 
-                Message = "An error occurred while processing your request." 
+                Message = ex.Message 
             });
         }
     }

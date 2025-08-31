@@ -1,0 +1,69 @@
+{
+  "expo": {
+    "name": "BlotzTask",
+    "slug": "BlotzTask",
+    "owner": "blotztask",
+    "version": "1.0.0",
+    "runtimeVersion": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "blotztask",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.Blotz.BlotzTask",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.Blotz.BlotzTask"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-dev-client",
+        {
+          "launchMode": "most-recent"
+        }
+      ],
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "CUSTOM: Allow BlotzTask to access the microphone",
+          "speechRecognitionPermission": "CUSTOM: Allow BlotzTask to securely recognize user speech"
+        }
+      ],
+      "patch-project"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8e8ffbf2-206b-4d9b-b11c-a387b49a3126"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/99062285-944a-4758-ab2c-641d3733c0ca"
+    }
+  }
+}
