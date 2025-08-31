@@ -29,7 +29,7 @@ type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO
   onDismiss?: () => void
   onChange?: (index: number) => void
-  onEdited?: () => void
+  onEdited?: (task: TaskDetailDTO) => void
 }
 
 const TaskDetailBottomSheet = forwardRef<
@@ -204,6 +204,7 @@ const TaskDetailBottomSheet = forwardRef<
           onClose={setIsEditVisible}
           onEdited={(updatedTask) => {
             setLocalTask(updatedTask)
+            onEdited?.(updatedTask)
           }}
         />
       )}

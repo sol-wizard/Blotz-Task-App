@@ -7,13 +7,10 @@ import {
   EditTaskInput,
   EditTaskValues,
 } from './task-form-schema'
-// import BottomSheet, {
-//   BottomSheetBackdrop,
-//   BottomSheetView,
-// } from '@gorhom/bottom-sheet'
 import { RepeatMenu } from '../task-creation/repeat-menu'
 import { LabelMenu } from '../task-creation/label-menu'
-import DateBottomSheetTrigger from '@/feature/task/task-edit/dateSelector'
+// import DateBottomSheetTrigger from '@/feature/task/task-edit/dateSelector'
+import DateBottomSheetTriggers from '@/feature/task/task-edit/DateBottomSheetTrigger'
 import { useEffect } from 'react'
 
 // const schema = z.object({
@@ -68,6 +65,7 @@ export const EditTaskForm = ({
       console.log('❌ validation errors:', errors)
     }
   )
+
   return (
     <View className="gap-3">
       <View className="mb-3">
@@ -111,7 +109,7 @@ export const EditTaskForm = ({
       </View>
       <View className="flex-row items-center gap-2">
         <View className="flex-1">
-          <DateBottomSheetTrigger control={control} />
+          <DateBottomSheetTriggers control={control} />
         </View>
         <View className="flex-1">
           <RepeatMenu control={control} />
