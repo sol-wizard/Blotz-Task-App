@@ -7,7 +7,7 @@ export const EditTaskSchema = z.object({
     .min(1, 'Title is required.')
     .max(120, 'Max 120 characters.'),
   description: z.string().trim().max(2000, 'Max 2000 characters.').default(''),
-  endTime: z.string().default(''),
+  endTime: z.string().optional(),
   repeat: z.enum(['none', 'daily', 'weekly', 'monthly']).default('none'),
   // labelId: z.preprocess((val) => Number(val), z.number()),
   labelId: z.preprocess((val) => Number(val ?? 0), z.number()),

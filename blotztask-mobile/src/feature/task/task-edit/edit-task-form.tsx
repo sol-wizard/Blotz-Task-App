@@ -13,19 +13,6 @@ import { LabelMenu } from '../task-creation/label-menu'
 import DateBottomSheetTriggers from '@/feature/task/task-edit/DateBottomSheetTrigger'
 import { useEffect } from 'react'
 
-// const schema = z.object({
-//   title: z
-//     .string()
-//     .trim()
-//     .min(1, 'Title is required.')
-//     .max(120, 'Max 120 characters.'),
-//   description: z.string().trim().max(2000, 'Max 2000 characters.').default(''),
-//   endTime: z.string().default(''),
-//   repeat: z.enum(['none', 'daily', 'weekly', 'monthly']).default('none'),
-//   labelId: z.string().default(''),
-// })
-// type FormInput = z.input<typeof schema>
-// type EditTaskValues = z.output<typeof schema>
 export type EditTaskFormProps = {
   initialValues: EditTaskValues
   onSubmit: (values: EditTaskValues) => void
@@ -48,15 +35,8 @@ export const EditTaskForm = ({
     defaultValues: initialValues,
   })
   useEffect(() => {
-    reset(initialValues)
+    reset({ ...initialValues, endTime: initialValues.endTime ?? '' })
   }, [initialValues, reset])
-
-  // const pressSubmit = () => {
-  //   void handleSubmit((raw: EditTaskInput) => {
-  //     const parsed = EditTaskSchema.parse(raw)
-  //     onSubmit(parsed)
-  //   })()
-  // }
   const pressSubmit = handleSubmit(
     (data) => {
       onSubmit(EditTaskSchema.parse(data))
@@ -139,20 +119,6 @@ export const EditTaskForm = ({
         >
           <Text className="text-sm text-gray-500"> Cancel</Text>
         </TouchableOpacity>
-        {/* date & time
-        <DateTimeBottomSheet
-          control={control}
-          isVisible={dtVisible}
-          // initialText={datetime}
-          onClose={() => setDtVisible(false)}
-          handleCreateTaskBottomSheetOpen={() => {}}
-          // onConfirm={(displayText) => {
-          //   setValue("datetime", displayText, { shouldValidate: true });
-          //   setDtVisible(false);
-          // }}
-        />
-        <RepeatMenu control={control}></RepeatMenu>
-        <LabelMenu /> */}
       </View>
     </View>
   )

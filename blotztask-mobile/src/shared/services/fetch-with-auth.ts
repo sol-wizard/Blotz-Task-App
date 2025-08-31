@@ -11,12 +11,6 @@ export const fetchWithAuth = async <T>(
     if (!token) {
       throw new Error('No access token found.')
     }
-
-    // const headers = {
-    //   ...(options.headers || {}),
-    //   Authorization: `Bearer ${token}`,
-    //   "Content-Type": "application/json",
-    // };
     const headers: Record<string, string> = {
       ...(options.headers as Record<string, string>),
       Authorization: `Bearer ${token}`,
@@ -31,13 +25,10 @@ export const fetchWithAuth = async <T>(
     const text = await response.text().catch(() => '')
 
     if (!response.ok) {
-      // console.error('API error:', response.status)
       console.log('HTTP', response.status, '--', url)
       console.log('RESPONSE BODY:', text || '(empty)')
       throw new Error(`HTTP error! status: ${response.status}`)
     }
-
-    // const data: T = await response.json()
 
     return (text ? JSON.parse(text) : null) as T
   } catch (error) {

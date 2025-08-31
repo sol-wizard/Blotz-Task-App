@@ -39,7 +39,6 @@ const TaskDetailBottomSheet = forwardRef<
   const taskDetailModalRef = useRef<BottomSheetModal>(null)
   const [isEditVisible, setIsEditVisible] = useState(false)
   const [localTask, setLocalTask] = useState<TaskDetailDTO | undefined>(task)
-  // const [editTask, setEditTask] = useState<TaskDetailDTO | undefined>(undefined)
   useEffect(() => {
     setLocalTask(task)
   }, [task])

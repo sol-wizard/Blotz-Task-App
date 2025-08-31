@@ -1,4 +1,3 @@
-// import { Portal } from 'react-native-paper'
 import { useCallback, useEffect, useRef } from 'react'
 import {
   BottomSheetBackdrop,
@@ -10,7 +9,6 @@ import { EditTaskForm } from './edit-task-form'
 import { updateTaskItem } from '../services/task-service'
 import { fetchAllLabel } from '@/shared/services/label-service'
 
-// const [isEditVisible,setIsEditVisible]=useState(false);
 export const EditTaskBottomSheet = ({
   isVisible,
   onClose,

@@ -54,7 +54,7 @@ export async function updateTaskItem(
       id: taskId,
       title: payload.title,
       description: payload.description,
-      endTime: payload.endTime,
+      endTime: payload.endTime || null,
       repeat: payload.repeat,
       labelId: payload.labelId ? Number(payload.labelId) : 0,
       isDone: false,

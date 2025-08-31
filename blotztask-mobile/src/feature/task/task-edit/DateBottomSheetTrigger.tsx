@@ -36,7 +36,10 @@ export default function DateBottomSheetTriggers({ control }: { control: any }) {
           <Button
             mode="outlined"
             icon="calendar"
-            onPress={() => sheetRef.current?.present()}
+            onPress={() => {
+              setTempDate(value ? new Date(value) : new Date())
+              sheetRef.current?.present()
+            }}
             buttonColor={undefined}
             style={{ borderRadius: 12, borderColor: '#E5E7EB', flex: 1 }}
             contentStyle={{ height: 44 }}
@@ -51,26 +54,30 @@ export default function DateBottomSheetTriggers({ control }: { control: any }) {
             backdropComponent={renderBackdrop}
             enablePanDownToClose
           >
-            <BottomSheetView style={{ padding: 16 }}>
+            <BottomSheetView style={{ padding: 16, minHeight: 250 }}>
               <DateTimePicker
-                value={value ? new Date(value) : new Date()}
+                // value={value ? new Date(value) : new Date()}
+                value={tempDate ?? (value ? new Date(value) : new Date())}
                 mode="date"
                 display="spinner"
-                onChange={(event, selectedDate) => {
+                onChange={(_, selectedDate) => {
                   if (selectedDate) {
                     setTempDate(selectedDate)
                   }
                 }}
-                style={{ flex: 1 }}
+                style={{ height: 200 }}
+                textColor="black"
               />
 
               <Button
                 mode="contained"
                 style={{ marginTop: 16, borderRadius: 12 }}
                 onPress={() => {
+                  // onChange(tempDate.toISOString())
                   if (tempDate) {
                     onChange(tempDate.toISOString())
                   }
+                  setTempDate(null)
                   sheetRef.current?.dismiss()
                 }}
               >
