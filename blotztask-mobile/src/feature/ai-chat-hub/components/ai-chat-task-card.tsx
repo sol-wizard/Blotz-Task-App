@@ -7,6 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 
+//Rename to main feature folder to ai-task-generator
 export const AIChatTaskCard = ({
   task,
   className,
@@ -15,6 +16,7 @@ export const AIChatTaskCard = ({
   className?: string;
 }) => {
   const [isTaskAdded, setTaskIsAdded] = useState(task.isAdded);
+
   const handleAddTask = async (task: AiTaskDTO) => {
     const newTask = convertAiTaskToAddTaskItemDTO(task);
     if (!isTaskAdded) {
@@ -28,9 +30,11 @@ export const AIChatTaskCard = ({
       console.log("Task has already been added to database.");
     }
   };
+
   const onEditTask = (id: string) => {
     console.log("task edited");
   };
+  
   return (
     <View className="flex-row w-full items-center justify-between">
       <View

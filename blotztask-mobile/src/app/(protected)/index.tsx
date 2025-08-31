@@ -39,13 +39,15 @@ export default function ProtectedIndex() {
   });
 
   return (
+    //TODO: Check if we need this BottomSheetModalProvider
+    
     <BottomSheetModalProvider>
       <BottomNavigation
         navigationState={{ index, routes }}
         onIndexChange={setIndex}
         renderScene={renderScene}
       />
-
+      {/* //TODO: There should be a better way to do this without hacking the css */}
       <View
         className="absolute left-0 right-0 items-center"
         style={{ bottom: insets.bottom + 20 }}

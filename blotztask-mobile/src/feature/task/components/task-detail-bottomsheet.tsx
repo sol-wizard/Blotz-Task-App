@@ -60,6 +60,7 @@ const TaskDetailBottomSheet = forwardRef<
 
     router.push({
       pathname: "/(protected)/ai-breakdown",
+      //TODO: Only pass id to the ai-breakdown screen and breakdown backend need to query database to get more details
       params: {
         id: task.id,
         title: task.title,

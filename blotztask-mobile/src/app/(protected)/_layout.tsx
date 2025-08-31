@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function ProtectedLayout() {
   return (
+    //TODO: Check if we need this GestureHandlerRootView
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <Stack screenOptions={{ headerShown: false }}>

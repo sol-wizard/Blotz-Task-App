@@ -5,7 +5,7 @@ const config = {
 };
 
 const SIGNALR_HUBS_CHAT = `${config.API_BASE_URL}/ai-task-generate-chathub`;
-
+//TODO: Rename file to ai-task-generator-signalr-service.ts
 export const signalRService = {
   createConnection: () => {
     console.log(

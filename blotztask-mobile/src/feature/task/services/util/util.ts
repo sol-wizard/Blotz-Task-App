@@ -1,6 +1,7 @@
 import { AddTaskItemDTO } from "../../models/add-task-item-dto";
 import AddTaskFormField from "../task-creation-form-schema";
 
+//TODO: Rename to task-generator-util.ts and move out from services
 export function toAddTaskItemDTO(form: AddTaskFormField): AddTaskItemDTO {
   return {
     title: (form.title ?? "").trim(),

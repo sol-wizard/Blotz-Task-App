@@ -16,7 +16,9 @@ import uuid from "react-native-uuid";
 
 import TypingAnimation from "@/feature/ai-chat-hub/components/typing-animation";
 
+//TODO: Change AiTaskGeneratorScreen
 export default function AiPlannerScreen() {
+  //TODO: we dont need conversation id but we need to chage backend if we want to remove this
   const [conversationId] = useState<string>(() => uuid.v4());
   const { messages, sendMessage, isTyping } = useSignalRChat(conversationId);
   const [text, setText] = useState("");

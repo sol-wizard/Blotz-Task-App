@@ -2,6 +2,7 @@ import z from "zod";
 
 const RepeatEnum = z.enum(["none", "daily", "weekly", "monthly"]);
 
+//move schema out from services and put in to model folder
 export const taskCreationSchema = z.object({
   title: z.string().min(1, "Title is required").max(80, "Max 80 chars"),
   description: z

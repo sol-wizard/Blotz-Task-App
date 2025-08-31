@@ -25,6 +25,7 @@ export default function AiBreakdownScreen() {
   const params = useLocalSearchParams();
   const addSubtaskSheetRef = useRef<AddSubtaskBottomSheetHandle>(null);
   const [selectedSubtasks, setSelectedSubtasks] = useState<SubTask[]>([]);
+  //TODO: If we only pass in id we don't need to pass in title and description, here need to refactor and also backend need to write a query to database
   const taskDetails: TaskDetailsDto = {
     title: params.title as string,
     description: params.description as string,

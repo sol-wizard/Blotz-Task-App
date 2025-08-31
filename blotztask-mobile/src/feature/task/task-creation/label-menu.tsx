@@ -4,6 +4,7 @@ import { Controller } from "react-hook-form";
 import { LabelDTO } from "@/shared/models/label-dto";
 import { fetchAllLabel } from "@/shared/services/label-service";
 
+//TODO: Rename to LabelSelect
 export function LabelMenu({ control }: { control: any }) {
   const [visible, setVisible] = useState(false);
   const [labels, setLabels] = useState<LabelDTO[]>([]);
