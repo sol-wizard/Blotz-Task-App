@@ -18,7 +18,7 @@ function getUserTimeZone(): string {
 }
 
 export async function generateAiTask(prompt: string): Promise<AIAssistantResponse> {
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/AzureAi/generate`;
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL_WITH_API}/aitask/generate`;
 
   const payload: PromptRequest = {
     prompt,
@@ -40,7 +40,7 @@ export async function generateAiTask(prompt: string): Promise<AIAssistantRespons
     title: task.title,
     isDone: false,
     label: task.label,
-    dueDate: new Date(task.due_date),
+    endTime: new Date(task.endTime),
     hasTime: false, //TODO: Current AI generate task still not support time
   }));
 
