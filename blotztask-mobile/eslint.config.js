@@ -28,6 +28,7 @@ module.exports = defineConfig([
     rules: {
       "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-explicit-any": "off",
       camelcase: "warn",
       quotes: ["error", "double", { avoidEscape: true, allowTemplateLiterals: true }],
     },
@@ -35,6 +36,13 @@ module.exports = defineConfig([
   prettier,
 
   {
-    ignores: ["dist/**", "node_modules/**"],
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "eslint.config.*",
+      "metro.config.*",
+      "tailwind.config.*",
+      "babel.config.*",
+    ],
   },
 ]);

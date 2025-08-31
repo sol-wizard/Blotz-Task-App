@@ -3,11 +3,10 @@ import { SafeAreaView, FlatList, ActivityIndicator, View, Text } from "react-nat
 import { CalendarProvider, WeekCalendar, DateData } from "react-native-calendars";
 import { Snackbar } from "react-native-paper";
 
-import { format } from "date-fns";
+import { format , isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
 import TaskCard from "../components/task-card";
-import { isSameDay } from "date-fns";
 
 import { fetchTasksForDate, toggleTaskCompletion, deleteTask } from "../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";

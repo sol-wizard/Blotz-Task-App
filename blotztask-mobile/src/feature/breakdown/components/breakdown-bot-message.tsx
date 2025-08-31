@@ -26,15 +26,11 @@ export default function BreakdownBotMessage({
         {subtasks && subtasks.length > 0 && (
           <View className="mt-3">
             {subtasks.map((subtask, index) => (
-<<<<<<< HEAD
-              <BreakdownTaskCard key={index} parentTaskId={parentTaskId} subTask={subtask} />
-=======
               <BreakdownTaskCard
                 key={index}
                 subTask={subtask}
                 openAddSubtaskBottomSheet={openAddSubtaskBottomSheet}
               />
->>>>>>> b5ac3bf9107553453f261a3cc7660f1eac94cb3f
             ))}
           </View>
         )}
