@@ -5,9 +5,9 @@ import { AddTaskItemDTO } from "../models/add-task-item-dto";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_URL as string;
 
-export async function fetchTasksForDate(date: Date): Promise<TaskDetailDTO[]> {
+export async function fetchTasksForDate(date: Date, includeFloatingForToday: boolean): Promise<TaskDetailDTO[]> {
   const startDateUtc = getStartOfDayUtc(date).toISOString();
-  const url = `${API_BASE_URL}/api/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}`;
+  const url = `${API_BASE_URL}/api/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}&includeFloatingForToday=${includeFloatingForToday}`;
 
   const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: "GET" });
   return data;
@@ -38,3 +38,13 @@ export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<TaskDeta
     throw error;
   }
 };
+
+export async function deleteTask(taskId: number): Promise<void> {
+  const url = `${API_BASE_URL}/api/Task/${taskId}`;
+  try {
+    await fetchWithAuth<void>(url, { method: "DELETE" });
+  } catch (err: any) {
+    console.error("deleteTask failed:", err);
+    throw new Error("Delete task failed");
+  }
+}
