@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BlotzTask.Modules.Tasks.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("/api/[controller]")]
 [Authorize]
 public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler getTasksByDateQueryHandler, TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler) : ControllerBase
 {
@@ -69,13 +69,6 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
         var result = await getTasksByDateQueryHandler.Handle(query, ct);
         return result;
     }
-
-    // [HttpGet("{id:int}")]
-    // [Obsolete("This endpoint is not in use in frontend")]
-    // public async Task<IActionResult> GetTaskById(int id)
-    // {
-    //     return Ok(await _taskService.GetTaskById(id));
-    // }
 
     [HttpGet("today-done")]
     public async Task<IActionResult> GetTodayDoneTasks()
