@@ -16,11 +16,7 @@ export function TimeModeSegment({
         active ? "bg-white shadow" : "bg-transparent",
       ].join(" ")}
     >
-      <Text
-        className={active ? "text-gray-900 font-semibold" : "text-gray-500"}
-      >
-        {label}
-      </Text>
+      <Text className={active ? "text-gray-900 font-semibold" : "text-gray-500"}>{label}</Text>
     </Pressable>
   );
 }

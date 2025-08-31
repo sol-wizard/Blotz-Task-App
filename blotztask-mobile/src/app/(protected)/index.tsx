@@ -30,8 +30,7 @@ const SettingsRoute = () => <SettingsScreen />;
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
   const insets = useSafeAreaInsets();
-  const [isTaskCreationSheetVisible, setIsTaskCreationSheetVisible] =
-    useState(false);
+  const [isTaskCreationSheetVisible, setIsTaskCreationSheetVisible] = useState(false);
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
@@ -46,10 +45,7 @@ export default function ProtectedIndex() {
         renderScene={renderScene}
       />
 
-      <View
-        className="absolute left-0 right-0 items-center"
-        style={{ bottom: insets.bottom + 20 }}
-      >
+      <View className="absolute left-0 right-0 items-center" style={{ bottom: insets.bottom + 20 }}>
         <Pressable
           onPress={() => setIsTaskCreationSheetVisible(true)}
           className="w-14 h-14 rounded-full bg-gray-200 items-center justify-center"

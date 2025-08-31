@@ -28,10 +28,7 @@ export default function AiPlannerScreen() {
   };
 
   return (
-    <SafeAreaView
-      className="flex-1 bg-white"
-      edges={["left", "right", "bottom"]}
-    >
+    <SafeAreaView className="flex-1 bg-white" edges={["left", "right", "bottom"]}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -47,16 +44,12 @@ export default function AiPlannerScreen() {
               {messages &&
                 messages.map((msg, index) =>
                   msg.isBot ? (
-                    <BotMessage
-                      key={index}
-                      text={msg.content}
-                      tasks={msg.tasks}
-                    />
+                    <BotMessage key={index} text={msg.content} tasks={msg.tasks} />
                   ) : (
                     <UserMessage key={index} text={msg.content} />
-                  )
+                  ),
                 )}
-                {isTyping && <TypingAnimation visible={isTyping} />}
+              {isTyping && <TypingAnimation visible={isTyping} />}
             </ScrollView>
           </TouchableWithoutFeedback>
 

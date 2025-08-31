@@ -32,10 +32,7 @@ export default function AiBreakdownScreen() {
   };
 
   return (
-    <SafeAreaView
-      className="flex-1 bg-white"
-      edges={["left", "right", "bottom"]}
-    >
+    <SafeAreaView className="flex-1 bg-white" edges={["left", "right", "bottom"]}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -59,7 +56,7 @@ export default function AiBreakdownScreen() {
                     />
                   ) : (
                     <UserMessage key={index} text={msg.content} />
-                  )
+                  ),
                 )}
               {isTyping && (
                 <View className="mb-4">

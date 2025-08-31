@@ -1,24 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  SafeAreaView,
-  FlatList,
-  ActivityIndicator,
-  View,
-  Text,
-} from "react-native";
-import {
-  CalendarProvider,
-  WeekCalendar,
-  DateData,
-} from "react-native-calendars";
+import { SafeAreaView, FlatList, ActivityIndicator, View, Text } from "react-native";
+import { CalendarProvider, WeekCalendar, DateData } from "react-native-calendars";
 import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
 import TaskCard from "../components/task-card";
-import {
-  fetchTasksForDate,
-  toggleTaskCompletion,
-} from "../services/task-service";
+import { fetchTasksForDate, toggleTaskCompletion } from "../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import TaskDetailBottomSheet, {
   TaskDetailBottomSheetHandle,
@@ -26,14 +13,10 @@ import TaskDetailBottomSheet, {
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
-  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<
-    TaskDetailDTO[]
-  >([]);
+  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDetailDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
-    undefined
-  );
+  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
   const taskDetailSheetRef = useRef<TaskDetailBottomSheetHandle>(null);
 
   useEffect(() => {
@@ -91,9 +74,7 @@ export default function CalendarPage() {
         showTodayButton={false}
       >
         <WeekCalendar
-          onDayPress={(day: DateData) =>
-            setSelectedDay(new Date(day.dateString))
-          }
+          onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
           current={format(selectedDay, "yyyy-MM-dd")}
           theme={{
             selectedDayBackgroundColor: "#2d4150",

@@ -9,9 +9,7 @@ import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 //TODO: Rename to a specific name
 export function useSignalRChat(conversationId: string) {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
-  const [connection, setConnection] = useState<signalR.HubConnection | null>(
-    null
-  );
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [isTyping, setIsTyping] = useState(false);
 
   const sendMessage = async (text: string) => {
@@ -26,13 +24,7 @@ export function useSignalRChat(conversationId: string) {
 
     if (connection) {
       try {
-        await signalRService.invoke(
-          connection,
-          "SendMessage",
-          "User",
-          text.trim(),
-          conversationId
-        );
+        await signalRService.invoke(connection, "SendMessage", "User", text.trim(), conversationId);
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
       }
@@ -49,9 +41,7 @@ export function useSignalRChat(conversationId: string) {
   const receiveTasksHandler = (receivedTasks: ExtractedTaskDTO[]) => {
     if (!receivedTasks || receivedTasks.length === 0) return;
     console.log("receivedTasks:", receivedTasks);
-    const mappedTasks: AiTaskDTO[] = receivedTasks.map(
-      mapExtractedTaskDTOToAiTaskDTO
-    );
+    const mappedTasks: AiTaskDTO[] = receivedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
     console.log("mappedTasks,", mappedTasks);
 
     setMessages((prev = []) => [
@@ -96,9 +86,7 @@ export function useSignalRChat(conversationId: string) {
           newConnection.off("ReceiveTasks", receiveTasksHandler);
           newConnection.off("BotTyping", botTypingHandler);
         })
-        .catch((error) =>
-          console.error("Error stopping SignalR connection:", error)
-        );
+        .catch((error) => console.error("Error stopping SignalR connection:", error));
     };
   }, []);
 

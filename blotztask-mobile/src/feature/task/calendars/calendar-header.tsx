@@ -5,17 +5,17 @@ interface CalendarHeaderProps {
 }
 
 const formDate = (dateString: string) => {
-    const dateObj = new Date(`${dateString}T00:00:00`);
-    const dayOfWeek = dateObj.toLocaleString('default', { weekday: 'short' });
-    const month = dateObj.toLocaleString('default', { month: 'short' });
-    const day = dateObj.getDate();
-    const year = dateObj.getFullYear();
+  const dateObj = new Date(`${dateString}T00:00:00`);
+  const dayOfWeek = dateObj.toLocaleString("default", { weekday: "short" });
+  const month = dateObj.toLocaleString("default", { month: "short" });
+  const day = dateObj.getDate();
+  const year = dateObj.getFullYear();
 
-    return {
-        dayOfWeek,
-        monthDay: `${month} ${day}`,
-        year: year.toString()
-    };
+  return {
+    dayOfWeek,
+    monthDay: `${month} ${day}`,
+    year: year.toString(),
+  };
 };
 
 export default function CalendarHeader({ date }: CalendarHeaderProps) {

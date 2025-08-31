@@ -5,15 +5,8 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
 import { SubTask } from "../models/subtask";
 import { zodResolver } from "@hookform/resolvers/zod";
-import EditTaskFormField, {
-  taskEditFormSchema,
-} from "../services/breakdown-task-edit-form-schema";
-import {
-  Controller,
-  FormProvider,
-  SubmitHandler,
-  useForm,
-} from "react-hook-form";
+import EditTaskFormField, { taskEditFormSchema } from "../services/breakdown-task-edit-form-schema";
+import { Controller, FormProvider, SubmitHandler, useForm } from "react-hook-form";
 
 export const BreakdownTaskCard = ({
   parentTaskId,
@@ -64,9 +57,7 @@ export const BreakdownTaskCard = ({
             <View className="flex-row my-1">
               <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
               {subTask.duration && (
-                <Text className="text-base text-primary ml-2">
-                  {subTask.duration}
-                </Text>
+                <Text className="text-base text-primary ml-2">{subTask.duration}</Text>
               )}
             </View>
           </View>

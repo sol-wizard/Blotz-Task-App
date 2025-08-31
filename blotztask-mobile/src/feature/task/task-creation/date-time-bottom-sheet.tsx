@@ -76,9 +76,7 @@ export const DateTimeBottomSheet = ({
                     className="bg-black rounded-xl px-4 py-2 ml-2 w-64 items-center"
                     onPress={handleDateTimeSubmit}
                   >
-                    <Text className="text-lg font-semibold text-white">
-                      Done
-                    </Text>
+                    <Text className="text-lg font-semibold text-white">Done</Text>
                   </Pressable>
                 </View>
               </BottomSheetView>

@@ -9,12 +9,7 @@ interface CustomMarking extends MarkingProps {
 
 // custom day component
 // haven't used this yet, but we can use this to customize the day view in calendar later
-export default function CustomDayComponent({
-  date,
-  state,
-  marking,
-  onPress,
-}: DayProps) {
+export default function CustomDayComponent({ date, state, marking, onPress }: DayProps) {
   const isSelected = state === "selected";
   // const isToday = state === 'today';
   const isDisabled = state === "disabled";
@@ -33,9 +28,7 @@ export default function CustomDayComponent({
     >
       <View style={styles.contentContainer}>
         {/* dot */}
-        {hasDot && (
-          <View style={[styles.dot, isSelected && styles.dotSelected]} />
-        )}
+        {hasDot && <View style={[styles.dot, isSelected && styles.dotSelected]} />}
 
         <View style={styles.dateAndDayWrapper}>
           {/* day */}

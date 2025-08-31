@@ -22,9 +22,7 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarType, setSnackbarType] = useState<
-    "error" | "success" | "warning"
-  >("error");
+  const [snackbarType, setSnackbarType] = useState<"error" | "success" | "warning">("error");
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
@@ -64,9 +62,7 @@ export default function LoginForm() {
       }
     } catch (error) {
       console.error("Login error:", error);
-      setSnackbarMessage(
-        "Login failed. Please check your credentials and try again."
-      );
+      setSnackbarMessage("Login failed. Please check your credentials and try again.");
       setSnackbarType("error");
       setSnackbarVisible(true);
     } finally {
@@ -85,9 +81,7 @@ export default function LoginForm() {
       setSnackbarType("success");
       setSnackbarVisible(true);
     } else {
-      setSnackbarMessage(
-        "Test account credentials not configured in environment."
-      );
+      setSnackbarMessage("Test account credentials not configured in environment.");
       setSnackbarType("warning");
       setSnackbarVisible(true);
     }

@@ -7,13 +7,7 @@ import { addTaskItem } from "@/feature/task/services/task-service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
 
-export const AIChatTaskCard = ({
-  task,
-  className,
-}: {
-  task: AiTaskDTO;
-  className?: string;
-}) => {
+export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className?: string }) => {
   const [isTaskAdded, setTaskIsAdded] = useState(task.isAdded);
   const handleAddTask = async (task: AiTaskDTO) => {
     const newTask = convertAiTaskToAddTaskItemDTO(task);
@@ -51,11 +45,7 @@ export const AIChatTaskCard = ({
           />
           <View className="flex-row my-1">
             <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
-            {task.endTime && (
-              <Text className="text-base text-primary ml-2">
-                {task.endTime}
-              </Text>
-            )}
+            {task.endTime && <Text className="text-base text-primary ml-2">{task.endTime}</Text>}
           </View>
         </View>
       </View>

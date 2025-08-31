@@ -23,6 +23,7 @@ module.exports = defineConfig([
       "@typescript-eslint/no-unused-vars": "error",
       camelcase: "warn",
     },
+    extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
   },
 
   {

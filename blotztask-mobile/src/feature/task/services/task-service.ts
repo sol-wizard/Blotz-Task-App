@@ -19,9 +19,7 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
   await fetchWithAuth<unknown>(url, { method: "PUT" });
 }
 
-export const addTaskItem = async (
-  addTaskForm: AddTaskItemDTO
-): Promise<TaskDetailDTO> => {
+export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<TaskDetailDTO> => {
   try {
     const result = await fetchWithAuth<TaskDetailDTO>(
       `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`,
@@ -31,7 +29,7 @@ export const addTaskItem = async (
           "Content-Type": "application/json",
         },
         body: JSON.stringify(addTaskForm),
-      }
+      },
     );
 
     return result;

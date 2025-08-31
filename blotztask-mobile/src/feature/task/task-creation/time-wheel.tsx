@@ -2,11 +2,7 @@ import { View, Text, Pressable } from "react-native";
 import WheelPicker from "@quidone/react-native-wheel-picker";
 import { useEffect, useState } from "react";
 
-export const TimeWheel = ({
-  onChange,
-}: {
-  onChange: (timeISO: string) => void;
-}) => {
+export const TimeWheel = ({ onChange }: { onChange: (timeISO: string) => void }) => {
   const [selected, setSelected] = useState<"AM" | "PM">("AM");
   const [hourValue, setHourValue] = useState(0);
   const [minValue, setMinValue] = useState(0);
@@ -52,9 +48,7 @@ export const TimeWheel = ({
           value={hourValue}
           onValueChanged={({ item: { value } }) => setHourValue(value)}
         />
-        <Text className="text-center font-bold text-2xl text-gray-600 mt-2 ">
-          :
-        </Text>
+        <Text className="text-center font-bold text-2xl text-gray-600 mt-2 ">:</Text>
         <WheelPicker
           style={{ backgroundColor: "transparent" }}
           contentContainerStyle={{ backgroundColor: "transparent" }}
@@ -76,13 +70,7 @@ export const TimeWheel = ({
             selected === "AM" ? "bg-black" : "bg-white"
           }`}
         >
-          <Text
-            className={`text-lg ${
-              selected === "AM" ? "text-white" : "text-black"
-            }`}
-          >
-            AM
-          </Text>
+          <Text className={`text-lg ${selected === "AM" ? "text-white" : "text-black"}`}>AM</Text>
         </Pressable>
 
         <Pressable
@@ -91,13 +79,7 @@ export const TimeWheel = ({
             selected === "PM" ? "bg-black" : "bg-white"
           }`}
         >
-          <Text
-            className={`text-lg ${
-              selected === "PM" ? "text-white" : "text-black"
-            }`}
-          >
-            PM
-          </Text>
+          <Text className={`text-lg ${selected === "PM" ? "text-white" : "text-black"}`}>PM</Text>
         </Pressable>
       </View>
     </View>

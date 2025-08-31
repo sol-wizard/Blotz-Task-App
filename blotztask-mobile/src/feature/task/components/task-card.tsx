@@ -37,7 +37,7 @@ export default function TaskCard({
     const formatToken = "dd/MM/yyyy";
     const hasStartTime = startTime && startTime !== null;
     const hasEndTime = endTime && endTime !== null;
-    
+
     if (hasStartTime && hasEndTime) {
       return `${format(new Date(startTime), formatToken)} - ${format(new Date(endTime), formatToken)}`;
     } else if (hasStartTime && !hasEndTime) {
@@ -50,17 +50,15 @@ export default function TaskCard({
   };
 
   return (
-    <Pressable 
-      className="bg-white rounded-2xl mx-4 my-2 shadow-sm shadow-black/10 elevation-3" 
+    <Pressable
+      className="bg-white rounded-2xl mx-4 my-2 shadow-sm shadow-black/10 elevation-3"
       onPress={onPress}
     >
       <View className="flex-row items-center p-5">
         {/* Custom Checkbox */}
         <Pressable
           className={`w-8 h-8 rounded-[10px] border-[3px] mr-3 items-center justify-center ${
-            checked 
-              ? 'bg-neutral-300 border-neutral-300' 
-              : 'bg-white border-gray-300'
+            checked ? "bg-neutral-300 border-neutral-300" : "bg-white border-gray-300"
           }`}
           onPress={handleToggleComplete}
         >
@@ -72,9 +70,9 @@ export default function TaskCard({
 
         {/* Content */}
         <View className="flex-1 justify-start pt-0">
-          <Text 
+          <Text
             className={`text-base font-bold text-black -mt-0.5 mb-0 ${
-              checked ? 'text-neutral-400 line-through' : ''
+              checked ? "text-neutral-400 line-through" : ""
             }`}
           >
             {title}

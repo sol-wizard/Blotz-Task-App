@@ -27,24 +27,14 @@ export default function TimePicker({
           active={mode === "allDay"}
           onPress={() => setMode("allDay")}
         />
-        <TimeModeSegment
-          label="Time"
-          active={mode === "time"}
-          onPress={() => setMode("time")}
-        />
-        <TimeModeSegment
-          label="Range"
-          active={mode === "range"}
-          onPress={() => setMode("range")}
-        />
+        <TimeModeSegment label="Time" active={mode === "time"} onPress={() => setMode("time")} />
+        <TimeModeSegment label="Range" active={mode === "range"} onPress={() => setMode("range")} />
       </View>
 
       {mode === "allDay" && (
         <View className="bg-white rounded-xl border border-gray-200 p-4">
           <Text className="text-gray-800">All-day event</Text>
-          <Text className="text-gray-500 mt-1 text-sm">
-            The task lasts for the whole day.
-          </Text>
+          <Text className="text-gray-500 mt-1 text-sm">The task lasts for the whole day.</Text>
         </View>
       )}
 
