@@ -2,17 +2,10 @@ import { TextInput, View, Text } from "react-native";
 import { useState } from "react";
 import { SubTask } from "../models/subtask";
 import { zodResolver } from "@hookform/resolvers/zod";
-<<<<<<< HEAD
 import EditTaskFormField, { taskEditFormSchema } from "../services/breakdown-task-edit-form-schema";
-import { Controller, FormProvider, SubmitHandler, useForm } from "react-hook-form";
-=======
-import EditTaskFormField, {
-  taskEditFormSchema,
-} from "../services/breakdown-task-edit-form-schema";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { convertSubtaskTimeForm } from "../services/utils/convert-subtask-time-form";
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
->>>>>>> b5ac3bf9107553453f261a3cc7660f1eac94cb3f
 
 export const BreakdownTaskCard = ({
   subTask,
@@ -61,20 +54,11 @@ export const BreakdownTaskCard = ({
               )}
             />
 
-<<<<<<< HEAD
-            <View className="flex-row my-1">
-              <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
-              {subTask.duration && (
-                <Text className="text-base text-primary ml-2">{subTask.duration}</Text>
-              )}
-            </View>
-=======
             {subTask.duration && (
               <Text className="text-base text-primary ml-2">
                 {convertSubtaskTimeForm(subTask.duration)}
               </Text>
             )}
->>>>>>> b5ac3bf9107553453f261a3cc7660f1eac94cb3f
           </View>
         </View>
       </View>
