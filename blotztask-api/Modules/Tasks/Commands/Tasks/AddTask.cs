@@ -1,7 +1,6 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.DTOs;
-using BlotzTask.Shared.DTOs;
 using System.ComponentModel.DataAnnotations;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;

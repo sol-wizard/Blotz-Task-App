@@ -343,7 +343,6 @@ public class TaskService : ITaskService
         }
     }
 
-
     private ScheduledTasksDto GroupTasksBySchedule(TimeZoneInfo timeZoneInfo, List<TaskItemDto> tasks, DateTime now)
     {
         var startOfToday = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(now, DateTimeKind.Utc), timeZoneInfo);
