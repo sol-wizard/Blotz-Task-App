@@ -1,26 +1,34 @@
-import { useCallback, useEffect, useRef } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from "react";
 import {
   BottomSheetBackdrop,
   BottomSheetView,
   BottomSheetModal,
-} from '@gorhom/bottom-sheet'
-import { TaskDetailDTO } from '@/shared/models/task-detail-dto'
-import { EditTaskForm } from './edit-task-form'
-import { updateTaskItem } from '../services/task-service'
-import { fetchAllLabel } from '@/shared/services/label-service'
+} from "@gorhom/bottom-sheet";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { EditTaskForm } from "./edit-task-form";
+import { updateTaskItem } from "../services/task-service";
+import { fetchAllLabel } from "@/shared/services/label-service";
 
-export const EditTaskBottomSheet = ({
-  isVisible,
-  onClose,
-  task,
-  onEdited,
-}: {
-  isVisible: boolean
-  onClose: (isVisible: boolean) => void
-  task: TaskDetailDTO
-  onEdited?: (updated: TaskDetailDTO) => void
-}) => {
-  const sheetRef = useRef<BottomSheetModal>(null)
+export type EditTaskBottomSheetHandle = {
+  present: () => void;
+  dismiss: () => void;
+};
+
+export const EditTaskBottomSheet = forwardRef<
+  EditTaskBottomSheetHandle,
+  {
+    task: TaskDetailDTO;
+    onEdited?: (t: TaskDetailDTO) => void;
+    onClose?: () => void;
+  }
+>(({ task, onEdited, onClose }, ref) => {
+  const modalRef = useRef<BottomSheetModal>(null);
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -32,25 +40,21 @@ export const EditTaskBottomSheet = ({
       />
     ),
     []
-  )
-  //show/hide modal
-  useEffect(() => {
-    if (isVisible) {
-      sheetRef.current?.present()
-    } else {
-      sheetRef.current?.dismiss()
-    }
-  }, [isVisible])
+  );
+  useImperativeHandle(ref, () => ({
+    present: () => modalRef.current?.present(),
+    dismiss: () => modalRef.current?.dismiss(),
+  }));
 
   return (
     <BottomSheetModal
-      ref={sheetRef}
-      snapPoints={['55%']}
+      ref={modalRef}
+      snapPoints={["55%"]}
       keyboardBlurBehavior="restore"
       backdropComponent={renderBackdrop}
       // onChange={handleSheetChange}
       enablePanDownToClose
-      onDismiss={() => onClose(false)}
+      onDismiss={onClose}
     >
       <BottomSheetView style={{ padding: 16 }}>
         <EditTaskForm
@@ -58,42 +62,42 @@ export const EditTaskBottomSheet = ({
             title: task.title,
             description: task.description,
             endTime: task.endTime,
-            repeat: (task as any).repeat ?? 'none',
+            repeat: (task as any).repeat ?? "none",
             labelId: task.label?.labelId ?? 0,
           }}
           onSubmit={async (values) => {
             try {
-              await updateTaskItem(task.id, values)
-              const allLabels = await fetchAllLabel()
+              await updateTaskItem(task.id, values);
+              const allLabels = await fetchAllLabel();
               const selectdLabel = allLabels.find(
                 (l) => l.labelId === Number(values.labelId)
-              )
+              );
               const updatedTask: TaskDetailDTO = {
                 ...task,
                 title: values.title,
                 description: values.description,
-                repeat: values.repeat ?? 'none',
+                repeat: values.repeat ?? "none",
                 label: values.labelId
                   ? {
                       labelId: Number(values.labelId),
-                      name: selectdLabel?.name ?? '',
-                      color: task.label?.color ?? '#FFFFFF',
+                      name: selectdLabel?.name ?? "",
+                      color: task.label?.color ?? "#FFFFFF",
                     }
                   : {
                       labelId: 0,
-                      name: '',
-                      color: '#FFFFFF',
+                      name: "",
+                      color: "#FFFFFF",
                     },
-              }
-              onEdited?.(updatedTask)
-              onClose(false)
+              };
+              onEdited?.(updatedTask);
+              onClose;
             } catch (err) {
-              console.error('updateTaskItem failed', err)
+              console.error("updateTaskItem failed", err);
             }
           }}
-          onCancel={() => onClose(false)}
+          onCancel={onClose}
         />
       </BottomSheetView>
     </BottomSheetModal>
-  )
-}
+  );
+});

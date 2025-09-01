@@ -5,50 +5,54 @@ import {
   useCallback,
   useState,
   useEffect,
-} from 'react'
-import { View, TouchableOpacity } from 'react-native'
+} from "react";
+import { View, TouchableOpacity } from "react-native";
 import {
   BottomSheetModal,
   BottomSheetView,
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
-} from '@gorhom/bottom-sheet'
-import { Button, Text } from 'react-native-paper'
-import { MaterialIcons } from '@expo/vector-icons'
-import { TaskDetailDTO } from '@/shared/models/task-detail-dto'
-import { router } from 'expo-router'
-import { TaskDetailTag } from './task-detail-tag'
-import { EditTaskBottomSheet } from '../task-edit/edit-task-bottom-sheet'
+} from "@gorhom/bottom-sheet";
+import { Button, Text } from "react-native-paper";
+import { MaterialIcons } from "@expo/vector-icons";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { router } from "expo-router";
+import { TaskDetailTag } from "./task-detail-tag";
+import {
+  EditTaskBottomSheet,
+  EditTaskBottomSheetHandle,
+} from "../task-edit/edit-task-bottom-sheet";
 
 export type TaskDetailBottomSheetHandle = {
-  present: () => void
-  dismiss: () => void
-}
+  present: () => void;
+  dismiss: () => void;
+};
 
 type TaskDetailBottomSheetProps = {
-  task?: TaskDetailDTO
-  onDismiss?: () => void
-  onChange?: (index: number) => void
-  onEdited?: (task: TaskDetailDTO) => void
-}
+  task?: TaskDetailDTO;
+  onDismiss?: () => void;
+  onChange?: (index: number) => void;
+  onEdited?: (task: TaskDetailDTO) => void;
+};
 
 const TaskDetailBottomSheet = forwardRef<
   TaskDetailBottomSheetHandle,
   TaskDetailBottomSheetProps
 >(({ task, onDismiss, onChange, onEdited }, ref) => {
-  const taskDetailModalRef = useRef<BottomSheetModal>(null)
-  const [isEditVisible, setIsEditVisible] = useState(false)
-  const [localTask, setLocalTask] = useState<TaskDetailDTO | undefined>(task)
+  const taskDetailModalRef = useRef<BottomSheetModal>(null);
+  const editSheetRef = useRef<EditTaskBottomSheetHandle>(null);
+
+  const [localTask, setLocalTask] = useState<TaskDetailDTO | undefined>(task);
   useEffect(() => {
-    setLocalTask(task)
-  }, [task])
+    setLocalTask(task);
+  }, [task]);
 
   useImperativeHandle(ref, () => ({
     present: () => taskDetailModalRef.current?.present(),
     dismiss: () => taskDetailModalRef.current?.dismiss(),
-  }))
+  }));
 
-  const snapPoints = ['60%', '80%']
+  const snapPoints = ["60%", "80%"];
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -61,25 +65,25 @@ const TaskDetailBottomSheet = forwardRef<
       />
     ),
     []
-  )
+  );
 
   const handleAiBreakdown = () => {
-    if (!task) return
-    taskDetailModalRef.current?.dismiss()
+    if (!task) return;
+    taskDetailModalRef.current?.dismiss();
 
     router.push({
-      pathname: '/(protected)/ai-breakdown',
+      pathname: "/(protected)/ai-breakdown",
       params: {
         id: task.id,
         title: task.title,
         description: task.description,
       },
-    })
-  }
+    });
+  };
   const handleEditPress = () => {
-    if (!task) return
-    setIsEditVisible(true)
-  }
+    if (!task) return;
+    editSheetRef.current?.present();
+  };
 
   return (
     <>
@@ -91,7 +95,7 @@ const TaskDetailBottomSheet = forwardRef<
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         backgroundStyle={{
-          backgroundColor: '#FFFFFF',
+          backgroundColor: "#FFFFFF",
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
         }}
@@ -103,7 +107,7 @@ const TaskDetailBottomSheet = forwardRef<
               <View className="flex-row items-center justify-between mb-2">
                 <Text
                   className="flex-1 text-gray-900 mr-3 text-xl leading-6"
-                  style={{ fontWeight: '800' }}
+                  style={{ fontWeight: "800" }}
                 >
                   {localTask.title}
                 </Text>
@@ -114,7 +118,7 @@ const TaskDetailBottomSheet = forwardRef<
                     onPress={handleEditPress}
                     textColor="#374151"
                     compact
-                    labelStyle={{ fontSize: 15, fontWeight: 'bold' }}
+                    labelStyle={{ fontSize: 15, fontWeight: "bold" }}
                     contentStyle={{ paddingHorizontal: 0 }}
                   >
                     Edit
@@ -142,7 +146,7 @@ const TaskDetailBottomSheet = forwardRef<
                   <TaskDetailTag>{localTask.label.name}</TaskDetailTag>
                 ) : null}
                 <TaskDetailTag>
-                  {localTask.isDone ? 'Done' : 'In progress'}
+                  {localTask.isDone ? "Done" : "In progress"}
                 </TaskDetailTag>
               </View>
 
@@ -195,22 +199,22 @@ const TaskDetailBottomSheet = forwardRef<
           )}
         </BottomSheetView>
       </BottomSheetModal>
-      {localTask && isEditVisible && (
+      {localTask && (
         <EditTaskBottomSheet
-          isVisible={isEditVisible}
+          ref={editSheetRef}
           task={localTask}
-          // task={task!}
-          onClose={setIsEditVisible}
+          onClose={() => editSheetRef.current?.dismiss()}
           onEdited={(updatedTask) => {
-            setLocalTask(updatedTask)
-            onEdited?.(updatedTask)
+            setLocalTask(updatedTask);
+            onEdited?.(updatedTask);
+            editSheetRef.current?.dismiss();
           }}
         />
       )}
     </>
-  )
-})
+  );
+});
 
-TaskDetailBottomSheet.displayName = 'TaskDetailBottomSheet'
+TaskDetailBottomSheet.displayName = "TaskDetailBottomSheet";
 
-export default TaskDetailBottomSheet
+export default TaskDetailBottomSheet;
