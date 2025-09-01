@@ -2,6 +2,7 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
 import { getStartOfDayUtc } from "../util/date-utils";
 import { AddTaskItemDTO } from "../models/add-task-item-dto";
+import { ResponseWrapper } from "@/shared/models/response-wrapper";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_URL as string;
 
@@ -21,9 +22,9 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
 
 export const addTaskItem = async (
   addTaskForm: AddTaskItemDTO
-): Promise<TaskDetailDTO> => {
+): Promise<string> => {
   try {
-    const result = await fetchWithAuth<TaskDetailDTO>(
+    const result = await fetchWithAuth<ResponseWrapper<string>>(
       `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`,
       {
         method: "POST",
@@ -34,7 +35,7 @@ export const addTaskItem = async (
       }
     );
 
-    return result;
+    return result.data;
   } catch (error) {
     console.error("Error adding task:", error);
     throw error;
