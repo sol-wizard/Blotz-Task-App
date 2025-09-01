@@ -9,48 +9,35 @@ namespace BlotzTask.Modules.Tasks.Commands.Tasks;
 public class AddTaskCommand
 {
     [Required]
-    public required AddTaskItemDto Dto { get; set; }
+    public required AddTaskItemDto TaskDetails { get; set; }
     [Required]
-    public string UserId { get; set; } = string.Empty;
+    public required string UserId { get; set; }
 }
 
 public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommandHandler> logger)
 {
     public async Task<string> Handle(AddTaskCommand command, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(command.UserId))
-        {
-            throw new UnauthorizedAccessException("User ID cannot be null or empty.");
-        }
-
         logger.LogInformation("Adding new task for user {UserId}", command.UserId);
 
-        try
+        var newTask = new TaskItem
         {
-            var newTask = new TaskItem
-            {
-                Title = command.Dto.Title,
-                Description = command.Dto.Description,
-                StartTime = command.Dto.StartTime,
-                EndTime = command.Dto.EndTime,
-                LabelId = command.Dto.LabelId,
-                UserId = command.UserId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                HasTime = command.Dto.HasTime
-            };
+            Title = command.TaskDetails.Title,
+            Description = command.TaskDetails.Description,
+            StartTime = command.TaskDetails.StartTime,
+            EndTime = command.TaskDetails.EndTime,
+            LabelId = command.TaskDetails.LabelId,
+            UserId = command.UserId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            HasTime = command.TaskDetails.HasTime
+        };
 
-            db.TaskItems.Add(newTask);
-            await db.SaveChangesAsync(ct);
+        db.TaskItems.Add(newTask);
+        await db.SaveChangesAsync(ct);
 
-            logger.LogInformation("Task {Id} was successfully added for user {UserId}", newTask.Id, command.UserId);
+        logger.LogInformation("Task {Id} was successfully added for user {UserId}", newTask.Id, command.UserId);
 
-            return $"Task {newTask.Id} titled {newTask.Title} was successfully added.";
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error adding task for user {UserId}: {Message}", command.UserId, ex.Message);
-            throw;
-        }
+        return $"Task {newTask.Id} titled {newTask.Title} was successfully added.";
     }
 }

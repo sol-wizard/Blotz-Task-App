@@ -100,7 +100,7 @@ public class TaskController(
 
         var command = new AddTaskCommand
         {
-            Dto = addtaskItem,
+            TaskDetails = addtaskItem,
             UserId = userId,
         };
 
