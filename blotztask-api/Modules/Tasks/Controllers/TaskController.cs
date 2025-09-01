@@ -13,7 +13,12 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Route("/api/[controller]")]
 [Authorize]
-public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler  getTasksByDateQueryHandler, TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler) : ControllerBase
+public class TaskController(
+    ITaskService taskService,
+    GetTasksByDateQueryHandler  getTasksByDateQueryHandler,
+    TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
+    AddTaskCommandHandler addTaskCommandHandler
+) : ControllerBase
 {
     [HttpGet]
     [Obsolete("This endpoint is not in use and will be removed later.")]
@@ -84,7 +89,7 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddTask([FromBody] AddTaskItemDto addtaskItem)
+    public async Task<string> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
     {
         var userId = HttpContext.Items["UserId"] as string;
 
@@ -92,7 +97,15 @@ public class TaskController(ITaskService taskService, GetTasksByDateQueryHandler
         {
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
-        return Ok(await taskService.AddTaskAsync(addtaskItem, userId));
+
+        var command = new AddTaskCommand
+        {
+            TaskDetails = addtaskItem,
+            UserId = userId,
+        };
+
+        var result = await addTaskCommandHandler.Handle(command, ct);
+        return result;
     }
 
     [HttpPut("{id}")]
