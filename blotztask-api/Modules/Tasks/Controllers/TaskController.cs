@@ -89,7 +89,7 @@ public class TaskController(
     }
 
     [HttpPost]
-    public async Task<ResponseWrapper<string>> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
+    public async Task<string> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
     {
         var userId = HttpContext.Items["UserId"] as string;
 

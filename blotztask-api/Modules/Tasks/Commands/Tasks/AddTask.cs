@@ -16,7 +16,7 @@ public class AddTaskCommand
 
 public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommandHandler> logger)
 {
-    public async Task<ResponseWrapper<string>> Handle(AddTaskCommand command, CancellationToken ct = default)
+    public async Task<string> Handle(AddTaskCommand command, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(command.UserId))
         {
@@ -45,11 +45,7 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
 
             logger.LogInformation("Task {Id} was successfully added for user {UserId}", newTask.Id, command.UserId);
 
-            return new ResponseWrapper<string>(
-                newTask.Title,
-                "Task added successfully.",
-                true
-            );
+            return $"Task {newTask.Id} titled {newTask.Title} was successfully added.";
         }
         catch (Exception ex)
         {
