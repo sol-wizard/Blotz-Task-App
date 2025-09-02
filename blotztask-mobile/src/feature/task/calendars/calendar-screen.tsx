@@ -47,11 +47,10 @@ export default function CalendarPage() {
   });
 
   useEffect(() => {
-    loadTasksForDate();
+    loadTask();
   }, [selectedDay]);
 
-  //TODO: Rename to loadtask
-  const loadTasksForDate = async () => {
+  const loadTask = async () => {
     setIsLoading(true);
     try {
       const isToday = isSameDay(selectedDay, new Date());
@@ -90,7 +89,9 @@ export default function CalendarPage() {
       isCompleted={item.isDone}
       onToggleComplete={() => handleToggleTask(item)}
       onPress={() => presentSheet(item)}
-      onDelete={async () => {await handleDeleteTask(item.id);}}
+      onDelete={async () => {
+        await handleDeleteTask(item.id);
+      }}
     />
   );
 
@@ -98,11 +99,14 @@ export default function CalendarPage() {
     try {
       await deleteTask(taskId);
       //TODO: Should refresh the tasks for the selected day instead of deleting at frontend
-      setTasksForSelectedDay(prev => prev.filter(t => t.id !== taskId)); // delete at frontend
+      setTasksForSelectedDay((prev) => prev.filter((t) => t.id !== taskId)); // delete at frontend
       setSnackbar({ visible: true, text: "Delete Successful" });
     } catch (e) {
       console.error(e);
-      setSnackbar({ visible: true, text: "Delete Failed, please try again later" });
+      setSnackbar({
+        visible: true,
+        text: "Delete Failed, please try again later",
+      });
     }
   };
 
@@ -128,7 +132,7 @@ export default function CalendarPage() {
             textDayFontWeight: "bold",
             textDayHeaderFontWeight: "bold",
           }}
-          allowShadow={false} 
+          allowShadow={false}
           firstDay={1}
         />
 

@@ -7,7 +7,7 @@ import { SubTask } from "@/feature/breakdown/models/subtask";
 const API_BASE_URL = process.env.EXPO_PUBLIC_URL;
 const BREAKDOWN_HUB_URL = `${API_BASE_URL}/ai-task-breakdown-chathub`;
 
-export function useBreakdownChat(taskDetails: TaskDetailsDto) {
+export function useBreakdownChat(taskId: string) {
   const [messages, setMessages] = useState<BreakdownMessage[]>([]);
   const [connection, setConnection] = useState<signalR.HubConnection | null>(
     null
@@ -69,7 +69,7 @@ export function useBreakdownChat(taskDetails: TaskDetailsDto) {
       // Automatically trigger initial breakdown once connected
       if (!hasInitialBreakdown) {
         try {
-          await connection.invoke("BreakdownTask", taskDetails);
+          await connection.invoke("BreakdownTask", taskId);
           setHasInitialBreakdown(true);
         } catch (error) {
           console.error("Error invoking BreakdownTask:", error);

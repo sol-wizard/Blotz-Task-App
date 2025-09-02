@@ -1,7 +1,7 @@
 import BotMessage from "@/feature/ai-chat-hub/components/bot-message";
 import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
-import { useSignalRChat } from "@/feature/ai-chat-hub/hooks/useSignalRChat";
+import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
 import React, { useState } from "react";
 import {
   View,
@@ -16,11 +16,11 @@ import uuid from "react-native-uuid";
 
 import TypingAnimation from "@/feature/ai-chat-hub/components/typing-animation";
 
-//TODO: Change AiTaskGeneratorScreen
-export default function AiPlannerScreen() {
+export default function AiTaskGeneratorScreen() {
   //TODO: we dont need conversation id but we need to chage backend if we want to remove this
   const [conversationId] = useState<string>(() => uuid.v4());
-  const { messages, sendMessage, isTyping } = useSignalRChat(conversationId);
+  const { messages, sendMessage, isTyping } =
+    useAiTaskGenerator(conversationId);
   const [text, setText] = useState("");
 
   const handleSend = () => {
@@ -32,7 +32,7 @@ export default function AiPlannerScreen() {
   return (
     <SafeAreaView
       className="flex-1 bg-white"
-      edges={["left", "right", "bottom"]}
+      edges={["right", "left", "bottom"]}
     >
       <KeyboardAvoidingView
         className="flex-1"
@@ -58,7 +58,7 @@ export default function AiPlannerScreen() {
                     <UserMessage key={index} text={msg.content} />
                   )
                 )}
-                {isTyping && <TypingAnimation visible={isTyping} />}
+              {isTyping && <TypingAnimation visible={isTyping} />}
             </ScrollView>
           </TouchableWithoutFeedback>
 

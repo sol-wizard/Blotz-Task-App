@@ -1,11 +1,11 @@
 import { TextInput, View, Text } from "react-native";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { useState } from "react";
-import { convertAiTaskToAddTaskItemDTO } from "../services/util/util";
 import { addTaskItem } from "@/feature/task/services/task-service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
+import { convertAiTaskToAddTaskItemDTO } from "../util/ai-task-generator-util";
 
 //Rename to main feature folder to ai-task-generator
 export const AIChatTaskCard = ({
@@ -34,7 +34,7 @@ export const AIChatTaskCard = ({
   const onEditTask = (id: string) => {
     console.log("task edited");
   };
-  
+
   return (
     <View className="flex-row w-full items-center justify-between">
       <View

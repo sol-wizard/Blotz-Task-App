@@ -37,6 +37,5 @@ export default function Index() {
   }
 
   // Show onboarding screen for unauthenticated users
-  //TODO: Move to auth folder
-  return <Redirect href="/onboarding" />;
+  return <Redirect href="/(auth)/onboarding" />;
 }

@@ -4,35 +4,30 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function ProtectedLayout() {
   return (
-    //TODO: Check if we need this GestureHandlerRootView
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <BottomSheetModalProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="ai-planner"
-            options={{
-              headerShown: true,
-              headerShadowVisible: false,
-              headerTitle: "",
-              headerBackVisible: true,
-              headerTintColor: "#8E8E93",
-              headerBackButtonDisplayMode: "minimal",
-            }}
-          />
-          <Stack.Screen
-            name="ai-breakdown"
-            options={{
-              headerShown: true,
-              headerShadowVisible: false,
-              headerTitle: "",
-              headerBackVisible: true,
-              headerTintColor: "#8E8E93",
-              headerBackButtonDisplayMode: "minimal",
-            }}
-          />
-        </Stack>
-      </BottomSheetModalProvider>
-    </GestureHandlerRootView>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="ai-task-generator"
+        options={{
+          headerShown: true,
+          headerShadowVisible: false,
+          headerTitle: "",
+          headerBackVisible: true,
+          headerTintColor: "#8E8E93",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+      <Stack.Screen
+        name="ai-breakdown"
+        options={{
+          headerShown: true,
+          headerShadowVisible: false,
+          headerTitle: "",
+          headerBackVisible: true,
+          headerTintColor: "#8E8E93",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+    </Stack>
   );
 }

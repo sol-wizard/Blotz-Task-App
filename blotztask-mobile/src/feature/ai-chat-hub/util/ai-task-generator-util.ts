@@ -1,7 +1,6 @@
 import { AddTaskItemDTO } from "@/feature/task/models/add-task-item-dto";
 import { AiTaskDTO } from "../../models/ai-task-dto";
 
-//TODO: Rename to ai-task-generator-util.ts
 export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {
   return {
     title: task.title,

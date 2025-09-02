@@ -22,17 +22,13 @@ import {
 import { SubTask } from "@/feature/breakdown/models/subtask";
 
 export default function AiBreakdownScreen() {
-  const params = useLocalSearchParams();
+  const { id: taskId } = useLocalSearchParams<{ id?: string }>();
+  if (!taskId) throw new Error("Missing task id");
   const addSubtaskSheetRef = useRef<AddSubtaskBottomSheetHandle>(null);
   const [selectedSubtasks, setSelectedSubtasks] = useState<SubTask[]>([]);
-  //TODO: If we only pass in id we don't need to pass in title and description, here need to refactor and also backend need to write a query to database
-  const taskDetails: TaskDetailsDto = {
-    title: params.title as string,
-    description: params.description as string,
-  };
 
   const [text, setText] = useState("");
-  const { messages, isTyping, sendMessage } = useBreakdownChat(taskDetails);
+  const { messages, isTyping, sendMessage } = useBreakdownChat(taskId);
   const handleSend = () => {
     sendMessage(text);
     setText("");
@@ -85,7 +81,7 @@ export default function AiBreakdownScreen() {
                   msg.isBot ? (
                     <BreakdownBotMessage
                       key={index}
-                      parentTaskId={params.id as string}
+                      parentTaskId={taskId as string}
                       text={msg.content}
                       subtasks={msg.subtasks}
                       openAddSubtaskBottomSheet={handleSelectSubtask}

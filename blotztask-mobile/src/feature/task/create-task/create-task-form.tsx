@@ -1,26 +1,27 @@
-import { DateBottomSheetTrigger } from "@/feature/task/task-creation/day-time-selector";
-import { LabelMenu } from "@/feature/task/task-creation/label-menu";
-import { RepeatMenu } from "@/feature/task/task-creation/repeat-menu";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import AddTaskFormField, {
   taskCreationSchema,
 } from "@/feature/task/services/task-creation-form-schema";
 import { addTaskItem } from "@/feature/task/services/task-service";
-import { toAddTaskItemDTO } from "@/feature/task/services/util/util";
+import { toAddTaskItemDTO } from "@/feature/task/util/task-generator-util";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
 
-export default function TaskCreationForm({
+import { RepeatMenu } from "./repeat-menu";
+import { LabelMenu } from "./label-menu";
+import { DateBottomSheetTrigger } from "./day-time-selector";
+
+export default function CreateTaskForm({
   handleTaskCreationSheetClose,
 }: {
   handleTaskCreationSheetClose: (index: number) => void;
 }) {
   const handleAiChat = () => {
     handleTaskCreationSheetClose(-1);
-    router.push("/(protected)/ai-planner");
+    router.push("/(protected)/ai-task-generator");
   };
   const form = useForm<AddTaskFormField>({
     resolver: zodResolver(taskCreationSchema),
@@ -100,11 +101,7 @@ export default function TaskCreationForm({
         </View>
 
         <View className="flex-row gap-3 mb-8">
-          <DateBottomSheetTrigger
-            control={form.control}
-            // handleTaskCreationSheetClose={handleTaskCreationSheetClose}
-            // handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
-          />
+          <DateBottomSheetTrigger control={form.control} />
 
           <View className="flex-1">
             <RepeatMenu control={form.control} />

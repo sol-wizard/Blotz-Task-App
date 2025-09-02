@@ -3,9 +3,10 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import TaskCreationForm from "../task-creation/task-creation-form";
+
 import { Portal } from "react-native-paper";
 import { View } from "react-native";
+import CreateTaskForm from "./create-task-form";
 
 //TODO: Rename all task creation to create-task
 export const CreateTaskBottomSheet = ({
@@ -60,10 +61,7 @@ export const CreateTaskBottomSheet = ({
           onClose={() => onClose(false)}
         >
           <BottomSheetView style={{ padding: 16 }}>
-            <TaskCreationForm
-              handleTaskCreationSheetClose={handleSheetChange}
-              // handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
-            />
+            <CreateTaskForm handleTaskCreationSheetClose={handleSheetChange} />
           </BottomSheetView>
         </BottomSheet>
       </View>

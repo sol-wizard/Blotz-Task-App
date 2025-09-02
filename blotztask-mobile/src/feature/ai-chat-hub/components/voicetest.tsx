@@ -14,7 +14,7 @@ type VoiceTestProps = {
   onResult?: (text: string) => void;
 };
 
-//TODO: Add some comments to explain for future use
+//This is for future testing voice input, need to change the UI --- IGNORE ---
 function VoiceTest({ onResult }: VoiceTestProps) {
   const [results, setResults] = useState<string[]>([]);
   const [isVoiceAvailable, setIsVoiceAvailable] = useState(false);
