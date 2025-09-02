@@ -5,7 +5,10 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface ITaskGenerateChatService
 {
-    Task<AiTaskGenerateChatResult> HandleUserMessageAsync(ConversationMessage userMessage, CancellationToken ct);
+    Task<AiTaskGenerateChatResult> HandleUserMessageAsync(
+        ConversationMessage userMessage,
+        CancellationToken ct
+    );
 }
 
 public class TaskGenerateChatService : ITaskGenerateChatService
@@ -31,11 +34,6 @@ public class TaskGenerateChatService : ITaskGenerateChatService
         string botContent;
         List<ExtractedTask>? tasks = null;
 
-        if (UserExplicitlyEndedConversation(userMessage.Content))
-        {
-            return EndConversation(conversationId);
-        }
-
         // If there's no chathistory, create a new converstaion
         if (!_chatHistoryManagerService.TryGetChatHistory(conversationId, out var chatHistory))
         {
@@ -49,22 +47,15 @@ public class TaskGenerateChatService : ITaskGenerateChatService
         // considering getting it from the ai response
 
         var aiResponseTasks = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
-        if (aiResponseTasks == null)
-        {
-            // No tasks were generated at all
-            botContent =
-                "I couldn't extract any tasks from your input. Please provide clear and actionable tasks.";
-        }
-        else if (aiResponseTasks.Count > 0)
+        if (aiResponseTasks.Count > 0)
         {
             tasks = aiResponseTasks;
-            botContent =
-                "If you're happy with these tasks, you can type **end this** to end the conversation.";
+            botContent = "If you're happy with these tasks, you can end the conversation.";
         }
         else
         {
-            // The tasks generated are not actionable or too generic so they didn't pass the revision
-            botContent = "No tasks could be generated.";
+            botContent =
+                "I couldn't extract any tasks from your input. Please provide clear and actionable tasks.";
         }
 
         return new AiTaskGenerateChatResult
@@ -80,31 +71,5 @@ public class TaskGenerateChatService : ITaskGenerateChatService
             IsConversationComplete = false,
             Tasks = tasks,
         };
-    }
-
-    private AiTaskGenerateChatResult EndConversation(string conversationId)
-    {
-        _chatHistoryManagerService.RemoveConversation(conversationId);
-
-        return new AiTaskGenerateChatResult
-        {
-            BotMessage = new ConversationMessage
-            {
-                Sender = "ChatBot",
-                Content = "Okay, your plan is complete. You can start a new one anytime.",
-                ConversationId = conversationId,
-                Timestamp = DateTime.UtcNow,
-                IsBot = true,
-            },
-            IsConversationComplete = true,
-            Tasks = null,
-        };
-    }
-
-    // TODO: Change this to a more robust solution
-    private bool UserExplicitlyEndedConversation(string message)
-    {
-        var lower = message.ToLowerInvariant();
-        return lower.Contains("end this") || lower.Contains("that's all");
     }
 }
