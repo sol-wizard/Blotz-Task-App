@@ -1,7 +1,7 @@
-using BlotzTask.Modules.GoalPlannerChat.Dtos;
+using BlotzTask.Modules.ChatGoalPlanner.DTOs;
 using BlotzTask.Shared.DTOs;
 
-namespace BlotzTask.Modules.GoalPlannerChat.Services;
+namespace BlotzTask.Modules.ChatGoalPlanner.Services;
 public interface IGoalPlannerChatService
 {
     Task<GoalPlanningChatResult> HandleUserMessageAsync(ConversationMessage userMessage);
