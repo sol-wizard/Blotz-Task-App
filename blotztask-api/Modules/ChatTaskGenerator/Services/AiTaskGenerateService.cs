@@ -86,7 +86,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                     _logger.LogInformation(functionResultMessage.Content);
                     var extractedTasks = JsonSerializer.Deserialize<List<ExtractedTask>>(
                         functionResultMessage.Content,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true } // Important for JSON deserialization
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                     );
 
                     if (extractedTasks != null)
@@ -94,10 +94,8 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                         chatHistory.AddAssistantMessage(JsonSerializer.Serialize(extractedTasks));
                         return extractedTasks;
                     }
-                    else
-                    {
-                        return new List<ExtractedTask>();
-                    }
+
+                    return null;
                 }
                 catch (JsonException ex)
                 {
@@ -106,7 +104,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                         "Failed to deserialize function result content into ExtractedTaskResponse. Content: {Content}",
                         functionResultMessage.Content
                     );
-                    return new List<ExtractedTask>();
+                    return null;
                 }
             }
         }
@@ -116,7 +114,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                 ex,
                 "Semantic Kernel FunctionChoiceBehavior.Required for TaskExtraction failed."
             );
-            return new List<ExtractedTask>();
+            return null;
         }
         return null;
     }
