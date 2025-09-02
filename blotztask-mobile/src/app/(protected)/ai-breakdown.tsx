@@ -1,7 +1,6 @@
 import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
 import { useBreakdownChat } from "@/feature/breakdown/hooks/useBreakdownChat";
-import { TaskDetailsDto } from "@/feature/breakdown/models/task-details-dto";
 import { useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import {

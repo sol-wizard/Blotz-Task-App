@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { TaskDetailsDto } from "@/feature/breakdown/models/task-details-dto";
 import { BreakdownMessage } from "@/feature/breakdown/models/breakdown-message";
 import { SubTask } from "@/feature/breakdown/models/subtask";
 
