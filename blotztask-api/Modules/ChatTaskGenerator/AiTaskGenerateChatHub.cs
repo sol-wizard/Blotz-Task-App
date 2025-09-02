@@ -1,9 +1,9 @@
-using BlotzTask.Modules.Chat.DTOs;
-using BlotzTask.Modules.Chat.Services;
+using BlotzTask.Modules.ChatTaskGenerator.DTOs;
+using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.SignalR;
 
-namespace BlotzTask.Modules.Chat;
+namespace BlotzTask.Modules.ChatTaskGenerator;
 
 public class AiTaskGenerateChatHub : Hub
 {

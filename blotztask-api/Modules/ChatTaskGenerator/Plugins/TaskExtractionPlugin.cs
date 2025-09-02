@@ -2,7 +2,7 @@ using System.ComponentModel;
 using BlotzTask.Shared.DTOs;
 using Microsoft.SemanticKernel;
 
-namespace BlotzTask.Modules.Chat.Plugins;
+namespace BlotzTask.Modules.ChatTaskGenerator.Plugins;
 
 public class TaskExtractionPlugin
 {

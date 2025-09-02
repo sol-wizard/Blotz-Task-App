@@ -1,6 +1,6 @@
 using BlotzTask.Shared.DTOs;
 
-namespace BlotzTask.Modules.Chat.DTOs;
+namespace BlotzTask.Modules.ChatTaskGenerator.DTOs;
 
 public class AiTaskGenerateChatResult
 {

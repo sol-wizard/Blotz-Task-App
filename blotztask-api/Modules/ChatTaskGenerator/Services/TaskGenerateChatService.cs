@@ -1,7 +1,7 @@
-using BlotzTask.Modules.Chat.DTOs;
+using BlotzTask.Modules.ChatTaskGenerator.DTOs;
 using BlotzTask.Shared.DTOs;
 
-namespace BlotzTask.Modules.Chat.Services;
+namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface ITaskGenerateChatService
 {
