@@ -1,7 +1,7 @@
 import BotMessage from "@/feature/ai-chat-hub/components/bot-message";
 import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
-import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
+
 import React, { useState } from "react";
 import {
   View,
@@ -15,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import uuid from "react-native-uuid";
 
 import TypingAnimation from "@/feature/ai-chat-hub/components/typing-animation";
+import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
 
 export default function AiTaskGeneratorScreen() {
   //TODO: we dont need conversation id but we need to chage backend if we want to remove this
