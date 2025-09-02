@@ -1,9 +1,9 @@
-using BlotzTask.Modules.GoalPlannerChat.Dtos;
-using BlotzTask.Modules.GoalPlannerChat.Services;
+using BlotzTask.Modules.ChatGoalPlanner.DTOs;
+using BlotzTask.Modules.ChatGoalPlanner.Services;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.SignalR;
 
-namespace BlotzTask.Modules.GoalPlannerChat;
+namespace BlotzTask.Modules.ChatGoalPlanner;
 
 public class GoalPlannerChatHub : Hub
 {

@@ -1,16 +1,10 @@
 using System.Text.Json;
-using BlotzTask.Modules.Chat.Constants;
-using BlotzTask.Modules.Chat.Plugins;
-using BlotzTask.Modules.Labels.Services;
+using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Shared.DTOs;
-using BlotzTask.Shared.Services;
-using Microsoft.AspNetCore.Connections;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
-using OpenAI.Chat;
 
-namespace BlotzTask.Modules.Chat.Services;
+namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
