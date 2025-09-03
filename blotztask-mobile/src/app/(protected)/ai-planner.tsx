@@ -2,7 +2,7 @@ import BotMessage from "@/feature/ai-chat-hub/components/bot-message";
 import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
 import { useSignalRChat } from "@/feature/ai-chat-hub/hooks/useSignalRChat";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   ScrollView,
@@ -20,12 +20,19 @@ export default function AiPlannerScreen() {
   const [conversationId] = useState<string>(() => uuid.v4());
   const { messages, sendMessage, isTyping } = useSignalRChat(conversationId);
   const [text, setText] = useState("");
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handleSend = () => {
     if (!text.trim()) return;
     sendMessage(text);
     setText("");
   };
+
+  useEffect(()=>{
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollToEnd({animated: true});
+    }
+  }, [messages, isTyping]);
 
   return (
     <SafeAreaView
@@ -40,6 +47,7 @@ export default function AiPlannerScreen() {
         <View className="flex-1">
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <ScrollView
+              ref={scrollViewRef}
               className="px-4"
               contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
               keyboardShouldPersistTaps="handled"
