@@ -50,8 +50,8 @@ export default function CreateTaskForm({
       form.reset({
         title: "",
         description: "",
-        startTime: undefined,
-        endTime: undefined,
+        startTime: startOfDay(new Date()),
+        endTime: endOfDay(new Date()),
         repeat: "none",
         labelId: undefined,
       });

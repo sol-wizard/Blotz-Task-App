@@ -1,21 +1,30 @@
 import { View } from "react-native";
 import DatePicker from "./date-picker";
-import { TimeWheel } from "./time-wheel";
+import { TimePicker } from "./time-picker";
+import { useEffect, useState } from "react";
 
 export const DateTimeSelector = ({
   defaultValue,
   changeDateTime,
 }: {
   defaultValue: Date;
-  changeDateTime: () => void;
+  changeDateTime: (d: Date) => void;
 }) => {
-  console.log("DateTimeSelector - defaultValue:", defaultValue);
+  const [datePart, setDatePart] = useState<Date>(defaultValue);
+  const [timePart, setTimePart] = useState<Date>(defaultValue);
+
+  useEffect(() => {
+    const merged = new Date(datePart);
+    merged.setHours(timePart.getHours(), timePart.getMinutes(), 0, 0);
+    changeDateTime(merged);
+  }, []);
+
   return (
     <View className="flex-col p-2">
-      <DatePicker value={new Date(defaultValue)} onChange={changeDateTime} />
-      <TimeWheel
+      <DatePicker value={new Date(defaultValue)} onChange={setDatePart} />
+      <TimePicker
         defaultValue={new Date(defaultValue)}
-        onChange={changeDateTime}
+        onChange={setTimePart}
       />
     </View>
   );

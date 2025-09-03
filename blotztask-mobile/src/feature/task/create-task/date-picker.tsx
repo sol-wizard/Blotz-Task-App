@@ -13,24 +13,24 @@ type Props = {
 };
 
 export default function DatePicker({ value, onChange }: Props) {
-  const [open, setOpen] = useState(false);
-  const [temp, setTemp] = useState<Date>(value);
+  const [openCalendar, setOpenCalendar] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(value);
 
   const onNativeChange = (_: DateTimePickerEvent, selected?: Date) => {
-    if (selected) setTemp(selected);
+    if (selected) setTempDate(selected);
   };
 
   const handleConfirm = () => {
-    onChange(temp);
-    setOpen(false);
+    onChange(tempDate);
+    setOpenCalendar(false);
   };
 
   return (
-    <>
+    <View className="pb-2">
       <Pressable
         onPress={() => {
-          setTemp(value ?? new Date());
-          setOpen(true);
+          setTempDate(value ?? new Date());
+          setOpenCalendar(true);
         }}
         className="flex-row items-center justify-between px-3 py-2 rounded-xl border border-gray-300 bg-white"
       >
@@ -43,22 +43,18 @@ export default function DatePicker({ value, onChange }: Props) {
       </Pressable>
 
       <Modal
-        isVisible={open}
+        isVisible={openCalendar}
         backdropColor="black"
         backdropOpacity={0.5}
-        onBackdropPress={() => setOpen(false)}
+        onBackdropPress={() => setOpenCalendar(false)}
         presentationStyle="overFullScreen"
         statusBarTranslucent
       >
         <View className="absolute inset-0 items-center justify-center px-4">
           <View className="w-full max-w-md rounded-2xl bg-white p-4">
-            <Text className="text-lg font-semibold text-slate-800 mb-3">
-              Select date
-            </Text>
-
             <View className="items-center">
               <DateTimePicker
-                value={temp}
+                value={tempDate}
                 mode="date"
                 display={Platform.OS === "ios" ? "spinner" : "calendar"}
                 locale={Platform.OS === "ios" ? "en-GB" : undefined}
@@ -70,7 +66,7 @@ export default function DatePicker({ value, onChange }: Props) {
 
             <View className="flex-row justify-end mt-2 space-x-3">
               <Pressable
-                onPress={() => setOpen(false)}
+                onPress={() => setOpenCalendar(false)}
                 className="px-4 py-2 rounded-lg"
               >
                 <Text className="text-slate-600">Cancel</Text>
@@ -85,6 +81,6 @@ export default function DatePicker({ value, onChange }: Props) {
           </View>
         </View>
       </Modal>
-    </>
+    </View>
   );
 }

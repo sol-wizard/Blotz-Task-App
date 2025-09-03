@@ -9,7 +9,6 @@ export const StartEndDateTimePicker = ({ control }: { control: any }) => {
         control={control}
         name="startTime"
         render={({ field: { value, onChange } }) => {
-          console.log("StartEndDateTimePicker - startTime value:", value);
           return (
             <DateTimeSelector defaultValue={value} changeDateTime={onChange} />
           );

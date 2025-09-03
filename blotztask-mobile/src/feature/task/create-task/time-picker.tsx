@@ -2,17 +2,15 @@ import { View, Text } from "react-native";
 import WheelPicker from "@quidone/react-native-wheel-picker";
 import { useEffect, useState } from "react";
 
-export const TimeWheel = ({
+export const TimePicker = ({
   defaultValue,
   onChange,
 }: {
   defaultValue: Date;
-  onChange: (timeISO: string) => void;
+  onChange: (d: Date) => void;
 }) => {
-  const initialHour = defaultValue ? defaultValue.getHours() : 0;
-  const initialMinute = defaultValue ? defaultValue.getMinutes() : 0;
-  const [hourValue, setHourValue] = useState(initialHour);
-  const [minValue, setMinValue] = useState(initialMinute);
+  const [hourValue, setHourValue] = useState(defaultValue.getHours());
+  const [minValue, setMinValue] = useState(defaultValue.getMinutes());
 
   const hourData = [...Array(24).keys()].map((h) => ({
     value: h,
@@ -24,14 +22,10 @@ export const TimeWheel = ({
     label: String(m).padStart(2, "0"),
   }));
 
-  const getTime = () => {
-    const hh = String(hourValue).padStart(2, "0");
-    const mm = String(minValue).padStart(2, "0");
-    return `${hh}:${mm}:00`;
-  };
-
   useEffect(() => {
-    onChange(getTime());
+    const merged = new Date(defaultValue);
+    merged.setHours(hourValue, minValue, 0, 0);
+    onChange(merged);
   }, [hourValue, minValue]);
 
   return (
