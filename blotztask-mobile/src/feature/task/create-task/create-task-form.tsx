@@ -42,9 +42,10 @@ export default function CreateTaskForm({
   const [showingDateTimePicker, setShowingDateTimePicker] = useState(false);
 
   const handleFormSubmit = async (data: any) => {
+    console.log("Form Data:", data);
     try {
       const dto = toAddTaskItemDTO(data);
-
+      console.log("Submitting task:", dto);
       await addTaskItem(dto);
       handleTaskCreationSheetClose(-1);
       form.reset({

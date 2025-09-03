@@ -17,7 +17,7 @@ export const DateTimeSelector = ({
     const merged = new Date(datePart);
     merged.setHours(timePart.getHours(), timePart.getMinutes(), 0, 0);
     changeDateTime(merged);
-  }, []);
+  }, [datePart, timePart]);
 
   return (
     <View className="flex-col p-2">

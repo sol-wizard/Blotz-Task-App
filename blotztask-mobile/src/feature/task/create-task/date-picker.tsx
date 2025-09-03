@@ -37,7 +37,7 @@ export default function DatePicker({ value, onChange }: Props) {
         <Text
           className={`text-base ${value ? "text-slate-700" : "text-slate-400"}`}
         >
-          {value && isValid(value) ? format(value, "dd/MM/yy") : "DD/MM/YY"}
+          {tempDate ? format(tempDate, "dd/MM/yy") : "DD/MM/YY"}
         </Text>
         <Ionicons name="calendar-outline" size={22} color="#3b3f58" />
       </Pressable>
