@@ -13,11 +13,10 @@ import {
 } from "react-native-calendars";
 import { Snackbar } from "react-native-paper";
 
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
 import TaskCard from "../components/task-card";
-import { isSameDay } from "date-fns";
 
 import {
   fetchTasksForDate,
