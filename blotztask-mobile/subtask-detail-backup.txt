@@ -1,0 +1,261 @@
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
+import { View, Pressable } from "react-native";
+import {
+                       {!isLast && (
+                    <View
+                    pointerEvents="none"
+                    style={{
+                        position: "absolute",
+                        left: LEFT_COL_WIDTH / 2,
+                        top: LINE_TOP_OFFSET,
+                        height: 40, 
+                        width: 0,
+                        borderLeftWidth: 2,
+                        borderColor: DESIGN_GREY,
+                        borderStyle: "dashed",
+                        zIndex: 10
+                    }}
+                    />style={{
+                        position: "absolute",
+                        left: LEFT_COL_WIDTH / 2,
+                        top: LINE_TOP_OFFSET,
+                        height: 40,  // 固定高度，确保虚线可见
+                        width: 0,
+                        borderLeftWidth: 2,
+                        borderColor: DESIGN_GREY,
+                        borderStyle: "dashed",
+                        zIndex: 10,eetModal,
+  BottomSheetView,
+  BottomSheetBackdrop,
+  BottomSheetBackdropProps,
+} from "@gorhom/bottom-sheet";
+import { Text, Button, ProgressBar } from "react-native-paper";
+import { router } from "expo-router";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
+import { TaskDetailTag } from "./task-detail-tag";
+
+// 轻量本地类型
+type Subtask = {
+  id: number;
+  title: string;
+  estimatedDuration: string; // "1h" | "2h" | "1.5h"
+  isCompleted: boolean;
+  subtitle?: string;
+};
+
+export type SubtaskDetailBottomSheetHandle = {
+  present: () => void;
+  dismiss: () => void;
+};
+
+type Props = {
+  task?: TaskDetailDTO;
+  initialSubtasks?: Subtask[];
+  onDismiss?: () => void;
+};
+
+// ===== 设计色：更浅的深灰 =====
+const DESIGN_GREY = "#AEAEB2";
+
+// 竖向连线定位常量（可按实际 UI 微调）
+const LEFT_COL_WIDTH = 44;          // 和你的 checkbox 列宽一致
+const CHECKBOX_SIZE = 28;           // 你们的 CustomCheckbox 视觉尺寸(可微调 26/30)
+const LINE_TOP_OFFSET = CHECKBOX_SIZE / 2 + 6;   // 从 checkbox 下缘稍微往下开始
+const LINE_BOTTOM_OVERFLOW = 12;    // 向下一行延伸一点，保证“接上”
+
+const SubtaskDetailBottomSheet = forwardRef<
+  SubtaskDetailBottomSheetHandle,
+  Props
+>(({ task, initialSubtasks = [], onDismiss }, ref) => {
+  const subtaskDetailModalRef = useRef<BottomSheetModal>(null);
+  const [subtasks, setSubtasks] = useState<Subtask[]>(initialSubtasks);
+
+  useImperativeHandle(ref, () => ({
+    present: () => subtaskDetailModalRef.current?.present(),
+    dismiss: () => subtaskDetailModalRef.current?.dismiss(),
+  }));
+
+  const snapPoints = useMemo(() => ["60%", "90%"], []);
+
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        pressBehavior="close"
+        opacity={0.5}
+      />
+    ),
+    []
+  );
+
+  // Count the progress
+  const completed = subtasks.filter((s) => s.isCompleted).length;
+  const total = subtasks.length || 1;
+  const progress = completed / total;
+
+  // Get the total hours of the subtasks
+  const totalHours = useMemo(() => {
+    return subtasks.reduce((sum, s) => {
+      const n = parseFloat(String(s.estimatedDuration).replace(/[^\d.]/g, ""));
+      return sum + (isNaN(n) ? 0 : n);
+    }, 0);
+  }, [subtasks]);
+
+  const totalHoursLabel =
+    Number.isInteger(totalHours) ? `${totalHours}h` : `${totalHours.toFixed(1)}h`;
+
+    // Toggle subtask completion
+  const toggle = (id: number) => {
+    setSubtasks((prev) =>
+      prev.map((s) =>
+        s.id === id ? { ...s, isCompleted: !s.isCompleted } : s
+      )
+    );
+  };
+
+  // Navigate to AI breakdown page
+  const handleEditWithAI = () => {
+    if (!task) return;
+    subtaskDetailModalRef.current?.dismiss();
+    router.push({
+      pathname: "/(protected)/ai-breakdown",
+      params: { id: task.id, title: task.title, description: task.description },
+    });
+  };
+
+  return (
+    <BottomSheetModal
+      ref={subtaskDetailModalRef}
+      snapPoints={snapPoints}
+      onDismiss={onDismiss}
+      enablePanDownToClose
+      backdropComponent={renderBackdrop}
+      backgroundStyle={{
+        backgroundColor: "#FFFFFF",
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+      }}
+    >
+      <BottomSheetView className="flex-1 bg-white px-4 pt-3 pb-28">
+        {/* Header */}
+        <View className="flex-row items-start justify-between mb-2">
+          <Text
+            className="flex-1 text-gray-900 mr-3 text-[22px] leading-7"
+            style={{ fontWeight: "800" }} // 任务标题：font-weight 800
+          >
+            {task?.title ?? "Subtask Detail"}
+          </Text>
+          {/* 右上：总时长 */}
+          <Text style={{ color: DESIGN_GREY, fontWeight: "800" }} className="text-sm">
+            {totalHoursLabel}
+          </Text>
+        </View>
+
+        {/* tags */}
+        <View className="flex-row items-center mb-3 gap-2 mt-1">
+          <TaskDetailTag>Work</TaskDetailTag>
+          <TaskDetailTag>{task?.isDone ? "Done" : "In progress"}</TaskDetailTag>
+        </View>
+
+        {/* 进度 */}
+        <View className="mb-2">
+          <Text className="text-[12px] text-neutral-500 font-bold mb-1">
+            {completed}/{total} Completed
+          </Text>
+          {/* 进度条颜色：使用设计灰 */}
+          <ProgressBar progress={progress} color={DESIGN_GREY} />
+        </View>
+
+        {/* 分隔线：使用设计灰 */}
+        <View style={{ height: 1, backgroundColor: DESIGN_GREY }} className="my-3" />
+
+        {/* Subtasks */}
+        <View>
+          {subtasks.map((s, i) => {
+            const isLast = i === subtasks.length - 1;
+            return (
+              <View key={s.id} className="relative flex-row items-start py-4">
+                {/* 左列：checkbox（固定宽度，便于连线居中） */}
+                <View
+                style={{ width: LEFT_COL_WIDTH, position: "relative" }}  // ✅ position: 'relative' 很关键
+                className="items-center"
+                >
+                <CustomCheckbox checked={s.isCompleted} onPress={() => toggle(s.id)} />
+
+                {/* ✅ 竖向虚线：绝对定位在左列内部，不参与布局，不会挡后续行 */}
+                {!isLast && (
+                    <View
+                    pointerEvents="none"
+                    style={{
+                        position: "absolute",
+                        left: LEFT_COL_WIDTH / 2 - 0.5,   // 居中于列（-0.5 视觉像素对齐）
+                        top: LINE_TOP_OFFSET,             // 从 checkbox 下方开始
+                        bottom: -LINE_BOTTOM_OVERFLOW,    // 向下一行延伸一点，形成“连接”
+                        width: 0,
+                        borderLeftWidth: 3,               // 想更明显可调成 2
+                        borderLeftColor: DESIGN_GREY,
+                        borderStyle: "dashed",
+                    }}
+                    />
+                )}
+                </View>
+
+                {/* 右列：标题 + 右侧时长 + 副标题 */}
+                <View className="flex-1 ml-2">
+                  <View className="flex-row items-center justify-between">
+                    <Text
+                      className={`text-[15px] ${s.isCompleted ? "line-through" : ""}`}
+                      style={{ fontWeight: "800", color: s.isCompleted ? DESIGN_GREY : undefined }}
+                    >
+                      {s.title}
+                    </Text>
+                    <Text
+                      className="ml-3 text-sm"
+                      style={{ color: DESIGN_GREY, fontWeight: "800" }} // 右侧时长同任务标题字体（权重 800），字号保持不变
+                    >
+                      {s.estimatedDuration}
+                    </Text>
+                  </View>
+
+                  {!!s.subtitle && (
+                    <Text
+                      className={`mt-1 text-[13px] font-semibold ${s.isCompleted ? "line-through" : ""}`}
+                      style={{ color: DESIGN_GREY }}
+                    >
+                      {s.subtitle}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Footer 按钮：背景 #a0a0a0，白字加粗 */}
+        <View className="absolute left-4 right-4 bottom-6">
+          <Pressable
+            onPress={handleEditWithAI}
+            className="w-full items-center justify-center py-4 rounded-2xl bg-neutral-300 border-neutral-300"
+          >
+            <Text className="text-base text-white" style={{ fontWeight: "800" }}>
+              Edit with AI
+            </Text>
+          </Pressable>
+        </View>
+      </BottomSheetView>
+    </BottomSheetModal>
+  );
+});
+
+SubtaskDetailBottomSheet.displayName = "SubtaskDetailBottomSheet";
+export default SubtaskDetailBottomSheet;
