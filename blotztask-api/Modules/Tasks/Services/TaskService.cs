@@ -35,6 +35,7 @@ public class TaskService : ITaskService
     {
         return await _dbContext.TaskItems
             .Where(x => x.UserId == userId)
+            .Include(x => x.Label)
             .OrderBy(x => x.EndTime)
             .Select(x => new TaskItemDto
             {
@@ -43,6 +44,8 @@ public class TaskService : ITaskService
                 Description = x.Description,
                 EndTime = x.EndTime,
                 IsDone = x.IsDone,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt,
                 Label = x.Label != null ? new LabelDto { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color } : null,
                 HasTime = x.HasTime,
             })
@@ -51,7 +54,9 @@ public class TaskService : ITaskService
 
     public async Task<TaskItemDto> GetTaskById(int id)
     {
-        var task = await _dbContext.TaskItems.FindAsync(id);
+        var task = await _dbContext.TaskItems
+            .Include(x => x.Label)
+            .FirstOrDefaultAsync(x => x.Id == id);
 
         if (task == null)
         {
@@ -67,7 +72,7 @@ public class TaskService : ITaskService
             IsDone = task.IsDone,
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
-            Label = task.Label != null ? new LabelDto { Name = task.Label.Name, Color = task.Label.Color } : null,
+            Label = task.Label != null ? new LabelDto { LabelId = task.Label.LabelId, Name = task.Label.Name, Color = task.Label.Color } : null,
             HasTime = task.HasTime
         };
 
