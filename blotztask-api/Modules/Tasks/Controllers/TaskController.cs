@@ -16,7 +16,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 public class TaskController(
     ITaskService taskService,
 
-    GetTasksByDateQueryHandler  getTasksByDateQueryHandler,
+    GetTasksByDateQueryHandler getTasksByDateQueryHandler,
 
     TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
     AddTaskCommandHandler addTaskCommandHandler
@@ -91,25 +91,8 @@ public class TaskController(
     }
 
     [HttpPost]
-
-    public async Task<string> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
-
+    public async Task<ActionResult<string>> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        if (string.IsNullOrWhiteSpace(addtaskItem.Title))
-        {
-            return BadRequest("Title is required and cannot be empty.");
-        }
-
-        if (addtaskItem.Title.Length > 200)
-        {
-            return BadRequest("Title cannot be longer than 200 characters.");
-        }
-
         var userId = HttpContext.Items["UserId"] as string;
 
         if (userId == null)
@@ -124,8 +107,7 @@ public class TaskController(
         };
 
         var result = await addTaskCommandHandler.Handle(command, ct);
-
-        return result;
+        return Ok(result);
 
     }
 
