@@ -4,30 +4,28 @@ import { getStartOfDayUtc } from '../util/date-utils'
 import { AddTaskItemDTO } from '../models/add-task-item-dto'
 import { EditTaskValues } from '../task-edit/task-form-schema'
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_URL as string
-
 export async function fetchTasksForDate(
   date: Date,
   includeFloatingForToday: boolean
 ): Promise<TaskDetailDTO[]> {
   const startDateUtc = getStartOfDayUtc(date).toISOString()
-  const url = `${API_BASE_URL}/api/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}&includeFloatingForToday=${includeFloatingForToday}`
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}&includeFloatingForToday=${includeFloatingForToday}`
 
   const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: 'GET' })
   return data
 }
 
 export async function toggleTaskCompletion(taskId: number): Promise<void> {
-  const url = `${API_BASE_URL}/api/Task/task-completion-status/${taskId}`
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/task-completion-status/${taskId}`
 
   await fetchWithAuth<unknown>(url, { method: 'PUT' })
 }
 
 export const addTaskItem = async (
   addTaskForm: AddTaskItemDTO
-): Promise<TaskDetailDTO> => {
+): Promise<string> => {
   try {
-    const result = await fetchWithAuth<TaskDetailDTO>(
+    const result = await fetchWithAuth<string>(
       `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`,
       {
         method: 'POST',
@@ -80,7 +78,7 @@ export async function updateTaskItem(
 }
 
 export async function deleteTask(taskId: number): Promise<void> {
-  const url = `${API_BASE_URL}/api/Task/${taskId}`
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`
   try {
     await fetchWithAuth<void>(url, { method: 'DELETE' })
   } catch (err: any) {

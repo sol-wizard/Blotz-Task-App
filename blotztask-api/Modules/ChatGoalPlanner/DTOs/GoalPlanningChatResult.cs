@@ -1,6 +1,6 @@
 using BlotzTask.Shared.DTOs;
 
-namespace BlotzTask.Modules.GoalPlannerChat.Dtos;
+namespace BlotzTask.Modules.ChatGoalPlanner.DTOs;
 
 public class GoalPlanningChatResult
 {
