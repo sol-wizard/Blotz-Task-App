@@ -7,6 +7,12 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 
+const formatTime = (iso: string | undefined) => {
+  if (!iso) return "";
+  const date = new Date(iso);
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+};
+
 export const AIChatTaskCard = ({
   task,
   className,
@@ -44,20 +50,29 @@ export const AIChatTaskCard = ({
         <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
         <View className="flex-col">
           <TextInput
-            value={task?.title}
+            value={task.title}
             onChangeText={(t) => onEditTask(task.id)}
             style={{ fontSize: 16, fontWeight: "600" }}
             multiline={true}
             scrollEnabled={false}
           />
-          <View className="flex-row my-1">
-            <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
-            {task.endTime && (
+
+          {/* 
+          Shows nothing if both times are missing.
+          Shows only start or end time if just one exists.
+          Shows startTime - endTime if both exist.
+          */}
+
+          {(task.startTime || task.endTime) && (
+            <View className="flex-row my-1">
+              <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
               <Text className="text-base text-primary ml-2">
-                {task.endTime}
+                {task.startTime && task.endTime
+                  ? `${formatTime(task.startTime)} - ${formatTime(task.endTime)}`
+                  : formatTime(task.startTime || task.endTime)}
               </Text>
-            )}
-          </View>
+            </View>
+          )}
         </View>
       </View>
     </View>
