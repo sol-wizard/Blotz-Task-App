@@ -7,7 +7,7 @@ import { AiTaskDTO } from "../models/ai-task-dto";
 import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 
 //TODO: Rename to a specific name
-export function useSignalRChat(conversationId: string) {
+export function useSignalRChat() {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [connection, setConnection] = useState<signalR.HubConnection | null>(
     null
@@ -30,8 +30,7 @@ export function useSignalRChat(conversationId: string) {
           connection,
           "SendMessage",
           "User",
-          text.trim(),
-          conversationId
+          text.trim()
         );
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
