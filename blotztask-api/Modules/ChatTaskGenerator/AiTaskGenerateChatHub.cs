@@ -35,7 +35,7 @@ public class AiTaskGenerateChatHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task SendMessage(string user, string message, string conversationId)
+    public async Task SendMessage(string user, string message)
     {
         var userMsg = new ConversationMessage
         {
@@ -59,7 +59,7 @@ public class AiTaskGenerateChatHub : Hub
             {
                 await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
                 await Clients.Caller.SendAsync("BotTyping", false);
-                await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
+                await Clients.Caller.SendAsync("ConversationCompleted");
                 return;
             }
 

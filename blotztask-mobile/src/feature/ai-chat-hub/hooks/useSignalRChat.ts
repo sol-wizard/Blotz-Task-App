@@ -30,8 +30,7 @@ export function useSignalRChat(conversationId: string) {
           connection,
           "SendMessage",
           "User",
-          text.trim(),
-          conversationId
+          text.trim()
         );
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
