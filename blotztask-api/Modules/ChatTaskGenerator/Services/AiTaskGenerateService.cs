@@ -9,7 +9,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 public interface IAiTaskGenerateService
 {
     Task<List<ExtractedTask>?> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct);
-    Task<ChatHistory> InitializeNewConversation(string conversationId);
+    Task<ChatHistory> InitializeNewConversation();
 }
 
 public class AiTaskGenerateService : IAiTaskGenerateService
@@ -123,17 +123,16 @@ public class AiTaskGenerateService : IAiTaskGenerateService
     ///  Initializes a new conversation by creating a new ChatHistory object
     ///  and setting the system message.
     ///  </summary>
-    /// <param name="conversationId">The unique identifier for the conversation.</param>
     /// <returns>A Task that represents the asynchronous operation, containing the initialized ChatHistory.</returns
     /// <exception cref="ArgumentException">Thrown when the conversationId is null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the conversation state service fails to set
     /// the chat history.</exception>
-    public Task<ChatHistory> InitializeNewConversation(string conversationId)
+    public Task<ChatHistory> InitializeNewConversation()
     {
         var chatHistory = new ChatHistory();
         chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(DateTime.Now));
 
-        _chatHistoryManagerService.SetChatHistory(conversationId, chatHistory);
+        _chatHistoryManagerService.SetChatHistory(chatHistory);
 
         return Task.FromResult(chatHistory);
     }
