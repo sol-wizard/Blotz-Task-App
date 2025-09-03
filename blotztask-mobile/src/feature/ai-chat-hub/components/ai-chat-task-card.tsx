@@ -61,16 +61,24 @@ export const AIChatTaskCard = ({
           Shows startTime - endTime if both exist.
           */}
 
-          {(task.startTime || task.endTime) && (
+          {task.startTime || task.endTime ? (
             <View className="flex-row my-1">
               <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
-              <Text className="text-base text-primary ml-2">
-                {task.startTime && task.endTime
-                  ? `${formatTime(task.startTime)} - ${formatTime(task.endTime)}`
-                  : formatTime(task.startTime || task.endTime)}
-              </Text>
+              <View className="flex-col ml-2">
+                {task.startTime && (
+                  <Text className="text-base text-primary">
+                    {formatTime(task.startTime)}
+                  </Text>
+                )}
+                {task.endTime && (
+                  <Text className="text-base text-primary">
+                    {formatTime(task.endTime)}
+                  </Text>
+                )}
+              </View>
             </View>
-          )}
+          ) : null}
+          
         </View>
       </View>
     </View>
