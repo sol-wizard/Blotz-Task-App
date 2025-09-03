@@ -12,13 +12,11 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import uuid from "react-native-uuid";
 
 import TypingAnimation from "@/feature/ai-chat-hub/components/typing-animation";
 
 export default function AiPlannerScreen() {
-  const [conversationId] = useState<string>(() => uuid.v4());
-  const { messages, sendMessage, isTyping } = useSignalRChat(conversationId);
+  const { messages, sendMessage, isTyping } = useSignalRChat();
   const [text, setText] = useState("");
   const scrollViewRef = useRef<ScrollView>(null);
 
