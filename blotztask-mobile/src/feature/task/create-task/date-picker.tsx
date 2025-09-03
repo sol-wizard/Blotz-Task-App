@@ -4,7 +4,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 
 export default function DatePicker({
   value,
@@ -37,7 +37,7 @@ export default function DatePicker({
         <Text
           className={`text-base ${value ? "text-slate-700" : "text-slate-400"}`}
         >
-          {format(value, "dd/MM/yy")}
+          {value && isValid(value) ? format(value, "dd/MM/yy") : "DD/MM/YY"}
         </Text>
         <Ionicons name="calendar-outline" size={22} color="#3b3f58" />
       </Pressable>
@@ -54,10 +54,6 @@ export default function DatePicker({
         />
 
         <View className="absolute inset-x-4 bottom-8 rounded-2xl bg-white p-4">
-          <Text className="text-lg font-semibold text-slate-800 mb-3">
-            Select date
-          </Text>
-
           <View className="items-center">
             <DateTimePicker
               value={temp}

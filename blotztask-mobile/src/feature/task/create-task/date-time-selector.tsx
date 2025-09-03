@@ -9,6 +9,7 @@ export const DateTimeSelector = ({
   defaultValue: Date;
   changeDateTime: () => void;
 }) => {
+  console.log("DateTimeSelector - defaultValue:", defaultValue);
   return (
     <View className="flex-col p-2">
       <DatePicker value={new Date(defaultValue)} onChange={changeDateTime} />
