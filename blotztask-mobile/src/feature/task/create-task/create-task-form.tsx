@@ -9,7 +9,6 @@ import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
-
 import { RepeatMenu } from "./repeat-menu";
 import { LabelMenu } from "./label-menu";
 import { DateTimeSelectorTrigger } from "./date-time-selector-trigger";

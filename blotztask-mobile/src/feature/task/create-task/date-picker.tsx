@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
-import { format, isValid } from "date-fns";
+import { format } from "date-fns";
 import Modal from "react-native-modal";
 
 type Props = {

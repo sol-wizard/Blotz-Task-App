@@ -14,12 +14,6 @@ export const DateTimeSelectorTrigger = ({
     handleTrigger();
   };
 
-  const getTodayISOString = () => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString();
-  };
-
   return (
     <TouchableOpacity
       onPress={handlePress}
