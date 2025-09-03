@@ -17,7 +17,7 @@ public class AddLabelCommand
 
 public class AddLabelCommandHandler(BlotzTaskDbContext db, ILogger<AddLabelCommandHandler> logger)
 {
-    public async Task<AddLabelDto> Handle(AddLabelCommand command, CancellationToken ct = default )
+    public async Task<String> Handle(AddLabelCommand command, CancellationToken ct = default )
     {
         logger.LogInformation("Adding label {Name}", command.Name);
         
@@ -31,20 +31,7 @@ public class AddLabelCommandHandler(BlotzTaskDbContext db, ILogger<AddLabelComma
         db.Labels.Add(addlabel);
         await db.SaveChangesAsync();
 
-        return new AddLabelDto
-        {
-            LabelId = addlabel.LabelId,
-            Name = addlabel.Name,
-            Color = addlabel.Color,
-            Description = addlabel.Description
-        };
+        return addlabel.Name;
     }
 }
 
-public class AddLabelDto
-{
-    public int LabelId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Color { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-}

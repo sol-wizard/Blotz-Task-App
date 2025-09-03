@@ -27,6 +27,7 @@ public class LabelController(ILabelService _labelService, AddLabelCommandHandler
 
 
     [HttpPost]
+    [Obsolete("This endpoint is not in used")]
     public async Task<IActionResult> AddLabel([FromBody] AddLabelDto addLabels, CancellationToken ct)
     {
         
