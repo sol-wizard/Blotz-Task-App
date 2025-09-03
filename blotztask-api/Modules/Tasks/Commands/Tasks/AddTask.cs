@@ -20,24 +20,36 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
     {
         logger.LogInformation("Adding new task for user {UserId}", command.UserId);
 
-        var newTask = new TaskItem
+        try
         {
-            Title = command.TaskDetails.Title,
-            Description = command.TaskDetails.Description,
-            StartTime = command.TaskDetails.StartTime,
-            EndTime = command.TaskDetails.EndTime,
-            LabelId = command.TaskDetails.LabelId,
-            UserId = command.UserId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            HasTime = command.TaskDetails.HasTime
-        };
+            var newTask = new TaskItem
+            {
+                Title = command.TaskDetails.Title,
+                Description = command.TaskDetails.Description,
+                StartTime = command.TaskDetails.StartTime,
+                EndTime = command.TaskDetails.EndTime,
+                LabelId = command.TaskDetails.LabelId,
+                UserId = command.UserId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                HasTime = command.TaskDetails.HasTime
+            };
 
-        db.TaskItems.Add(newTask);
-        await db.SaveChangesAsync(ct);
+            db.TaskItems.Add(newTask);
+            await db.SaveChangesAsync(ct);
 
-        logger.LogInformation("Task {Id} was successfully added for user {UserId}", newTask.Id, command.UserId);
+            logger.LogInformation("Task {Id} was successfully added for user {UserId}", newTask.Id, command.UserId);
 
-        return $"Task {newTask.Id} titled {newTask.Title} was successfully added.";
+            return $"Task {newTask.Id} titled {newTask.Title} was successfully added.";
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error adding task for user {UserId}. Error: {ErrorMessage}", command.UserId, ex.Message);
+            if (ex.InnerException != null)
+            {
+                logger.LogError("Inner exception: {InnerException}", ex.InnerException.Message);
+            }
+            throw;
+        }
     }
 }
