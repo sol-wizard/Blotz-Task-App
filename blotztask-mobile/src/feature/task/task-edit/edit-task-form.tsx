@@ -9,8 +9,8 @@ import {
 } from './task-form-schema'
 import { RepeatMenu } from '../task-creation/repeat-menu'
 import { LabelMenu } from '../task-creation/label-menu'
-import DateBottomSheetTriggers from '@/feature/task/task-edit/dateBottomSheetTrigger'
 import { useEffect } from 'react'
+import DateBottomSheetTriggers from './DateBottomSheetTrigger'
 
 export type EditTaskFormProps = {
   initialValues: EditTaskValues
