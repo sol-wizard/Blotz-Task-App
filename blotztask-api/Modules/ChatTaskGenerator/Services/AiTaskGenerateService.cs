@@ -1,16 +1,10 @@
 using System.Text.Json;
-using BlotzTask.Modules.Chat.Constants;
-using BlotzTask.Modules.Chat.Plugins;
-using BlotzTask.Modules.Labels.Services;
+using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Shared.DTOs;
-using BlotzTask.Shared.Services;
-using Microsoft.AspNetCore.Connections;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
-using OpenAI.Chat;
 
-namespace BlotzTask.Modules.Chat.Services;
+namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
@@ -21,7 +15,7 @@ public interface IAiTaskGenerateService
 public class AiTaskGenerateService : IAiTaskGenerateService
 {
     private readonly IChatHistoryManagerService _chatHistoryManagerService;
-    private readonly IChatCompletionService _chatCompletionService; // TODO: use safeChatCompletionService 
+    private readonly IChatCompletionService _chatCompletionService; // TODO: use safeChatCompletionService
     private readonly ILogger<AiTaskGenerateService> _logger;
     private readonly Kernel _kernel;
 
@@ -57,16 +51,18 @@ public class AiTaskGenerateService : IAiTaskGenerateService
             - If the user mentions multiple actions in one message, extract **all distinct tasks** separately.  
             - Do not include tasks from earlier turns of the conversation.  
             - Always return every valid task, not just one.
+            - The user message may contain Mandarin characters. Please ensure that the extracted tasks are relevant
+            to the Mandarin content and provide translations if necessary.
             """
         );
-    
+
         var extractTasksFunction = _kernel.Plugins["TaskExtractionPlugin"]["ExtractTasks"];
         var executionSettings = new PromptExecutionSettings
         {
-            FunctionChoiceBehavior   = FunctionChoiceBehavior.Required(
-                functions: new []{extractTasksFunction},
-                autoInvoke:true
-                )
+            FunctionChoiceBehavior = FunctionChoiceBehavior.Required(
+                functions: new[] { extractTasksFunction },
+                autoInvoke: true
+            ),
         };
 
         try
@@ -79,40 +75,46 @@ public class AiTaskGenerateService : IAiTaskGenerateService
             );
 
             var functionResultMessage = chatResults.LastOrDefault();
-            
 
-            if (functionResultMessage != null && !string.IsNullOrEmpty(functionResultMessage.Content))
+            if (
+                functionResultMessage != null
+                && !string.IsNullOrEmpty(functionResultMessage.Content)
+            )
             {
                 try
                 {
                     _logger.LogInformation(functionResultMessage.Content);
                     var extractedTasks = JsonSerializer.Deserialize<List<ExtractedTask>>(
                         functionResultMessage.Content,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true } // Important for JSON deserialization
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                     );
 
-                    if (extractedTasks!= null)
+                    if (extractedTasks != null)
                     {
                         chatHistory.AddAssistantMessage(JsonSerializer.Serialize(extractedTasks));
                         return extractedTasks;
                     }
-                    else
-                    {
-                        return new List<ExtractedTask>();
-                    }
 
+                    return null;
                 }
                 catch (JsonException ex)
                 {
-                    _logger.LogError(ex, "Failed to deserialize function result content into ExtractedTaskResponse. Content: {Content}", functionResultMessage.Content);
-                    return new List<ExtractedTask>();
+                    _logger.LogError(
+                        ex,
+                        "Failed to deserialize function result content into ExtractedTaskResponse. Content: {Content}",
+                        functionResultMessage.Content
+                    );
+                    return null;
                 }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Semantic Kernel FunctionChoiceBehavior.Required for TaskExtraction failed.");
-            return new List<ExtractedTask>();
+            _logger.LogError(
+                ex,
+                "Semantic Kernel FunctionChoiceBehavior.Required for TaskExtraction failed."
+            );
+            return null;
         }
         return null;
     }
@@ -135,5 +137,4 @@ public class AiTaskGenerateService : IAiTaskGenerateService
 
         return Task.FromResult(chatHistory);
     }
-    
 }
