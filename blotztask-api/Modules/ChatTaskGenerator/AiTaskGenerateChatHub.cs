@@ -41,7 +41,6 @@ public class AiTaskGenerateChatHub : Hub
         {
             Sender = user,
             Content = message,
-            ConversationId = conversationId,
             Timestamp = DateTime.UtcNow,
             IsBot = false,
         };
