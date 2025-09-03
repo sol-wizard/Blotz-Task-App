@@ -30,15 +30,13 @@ public class TaskGenerateChatService : ITaskGenerateChatService
         CancellationToken ct
     )
     {
-        var conversationId = userMessage.ConversationId;
         string botContent;
         List<ExtractedTask>? tasks = null;
 
         // If there's no chathistory, create a new converstaion
-        if (!_chatHistoryManagerService.TryGetChatHistory(conversationId, out var chatHistory))
+        if (!_chatHistoryManagerService.TryGetChatHistory(out var chatHistory))
         {
-            chatHistory = await _aiTaskGenerateService.InitializeNewConversation(conversationId);
-            _chatHistoryManagerService.SetChatHistory(conversationId, chatHistory);
+            chatHistory = await _aiTaskGenerateService.InitializeNewConversation();
         }
 
         chatHistory.AddUserMessage(userMessage.Content);
@@ -64,7 +62,6 @@ public class TaskGenerateChatService : ITaskGenerateChatService
             {
                 Sender = "ChatBot",
                 Content = botContent,
-                ConversationId = conversationId,
                 Timestamp = DateTime.UtcNow,
                 IsBot = true,
             },
