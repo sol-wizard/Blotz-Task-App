@@ -1,18 +1,18 @@
-import React, { useState } from "react";
-import { Modal, Platform, Pressable, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Platform, Pressable, Text, View } from "react-native";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { format, isValid } from "date-fns";
+import Modal from "react-native-modal";
 
-export default function DatePicker({
-  value,
-  onChange,
-}: {
+type Props = {
   value: Date;
   onChange: (d: Date) => void;
-}) {
+};
+
+export default function DatePicker({ value, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const [temp, setTemp] = useState<Date>(value);
 
@@ -43,40 +43,45 @@ export default function DatePicker({
       </Pressable>
 
       <Modal
-        visible={open}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setOpen(false)}
+        isVisible={open}
+        backdropColor="black"
+        backdropOpacity={0.5}
+        onBackdropPress={() => setOpen(false)}
+        presentationStyle="overFullScreen"
+        statusBarTranslucent
       >
-        <Pressable
-          className="flex-1 bg-black/40"
-          onPress={() => setOpen(false)}
-        />
+        <View className="absolute inset-0 items-center justify-center px-4">
+          <View className="w-full max-w-md rounded-2xl bg-white p-4">
+            <Text className="text-lg font-semibold text-slate-800 mb-3">
+              Select date
+            </Text>
 
-        <View className="absolute inset-x-4 bottom-8 rounded-2xl bg-white p-4">
-          <View className="items-center">
-            <DateTimePicker
-              value={temp}
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "calendar"}
-              onChange={onNativeChange}
-              style={{ alignSelf: "stretch" }}
-            />
-          </View>
+            <View className="items-center">
+              <DateTimePicker
+                value={temp}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "calendar"}
+                locale={Platform.OS === "ios" ? "en-GB" : undefined}
+                minimumDate={new Date(1900, 0, 1)}
+                onChange={onNativeChange}
+                style={{ alignSelf: "stretch" }}
+              />
+            </View>
 
-          <View className="flex-row justify-end mt-2 space-x-3">
-            <Pressable
-              onPress={() => setOpen(false)}
-              className="px-4 py-2 rounded-lg"
-            >
-              <Text className="text-slate-600">Cancel</Text>
-            </Pressable>
-            <Pressable
-              onPress={handleConfirm}
-              className="px-4 py-2 rounded-lg bg-blue-500"
-            >
-              <Text className="text-white font-medium">Confirm</Text>
-            </Pressable>
+            <View className="flex-row justify-end mt-2 space-x-3">
+              <Pressable
+                onPress={() => setOpen(false)}
+                className="px-4 py-2 rounded-lg"
+              >
+                <Text className="text-slate-600">Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleConfirm}
+                className="px-4 py-2 rounded-lg bg-blue-500"
+              >
+                <Text className="text-white font-medium">Confirm</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </Modal>
