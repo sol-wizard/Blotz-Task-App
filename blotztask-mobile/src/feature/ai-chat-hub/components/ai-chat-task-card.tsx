@@ -6,12 +6,10 @@ import { addTaskItem } from "@/feature/task/services/task-service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
+import { format, parseISO } from "date-fns";
 
-const formatTime = (iso: string | undefined) => {
-  if (!iso) return "";
-  const date = new Date(iso);
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-};
+const formatTime = (iso?: string, fmt: string = "MM-dd HH:mm"): string =>
+  iso ? format(parseISO(iso), fmt) : "";
 
 export const AIChatTaskCard = ({
   task,
