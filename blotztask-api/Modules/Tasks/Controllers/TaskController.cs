@@ -16,7 +16,8 @@ public class TaskController(
     ITaskService taskService,
     GetTasksByDateQueryHandler  getTasksByDateQueryHandler,
     TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
-    AddTaskCommandHandler addTaskCommandHandler
+    AddTaskCommandHandler addTaskCommandHandler,
+    GetTaskByIdQueryHandler getTaskByIdQueryHandler
 ) : ControllerBase
 {
     [HttpGet]
@@ -48,9 +49,9 @@ public class TaskController(
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetTaskById(int id)
+    public async Task<TaskByIdItemDto> GetTaskById(int id, CancellationToken ct)
     {
-        return Ok(await taskService.GetTaskById(id));
+        return await getTaskByIdQueryHandler.Handle(id, ct);
     }
         
     [HttpGet("by-date")]
