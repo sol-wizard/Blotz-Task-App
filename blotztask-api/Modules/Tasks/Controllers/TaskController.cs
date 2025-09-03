@@ -15,7 +15,9 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [Authorize]
 public class TaskController(
     ITaskService taskService,
-    GetTasksByDateQueryHandler getTasksByDateQueryHandler,
+
+    GetTasksByDateQueryHandler  getTasksByDateQueryHandler,
+
     TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
     AddTaskCommandHandler addTaskCommandHandler
 ) : ControllerBase
@@ -89,7 +91,9 @@ public class TaskController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
+
+    public async Task<string> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
+
     {
         if (!ModelState.IsValid)
         {
@@ -120,7 +124,9 @@ public class TaskController(
         };
 
         var result = await addTaskCommandHandler.Handle(command, ct);
-        return Ok(result);
+
+        return result;
+
     }
 
     [HttpPut("{id}")]
