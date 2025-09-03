@@ -28,6 +28,7 @@ export default function TaskCreationForm({
     defaultValues: {
       title: "",
       description: "",
+      startTime: undefined,
       endTime: undefined,
       repeat: "none",
       labelId: undefined,
@@ -43,6 +44,7 @@ export default function TaskCreationForm({
       form.reset({
         title: "",
         description: "",
+        startTime: undefined,
         endTime: undefined,
         repeat: "none",
         labelId: undefined,
@@ -100,11 +102,21 @@ export default function TaskCreationForm({
         </View>
 
         <View className="flex-row gap-3 mb-8">
-          <DateBottomSheetTrigger
-            control={form.control}
-            // handleTaskCreationSheetClose={handleTaskCreationSheetClose}
-            // handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
-          />
+          <View className="flex-col gap-3">
+            {/* start time */}
+            <DateBottomSheetTrigger
+              control={form.control}
+              // handleTaskCreationSheetClose={handleTaskCreationSheetClose}
+              // handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
+            />
+
+            {/* end time */}
+            <DateBottomSheetTrigger
+              control={form.control}
+              // handleTaskCreationSheetClose={handleTaskCreationSheetClose}
+              // handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
+            />
+          </View>
 
           <View className="flex-1">
             <RepeatMenu control={form.control} />
