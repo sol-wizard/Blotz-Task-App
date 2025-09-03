@@ -91,7 +91,7 @@ public class TaskController(
     }
 
     [HttpPost]
-    public async Task<ActionResult<string>> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
+    public async Task<string> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
     {
         var userId = HttpContext.Items["UserId"] as string;
 
@@ -107,28 +107,13 @@ public class TaskController(
         };
 
         var result = await addTaskCommandHandler.Handle(command, ct);
-        return Ok(result);
+        return result;
 
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> EditTask(int id, [FromBody] EditTaskItemDto editTaskItem)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
-        if (string.IsNullOrWhiteSpace(editTaskItem.Title))
-        {
-            return BadRequest("Title is required and cannot be empty.");
-        }
-
-        if (editTaskItem.Title.Length > 200)
-        {
-            return BadRequest("Title cannot be longer than 200 characters.");
-        }
-
         var result = await taskService.EditTaskAsync(id, editTaskItem);
 
         return Ok(result);
