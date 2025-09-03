@@ -1,19 +1,25 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Shared.Exceptions;
+using System.ComponentModel.DataAnnotations;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
+public class GetTasksByIdQuery
+{
+    [Required]
+    public required int TaskId { get; init; }
+}
 
 public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQueryHandler> logger)
 {
-    public async Task<TaskByIdItemDto> Handle(int TaskId, CancellationToken ct = default)
+    public async Task<TaskByIdItemDto> Handle(GetTasksByIdQuery query, CancellationToken ct = default)
     {
-        logger.LogInformation("Fetching task with ID {TaskId}.", TaskId);
+        logger.LogInformation("Fetching task with ID {TaskId}.", query.TaskId);
 
-        var task = await db.TaskItems.FindAsync(TaskId, ct);
+        var task = await db.TaskItems.FindAsync(query.TaskId, ct);
 
         if (task == null)
         {
-            throw new NotFoundException($"Task with ID {TaskId} not found.");
+            throw new NotFoundException($"Task with ID {query.TaskId} not found.");
         }
 
         var result = new TaskByIdItemDto
