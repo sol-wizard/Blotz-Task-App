@@ -12,7 +12,10 @@ import { Button } from "react-native-paper";
 
 import { RepeatMenu } from "./repeat-menu";
 import { LabelMenu } from "./label-menu";
-import { DateBottomSheetTrigger } from "./day-time-selector";
+import { DateTimeSelectorTrigger } from "./date-time-selector-trigger";
+import { useState } from "react";
+import { StartEndDateTimePicker } from "./start-end-date-time-picker";
+import { endOfDay, startOfDay } from "date-fns";
 
 export default function CreateTaskForm({
   handleTaskCreationSheetClose,
@@ -29,11 +32,14 @@ export default function CreateTaskForm({
     defaultValues: {
       title: "",
       description: "",
-      endTime: undefined,
+      startTime: startOfDay(new Date()),
+      endTime: endOfDay(new Date()),
       repeat: "none",
       labelId: undefined,
     },
   });
+
+  const [showingDateTimePicker, setShowingDateTimePicker] = useState(false);
 
   const handleFormSubmit = async (data: any) => {
     try {
@@ -44,6 +50,7 @@ export default function CreateTaskForm({
       form.reset({
         title: "",
         description: "",
+        startTime: undefined,
         endTime: undefined,
         repeat: "none",
         labelId: undefined,
@@ -101,7 +108,9 @@ export default function CreateTaskForm({
         </View>
 
         <View className="flex-row gap-3 mb-8">
-          <DateBottomSheetTrigger control={form.control} />
+          <DateTimeSelectorTrigger
+            handleTrigger={() => setShowingDateTimePicker((prev) => !prev)}
+          />
 
           <View className="flex-1">
             <RepeatMenu control={form.control} />
@@ -111,6 +120,9 @@ export default function CreateTaskForm({
             <LabelMenu control={form.control} />
           </View>
         </View>
+        {showingDateTimePicker && (
+          <StartEndDateTimePicker control={form.control} />
+        )}
 
         <Button
           mode="contained"
