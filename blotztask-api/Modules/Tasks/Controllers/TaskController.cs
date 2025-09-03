@@ -51,7 +51,8 @@ public class TaskController(
     [HttpGet("{id}")]
     public async Task<TaskByIdItemDto> GetTaskById(int id, CancellationToken ct)
     {
-        return await getTaskByIdQueryHandler.Handle(id, ct);
+        var query = new GetTasksByIdQuery { TaskId = id };
+        return await getTaskByIdQueryHandler.Handle(query, ct);
     }
         
     [HttpGet("by-date")]
