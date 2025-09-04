@@ -11,7 +11,6 @@ namespace BlotzTask.Modules.Tasks.Services;
 public interface ITaskService
 {
     public Task<List<TaskItemDto>> GetTodoItemsByUser(string userId, CancellationToken cancellationToken);
-    public Task<TaskItemDto> GetTaskById(int id);
     public Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDto editTaskItem);
     public Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id);
     public Task<List<TaskItemDto>> GetTodayDoneTasks(string userId);
@@ -47,31 +46,6 @@ public class TaskService : ITaskService
                 HasTime = x.HasTime,
             })
             .ToListAsync(cancellationToken);
-    }
-
-    public async Task<TaskItemDto> GetTaskById(int id)
-    {
-        var task = await _dbContext.TaskItems.FindAsync(id);
-
-        if (task == null)
-        {
-            throw new NotFoundException($"Task with ID {id} not found.");
-        }
-
-        var result = new TaskItemDto()
-        {
-            Id = task.Id,
-            Title = task.Title,
-            Description = task.Description,
-            EndTime = task.EndTime,
-            IsDone = task.IsDone,
-            CreatedAt = task.CreatedAt,
-            UpdatedAt = task.UpdatedAt,
-            Label = new LabelDto { Name = task.Label.Name, Color = task.Label.Color },
-            HasTime = task.HasTime
-        };
-
-        return result;
     }
 
     public async Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id)
@@ -342,7 +316,6 @@ public class TaskService : ITaskService
             throw;
         }
     }
-
 
     private ScheduledTasksDto GroupTasksBySchedule(TimeZoneInfo timeZoneInfo, List<TaskItemDto> tasks, DateTime now)
     {
