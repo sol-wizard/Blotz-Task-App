@@ -43,6 +43,14 @@ export default function CalendarPage() {
     visible: false,
     text: '',
   })
+  const reloadTasks = async () => {
+    const isToday = isSameDay(selectedDay, new Date())
+    const tasks = await fetchTasksForDate(selectedDay, isToday)
+    setTasksForSelectedDay(tasks)
+  }
+  const handleDismiss = () => {
+    setSelectedTask(undefined)
+  }
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -158,14 +166,8 @@ export default function CalendarPage() {
       <TaskDetailBottomSheet
         ref={taskDetailSheetRef}
         task={selectedTask}
-        onDismiss={() => {
-          setSelectedTask(undefined)
-        }}
-        onEdited={async (updatedTask) => {
-          const isToday = isSameDay(selectedDay, new Date())
-          const tasks = await fetchTasksForDate(selectedDay, isToday)
-          setTasksForSelectedDay(tasks)
-        }}
+        onDismiss={handleDismiss}
+        onEdited={reloadTasks}
       />
 
       <Snackbar

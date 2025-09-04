@@ -10,12 +10,11 @@ import {
 import { RepeatMenu } from '../task-creation/repeat-menu'
 import { LabelMenu } from '../task-creation/label-menu'
 import { useEffect } from 'react'
-import DateBottomSheetTriggers from './DateBottomSheetTrigger'
+import DateBottomSheetTriggers from './dateBottomSheetTrigger'
 
 export type EditTaskFormProps = {
   initialValues: EditTaskValues
   onSubmit: (values: EditTaskValues) => void
-  // onSubmit: SubmitHandler<EditTaskValues>
   onCancel?: () => void
 }
 export const EditTaskForm = ({
