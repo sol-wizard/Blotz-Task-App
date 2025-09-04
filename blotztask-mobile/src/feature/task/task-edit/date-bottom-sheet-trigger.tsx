@@ -1,18 +1,18 @@
-import React, { useRef, useState, useCallback } from 'react'
-import { Button } from 'react-native-paper'
+import React, { useRef, useState, useCallback } from "react";
+import { Button } from "react-native-paper";
 import {
   BottomSheetModal,
   BottomSheetView,
   BottomSheetBackdrop,
-} from '@gorhom/bottom-sheet'
-import DateTimePicker from '@react-native-community/datetimepicker'
-import { Controller } from 'react-hook-form'
+} from "@gorhom/bottom-sheet";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Controller } from "react-hook-form";
 
-export default function DateBottomSheetTriggers({ control }: { control: any }) {
-  const sheetRef = useRef<BottomSheetModal>(null)
-  const [tempDate, setTempDate] = useState<Date | null>(null)
+export default function DateBottomSheetTrigger({ control }: { control: any }) {
+  const sheetRef = useRef<BottomSheetModal>(null);
+  const [tempDate, setTempDate] = useState<Date | null>(null);
 
-  const snapPoints = ['40%']
+  const snapPoints = ["40%"];
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -25,7 +25,7 @@ export default function DateBottomSheetTriggers({ control }: { control: any }) {
       />
     ),
     []
-  )
+  );
 
   return (
     <Controller
@@ -37,15 +37,15 @@ export default function DateBottomSheetTriggers({ control }: { control: any }) {
             mode="outlined"
             icon="calendar"
             onPress={() => {
-              setTempDate(value ? new Date(value) : new Date())
-              sheetRef.current?.present()
+              setTempDate(value ? new Date(value) : new Date());
+              sheetRef.current?.present();
             }}
             buttonColor={undefined}
-            style={{ borderRadius: 12, borderColor: '#E5E7EB', flex: 1 }}
+            style={{ borderRadius: 12, borderColor: "#E5E7EB", flex: 1 }}
             contentStyle={{ height: 44 }}
-            labelStyle={{ fontSize: 12, color: '#444964' }}
+            labelStyle={{ fontSize: 12, color: "#444964" }}
           >
-            {value ? new Date(value).toLocaleDateString() : 'Add Time'}
+            {value ? new Date(value).toLocaleDateString() : "Add Time"}
           </Button>
           {/* BottomSheet 内放系统 DateTimePicker */}
           <BottomSheetModal
@@ -62,7 +62,7 @@ export default function DateBottomSheetTriggers({ control }: { control: any }) {
                 display="spinner"
                 onChange={(_, selectedDate) => {
                   if (selectedDate) {
-                    setTempDate(selectedDate)
+                    setTempDate(selectedDate);
                   }
                 }}
                 style={{ height: 200 }}
@@ -75,10 +75,10 @@ export default function DateBottomSheetTriggers({ control }: { control: any }) {
                 onPress={() => {
                   // onChange(tempDate.toISOString())
                   if (tempDate) {
-                    onChange(tempDate.toISOString())
+                    onChange(tempDate.toISOString());
                   }
-                  setTempDate(null)
-                  sheetRef.current?.dismiss()
+                  setTempDate(null);
+                  sheetRef.current?.dismiss();
                 }}
               >
                 Confirm
@@ -95,5 +95,5 @@ export default function DateBottomSheetTriggers({ control }: { control: any }) {
         </>
       )}
     />
-  )
+  );
 }

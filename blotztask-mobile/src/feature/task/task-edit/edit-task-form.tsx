@@ -1,22 +1,22 @@
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { View, Text, TouchableOpacity } from 'react-native'
-import { FormTextInput } from '@/shared/components/ui/form-text-input'
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { View, Text, TouchableOpacity } from "react-native";
+import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import {
   EditTaskSchema,
   EditTaskInput,
   EditTaskValues,
-} from './task-form-schema'
-import { RepeatMenu } from '../task-creation/repeat-menu'
-import { LabelMenu } from '../task-creation/label-menu'
-import { useEffect } from 'react'
-import DateBottomSheetTriggers from './dateBottomSheetTrigger'
+} from "./task-form-schema";
+import { RepeatMenu } from "../task-creation/repeat-menu";
+import { LabelMenu } from "../task-creation/label-menu";
+import { useEffect } from "react";
+import DateBottomSheetTrigger from "./date-bottom-sheet-trigger";
 
 export type EditTaskFormProps = {
-  initialValues: EditTaskValues
-  onSubmit: (values: EditTaskValues) => void
-  onCancel?: () => void
-}
+  initialValues: EditTaskValues;
+  onSubmit: (values: EditTaskValues) => void;
+  onCancel?: () => void;
+};
 export const EditTaskForm = ({
   initialValues,
   onSubmit,
@@ -29,20 +29,20 @@ export const EditTaskForm = ({
     formState: { errors, isSubmitting, isValid },
   } = useForm<EditTaskInput>({
     resolver: zodResolver(EditTaskSchema),
-    mode: 'onChange',
+    mode: "onChange",
     defaultValues: initialValues,
-  })
+  });
   useEffect(() => {
-    reset({ ...initialValues, endTime: initialValues.endTime ?? '' })
-  }, [initialValues, reset])
+    reset({ ...initialValues, endTime: initialValues.endTime ?? "" });
+  }, [initialValues, reset]);
   const pressSubmit = handleSubmit(
     (data) => {
-      onSubmit(EditTaskSchema.parse(data))
+      onSubmit(EditTaskSchema.parse(data));
     },
     (errors) => {
-      console.log('❌ validation errors:', errors)
+      console.log("❌ validation errors:", errors);
     }
-  )
+  );
 
   return (
     <View className="gap-3">
@@ -53,8 +53,8 @@ export const EditTaskForm = ({
           placeholder="Task title"
           className="text-lg font-semibold rounded-2xl bg-slate-200 border-slate-200  border px-4 py-3 shadow-sm "
           inputProps={{
-            textAlignVertical: 'top',
-            textAlign: 'left',
+            textAlignVertical: "top",
+            textAlign: "left",
             style: {
               paddingTop: 10,
               lineHeight: 20,
@@ -75,8 +75,8 @@ export const EditTaskForm = ({
           inputProps={{
             multiline: true,
             numberOfLines: 5,
-            textAlignVertical: 'top',
-            textAlign: 'left',
+            textAlignVertical: "top",
+            textAlign: "left",
           }}
         />
         {errors.description && (
@@ -87,7 +87,7 @@ export const EditTaskForm = ({
       </View>
       <View className="flex-row items-center gap-2">
         <View className="flex-1">
-          <DateBottomSheetTriggers control={control} />
+          <DateBottomSheetTrigger control={control} />
         </View>
         <View className="flex-1">
           <RepeatMenu control={control} />
@@ -101,13 +101,13 @@ export const EditTaskForm = ({
       <View className="mt-2">
         <TouchableOpacity
           className={` rounded-2xl py-5 items-center mt-4 ${
-            isValid ? 'bg-black' : ' bg-gray-200'
+            isValid ? "bg-black" : " bg-gray-200"
           }`}
           onPress={pressSubmit}
           disabled={!isValid || isSubmitting}
         >
           <Text className="text-white text-base font-semibold">
-            {isSubmitting ? 'saving...' : 'Confirm'}
+            {isSubmitting ? "saving..." : "Confirm"}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -119,5 +119,5 @@ export const EditTaskForm = ({
         </TouchableOpacity>
       </View>
     </View>
-  )
-}
+  );
+};

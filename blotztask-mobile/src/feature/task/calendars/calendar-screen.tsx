@@ -1,92 +1,92 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from "react";
 import {
   SafeAreaView,
   FlatList,
   ActivityIndicator,
   View,
   Text,
-} from 'react-native'
+} from "react-native";
 import {
   CalendarProvider,
   WeekCalendar,
   DateData,
-} from 'react-native-calendars'
-import { Snackbar } from 'react-native-paper'
+} from "react-native-calendars";
+import { Snackbar } from "react-native-paper";
 
-import { format, isSameDay } from 'date-fns'
-import CalendarHeader from './calendar-header'
-import NoGoalsView from './noGoalsView'
-import TaskCard from '../components/task-card'
+import { format, isSameDay } from "date-fns";
+import CalendarHeader from "./calendar-header";
+import NoGoalsView from "./noGoalsView";
+import TaskCard from "../components/task-card";
 
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
   deleteTask,
-} from '../services/task-service'
-import { TaskDetailDTO } from '@/shared/models/task-detail-dto'
-import TaskDetailBottomSheet, {
-  TaskDetailBottomSheetHandle,
-} from '../components/task-detail-bottomsheet'
+} from "../services/task-service";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
 
 export default function CalendarPage() {
-  const [selectedDay, setSelectedDay] = useState(new Date())
+  const [selectedDay, setSelectedDay] = useState(new Date());
   const [tasksForSelectedDay, setTasksForSelectedDay] = useState<
     TaskDetailDTO[]
-  >([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  >([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
     undefined
-  )
-  const taskDetailSheetRef = useRef<TaskDetailBottomSheetHandle>(null)
+  );
+
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
-    text: '',
-  })
+    text: "",
+  });
+  const [taskDetailBottomSheetOpen, setTaskDetailBottomSheetOpen] =
+    useState(false);
   const reloadTasks = async () => {
-    const isToday = isSameDay(selectedDay, new Date())
-    const tasks = await fetchTasksForDate(selectedDay, isToday)
-    setTasksForSelectedDay(tasks)
-  }
+    const isToday = isSameDay(selectedDay, new Date());
+    const tasks = await fetchTasksForDate(selectedDay, isToday);
+    setTasksForSelectedDay(tasks);
+  };
   const handleDismiss = () => {
-    setSelectedTask(undefined)
-  }
+    setSelectedTask(undefined);
+  };
 
   useEffect(() => {
     const loadTasksForDate = async () => {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
+      setError(null);
       try {
-        const isToday = isSameDay(selectedDay, new Date())
-        const tasks = await fetchTasksForDate(selectedDay, isToday)
-        setTasksForSelectedDay(tasks)
+        const isToday = isSameDay(selectedDay, new Date());
+        const tasks = await fetchTasksForDate(selectedDay, isToday);
+        setTasksForSelectedDay(tasks);
       } catch (e) {
-        console.error(e)
-        setError('Failed to load tasks')
-        setTasksForSelectedDay([])
+        console.error(e);
+        setError("Failed to load tasks");
+        setTasksForSelectedDay([]);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    loadTasksForDate()
-  }, [selectedDay])
+    loadTasksForDate();
+  }, [selectedDay]);
 
   const handleToggleTask = async (task: TaskDetailDTO) => {
     try {
-      await toggleTaskCompletion(task.id)
-      const isToday = isSameDay(selectedDay, new Date())
-      const updatedTasks = await fetchTasksForDate(selectedDay, isToday)
-      setTasksForSelectedDay(updatedTasks)
+      await toggleTaskCompletion(task.id);
+      const isToday = isSameDay(selectedDay, new Date());
+      const updatedTasks = await fetchTasksForDate(selectedDay, isToday);
+      setTasksForSelectedDay(updatedTasks);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
-  }
+  };
 
   const presentSheet = (task: TaskDetailDTO) => {
-    setSelectedTask(task)
-    requestAnimationFrame(() => taskDetailSheetRef.current?.present())
-  }
+    setSelectedTask(task);
+    setTaskDetailBottomSheetOpen((prev) => !prev);
+  };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
     <TaskCard
@@ -98,30 +98,30 @@ export default function CalendarPage() {
       onToggleComplete={() => handleToggleTask(item)}
       onPress={() => presentSheet(item)}
       onDelete={async () => {
-        await handleDeleteTask(item.id)
+        await handleDeleteTask(item.id);
       }}
     />
-  )
+  );
 
   const handleDeleteTask = async (taskId: number) => {
     try {
-      await deleteTask(taskId)
-      setTasksForSelectedDay((prev) => prev.filter((t) => t.id !== taskId)) // delete at frontend
-      setSnackbar({ visible: true, text: 'Delete Successful' })
+      await deleteTask(taskId);
+      setTasksForSelectedDay((prev) => prev.filter((t) => t.id !== taskId)); // delete at frontend
+      setSnackbar({ visible: true, text: "Delete Successful" });
     } catch (e) {
-      console.error(e)
+      console.error(e);
       setSnackbar({
         visible: true,
-        text: 'Delete Failed, please try again later',
-      })
+        text: "Delete Failed, please try again later",
+      });
     }
-  }
+  };
 
   return (
     <SafeAreaView className="flex-1">
-      <CalendarHeader date={format(selectedDay, 'yyyy-MM-dd')} />
+      <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
       <CalendarProvider
-        date={format(selectedDay, 'yyyy-MM-dd')}
+        date={format(selectedDay, "yyyy-MM-dd")}
         onDateChanged={(date: string) => setSelectedDay(new Date(date))}
         showTodayButton={false}
       >
@@ -129,15 +129,15 @@ export default function CalendarPage() {
           onDayPress={(day: DateData) =>
             setSelectedDay(new Date(day.dateString))
           }
-          current={format(selectedDay, 'yyyy-MM-dd')}
+          current={format(selectedDay, "yyyy-MM-dd")}
           theme={{
-            selectedDayBackgroundColor: '#2d4150',
-            todayTextColor: '#2d4150',
-            arrowColor: '#2d4150',
-            monthTextColor: '#2d4150',
-            textMonthFontWeight: 'bold',
-            textDayFontWeight: 'bold',
-            textDayHeaderFontWeight: 'bold',
+            selectedDayBackgroundColor: "#2d4150",
+            todayTextColor: "#2d4150",
+            arrowColor: "#2d4150",
+            monthTextColor: "#2d4150",
+            textMonthFontWeight: "bold",
+            textDayFontWeight: "bold",
+            textDayHeaderFontWeight: "bold",
           }}
           allowShadow={false}
           firstDay={1}
@@ -164,7 +164,7 @@ export default function CalendarPage() {
       </CalendarProvider>
 
       <TaskDetailBottomSheet
-        ref={taskDetailSheetRef}
+        isOpen={taskDetailBottomSheetOpen}
         task={selectedTask}
         onDismiss={handleDismiss}
         onEdited={reloadTasks}
@@ -172,11 +172,11 @@ export default function CalendarPage() {
 
       <Snackbar
         visible={snackbar.visible}
-        onDismiss={() => setSnackbar({ visible: false, text: '' })}
+        onDismiss={() => setSnackbar({ visible: false, text: "" })}
         duration={2200}
       >
         {snackbar.text}
       </Snackbar>
     </SafeAreaView>
-  )
+  );
 }
