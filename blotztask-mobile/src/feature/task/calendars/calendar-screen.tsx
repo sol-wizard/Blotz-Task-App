@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   FlatList,
@@ -12,12 +12,10 @@ import {
   DateData,
 } from "react-native-calendars";
 import { Snackbar } from "react-native-paper";
-
 import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
 import TaskCard from "../components/task-card";
-
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
@@ -25,6 +23,8 @@ import {
 } from "../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
+import { EditTaskBottomSheet } from "../task-edit/edit-task-bottom-sheet";
+import { selectTopKey, useSheetRouter } from "../services/util/store";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -41,16 +41,13 @@ export default function CalendarPage() {
     visible: false,
     text: "",
   });
-  const [taskDetailBottomSheetOpen, setTaskDetailBottomSheetOpen] =
-    useState(false);
-  const reloadTasks = async () => {
-    const isToday = isSameDay(selectedDay, new Date());
-    const tasks = await fetchTasksForDate(selectedDay, isToday);
-    setTasksForSelectedDay(tasks);
-  };
-  const handleDismiss = () => {
-    setSelectedTask(undefined);
-  };
+
+  const topKey = useSheetRouter(selectTopKey);
+  const push = useSheetRouter((s) => s.push);
+  const pop = useSheetRouter((s) => s.pop);
+
+  const taskDetailOpen = topKey === "taskDetail";
+  const editTaskOpen = topKey === "editTask";
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -68,7 +65,6 @@ export default function CalendarPage() {
         setIsLoading(false);
       }
     };
-
     loadTasksForDate();
   }, [selectedDay]);
 
@@ -85,7 +81,7 @@ export default function CalendarPage() {
 
   const presentSheet = (task: TaskDetailDTO) => {
     setSelectedTask(task);
-    setTaskDetailBottomSheetOpen((prev) => !prev);
+    push({ key: "taskDetail", taskId: task.id });
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
@@ -106,7 +102,7 @@ export default function CalendarPage() {
   const handleDeleteTask = async (taskId: number) => {
     try {
       await deleteTask(taskId);
-      setTasksForSelectedDay((prev) => prev.filter((t) => t.id !== taskId)); // delete at frontend
+      setTasksForSelectedDay((prev) => prev.filter((t) => t.id !== taskId));
       setSnackbar({ visible: true, text: "Delete Successful" });
     } catch (e) {
       console.error(e);
@@ -114,6 +110,14 @@ export default function CalendarPage() {
         visible: true,
         text: "Delete Failed, please try again later",
       });
+    }
+  };
+
+  const setEditTaskBottomSheetOpen = (flag: boolean) => {
+    if (!selectedTask) return;
+    if (flag) {
+      push({ key: "editTask", taskId: selectedTask.id });
+    } else {
     }
   };
 
@@ -164,11 +168,18 @@ export default function CalendarPage() {
       </CalendarProvider>
 
       <TaskDetailBottomSheet
-        isOpen={taskDetailBottomSheetOpen}
+        isOpen={taskDetailOpen}
         task={selectedTask}
-        onDismiss={handleDismiss}
-        onEdited={reloadTasks}
+        setEditTaskBottomSheetOpen={setEditTaskBottomSheetOpen}
       />
+
+      {selectedTask && (
+        <EditTaskBottomSheet
+          task={selectedTask}
+          isOpen={editTaskOpen}
+          onDismiss={() => pop()}
+        />
+      )}
 
       <Snackbar
         visible={snackbar.visible}

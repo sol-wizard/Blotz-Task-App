@@ -1,24 +1,23 @@
-import { TaskDetailDTO } from '@/shared/models/task-detail-dto'
-import { fetchWithAuth } from '@/shared/services/fetch-with-auth'
-import { getStartOfDayUtc } from '../util/date-utils'
-import { AddTaskItemDTO } from '../models/add-task-item-dto'
-import { EditTaskValues } from '../task-edit/task-form-schema'
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
+import { getStartOfDayUtc } from "../util/date-utils";
+import { AddTaskItemDTO } from "../models/add-task-item-dto";
 
 export async function fetchTasksForDate(
   date: Date,
   includeFloatingForToday: boolean
 ): Promise<TaskDetailDTO[]> {
-  const startDateUtc = getStartOfDayUtc(date).toISOString()
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}&includeFloatingForToday=${includeFloatingForToday}`
+  const startDateUtc = getStartOfDayUtc(date).toISOString();
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}&includeFloatingForToday=${includeFloatingForToday}`;
 
-  const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: 'GET' })
-  return data
+  const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: "GET" });
+  return data;
 }
 
 export async function toggleTaskCompletion(taskId: number): Promise<void> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/task-completion-status/${taskId}`
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/task-completion-status/${taskId}`;
 
-  await fetchWithAuth<unknown>(url, { method: 'PUT' })
+  await fetchWithAuth<unknown>(url, { method: "PUT" });
 }
 
 export const addTaskItem = async (
@@ -28,61 +27,45 @@ export const addTaskItem = async (
     const result = await fetchWithAuth<string>(
       `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(addTaskForm),
       }
-    )
+    );
 
-    return result
+    return result;
   } catch (error) {
-    console.error('Error adding task:', error)
-    throw error
+    console.error("Error adding task:", error);
+    throw error;
   }
-}
+};
 
-export async function updateTaskItem(
-  taskId: number,
-  payload: EditTaskValues
-): Promise<void> {
+export async function updateTaskItem(updatedTask: any): Promise<void> {
   try {
-    const dto = {
-      id: taskId,
-      title: payload.title,
-      description: payload.description,
-      endTime: payload.endTime || null,
-      repeat: payload.repeat,
-      labelId: payload.labelId ? Number(payload.labelId) : 0,
-      isDone: false,
-      hasTime: !!payload.endTime,
-    }
-    // console.log('sending update dto:', dto)
-    // const result = await fetchWithAuth<TaskDetailDTO>
     await fetchWithAuth<any>(
-      `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`,
+      `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${updatedTask.id}`,
       {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(dto),
+        body: JSON.stringify(updatedTask),
       }
-    )
-    // return result
+    );
   } catch (error) {
-    console.error('Error updating task:', error)
-    throw error
+    console.error("Error updating task:", error);
+    throw error;
   }
 }
 
 export async function deleteTask(taskId: number): Promise<void> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`;
   try {
-    await fetchWithAuth<void>(url, { method: 'DELETE' })
+    await fetchWithAuth<void>(url, { method: "DELETE" });
   } catch (err: any) {
-    console.error('deleteTask failed:', err)
-    throw new Error('Delete task failed')
+    console.error("deleteTask failed:", err);
+    throw new Error("Delete task failed");
   }
 }

@@ -1,11 +1,4 @@
-import {
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  useCallback,
-  useState,
-  useEffect,
-} from "react";
+import { useRef, useCallback, useState, useEffect } from "react";
 import { View, TouchableOpacity } from "react-native";
 import {
   BottomSheetModal,
@@ -18,33 +11,19 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
-import {
-  EditTaskBottomSheet,
-  EditTaskBottomSheetHandle,
-} from "../task-edit/edit-task-bottom-sheet";
-
-export type TaskDetailBottomSheetHandle = {
-  present: () => void;
-  dismiss: () => void;
-};
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
   isOpen?: boolean;
-  onDismiss?: () => void;
-  onChange?: (index: number) => void;
-  onEdited?: (task: TaskDetailDTO) => void;
+  setEditTaskBottomSheetOpen: (open: boolean) => void;
 };
 
 const TaskDetailBottomSheet = ({
   task,
   isOpen,
-  onDismiss,
-  onChange,
-  onEdited,
+  setEditTaskBottomSheetOpen,
 }: TaskDetailBottomSheetProps) => {
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
-  const editSheetRef = useRef<EditTaskBottomSheetHandle>(null);
 
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
     task
@@ -88,7 +67,7 @@ const TaskDetailBottomSheet = ({
   };
   const handleEditPress = () => {
     if (!task) return;
-    editSheetRef.current?.present();
+    setEditTaskBottomSheetOpen(true);
   };
 
   return (
@@ -96,8 +75,6 @@ const TaskDetailBottomSheet = ({
       <BottomSheetModal
         ref={taskDetailModalRef}
         snapPoints={snapPoints}
-        onDismiss={onDismiss}
-        onChange={onChange}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         backgroundStyle={{
@@ -205,7 +182,7 @@ const TaskDetailBottomSheet = ({
           )}
         </BottomSheetView>
       </BottomSheetModal>
-      {selectedTask && (
+      {/* {selectedTask && (
         <EditTaskBottomSheet
           ref={editSheetRef}
           task={selectedTask}
@@ -216,7 +193,7 @@ const TaskDetailBottomSheet = ({
             editSheetRef.current?.dismiss();
           }}
         />
-      )}
+      )} */}
     </>
   );
 };
