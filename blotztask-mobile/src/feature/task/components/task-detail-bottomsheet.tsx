@@ -15,13 +15,13 @@ import { TaskDetailTag } from "./task-detail-tag";
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
   isOpen?: boolean;
-  setEditTaskBottomSheetOpen: (open: boolean) => void;
+  openEditTask: () => void;
 };
 
 const TaskDetailBottomSheet = ({
   task,
   isOpen,
-  setEditTaskBottomSheetOpen,
+  openEditTask,
 }: TaskDetailBottomSheetProps) => {
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
 
@@ -65,9 +65,10 @@ const TaskDetailBottomSheet = ({
       },
     });
   };
+
   const handleEditPress = () => {
-    if (!task) return;
-    setEditTaskBottomSheetOpen(true);
+    taskDetailModalRef.current?.dismiss();
+    openEditTask();
   };
 
   return (
@@ -182,18 +183,6 @@ const TaskDetailBottomSheet = ({
           )}
         </BottomSheetView>
       </BottomSheetModal>
-      {/* {selectedTask && (
-        <EditTaskBottomSheet
-          ref={editSheetRef}
-          task={selectedTask}
-          onClose={() => editSheetRef.current?.dismiss()}
-          onEdited={(updatedTask) => {
-            setSelectedTask(updatedTask);
-            onEdited?.(updatedTask);
-            editSheetRef.current?.dismiss();
-          }}
-        />
-      )} */}
     </>
   );
 };

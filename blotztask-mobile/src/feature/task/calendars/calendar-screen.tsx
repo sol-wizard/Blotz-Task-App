@@ -24,7 +24,6 @@ import {
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
 import { EditTaskBottomSheet } from "../task-edit/edit-task-bottom-sheet";
-import { selectTopKey, useSheetRouter } from "../services/util/store";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -42,12 +41,8 @@ export default function CalendarPage() {
     text: "",
   });
 
-  const topKey = useSheetRouter(selectTopKey);
-  const push = useSheetRouter((s) => s.push);
-  const pop = useSheetRouter((s) => s.pop);
-
-  const taskDetailOpen = topKey === "taskDetail";
-  const editTaskOpen = topKey === "editTask";
+  const [taskDetailOpen, setTaskDetailOpen] = useState(false);
+  const [editTaskOpen, setEditTaskOpen] = useState(false);
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -81,7 +76,7 @@ export default function CalendarPage() {
 
   const presentSheet = (task: TaskDetailDTO) => {
     setSelectedTask(task);
-    push({ key: "taskDetail", taskId: task.id });
+    setTaskDetailOpen(true);
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
@@ -110,14 +105,6 @@ export default function CalendarPage() {
         visible: true,
         text: "Delete Failed, please try again later",
       });
-    }
-  };
-
-  const setEditTaskBottomSheetOpen = (flag: boolean) => {
-    if (!selectedTask) return;
-    if (flag) {
-      push({ key: "editTask", taskId: selectedTask.id });
-    } else {
     }
   };
 
@@ -170,14 +157,14 @@ export default function CalendarPage() {
       <TaskDetailBottomSheet
         isOpen={taskDetailOpen}
         task={selectedTask}
-        setEditTaskBottomSheetOpen={setEditTaskBottomSheetOpen}
+        openEditTask={() => setEditTaskOpen(true)}
       />
 
       {selectedTask && (
         <EditTaskBottomSheet
           task={selectedTask}
           isOpen={editTaskOpen}
-          onDismiss={() => pop()}
+          openTaskDetail={() => setTaskDetailOpen(true)}
         />
       )}
 

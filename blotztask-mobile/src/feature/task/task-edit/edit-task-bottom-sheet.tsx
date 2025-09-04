@@ -10,11 +10,11 @@ import { EditTaskForm } from "./edit-task-form";
 export const EditTaskBottomSheet = ({
   task,
   isOpen,
-  onDismiss,
+  openTaskDetail,
 }: {
   task: TaskDetailDTO;
   isOpen: boolean;
-  onDismiss: () => void;
+  openTaskDetail: () => void;
 }) => {
   const sheetRef = useRef<BottomSheetModal>(null);
 
@@ -30,8 +30,9 @@ export const EditTaskBottomSheet = ({
     []
   );
 
-  const handleSubmit = () => {
+  const handleClose = () => {
     sheetRef.current?.dismiss();
+    openTaskDetail();
   };
 
   useEffect(() => {
@@ -45,14 +46,14 @@ export const EditTaskBottomSheet = ({
       snapPoints={["55%"]}
       keyboardBlurBehavior="restore"
       backdropComponent={renderBackdrop}
-      onDismiss={onDismiss}
+      onDismiss={openTaskDetail}
       enablePanDownToClose
     >
       <BottomSheetView style={{ padding: 16 }}>
         <EditTaskForm
           task={task}
-          onSubmit={handleSubmit}
-          onCancel={() => sheetRef.current?.dismiss()}
+          onSubmit={handleClose}
+          onCancel={handleClose}
         />
       </BottomSheetView>
     </BottomSheetModal>
