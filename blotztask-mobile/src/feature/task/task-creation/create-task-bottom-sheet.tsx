@@ -1,20 +1,20 @@
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback } from 'react'
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
-} from "@gorhom/bottom-sheet";
-import TaskCreationForm from "../task-creation/task-creation-form";
-import { Portal } from "react-native-paper";
-import { View } from "react-native";
+} from '@gorhom/bottom-sheet'
+import TaskCreationForm from '../task-creation/task-creation-form'
+import { Portal } from 'react-native-paper'
+import { View } from 'react-native'
 
 export const CreateTaskBottomSheet = ({
   isVisible,
   onClose,
 }: {
-  isVisible: boolean;
-  onClose: (isVisible: boolean) => void;
+  isVisible: boolean
+  onClose: (isVisible: boolean) => void
 }) => {
-  const taskCreationBottomSheetRef = useRef<BottomSheet>(null);
+  const taskCreationBottomSheetRef = useRef<BottomSheet>(null)
 
   // const handleTaskCreationSheetClose = () => {
   //   taskCreationBottomSheetRef.current?.close();
@@ -27,11 +27,11 @@ export const CreateTaskBottomSheet = ({
   const handleSheetChange = useCallback(
     (index: number) => {
       if (index === -1) {
-        onClose(false);
+        onClose(false)
       }
     },
     [onClose]
-  );
+  )
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -43,7 +43,7 @@ export const CreateTaskBottomSheet = ({
       />
     ),
     []
-  );
+  )
 
   return (
     <Portal>
@@ -51,7 +51,7 @@ export const CreateTaskBottomSheet = ({
         <BottomSheet
           ref={taskCreationBottomSheetRef}
           index={isVisible ? 0 : -1}
-          snapPoints={["55%"]}
+          snapPoints={['55%']}
           keyboardBlurBehavior="restore"
           backdropComponent={renderBackdrop}
           onChange={handleSheetChange}
@@ -67,5 +67,5 @@ export const CreateTaskBottomSheet = ({
         </BottomSheet>
       </View>
     </Portal>
-  );
-};
+  )
+}

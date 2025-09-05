@@ -28,9 +28,16 @@ export const fetchWithAuth = async <T>(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data: T = await response.json();
+    const contentType = response.headers.get("content-type");
+    let data: any;
 
-    return data;
+    if (contentType && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = await response.text();
+    }
+
+    return data as T;
   } catch (error) {
     console.error("fetchWithAuth error:", error);
     throw error;
