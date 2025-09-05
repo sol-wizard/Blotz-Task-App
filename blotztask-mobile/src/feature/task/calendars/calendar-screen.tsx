@@ -24,7 +24,7 @@ import {
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
 import { EditTaskBottomSheet } from "../task-edit/edit-task-bottom-sheet";
-import { useBottomSheetStore } from "../util/sheetApiStore";
+import { useBottomSheetStore } from "../util/bottomSheetStore";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());

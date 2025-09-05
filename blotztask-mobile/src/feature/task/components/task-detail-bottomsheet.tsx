@@ -11,7 +11,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
-import { useBottomSheetStore } from "../util/sheetApiStore";
+import { useBottomSheetStore } from "../util/bottomSheetStore";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
