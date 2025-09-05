@@ -9,8 +9,8 @@ import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
-import { RepeatMenu } from "./repeat-menu";
-import { LabelMenu } from "./label-menu";
+import { RepeatSelect } from "./repeat-select";
+import { LabelSelect } from "./label-select";
 import { DateTimeSelectorTrigger } from "./date-time-selector-trigger";
 import { useState } from "react";
 import { StartEndDateTimePicker } from "./start-end-date-time-picker";
@@ -112,11 +112,11 @@ export default function CreateTaskForm({
           />
 
           <View className="flex-1">
-            <RepeatMenu control={form.control} />
+            <RepeatSelect control={form.control} />
           </View>
 
           <View className="flex-1">
-            <LabelMenu control={form.control} />
+            <LabelSelect control={form.control} />
           </View>
         </View>
         {showingDateTimePicker && (

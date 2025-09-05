@@ -2,20 +2,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text, TouchableOpacity } from "react-native";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
-
-import DateBottomSheetTrigger from "./date-bottom-sheet-trigger";
-
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { updateTaskItem } from "../services/task-service";
 import AddTaskFormField, {
   taskCreationSchema,
 } from "../util/task-creation-form-schema";
-import { RepeatMenu } from "../create-task/repeat-menu";
-import { LabelMenu } from "../create-task/label-menu";
+import { RepeatSelect } from "../create-task/repeat-select";
+import { LabelSelect } from "../create-task/label-select";
 
 export type EditTaskFormProps = {
   task: TaskDetailDTO;
-  onSubmit: (values: AddTaskFormField) => void;
+  onSubmit: () => void;
   onCancel?: () => void;
 };
 export const EditTaskForm = ({
@@ -25,13 +22,13 @@ export const EditTaskForm = ({
 }: EditTaskFormProps) => {
   const form = useForm<AddTaskFormField>({
     resolver: zodResolver(taskCreationSchema),
-    mode: "onSubmit",
+    mode: "onChange",
     defaultValues: {
-      title: task?.title ?? "",
-      description: task?.description ?? "",
-      endTime: new Date(task?.endTime) ?? undefined,
+      title: task.title,
+      description: task.description ?? "",
+      endTime: new Date(task.endTime) ?? undefined,
       repeat: "none",
-      labelId: task?.label?.labelId ?? undefined,
+      labelId: task.label?.labelId ?? undefined,
     },
   });
 
@@ -56,7 +53,7 @@ export const EditTaskForm = ({
     } catch (err) {
       console.error("updateTaskItem failed", err);
     }
-    onSubmit(updatedTask);
+    onSubmit();
   });
 
   return (
@@ -100,13 +97,10 @@ export const EditTaskForm = ({
         </View>
         <View className="flex-row items-center gap-2">
           <View className="flex-1">
-            <DateBottomSheetTrigger control={control} />
+            <RepeatSelect control={control} />
           </View>
           <View className="flex-1">
-            <RepeatMenu control={control} />
-          </View>
-          <View className="flex-1">
-            <LabelMenu control={control} />
+            <LabelSelect control={control} />
           </View>
         </View>
 

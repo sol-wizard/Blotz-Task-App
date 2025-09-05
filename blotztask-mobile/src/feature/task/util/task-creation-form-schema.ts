@@ -9,9 +9,10 @@ export const taskCreationSchema = z.object({
     .string()
     .max(1000, "Max 1000 chars")
     .optional()
-    .or(z.literal("")),
-  startTime: z.date(),
-  endTime: z.date(),
+    .or(z.literal(""))
+    .optional(),
+  startTime: z.date().optional(),
+  endTime: z.date().optional(),
   repeat: RepeatEnum.optional(),
   labelId: z.number(),
 });

@@ -12,9 +12,9 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <BottomSheetModalProvider>
-        <SafeAreaProvider>
-          <PaperProvider theme={theme}>
+      <PaperProvider theme={theme}>
+        <BottomSheetModalProvider>
+          <SafeAreaProvider>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -23,9 +23,9 @@ export default function RootLayout() {
                 options={{ headerShown: false }}
               />
             </Stack>
-          </PaperProvider>
-        </SafeAreaProvider>
-      </BottomSheetModalProvider>
+          </SafeAreaProvider>
+        </BottomSheetModalProvider>
+      </PaperProvider>
     </GestureHandlerRootView>
   );
 }
