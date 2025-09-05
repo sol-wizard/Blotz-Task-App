@@ -31,6 +31,9 @@ jobs:
         working-directory: ./blotztask-api
         run: dotnet build --configuration Release
 
+      - name: Install EF Core tools
+        run: dotnet tool install --global dotnet-ef
+
       - name: .Net - Tool restore
         working-directory: ./blotztask-api
         run: dotnet tool restore
