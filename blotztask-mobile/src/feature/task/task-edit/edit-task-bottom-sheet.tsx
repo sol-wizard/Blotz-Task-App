@@ -6,16 +6,9 @@ import {
 } from "@gorhom/bottom-sheet";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskForm } from "./edit-task-form";
+import { useBottomSheetStore } from "../util/sheetApiStore";
 
-export const EditTaskBottomSheet = ({
-  task,
-  isOpen,
-  openTaskDetail,
-}: {
-  task: TaskDetailDTO;
-  isOpen: boolean;
-  openTaskDetail: () => void;
-}) => {
+export const EditTaskBottomSheet = ({ task }: { task: TaskDetailDTO }) => {
   const sheetRef = useRef<BottomSheetModal>(null);
 
   const renderBackdrop = useCallback(
@@ -30,15 +23,16 @@ export const EditTaskBottomSheet = ({
     []
   );
 
-  const handleClose = () => {
-    sheetRef.current?.dismiss();
-    openTaskDetail();
-  };
+  const { editTaskOpen, closeEditTask, openTaskDetail } = useBottomSheetStore();
 
   useEffect(() => {
-    if (isOpen) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [isOpen]);
+    editTaskOpen ? sheetRef.current?.present() : sheetRef.current?.dismiss();
+  }, [editTaskOpen]);
+
+  const handleClose = () => {
+    closeEditTask();
+    openTaskDetail();
+  };
 
   return (
     <BottomSheetModal
@@ -46,7 +40,7 @@ export const EditTaskBottomSheet = ({
       snapPoints={["55%"]}
       keyboardBlurBehavior="restore"
       backdropComponent={renderBackdrop}
-      onDismiss={openTaskDetail}
+      onDismiss={handleClose}
       enablePanDownToClose
     >
       <BottomSheetView style={{ padding: 16 }}>
@@ -59,5 +53,3 @@ export const EditTaskBottomSheet = ({
     </BottomSheetModal>
   );
 };
-
-// EditTaskBottomSheet.displayName = 'EditTaskBottomSheet'

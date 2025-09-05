@@ -11,18 +11,13 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
+import { useBottomSheetStore } from "../util/sheetApiStore";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
-  isOpen?: boolean;
-  openEditTask: () => void;
 };
 
-const TaskDetailBottomSheet = ({
-  task,
-  isOpen,
-  openEditTask,
-}: TaskDetailBottomSheetProps) => {
+const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
 
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
@@ -32,10 +27,13 @@ const TaskDetailBottomSheet = ({
     setSelectedTask(task);
   }, [task]);
 
+  const { taskDetailOpen, openEditTask, closeTaskDetail } =
+    useBottomSheetStore();
   useEffect(() => {
-    if (isOpen) taskDetailModalRef.current?.present();
-    else taskDetailModalRef.current?.dismiss();
-  }, [isOpen]);
+    taskDetailOpen
+      ? taskDetailModalRef.current?.present()
+      : taskDetailModalRef.current?.dismiss();
+  }, [taskDetailOpen]);
 
   const snapPoints = ["60%", "80%"];
 
@@ -83,6 +81,7 @@ const TaskDetailBottomSheet = ({
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
         }}
+        onDismiss={closeTaskDetail}
       >
         <BottomSheetView className="flex-1 bg-white px-4 pt-3 pb-24">
           {selectedTask ? (

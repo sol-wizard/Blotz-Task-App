@@ -24,6 +24,7 @@ import {
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
 import { EditTaskBottomSheet } from "../task-edit/edit-task-bottom-sheet";
+import { useBottomSheetStore } from "../util/sheetApiStore";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -40,9 +41,6 @@ export default function CalendarPage() {
     visible: false,
     text: "",
   });
-
-  const [taskDetailOpen, setTaskDetailOpen] = useState(false);
-  const [editTaskOpen, setEditTaskOpen] = useState(false);
 
   useEffect(() => {
     const loadTasksForDate = async () => {
@@ -73,10 +71,11 @@ export default function CalendarPage() {
       console.error(e);
     }
   };
+  const { openTaskDetail } = useBottomSheetStore();
 
   const presentSheet = (task: TaskDetailDTO) => {
     setSelectedTask(task);
-    setTaskDetailOpen(true);
+    openTaskDetail();
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
@@ -154,19 +153,9 @@ export default function CalendarPage() {
         )}
       </CalendarProvider>
 
-      <TaskDetailBottomSheet
-        isOpen={taskDetailOpen}
-        task={selectedTask}
-        openEditTask={() => setEditTaskOpen(true)}
-      />
+      <TaskDetailBottomSheet task={selectedTask} />
 
-      {selectedTask && (
-        <EditTaskBottomSheet
-          task={selectedTask}
-          isOpen={editTaskOpen}
-          openTaskDetail={() => setTaskDetailOpen(true)}
-        />
-      )}
+      {selectedTask && <EditTaskBottomSheet task={selectedTask} />}
 
       <Snackbar
         visible={snackbar.visible}
