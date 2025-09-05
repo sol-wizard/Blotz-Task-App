@@ -12,7 +12,6 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import uuid from "react-native-uuid";
 
 import TypingAnimation from "@/feature/ai-chat-hub/components/typing-animation";
 import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
@@ -23,12 +22,19 @@ export default function AiTaskGeneratorScreen() {
   const { messages, sendMessage, isTyping } =
     useAiTaskGenerator(conversationId);
   const [text, setText] = useState("");
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handleSend = () => {
     if (!text.trim()) return;
     sendMessage(text);
     setText("");
   };
+
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages, isTyping]);
 
   return (
     <SafeAreaView
@@ -43,6 +49,7 @@ export default function AiTaskGeneratorScreen() {
         <View className="flex-1">
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <ScrollView
+              ref={scrollViewRef}
               className="px-4"
               contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
               keyboardShouldPersistTaps="handled"

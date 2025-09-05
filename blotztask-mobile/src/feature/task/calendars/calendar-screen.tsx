@@ -1,26 +1,30 @@
-import React, { useState, useEffect, useRef } from "react";
-import { SafeAreaView, FlatList, ActivityIndicator, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  SafeAreaView,
+  FlatList,
+  ActivityIndicator,
+  View,
+  Text,
+} from "react-native";
 import {
   CalendarProvider,
   WeekCalendar,
   DateData,
 } from "react-native-calendars";
 import { Snackbar } from "react-native-paper";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
 import TaskCard from "../components/task-card";
-import { isSameDay } from "date-fns";
-
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
   deleteTask,
 } from "../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import TaskDetailBottomSheet, {
-  TaskDetailBottomSheetHandle,
-} from "../components/task-detail-bottomsheet";
+import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
+import { EditTaskBottomSheet } from "../task-edit/edit-task-bottom-sheet";
+import { useBottomSheetStore } from "../util/bottomSheetStore";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -33,7 +37,7 @@ export default function CalendarPage() {
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
     undefined
   );
-  const taskDetailSheetRef = useRef<TaskDetailBottomSheetHandle>(null);
+
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
     text: "",
@@ -67,10 +71,11 @@ export default function CalendarPage() {
       console.error(e);
     }
   };
+  const { openTaskDetail } = useBottomSheetStore();
 
   const presentSheet = (task: TaskDetailDTO) => {
     setSelectedTask(task);
-    requestAnimationFrame(() => taskDetailSheetRef.current?.present());
+    openTaskDetail();
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
@@ -96,6 +101,10 @@ export default function CalendarPage() {
       setSnackbar({ visible: true, text: "Delete Successful" });
     } catch (e) {
       console.error(e);
+      setSnackbar({
+        visible: true,
+        text: "Delete Failed, please try again later",
+      });
       setSnackbar({
         visible: true,
         text: "Delete Failed, please try again later",
@@ -145,13 +154,9 @@ export default function CalendarPage() {
         )}
       </CalendarProvider>
 
-      <TaskDetailBottomSheet
-        ref={taskDetailSheetRef}
-        task={selectedTask}
-        onDismiss={() => {
-          setSelectedTask(undefined);
-        }}
-      />
+      <TaskDetailBottomSheet task={selectedTask} />
+
+      {selectedTask && <EditTaskBottomSheet task={selectedTask} />}
 
       <Snackbar
         visible={snackbar.visible}

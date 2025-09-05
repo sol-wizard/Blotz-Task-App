@@ -1,25 +1,25 @@
-import React, { useEffect, useState } from "react";
-import { Menu, Button } from "react-native-paper";
-import { Controller } from "react-hook-form";
-import { LabelDTO } from "@/shared/models/label-dto";
-import { fetchAllLabel } from "@/shared/services/label-service";
+import React, { useEffect, useState } from 'react'
+import { Menu, Button } from 'react-native-paper'
+import { Controller } from 'react-hook-form'
+import { LabelDTO } from '@/shared/models/label-dto'
+import { fetchAllLabel } from '@/shared/services/label-service'
 
 //TODO: Rename to LabelSelect
 export function LabelMenu({ control }: { control: any }) {
-  const [visible, setVisible] = useState(false);
-  const [labels, setLabels] = useState<LabelDTO[]>([]);
+  const [visible, setVisible] = useState(false)
+  const [labels, setLabels] = useState<LabelDTO[]>([])
   const loadAllLabel = async () => {
     try {
-      const labelData = await fetchAllLabel();
-      setLabels(labelData);
+      const labelData = await fetchAllLabel()
+      setLabels(labelData)
     } catch (error) {
-      console.error("Error loading labels:", error);
+      console.error('Error loading labels:', error)
     }
-  };
+  }
 
   useEffect(() => {
-    loadAllLabel();
-  }, []);
+    loadAllLabel()
+  }, [])
 
   return (
     <Controller
@@ -35,11 +35,11 @@ export function LabelMenu({ control }: { control: any }) {
               mode="outlined"
               icon="label-outline"
               onPress={() => setVisible(true)}
-              style={{ borderRadius: 12, borderColor: "#E5E7EB" }}
+              style={{ borderRadius: 12, borderColor: '#E5E7EB' }}
               contentStyle={{ height: 44 }}
-              labelStyle={{ fontSize: 12, color: "#444964" }}
+              labelStyle={{ fontSize: 12, color: '#444964' }}
             >
-              {labels.find((opt) => opt.labelId === value)?.name || "Add Label"}
+              {labels.find((opt) => opt.labelId === value)?.name || 'Add Label'}
             </Button>
           }
         >
@@ -47,8 +47,8 @@ export function LabelMenu({ control }: { control: any }) {
             <Menu.Item
               key={opt.labelId}
               onPress={() => {
-                onChange(opt.labelId);
-                setVisible(false);
+                onChange(opt.labelId)
+                setVisible(false)
               }}
               title={opt.name}
             />
@@ -56,5 +56,5 @@ export function LabelMenu({ control }: { control: any }) {
         </Menu>
       )}
     />
-  );
+  )
 }
