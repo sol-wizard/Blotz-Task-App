@@ -26,7 +26,13 @@ public class TaskController(
     [Obsolete("This endpoint is not in use and will be removed later.")]
     public async Task<ActionResult<List<TaskItemDto>>> GetAllTask(CancellationToken cancellationToken)
     {
+<<<<<<< HEAD
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+=======
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+>>>>>>> b3808c0 (Edit task UI (#461))
         {
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         }

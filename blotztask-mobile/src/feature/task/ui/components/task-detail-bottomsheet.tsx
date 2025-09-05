@@ -11,8 +11,11 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
-import { useBottomSheetStore } from "../../store/bottomSheetStore";
+import { useBottomSheetStore } from "../../util/bottomSheetStore";
 import { format, isBefore, startOfDay } from "date-fns";
+import SubtaskDetailBottomSheet, {
+  SubtaskDetailBottomSheetHandle,
+} from "./subtask-detail-bottomsheet";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
@@ -20,6 +23,7 @@ type TaskDetailBottomSheetProps = {
 
 const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
+  const subtaskSheetRef = useRef<SubtaskDetailBottomSheetHandle>(null);
 
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(task);
   useEffect(() => {
@@ -66,6 +70,48 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
     taskDetailModalRef.current?.dismiss();
     openEditTask();
   };
+
+  const openSubtaskDetail = () => {
+    subtaskSheetRef.current?.present();
+  };
+
+  const mockSubtasks = [
+    {
+      id: 1,
+      subtask: "Define Goals & Project List",
+      content: "Define Goals & Project List",
+      estimatedDuration: "1h",
+      isCompleted: false,
+    },
+    {
+      id: 2,
+      subtask: "Content Drafting",
+      content: "Define Goals & Project List",
+      estimatedDuration: "2h",
+      isCompleted: false,
+    },
+    {
+      id: 3,
+      subtask: "Visual Asset Preparation",
+      content: "Define Goals & Project List",
+      estimatedDuration: "2h",
+      isCompleted: true,
+    },
+    {
+      id: 4,
+      subtask: "Platform Update",
+      content: "Define Goals & Project List",
+      estimatedDuration: "2h",
+      isCompleted: false,
+    },
+    {
+      id: 5,
+      subtask: "Review & Resume Alignment",
+      content: "Define Goals & Project List",
+      estimatedDuration: "1h",
+      isCompleted: false,
+    },
+  ];
 
   return (
     <>
@@ -162,12 +208,29 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
                   </Text>
                 </View>
               ) : null}
+
+              {/* ✅ 新增：进入子任务明细 Bottom Sheet 的按钮 */}
+              <View className="mt-4">
+                <Button
+                  mode="contained"
+                  onPress={openSubtaskDetail}
+                  style={{ borderRadius: 16, backgroundColor: "#111827" }}
+                  labelStyle={{ fontWeight: "bold" }}
+                >
+                  Open Subtask Detail (Mock)
+                </Button>
+              </View>
             </>
           ) : (
             <Text>No task selected</Text>
           )}
         </BottomSheetView>
       </BottomSheetModal>
+      <SubtaskDetailBottomSheet
+        ref={subtaskSheetRef}
+        task={selectedTask}
+        initialSubtasks={mockSubtasks}
+      />
     </>
   );
 };

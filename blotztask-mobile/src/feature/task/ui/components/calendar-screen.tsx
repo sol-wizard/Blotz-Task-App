@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from "react";
+<<<<<<< HEAD:blotztask-mobile/src/feature/task/ui/components/calendar-screen.tsx
+=======
+import {
+  SafeAreaView,
+  FlatList,
+  ActivityIndicator,
+  View,
+  Text,
+} from "react-native";
+import {
+  CalendarProvider,
+  WeekCalendar,
+  DateData,
+} from "react-native-calendars";
+>>>>>>> b3808c0 (Edit task UI (#461)):blotztask-mobile/src/feature/task/calendars/calendar-screen.tsx
 import { Snackbar } from "react-native-paper";
 import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
+<<<<<<< HEAD:blotztask-mobile/src/feature/task/ui/components/calendar-screen.tsx
 import { fetchTasksForDate, toggleTaskCompletion, deleteTask } from "../../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
@@ -11,14 +27,33 @@ import TaskCard from "./task-card";
 import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
+=======
+import TaskCard from "../components/task-card";
+import {
+  fetchTasksForDate,
+  toggleTaskCompletion,
+  deleteTask,
+} from "../services/task-service";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
+import { EditTaskBottomSheet } from "../task-edit/edit-task-bottom-sheet";
+import { useBottomSheetStore } from "../util/bottomSheetStore";
+>>>>>>> b3808c0 (Edit task UI (#461)):blotztask-mobile/src/feature/task/calendars/calendar-screen.tsx
 
 export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDetailDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+<<<<<<< HEAD:blotztask-mobile/src/feature/task/ui/components/calendar-screen.tsx
 
   //TODO: Maybe we dont need this
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
+=======
+  const [error, setError] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
+    undefined
+  );
+>>>>>>> b3808c0 (Edit task UI (#461)):blotztask-mobile/src/feature/task/calendars/calendar-screen.tsx
 
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
@@ -26,6 +61,7 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
   });
 
   useEffect(() => {
+<<<<<<< HEAD:blotztask-mobile/src/feature/task/ui/components/calendar-screen.tsx
     loadTask();
   }, [selectedDay, refreshFlag]);
 
@@ -42,6 +78,25 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
       setIsLoading(false);
     }
   };
+=======
+    const loadTasksForDate = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const isToday = isSameDay(selectedDay, new Date());
+        const tasks = await fetchTasksForDate(selectedDay, isToday);
+        setTasksForSelectedDay(tasks);
+      } catch (e) {
+        console.error(e);
+        setError("Failed to load tasks");
+        setTasksForSelectedDay([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadTasksForDate();
+  }, [selectedDay]);
+>>>>>>> b3808c0 (Edit task UI (#461)):blotztask-mobile/src/feature/task/calendars/calendar-screen.tsx
 
   const handleToggleTask = async (task: TaskDetailDTO) => {
     try {
@@ -78,8 +133,12 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
   const handleDeleteTask = async (taskId: number) => {
     try {
       await deleteTask(taskId);
+<<<<<<< HEAD:blotztask-mobile/src/feature/task/ui/components/calendar-screen.tsx
       //TODO: Should refresh the tasks for the selected day instead of deleting at frontend
       setTasksForSelectedDay((prev) => prev.filter((t) => t.id !== taskId)); // delete at frontend
+=======
+      setTasksForSelectedDay((prev) => prev.filter((t) => t.id !== taskId));
+>>>>>>> b3808c0 (Edit task UI (#461)):blotztask-mobile/src/feature/task/calendars/calendar-screen.tsx
       setSnackbar({ visible: true, text: "Delete Successful" });
     } catch (e) {
       console.error(e);
@@ -87,10 +146,13 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
         visible: true,
         text: "Delete Failed, please try again later",
       });
+<<<<<<< HEAD:blotztask-mobile/src/feature/task/ui/components/calendar-screen.tsx
       setSnackbar({
         visible: true,
         text: "Delete Failed, please try again later",
       });
+=======
+>>>>>>> b3808c0 (Edit task UI (#461)):blotztask-mobile/src/feature/task/calendars/calendar-screen.tsx
     }
   };
 
