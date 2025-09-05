@@ -14,7 +14,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [Authorize]
 public class TaskController(
     ITaskService taskService,
-    GetTasksByDateQueryHandler  getTasksByDateQueryHandler,
+    GetTasksByDateQueryHandler getTasksByDateQueryHandler,
     TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
     AddTaskCommandHandler addTaskCommandHandler,
     GetTaskByIdQueryHandler getTaskByIdQueryHandler
@@ -25,7 +25,7 @@ public class TaskController(
     public async Task<ActionResult<List<TaskItemDto>>> GetAllTask(CancellationToken cancellationToken)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        
+
         if (string.IsNullOrEmpty(userId))
         {
             throw new UnauthorizedAccessException("Could not find user id from token");
@@ -54,7 +54,7 @@ public class TaskController(
         var query = new GetTasksByIdQuery { TaskId = id };
         return await getTaskByIdQueryHandler.Handle(query, ct);
     }
-        
+
     [HttpGet("by-date")]
     public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery] DateTime startDateUtc, [FromQuery] bool includeFloatingForToday, CancellationToken ct)
     {
@@ -64,14 +64,14 @@ public class TaskController(
         {
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
-        
+
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
             StartDateUtc = startDateUtc,
             IncludeFloatingForToday = includeFloatingForToday
         };
-        
+
         var result = await getTasksByDateQueryHandler.Handle(query, ct);
         return result;
     }
@@ -146,7 +146,7 @@ public class TaskController(
 
     [HttpPost("{id}/undo-delete")]
     [Obsolete("This endpoint is not in use in mobile app.")]
-    public async Task<IActionResult> RestoreFromTrash(int id) 
+    public async Task<IActionResult> RestoreFromTrash(int id)
     {
         var result = await taskService.RestoreFromTrashAsync(id);
         if (!result.Success)
@@ -174,7 +174,7 @@ public class TaskController(
         {
             throw new UnauthorizedAccessException("Could not find user id from Http Context");
         }
-            
+
         return Ok(await taskService.GetScheduledTasks(timeZone, todayDate, userId));
     }
 
