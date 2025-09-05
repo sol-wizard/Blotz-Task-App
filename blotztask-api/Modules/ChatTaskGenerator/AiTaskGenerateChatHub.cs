@@ -1,9 +1,9 @@
-using BlotzTask.Modules.Chat.DTOs;
-using BlotzTask.Modules.Chat.Services;
+using BlotzTask.Modules.ChatTaskGenerator.DTOs;
+using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.SignalR;
 
-namespace BlotzTask.Modules.Chat;
+namespace BlotzTask.Modules.ChatTaskGenerator;
 
 public class AiTaskGenerateChatHub : Hub
 {
@@ -35,13 +35,12 @@ public class AiTaskGenerateChatHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task SendMessage(string user, string message, string conversationId)
+    public async Task SendMessage(string user, string message)
     {
         var userMsg = new ConversationMessage
         {
             Sender = user,
             Content = message,
-            ConversationId = conversationId,
             Timestamp = DateTime.UtcNow,
             IsBot = false,
         };
@@ -60,7 +59,7 @@ public class AiTaskGenerateChatHub : Hub
             {
                 await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
                 await Clients.Caller.SendAsync("BotTyping", false);
-                await Clients.Caller.SendAsync("ConversationCompleted", conversationId);
+                await Clients.Caller.SendAsync("ConversationCompleted");
                 return;
             }
 

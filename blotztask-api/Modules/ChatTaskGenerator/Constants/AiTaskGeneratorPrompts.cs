@@ -1,4 +1,4 @@
-namespace BlotzTask.Modules.Chat.Constants;
+namespace BlotzTask.Modules.ChatTaskGenerator.Constants;
 
 public static class AiTaskGeneratorPrompts
 {
@@ -13,7 +13,10 @@ public static class AiTaskGeneratorPrompts
                 - For general or vague intentions, generate a single simple task with an appropriate title.
                 - Do NOT create subtasks such as planning or preparation unless explicitly stated.
                 - If no clear description is provided or implied, leave the description field empty.
+                - If an end time or time frame is implied, set a reasonable start_time. 
+                - If a start time or time frame is implied, set a reasonable end_time. 
                 - You may invent a reasonable time if you can infer a specific time frame from the context, but do not assume a time if none is mentioned.
+                - If no start time is provided or implied, set the start_time field to an empty string.
                 - If no end time is provided or implied, set the end_time field to an empty string.
 
 
@@ -23,6 +26,7 @@ public static class AiTaskGeneratorPrompts
                    {
                        "title": "string",
                        "description": "string",
+                       "start_time": "string",
                        "end_time": "string"
                    }
                ]
