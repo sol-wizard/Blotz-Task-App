@@ -4,7 +4,6 @@ using BlotzTask.Modules.Tasks.DTOs;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Services;
-using BlotzTask.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,7 +18,8 @@ public class TaskController(
     GetTasksByDateQueryHandler getTasksByDateQueryHandler,
 
     TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
-    AddTaskCommandHandler addTaskCommandHandler
+    AddTaskCommandHandler addTaskCommandHandler,
+    GetTaskByIdQueryHandler getTaskByIdQueryHandler
 ) : ControllerBase
 {
     [HttpGet]
@@ -51,9 +51,10 @@ public class TaskController(
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetTaskById(int id)
+    public async Task<TaskByIdItemDto> GetTaskById(int id, CancellationToken ct)
     {
-        return Ok(await taskService.GetTaskById(id));
+        var query = new GetTasksByIdQuery { TaskId = id };
+        return await getTaskByIdQueryHandler.Handle(query, ct);
     }
 
     [HttpGet("by-date")]
@@ -78,6 +79,7 @@ public class TaskController(
     }
 
     [HttpGet("today-done")]
+    [Obsolete("This endpoint is not in use in mobile app.")]
     public async Task<IActionResult> GetTodayDoneTasks()
     {
         var userId = HttpContext.Items["UserId"] as string;
@@ -146,7 +148,8 @@ public class TaskController(
     }
 
     [HttpPost("{id}/undo-delete")]
-    public async Task<IActionResult> RestoreFromTrash(int id)
+    [Obsolete("This endpoint is not in use in mobile app.")]
+    public async Task<IActionResult> RestoreFromTrash(int id) 
     {
         var result = await taskService.RestoreFromTrashAsync(id);
         if (!result.Success)
@@ -157,6 +160,7 @@ public class TaskController(
     }
 
     [HttpGet("search")]
+    [Obsolete("This endpoint is not in use in mobile app.")]
     public async Task<IActionResult> SearchTasks([FromQuery, Required] string query)
     {
         var tasks = await taskService.SearchTasksAsync(query);
@@ -164,7 +168,7 @@ public class TaskController(
     }
 
     [HttpGet("scheduled-tasks")]
-    [Obsolete("This endpoint not in used in mobile app.")]
+    [Obsolete("This endpoint is not in use in mobile app.")]
     public async Task<IActionResult> GetScheduleSortTasks([FromQuery, Required] string timeZone, [FromQuery, Required] DateTime todayDate)
     {
         var userId = HttpContext.Items["UserId"] as string;
@@ -178,6 +182,7 @@ public class TaskController(
     }
 
     [HttpGet("due-tasks")]
+    [Obsolete("This endpoint is not in use in mobile app.")]
     public async Task<IActionResult> GetDueTasks()
     {
         var userId = HttpContext.Items["UserId"] as string;
