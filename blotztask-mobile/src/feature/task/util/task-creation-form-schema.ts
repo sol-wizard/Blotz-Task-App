@@ -3,7 +3,7 @@ import z from "zod";
 const RepeatEnum = z.enum(["none", "daily", "weekly", "monthly"]);
 
 //move schema out from services and put in to model folder
-export const taskCreationSchema = z.object({
+export const taskFormSchema = z.object({
   title: z.string().min(1, "Title is required").max(80, "Max 80 chars"),
   description: z
     .string()
@@ -17,6 +17,6 @@ export const taskCreationSchema = z.object({
   labelId: z.number(),
 });
 
-type AddTaskFormField = z.infer<typeof taskCreationSchema>;
+type TaskFormField = z.infer<typeof taskFormSchema>;
 
-export default AddTaskFormField;
+export default TaskFormField;

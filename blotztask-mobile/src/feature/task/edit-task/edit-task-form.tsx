@@ -4,8 +4,8 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { updateTaskItem } from "../services/task-service";
-import AddTaskFormField, {
-  taskCreationSchema,
+import TaskFormField, {
+  taskFormSchema,
 } from "../util/task-creation-form-schema";
 import { RepeatSelect } from "../create-task/repeat-select";
 import { LabelSelect } from "../create-task/label-select";
@@ -20,8 +20,8 @@ export const EditTaskForm = ({
   onSubmit,
   onCancel,
 }: EditTaskFormProps) => {
-  const form = useForm<AddTaskFormField>({
-    resolver: zodResolver(taskCreationSchema),
+  const form = useForm<TaskFormField>({
+    resolver: zodResolver(taskFormSchema),
     mode: "onChange",
     defaultValues: {
       title: task.title,
@@ -37,7 +37,7 @@ export const EditTaskForm = ({
     formState: { errors, isValid, isSubmitting },
   } = form;
 
-  const handleSubmit = form.handleSubmit(async (values: AddTaskFormField) => {
+  const handleSubmit = form.handleSubmit(async (values: TaskFormField) => {
     const updatedTask = {
       id: task?.id ?? 0,
       title: values.title,

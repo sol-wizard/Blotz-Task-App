@@ -5,8 +5,9 @@ import {
   BottomSheetModal,
 } from "@gorhom/bottom-sheet";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+
+import { useBottomSheetStore } from "../store/bottomSheetStore";
 import { EditTaskForm } from "./edit-task-form";
-import { useBottomSheetStore } from "../util/bottomSheetStore";
 
 export const EditTaskBottomSheet = ({ task }: { task: TaskDetailDTO }) => {
   const sheetRef = useRef<BottomSheetModal>(null);

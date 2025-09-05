@@ -23,8 +23,8 @@ import {
 } from "../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
-import { EditTaskBottomSheet } from "../task-edit/edit-task-bottom-sheet";
-import { useBottomSheetStore } from "../util/bottomSheetStore";
+import { EditTaskBottomSheet } from "../edit-task/edit-task-bottom-sheet";
+import { useBottomSheetStore } from "../store/bottomSheetStore";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());

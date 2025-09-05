@@ -1,7 +1,7 @@
 import { AddTaskItemDTO } from "../models/add-task-item-dto";
-import AddTaskFormField from "./task-creation-form-schema";
+import TaskFormField from "./task-creation-form-schema";
 
-export function toAddTaskItemDTO(form: AddTaskFormField): AddTaskItemDTO {
+export function toAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
   return {
     title: (form.title ?? "").trim(),
     description: (form.description ?? "").trim(),

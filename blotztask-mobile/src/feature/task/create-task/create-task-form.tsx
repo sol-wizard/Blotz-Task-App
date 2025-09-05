@@ -1,6 +1,6 @@
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
-import AddTaskFormField, {
-  taskCreationSchema,
+import TaskFormField, {
+  taskFormSchema,
 } from "@/feature/task/util/task-creation-form-schema";
 import { addTaskItem } from "@/feature/task/services/task-service";
 import { toAddTaskItemDTO } from "@/feature/task/util/task-generator-util";
@@ -25,8 +25,8 @@ export default function CreateTaskForm({
     handleTaskCreationSheetClose(-1);
     router.push("/(protected)/ai-task-generator");
   };
-  const form = useForm<AddTaskFormField>({
-    resolver: zodResolver(taskCreationSchema),
+  const form = useForm<TaskFormField>({
+    resolver: zodResolver(taskFormSchema),
     mode: "onSubmit",
     defaultValues: {
       title: "",
