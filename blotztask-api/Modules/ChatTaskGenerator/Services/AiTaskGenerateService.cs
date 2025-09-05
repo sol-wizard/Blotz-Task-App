@@ -9,7 +9,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 public interface IAiTaskGenerateService
 {
     Task<List<ExtractedTask>?> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct);
-    Task<ChatHistory> InitializeNewConversation(string conversationId);
+    Task<ChatHistory> InitializeNewConversation();
 }
 
 public class AiTaskGenerateService : IAiTaskGenerateService
@@ -86,7 +86,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                     _logger.LogInformation(functionResultMessage.Content);
                     var extractedTasks = JsonSerializer.Deserialize<List<ExtractedTask>>(
                         functionResultMessage.Content,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true } // Important for JSON deserialization
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                     );
 
                     if (extractedTasks != null)
@@ -94,10 +94,8 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                         chatHistory.AddAssistantMessage(JsonSerializer.Serialize(extractedTasks));
                         return extractedTasks;
                     }
-                    else
-                    {
-                        return new List<ExtractedTask>();
-                    }
+
+                    return null;
                 }
                 catch (JsonException ex)
                 {
@@ -106,7 +104,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                         "Failed to deserialize function result content into ExtractedTaskResponse. Content: {Content}",
                         functionResultMessage.Content
                     );
-                    return new List<ExtractedTask>();
+                    return null;
                 }
             }
         }
@@ -116,7 +114,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                 ex,
                 "Semantic Kernel FunctionChoiceBehavior.Required for TaskExtraction failed."
             );
-            return new List<ExtractedTask>();
+            return null;
         }
         return null;
     }
@@ -125,17 +123,16 @@ public class AiTaskGenerateService : IAiTaskGenerateService
     ///  Initializes a new conversation by creating a new ChatHistory object
     ///  and setting the system message.
     ///  </summary>
-    /// <param name="conversationId">The unique identifier for the conversation.</param>
     /// <returns>A Task that represents the asynchronous operation, containing the initialized ChatHistory.</returns
     /// <exception cref="ArgumentException">Thrown when the conversationId is null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the conversation state service fails to set
     /// the chat history.</exception>
-    public Task<ChatHistory> InitializeNewConversation(string conversationId)
+    public Task<ChatHistory> InitializeNewConversation()
     {
         var chatHistory = new ChatHistory();
         chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(DateTime.Now));
 
-        _chatHistoryManagerService.SetChatHistory(conversationId, chatHistory);
+        _chatHistoryManagerService.SetChatHistory(chatHistory);
 
         return Task.FromResult(chatHistory);
     }

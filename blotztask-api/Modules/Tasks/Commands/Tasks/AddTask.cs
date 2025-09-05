@@ -1,7 +1,5 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Entities;
-using BlotzTask.Modules.Tasks.DTOs;
-using BlotzTask.Shared.DTOs;
 using System.ComponentModel.DataAnnotations;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;
@@ -40,4 +38,14 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
 
         return $"Task {newTask.Id} titled {newTask.Title} was successfully added.";
     }
+}
+
+public class AddTaskItemDto
+{
+    public required string Title { get; set; }
+    public required string Description { get; set; }
+    public DateTimeOffset? EndTime { get; set; }
+    public DateTimeOffset? StartTime { get; set; }
+    public int LabelId { get; set; }
+    public bool HasTime { get; set; }
 }

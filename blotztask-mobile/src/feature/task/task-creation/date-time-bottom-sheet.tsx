@@ -1,10 +1,10 @@
-import { Portal } from "react-native-paper";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { Pressable, Text, View } from "react-native";
-import { useEffect, useRef, useState } from "react";
-import { Controller } from "react-hook-form";
-import { DatePicker } from "./date-picker";
-import TimePicker from "./time-picker";
+import { Portal } from 'react-native-paper'
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
+import { Pressable, Text, View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { Controller } from 'react-hook-form'
+import { DatePicker } from './date-picker'
+import TimePicker from './time-picker'
 
 export const DateTimeBottomSheet = ({
   control,
@@ -12,53 +12,63 @@ export const DateTimeBottomSheet = ({
   onClose,
   handleCreateTaskBottomSheetOpen,
 }: {
-  control: any;
-  isVisible: boolean;
-  onClose: () => void;
-  handleCreateTaskBottomSheetOpen: () => void;
+  control: any
+  isVisible: boolean
+  onClose: () => void
+  handleCreateTaskBottomSheetOpen: () => void
 }) => {
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const bottomSheetRef = useRef<BottomSheet>(null)
 
-  const [dateSelected, setDateSelected] = useState<string>("");
-  const [timeSelected, setTimeSelected] = useState<string>("");
+  const [dateSelected, setDateSelected] = useState<string>('')
+  const [timeSelected, setTimeSelected] = useState<string>('')
   // const [hasTime, setHasTime] = useState<boolean>(false);
 
-  const handleDateTimeSubmit = () => {
-    if (!dateSelected || !timeSelected) {
-      console.error("❌ Unselected date or time");
-      return;
-    }
+  // const handleDateTimeSubmit = () => {
+  // if (!dateSelected || !timeSelected) {
+  //     console.error("❌ Unselected date or time");
+  //     return;
+  //   }
 
-    // if (!hasTime) {
-    //   const endDateISO = dateSelected;
-    //   console.log("✅ Choose all day, End DateTime ISO:", endDateISO);
-    // } else {
-    //   const combined = `${dateSelected}T${timeSelected}`;
+  // if (!hasTime) {
+  //   const endDateISO = dateSelected;
+  //   console.log("✅ Choose all day, End DateTime ISO:", endDateISO);
+  // } else {
+  //   const combined = `${dateSelected}T${timeSelected}`;
 
-    //   const endDateISO = new Date(combined).toISOString();
+  //   const endDateISO = new Date(combined).toISOString();
 
-    //   console.log("✅ End DateTime ISO:", endDateISO);
-    // }
-  };
+  //   console.log("✅ End DateTime ISO:", endDateISO);
+  // }
+  // };
 
   useEffect(() => {
     if (isVisible) {
-      bottomSheetRef.current?.snapToIndex(0);
+      bottomSheetRef.current?.snapToIndex(0)
     } else {
-      bottomSheetRef.current?.close();
-      handleCreateTaskBottomSheetOpen();
+      bottomSheetRef.current?.close()
+      handleCreateTaskBottomSheetOpen()
     }
-  }, [isVisible]);
+  }, [isVisible])
   return (
     <Controller
       control={control}
       name="endTime"
       render={({ field: { value, onChange } }) => {
+        const handleDateTimeSubmit = () => {
+          if (!dateSelected || !timeSelected) {
+            console.error('❌ Unselected date or time')
+            return
+          }
+          const combined = `${dateSelected}T${timeSelected}`
+          const iso = new Date(combined).toISOString()
+          onChange(iso)
+          onClose()
+        }
         return (
           <Portal>
             <BottomSheet
               ref={bottomSheetRef}
-              snapPoints={["80%"]}
+              snapPoints={['80%']}
               enablePanDownToClose
               onClose={onClose}
             >
@@ -84,8 +94,8 @@ export const DateTimeBottomSheet = ({
               </BottomSheetView>
             </BottomSheet>
           </Portal>
-        );
+        )
       }}
     />
-  );
-};
+  )
+}
