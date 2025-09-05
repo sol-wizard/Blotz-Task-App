@@ -1,9 +1,4 @@
-import React, {
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  useCallback,
-} from "react";
+import { useRef, useCallback, useState, useEffect } from "react";
 import { View, TouchableOpacity } from "react-native";
 import {
   BottomSheetModal,
@@ -16,28 +11,29 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
-
-export type TaskDetailBottomSheetHandle = {
-  present: () => void;
-  dismiss: () => void;
-};
+import { useBottomSheetStore } from "../util/bottomSheetStore";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
-  onDismiss?: () => void;
-  onChange?: (index: number) => void;
 };
 
-const TaskDetailBottomSheet = forwardRef<
-  TaskDetailBottomSheetHandle,
-  TaskDetailBottomSheetProps
->(({ task, onDismiss, onChange }, ref) => {
+const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
 
-  useImperativeHandle(ref, () => ({
-    present: () => taskDetailModalRef.current?.present(),
-    dismiss: () => taskDetailModalRef.current?.dismiss(),
-  }));
+  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
+    task
+  );
+  useEffect(() => {
+    setSelectedTask(task);
+  }, [task]);
+
+  const { taskDetailOpen, openEditTask, closeTaskDetail } =
+    useBottomSheetStore();
+  useEffect(() => {
+    taskDetailOpen
+      ? taskDetailModalRef.current?.present()
+      : taskDetailModalRef.current?.dismiss();
+  }, [taskDetailOpen]);
 
   const snapPoints = ["60%", "80%"];
 
@@ -68,122 +64,126 @@ const TaskDetailBottomSheet = forwardRef<
     });
   };
 
+  const handleEditPress = () => {
+    taskDetailModalRef.current?.dismiss();
+    openEditTask();
+  };
+
   return (
-    <BottomSheetModal
-      ref={taskDetailModalRef}
-      snapPoints={snapPoints}
-      onDismiss={onDismiss}
-      onChange={onChange}
-      enablePanDownToClose
-      backdropComponent={renderBackdrop}
-      backgroundStyle={{
-        backgroundColor: "#FFFFFF",
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-      }}
-    >
-      <BottomSheetView className="flex-1 bg-white px-4 pt-3 pb-24">
-        {task ? (
-          <>
-            {/* Header */}
-            <View className="flex-row items-center justify-between mb-2">
-              <Text
-                className="flex-1 text-gray-900 mr-3 text-xl leading-6"
-                style={{ fontWeight: "800" }}
-              >
-                {task.title}
-              </Text>
-
-              <View className="flex-row items-center gap-2">
-                <Button
-                  mode="text"
-                  onPress={() => console.log("Edit task:", task.id)}
-                  textColor="#374151"
-                  compact
-                  labelStyle={{ fontSize: 15, fontWeight: "bold" }}
-                  contentStyle={{ paddingHorizontal: 0 }}
+    <>
+      <BottomSheetModal
+        ref={taskDetailModalRef}
+        snapPoints={snapPoints}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{
+          backgroundColor: "#FFFFFF",
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+        }}
+        onDismiss={closeTaskDetail}
+      >
+        <BottomSheetView className="flex-1 bg-white px-4 pt-3 pb-24">
+          {selectedTask ? (
+            <>
+              {/* Header */}
+              <View className="flex-row items-center justify-between mb-2">
+                <Text
+                  className="flex-1 text-gray-900 mr-3 text-xl leading-6"
+                  style={{ fontWeight: "800" }}
                 >
-                  Edit
-                </Button>
+                  {selectedTask.title}
+                </Text>
 
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={handleAiBreakdown}
-                  className="flex-row items-center px-3 py-1.5 bg-white border border-gray-200 rounded-2xl"
-                >
-                  <MaterialIcons
-                    name="auto-awesome"
-                    size={15}
-                    color="#9CA3AF"
-                  />
-                  <Text className="ml-1.5 text-gray-900 text-xs font-bold">
-                    AI Breakdown
-                  </Text>
-                </TouchableOpacity>
+                <View className="flex-row items-center gap-2">
+                  <Button
+                    mode="text"
+                    onPress={handleEditPress}
+                    textColor="#374151"
+                    compact
+                    labelStyle={{ fontSize: 15, fontWeight: "bold" }}
+                    contentStyle={{ paddingHorizontal: 0 }}
+                  >
+                    Edit
+                  </Button>
+
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={handleAiBreakdown}
+                    className="flex-row items-center px-3 py-1.5 bg-white border border-gray-200 rounded-2xl"
+                  >
+                    <MaterialIcons
+                      name="auto-awesome"
+                      size={15}
+                      color="#9CA3AF"
+                    />
+                    <Text className="ml-1.5 text-gray-900 text-xs font-bold">
+                      AI Breakdown
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
 
-            <View className="flex-row items-center mb-3 gap-2 mt-1">
-              {task.label ? (
-                <TaskDetailTag>{task.label.name}</TaskDetailTag>
-              ) : null}
-              <TaskDetailTag>
-                {task.isDone ? "Done" : "In progress"}
-              </TaskDetailTag>
-            </View>
-
-            <View className="h-px bg-gray-200 mb-3" />
-
-            {task?.startTime ? (
-              <View className="flex-row items-center mb-2">
-                <MaterialIcons name="event" size={18} color="#6B7280" />
-                <Text className="ml-2.5 text-base leading-5 text-gray-900">
-                  {task.startTime}
-                </Text>
-                <Text className="ml-2.5 text-base leading-5 text-gray-500">
-                  →
-                </Text>
-                {task?.endTime ? (
-                  <Text className="ml-2 text-base leading-5 text-gray-900">
-                    {task.endTime}
-                  </Text>
+              <View className="flex-row items-center mb-3 gap-2 mt-1">
+                {selectedTask.label ? (
+                  <TaskDetailTag>{selectedTask.label.name}</TaskDetailTag>
                 ) : null}
+                <TaskDetailTag>
+                  {selectedTask.isDone ? "Done" : "In progress"}
+                </TaskDetailTag>
               </View>
-            ) : task?.endTime ? (
-              <View className="flex-row items-center mb-2">
-                <MaterialIcons
-                  name="calendar-today"
-                  size={18}
-                  color="#6B7280"
-                />
-                <Text className="ml-2.5 text-base leading-5 text-gray-900">
-                  {task.endTime}
-                </Text>
-              </View>
-            ) : null}
 
-            {task.description ? (
-              <View className="flex-row items-start">
-                <MaterialIcons
-                  name="description"
-                  size={18}
-                  color="#6B7280"
-                  className="mt-0.5"
-                />
-                <Text className="flex-1 ml-2.5 text-base leading-5 text-gray-900">
-                  {task.description}
-                </Text>
-              </View>
-            ) : null}
-          </>
-        ) : (
-          <Text>No task selected</Text>
-        )}
-      </BottomSheetView>
-    </BottomSheetModal>
+              <View className="h-px bg-gray-200 mb-3" />
+
+              {selectedTask?.startTime ? (
+                <View className="flex-row items-center mb-2">
+                  <MaterialIcons name="event" size={18} color="#6B7280" />
+                  <Text className="ml-2.5 text-base leading-5 text-gray-900">
+                    {selectedTask.startTime}
+                  </Text>
+                  <Text className="ml-2.5 text-base leading-5 text-gray-500">
+                    →
+                  </Text>
+                  {selectedTask?.endTime ? (
+                    <Text className="ml-2 text-base leading-5 text-gray-900">
+                      {selectedTask.endTime}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : selectedTask?.endTime ? (
+                <View className="flex-row items-center mb-2">
+                  <MaterialIcons
+                    name="calendar-today"
+                    size={18}
+                    color="#6B7280"
+                  />
+                  <Text className="ml-2.5 text-base leading-5 text-gray-900">
+                    {selectedTask.endTime}
+                  </Text>
+                </View>
+              ) : null}
+
+              {selectedTask.description ? (
+                <View className="flex-row items-start">
+                  <MaterialIcons
+                    name="description"
+                    size={18}
+                    color="#6B7280"
+                    className="mt-0.5"
+                  />
+                  <Text className="flex-1 ml-2.5 text-base leading-5 text-gray-900">
+                    {selectedTask.description}
+                  </Text>
+                </View>
+              ) : null}
+            </>
+          ) : (
+            <Text>No task selected</Text>
+          )}
+        </BottomSheetView>
+      </BottomSheetModal>
+    </>
   );
-});
-
-TaskDetailBottomSheet.displayName = "TaskDetailBottomSheet";
+};
 
 export default TaskDetailBottomSheet;
