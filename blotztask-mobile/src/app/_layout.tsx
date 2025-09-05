@@ -1,12 +1,10 @@
-import "react-native-gesture-handler";
-import "react-native-reanimated";
-
-import { Stack } from "expo-router";
-import { MD3LightTheme, PaperProvider } from "react-native-paper";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import "../../global.css";
-import React from "react";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import 'react-native-reanimated'
+import { Stack } from 'expo-router'
+import { MD3LightTheme, PaperProvider } from 'react-native-paper'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import '../../global.css'
+import React from 'react'
 
 export default function RootLayout() {
   return (
@@ -22,13 +20,13 @@ export default function RootLayout() {
         </PaperProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
-  );
+  )
 }
 
 const theme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: "#6200ee",
+    primary: '#6200ee',
   },
-};
+}
