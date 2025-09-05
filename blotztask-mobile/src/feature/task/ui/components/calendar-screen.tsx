@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  SafeAreaView,
-  FlatList,
-  ActivityIndicator,
-  View,
-  Text,
-} from "react-native";
+import { SafeAreaView, FlatList, ActivityIndicator, View } from "react-native";
 import {
   CalendarProvider,
   WeekCalendar,
@@ -15,16 +9,18 @@ import { Snackbar } from "react-native-paper";
 import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
-import TaskCard from "../components/task-card";
+
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
   deleteTask,
-} from "../services/task-service";
+} from "../../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
-import { EditTaskBottomSheet } from "../edit-task/edit-task-bottom-sheet";
-import { useBottomSheetStore } from "../store/bottomSheetStore";
+
+import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
+import { useBottomSheetStore } from "../../store/bottomSheetStore";
+import TaskCard from "./task-card";
+import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());

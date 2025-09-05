@@ -1,12 +1,12 @@
 import { AddTaskItemDTO } from "../models/add-task-item-dto";
-import TaskFormField from "./task-creation-form-schema";
+import TaskFormField from "./task-form-schema";
 
 export function toAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
   return {
     title: (form.title ?? "").trim(),
     description: (form.description ?? "").trim(),
-    startTime: new Date(form.startTime),
-    endTime: new Date(form.endTime),
+    startTime: form.startTime ?? undefined,
+    endTime: form.endTime ?? undefined,
     hasTime: false,
     labelId: form.labelId,
   };

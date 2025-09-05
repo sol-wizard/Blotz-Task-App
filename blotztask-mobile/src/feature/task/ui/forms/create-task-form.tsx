@@ -1,7 +1,7 @@
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import TaskFormField, {
   taskFormSchema,
-} from "@/feature/task/util/task-creation-form-schema";
+} from "@/feature/task/util/task-form-schema";
 import { addTaskItem } from "@/feature/task/services/task-service";
 import { toAddTaskItemDTO } from "@/feature/task/util/task-generator-util";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,12 +9,13 @@ import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
-import { RepeatSelect } from "./repeat-select";
-import { LabelSelect } from "./label-select";
-import { DateTimeSelectorTrigger } from "./date-time-selector-trigger";
-import { useState } from "react";
-import { StartEndDateTimePicker } from "./start-end-date-time-picker";
+
 import { endOfDay, startOfDay } from "date-fns";
+import { useState } from "react";
+import { DateTimeSelectorTrigger } from "./fields/date-time-selector-trigger";
+import { RepeatSelect } from "./fields/repeat-select";
+import { LabelSelect } from "./fields/label-select";
+import { StartEndDateTimePicker } from "./fields/start-end-date-time-picker";
 
 export default function CreateTaskForm({
   handleTaskCreationSheetClose,

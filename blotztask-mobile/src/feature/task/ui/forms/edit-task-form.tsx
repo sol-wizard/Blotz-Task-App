@@ -3,12 +3,11 @@ import { FormProvider, useForm } from "react-hook-form";
 import { View, Text, TouchableOpacity } from "react-native";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { updateTaskItem } from "../services/task-service";
-import TaskFormField, {
-  taskFormSchema,
-} from "../util/task-creation-form-schema";
-import { RepeatSelect } from "../create-task/repeat-select";
-import { LabelSelect } from "../create-task/label-select";
+
+import { updateTaskItem } from "../../services/task-service";
+import TaskFormField, { taskFormSchema } from "../../util/task-form-schema";
+import { RepeatSelect } from "./fields/repeat-select";
+import { LabelSelect } from "./fields/label-select";
 
 export type EditTaskFormProps = {
   task: TaskDetailDTO;

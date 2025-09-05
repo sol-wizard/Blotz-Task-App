@@ -6,9 +6,8 @@ import BottomSheet, {
 
 import { Portal } from "react-native-paper";
 import { View } from "react-native";
-import CreateTaskForm from "./create-task-form";
+import CreateTaskForm from "../forms/create-task-form";
 
-//TODO: Rename all task creation to create-task
 export const CreateTaskBottomSheet = ({
   isVisible,
   onClose,
@@ -17,14 +16,6 @@ export const CreateTaskBottomSheet = ({
   onClose: (isVisible: boolean) => void;
 }) => {
   const taskCreationBottomSheetRef = useRef<BottomSheet>(null);
-
-  // const handleTaskCreationSheetClose = () => {
-  //   taskCreationBottomSheetRef.current?.close();
-  // };
-
-  // const handleTaskCreationSheetOpen = () => {
-  //   taskCreationBottomSheetRef.current?.snapToIndex(0);
-  // };
 
   const handleSheetChange = useCallback(
     (index: number) => {
