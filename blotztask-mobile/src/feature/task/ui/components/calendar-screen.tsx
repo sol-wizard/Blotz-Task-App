@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, FlatList, ActivityIndicator, View } from "react-native";
 import { Snackbar } from "react-native-paper";
 import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
@@ -19,6 +18,7 @@ import {
   DateData,
   WeekCalendar,
 } from "react-native-calendars";
+import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
