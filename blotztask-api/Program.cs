@@ -16,6 +16,7 @@ using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Tasks.Services;
+using BlotzTask.Modules.Users;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Services;
 using BlotzTask.Shared.Services;
@@ -107,6 +108,7 @@ builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService
 builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
 
 builder.Services.AddTaskModule();
+builder.Services.AddUserModule();
 
 if (builder.Environment.IsDevelopment())
 {
