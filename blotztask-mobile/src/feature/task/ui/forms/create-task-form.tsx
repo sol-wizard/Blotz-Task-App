@@ -1,11 +1,15 @@
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import TaskFormField, { taskFormSchema } from "@/feature/task/models/task-form-schema";
 =======
 import TaskFormField, {
   taskFormSchema,
 } from "@/feature/task/util/task-form-schema";
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+import TaskFormField, { taskFormSchema } from "@/feature/task/models/task-form-schema";
+>>>>>>> c05ce2d (Unify code style (#462))
 import { addTaskItem } from "@/feature/task/services/task-service";
 import { toAddTaskItemDTO } from "@/feature/task/util/task-generator-util";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -164,12 +168,16 @@ export default function CreateTaskForm({
           </View>
         </View>
 <<<<<<< HEAD
+<<<<<<< HEAD
         {showingDateTimePicker && <StartEndDateTimePicker control={form.control} />}
 =======
         {showingDateTimePicker && (
           <StartEndDateTimePicker control={form.control} />
         )}
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+        {showingDateTimePicker && <StartEndDateTimePicker control={form.control} />}
+>>>>>>> c05ce2d (Unify code style (#462))
 
         <Button
           mode="contained"

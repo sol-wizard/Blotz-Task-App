@@ -2,11 +2,16 @@ import BotMessage from "@/feature/ai-chat-hub/components/bot-message";
 import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import React, { useEffect, useRef, useState } from "react";
 =======
 
 import React, { useState } from "react";
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+import uuid from "react-native-uuid";
+import React, { useEffect, useRef, useState } from "react";
+>>>>>>> c05ce2d (Unify code style (#462))
 import {
   View,
   ScrollView,
@@ -27,9 +32,13 @@ export default function AiTaskGeneratorScreen() {
   const { messages, sendMessage, isTyping } = useAiTaskGenerator();
 =======
   const [conversationId] = useState<string>(() => uuid.v4());
+<<<<<<< HEAD
   const { messages, sendMessage, isTyping } =
     useAiTaskGenerator(conversationId);
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+  const { messages, sendMessage, isTyping } = useAiTaskGenerator(conversationId);
+>>>>>>> c05ce2d (Unify code style (#462))
   const [text, setText] = useState("");
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -47,6 +56,7 @@ export default function AiTaskGeneratorScreen() {
 
   return (
 <<<<<<< HEAD
+<<<<<<< HEAD
     <SafeAreaView className="flex-1 bg-white" edges={["right", "left", "bottom"]}>
 =======
     <SafeAreaView
@@ -54,6 +64,9 @@ export default function AiTaskGeneratorScreen() {
       edges={["right", "left", "bottom"]}
     >
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+    <SafeAreaView className="flex-1 bg-white" edges={["right", "left", "bottom"]}>
+>>>>>>> c05ce2d (Unify code style (#462))
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}

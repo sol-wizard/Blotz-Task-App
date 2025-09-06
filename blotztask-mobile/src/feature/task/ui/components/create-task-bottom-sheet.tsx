@@ -17,11 +17,7 @@ import { View } from 'react-native'
 >>>>>>> b3808c0 (Edit task UI (#461)):blotztask-mobile/src/feature/task/task-creation/create-task-bottom-sheet.tsx
 =======
 import React, { useRef, useCallback } from "react";
-import BottomSheet, {
-  BottomSheetBackdrop,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
-
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
 import { Portal } from "react-native-paper";
 import { View } from "react-native";
 import CreateTaskForm from "../forms/create-task-form";
@@ -56,7 +52,10 @@ export const CreateTaskBottomSheet = ({
         onClose(false);
       }
     },
+<<<<<<< HEAD
 <<<<<<< HEAD:blotztask-mobile/src/feature/task/ui/components/create-task-bottom-sheet.tsx
+=======
+>>>>>>> c05ce2d (Unify code style (#462))
     [onClose],
   );
 =======
@@ -77,7 +76,10 @@ export const CreateTaskBottomSheet = ({
         pressBehavior="close"
       />
     ),
+<<<<<<< HEAD
 <<<<<<< HEAD:blotztask-mobile/src/feature/task/ui/components/create-task-bottom-sheet.tsx
+=======
+>>>>>>> c05ce2d (Unify code style (#462))
     [],
   );
 =======
