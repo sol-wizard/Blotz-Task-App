@@ -42,6 +42,8 @@ public class TaskService : ITaskService
                 Description = x.Description,
                 EndTime = x.EndTime,
                 IsDone = x.IsDone,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt,
                 Label = new LabelDto { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color },
                 HasTime = x.HasTime,
             })
@@ -189,7 +191,7 @@ public class TaskService : ITaskService
 
             return result;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             throw;
         }
