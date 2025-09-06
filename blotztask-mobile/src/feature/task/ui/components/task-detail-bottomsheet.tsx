@@ -20,19 +20,18 @@ type TaskDetailBottomSheetProps = {
 const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
 
-  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
-    task
-  );
+  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(task);
   useEffect(() => {
     setSelectedTask(task);
   }, [task]);
 
-  const { taskDetailOpen, openEditTask, closeTaskDetail } =
-    useBottomSheetStore();
+  const { taskDetailOpen, openEditTask, closeTaskDetail } = useBottomSheetStore();
   useEffect(() => {
-    taskDetailOpen
-      ? taskDetailModalRef.current?.present()
-      : taskDetailModalRef.current?.dismiss();
+    if (taskDetailOpen) {
+      taskDetailModalRef.current?.present();
+    } else {
+      taskDetailModalRef.current?.dismiss();
+    }
   }, [taskDetailOpen]);
 
   const snapPoints = ["60%", "80%"];
@@ -47,7 +46,7 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
         opacity={0.5}
       />
     ),
-    []
+    [],
   );
 
   const handleAiBreakdown = () => {
@@ -110,14 +109,8 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
                     onPress={handleAiBreakdown}
                     className="flex-row items-center px-3 py-1.5 bg-white border border-gray-200 rounded-2xl"
                   >
-                    <MaterialIcons
-                      name="auto-awesome"
-                      size={15}
-                      color="#9CA3AF"
-                    />
-                    <Text className="ml-1.5 text-gray-900 text-xs font-bold">
-                      AI Breakdown
-                    </Text>
+                    <MaterialIcons name="auto-awesome" size={15} color="#9CA3AF" />
+                    <Text className="ml-1.5 text-gray-900 text-xs font-bold">AI Breakdown</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -126,9 +119,7 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
                 {selectedTask.label ? (
                   <TaskDetailTag>{selectedTask.label.name}</TaskDetailTag>
                 ) : null}
-                <TaskDetailTag>
-                  {selectedTask.isDone ? "Done" : "In progress"}
-                </TaskDetailTag>
+                <TaskDetailTag>{selectedTask.isDone ? "Done" : "In progress"}</TaskDetailTag>
               </View>
 
               <View className="h-px bg-gray-200 mb-3" />
@@ -139,9 +130,7 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
                   <Text className="ml-2.5 text-base leading-5 text-gray-900">
                     {selectedTask.startTime}
                   </Text>
-                  <Text className="ml-2.5 text-base leading-5 text-gray-500">
-                    →
-                  </Text>
+                  <Text className="ml-2.5 text-base leading-5 text-gray-500">→</Text>
                   {selectedTask?.endTime ? (
                     <Text className="ml-2 text-base leading-5 text-gray-900">
                       {selectedTask.endTime}
@@ -150,11 +139,7 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
                 </View>
               ) : selectedTask?.endTime ? (
                 <View className="flex-row items-center mb-2">
-                  <MaterialIcons
-                    name="calendar-today"
-                    size={18}
-                    color="#6B7280"
-                  />
+                  <MaterialIcons name="calendar-today" size={18} color="#6B7280" />
                   <Text className="ml-2.5 text-base leading-5 text-gray-900">
                     {selectedTask.endTime}
                   </Text>
@@ -163,12 +148,7 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
 
               {selectedTask.description ? (
                 <View className="flex-row items-start">
-                  <MaterialIcons
-                    name="description"
-                    size={18}
-                    color="#6B7280"
-                    className="mt-0.5"
-                  />
+                  <MaterialIcons name="description" size={18} color="#6B7280" className="mt-0.5" />
                   <Text className="flex-1 ml-2.5 text-base leading-5 text-gray-900">
                     {selectedTask.description}
                   </Text>

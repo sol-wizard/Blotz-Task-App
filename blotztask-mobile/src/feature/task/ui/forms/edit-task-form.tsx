@@ -21,7 +21,7 @@ export const EditTaskForm = ({ task, onSubmit, onCancel }: EditTaskFormProps) =>
     defaultValues: {
       title: task.title,
       description: task.description ?? "",
-      endTime: new Date(task.endTime) ?? undefined,
+      endTime: new Date(task.endTime),
       repeat: "none",
       labelId: task.label?.labelId ?? undefined,
     },
