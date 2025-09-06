@@ -8,7 +8,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,css,scss}\""
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -70,15 +71,18 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@eslint/js": "^9.34.0",
     "@expo/config-plugins": "~10.1.1",
     "@types/react": "~19.0.10",
-    "@typescript-eslint/eslint-plugin": "^8.38.0",
-    "@typescript-eslint/parser": "^8.38.0",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
     "ajv": "^8.17.1",
-    "eslint": "^9.32.0",
+    "eslint": "^9.34.0",
     "eslint-config-expo": "~9.2.0",
+    "eslint-config-prettier": "^10.1.8",
     "prettier-plugin-tailwindcss": "^0.6.13",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.41.0"
   },
   "private": true
 }
