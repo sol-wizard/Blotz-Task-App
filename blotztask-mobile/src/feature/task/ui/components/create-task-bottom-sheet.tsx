@@ -1,9 +1,5 @@
 import React, { useRef, useCallback } from "react";
-import BottomSheet, {
-  BottomSheetBackdrop,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
-
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from "@gorhom/bottom-sheet";
 import { Portal } from "react-native-paper";
 import { View } from "react-native";
 import CreateTaskForm from "../forms/create-task-form";
@@ -23,7 +19,7 @@ export const CreateTaskBottomSheet = ({
         onClose(false);
       }
     },
-    [onClose]
+    [onClose],
   );
 
   const renderBackdrop = useCallback(
@@ -35,7 +31,7 @@ export const CreateTaskBottomSheet = ({
         pressBehavior="close"
       />
     ),
-    []
+    [],
   );
 
   return (
