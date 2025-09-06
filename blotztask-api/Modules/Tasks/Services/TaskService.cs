@@ -11,10 +11,8 @@ namespace BlotzTask.Modules.Tasks.Services;
 public interface ITaskService
 {
     public Task<List<TaskItemDto>> GetTodoItemsByUser(string userId, CancellationToken cancellationToken);
-    public Task<TaskItemDto> GetTaskById(int id);
     public Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDto editTaskItem);
     public Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id);
-    public Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDto addTaskItem, string userId);
     public Task<List<TaskItemDto>> GetTodayDoneTasks(string userId);
     public Task<MonthlyStatDto> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
@@ -48,31 +46,6 @@ public class TaskService : ITaskService
                 HasTime = x.HasTime,
             })
             .ToListAsync(cancellationToken);
-    }
-
-    public async Task<TaskItemDto> GetTaskById(int id)
-    {
-        var task = await _dbContext.TaskItems.FindAsync(id);
-
-        if (task == null)
-        {
-            throw new NotFoundException($"Task with ID {id} not found.");
-        }
-
-        var result = new TaskItemDto()
-        {
-            Id = task.Id,
-            Title = task.Title,
-            Description = task.Description,
-            EndTime = task.EndTime,
-            IsDone = task.IsDone,
-            CreatedAt = task.CreatedAt,
-            UpdatedAt = task.UpdatedAt,
-            Label = new LabelDto { Name = task.Label.Name, Color = task.Label.Color },
-            HasTime = task.HasTime
-        };
-
-        return result;
     }
 
     public async Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id)
@@ -114,45 +87,6 @@ public class TaskService : ITaskService
             throw;
         }
     }
-
-    public async Task<ResponseWrapper<string>> AddTaskAsync(AddTaskItemDto addTaskItem, string userId)
-    {
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            throw new UnauthorizedAccessException("User ID cannot be null or empty.");
-        }
-
-        try
-        {
-            var newTask = new TaskItem
-            {
-                Title = addTaskItem.Title,
-                Description = addTaskItem.Description,
-                StartTime = addTaskItem.StartTime,
-                EndTime = addTaskItem.EndTime,
-                LabelId = addTaskItem.LabelId,
-                UserId = userId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                HasTime = addTaskItem.HasTime
-            };
-
-            _dbContext.TaskItems.Add(newTask);
-            await _dbContext.SaveChangesAsync();
-
-            return new ResponseWrapper<string>(
-                newTask.Title,
-                "Task added successfully.",
-                true
-            );
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error adding task: {ex.Message}");
-            throw;
-        }
-    }
-
 
     public async Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDto editTaskItem)
     {
@@ -382,7 +316,6 @@ public class TaskService : ITaskService
             throw;
         }
     }
-
 
     private ScheduledTasksDto GroupTasksBySchedule(TimeZoneInfo timeZoneInfo, List<TaskItemDto> tasks, DateTime now)
     {

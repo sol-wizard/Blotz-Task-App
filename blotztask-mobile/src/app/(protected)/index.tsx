@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
-import CalendarPage from "@/feature/task/calendars/calendar-screen";
+import CalendarPage from "@/feature/task/ui/components/calendar-screen";
 import SettingsScreen from "@/feature/settings/page/settings-screen";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { CreateTaskBottomSheet } from "@/feature/task/task-creation/create-task-bottom-sheet";
+import { CreateTaskBottomSheet } from "@/feature/task/ui/components/create-task-bottom-sheet";
 
 const routes = [
   {
@@ -38,7 +37,7 @@ export default function ProtectedIndex() {
   });
 
   return (
-    <BottomSheetModalProvider>
+    <>
       <BottomNavigation
         navigationState={{ index, routes }}
         onIndexChange={setIndex}
@@ -60,6 +59,6 @@ export default function ProtectedIndex() {
           onClose={setIsTaskCreationSheetVisible}
         ></CreateTaskBottomSheet>
       )}
-    </BottomSheetModalProvider>
+    </>
   );
 }
