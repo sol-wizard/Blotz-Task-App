@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
-import CalendarPage from "@/feature/task/calendars/calendar-screen";
+import CalendarPage from "@/feature/task/ui/components/calendar-screen";
 import SettingsScreen from "@/feature/settings/page/settings-screen";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { CreateTaskBottomSheet } from "@/feature/task/task-creation/create-task-bottom-sheet";
+import { CreateTaskBottomSheet } from "@/feature/task/ui/components/create-task-bottom-sheet";
 
 const routes = [
   {
@@ -30,8 +29,7 @@ const SettingsRoute = () => <SettingsScreen />;
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
   const insets = useSafeAreaInsets();
-  const [isTaskCreationSheetVisible, setIsTaskCreationSheetVisible] =
-    useState(false);
+  const [isTaskCreationSheetVisible, setIsTaskCreationSheetVisible] = useState(false);
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
@@ -39,17 +37,14 @@ export default function ProtectedIndex() {
   });
 
   return (
-    <BottomSheetModalProvider>
+    <>
       <BottomNavigation
         navigationState={{ index, routes }}
         onIndexChange={setIndex}
         renderScene={renderScene}
       />
 
-      <View
-        className="absolute left-0 right-0 items-center"
-        style={{ bottom: insets.bottom + 20 }}
-      >
+      <View className="absolute left-0 right-0 items-center" style={{ bottom: insets.bottom + 20 }}>
         <Pressable
           onPress={() => setIsTaskCreationSheetVisible(true)}
           className="w-14 h-14 rounded-full bg-gray-200 items-center justify-center"
@@ -64,6 +59,6 @@ export default function ProtectedIndex() {
           onClose={setIsTaskCreationSheetVisible}
         ></CreateTaskBottomSheet>
       )}
-    </BottomSheetModalProvider>
+    </>
   );
 }
