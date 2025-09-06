@@ -10,9 +10,7 @@ export interface LoginResponse {
   refreshToken?: string;
 }
 
-export const loginService = async (
-  credentials: LoginCredentials
-): Promise<LoginResponse> => {
+export const loginService = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   const response = await fetch(`${process.env.EXPO_PUBLIC_URL}/login`, {
     method: "POST",
     headers: {

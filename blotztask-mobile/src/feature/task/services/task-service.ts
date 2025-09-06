@@ -5,7 +5,7 @@ import { AddTaskItemDTO } from "../models/add-task-item-dto";
 
 export async function fetchTasksForDate(
   date: Date,
-  includeFloatingForToday: boolean
+  includeFloatingForToday: boolean,
 ): Promise<TaskDetailDTO[]> {
   const startDateUtc = getStartOfDayUtc(date).toISOString();
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}&includeFloatingForToday=${includeFloatingForToday}`;
@@ -20,20 +20,15 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
   await fetchWithAuth<unknown>(url, { method: "PUT" });
 }
 
-export const addTaskItem = async (
-  addTaskForm: AddTaskItemDTO
-): Promise<string> => {
+export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<string> => {
   try {
-    const result = await fetchWithAuth<string>(
-      `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(addTaskForm),
-      }
-    );
+    const result = await fetchWithAuth<string>(`${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(addTaskForm),
+    });
 
     return result;
   } catch (error) {
@@ -44,16 +39,13 @@ export const addTaskItem = async (
 
 export async function updateTaskItem(updatedTask: any): Promise<void> {
   try {
-    await fetchWithAuth<any>(
-      `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${updatedTask.id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedTask),
-      }
-    );
+    await fetchWithAuth<any>(`${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${updatedTask.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updatedTask),
+    });
   } catch (error) {
     console.error("Error updating task:", error);
     throw error;

@@ -1,11 +1,17 @@
-// https://docs.expo.dev/guides/using-eslint/
 const { defineConfig } = require("eslint/config");
-const expoConfig = require("eslint-config-expo/flat");
-const tsPlugin = require("@typescript-eslint/eslint-plugin");
+const js = require("@eslint/js");
+const tseslint = require("typescript-eslint");
+const expo = require("eslint-config-expo/flat");
+const prettier = require("eslint-config-prettier");
 const tsParser = require("@typescript-eslint/parser");
+const tsPlugin = require("@typescript-eslint/eslint-plugin");
 
 module.exports = defineConfig([
-  ...expoConfig,
+  ...expo,
+
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+
   {
     files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
@@ -21,11 +27,22 @@ module.exports = defineConfig([
     },
     rules: {
       "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-explicit-any": "off",
       camelcase: "warn",
+      quotes: ["error", "double", { avoidEscape: true, allowTemplateLiterals: true }],
     },
   },
+  prettier,
 
   {
-    ignores: ["dist/**", "node_modules/**"],
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "eslint.config.*",
+      "metro.config.*",
+      "tailwind.config.*",
+      "babel.config.*",
+    ],
   },
 ]);

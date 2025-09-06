@@ -7,14 +7,7 @@ import { COLORS } from "@/shared/constants/colors";
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 import { convertAiTaskToAddTaskItemDTO } from "../util/ai-task-generator-util";
 
-//Rename to main feature folder to ai-task-generator
-export const AIChatTaskCard = ({
-  task,
-  className,
-}: {
-  task: AiTaskDTO;
-  className?: string;
-}) => {
+export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className?: string }) => {
   const [isTaskAdded, setTaskIsAdded] = useState(task.isAdded);
 
   const handleAddTask = async (task: AiTaskDTO) => {
@@ -40,10 +33,7 @@ export const AIChatTaskCard = ({
       <View
         className={`flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1 ${className}`}
       >
-        <CustomCheckbox
-          checked={isTaskAdded}
-          onPress={() => handleAddTask(task)}
-        />
+        <CustomCheckbox checked={isTaskAdded} onPress={() => handleAddTask(task)} />
 
         <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
         <View className="flex-col">
@@ -56,11 +46,7 @@ export const AIChatTaskCard = ({
           />
           <View className="flex-row my-1">
             <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
-            {task.endTime && (
-              <Text className="text-base text-primary ml-2">
-                {task.endTime}
-              </Text>
-            )}
+            {task.endTime && <Text className="text-base text-primary ml-2">{task.endTime}</Text>}
           </View>
         </View>
       </View>

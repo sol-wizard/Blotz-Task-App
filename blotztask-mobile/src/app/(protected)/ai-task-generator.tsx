@@ -1,8 +1,8 @@
 import BotMessage from "@/feature/ai-chat-hub/components/bot-message";
 import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
-
-import React, { useState } from "react";
+import uuid from "react-native-uuid";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   ScrollView,
@@ -19,8 +19,7 @@ import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerat
 export default function AiTaskGeneratorScreen() {
   //TODO: we dont need conversation id but we need to chage backend if we want to remove this
   const [conversationId] = useState<string>(() => uuid.v4());
-  const { messages, sendMessage, isTyping } =
-    useAiTaskGenerator(conversationId);
+  const { messages, sendMessage, isTyping } = useAiTaskGenerator(conversationId);
   const [text, setText] = useState("");
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -37,10 +36,7 @@ export default function AiTaskGeneratorScreen() {
   }, [messages, isTyping]);
 
   return (
-    <SafeAreaView
-      className="flex-1 bg-white"
-      edges={["right", "left", "bottom"]}
-    >
+    <SafeAreaView className="flex-1 bg-white" edges={["right", "left", "bottom"]}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -57,14 +53,10 @@ export default function AiTaskGeneratorScreen() {
               {messages &&
                 messages.map((msg, index) =>
                   msg.isBot ? (
-                    <BotMessage
-                      key={index}
-                      text={msg.content}
-                      tasks={msg.tasks}
-                    />
+                    <BotMessage key={index} text={msg.content} tasks={msg.tasks} />
                   ) : (
                     <UserMessage key={index} text={msg.content} />
-                  )
+                  ),
                 )}
               {isTyping && <TypingAnimation visible={isTyping} />}
             </ScrollView>

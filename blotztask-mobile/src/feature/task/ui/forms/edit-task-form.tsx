@@ -5,7 +5,7 @@ import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 import { updateTaskItem } from "../../services/task-service";
-import TaskFormField, { taskFormSchema } from "../../util/task-form-schema";
+import TaskFormField, { taskFormSchema } from "../../models/task-form-schema";
 import { RepeatSelect } from "./fields/repeat-select";
 import { LabelSelect } from "./fields/label-select";
 
@@ -14,18 +14,14 @@ export type EditTaskFormProps = {
   onSubmit: () => void;
   onCancel?: () => void;
 };
-export const EditTaskForm = ({
-  task,
-  onSubmit,
-  onCancel,
-}: EditTaskFormProps) => {
+export const EditTaskForm = ({ task, onSubmit, onCancel }: EditTaskFormProps) => {
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
     defaultValues: {
       title: task.title,
       description: task.description ?? "",
-      endTime: new Date(task.endTime) ?? undefined,
+      endTime: new Date(task.endTime),
       repeat: "none",
       labelId: task.label?.labelId ?? undefined,
     },
@@ -89,9 +85,7 @@ export const EditTaskForm = ({
             }}
           />
           {errors.description && (
-            <Text className="text-red-500 text-xs">
-              {errors.description.message}
-            </Text>
+            <Text className="text-red-500 text-xs">{errors.description.message}</Text>
           )}
         </View>
         <View className="flex-row items-center gap-2">

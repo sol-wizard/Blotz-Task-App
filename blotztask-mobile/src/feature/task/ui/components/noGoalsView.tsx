@@ -12,17 +12,13 @@ export default function NoGoalsView() {
         style={{ width: 160, height: 160 }}
       />
 
-      <Text className="text-xl font-bold text-zinc-800 mb-2">
-        No tasks for this day
-      </Text>
+      <Text className="text-xl font-bold text-zinc-800 mb-2">No tasks for this day</Text>
       <Text className="text-base text-zinc-600 text-center mb-5">
         Your to do list is empty. Wanna Create new?
       </Text>
 
       <TouchableOpacity className="flex-row items-center bg-zinc-100 p-4 rounded-lg mb-4">
-        <Text className="text-base font-semibold text-zinc-800 ml-2">
-          Check Sample
-        </Text>
+        <Text className="text-base font-semibold text-zinc-800 ml-2">Check Sample</Text>
         <Text className="ml-auto text-zinc-800">→</Text>
       </TouchableOpacity>
     </View>

@@ -18,8 +18,7 @@ export function RepeatSelect({ control }: { control: any }) {
       control={control}
       name="repeat"
       render={({ field: { value, onChange } }) => {
-        const current =
-          REPEAT_OPTIONS.find((opt) => opt.value === value)?.label || "Repeat";
+        const current = REPEAT_OPTIONS.find((opt) => opt.value === value)?.label || "Repeat";
 
         return (
           <Menu
