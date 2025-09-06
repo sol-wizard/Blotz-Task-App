@@ -14,9 +14,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [Authorize]
 public class TaskController(
     ITaskService taskService,
-
     GetTasksByDateQueryHandler getTasksByDateQueryHandler,
-
     TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
     AddTaskCommandHandler addTaskCommandHandler,
     GetTaskByIdQueryHandler getTaskByIdQueryHandler
