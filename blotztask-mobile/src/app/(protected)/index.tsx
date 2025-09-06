@@ -26,11 +26,14 @@ export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
   const insets = useSafeAreaInsets();
   const [isTaskCreationSheetVisible, setIsTaskCreationSheetVisible] = useState(false);
+<<<<<<< HEAD
   const [refreshFlag, setRefreshFlag] = useState(false);
 
   const CalendarRoute: any = () => <CalendarPage refreshFlag={refreshFlag} />;
 
   const SettingsRoute = () => <SettingsScreen />;
+=======
+>>>>>>> c05ce2d (Unify code style (#462))
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
@@ -54,6 +57,7 @@ export default function ProtectedIndex() {
         )}
       />
 <<<<<<< HEAD
+<<<<<<< HEAD
 
       <View className="absolute left-0 right-0 items-center" style={{ bottom: insets.bottom }}>
 =======
@@ -63,6 +67,10 @@ export default function ProtectedIndex() {
         style={{ bottom: insets.bottom + 20 }}
       >
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+
+      <View className="absolute left-0 right-0 items-center" style={{ bottom: insets.bottom + 20 }}>
+>>>>>>> c05ce2d (Unify code style (#462))
         <Pressable
           onPress={() => setIsTaskCreationSheetVisible(true)}
           className="w-14 h-14 rounded-full bg-gray-200 items-center justify-center"

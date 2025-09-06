@@ -16,6 +16,7 @@ export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className
 =======
 import { convertAiTaskToAddTaskItemDTO } from "../util/ai-task-generator-util";
 
+<<<<<<< HEAD
 //Rename to main feature folder to ai-task-generator
 export const AIChatTaskCard = ({
   task,
@@ -25,6 +26,9 @@ export const AIChatTaskCard = ({
   className?: string;
 }) => {
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className?: string }) => {
+>>>>>>> c05ce2d (Unify code style (#462))
   const [isTaskAdded, setTaskIsAdded] = useState(task.isAdded);
 
   const handleAddTask = async (task: AiTaskDTO) => {
@@ -62,6 +66,7 @@ export const AIChatTaskCard = ({
             multiline={true}
             scrollEnabled={false}
           />
+<<<<<<< HEAD
 
           {/* 
           Shows nothing if both times are missing.
@@ -82,6 +87,12 @@ export const AIChatTaskCard = ({
               </View>
             </View>
           ) : null}
+=======
+          <View className="flex-row my-1">
+            <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
+            {task.endTime && <Text className="text-base text-primary ml-2">{task.endTime}</Text>}
+          </View>
+>>>>>>> c05ce2d (Unify code style (#462))
         </View>
       </View>
     </View>

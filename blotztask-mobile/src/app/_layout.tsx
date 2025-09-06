@@ -1,9 +1,13 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 =======
 import "react-native-gesture-handler";
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+>>>>>>> c05ce2d (Unify code style (#462))
 import "react-native-reanimated";
 
 import { Stack } from "expo-router";
@@ -11,6 +15,7 @@ import { MD3LightTheme, PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../../global.css";
 import React from "react";
+<<<<<<< HEAD
 <<<<<<< HEAD
 import { Auth0Provider } from "react-native-auth0";
 
@@ -26,6 +31,9 @@ import React from 'react'
 >>>>>>> b3808c0 (Edit task UI (#461))
 =======
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+=======
+
+>>>>>>> c05ce2d (Unify code style (#462))
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 >>>>>>> 6eb4676 (Frontend refactor (#467))
 
@@ -65,10 +73,7 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="(protected)"
-                options={{ headerShown: false }}
-              />
+              <Stack.Screen name="(protected)" options={{ headerShown: false }} />
             </Stack>
           </SafeAreaProvider>
         </BottomSheetModalProvider>

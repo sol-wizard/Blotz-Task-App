@@ -6,10 +6,14 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 import { updateTaskItem } from "../../services/task-service";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import TaskFormField, { taskFormSchema } from "../../models/task-form-schema";
 =======
 import TaskFormField, { taskFormSchema } from "../../util/task-form-schema";
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+import TaskFormField, { taskFormSchema } from "../../models/task-form-schema";
+>>>>>>> c05ce2d (Unify code style (#462))
 import { RepeatSelect } from "./fields/repeat-select";
 import { LabelSelect } from "./fields/label-select";
 
@@ -19,6 +23,7 @@ export type EditTaskFormProps = {
   onCancel?: () => void;
 };
 <<<<<<< HEAD
+<<<<<<< HEAD
 export const EditTaskForm = ({ task, onSubmit, onCancel }: EditTaskFormProps) => {
 =======
 export const EditTaskForm = ({
@@ -27,6 +32,9 @@ export const EditTaskForm = ({
   onCancel,
 }: EditTaskFormProps) => {
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+export const EditTaskForm = ({ task, onSubmit, onCancel }: EditTaskFormProps) => {
+>>>>>>> c05ce2d (Unify code style (#462))
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
@@ -34,10 +42,14 @@ export const EditTaskForm = ({
       title: task.title,
       description: task.description ?? "",
 <<<<<<< HEAD
+<<<<<<< HEAD
       endTime: new Date(task.endTime),
 =======
       endTime: new Date(task.endTime) ?? undefined,
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+      endTime: new Date(task.endTime),
+>>>>>>> c05ce2d (Unify code style (#462))
       repeat: "none",
       labelId: task.label?.labelId ?? undefined,
     },
@@ -102,12 +114,16 @@ export const EditTaskForm = ({
           />
           {errors.description && (
 <<<<<<< HEAD
+<<<<<<< HEAD
             <Text className="text-red-500 text-xs">{errors.description.message}</Text>
 =======
             <Text className="text-red-500 text-xs">
               {errors.description.message}
             </Text>
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+            <Text className="text-red-500 text-xs">{errors.description.message}</Text>
+>>>>>>> c05ce2d (Unify code style (#462))
           )}
         </View>
         <View className="flex-row items-center gap-2">

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { BottomSheetBackdrop, BottomSheetView, BottomSheetModal } from "@gorhom/bottom-sheet";
 =======
 import {
@@ -8,6 +9,9 @@ import {
   BottomSheetModal,
 } from "@gorhom/bottom-sheet";
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+import { BottomSheetBackdrop, BottomSheetView, BottomSheetModal } from "@gorhom/bottom-sheet";
+>>>>>>> c05ce2d (Unify code style (#462))
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 import { useBottomSheetStore } from "../../store/bottomSheetStore";
@@ -26,24 +30,34 @@ export const EditTaskBottomSheet = ({ task }: { task: TaskDetailDTO }) => {
       />
     ),
 <<<<<<< HEAD
+<<<<<<< HEAD
     [],
 =======
     []
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+    [],
+>>>>>>> c05ce2d (Unify code style (#462))
   );
 
   const { editTaskOpen, closeEditTask, openTaskDetail } = useBottomSheetStore();
 
   useEffect(() => {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> c05ce2d (Unify code style (#462))
     if (editTaskOpen) {
       sheetRef.current?.present();
     } else {
       sheetRef.current?.dismiss();
     }
+<<<<<<< HEAD
 =======
     editTaskOpen ? sheetRef.current?.present() : sheetRef.current?.dismiss();
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+>>>>>>> c05ce2d (Unify code style (#462))
   }, [editTaskOpen]);
 
   const handleClose = () => {
@@ -62,6 +76,7 @@ export const EditTaskBottomSheet = ({ task }: { task: TaskDetailDTO }) => {
     >
       <BottomSheetView style={{ padding: 16 }}>
 <<<<<<< HEAD
+<<<<<<< HEAD
         <EditTaskForm task={task} onSubmit={handleClose} onCancel={handleClose} />
 =======
         <EditTaskForm
@@ -70,6 +85,9 @@ export const EditTaskBottomSheet = ({ task }: { task: TaskDetailDTO }) => {
           onCancel={handleClose}
         />
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+        <EditTaskForm task={task} onSubmit={handleClose} onCancel={handleClose} />
+>>>>>>> c05ce2d (Unify code style (#462))
       </BottomSheetView>
     </BottomSheetModal>
   );

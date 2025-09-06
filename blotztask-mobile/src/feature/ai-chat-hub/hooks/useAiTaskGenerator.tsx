@@ -2,19 +2,26 @@ import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { ConversationMessage } from "@/feature/ai-chat-hub/models/conversation-message";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-chat-hub/util/map-extracted-to-task-dto";
 =======
 import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-chat-hub/services/map-extracted-to-task-dto";
 
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-chat-hub/util/map-extracted-to-task-dto";
+>>>>>>> c05ce2d (Unify code style (#462))
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 import { signalRService } from "../services/ai-task-generator-signalr-service";
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 export function useAiTaskGenerator() {
 =======
 //TODO: Rename to a specific name
+=======
+>>>>>>> c05ce2d (Unify code style (#462))
 export function useAiTaskGenerator(conversationId: string) {
 >>>>>>> 6eb4676 (Frontend refactor (#467))
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
