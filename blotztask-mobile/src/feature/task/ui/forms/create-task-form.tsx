@@ -1,7 +1,5 @@
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
-import TaskFormField, {
-  taskFormSchema,
-} from "@/feature/task/util/task-form-schema";
+import TaskFormField, { taskFormSchema } from "@/feature/task/models/task-form-schema";
 import { addTaskItem } from "@/feature/task/services/task-service";
 import { toAddTaskItemDTO } from "@/feature/task/util/task-generator-util";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -63,16 +61,12 @@ export default function CreateTaskForm({
   return (
     <FormProvider {...form}>
       <View className="flex-1 bg-white px-5 pb-5">
-        <Text className="text-3xl font-extrabold text-center mb-6">
-          Create New Task
-        </Text>
+        <Text className="text-3xl font-extrabold text-center mb-6">Create New Task</Text>
 
         <View className="flex-row items-center mb-6">
           <View className="w-8 h-8 rounded-full bg-gray-300 mr-3" />
           <View className="bg-gray-100 rounded-full px-4 py-2">
-            <Text className="text-gray-600 text-sm">
-              Keep going. Tiny steps still win. 🚀
-            </Text>
+            <Text className="text-gray-600 text-sm">Keep going. Tiny steps still win. 🚀</Text>
           </View>
         </View>
 
@@ -120,9 +114,7 @@ export default function CreateTaskForm({
             <LabelSelect control={form.control} />
           </View>
         </View>
-        {showingDateTimePicker && (
-          <StartEndDateTimePicker control={form.control} />
-        )}
+        {showingDateTimePicker && <StartEndDateTimePicker control={form.control} />}
 
         <Button
           mode="contained"

@@ -1,5 +1,5 @@
 import { AddTaskItemDTO } from "../models/add-task-item-dto";
-import TaskFormField from "./task-form-schema";
+import TaskFormField from "../models/task-form-schema";
 
 export function toAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
   return {

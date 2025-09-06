@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import {
-  BottomSheetBackdrop,
-  BottomSheetView,
-  BottomSheetModal,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetBackdrop, BottomSheetView, BottomSheetModal } from "@gorhom/bottom-sheet";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 import { useBottomSheetStore } from "../../store/bottomSheetStore";
@@ -21,13 +17,17 @@ export const EditTaskBottomSheet = ({ task }: { task: TaskDetailDTO }) => {
         pressBehavior="close"
       />
     ),
-    []
+    [],
   );
 
   const { editTaskOpen, closeEditTask, openTaskDetail } = useBottomSheetStore();
 
   useEffect(() => {
-    editTaskOpen ? sheetRef.current?.present() : sheetRef.current?.dismiss();
+    if (editTaskOpen) {
+      sheetRef.current?.present();
+    } else {
+      sheetRef.current?.dismiss();
+    }
   }, [editTaskOpen]);
 
   const handleClose = () => {
@@ -45,11 +45,7 @@ export const EditTaskBottomSheet = ({ task }: { task: TaskDetailDTO }) => {
       enablePanDownToClose
     >
       <BottomSheetView style={{ padding: 16 }}>
-        <EditTaskForm
-          task={task}
-          onSubmit={handleClose}
-          onCancel={handleClose}
-        />
+        <EditTaskForm task={task} onSubmit={handleClose} onCancel={handleClose} />
       </BottomSheetView>
     </BottomSheetModal>
   );

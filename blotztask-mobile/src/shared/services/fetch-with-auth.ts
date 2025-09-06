@@ -1,10 +1,7 @@
 import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
 import * as SecureStore from "expo-secure-store";
 
-export const fetchWithAuth = async <T>(
-  url: string,
-  options: RequestInit = {}
-): Promise<T> => {
+export const fetchWithAuth = async <T>(url: string, options: RequestInit = {}): Promise<T> => {
   try {
     const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
 
