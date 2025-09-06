@@ -6,7 +6,7 @@ export default function NoGoalsView() {
   return (
     <View className="flex-1 justify-center items-center p-5 bg-white">
       <LottieView
-        source={require("../../../../assets/images/empty-box.json")}
+        source={require("../../../../../assets/images/empty-box.json")}
         autoPlay
         loop
         style={{ width: 160, height: 160 }}
