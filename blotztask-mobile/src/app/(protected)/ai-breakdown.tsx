@@ -1,7 +1,6 @@
 import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
 import { useBreakdownChat } from "@/feature/breakdown/hooks/useBreakdownChat";
-import { TaskDetailsDto } from "@/feature/breakdown/models/task-details-dto";
 import { useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -22,16 +21,13 @@ import {
 import { SubTask } from "@/feature/breakdown/models/subtask";
 
 export default function AiBreakdownScreen() {
-  const params = useLocalSearchParams();
+  const { id: taskId } = useLocalSearchParams<{ id?: string }>();
+  if (!taskId) throw new Error("Missing task id");
   const addSubtaskSheetRef = useRef<AddSubtaskBottomSheetHandle>(null);
   const [selectedSubtasks, setSelectedSubtasks] = useState<SubTask[]>([]);
-  const taskDetails: TaskDetailsDto = {
-    title: params.title as string,
-    description: params.description as string,
-  };
 
   const [text, setText] = useState("");
-  const { messages, isTyping, sendMessage } = useBreakdownChat(taskDetails);
+  const { messages, isTyping, sendMessage } = useBreakdownChat(taskId);
   const handleSend = () => {
     sendMessage(text);
     setText("");
@@ -84,7 +80,7 @@ export default function AiBreakdownScreen() {
                   msg.isBot ? (
                     <BreakdownBotMessage
                       key={index}
-                      parentTaskId={params.id as string}
+                      parentTaskId={taskId as string}
                       text={msg.content}
                       subtasks={msg.subtasks}
                       openAddSubtaskBottomSheet={handleSelectSubtask}

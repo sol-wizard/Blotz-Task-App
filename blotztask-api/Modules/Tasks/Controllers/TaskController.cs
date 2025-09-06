@@ -147,7 +147,7 @@ public class TaskController(
 
     [HttpPost("{id}/undo-delete")]
     [Obsolete("This endpoint is not in use in mobile app.")]
-    public async Task<IActionResult> RestoreFromTrash(int id) 
+    public async Task<IActionResult> RestoreFromTrash(int id)
     {
         var result = await taskService.RestoreFromTrashAsync(id);
         if (!result.Success)

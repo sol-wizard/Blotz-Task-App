@@ -3,7 +3,10 @@ import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
 import { getStartOfDayUtc } from "../util/date-utils";
 import { AddTaskItemDTO } from "../models/add-task-item-dto";
 
-export async function fetchTasksForDate(date: Date, includeFloatingForToday: boolean): Promise<TaskDetailDTO[]> {
+export async function fetchTasksForDate(
+  date: Date,
+  includeFloatingForToday: boolean
+): Promise<TaskDetailDTO[]> {
   const startDateUtc = getStartOfDayUtc(date).toISOString();
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}&includeFloatingForToday=${includeFloatingForToday}`;
 
@@ -38,6 +41,24 @@ export const addTaskItem = async (
     throw error;
   }
 };
+
+export async function updateTaskItem(updatedTask: any): Promise<void> {
+  try {
+    await fetchWithAuth<any>(
+      `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${updatedTask.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedTask),
+      }
+    );
+  } catch (error) {
+    console.error("Error updating task:", error);
+    throw error;
+  }
+}
 
 export async function deleteTask(taskId: number): Promise<void> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`;

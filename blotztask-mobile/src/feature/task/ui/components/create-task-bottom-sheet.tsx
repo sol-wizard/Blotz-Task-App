@@ -3,9 +3,10 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import TaskCreationForm from "../task-creation/task-creation-form";
+
 import { Portal } from "react-native-paper";
 import { View } from "react-native";
+import CreateTaskForm from "../forms/create-task-form";
 
 export const CreateTaskBottomSheet = ({
   isVisible,
@@ -15,14 +16,6 @@ export const CreateTaskBottomSheet = ({
   onClose: (isVisible: boolean) => void;
 }) => {
   const taskCreationBottomSheetRef = useRef<BottomSheet>(null);
-
-  // const handleTaskCreationSheetClose = () => {
-  //   taskCreationBottomSheetRef.current?.close();
-  // };
-
-  // const handleTaskCreationSheetOpen = () => {
-  //   taskCreationBottomSheetRef.current?.snapToIndex(0);
-  // };
 
   const handleSheetChange = useCallback(
     (index: number) => {
@@ -59,10 +52,7 @@ export const CreateTaskBottomSheet = ({
           onClose={() => onClose(false)}
         >
           <BottomSheetView style={{ padding: 16 }}>
-            <TaskCreationForm
-              handleTaskCreationSheetClose={handleSheetChange}
-              // handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
-            />
+            <CreateTaskForm handleTaskCreationSheetClose={handleSheetChange} />
           </BottomSheetView>
         </BottomSheet>
       </View>
