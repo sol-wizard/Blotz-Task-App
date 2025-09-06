@@ -30,11 +30,6 @@ public class LabelController(ILabelService _labelService, AddLabelCommandHandler
     [Obsolete("This endpoint is not in used")]
     public async Task<IActionResult> AddLabel([FromBody] AddLabelDto addLabels, CancellationToken ct)
     {
-        
-        if (string.IsNullOrWhiteSpace(addLabels.Name) && string.IsNullOrWhiteSpace(addLabels.Color))
-        {
-            return BadRequest("Name or Color must be provided.");
-        }
 
         var name = addLabels.Name;
         var command = new AddLabelCommand
