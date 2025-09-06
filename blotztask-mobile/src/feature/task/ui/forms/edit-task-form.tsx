@@ -5,7 +5,11 @@ import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 import { updateTaskItem } from "../../services/task-service";
+<<<<<<< HEAD
 import TaskFormField, { taskFormSchema } from "../../models/task-form-schema";
+=======
+import TaskFormField, { taskFormSchema } from "../../util/task-form-schema";
+>>>>>>> 6eb4676 (Frontend refactor (#467))
 import { RepeatSelect } from "./fields/repeat-select";
 import { LabelSelect } from "./fields/label-select";
 
@@ -14,14 +18,26 @@ export type EditTaskFormProps = {
   onSubmit: () => void;
   onCancel?: () => void;
 };
+<<<<<<< HEAD
 export const EditTaskForm = ({ task, onSubmit, onCancel }: EditTaskFormProps) => {
+=======
+export const EditTaskForm = ({
+  task,
+  onSubmit,
+  onCancel,
+}: EditTaskFormProps) => {
+>>>>>>> 6eb4676 (Frontend refactor (#467))
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
     defaultValues: {
       title: task.title,
       description: task.description ?? "",
+<<<<<<< HEAD
       endTime: new Date(task.endTime),
+=======
+      endTime: new Date(task.endTime) ?? undefined,
+>>>>>>> 6eb4676 (Frontend refactor (#467))
       repeat: "none",
       labelId: task.label?.labelId ?? undefined,
     },
@@ -85,7 +101,13 @@ export const EditTaskForm = ({ task, onSubmit, onCancel }: EditTaskFormProps) =>
             }}
           />
           {errors.description && (
+<<<<<<< HEAD
             <Text className="text-red-500 text-xs">{errors.description.message}</Text>
+=======
+            <Text className="text-red-500 text-xs">
+              {errors.description.message}
+            </Text>
+>>>>>>> 6eb4676 (Frontend refactor (#467))
           )}
         </View>
         <View className="flex-row items-center gap-2">

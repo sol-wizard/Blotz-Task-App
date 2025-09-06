@@ -53,8 +53,16 @@ export default function ProtectedIndex() {
           />
         )}
       />
+<<<<<<< HEAD
 
       <View className="absolute left-0 right-0 items-center" style={{ bottom: insets.bottom }}>
+=======
+      {/* //TODO: There should be a better way to do this without hacking the css */}
+      <View
+        className="absolute left-0 right-0 items-center"
+        style={{ bottom: insets.bottom + 20 }}
+      >
+>>>>>>> 6eb4676 (Frontend refactor (#467))
         <Pressable
           onPress={() => setIsTaskCreationSheetVisible(true)}
           className="w-14 h-14 rounded-full bg-gray-200 items-center justify-center"

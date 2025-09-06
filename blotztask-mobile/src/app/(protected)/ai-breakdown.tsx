@@ -23,6 +23,7 @@ export default function AiBreakdownScreen() {
   const { id: taskId } = useLocalSearchParams<{ id?: string }>();
   if (!taskId) throw new Error("Missing task id");
   const addSubtaskSheetRef = useRef<AddSubtaskBottomSheetHandle>(null);
+<<<<<<< HEAD
   const [selectedSubtasks, setSelectedSubtasks] = useState<AddSubtaskDTO[]>([]);
 
   // const [text, setText] = useState("");
@@ -31,6 +32,16 @@ export default function AiBreakdownScreen() {
   //   sendMessage(text);
   //   setText("");
   // };
+=======
+  const [selectedSubtasks, setSelectedSubtasks] = useState<SubTask[]>([]);
+
+  const [text, setText] = useState("");
+  const { messages, isTyping, sendMessage } = useBreakdownChat(taskId);
+  const handleSend = () => {
+    sendMessage(text);
+    setText("");
+  };
+>>>>>>> 6eb4676 (Frontend refactor (#467))
 
   const handleSelectSubtask = (subTask: AddSubtaskDTO) => {
     setSelectedSubtasks((prev) => {

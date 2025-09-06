@@ -5,6 +5,7 @@ import { addTaskItem } from "@/feature/task/services/task-service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
+<<<<<<< HEAD
 import { format, parseISO } from "date-fns";
 import { convertAiTaskToAddTaskItemDTO } from "../util/ai-task-generator-util";
 
@@ -12,6 +13,18 @@ const formatTime = (iso?: string, fmt: string = "MM-dd HH:mm"): string =>
   iso ? format(parseISO(iso), fmt) : "";
 
 export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className?: string }) => {
+=======
+import { convertAiTaskToAddTaskItemDTO } from "../util/ai-task-generator-util";
+
+//Rename to main feature folder to ai-task-generator
+export const AIChatTaskCard = ({
+  task,
+  className,
+}: {
+  task: AiTaskDTO;
+  className?: string;
+}) => {
+>>>>>>> 6eb4676 (Frontend refactor (#467))
   const [isTaskAdded, setTaskIsAdded] = useState(task.isAdded);
 
   const handleAddTask = async (task: AiTaskDTO) => {

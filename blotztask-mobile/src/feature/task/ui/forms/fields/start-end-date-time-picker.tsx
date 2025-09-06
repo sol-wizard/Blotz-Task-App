@@ -9,14 +9,26 @@ export const StartEndDateTimePicker = ({ control }: { control: any }) => {
         control={control}
         name="startTime"
         render={({ field: { value, onChange } }) => {
+<<<<<<< HEAD
           return <DateTimeSelector defaultValue={value} changeDateTime={onChange} />;
+=======
+          return (
+            <DateTimeSelector defaultValue={value} changeDateTime={onChange} />
+          );
+>>>>>>> 6eb4676 (Frontend refactor (#467))
         }}
       />
       <Controller
         control={control}
         name="endTime"
         render={({ field: { value, onChange } }) => {
+<<<<<<< HEAD
           return <DateTimeSelector defaultValue={value} changeDateTime={onChange} />;
+=======
+          return (
+            <DateTimeSelector defaultValue={value} changeDateTime={onChange} />
+          );
+>>>>>>> 6eb4676 (Frontend refactor (#467))
         }}
       />
     </View>

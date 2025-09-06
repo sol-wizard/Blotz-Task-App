@@ -1,5 +1,11 @@
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
+<<<<<<< HEAD
 import TaskFormField, { taskFormSchema } from "@/feature/task/models/task-form-schema";
+=======
+import TaskFormField, {
+  taskFormSchema,
+} from "@/feature/task/util/task-form-schema";
+>>>>>>> 6eb4676 (Frontend refactor (#467))
 import { addTaskItem } from "@/feature/task/services/task-service";
 import { toAddTaskItemDTO } from "@/feature/task/util/task-generator-util";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +19,16 @@ import { RepeatSelect } from "./fields/repeat-select";
 import { LabelSelect } from "./fields/label-select";
 import { StartEndDateTimePicker } from "./fields/start-end-date-time-picker";
 
+<<<<<<< HEAD
+=======
+import { endOfDay, startOfDay } from "date-fns";
+import { useState } from "react";
+import { DateTimeSelectorTrigger } from "./fields/date-time-selector-trigger";
+import { RepeatSelect } from "./fields/repeat-select";
+import { LabelSelect } from "./fields/label-select";
+import { StartEndDateTimePicker } from "./fields/start-end-date-time-picker";
+
+>>>>>>> 6eb4676 (Frontend refactor (#467))
 export default function CreateTaskForm({
   handleTaskCreationSheetClose,
   refreshCalendarPage,
@@ -30,8 +46,13 @@ export default function CreateTaskForm({
     defaultValues: {
       title: "",
       description: "",
+<<<<<<< HEAD
       startTime: undefined,
       endTime: undefined,
+=======
+      startTime: startOfDay(new Date()),
+      endTime: endOfDay(new Date()),
+>>>>>>> 6eb4676 (Frontend refactor (#467))
       repeat: "none",
       labelId: undefined,
     },
@@ -39,6 +60,8 @@ export default function CreateTaskForm({
   const {
     formState: { errors },
   } = form;
+
+  const [showingDateTimePicker, setShowingDateTimePicker] = useState(false);
 
   const [showingDateTimePicker, setShowingDateTimePicker] = useState(false);
 
@@ -51,8 +74,13 @@ export default function CreateTaskForm({
       form.reset({
         title: "",
         description: "",
+<<<<<<< HEAD
         startTime: undefined,
         endTime: undefined,
+=======
+        startTime: startOfDay(new Date()),
+        endTime: endOfDay(new Date()),
+>>>>>>> 6eb4676 (Frontend refactor (#467))
         repeat: "none",
         labelId: undefined,
       });
@@ -109,6 +137,7 @@ export default function CreateTaskForm({
 
         <View className="flex-row gap-3 mb-8">
           <DateTimeSelectorTrigger
+<<<<<<< HEAD
             handleTrigger={() => {
               const start = form.getValues("startTime");
               const end = form.getValues("endTime");
@@ -121,6 +150,9 @@ export default function CreateTaskForm({
               }
             }}
             control={form.control}
+=======
+            handleTrigger={() => setShowingDateTimePicker((prev) => !prev)}
+>>>>>>> 6eb4676 (Frontend refactor (#467))
           />
 
           <View className="flex-1">
@@ -131,7 +163,13 @@ export default function CreateTaskForm({
             <LabelSelect control={form.control} />
           </View>
         </View>
+<<<<<<< HEAD
         {showingDateTimePicker && <StartEndDateTimePicker control={form.control} />}
+=======
+        {showingDateTimePicker && (
+          <StartEndDateTimePicker control={form.control} />
+        )}
+>>>>>>> 6eb4676 (Frontend refactor (#467))
 
         <Button
           mode="contained"
