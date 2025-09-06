@@ -4,7 +4,6 @@ import {
   FlatList,
   ActivityIndicator,
   View,
-  Text,
 } from "react-native";
 import {
   CalendarProvider,
