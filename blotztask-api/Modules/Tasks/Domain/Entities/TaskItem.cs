@@ -8,21 +8,17 @@ public class TaskItem
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
-    public string Title { get; set; }
-    public string Description { get; set; }
-
+    public required string Title { get; set; }
+    public string? Description { get; set; }
     public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public string UserId { get; set; }
-    [ForeignKey("UserId")]
+    public required string UserId { get; set; }
     public User User { get; set; }
-    public int LabelId { get; set; }
-    [ForeignKey("LabelId")]
+    public required int LabelId { get; set; }
     public Label Label { get; set; }
-    public bool HasTime { get; set; } 
+    public bool? HasTime { get; set; }
     public ICollection<Subtask> Subtasks { get; set; } = new List<Subtask>();
-
 }
