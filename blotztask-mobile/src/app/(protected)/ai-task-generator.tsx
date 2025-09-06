@@ -1,94 +1,70 @@
-import { useEffect, useState } from "react";
-import * as signalR from "@microsoft/signalr";
-import { ConversationMessage } from "@/feature/ai-chat-hub/models/conversation-message";
-import { signalRService } from "@/feature/ai-chat-hub/services/ai-task-generator-signalr-service";
-import { ExtractedTaskDTO } from "@/feature/ai-chat-hub/models/extracted-task-dto";
-import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
-import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-chat-hub/util/map-extracted-to-task-dto";
+import BotMessage from "@/feature/ai-chat-hub/components/bot-message";
+import { TypingArea } from "@/shared/components/ui/typing-area";
+import UserMessage from "@/feature/ai-chat-hub/components/user-message";
+import uuid from "react-native-uuid";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-//TODO: Rename to a specific name
-export function useAiTaskGenerator(conversationId: string) {
-  const [messages, setMessages] = useState<ConversationMessage[]>([]);
-  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
+import TypingAnimation from "@/feature/ai-chat-hub/components/typing-animation";
+import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
 
-  const sendMessage = async (text: string) => {
+export default function AiTaskGeneratorScreen() {
+  //TODO: we dont need conversation id but we need to chage backend if we want to remove this
+  const [conversationId] = useState<string>(() => uuid.v4());
+  const { messages, sendMessage, isTyping } = useAiTaskGenerator(conversationId);
+  const [text, setText] = useState("");
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const handleSend = () => {
     if (!text.trim()) return;
-
-    const userMessage: ConversationMessage = {
-      content: text.trim(),
-      isBot: false,
-    };
-
-    setMessages((prev = []) => [...prev, userMessage]);
-
-    if (connection) {
-      try {
-        await signalRService.invoke(connection, "SendMessage", "User", text.trim());
-      } catch (error) {
-        console.error("Error invoking SendMessage:", error);
-      }
-    } else {
-      console.warn("Cannot send message: Not connected.");
-    }
-  };
-
-  const receiveMessageHandler = (msg: ConversationMessage) => {
-    if (msg.isBot === false) return;
-    setMessages((prev = []) => [...prev, msg]);
-  };
-
-  const receiveTasksHandler = (receivedTasks: ExtractedTaskDTO[]) => {
-    if (!receivedTasks || receivedTasks.length === 0) return;
-    console.log("receivedTasks:", receivedTasks);
-    const mappedTasks: AiTaskDTO[] = receivedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
-    console.log("mappedTasks,", mappedTasks);
-
-    setMessages((prev = []) => [
-      ...prev,
-      {
-        content: "Here are the tasks I generated for you :)", //TODO: delete after new endpoint ready. move to chat backend
-        isBot: true,
-        tasks: mappedTasks,
-      },
-    ]);
-  };
-
-  const botTypingHandler = (typing: boolean) => {
-    setIsTyping(typing);
+    sendMessage(text);
+    setText("");
   };
 
   useEffect(() => {
-    const newConnection = signalRService.createConnection();
-    setConnection(newConnection);
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages, isTyping]);
 
-    const startConnection = async () => {
-      try {
-        await newConnection.start();
-        newConnection.on("ReceiveMessage", receiveMessageHandler);
-        newConnection.on("ReceiveTasks", receiveTasksHandler);
-        newConnection.on("BotTyping", botTypingHandler);
-        newConnection.onclose(() => setIsTyping(false));
-        console.log("Connected to SignalR hub!");
-      } catch (error) {
-        console.error("Error connecting to SignalR:", error);
-      }
-    };
+  return (
+    <SafeAreaView className="flex-1 bg-white" edges={["right", "left", "bottom"]}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={100}
+      >
+        <View className="flex-1">
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <ScrollView
+              ref={scrollViewRef}
+              className="px-4"
+              contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
+              keyboardShouldPersistTaps="handled"
+            >
+              {messages &&
+                messages.map((msg, index) =>
+                  msg.isBot ? (
+                    <BotMessage key={index} text={msg.content} tasks={msg.tasks} />
+                  ) : (
+                    <UserMessage key={index} text={msg.content} />
+                  ),
+                )}
+              {isTyping && <TypingAnimation visible={isTyping} />}
+            </ScrollView>
+          </TouchableWithoutFeedback>
 
-    startConnection();
-
-    return () => {
-      newConnection
-        .stop()
-        .then(() => {
-          console.log("SignalR Connection Stopped.");
-          newConnection.off("ReceiveMessage", receiveMessageHandler);
-          newConnection.off("ReceiveTasks", receiveTasksHandler);
-          newConnection.off("BotTyping", botTypingHandler);
-        })
-        .catch((error) => console.error("Error stopping SignalR connection:", error));
-    };
-  }, []);
-
-  return { messages, sendMessage, isTyping };
+          <TypingArea text={text} setText={setText} handleSend={handleSend} />
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
 }
