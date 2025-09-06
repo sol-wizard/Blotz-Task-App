@@ -1,7 +1,12 @@
 import BotMessage from "@/feature/ai-chat-hub/components/bot-message";
 import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
+<<<<<<< HEAD
 import React, { useEffect, useRef, useState } from "react";
+=======
+
+import React, { useState } from "react";
+>>>>>>> 6eb4676 (Frontend refactor (#467))
 import {
   View,
   ScrollView,
@@ -17,8 +22,14 @@ import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerat
 
 export default function AiTaskGeneratorScreen() {
   //TODO: we dont need conversation id but we need to chage backend if we want to remove this
+<<<<<<< HEAD
 
   const { messages, sendMessage, isTyping } = useAiTaskGenerator();
+=======
+  const [conversationId] = useState<string>(() => uuid.v4());
+  const { messages, sendMessage, isTyping } =
+    useAiTaskGenerator(conversationId);
+>>>>>>> 6eb4676 (Frontend refactor (#467))
   const [text, setText] = useState("");
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -35,7 +46,14 @@ export default function AiTaskGeneratorScreen() {
   }, [messages, isTyping]);
 
   return (
+<<<<<<< HEAD
     <SafeAreaView className="flex-1 bg-white" edges={["right", "left", "bottom"]}>
+=======
+    <SafeAreaView
+      className="flex-1 bg-white"
+      edges={["right", "left", "bottom"]}
+    >
+>>>>>>> 6eb4676 (Frontend refactor (#467))
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}

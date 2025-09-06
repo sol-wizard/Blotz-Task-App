@@ -11,11 +11,11 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
-import { useBottomSheetStore } from "../../util/bottomSheetStore";
 import { format, isBefore, startOfDay } from "date-fns";
 import SubtaskDetailBottomSheet, {
   SubtaskDetailBottomSheetHandle,
 } from "./subtask-detail-bottomsheet";
+import { useBottomSheetStore } from "../../store/bottomSheetStore";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;

@@ -1,24 +1,39 @@
 import React, { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
+<<<<<<< HEAD
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+=======
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
+>>>>>>> 6eb4676 (Frontend refactor (#467))
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import Modal from "react-native-modal";
 
 type Props = {
+<<<<<<< HEAD
   value?: Date;
+=======
+  value: Date;
+>>>>>>> 6eb4676 (Frontend refactor (#467))
   onChange: (d: Date) => void;
 };
 
 export default function DatePicker({ value, onChange }: Props) {
   const [openCalendar, setOpenCalendar] = useState(false);
+<<<<<<< HEAD
   const [tempDate, setTempDate] = useState<Date | undefined>(value);
+=======
+  const [tempDate, setTempDate] = useState<Date>(value);
+>>>>>>> 6eb4676 (Frontend refactor (#467))
 
   const onNativeChange = (_: DateTimePickerEvent, selected?: Date) => {
     if (selected) setTempDate(selected);
   };
 
   const handleConfirm = () => {
+<<<<<<< HEAD
     if (tempDate) {
       onChange(tempDate);
     }
@@ -27,6 +42,9 @@ export default function DatePicker({ value, onChange }: Props) {
 
   const handleCanel = () => {
     setTempDate(undefined);
+=======
+    onChange(tempDate);
+>>>>>>> 6eb4676 (Frontend refactor (#467))
     setOpenCalendar(false);
   };
 
@@ -39,7 +57,13 @@ export default function DatePicker({ value, onChange }: Props) {
         }}
         className="flex-row items-center justify-between px-3 py-2 rounded-xl border border-gray-300 bg-white"
       >
+<<<<<<< HEAD
         <Text className={`text-base ${value ? "text-slate-700" : "text-slate-400"}`}>
+=======
+        <Text
+          className={`text-base ${value ? "text-slate-700" : "text-slate-400"}`}
+        >
+>>>>>>> 6eb4676 (Frontend refactor (#467))
           {tempDate ? format(tempDate, "dd/MM/yy") : "DD/MM/YY"}
         </Text>
         <Ionicons name="calendar-outline" size={22} color="#3b3f58" />
@@ -57,7 +81,11 @@ export default function DatePicker({ value, onChange }: Props) {
           <View className="w-full max-w-md rounded-2xl bg-white p-4">
             <View className="items-center">
               <DateTimePicker
+<<<<<<< HEAD
                 value={tempDate ?? new Date()}
+=======
+                value={tempDate}
+>>>>>>> 6eb4676 (Frontend refactor (#467))
                 mode="date"
                 display={Platform.OS === "ios" ? "spinner" : "calendar"}
                 locale={Platform.OS === "ios" ? "en-GB" : undefined}
@@ -68,10 +96,23 @@ export default function DatePicker({ value, onChange }: Props) {
             </View>
 
             <View className="flex-row justify-end mt-2 space-x-3">
+<<<<<<< HEAD
               <Pressable onPress={handleCanel} className="px-4 py-2 rounded-lg">
                 <Text className="text-slate-600">Cancel</Text>
               </Pressable>
               <Pressable onPress={handleConfirm} className="px-4 py-2 rounded-lg bg-blue-500">
+=======
+              <Pressable
+                onPress={() => setOpenCalendar(false)}
+                className="px-4 py-2 rounded-lg"
+              >
+                <Text className="text-slate-600">Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleConfirm}
+                className="px-4 py-2 rounded-lg bg-blue-500"
+              >
+>>>>>>> 6eb4676 (Frontend refactor (#467))
                 <Text className="text-white font-medium">Confirm</Text>
               </Pressable>
             </View>
