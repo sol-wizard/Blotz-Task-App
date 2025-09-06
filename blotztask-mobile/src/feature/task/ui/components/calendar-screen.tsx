@@ -1,30 +1,24 @@
 import React, { useState, useEffect } from "react";
-import {
-  SafeAreaView,
-  FlatList,
-  ActivityIndicator,
-  View,
-  Text,
-} from "react-native";
-import {
-  CalendarProvider,
-  WeekCalendar,
-  DateData,
-} from "react-native-calendars";
 import { Snackbar } from "react-native-paper";
 import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
-import TaskCard from "../components/task-card";
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
   deleteTask,
-} from "../services/task-service";
+} from "../../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
-import { EditTaskBottomSheet } from "../task-edit/edit-task-bottom-sheet";
-import { useBottomSheetStore } from "../util/bottomSheetStore";
+import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
+import { useBottomSheetStore } from "../../store/bottomSheetStore";
+import TaskCard from "./task-card";
+import TaskDetailBottomSheet from "./task-detail-bottomsheet";
+import {
+  CalendarProvider,
+  DateData,
+  WeekCalendar,
+} from "react-native-calendars";
+import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 
 export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -32,7 +26,8 @@ export default function CalendarPage() {
     TaskDetailDTO[]
   >([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  //TODO: Maybe we dont need this
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
     undefined
   );
@@ -43,23 +38,22 @@ export default function CalendarPage() {
   });
 
   useEffect(() => {
-    const loadTasksForDate = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const isToday = isSameDay(selectedDay, new Date());
-        const tasks = await fetchTasksForDate(selectedDay, isToday);
-        setTasksForSelectedDay(tasks);
-      } catch (e) {
-        console.error(e);
-        setError("Failed to load tasks");
-        setTasksForSelectedDay([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadTasksForDate();
+    loadTask();
   }, [selectedDay]);
+
+  const loadTask = async () => {
+    setIsLoading(true);
+    try {
+      const isToday = isSameDay(selectedDay, new Date());
+      const tasks = await fetchTasksForDate(selectedDay, isToday);
+      setTasksForSelectedDay(tasks);
+    } catch (e) {
+      console.error(e);
+      setTasksForSelectedDay([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleToggleTask = async (task: TaskDetailDTO) => {
     try {
@@ -96,10 +90,15 @@ export default function CalendarPage() {
   const handleDeleteTask = async (taskId: number) => {
     try {
       await deleteTask(taskId);
-      setTasksForSelectedDay((prev) => prev.filter((t) => t.id !== taskId));
+      //TODO: Should refresh the tasks for the selected day instead of deleting at frontend
+      setTasksForSelectedDay((prev) => prev.filter((t) => t.id !== taskId)); // delete at frontend
       setSnackbar({ visible: true, text: "Delete Successful" });
     } catch (e) {
       console.error(e);
+      setSnackbar({
+        visible: true,
+        text: "Delete Failed, please try again later",
+      });
       setSnackbar({
         visible: true,
         text: "Delete Failed, please try again later",
@@ -136,10 +135,6 @@ export default function CalendarPage() {
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="small" />
-          </View>
-        ) : error ? (
-          <View className="flex-1 items-center justify-center">
-            <Text>Failed to load tasks</Text>
           </View>
         ) : tasksForSelectedDay.length > 0 ? (
           <FlatList
