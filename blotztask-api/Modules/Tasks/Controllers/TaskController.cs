@@ -108,7 +108,6 @@ public class TaskController(
 
         var result = await addTaskCommandHandler.Handle(command, ct);
         return result;
-
     }
 
     [HttpPut("{id}")]

@@ -16,9 +16,9 @@ public class TaskItem
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public required string UserId { get; set; }
-    public User? User { get; set; }
-    public int? LabelId { get; set; }
-    public Label? Label { get; set; }
+    public User User { get; set; }
+    public required int LabelId { get; set; }
+    public Label Label { get; set; }
     public bool? HasTime { get; set; }
     public ICollection<Subtask> Subtasks { get; set; } = new List<Subtask>();
 }

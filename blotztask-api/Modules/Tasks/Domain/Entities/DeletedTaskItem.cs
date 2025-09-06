@@ -20,7 +20,7 @@ public class DeletedTaskItem
     [ForeignKey("UserId")]
     public User? User { get; set; }
 
-    public int? LabelId { get; set; }
+    public required int LabelId { get; set; }
     [ForeignKey("LabelId")]
     public Label? Label { get; set; }
     public bool? HasTime { get; set; }

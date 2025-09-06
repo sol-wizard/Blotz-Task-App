@@ -96,7 +96,6 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                     }
 
                     return null;
-
                 }
                 catch (JsonException ex)
                 {
@@ -107,7 +106,6 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                     );
 
                     return null;
-
                 }
             }
         }
@@ -119,7 +117,6 @@ public class AiTaskGenerateService : IAiTaskGenerateService
             );
 
             return null;
-
         }
         return null;
     }

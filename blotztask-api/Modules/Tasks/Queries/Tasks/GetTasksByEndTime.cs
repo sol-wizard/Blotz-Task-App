@@ -43,7 +43,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                 IsDone = task.IsDone,
                 Label = new LabelDto
                 {
-                    LabelId = task.Label!.LabelId,
+                    LabelId = task.Label.LabelId,
                     Name = task.Label.Name,
                     Color = task.Label.Color
                 },
@@ -64,6 +64,6 @@ public class TaskByDateItemDto
     public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
-    public LabelDto? Label { get; set; }
+    public required LabelDto Label { get; set; }
     public bool HasTime { get; set; }
 }

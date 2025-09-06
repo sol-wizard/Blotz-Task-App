@@ -34,7 +34,6 @@ public class TaskService : ITaskService
     {
         return await _dbContext.TaskItems
             .Where(x => x.UserId == userId)
-            .Include(x => x.Label)
             .OrderBy(x => x.EndTime)
             .Select(x => new TaskItemDto
             {
@@ -45,7 +44,7 @@ public class TaskService : ITaskService
                 IsDone = x.IsDone,
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt,
-                Label = new LabelDto { LabelId = x.Label!.LabelId, Name = x.Label.Name, Color = x.Label.Color },
+                Label = new LabelDto { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color },
                 HasTime = x.HasTime,
             })
             .ToListAsync(cancellationToken);
@@ -147,7 +146,7 @@ public class TaskService : ITaskService
                     IsDone = task.IsDone,
                     Label = new LabelDto
                     {
-                        LabelId = task.Label!.LabelId,
+                        LabelId = task.Label.LabelId,
                         Name = task.Label.Name,
                         Color = task.Label.Color
                     },
@@ -167,7 +166,7 @@ public class TaskService : ITaskService
         {
             var filteredTasks = await _dbContext.TaskItems
                 .Where(x => x.UserId == userId && x.EndTime != null && x.EndTime.Value.Month == month && x.EndTime.Value.Year == year)
-                .GroupBy(x => new { x.Label!.Name, x.IsDone })
+                .GroupBy(x => new { x.Label.Name, x.IsDone })
                 .Select(g => new
                 {
                     Label = g.Key.Name,
@@ -256,7 +255,7 @@ public class TaskService : ITaskService
                     IsDone = task.IsDone,
                     Label = new LabelDto
                     {
-                        LabelId = task.Label!.LabelId,
+                        LabelId = task.Label.LabelId,
                         Name = task.Label.Name,
                         Color = task.Label.Color
                     },
@@ -297,7 +296,7 @@ public class TaskService : ITaskService
                     IsDone = task.IsDone,
                     Label = new LabelDto
                     {
-                        LabelId = task.Label!.LabelId,
+                        LabelId = task.Label.LabelId,
                         Name = task.Label.Name,
                         Color = task.Label.Color
                     },
@@ -395,7 +394,7 @@ public class TaskService : ITaskService
                     IsDone = t.IsDone,
                     Label = new LabelDto
                     {
-                        LabelId = t.Label!.LabelId,
+                        LabelId = t.Label.LabelId,
                         Name = t.Label.Name,
                         Color = t.Label.Color
                     },

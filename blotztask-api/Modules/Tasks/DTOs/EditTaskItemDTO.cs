@@ -11,6 +11,6 @@ public class EditTaskItemDto
     public string? Description { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
-    public int? LabelId { get; set; }
+    public int LabelId { get; set; }
     public bool? HasTime { get; set; }
 }

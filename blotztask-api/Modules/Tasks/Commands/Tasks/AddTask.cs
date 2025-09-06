@@ -18,7 +18,6 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
     {
         logger.LogInformation("Adding new task for user {UserId}", command.UserId);
 
-
         var newTask = new TaskItem
         {
             Title = command.TaskDetails.Title,
@@ -38,7 +37,6 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
         logger.LogInformation("Task {Id} was successfully added for user {UserId}", newTask.Id, command.UserId);
 
         return $"Task {newTask.Id} titled {newTask.Title} was successfully added.";
-
     }
 }
 
