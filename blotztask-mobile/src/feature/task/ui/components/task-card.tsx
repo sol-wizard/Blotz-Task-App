@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Pressable, Text } from "react-native";
-import { formatDateRange } from "../util/format-date-range";
+
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 
 // [ADDED] gesture and animation
@@ -14,6 +14,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { formatDateRange } from "../../util/format-date-range";
 
 interface TaskCardProps {
   id: string;
@@ -111,8 +112,7 @@ export default function TaskCard({
     onToggleComplete?.(id, newChecked);
   };
 
-  const timePeriod = formatDateRange({startTime, endTime});
-  
+  const timePeriod = formatDateRange({ startTime, endTime });
 
   return (
     <View className="relative mx-4 my-2 rounded-2xl bg-white shadow-sm shadow-black/10 elevation-3 overflow-hidden">
@@ -133,27 +133,31 @@ export default function TaskCard({
         <Pressable
           onPress={async () => {
             if (!onDelete) return;
-            await onDelete(id);                // Trigger parent delete handler
-            translateX.value = withTiming(0);  // Reset position
+            await onDelete(id); // Trigger parent delete handler
+            translateX.value = withTiming(0); // Reset position
             runOnJS(setActionsEnabled)(false);
           }}
           android_ripple={{ color: "#e5e7eb", borderless: true }}
           className="w-[30px] h-[30px] rounded-full border-2 border-neutral-300 items-center justify-center"
         >
-          <MaterialCommunityIcons name="trash-can-outline" size={22} color="#6B7280" />
+          <MaterialCommunityIcons
+            name="trash-can-outline"
+            size={22}
+            color="#6B7280"
+          />
         </Pressable>
       </Animated.View>
 
       {/* Gesture-driven content layer */}
       <GestureDetector gesture={pan}>
-        <Animated.View
-          style={cardStyle}
-          className="bg-white rounded-2xl"
-        >
+        <Animated.View style={cardStyle} className="bg-white rounded-2xl">
           <Pressable onPress={onPress}>
             <View className="flex-row items-center p-5">
               {/* Left combination: vertical bar + checkbox; overall added leftExtrasStyle */}
-              <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
+              <Animated.View
+                style={leftExtrasStyle}
+                className="flex-row items-center mr-3"
+              >
                 {/* Custom checkbox */}
                 <CustomCheckbox
                   checked={checked}
@@ -165,8 +169,8 @@ export default function TaskCard({
 
               {/* Content */}
               <View className="flex-1 justify-start pt-0">
-                <Text 
-                  className={`text-base font-bold ${checked ? 'text-neutral-400 line-through' : 'text-black'}`}
+                <Text
+                  className={`text-base font-bold ${checked ? "text-neutral-400 line-through" : "text-black"}`}
                 >
                   {title}
                 </Text>

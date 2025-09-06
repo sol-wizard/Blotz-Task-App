@@ -2,6 +2,7 @@ import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import uuid from "react-native-uuid";
 
+//TODO: Rename file and move to util
 export function mapExtractedTaskDTOToAiTaskDTO(
   extractedTask: ExtractedTaskDTO
 ): AiTaskDTO {

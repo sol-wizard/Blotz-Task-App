@@ -2,18 +2,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text, TouchableOpacity } from "react-native";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
-import { RepeatMenu } from "../task-creation/repeat-menu";
-import { LabelMenu } from "../task-creation/label-menu";
-import DateBottomSheetTrigger from "./date-bottom-sheet-trigger";
-import AddTaskFormField, {
-  taskCreationSchema,
-} from "../services/task-creation-form-schema";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { updateTaskItem } from "../services/task-service";
+
+import { updateTaskItem } from "../../services/task-service";
+import TaskFormField, { taskFormSchema } from "../../util/task-form-schema";
+import { RepeatSelect } from "./fields/repeat-select";
+import { LabelSelect } from "./fields/label-select";
 
 export type EditTaskFormProps = {
   task: TaskDetailDTO;
-  onSubmit: (values: AddTaskFormField) => void;
+  onSubmit: () => void;
   onCancel?: () => void;
 };
 export const EditTaskForm = ({
@@ -21,15 +19,15 @@ export const EditTaskForm = ({
   onSubmit,
   onCancel,
 }: EditTaskFormProps) => {
-  const form = useForm<AddTaskFormField>({
-    resolver: zodResolver(taskCreationSchema),
-    mode: "onSubmit",
+  const form = useForm<TaskFormField>({
+    resolver: zodResolver(taskFormSchema),
+    mode: "onChange",
     defaultValues: {
-      title: task?.title ?? "",
-      description: task?.description ?? "",
-      endTime: task?.endTime ?? undefined,
+      title: task.title,
+      description: task.description ?? "",
+      endTime: new Date(task.endTime) ?? undefined,
       repeat: "none",
-      labelId: task?.label?.labelId ?? undefined,
+      labelId: task.label?.labelId ?? undefined,
     },
   });
 
@@ -38,7 +36,7 @@ export const EditTaskForm = ({
     formState: { errors, isValid, isSubmitting },
   } = form;
 
-  const handleSubmit = form.handleSubmit(async (values: AddTaskFormField) => {
+  const handleSubmit = form.handleSubmit(async (values: TaskFormField) => {
     const updatedTask = {
       id: task?.id ?? 0,
       title: values.title,
@@ -54,7 +52,7 @@ export const EditTaskForm = ({
     } catch (err) {
       console.error("updateTaskItem failed", err);
     }
-    onSubmit(updatedTask);
+    onSubmit();
   });
 
   return (
@@ -98,13 +96,10 @@ export const EditTaskForm = ({
         </View>
         <View className="flex-row items-center gap-2">
           <View className="flex-1">
-            <DateBottomSheetTrigger control={control} />
+            <RepeatSelect control={control} />
           </View>
           <View className="flex-1">
-            <RepeatMenu control={control} />
-          </View>
-          <View className="flex-1">
-            <LabelMenu control={control} />
+            <LabelSelect control={control} />
           </View>
         </View>
 
