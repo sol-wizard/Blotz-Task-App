@@ -76,28 +76,16 @@ export default function TaskCard({
 
   // Right action area follows gesture movement
   const rightActionStyle = useAnimatedStyle(() => {
-    const progress = interpolate(
-      -translateX.value,
-      [0, ACTION_WIDTH],
-      [0, 1],
-      Extrapolation.CLAMP
-    );
+    const progress = interpolate(-translateX.value, [0, ACTION_WIDTH], [0, 1], Extrapolation.CLAMP);
     return {
-      transform: [
-        { translateX: interpolate(progress, [0, 1], [ACTION_WIDTH, 0]) },
-      ],
+      transform: [{ translateX: interpolate(progress, [0, 1], [ACTION_WIDTH, 0]) }],
       opacity: progress,
     };
   });
 
   // Dividing line is visible and hidden with the action area
   const dividerStyle = useAnimatedStyle(() => {
-    const progress = interpolate(
-      -translateX.value,
-      [0, ACTION_WIDTH],
-      [0, 1],
-      Extrapolation.CLAMP
-    );
+    const progress = interpolate(-translateX.value, [0, ACTION_WIDTH], [0, 1], Extrapolation.CLAMP);
     return { opacity: progress };
   });
 
@@ -159,10 +147,7 @@ export default function TaskCard({
                 className="flex-row items-center mr-3"
               >
                 {/* Custom checkbox */}
-                <CustomCheckbox
-                  checked={checked}
-                  onPress={handleToggleComplete}
-                />
+                <CustomCheckbox checked={checked} onPress={handleToggleComplete} />
                 {/* Grey dividing line */}
                 <View className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-3" />
               </Animated.View>

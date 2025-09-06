@@ -25,23 +25,15 @@ export default function NotificationTester() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>🔔 Latest Notification</Text>
         <Text style={styles.label}>
-          Title:{" "}
-          <Text style={styles.value}>
-            {notification?.request?.content?.title ?? "None"}
-          </Text>
+          Title: <Text style={styles.value}>{notification?.request?.content?.title ?? "None"}</Text>
         </Text>
         <Text style={styles.label}>
-          Body:{" "}
-          <Text style={styles.value}>
-            {notification?.request?.content?.body ?? "None"}
-          </Text>
+          Body: <Text style={styles.value}>{notification?.request?.content?.body ?? "None"}</Text>
         </Text>
         <Text style={styles.label}>
           Data:{" "}
           <Text style={styles.value}>
-            {notification
-              ? JSON.stringify(notification.request.content.data)
-              : "None"}
+            {notification ? JSON.stringify(notification.request.content.data) : "None"}
           </Text>
         </Text>
       </View>
