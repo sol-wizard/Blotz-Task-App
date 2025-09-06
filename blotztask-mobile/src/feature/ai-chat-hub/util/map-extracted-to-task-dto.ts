@@ -3,9 +3,7 @@ import { AiTaskDTO } from "../models/ai-task-dto";
 import uuid from "react-native-uuid";
 
 //TODO: Rename file and move to util
-export function mapExtractedTaskDTOToAiTaskDTO(
-  extractedTask: ExtractedTaskDTO
-): AiTaskDTO {
+export function mapExtractedTaskDTOToAiTaskDTO(extractedTask: ExtractedTaskDTO): AiTaskDTO {
   return {
     //TODO: This is just a temporary id, we not using id for now, just to fulfill the DTO, we will need new dto for it
     id: uuid.v4().toString(),

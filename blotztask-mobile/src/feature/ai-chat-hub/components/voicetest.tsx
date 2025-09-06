@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  TouchableHighlight,
-  Platform,
-} from "react-native";
+import { StyleSheet, Text, View, Image, TouchableHighlight, Platform } from "react-native";
 
 let Voice: any = null;
 
@@ -32,10 +25,7 @@ function VoiceTest({ onResult }: VoiceTestProps) {
 
         setIsVoiceAvailable(true);
       } catch (err) {
-        console.warn(
-          "Voice module not available (likely running in Expo Go):",
-          err
-        );
+        console.warn("Voice module not available (likely running in Expo Go):", err);
       }
     };
 
@@ -81,9 +71,7 @@ function VoiceTest({ onResult }: VoiceTestProps) {
   if (!isVoiceAvailable) {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Voice not available on this platform.
-        </Text>
+        <Text style={styles.welcome}>Voice not available on this platform.</Text>
         <Text style={styles.instructions}>
           Please use a development build or physical device with native support.
         </Text>
@@ -94,10 +82,7 @@ function VoiceTest({ onResult }: VoiceTestProps) {
   return (
     <View style={styles.container}>
       <TouchableHighlight onPress={_startRecognizing}>
-        <Image
-          style={styles.button}
-          source={require("../assets/voicebutton.png")}
-        />
+        <Image style={styles.button} source={require("../assets/voicebutton.png")} />
       </TouchableHighlight>
       <TouchableHighlight onPress={_stopRecognizing}>
         <Text style={styles.action}>Stop Recognizing</Text>

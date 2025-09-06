@@ -8,10 +8,7 @@ const SIGNALR_HUBS_CHAT = `${config.API_BASE_URL}/ai-task-generate-chathub`;
 
 export const signalRService = {
   createConnection: () => {
-    console.log(
-      "Attempting to create SignalR connection to:",
-      SIGNALR_HUBS_CHAT
-    );
+    console.log("Attempting to create SignalR connection to:", SIGNALR_HUBS_CHAT);
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(SIGNALR_HUBS_CHAT)
       .withAutomaticReconnect()
