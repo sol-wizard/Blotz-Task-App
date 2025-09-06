@@ -8,9 +8,7 @@ const BREAKDOWN_HUB_URL = `${API_BASE_URL}/ai-task-breakdown-chathub`;
 
 export function useBreakdownChat(taskId: string) {
   const [messages, setMessages] = useState<BreakdownMessage[]>([]);
-  const [connection, setConnection] = useState<signalR.HubConnection | null>(
-    null
-  );
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [hasInitialBreakdown, setHasInitialBreakdown] = useState(false);
 
@@ -96,9 +94,7 @@ export function useBreakdownChat(taskId: string) {
           newConnection.off("BotTyping", handleBotTyping);
           newConnection.off("ReceiveSubtasks", handleReceiveSubtasks);
         })
-        .catch((error) =>
-          console.error("Error stopping Breakdown SignalR connection:", error)
-        );
+        .catch((error) => console.error("Error stopping Breakdown SignalR connection:", error));
     };
   }, []);
 
