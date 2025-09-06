@@ -10,7 +10,7 @@ const REPEAT_OPTIONS = [
   { value: "monthly", label: "Monthly" },
 ];
 
-export function RepeatMenu({ control }: { control: any }) {
+export function RepeatSelect({ control }: { control: any }) {
   const [visible, setVisible] = useState(false);
 
   return (

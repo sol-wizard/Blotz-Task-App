@@ -1,38 +1,45 @@
-import { DateBottomSheetTrigger } from "@/feature/task/task-creation/day-time-selector";
-import { LabelMenu } from "@/feature/task/task-creation/label-menu";
-import { RepeatMenu } from "@/feature/task/task-creation/repeat-menu";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
-import AddTaskFormField, {
-  taskCreationSchema,
-} from "@/feature/task/services/task-creation-form-schema";
+import TaskFormField, {
+  taskFormSchema,
+} from "@/feature/task/util/task-form-schema";
 import { addTaskItem } from "@/feature/task/services/task-service";
-import { toAddTaskItemDTO } from "@/feature/task/services/util/util";
+import { toAddTaskItemDTO } from "@/feature/task/util/task-generator-util";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
 
-export default function TaskCreationForm({
+import { endOfDay, startOfDay } from "date-fns";
+import { useState } from "react";
+import { DateTimeSelectorTrigger } from "./fields/date-time-selector-trigger";
+import { RepeatSelect } from "./fields/repeat-select";
+import { LabelSelect } from "./fields/label-select";
+import { StartEndDateTimePicker } from "./fields/start-end-date-time-picker";
+
+export default function CreateTaskForm({
   handleTaskCreationSheetClose,
 }: {
   handleTaskCreationSheetClose: (index: number) => void;
 }) {
   const handleAiChat = () => {
     handleTaskCreationSheetClose(-1);
-    router.push("/(protected)/ai-planner");
+    router.push("/(protected)/ai-task-generator");
   };
-  const form = useForm<AddTaskFormField>({
-    resolver: zodResolver(taskCreationSchema),
+  const form = useForm<TaskFormField>({
+    resolver: zodResolver(taskFormSchema),
     mode: "onSubmit",
     defaultValues: {
       title: "",
       description: "",
-      endTime: undefined,
+      startTime: startOfDay(new Date()),
+      endTime: endOfDay(new Date()),
       repeat: "none",
       labelId: undefined,
     },
   });
+
+  const [showingDateTimePicker, setShowingDateTimePicker] = useState(false);
 
   const handleFormSubmit = async (data: any) => {
     try {
@@ -43,7 +50,8 @@ export default function TaskCreationForm({
       form.reset({
         title: "",
         description: "",
-        endTime: undefined,
+        startTime: startOfDay(new Date()),
+        endTime: endOfDay(new Date()),
         repeat: "none",
         labelId: undefined,
       });
@@ -100,20 +108,21 @@ export default function TaskCreationForm({
         </View>
 
         <View className="flex-row gap-3 mb-8">
-          <DateBottomSheetTrigger
-            control={form.control}
-            // handleTaskCreationSheetClose={handleTaskCreationSheetClose}
-            // handleTaskCreationSheetOpen={handleTaskCreationSheetOpen}
+          <DateTimeSelectorTrigger
+            handleTrigger={() => setShowingDateTimePicker((prev) => !prev)}
           />
 
           <View className="flex-1">
-            <RepeatMenu control={form.control} />
+            <RepeatSelect control={form.control} />
           </View>
 
           <View className="flex-1">
-            <LabelMenu control={form.control} />
+            <LabelSelect control={form.control} />
           </View>
         </View>
+        {showingDateTimePicker && (
+          <StartEndDateTimePicker control={form.control} />
+        )}
 
         <Button
           mode="contained"
