@@ -9,7 +9,7 @@ public interface ILabelService
 {
     public Task<List<LabelDto>> GetAllLabelsAsync();
     public Task<Label> GetLabelById(int id);
-//    public Task<string> AddLabelAsync(AddLabelDto addLabel);
+
 }
 
 public class LabelService : ILabelService
