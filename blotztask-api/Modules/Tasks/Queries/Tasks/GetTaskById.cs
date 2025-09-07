@@ -45,13 +45,13 @@ public class TaskByIdItemDto
 {
     public required int Id { get; set; }
     public required string Title { get; set; }
-    public string Description { get; set; }
     public DateTimeOffset? StartTime { get; set; }
+    public string? Description { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public required int LabelId { get; set; }
-    public bool HasTime { get; set; }
+    public int? LabelId { get; set; }
+    public bool? HasTime { get; set; }
 
 }

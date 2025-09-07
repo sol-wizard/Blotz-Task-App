@@ -113,6 +113,7 @@ builder.Services.AddSingleton(new ChatHistoryStore(
 ));
 
 builder.Services.AddTaskModule();
+builder.Services.AddLabelModule();
 
 if (builder.Environment.IsDevelopment())
 {
