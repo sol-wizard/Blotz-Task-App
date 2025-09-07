@@ -7,6 +7,7 @@ using BlotzTask.Infrastructure.Data.Seeding;
 using BlotzTask.Middleware;
 using BlotzTask.Modules.AiTask.Services;
 using BlotzTask.Modules.BreakDown;
+using BlotzTask.Modules.BreakDown.Plugins;
 using BlotzTask.Modules.BreakDown.Services;
 using BlotzTask.Modules.ChatGoalPlanner;
 using BlotzTask.Modules.ChatGoalPlanner.Services;
@@ -19,6 +20,7 @@ using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Services;
 using BlotzTask.Shared.Services;
+using BlotzTask.Shared.Store;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -105,6 +107,10 @@ builder.Services.AddScoped<ITaskGenerateChatService, TaskGenerateChatService>();
 builder.Services.AddScoped<TaskParsingService>();
 builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
 builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
+builder.Services.AddSingleton(new ChatHistoryStore(
+    expiration: TimeSpan.FromMinutes(30),  // Sessions expire after 30 minutes of inactivity
+    cleanupInterval: TimeSpan.FromMinutes(5) // Scanning every 5 minutes
+));
 
 builder.Services.AddTaskModule();
 builder.Services.AddLabelModule();
@@ -170,6 +176,7 @@ builder.Services.AddSingleton<Kernel>(sp =>
     );
     
     kernelBuilder.Plugins.AddFromObject(new TaskExtractionPlugin(), "TaskExtractionPlugin");
+    kernelBuilder.Plugins.AddFromObject(new TaskBreakdownPlugin(), "TaskBreakdownPlugin");
 
     return kernelBuilder.Build();
 });
