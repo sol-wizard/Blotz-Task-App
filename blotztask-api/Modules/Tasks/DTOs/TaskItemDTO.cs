@@ -5,6 +5,7 @@ namespace BlotzTask.Modules.Tasks.DTOs;
 public class TaskItemDto
 {
     public int Id { get; set; }
+    public DateTimeOffset? StartTime { get; set; }
     public required string Title { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset? EndTime { get; set; }
