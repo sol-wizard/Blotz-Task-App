@@ -1,4 +1,3 @@
-// src/features/auth/LoginForm.tsx
 import React, { useState } from "react";
 import { View } from "react-native";
 import { Button, TextInput, Text, Snackbar } from "react-native-paper";
@@ -12,7 +11,7 @@ import { AUTH_TOKEN_KEY } from "../../../shared/constants/token-key";
 
 // Validation schema
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
+  email: z.email("Please enter a valid email"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -22,9 +21,7 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarType, setSnackbarType] = useState<
-    "error" | "success" | "warning"
-  >("error");
+  const [snackbarType, setSnackbarType] = useState<"error" | "success" | "warning">("error");
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
@@ -64,9 +61,7 @@ export default function LoginForm() {
       }
     } catch (error) {
       console.error("Login error:", error);
-      setSnackbarMessage(
-        "Login failed. Please check your credentials and try again."
-      );
+      setSnackbarMessage("Login failed. Please check your credentials and try again.");
       setSnackbarType("error");
       setSnackbarVisible(true);
     } finally {
@@ -85,9 +80,7 @@ export default function LoginForm() {
       setSnackbarType("success");
       setSnackbarVisible(true);
     } else {
-      setSnackbarMessage(
-        "Test account credentials not configured in environment."
-      );
+      setSnackbarMessage("Test account credentials not configured in environment.");
       setSnackbarType("warning");
       setSnackbarVisible(true);
     }

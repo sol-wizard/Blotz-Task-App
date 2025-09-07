@@ -104,6 +104,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                         "Failed to deserialize function result content into ExtractedTaskResponse. Content: {Content}",
                         functionResultMessage.Content
                     );
+
                     return null;
                 }
             }
@@ -114,6 +115,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                 ex,
                 "Semantic Kernel FunctionChoiceBehavior.Required for TaskExtraction failed."
             );
+
             return null;
         }
         return null;
