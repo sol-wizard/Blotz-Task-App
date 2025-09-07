@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using BlotzTask.Modules.BreakDown.Services;
+using BlotzTask.Shared.Store;
 
 namespace BlotzTask.Modules.BreakDown;
 
@@ -7,13 +8,15 @@ public class AiTaskBreakDownChat : Hub
 {
     private readonly ILogger<AiTaskBreakDownChat> _logger;
     private readonly ITaskBreakdownService _taskBreakdownService;
+    private readonly ChatHistoryStore _chatHistoryStore;
 
     public AiTaskBreakDownChat(
         ILogger<AiTaskBreakDownChat> logger,
-        ITaskBreakdownService taskBreakdownService)
+        ITaskBreakdownService taskBreakdownService, ChatHistoryStore chatHistoryStore)
     {
         _logger = logger;
         _taskBreakdownService = taskBreakdownService;
+        _chatHistoryStore = chatHistoryStore;
     }
 
     private string GenerateConversationId()
@@ -37,7 +40,8 @@ public class AiTaskBreakDownChat : Hub
 
         // Retrieve the conversationId from Context.Items
         var conversationId = Context.Items["ConversationId"] as string;
-        var subtasks = await _taskBreakdownService.BreakdownTaskAsync(taskDetails, conversationId!);
+        CancellationToken ct = Context.ConnectionAborted;
+        var subtasks = await _taskBreakdownService.BreakdownTaskAsync(taskDetails, conversationId!, ct);
         await Clients.Caller.SendAsync("BotTyping", false);
         await Clients.Caller.SendAsync("ReceiveSubtasks", subtasks);
     }
@@ -51,6 +55,19 @@ public class AiTaskBreakDownChat : Hub
         var updatedSubtasks = await _taskBreakdownService.ModifyBreakdownAsync(userRequest, Context.Items["ConversationId"] as string);
         await Clients.Caller.SendAsync("BotTyping", false);
         await Clients.Caller.SendAsync("ReceiveSubtasks", updatedSubtasks);
+    }
+    
+    // Handle disconnections to clean up resources
+    public override async Task OnDisconnectedAsync(Exception exception)
+    {
+        if (exception != null)
+        {
+            _logger.LogError(exception, $"Client {Context.ConnectionId} abnormal disconnected : {exception.Message}");
+        }
+
+        _chatHistoryStore.Remove(Context.ConnectionId);
+
+        await base.OnDisconnectedAsync(exception);
     }
 }
 

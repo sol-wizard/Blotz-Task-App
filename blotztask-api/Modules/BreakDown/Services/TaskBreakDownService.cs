@@ -1,130 +1,132 @@
-using OpenAI.Chat;
+using System.Text.Json;
 using System.Xml;
 using BlotzTask.Modules.AiTask.DTOs;
-using System.Text.Json;
+using BlotzTask.Modules.BreakDown.prompt;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Shared.Store;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel;
 
 
 namespace BlotzTask.Modules.BreakDown.Services
 {
     public interface ITaskBreakdownService
     {
-        Task<List<SubTask>> BreakdownTaskAsync(TaskDetailsDto taskDetails, string conversationId);
+        Task<List<SubTask>> BreakdownTaskAsync(TaskDetailsDto taskDetails, string conversationId, CancellationToken ct);
         Task<List<SubTask>> ModifyBreakdownAsync(string userRequest, string conversationId);
     }
 
     public class TaskBreakdownService : ITaskBreakdownService
     {
         private readonly ILogger<TaskBreakdownService> _logger;
-
-        private readonly ChatClient _chatClient;
+        
         private readonly GetTaskByIdQueryHandler _getTaskByIdQueryHandler;
         
+        private readonly Kernel _kernel;
+
+        private ChatHistoryStore _chatHistoryStore;
+        
+        private readonly IChatCompletionService _chatCompletionService;
+        
         public TaskBreakdownService(ILogger<TaskBreakdownService> logger,
-            ChatClient chatClient, GetTaskByIdQueryHandler getTaskByIdQueryHandler)
+            Kernel kernel, GetTaskByIdQueryHandler getTaskByIdQueryHandler, ChatHistoryStore chatHistoryStore, IChatCompletionService chatCompletionService)
         {
             _logger = logger;
-            _chatClient = chatClient;
+            _kernel = kernel;
             _getTaskByIdQueryHandler = getTaskByIdQueryHandler;
+            _chatHistoryStore = chatHistoryStore;
+            _chatCompletionService = chatCompletionService;
         }
 
         // todo: need to change taskDetailsDto to Task id.
-        public async Task<List<SubTask>> BreakdownTaskAsync(TaskDetailsDto taskDetail, string conversationId)
+        public async Task<List<SubTask>> BreakdownTaskAsync(TaskDetailsDto taskDetail, string conversationId, CancellationToken ct)
         {
+           
+            if (taskDetail == null || string.IsNullOrWhiteSpace(taskDetail.id))
+            {
+                throw new ArgumentException("Task details are invalid.");
+            }
+            var query = new GetTasksByIdQuery { TaskId = int.Parse(taskDetail.id) };
+            TaskByIdItemDto task = await _getTaskByIdQueryHandler.Handle(query, ct);
+            task.EndTime = DateTimeOffset.Now;
+
+            // Create chat history
+            var chatHistory = _chatHistoryStore.GetOrCreate(conversationId);
+            chatHistory.AddSystemMessage(TaskBreakDownPrompt.TaskBreakdownSystemMessage);
+            chatHistory.AddUserMessage(TaskBreakDownPrompt.TaskBreakdownUserMessage(task));
+
+    
+            if (!_kernel.Plugins.Contains("TaskBreakdownPlugin"))
+            {
+                throw new ArgumentException("TaskBreakdownPlugin not registered in Kernel.");
+            }
+
+            var breakdownFunction = _kernel.Plugins["TaskBreakdownPlugin"]["BreakdownTask"];
+            var executionSettings = new PromptExecutionSettings
+            {
+                FunctionChoiceBehavior = FunctionChoiceBehavior.Required(
+                    functions: new[] { breakdownFunction },
+                    autoInvoke: true
+                ),
+            };
+
             try
             {
-                if (taskDetail == null || string.IsNullOrWhiteSpace(taskDetail.id))
-                {
-                    throw new ArgumentException("Task details are invalid.");
-                }
-                var query = new GetTasksByIdQuery { TaskId = int.Parse(taskDetail.id) };
-                TaskByIdItemDto task = await _getTaskByIdQueryHandler.Handle(query);
-                var messages = new List<ChatMessage>
-                    {
-                        new SystemChatMessage(@"
-                            You are a task breakdown assistant. 
-                            Given a task with title, description, start and end time, you need to break it down into smaller subtasks. 
-                            Each subtask must include:
-                            - title: A short descriptive name
-                            - duration: Time in minutes or hours, always converted into TimeSpan (e.g., 30 minutes = PT30M, 2 hours = PT2H).
-
-                            Guidelines:
-                            - The total duration of subtasks should not exceed (EndTime - StartTime).
-                            - If EndTime is null, estimate reasonable durations for subtasks.
-                            - Return a JSON object directly, do not wrap it inside another object or string.
-                        "),
-                        new UserChatMessage($@"
-                            Task Title: {task.Title}
-                            Description: {task.Description}
-                            Start Time: {(task.StartTime?.ToString("yyyy-MM-dd HH:mm") ?? "null")}
-                            End Time: {(task.EndTime?.ToString("yyyy-MM-dd HH:mm") ?? "null")}
-                        ")
-                    };
-
-                var tool = ChatTool.CreateFunctionTool(
-                    functionName: "breakdown_task",
-                    functionDescription: "Break down a task into multiple subtasks with duration.",
-                    functionParameters: BinaryData.FromObjectAsJson(new
-                    {
-                        type = "object",
-                        properties = new
-                        {
-                            subtasks = new
-                            {
-                                type = "array",
-                                items = new
-                                {
-                                    type = "object",
-                                    properties = new
-                                    {
-                                        title = new { type = "string", description = "Subtask title" },
-                                        duration = new { type = "string", description = "ISO8601 duration (PT30M, PT2H...)" }
-                                    },
-                                    required = new[] { "title", "duration" }
-                                }
-                            }
-                        },
-                        required = new[] { "subtasks" }
-                    })
+                // Call LLM to get subtasks
+                var chatResults = await _chatCompletionService.GetChatMessageContentsAsync(
+                    chatHistory: chatHistory,
+                    executionSettings: executionSettings,
+                    kernel: _kernel,
+                    cancellationToken: ct
                 );
 
-                var options = new ChatCompletionOptions
+                var functionResultMessage = chatResults.LastOrDefault();
+                if (functionResultMessage == null || string.IsNullOrEmpty(functionResultMessage.Content))
                 {
-                    Tools = { tool }
-                };
-
-                ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, options);
-                var toolCall = completion.ToolCalls.FirstOrDefault(tc => tc.FunctionName == "breakdown_task");
-                if (toolCall == null){
-                    _logger.LogWarning("No tool call found in AI response. ConversationId: {ConversationId}", conversationId);
+                    _logger.LogWarning("LLM returned no response for BreakdownTask.");
                     return new List<SubTask>();
                 }
 
-                var argsJson = toolCall.FunctionArguments.ToString();
-                if (string.IsNullOrWhiteSpace(argsJson)){
-                    _logger.LogWarning("Tool call arguments are empty. ConversationId: {ConversationId}", conversationId);
+                try
+                {
+                    _logger.LogInformation("LLM raw result: {Content}", functionResultMessage.Content);
+
+                    var rawResult = JsonSerializer.Deserialize<BreakdownTasksWrapper>(
+                        functionResultMessage.Content,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+
+                    if (rawResult == null || rawResult.Subtasks.Count == 0)
+                    {
+                        _logger.LogWarning("LLM returned empty subtasks.");
+                        return new List<SubTask>();
+                    }
+
+                    // Store the LLM response in chat history
+                    chatHistory.AddAssistantMessage(JsonSerializer.Serialize(rawResult));
+
+                    return rawResult.Subtasks.Select(st => new SubTask
+                    {
+                        Title = st.Title,
+                        Duration = XmlConvert.ToTimeSpan(st.Duration)
+                    }).ToList();
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(ex, "Failed to parse LLM response JSON. Content: {Content}", functionResultMessage.Content);
                     return new List<SubTask>();
                 }
-
-                if (argsJson.StartsWith("{{") && argsJson.EndsWith("}}"))
-                {
-                    argsJson = argsJson.Substring(1, argsJson.Length - 2);
-                }
-
-                var rawResult = JsonSerializer.Deserialize<BreakdownTasksWrapper>(argsJson);
-
-                return rawResult?.Subtasks.Select(st => new SubTask
-                {
-                    Title = st.Title,
-                    Duration = XmlConvert.ToTimeSpan(st.Duration)
-                }).ToList() ?? new List<SubTask>();
+            }
+            catch (TaskCanceledException)
+            {
+                _logger.LogWarning("BreakdownTaskAsync was canceled.");
+                return new List<SubTask>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in BreakdownTaskAsync. ConversationId: {ConversationId}", conversationId);
-                throw;
+                _logger.LogError(ex, "Unexpected error during BreakdownTaskAsync.");
+                return new List<SubTask>();
             }
-
         }
 
         public async Task<List<SubTask>> ModifyBreakdownAsync(string userRequest, string conversationId)

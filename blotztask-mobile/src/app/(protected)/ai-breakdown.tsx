@@ -26,6 +26,7 @@ export default function AiBreakdownScreen() {
   const addSubtaskSheetRef = useRef<AddSubtaskBottomSheetHandle>(null);
   const [selectedSubtasks, setSelectedSubtasks] = useState<SubTask[]>([]);
   const taskDetails: TaskDetailsDto = {
+    id: params.id as string,
     title: params.title as string,
     description: params.description as string,
   };
