@@ -5,11 +5,8 @@ import { registerForPushNotificationsAsync } from "@/shared/services/notificatio
 
 export function usePushNotificationSetup() {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  const [channels, setChannels] = useState<Notifications.NotificationChannel[]>(
-    []
-  );
-  const [notification, setNotification] =
-    useState<Notifications.Notification | null>(null);
+  const [channels, setChannels] = useState<Notifications.NotificationChannel[]>([]);
+  const [notification, setNotification] = useState<Notifications.Notification | null>(null);
 
   useEffect(() => {
     // Register notification permissions & get token
@@ -19,22 +16,17 @@ export function usePushNotificationSetup() {
 
     // Get Notification Channel for Android
     if (Platform.OS === "android") {
-      Notifications.getNotificationChannelsAsync().then((value) =>
-        setChannels(value ?? [])
-      );
+      Notifications.getNotificationChannelsAsync().then((value) => setChannels(value ?? []));
     }
 
     // Register notification listeners
-    const notificationListener = Notifications.addNotificationReceivedListener(
-      (notification) => {
-        setNotification(notification);
-      }
-    );
+    const notificationListener = Notifications.addNotificationReceivedListener((notification) => {
+      setNotification(notification);
+    });
 
-    const responseListener =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log("📲 User tapped on notification:", response);
-      });
+    const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
+      console.log("📲 User tapped on notification:", response);
+    });
 
     // Cleanup listeners on unmount
     return () => {

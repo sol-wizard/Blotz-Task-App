@@ -4,7 +4,6 @@ import LoginForm from "../../feature/auth/components/login-form";
 const { height } = Dimensions.get("window");
 
 export default function LoginPage() {
-
   return (
     <>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
