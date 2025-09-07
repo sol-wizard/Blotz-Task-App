@@ -9,7 +9,7 @@ public interface ILabelService
 {
     public Task<List<LabelDto>> GetAllLabelsAsync();
     public Task<Label> GetLabelById(int id);
-    public Task<string> AddLabelAsync(AddLabelDto addLabel);
+
 }
 
 public class LabelService : ILabelService
@@ -46,18 +46,5 @@ public class LabelService : ILabelService
         return await _dbContext.Labels.FindAsync(id);
     }
 
-    public async Task<string> AddLabelAsync(AddLabelDto addLabel)
-    {
-        var addlabel = new Label
-        {
-            Name = addLabel.Name,
-            Color = addLabel.Color,
-            Description = addLabel.Description
-        };
 
-        _dbContext.Labels.Add(addlabel);
-        await _dbContext.SaveChangesAsync();
-
-        return addLabel.Name;
-    }
 }
