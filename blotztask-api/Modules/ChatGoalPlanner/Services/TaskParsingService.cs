@@ -3,7 +3,7 @@ using BlotzTask.Modules.Labels.DTOs;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
 
-namespace BlotzTask.Shared.Services;
+namespace BlotzTask.Modules.ChatGoalPlanner.Services;
 
 // TODO: Replace this by using function tool to parse tasks from the response
 public class TaskParsingService

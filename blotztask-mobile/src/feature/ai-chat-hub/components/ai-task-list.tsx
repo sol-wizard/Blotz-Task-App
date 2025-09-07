@@ -4,6 +4,7 @@ import { View } from "react-native";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { AIChatTaskCard } from "./ai-chat-task-card";
 
+//Rename to Task List
 export default function AiTaskList({ tasks }: { tasks: AiTaskDTO[] }) {
   if (tasks.length === 0) return null;
 

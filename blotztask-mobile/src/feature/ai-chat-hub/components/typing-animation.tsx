@@ -11,14 +11,13 @@ export default function TypingAnimation({ visible }: TypingAnimationProps) {
 
   return (
     <View>
-        <LottieView
+      <LottieView
         source={require("../../../../assets/images/aiLoadingEffect.json")}
         autoPlay
         loop
         style={{ width: 60, height: 40 }}
-        />
-        <Text className="ml-2 text-sm text-gray-500 italic">AI is thinking…</Text>
+      />
+      <Text className="ml-2 text-sm text-gray-500 italic">AI is thinking…</Text>
     </View>
-    
   );
 }
