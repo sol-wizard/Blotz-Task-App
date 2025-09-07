@@ -107,6 +107,7 @@ builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService
 builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
 
 builder.Services.AddTaskModule();
+builder.Services.AddLabelModule();
 
 if (builder.Environment.IsDevelopment())
 {
