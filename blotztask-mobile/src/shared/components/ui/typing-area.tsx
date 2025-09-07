@@ -1,4 +1,4 @@
-import { useVoiceInput } from "@/feature/ai-chat-hub/components/useVoiceInput";
+import { useVoiceInput } from "@/shared/util/useVoiceInput";
 import { TextInput, View, Pressable } from "react-native";
 import { IconButton } from "react-native-paper";
 
