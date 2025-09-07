@@ -1,4 +1,5 @@
-import { TextInput, View } from "react-native";
+import { useVoiceInput } from "@/feature/ai-chat-hub/components/useVoiceInput";
+import { TextInput, View, Pressable } from "react-native";
 import { IconButton } from "react-native-paper";
 
 export const TypingArea = ({
@@ -10,6 +11,16 @@ export const TypingArea = ({
   setText: (text: string) => void;
   handleSend: () => void;
 }) => {
+  const { startListening, stopAndGetText, isListening } = useVoiceInput();
+
+  const handleMicPressOut = async () => {
+    const spoken = await stopAndGetText();
+    if (spoken) {
+      const newText = text?.length ? `${text.trim()} ${spoken}` : spoken;
+      setText(newText);
+    }
+  };
+
   return (
     <View
       className="flex-row items-center align-top px-3 border-t border-l border-r border-gray-200 bg-white rounded-t-2xl"
@@ -31,8 +42,11 @@ export const TypingArea = ({
         placeholderTextColor="#aaa"
         returnKeyType="send"
       />
+
       <IconButton icon="send" size={20} onPress={handleSend} />
-      <IconButton icon="microphone" size={20} onPress={() => {}} />
+      <Pressable onLongPress={startListening} onPressOut={handleMicPressOut} delayLongPress={250}>
+        <IconButton icon={isListening ? "microphone-outline" : "microphone"} size={20} />
+      </Pressable>
     </View>
   );
 };
