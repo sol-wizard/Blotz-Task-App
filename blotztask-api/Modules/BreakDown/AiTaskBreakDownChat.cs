@@ -34,14 +34,14 @@ public class AiTaskBreakDownChat : Hub
         await base.OnConnectedAsync();
     }
     
-    public async Task BreakdownTask(TaskDetailsDto taskDetails)
+    public async Task BreakdownTask(string taskId)
     {
         await Clients.Caller.SendAsync("BotTyping", true);
 
         // Retrieve the conversationId from Context.Items
         var conversationId = Context.Items["ConversationId"] as string;
         CancellationToken ct = Context.ConnectionAborted;
-        var subtasks = await _taskBreakdownService.BreakdownTaskAsync(taskDetails, conversationId!, ct);
+        var subtasks = await _taskBreakdownService.BreakdownTaskAsync(taskId, conversationId!, ct);
         await Clients.Caller.SendAsync("BotTyping", false);
         await Clients.Caller.SendAsync("ReceiveSubtasks", subtasks);
     }

@@ -12,7 +12,7 @@ namespace BlotzTask.Modules.BreakDown.Services
 {
     public interface ITaskBreakdownService
     {
-        Task<List<SubTask>> BreakdownTaskAsync(TaskDetailsDto taskDetails, string conversationId, CancellationToken ct);
+        Task<List<SubTask>> BreakdownTaskAsync(string taskId, string conversationId, CancellationToken ct);
         Task<List<SubTask>> ModifyBreakdownAsync(string userRequest, string conversationId);
     }
 
@@ -39,14 +39,14 @@ namespace BlotzTask.Modules.BreakDown.Services
         }
 
         // todo: need to change taskDetailsDto to Task id.
-        public async Task<List<SubTask>> BreakdownTaskAsync(TaskDetailsDto taskDetail, string conversationId, CancellationToken ct)
+        public async Task<List<SubTask>> BreakdownTaskAsync(string taskId, string conversationId, CancellationToken ct)
         {
            
-            if (taskDetail == null || string.IsNullOrWhiteSpace(taskDetail.id))
+            if (string.IsNullOrWhiteSpace(taskId))
             {
-                throw new ArgumentException("Task details are invalid.");
+                throw new ArgumentException("Task are invalid.");
             }
-            var query = new GetTasksByIdQuery { TaskId = int.Parse(taskDetail.id) };
+            var query = new GetTasksByIdQuery { TaskId = int.Parse(taskId) };
             TaskByIdItemDto task = await _getTaskByIdQueryHandler.Handle(query, ct);
             task.EndTime = DateTimeOffset.Now;
 
