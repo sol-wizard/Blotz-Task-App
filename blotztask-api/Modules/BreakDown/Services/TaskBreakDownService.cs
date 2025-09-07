@@ -48,7 +48,6 @@ namespace BlotzTask.Modules.BreakDown.Services
             }
             var query = new GetTasksByIdQuery { TaskId = int.Parse(taskId) };
             TaskByIdItemDto task = await _getTaskByIdQueryHandler.Handle(query, ct);
-            task.EndTime = DateTimeOffset.Now;
 
             // Create chat history
             var chatHistory = _chatHistoryStore.GetOrCreate(conversationId);
