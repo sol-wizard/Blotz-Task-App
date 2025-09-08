@@ -7,8 +7,8 @@ namespace BlotzTask.Modules.Tasks.Commands.Tasks;
 public class TaskStatusUpdateCommand
 {
     [Required]
-    public int TaskId { get; set; }
-    public bool? IsDone { get; set; }
+    public int TaskId { get; init; }
+    public bool? IsDone { get; init; }
 }
 
 public class TaskStatusUpdateCommandHandler(BlotzTaskDbContext db, ILogger<TaskStatusUpdateCommandHandler> logger)
