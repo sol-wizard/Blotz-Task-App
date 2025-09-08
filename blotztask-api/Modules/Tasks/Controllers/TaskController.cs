@@ -17,7 +17,9 @@ public class TaskController(
     GetTasksByDateQueryHandler getTasksByDateQueryHandler,
     TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
     AddTaskCommandHandler addTaskCommandHandler,
-    GetTaskByIdQueryHandler getTaskByIdQueryHandler
+    GetTaskByIdQueryHandler getTaskByIdQueryHandler,
+    DeleteTaskCommandHandler deleteTaskCommandHandler,
+    EditTaskCommandHandler editTaskCommandHandler
 ) : ControllerBase
 {
     [HttpGet]
@@ -111,11 +113,11 @@ public class TaskController(
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> EditTask(int id, [FromBody] EditTaskItemDto editTaskItem)
+    public async Task<string> EditTask(int id, [FromBody] EditTaskItemDto editTaskItem, CancellationToken ct)
     {
-        var result = await taskService.EditTaskAsync(id, editTaskItem);
+        var command = new EditTaskCommand { TaskId = id, TaskDetails = editTaskItem };
 
-        return Ok(result);
+        return await editTaskCommandHandler.Handle(command, ct);
     }
 
     [HttpPut("task-completion-status/{id}")]
@@ -137,11 +139,11 @@ public class TaskController(
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTaskById(int id)
+    public async Task<string> DeleteTaskById(int id)
     {
-        var result = await taskService.DeleteTaskByIdAsync(id);
+        var command = new DeleteTaskCommand { TaskId = id };
 
-        return Ok(result);
+        return await deleteTaskCommandHandler.Handle(command);
     }
 
     [HttpPost("{id}/undo-delete")]
