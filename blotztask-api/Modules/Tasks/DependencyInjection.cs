@@ -13,6 +13,8 @@ public static class DependencyInjection
         services.AddScoped<UpdateSubtaskCommandHandler>();
         services.AddScoped<TaskStatusUpdateCommandHandler>();
         services.AddScoped<AddTaskCommandHandler>();
+        services.AddScoped<EditTaskCommandHandler>();
+        services.AddScoped<DeleteTaskCommandHandler>();
 
         // Manual registration of query handlers 
         services.AddScoped<GetTasksByDateQueryHandler>();
@@ -23,11 +25,8 @@ public static class DependencyInjection
     
     public static IServiceCollection AddLabelModule(this IServiceCollection services)
     {
-
-
         services.AddScoped<AddLabelCommandHandler>();
         
         return services;
     }
-    
 }

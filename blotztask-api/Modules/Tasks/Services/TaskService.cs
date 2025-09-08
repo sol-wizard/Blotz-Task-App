@@ -11,8 +11,6 @@ namespace BlotzTask.Modules.Tasks.Services;
 public interface ITaskService
 {
     public Task<List<TaskItemDto>> GetTodoItemsByUser(string userId, CancellationToken cancellationToken);
-    public Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDto editTaskItem);
-    public Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id);
     public Task<List<TaskItemDto>> GetTodayDoneTasks(string userId);
     public Task<MonthlyStatDto> GetMonthlyStats(string userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
@@ -48,81 +46,6 @@ public class TaskService : ITaskService
                 HasTime = x.HasTime,
             })
             .ToListAsync(cancellationToken);
-    }
-
-    public async Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id)
-    {
-        var taskItem = await _dbContext.TaskItems.FindAsync(id);
-        if (taskItem == null)
-        {
-            throw new NotFoundException($"Task with ID {id} not found.");
-        }
-
-        var deletedTask = new DeletedTaskItem
-        {
-            Id = taskItem.Id,
-            Title = taskItem.Title,
-            Description = taskItem.Description,
-            EndTime = taskItem.EndTime,
-            IsDone = taskItem.IsDone,
-            CreatedAt = taskItem.CreatedAt,
-            UpdatedAt = taskItem.UpdatedAt,
-            DeletedAt = DateTime.UtcNow, // Track when it was deleted
-            UserId = taskItem.UserId,
-            LabelId = taskItem.LabelId,
-            HasTime = taskItem.HasTime
-        };
-        try
-        {
-            _dbContext.DeletedTaskItems.Add(deletedTask);
-            _dbContext.TaskItems.Remove(taskItem);
-            await _dbContext.SaveChangesAsync();
-            return new ResponseWrapper<int>(
-                taskItem.Id,
-                "Task deleted successfully.",
-                true
-            );
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error deleting task: {ex.Message}");
-            throw;
-        }
-    }
-
-    public async Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDto editTaskItem)
-    {
-        var task = await _dbContext.TaskItems.FindAsync(id);
-
-        if (task == null)
-        {
-            throw new NotFoundException($"Task with ID {id} not found.");
-        }
-
-        try
-        {
-            task.Title = editTaskItem.Title;
-            task.Description = editTaskItem.Description;
-            task.EndTime = editTaskItem.EndTime;
-            task.UpdatedAt = DateTime.UtcNow;
-            task.LabelId = editTaskItem.LabelId;
-            task.HasTime = editTaskItem.HasTime;
-
-
-            _dbContext.TaskItems.Update(task);
-            await _dbContext.SaveChangesAsync();
-
-            return new ResponseWrapper<int>(
-                task.Id,
-                "Task edited successfully.",
-                true
-            );
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error editing task: {ex.Message}");
-            throw;
-        }
     }
 
     public async Task<List<TaskItemDto>> GetTodayDoneTasks(string userId)
