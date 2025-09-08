@@ -3,13 +3,38 @@ import { View, StatusBar } from "react-native";
 import { Button } from "react-native-paper";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
+import { useAuth0 } from "react-native-auth0";
+import * as SecureStore from "expo-secure-store";
+import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
 
 export default function OnboardingScreen() {
   const router = useRouter();
 
-  const handleGetStarted = () => {
-    router.replace("/(auth)/login");
-  };
+  const LoginButton = () => {
+    const {authorize} = useAuth0();
+    const onPress = async () => {  
+      try {
+          const result = await authorize({
+            audience: "https://blotz-task-dev/api",
+          });          
+          // Check if we have a valid result with access token
+          if (result && result.accessToken) {
+            // Save the access token to secure storage
+            await SecureStore.setItemAsync(AUTH_TOKEN_KEY, result.accessToken);
+            console.log("Access token saved to storage");
+            
+            // Redirect to protected page
+            router.replace("/(protected)");
+          } else {
+            console.error("No access token received from Auth0");
+          }
+        } catch (e) {
+            console.error("Auth0 authorization error:", e);
+        }
+    };
+    
+    return <Button onPress={onPress} mode="contained">Log in with Auth0</Button>
+  }
 
   return (
     <>
@@ -42,26 +67,7 @@ export default function OnboardingScreen() {
             paddingBottom: 60,
           }}
         >
-          <Button
-            mode="contained"
-            onPress={handleGetStarted}
-            style={{
-              borderRadius: 12,
-              paddingVertical: 12,
-              backgroundColor: "#E5E7EB",
-            }}
-            labelStyle={{
-              fontSize: 16,
-              fontWeight: "500",
-              color: "#374151",
-              letterSpacing: 0.3,
-            }}
-            contentStyle={{
-              paddingVertical: 12,
-            }}
-          >
-            Let&apos;s Go!
-          </Button>
+          <LoginButton />
         </View>
       </View>
     </>
