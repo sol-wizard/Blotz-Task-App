@@ -1,3 +1,4 @@
+using BlotzTask.Modules.Labels.Commands;
 using BlotzTask.Modules.Tasks.Commands.SubTasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
@@ -15,7 +16,18 @@ public static class DependencyInjection
 
         // Manual registration of query handlers 
         services.AddScoped<GetTasksByDateQueryHandler>();
+        services.AddScoped<GetTaskByIdQueryHandler>();
 
         return services;
     }
+    
+    public static IServiceCollection AddLabelModule(this IServiceCollection services)
+    {
+
+
+        services.AddScoped<AddLabelCommandHandler>();
+        
+        return services;
+    }
+    
 }
