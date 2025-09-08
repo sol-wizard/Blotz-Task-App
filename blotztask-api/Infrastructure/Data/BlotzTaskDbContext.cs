@@ -2,19 +2,18 @@
 using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Infrastructure.Data;
 
-public class BlotzTaskDbContext : IdentityDbContext<User>
+public class BlotzTaskDbContext : DbContext
 {
     public BlotzTaskDbContext(DbContextOptions options) : base(options) { }
-
     public DbSet<TaskItem> TaskItems { get; set; }
     public DbSet<Label> Labels { get; set; }
     public DbSet<DeletedTaskItem> DeletedTaskItems { get; set; }
     public DbSet<Subtask> Subtasks => Set<Subtask>();
+    public DbSet<AppUser> AppUsers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
