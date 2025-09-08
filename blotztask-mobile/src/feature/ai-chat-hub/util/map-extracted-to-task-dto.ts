@@ -11,6 +11,7 @@ export function mapExtractedTaskDTOToAiTaskDTO(extractedTask: ExtractedTaskDTO):
     title: extractedTask.title,
     isAdded: false,
     hasTime: false,
+    startTime: extractedTask.start_time,
     endTime: extractedTask.end_time,
     labelId: extractedTask.label?.labelId,
   };

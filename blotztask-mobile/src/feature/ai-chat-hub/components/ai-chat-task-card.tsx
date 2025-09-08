@@ -5,7 +5,11 @@ import { addTaskItem } from "@/feature/task/services/task-service";
 import { MaterialIcons } from "@expo/vector-icons";
 import { COLORS } from "@/shared/constants/colors";
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
+import { format, parseISO } from "date-fns";
 import { convertAiTaskToAddTaskItemDTO } from "../util/ai-task-generator-util";
+
+const formatTime = (iso?: string, fmt: string = "MM-dd HH:mm"): string =>
+  iso ? format(parseISO(iso), fmt) : "";
 
 export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className?: string }) => {
   const [isTaskAdded, setTaskIsAdded] = useState(task.isAdded);
@@ -38,16 +42,32 @@ export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className
         <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
         <View className="flex-col">
           <TextInput
-            value={task?.title}
+            value={task.title}
             onChangeText={(t) => onEditTask(task.id)}
             style={{ fontSize: 16, fontWeight: "600" }}
             multiline={true}
             scrollEnabled={false}
           />
-          <View className="flex-row my-1">
-            <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
-            {task.endTime && <Text className="text-base text-primary ml-2">{task.endTime}</Text>}
-          </View>
+
+          {/* 
+          Shows nothing if both times are missing.
+          Shows only start or end time if just one exists.
+          Shows startTime - endTime if both exist.
+          */}
+
+          {task.startTime || task.endTime ? (
+            <View className="flex-row my-1">
+              <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
+              <View className="flex-col ml-2">
+                {task.startTime && (
+                  <Text className="text-base text-primary">{formatTime(task.startTime)}</Text>
+                )}
+                {task.endTime && (
+                  <Text className="text-base text-primary">{formatTime(task.endTime)}</Text>
+                )}
+              </View>
+            </View>
+          ) : null}
         </View>
       </View>
     </View>

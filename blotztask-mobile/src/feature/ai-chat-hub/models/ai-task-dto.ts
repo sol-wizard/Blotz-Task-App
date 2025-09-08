@@ -4,6 +4,7 @@ export interface AiTaskDTO {
   description: string;
   title: string;
   isAdded: boolean;
+  startTime: string;
   endTime: string;
   hasTime: boolean;
   labelId?: number;
