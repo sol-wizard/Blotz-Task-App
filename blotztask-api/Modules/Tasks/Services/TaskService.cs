@@ -10,15 +10,15 @@ namespace BlotzTask.Modules.Tasks.Services;
 
 public interface ITaskService
 {
-    public Task<List<TaskItemDto>> GetTodoItemsByUser(string userId, CancellationToken cancellationToken);
+    public Task<List<TaskItemDto>> GetTodoItemsByUser(Guid userId, CancellationToken cancellationToken);
     public Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDto editTaskItem);
     public Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id);
-    public Task<List<TaskItemDto>> GetTodayDoneTasks(string userId);
-    public Task<MonthlyStatDto> GetMonthlyStats(string userId, int year, int month);
+    public Task<List<TaskItemDto>> GetTodayDoneTasks(Guid userId);
+    public Task<MonthlyStatDto> GetMonthlyStats(Guid userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
     public Task<List<TaskItemDto>> SearchTasksAsync(string query);
-    public Task<ScheduledTasksDto> GetScheduledTasks(string timeZone, DateTime todayDate, string userId);
-    public Task<List<TaskItemDto>> GetDueTasksAsync(string userId);
+    public Task<ScheduledTasksDto> GetScheduledTasks(string timeZone, DateTime todayDate, Guid userId);
+    public Task<List<TaskItemDto>> GetDueTasksAsync(Guid userId);
 }
 
 public class TaskService : ITaskService
@@ -30,7 +30,7 @@ public class TaskService : ITaskService
         _dbContext = dbContext;
     }
 
-    public async Task<List<TaskItemDto>> GetTodoItemsByUser(string userId, CancellationToken cancellationToken)
+    public async Task<List<TaskItemDto>> GetTodoItemsByUser(Guid userId, CancellationToken cancellationToken)
     {
         return await _dbContext.TaskItems
             .Where(x => x.UserId == userId)
@@ -125,7 +125,7 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task<List<TaskItemDto>> GetTodayDoneTasks(string userId)
+    public async Task<List<TaskItemDto>> GetTodayDoneTasks(Guid userId)
     {
         try
         {
@@ -160,7 +160,7 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task<MonthlyStatDto> GetMonthlyStats(string userId, int year, int month)
+    public async Task<MonthlyStatDto> GetMonthlyStats(Guid userId, int year, int month)
     {
         try
         {
@@ -269,7 +269,7 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task<ScheduledTasksDto> GetScheduledTasks(string timeZone, DateTime todayDate, string userId)
+    public async Task<ScheduledTasksDto> GetScheduledTasks(string timeZone, DateTime todayDate, Guid userId)
     {
         try
         {
@@ -377,7 +377,7 @@ public class TaskService : ITaskService
         return scheduledTasksDto;
     }
 
-    public async Task<List<TaskItemDto>> GetDueTasksAsync(string userId)
+    public async Task<List<TaskItemDto>> GetDueTasksAsync(Guid userId)
     {
         try
         {

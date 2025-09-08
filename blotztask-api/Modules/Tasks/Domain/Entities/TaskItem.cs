@@ -15,8 +15,8 @@ public class TaskItem
     public bool IsDone { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public required string UserId { get; set; }
-    public User User { get; set; }
+    public required Guid UserId { get; set; }
+    public AppUser User { get; set; }
     public required int LabelId { get; set; }
     public Label Label { get; set; }
     public bool? HasTime { get; set; }

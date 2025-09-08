@@ -24,11 +24,9 @@ public class TaskController(
     [Obsolete("This endpoint is not in use and will be removed later.")]
     public async Task<ActionResult<List<TaskItemDto>>> GetAllTask(CancellationToken cancellationToken)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (string.IsNullOrEmpty(userId))
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
         {
-            throw new UnauthorizedAccessException("Could not find user id from token");
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         }
 
         return Ok(await taskService.GetTodoItemsByUser(userId, cancellationToken));
@@ -38,11 +36,9 @@ public class TaskController(
     [Obsolete("This endpoint is not in use and will be removed later.")]
     public async Task<IActionResult> GetMonthlyStats(int year, int month)
     {
-        var userId = HttpContext.Items["UserId"] as string;
-
-        if (userId == null)
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
         {
-            throw new UnauthorizedAccessException("Could not find user id from Http Context");
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         }
 
         return Ok(await taskService.GetMonthlyStats(userId, year, month));
@@ -58,11 +54,9 @@ public class TaskController(
     [HttpGet("by-date")]
     public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery] DateTime startDateUtc, [FromQuery] bool includeFloatingForToday, CancellationToken ct)
     {
-        var userId = HttpContext.Items["UserId"] as string;
-
-        if (userId == null)
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
         {
-            throw new UnauthorizedAccessException("Could not find user id from Http Context");
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         }
 
         var query = new GetTasksByDateQuery
@@ -80,11 +74,9 @@ public class TaskController(
     [Obsolete("This endpoint is not in use in mobile app.")]
     public async Task<IActionResult> GetTodayDoneTasks()
     {
-        var userId = HttpContext.Items["UserId"] as string;
-
-        if (userId == null)
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
         {
-            throw new UnauthorizedAccessException("Could not find user id from Http Context");
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         }
 
         return Ok(await taskService.GetTodayDoneTasks(userId));
@@ -93,11 +85,9 @@ public class TaskController(
     [HttpPost]
     public async Task<string> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
     {
-        var userId = HttpContext.Items["UserId"] as string;
-
-        if (userId == null)
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
         {
-            throw new UnauthorizedAccessException("Could not find user id from Http Context");
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         }
 
         var command = new AddTaskCommand
@@ -168,11 +158,9 @@ public class TaskController(
     [Obsolete("This endpoint is not in use in mobile app.")]
     public async Task<IActionResult> GetScheduleSortTasks([FromQuery, Required] string timeZone, [FromQuery, Required] DateTime todayDate)
     {
-        var userId = HttpContext.Items["UserId"] as string;
-
-        if (userId == null)
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
         {
-            throw new UnauthorizedAccessException("Could not find user id from Http Context");
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         }
 
         return Ok(await taskService.GetScheduledTasks(timeZone, todayDate, userId));
@@ -182,11 +170,9 @@ public class TaskController(
     [Obsolete("This endpoint is not in use in mobile app.")]
     public async Task<IActionResult> GetDueTasks()
     {
-        var userId = HttpContext.Items["UserId"] as string;
-
-        if (userId == null)
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
         {
-            throw new UnauthorizedAccessException("Could not find user id from Http Context");
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         }
 
         var tasks = await taskService.GetDueTasksAsync(userId);

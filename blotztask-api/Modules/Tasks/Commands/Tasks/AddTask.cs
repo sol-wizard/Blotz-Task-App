@@ -9,7 +9,7 @@ public class AddTaskCommand
     [Required]
     public required AddTaskItemDto TaskDetails { get; set; }
     [Required]
-    public required string UserId { get; set; }
+    public required Guid UserId { get; set; }
 }
 
 public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommandHandler> logger)
