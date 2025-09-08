@@ -1,6 +1,5 @@
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import TaskFormField, { taskFormSchema } from "@/feature/task/models/task-form-schema";
-import { addTaskItem } from "@/feature/task/services/task-service";
 import { toAddTaskItemDTO } from "@/feature/task/util/task-generator-util";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
@@ -14,6 +13,7 @@ import { DateTimeSelectorTrigger } from "./fields/date-time-selector-trigger";
 import { RepeatSelect } from "./fields/repeat-select";
 import { LabelSelect } from "./fields/label-select";
 import { StartEndDateTimePicker } from "./fields/start-end-date-time-picker";
+import { useSelectedDayTaskStore } from "../../store/selectedDayTaskStore";
 
 export default function CreateTaskForm({
   handleTaskCreationSheetClose,
@@ -37,13 +37,14 @@ export default function CreateTaskForm({
     },
   });
 
+  const { addTask } = useSelectedDayTaskStore();
   const [showingDateTimePicker, setShowingDateTimePicker] = useState(false);
 
   const handleFormSubmit = async (data: any) => {
     try {
       const dto = toAddTaskItemDTO(data);
+      addTask(dto);
 
-      await addTaskItem(dto);
       handleTaskCreationSheetClose(-1);
       form.reset({
         title: "",
