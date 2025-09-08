@@ -4,6 +4,7 @@ export interface ExtractedTaskDTO {
   title: string;
   isValidTask: boolean;
   description: string;
+  start_time: string;
   end_time: string;
   label?: LabelDTO;
 }
