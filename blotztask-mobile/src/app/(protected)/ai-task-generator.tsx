@@ -1,7 +1,6 @@
 import BotMessage from "@/feature/ai-chat-hub/components/bot-message";
 import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
-import uuid from "react-native-uuid";
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
