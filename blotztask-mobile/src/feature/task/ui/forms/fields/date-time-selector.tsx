@@ -15,6 +15,9 @@ export const DateTimeSelector = ({
 
   useEffect(() => {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b91d27e (Bugs fix before launch (#481))
     if (datePart) {
       const merged = new Date(datePart);
       if (timePart) {
@@ -23,15 +26,19 @@ export const DateTimeSelector = ({
       changeDateTime(merged);
     }
     return;
+<<<<<<< HEAD
 =======
     const merged = new Date(datePart);
     merged.setHours(timePart.getHours(), timePart.getMinutes(), 0, 0);
     changeDateTime(merged);
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+>>>>>>> b91d27e (Bugs fix before launch (#481))
   }, [datePart, timePart]);
 
   return (
     <View className="flex-col p-2">
+<<<<<<< HEAD
 <<<<<<< HEAD
       <DatePicker value={defaultValue} onChange={setDatePart} />
       <TimePicker defaultValue={defaultValue} onChange={setTimePart} />
@@ -42,6 +49,10 @@ export const DateTimeSelector = ({
         onChange={setTimePart}
       />
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+      <DatePicker value={defaultValue} onChange={setDatePart} />
+      <TimePicker defaultValue={defaultValue} onChange={setTimePart} />
+>>>>>>> b91d27e (Bugs fix before launch (#481))
     </View>
   );
 };

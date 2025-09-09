@@ -17,6 +17,7 @@ import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
+<<<<<<< HEAD
 import { useState } from "react";
 import { DateTimeSelectorTrigger } from "./fields/date-time-selector-trigger";
 import { RepeatSelect } from "./fields/repeat-select";
@@ -26,6 +27,8 @@ import { StartEndDateTimePicker } from "./fields/start-end-date-time-picker";
 <<<<<<< HEAD
 =======
 import { endOfDay, startOfDay } from "date-fns";
+=======
+>>>>>>> b91d27e (Bugs fix before launch (#481))
 import { useState } from "react";
 import { DateTimeSelectorTrigger } from "./fields/date-time-selector-trigger";
 import { RepeatSelect } from "./fields/repeat-select";
@@ -51,12 +54,17 @@ export default function CreateTaskForm({
       title: "",
       description: "",
 <<<<<<< HEAD
+<<<<<<< HEAD
       startTime: undefined,
       endTime: undefined,
 =======
       startTime: startOfDay(new Date()),
       endTime: endOfDay(new Date()),
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+      startTime: undefined,
+      endTime: undefined,
+>>>>>>> b91d27e (Bugs fix before launch (#481))
       repeat: "none",
       labelId: undefined,
     },
@@ -79,12 +87,17 @@ export default function CreateTaskForm({
         title: "",
         description: "",
 <<<<<<< HEAD
+<<<<<<< HEAD
         startTime: undefined,
         endTime: undefined,
 =======
         startTime: startOfDay(new Date()),
         endTime: endOfDay(new Date()),
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+        startTime: undefined,
+        endTime: undefined,
+>>>>>>> b91d27e (Bugs fix before launch (#481))
         repeat: "none",
         labelId: undefined,
       });
@@ -142,6 +155,9 @@ export default function CreateTaskForm({
         <View className="flex-row gap-3 mb-8">
           <DateTimeSelectorTrigger
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b91d27e (Bugs fix before launch (#481))
             handleTrigger={() => {
               const start = form.getValues("startTime");
               const end = form.getValues("endTime");
@@ -154,9 +170,12 @@ export default function CreateTaskForm({
               }
             }}
             control={form.control}
+<<<<<<< HEAD
 =======
             handleTrigger={() => setShowingDateTimePicker((prev) => !prev)}
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+>>>>>>> b91d27e (Bugs fix before launch (#481))
           />
 
           <View className="flex-1">

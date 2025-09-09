@@ -10,18 +10,6 @@ export const StartEndDateTimePicker = ({ control }: { control: any }) => {
         name="startTime"
         render={({ field: { value, onChange } }) => {
 <<<<<<< HEAD
-          return <DateTimeSelector defaultValue={value} changeDateTime={onChange} />;
-=======
-          return (
-            <DateTimeSelector defaultValue={value} changeDateTime={onChange} />
-          );
->>>>>>> 6eb4676 (Frontend refactor (#467))
-        }}
-      />
-      <Controller
-        control={control}
-        name="endTime"
-        render={({ field: { value, onChange } }) => {
 <<<<<<< HEAD
           return <DateTimeSelector defaultValue={value} changeDateTime={onChange} />;
 =======
@@ -29,6 +17,26 @@ export const StartEndDateTimePicker = ({ control }: { control: any }) => {
             <DateTimeSelector defaultValue={value} changeDateTime={onChange} />
           );
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+          return <DateTimeSelector defaultValue={value} changeDateTime={onChange} />;
+>>>>>>> b91d27e (Bugs fix before launch (#481))
+        }}
+      />
+      <Controller
+        control={control}
+        name="endTime"
+        render={({ field: { value, onChange } }) => {
+<<<<<<< HEAD
+<<<<<<< HEAD
+          return <DateTimeSelector defaultValue={value} changeDateTime={onChange} />;
+=======
+          return (
+            <DateTimeSelector defaultValue={value} changeDateTime={onChange} />
+          );
+>>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+          return <DateTimeSelector defaultValue={value} changeDateTime={onChange} />;
+>>>>>>> b91d27e (Bugs fix before launch (#481))
         }}
       />
     </View>

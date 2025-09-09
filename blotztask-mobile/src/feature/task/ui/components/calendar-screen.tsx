@@ -26,17 +26,22 @@ import { Snackbar } from "react-native-paper";
 import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
+<<<<<<< HEAD
 import {
   fetchTasksForDate,
   toggleTaskCompletion,
   deleteTask,
 } from "../../services/task-service";
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+import { fetchTasksForDate, toggleTaskCompletion, deleteTask } from "../../services/task-service";
+>>>>>>> b91d27e (Bugs fix before launch (#481))
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
 import { useBottomSheetStore } from "../../store/bottomSheetStore";
 import TaskCard from "./task-card";
 import TaskDetailBottomSheet from "./task-detail-bottomsheet";
+<<<<<<< HEAD
 <<<<<<< HEAD
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
@@ -91,20 +96,25 @@ import {
   DateData,
   WeekCalendar,
 } from "react-native-calendars";
+=======
+import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
+>>>>>>> b91d27e (Bugs fix before launch (#481))
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 
-export default function CalendarPage() {
+export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) {
   const [selectedDay, setSelectedDay] = useState(new Date());
-  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<
-    TaskDetailDTO[]
-  >([]);
+  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDetailDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   //TODO: Maybe we dont need this
+<<<<<<< HEAD
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
     undefined
   );
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
+>>>>>>> b91d27e (Bugs fix before launch (#481))
 
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
@@ -155,8 +165,12 @@ export default function CalendarPage() {
 >>>>>>> b3808c0 (Edit task UI (#461)):blotztask-mobile/src/feature/task/calendars/calendar-screen.tsx
 =======
     loadTask();
+<<<<<<< HEAD
   }, [selectedDay]);
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+  }, [selectedDay, refreshFlag]);
+>>>>>>> b91d27e (Bugs fix before launch (#481))
 
   const loadTask = async () => {
     setIsLoading(true);
@@ -262,12 +276,16 @@ export default function CalendarPage() {
       >
         <WeekCalendar
 <<<<<<< HEAD
+<<<<<<< HEAD
           onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
 =======
           onDayPress={(day: DateData) =>
             setSelectedDay(new Date(day.dateString))
           }
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+          onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
+>>>>>>> b91d27e (Bugs fix before launch (#481))
           current={format(selectedDay, "yyyy-MM-dd")}
           theme={{
             selectedDayBackgroundColor: "#2d4150",

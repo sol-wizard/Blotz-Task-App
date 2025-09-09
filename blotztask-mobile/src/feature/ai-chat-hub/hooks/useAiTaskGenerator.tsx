@@ -17,6 +17,7 @@ import { signalRService } from "../services/ai-task-generator-signalr-service";
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 export function useAiTaskGenerator() {
 =======
 //TODO: Rename to a specific name
@@ -24,6 +25,9 @@ export function useAiTaskGenerator() {
 >>>>>>> c05ce2d (Unify code style (#462))
 export function useAiTaskGenerator(conversationId: string) {
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+export function useAiTaskGenerator() {
+>>>>>>> b91d27e (Bugs fix before launch (#481))
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [isTyping, setIsTyping] = useState(false);

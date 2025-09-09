@@ -27,13 +27,19 @@ export default function ProtectedIndex() {
   const insets = useSafeAreaInsets();
   const [isTaskCreationSheetVisible, setIsTaskCreationSheetVisible] = useState(false);
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b91d27e (Bugs fix before launch (#481))
   const [refreshFlag, setRefreshFlag] = useState(false);
 
   const CalendarRoute: any = () => <CalendarPage refreshFlag={refreshFlag} />;
 
   const SettingsRoute = () => <SettingsScreen />;
+<<<<<<< HEAD
 =======
 >>>>>>> c05ce2d (Unify code style (#462))
+=======
+>>>>>>> b91d27e (Bugs fix before launch (#481))
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,

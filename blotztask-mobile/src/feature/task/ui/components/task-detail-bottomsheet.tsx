@@ -16,6 +16,7 @@ import SubtaskDetailBottomSheet, {
   SubtaskDetailBottomSheetHandle,
 } from "./subtask-detail-bottomsheet";
 import { useBottomSheetStore } from "../../store/bottomSheetStore";
+import { format, isBefore, startOfDay } from "date-fns";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
@@ -166,7 +167,14 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
                 {selectedTask.label ? (
                   <TaskDetailTag>{selectedTask.label.name}</TaskDetailTag>
                 ) : null}
-                <TaskDetailTag>{selectedTask.isDone ? "Done" : "In progress"}</TaskDetailTag>
+                <TaskDetailTag>
+                  {selectedTask.isDone
+                    ? "Done"
+                    : selectedTask.endTime &&
+                        isBefore(new Date(selectedTask.endTime), startOfDay(new Date()))
+                      ? "Overdue"
+                      : "In progress"}
+                </TaskDetailTag>
               </View>
 
               <View className="h-px bg-gray-200 mb-3" />

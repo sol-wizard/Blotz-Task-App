@@ -3,6 +3,7 @@ import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import React, { useEffect, useRef, useState } from "react";
 =======
 
@@ -10,6 +11,8 @@ import React, { useState } from "react";
 >>>>>>> 6eb4676 (Frontend refactor (#467))
 =======
 import uuid from "react-native-uuid";
+=======
+>>>>>>> b91d27e (Bugs fix before launch (#481))
 import React, { useEffect, useRef, useState } from "react";
 >>>>>>> c05ce2d (Unify code style (#462))
 import {
@@ -28,6 +31,7 @@ import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerat
 export default function AiTaskGeneratorScreen() {
   //TODO: we dont need conversation id but we need to chage backend if we want to remove this
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   const { messages, sendMessage, isTyping } = useAiTaskGenerator();
 =======
@@ -39,6 +43,10 @@ export default function AiTaskGeneratorScreen() {
 =======
   const { messages, sendMessage, isTyping } = useAiTaskGenerator(conversationId);
 >>>>>>> c05ce2d (Unify code style (#462))
+=======
+
+  const { messages, sendMessage, isTyping } = useAiTaskGenerator();
+>>>>>>> b91d27e (Bugs fix before launch (#481))
   const [text, setText] = useState("");
   const scrollViewRef = useRef<ScrollView>(null);
 
