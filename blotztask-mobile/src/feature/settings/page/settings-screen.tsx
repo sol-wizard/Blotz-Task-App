@@ -2,25 +2,18 @@ import { View } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
-import { AUTH_TOKEN_KEY } from "../../../shared/constants/token-key";
 import NotificationTester from "../components/notification-tester";
-
+import { useLogout } from "@/shared/hooks/uselogout";
+  
 export default function SettingsScreen() {
   const [showNotificationTester, setShowNotificationTester] = useState(false);
 
   const router = useRouter();
+  const logout = useLogout();
 
   const handleSignOut = async () => {
-    try {
-      // Remove the token from secure storage
-      await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
-
-      // Navigate back to login
-      router.replace("/(auth)/login");
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
+    await logout();
+    router.replace("/(auth)/onboarding");
   };
 
   return (
