@@ -15,7 +15,7 @@ export default function OnboardingScreen() {
     const onPress = async () => {  
       try {
           const result = await authorize({
-            audience: "https://blotz-task-dev/api",
+            audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
           });          
           // Check if we have a valid result with access token
           if (result && result.accessToken) {

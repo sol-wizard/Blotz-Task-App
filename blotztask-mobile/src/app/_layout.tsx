@@ -11,11 +11,11 @@ import {Auth0Provider} from 'react-native-auth0';
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 export default function RootLayout() {
+  const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
+  const clientId = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
+
   return (
-    <Auth0Provider
-      domain={"dev-k72xachs0fr6nebp.us.auth0.com"} 
-      clientId={"E7QTR6A1pHoihTRqbGQEw3BzO86Yvk6l"}
-    >
+    <Auth0Provider domain={domain} clientId={clientId}>
       <GestureHandlerRootView style={{ flex: 1 }}>
       <PaperProvider theme={theme}>
         <BottomSheetModalProvider>
