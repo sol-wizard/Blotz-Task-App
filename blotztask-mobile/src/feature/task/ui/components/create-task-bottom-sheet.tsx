@@ -42,6 +42,7 @@ export const CreateTaskBottomSheet = ({
 =======
   isVisible: boolean;
   onClose: (isVisible: boolean) => void;
+  refreshCalendarPage: () => void;
 }) => {
   const taskCreationBottomSheetRef = useRef<BottomSheet>(null);
 >>>>>>> 6eb4676 (Frontend refactor (#467))
@@ -106,13 +107,19 @@ export const CreateTaskBottomSheet = ({
         >
           <BottomSheetView style={{ padding: 16 }}>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b91d27e (Bugs fix before launch (#481))
             <CreateTaskForm
               handleTaskCreationSheetClose={handleSheetChange}
               refreshCalendarPage={refreshCalendarPage}
             />
+<<<<<<< HEAD
 =======
             <CreateTaskForm handleTaskCreationSheetClose={handleSheetChange} />
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+>>>>>>> b91d27e (Bugs fix before launch (#481))
           </BottomSheetView>
         </BottomSheet>
       </View>

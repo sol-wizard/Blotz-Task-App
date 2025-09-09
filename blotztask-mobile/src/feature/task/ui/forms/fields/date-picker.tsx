@@ -1,32 +1,44 @@
 import React, { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 <<<<<<< HEAD
+<<<<<<< HEAD
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 =======
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+>>>>>>> b91d27e (Bugs fix before launch (#481))
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import Modal from "react-native-modal";
 
 type Props = {
 <<<<<<< HEAD
+<<<<<<< HEAD
   value?: Date;
 =======
   value: Date;
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+  value?: Date;
+>>>>>>> b91d27e (Bugs fix before launch (#481))
   onChange: (d: Date) => void;
 };
 
 export default function DatePicker({ value, onChange }: Props) {
   const [openCalendar, setOpenCalendar] = useState(false);
 <<<<<<< HEAD
+<<<<<<< HEAD
   const [tempDate, setTempDate] = useState<Date | undefined>(value);
 =======
   const [tempDate, setTempDate] = useState<Date>(value);
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+  const [tempDate, setTempDate] = useState<Date | undefined>(value);
+>>>>>>> b91d27e (Bugs fix before launch (#481))
 
   const onNativeChange = (_: DateTimePickerEvent, selected?: Date) => {
     if (selected) setTempDate(selected);
@@ -34,6 +46,9 @@ export default function DatePicker({ value, onChange }: Props) {
 
   const handleConfirm = () => {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b91d27e (Bugs fix before launch (#481))
     if (tempDate) {
       onChange(tempDate);
     }
@@ -42,9 +57,12 @@ export default function DatePicker({ value, onChange }: Props) {
 
   const handleCanel = () => {
     setTempDate(undefined);
+<<<<<<< HEAD
 =======
     onChange(tempDate);
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+>>>>>>> b91d27e (Bugs fix before launch (#481))
     setOpenCalendar(false);
   };
 
@@ -58,12 +76,16 @@ export default function DatePicker({ value, onChange }: Props) {
         className="flex-row items-center justify-between px-3 py-2 rounded-xl border border-gray-300 bg-white"
       >
 <<<<<<< HEAD
+<<<<<<< HEAD
         <Text className={`text-base ${value ? "text-slate-700" : "text-slate-400"}`}>
 =======
         <Text
           className={`text-base ${value ? "text-slate-700" : "text-slate-400"}`}
         >
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+        <Text className={`text-base ${value ? "text-slate-700" : "text-slate-400"}`}>
+>>>>>>> b91d27e (Bugs fix before launch (#481))
           {tempDate ? format(tempDate, "dd/MM/yy") : "DD/MM/YY"}
         </Text>
         <Ionicons name="calendar-outline" size={22} color="#3b3f58" />
@@ -82,10 +104,14 @@ export default function DatePicker({ value, onChange }: Props) {
             <View className="items-center">
               <DateTimePicker
 <<<<<<< HEAD
+<<<<<<< HEAD
                 value={tempDate ?? new Date()}
 =======
                 value={tempDate}
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+                value={tempDate ?? new Date()}
+>>>>>>> b91d27e (Bugs fix before launch (#481))
                 mode="date"
                 display={Platform.OS === "ios" ? "spinner" : "calendar"}
                 locale={Platform.OS === "ios" ? "en-GB" : undefined}
@@ -96,6 +122,7 @@ export default function DatePicker({ value, onChange }: Props) {
             </View>
 
             <View className="flex-row justify-end mt-2 space-x-3">
+<<<<<<< HEAD
 <<<<<<< HEAD
               <Pressable onPress={handleCanel} className="px-4 py-2 rounded-lg">
                 <Text className="text-slate-600">Cancel</Text>
@@ -113,6 +140,12 @@ export default function DatePicker({ value, onChange }: Props) {
                 className="px-4 py-2 rounded-lg bg-blue-500"
               >
 >>>>>>> 6eb4676 (Frontend refactor (#467))
+=======
+              <Pressable onPress={handleCanel} className="px-4 py-2 rounded-lg">
+                <Text className="text-slate-600">Cancel</Text>
+              </Pressable>
+              <Pressable onPress={handleConfirm} className="px-4 py-2 rounded-lg bg-blue-500">
+>>>>>>> b91d27e (Bugs fix before launch (#481))
                 <Text className="text-white font-medium">Confirm</Text>
               </Pressable>
             </View>
