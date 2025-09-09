@@ -22,10 +22,7 @@ export const DateTimeSelector = ({
   return (
     <View className="flex-col p-2">
       <DatePicker value={new Date(defaultValue)} onChange={setDatePart} />
-      <TimePicker
-        defaultValue={new Date(defaultValue)}
-        onChange={setTimePart}
-      />
+      <TimePicker defaultValue={new Date(defaultValue)} onChange={setTimePart} />
     </View>
   );
 };

@@ -32,8 +32,8 @@ export default function CreateTaskForm({
     defaultValues: {
       title: "",
       description: "",
-      startTime: startOfDay(new Date()),
-      endTime: endOfDay(new Date()),
+      startTime: undefined,
+      endTime: undefined,
       repeat: "none",
       labelId: undefined,
     },
@@ -50,8 +50,8 @@ export default function CreateTaskForm({
       form.reset({
         title: "",
         description: "",
-        startTime: startOfDay(new Date()),
-        endTime: endOfDay(new Date()),
+        startTime: undefined,
+        endTime: undefined,
         repeat: "none",
         labelId: undefined,
       });
