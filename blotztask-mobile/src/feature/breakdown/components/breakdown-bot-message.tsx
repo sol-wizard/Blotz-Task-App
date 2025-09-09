@@ -12,7 +12,6 @@ interface BreakdownBotMessageProps {
 
 export default function BreakdownBotMessage({
   text,
-  parentTaskId,
   subtasks,
   openAddSubtaskBottomSheet,
 }: BreakdownBotMessageProps) {
