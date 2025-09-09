@@ -4,6 +4,7 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250908135404_Refactor_ToUse_NewUserTable")]
+    partial class Refactor_ToUse_NewUserTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -223,9 +226,6 @@ namespace BlotzTask.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreationAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("DisplayName")
                         .HasColumnType("nvarchar(max)");
 
@@ -236,28 +236,9 @@ namespace BlotzTask.Migrations
                     b.Property<string>("PictureUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("SignUpAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("Id");
 
                     b.ToTable("AppUsers");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("718ccb8f-ce52-4e51-8cfe-2a44cdca77d1"),
-                            Auth0UserId = "auth0|68c03ab7a093c0727999a791",
-                            CreationAt = new DateTime(2025, 9, 10, 0, 34, 27, 575, DateTimeKind.Local).AddTicks(6080),
-                            DisplayName = "blotztest1@gmail.com",
-                            Email = "blotztest1@gmail.com",
-                            PictureUrl = "https://s.gravatar.com/avatar/d7eee1179900d1154cf2b3a64f7f91dd?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbl.png",
-                            SignUpAt = new DateTime(2025, 9, 10, 0, 33, 27, 955, DateTimeKind.Local),
-                            UpdatedAt = new DateTime(2025, 9, 10, 0, 34, 27, 575, DateTimeKind.Local).AddTicks(6080)
-                        });
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.DeletedTaskItem", b =>

@@ -8,7 +8,7 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 public class GetTasksByDateQuery
 {
     [Required]
-    public required string UserId { get; init; }
+    public required Guid UserId { get; init; }
     [Required]
     public DateTime StartDateUtc { get; init; }
     [Required]
