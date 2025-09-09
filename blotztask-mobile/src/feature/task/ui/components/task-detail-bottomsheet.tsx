@@ -12,6 +12,7 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
 import { useBottomSheetStore } from "../../store/bottomSheetStore";
+import { format, isBefore, startOfDay } from "date-fns";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
@@ -119,7 +120,14 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
                 {selectedTask.label ? (
                   <TaskDetailTag>{selectedTask.label.name}</TaskDetailTag>
                 ) : null}
-                <TaskDetailTag>{selectedTask.isDone ? "Done" : "In progress"}</TaskDetailTag>
+                <TaskDetailTag>
+                  {selectedTask.isDone
+                    ? "Done"
+                    : selectedTask.endTime &&
+                        isBefore(new Date(selectedTask.endTime), startOfDay(new Date()))
+                      ? "Overdue"
+                      : "In progress"}
+                </TaskDetailTag>
               </View>
 
               <View className="h-px bg-gray-200 mb-3" />
@@ -128,12 +136,12 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
                 <View className="flex-row items-center mb-2">
                   <MaterialIcons name="event" size={18} color="#6B7280" />
                   <Text className="ml-2.5 text-base leading-5 text-gray-900">
-                    {selectedTask.startTime}
+                    {format(selectedTask.startTime, "yyyy-MM-dd HH:mm")}
                   </Text>
                   <Text className="ml-2.5 text-base leading-5 text-gray-500">→</Text>
                   {selectedTask?.endTime ? (
                     <Text className="ml-2 text-base leading-5 text-gray-900">
-                      {selectedTask.endTime}
+                      {format(selectedTask.endTime, "yyyy-MM-dd HH:mm")}
                     </Text>
                   ) : null}
                 </View>
@@ -141,7 +149,7 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
                 <View className="flex-row items-center mb-2">
                   <MaterialIcons name="calendar-today" size={18} color="#6B7280" />
                   <Text className="ml-2.5 text-base leading-5 text-gray-900">
-                    {selectedTask.endTime}
+                    {format(selectedTask.endTime, "yyyy-MM-dd HH:mm")}
                   </Text>
                 </View>
               ) : null}

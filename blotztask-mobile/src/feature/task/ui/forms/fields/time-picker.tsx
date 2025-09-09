@@ -9,8 +9,8 @@ export const TimePicker = ({
   defaultValue: Date;
   onChange: (d: Date) => void;
 }) => {
-  const [hourValue, setHourValue] = useState(defaultValue.getHours());
-  const [minValue, setMinValue] = useState(defaultValue.getMinutes());
+  const [hourValue, setHourValue] = useState(defaultValue?.getHours() || 0);
+  const [minValue, setMinValue] = useState(defaultValue?.getMinutes() || 0);
 
   const hourData = [...Array(24).keys()].map((h) => ({
     value: h,
@@ -23,9 +23,12 @@ export const TimePicker = ({
   }));
 
   useEffect(() => {
-    const merged = new Date(defaultValue);
-    merged.setHours(hourValue, minValue, 0, 0);
-    onChange(merged);
+    if (defaultValue) {
+      const merged = new Date(defaultValue);
+      merged.setHours(hourValue, minValue, 0, 0);
+      onChange(merged);
+    }
+    return;
   }, [hourValue, minValue]);
 
   return (
