@@ -22,7 +22,11 @@ export default function DatePicker({ value, onChange }: Props) {
     if (tempDate) {
       onChange(tempDate);
     }
+    setOpenCalendar(false);
+  };
 
+  const handleCanel = () => {
+    setTempDate(undefined);
     setOpenCalendar(false);
   };
 
@@ -36,7 +40,7 @@ export default function DatePicker({ value, onChange }: Props) {
         className="flex-row items-center justify-between px-3 py-2 rounded-xl border border-gray-300 bg-white"
       >
         <Text className={`text-base ${value ? "text-slate-700" : "text-slate-400"}`}>
-          {tempDate ? format(new Date(), "dd/MM/yy") : "DD/MM/YY"}
+          {tempDate ? format(tempDate, "dd/MM/yy") : "DD/MM/YY"}
         </Text>
         <Ionicons name="calendar-outline" size={22} color="#3b3f58" />
       </Pressable>
@@ -64,7 +68,7 @@ export default function DatePicker({ value, onChange }: Props) {
             </View>
 
             <View className="flex-row justify-end mt-2 space-x-3">
-              <Pressable onPress={() => setOpenCalendar(false)} className="px-4 py-2 rounded-lg">
+              <Pressable onPress={handleCanel} className="px-4 py-2 rounded-lg">
                 <Text className="text-slate-600">Cancel</Text>
               </Pressable>
               <Pressable onPress={handleConfirm} className="px-4 py-2 rounded-lg bg-blue-500">
