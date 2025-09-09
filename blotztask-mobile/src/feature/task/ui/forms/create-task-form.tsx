@@ -7,8 +7,6 @@ import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
-
-import { endOfDay, startOfDay } from "date-fns";
 import { useState } from "react";
 import { DateTimeSelectorTrigger } from "./fields/date-time-selector-trigger";
 import { RepeatSelect } from "./fields/repeat-select";
@@ -106,7 +104,18 @@ export default function CreateTaskForm({
 
         <View className="flex-row gap-3 mb-8">
           <DateTimeSelectorTrigger
-            handleTrigger={() => setShowingDateTimePicker((prev) => !prev)}
+            handleTrigger={() => {
+              const start = form.getValues("startTime");
+              const end = form.getValues("endTime");
+
+              if ((start || end) && !showingDateTimePicker) {
+                form.setValue("startTime", undefined);
+                form.setValue("endTime", undefined);
+              } else {
+                setShowingDateTimePicker((prev) => !prev);
+              }
+            }}
+            control={form.control}
           />
 
           <View className="flex-1">
