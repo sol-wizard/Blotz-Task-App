@@ -49,5 +49,17 @@ public class BlotzTaskDbContext : DbContext
                 Description = "Other tasks"
             }
         );
+        
+        modelBuilder.Entity<AppUser>().HasData(new AppUser
+        {
+            Id = new Guid("718ccb8f-ce52-4e51-8cfe-2a44cdca77d1"),
+            Auth0UserId = "auth0|68c03ab7a093c0727999a791",
+            Email = "blotztest1@gmail.com",
+            DisplayName = "blotztest1@gmail.com",
+            PictureUrl = "https://s.gravatar.com/avatar/d7eee1179900d1154cf2b3a64f7f91dd?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbl.png",
+            CreationAt = DateTime.Parse("2025-09-09T14:34:27.5756080Z"),
+            SignUpAt = DateTime.Parse("2025-09-09T14:33:27.9550000Z"),
+            UpdatedAt = DateTime.Parse("2025-09-09T14:34:27.5756080Z")
+        });
     }
 }
