@@ -1,7 +1,6 @@
 import { View } from "react-native";
 import { DateTimeSelector } from "./date-time-selector";
 import { Controller } from "react-hook-form";
-import { endOfDay, startOfDay } from "date-fns";
 
 export const StartEndDateTimePicker = ({ control }: { control: any }) => {
   return (
