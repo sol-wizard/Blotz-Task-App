@@ -1,3 +1,4 @@
+using System.Text.Json;
 using BlotzTask.Modules.Users.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,17 +8,17 @@ namespace BlotzTask.Modules.Users;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class UserController(AddUserCommandHandler addUserCommandHandler, ILogger<UserController> logger) : ControllerBase
+public class UserController(SyncUserCommandHandler syncUserCommandHandler, ILogger<UserController> logger, IConfiguration configuration) : ControllerBase
 {
     [HttpPost("user-sync")]
     [AllowAnonymous]
     [ApiExplorerSettings(IgnoreApi = true)]
     public async Task<IActionResult> UserSync(
-        [FromBody] AddUserCommand command,
+        [FromBody] JsonElement user,
         [FromHeader(Name = "x-api-key")] string? apiKey,
         CancellationToken ct)
     {
-        var expected = "DEV-ONLY-KEY-CHANGE-ME";
+        var expected = configuration["ApiKeys:UserSync"];
         
         if (string.IsNullOrWhiteSpace(expected) || apiKey != expected)
         {
@@ -25,7 +26,7 @@ public class UserController(AddUserCommandHandler addUserCommandHandler, ILogger
             return Unauthorized();
         }
         
-        var result = await addUserCommandHandler.Handle(command, ct);
-        return Ok(new { ok = true, message = result });
+        var result = await syncUserCommandHandler.Handle(new SyncUserCommand(user), ct);
+        return Ok(result);
     }
 }

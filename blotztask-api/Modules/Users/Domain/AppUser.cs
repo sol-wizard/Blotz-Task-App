@@ -7,4 +7,7 @@ public class AppUser
     public required string Email { get; set; }
     public string? DisplayName { get; set; }
     public string? PictureUrl { get; set; }
+    public DateTime SignUpAt { get; set; }
+    public DateTime CreationAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
