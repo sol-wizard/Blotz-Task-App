@@ -33,7 +33,7 @@ export default function OnboardingScreen() {
         }
     };
     
-    return <Button onPress={onPress} mode="contained">Log in with Auth0</Button>
+    return <Button onPress={onPress} mode="contained">Log In</Button>
   }
 
   return (

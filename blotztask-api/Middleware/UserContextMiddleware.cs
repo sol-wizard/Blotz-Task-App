@@ -27,7 +27,6 @@ public class UserContextMiddleware
                 throw new UnauthorizedAccessException("Could not resolve Auth0 user id.");
             }
 
-            // Look up internal AppUser by Auth0UserId
             var appUser = await dbContext.AppUsers
                 .FirstOrDefaultAsync(u => u.Auth0UserId == auth0UserId);
 
@@ -37,7 +36,6 @@ public class UserContextMiddleware
                 throw new UnauthorizedAccessException("User is not registered in this app.");
             }
 
-            // Store internal Guid Id instead of raw Auth0 ID
             context.Items["UserId"] = appUser.Id;
         }
 
