@@ -1,4 +1,3 @@
-import { TypingArea } from "@/shared/components/ui/typing-area";
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
 import { useBreakdownChat } from "@/feature/breakdown/hooks/useBreakdownChat";
 import { useLocalSearchParams } from "expo-router";
@@ -18,13 +17,14 @@ import {
   AddSubtaskBottomSheet,
   AddSubtaskBottomSheetHandle,
 } from "@/feature/breakdown/components/add-subtask-bottom-sheet";
-import { SubTask } from "@/feature/breakdown/models/subtask";
+import { SubtaskDTO } from "@/shared/models/subtask-dto";
+import { AddSubtaskDTO } from "@/feature/breakdown/models/addSubtaskDTO";
 
 export default function AiBreakdownScreen() {
   const { id: taskId } = useLocalSearchParams<{ id?: string }>();
   if (!taskId) throw new Error("Missing task id");
   const addSubtaskSheetRef = useRef<AddSubtaskBottomSheetHandle>(null);
-  const [selectedSubtasks, setSelectedSubtasks] = useState<SubTask[]>([]);
+  const [selectedSubtasks, setSelectedSubtasks] = useState<AddSubtaskDTO[]>([]);
 
   // const [text, setText] = useState("");
   const { messages, isTyping } = useBreakdownChat(taskId);
@@ -33,11 +33,11 @@ export default function AiBreakdownScreen() {
   //   setText("");
   // };
 
-  const handleSelectSubtask = (subTask: SubTask) => {
+  const handleSelectSubtask = (subTask: AddSubtaskDTO) => {
     setSelectedSubtasks((prev) => {
       const exists = prev.some((st) => st.title === subTask.title);
 
-      let next: SubTask[];
+      let next: AddSubtaskDTO[];
       if (exists) {
         next = prev.filter((st) => st.title !== subTask.title);
       } else {
