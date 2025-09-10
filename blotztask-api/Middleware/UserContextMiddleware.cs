@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using BlotzTask.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Middleware;
 
@@ -13,25 +15,30 @@ public class UserContextMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, BlotzTaskDbContext dbContext)
     {
-        // Check if the user is authenticated
         if (context.User.Identity?.IsAuthenticated == true)
         {
-            // Extract UserId from the claims
-            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
-            if (userId == null)
+            var auth0UserId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(auth0UserId))
             {
-                _logger.LogError("Unable to get user Id in UserContextMiddleware for an authenticated user.");
-                throw new UnauthorizedAccessException("Unable to get user Id in UserContextMiddleware.");
+                _logger.LogError("Authenticated user but no {Claim}", ClaimTypes.NameIdentifier);
+                throw new UnauthorizedAccessException("Could not resolve Auth0 user id.");
             }
 
-            // Store UserId in HttpContext.Items
-            context.Items["UserId"] = userId;
+            var appUser = await dbContext.AppUsers
+                .FirstOrDefaultAsync(u => u.Auth0UserId == auth0UserId);
+
+            if (appUser == null)
+            {
+                _logger.LogWarning("Auth0 user {Auth0UserId} not found in AppUsers", auth0UserId);
+                throw new UnauthorizedAccessException("User is not registered in this app.");
+            }
+
+            context.Items["UserId"] = appUser.Id;
         }
 
-        // Pass request to the next middleware in the pipeline
         await _next(context);
     }
 }

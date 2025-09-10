@@ -7,8 +7,6 @@ import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
-
-import { endOfDay, startOfDay } from "date-fns";
 import { useState } from "react";
 import { DateTimeSelectorTrigger } from "./fields/date-time-selector-trigger";
 import { RepeatSelect } from "./fields/repeat-select";
@@ -17,8 +15,10 @@ import { StartEndDateTimePicker } from "./fields/start-end-date-time-picker";
 
 export default function CreateTaskForm({
   handleTaskCreationSheetClose,
+  refreshCalendarPage,
 }: {
   handleTaskCreationSheetClose: (index: number) => void;
+  refreshCalendarPage: () => void;
 }) {
   const handleAiChat = () => {
     handleTaskCreationSheetClose(-1);
@@ -30,8 +30,8 @@ export default function CreateTaskForm({
     defaultValues: {
       title: "",
       description: "",
-      startTime: startOfDay(new Date()),
-      endTime: endOfDay(new Date()),
+      startTime: undefined,
+      endTime: undefined,
       repeat: "none",
       labelId: undefined,
     },
@@ -48,11 +48,12 @@ export default function CreateTaskForm({
       form.reset({
         title: "",
         description: "",
-        startTime: startOfDay(new Date()),
-        endTime: endOfDay(new Date()),
+        startTime: undefined,
+        endTime: undefined,
         repeat: "none",
         labelId: undefined,
       });
+      refreshCalendarPage();
     } catch (error) {
       console.error("Error adding action:", error);
     }
@@ -103,7 +104,18 @@ export default function CreateTaskForm({
 
         <View className="flex-row gap-3 mb-8">
           <DateTimeSelectorTrigger
-            handleTrigger={() => setShowingDateTimePicker((prev) => !prev)}
+            handleTrigger={() => {
+              const start = form.getValues("startTime");
+              const end = form.getValues("endTime");
+
+              if ((start || end) && !showingDateTimePicker) {
+                form.setValue("startTime", undefined);
+                form.setValue("endTime", undefined);
+              } else {
+                setShowingDateTimePicker((prev) => !prev);
+              }
+            }}
+            control={form.control}
           />
 
           <View className="flex-1">
