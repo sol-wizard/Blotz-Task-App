@@ -2,7 +2,7 @@ import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import CalendarPage from "@/feature/task/ui/components/calendar-screen";
 import SettingsScreen from "@/feature/settings/page/settings-screen";
-import { Pressable, View } from "react-native";
+import { Pressable, View, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { CreateTaskBottomSheet } from "@/feature/task/ui/components/create-task-bottom-sheet";
@@ -43,9 +43,18 @@ export default function ProtectedIndex() {
         navigationState={{ index, routes }}
         onIndexChange={setIndex}
         renderScene={renderScene}
+        barStyle={{ backgroundColor: "#F2F2F2", height: 90 }}
+        activeIndicatorStyle={{ backgroundColor: "transparent" }}
+        renderIcon={({ route, focused, color }) => (
+          <MaterialCommunityIcons
+            name={(focused ? route.focusedIcon : route.unfocusedIcon) as any}
+            size={24}
+            color={color}
+          />
+        )}
       />
 
-      <View className="absolute left-0 right-0 items-center" style={{ bottom: insets.bottom + 20 }}>
+      <View className="absolute left-0 right-0 items-center" style={{ bottom: insets.bottom }}>
         <Pressable
           onPress={() => setIsTaskCreationSheetVisible(true)}
           className="w-14 h-14 rounded-full bg-gray-200 items-center justify-center"
