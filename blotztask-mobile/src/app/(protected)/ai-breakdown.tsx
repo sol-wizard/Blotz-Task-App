@@ -26,12 +26,12 @@ export default function AiBreakdownScreen() {
   const addSubtaskSheetRef = useRef<AddSubtaskBottomSheetHandle>(null);
   const [selectedSubtasks, setSelectedSubtasks] = useState<SubTask[]>([]);
 
-  const [text, setText] = useState("");
-  const { messages, isTyping, sendMessage } = useBreakdownChat(taskId);
-  const handleSend = () => {
-    sendMessage(text);
-    setText("");
-  };
+  // const [text, setText] = useState("");
+  const { messages, isTyping } = useBreakdownChat(taskId);
+  // const handleSend = () => {
+  //   sendMessage(text);
+  //   setText("");
+  // };
 
   const handleSelectSubtask = (subTask: SubTask) => {
     setSelectedSubtasks((prev) => {
@@ -96,13 +96,10 @@ export default function AiBreakdownScreen() {
             </ScrollView>
           </TouchableWithoutFeedback>
 
-          <TypingArea text={text} setText={setText} handleSend={handleSend} />
+          {/* <TypingArea text={text} setText={setText} handleSend={handleSend} /> */}
         </View>
       </KeyboardAvoidingView>
-      <AddSubtaskBottomSheet
-        ref={addSubtaskSheetRef}
-        handleAddSubtasks={handleAddSubtasks}
-      />
+      <AddSubtaskBottomSheet ref={addSubtaskSheetRef} handleAddSubtasks={handleAddSubtasks} />
     </SafeAreaView>
   );
 }
