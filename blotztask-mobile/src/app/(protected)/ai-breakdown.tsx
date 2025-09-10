@@ -17,7 +17,6 @@ import {
   AddSubtaskBottomSheet,
   AddSubtaskBottomSheetHandle,
 } from "@/feature/breakdown/components/add-subtask-bottom-sheet";
-import { SubtaskDTO } from "@/shared/models/subtask-dto";
 import { AddSubtaskDTO } from "@/feature/breakdown/models/addSubtaskDTO";
 
 export default function AiBreakdownScreen() {
