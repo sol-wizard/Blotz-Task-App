@@ -16,9 +16,9 @@ public class DeletedTaskItem
     public DateTime UpdatedAt { get; set; }
     public DateTime DeletedAt { get; set; } // Track when it was deleted
 
-    public required string UserId { get; set; }
+    public required Guid UserId { get; set; }
     [ForeignKey("UserId")]
-    public User? User { get; set; }
+    public AppUser? User { get; set; }
 
     public required int LabelId { get; set; }
     [ForeignKey("LabelId")]

@@ -17,6 +17,10 @@ export const AddSubtaskBottomSheet = forwardRef<AddSubtaskBottomSheetHandle, Pro
       present: () => addSubtasRef.current?.present(),
       dismiss: () => addSubtasRef.current?.dismiss(),
     }));
+
+    const handleEditSubTask = () => {
+      addSubtasRef.current?.dismiss();
+    };
     return (
       <BottomSheetModal
         ref={addSubtasRef}
@@ -32,16 +36,14 @@ export const AddSubtaskBottomSheet = forwardRef<AddSubtaskBottomSheetHandle, Pro
         <BottomSheetView>
           <View className="bg-white rounded-2xl p-4 pb-14 pt-8" style={{ elevation: 4 }}>
             <View className="flex-row items-center">
-              {/* <Pressable
-              android_ripple={{ color: "transparent" }}
-              onPress={() => console.log("Edit Steps")}
-              className="flex-1 h-11 mr-3 items-center justify-center rounded-xl border border-gray-300 bg-transparent"
-              style={({ pressed }) => (pressed ? { opacity: 0.7 } : undefined)}
-            >
-              <Text className="text-[15px] font-semibold text-neutral-900">
-                Edit Steps
-              </Text>
-            </Pressable> */}
+              <Pressable
+                android_ripple={{ color: "transparent" }}
+                onPress={handleEditSubTask}
+                className="flex-1 h-11 mr-3 items-center justify-center rounded-xl border border-gray-300 bg-transparent"
+                style={({ pressed }) => (pressed ? { opacity: 0.7 } : undefined)}
+              >
+                <Text className="text-[15px] font-semibold text-neutral-900">Edit Steps</Text>
+              </Pressable>
 
               <Pressable
                 android_ripple={{ color: "transparent" }}

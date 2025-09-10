@@ -12,7 +12,7 @@ import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 
-export default function CalendarPage() {
+export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDetailDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +27,7 @@ export default function CalendarPage() {
 
   useEffect(() => {
     loadTask();
-  }, [selectedDay]);
+  }, [selectedDay, refreshFlag]);
 
   const loadTask = async () => {
     setIsLoading(true);
