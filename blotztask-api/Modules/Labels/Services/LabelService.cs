@@ -7,6 +7,7 @@ namespace BlotzTask.Modules.Labels.Services;
 
 public interface ILabelService
 {
+
     public Task<Label> GetLabelById(int id);
 
 }
