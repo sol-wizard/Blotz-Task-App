@@ -10,15 +10,13 @@ namespace BlotzTask.Modules.Tasks.Services;
 
 public interface ITaskService
 {
-    public Task<List<TaskItemDto>> GetTodoItemsByUser(string userId, CancellationToken cancellationToken);
-    public Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDto editTaskItem);
-    public Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id);
-    public Task<List<TaskItemDto>> GetTodayDoneTasks(string userId);
-    public Task<MonthlyStatDto> GetMonthlyStats(string userId, int year, int month);
+    public Task<List<TaskItemDto>> GetTodoItemsByUser(Guid userId, CancellationToken cancellationToken);
+    public Task<List<TaskItemDto>> GetTodayDoneTasks(Guid userId);
+    public Task<MonthlyStatDto> GetMonthlyStats(Guid userId, int year, int month);
     public Task<ResponseWrapper<int>> RestoreFromTrashAsync(int id);
     public Task<List<TaskItemDto>> SearchTasksAsync(string query);
-    public Task<ScheduledTasksDto> GetScheduledTasks(string timeZone, DateTime todayDate, string userId);
-    public Task<List<TaskItemDto>> GetDueTasksAsync(string userId);
+    public Task<ScheduledTasksDto> GetScheduledTasks(string timeZone, DateTime todayDate, Guid userId);
+    public Task<List<TaskItemDto>> GetDueTasksAsync(Guid userId);
 }
 
 public class TaskService : ITaskService
@@ -30,7 +28,7 @@ public class TaskService : ITaskService
         _dbContext = dbContext;
     }
 
-    public async Task<List<TaskItemDto>> GetTodoItemsByUser(string userId, CancellationToken cancellationToken)
+    public async Task<List<TaskItemDto>> GetTodoItemsByUser(Guid userId, CancellationToken cancellationToken)
     {
         return await _dbContext.TaskItems
             .Where(x => x.UserId == userId)
@@ -50,82 +48,7 @@ public class TaskService : ITaskService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<ResponseWrapper<int>> DeleteTaskByIdAsync(int id)
-    {
-        var taskItem = await _dbContext.TaskItems.FindAsync(id);
-        if (taskItem == null)
-        {
-            throw new NotFoundException($"Task with ID {id} not found.");
-        }
-
-        var deletedTask = new DeletedTaskItem
-        {
-            Id = taskItem.Id,
-            Title = taskItem.Title,
-            Description = taskItem.Description,
-            EndTime = taskItem.EndTime,
-            IsDone = taskItem.IsDone,
-            CreatedAt = taskItem.CreatedAt,
-            UpdatedAt = taskItem.UpdatedAt,
-            DeletedAt = DateTime.UtcNow, // Track when it was deleted
-            UserId = taskItem.UserId,
-            LabelId = taskItem.LabelId,
-            HasTime = taskItem.HasTime
-        };
-        try
-        {
-            _dbContext.DeletedTaskItems.Add(deletedTask);
-            _dbContext.TaskItems.Remove(taskItem);
-            await _dbContext.SaveChangesAsync();
-            return new ResponseWrapper<int>(
-                taskItem.Id,
-                "Task deleted successfully.",
-                true
-            );
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error deleting task: {ex.Message}");
-            throw;
-        }
-    }
-
-    public async Task<ResponseWrapper<int>> EditTaskAsync(int id, EditTaskItemDto editTaskItem)
-    {
-        var task = await _dbContext.TaskItems.FindAsync(id);
-
-        if (task == null)
-        {
-            throw new NotFoundException($"Task with ID {id} not found.");
-        }
-
-        try
-        {
-            task.Title = editTaskItem.Title;
-            task.Description = editTaskItem.Description;
-            task.EndTime = editTaskItem.EndTime;
-            task.UpdatedAt = DateTime.UtcNow;
-            task.LabelId = editTaskItem.LabelId;
-            task.HasTime = editTaskItem.HasTime;
-
-
-            _dbContext.TaskItems.Update(task);
-            await _dbContext.SaveChangesAsync();
-
-            return new ResponseWrapper<int>(
-                task.Id,
-                "Task edited successfully.",
-                true
-            );
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error editing task: {ex.Message}");
-            throw;
-        }
-    }
-
-    public async Task<List<TaskItemDto>> GetTodayDoneTasks(string userId)
+    public async Task<List<TaskItemDto>> GetTodayDoneTasks(Guid userId)
     {
         try
         {
@@ -160,7 +83,7 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task<MonthlyStatDto> GetMonthlyStats(string userId, int year, int month)
+    public async Task<MonthlyStatDto> GetMonthlyStats(Guid userId, int year, int month)
     {
         try
         {
@@ -269,7 +192,7 @@ public class TaskService : ITaskService
         }
     }
 
-    public async Task<ScheduledTasksDto> GetScheduledTasks(string timeZone, DateTime todayDate, string userId)
+    public async Task<ScheduledTasksDto> GetScheduledTasks(string timeZone, DateTime todayDate, Guid userId)
     {
         try
         {
@@ -377,7 +300,7 @@ public class TaskService : ITaskService
         return scheduledTasksDto;
     }
 
-    public async Task<List<TaskItemDto>> GetDueTasksAsync(string userId)
+    public async Task<List<TaskItemDto>> GetDueTasksAsync(Guid userId)
     {
         try
         {

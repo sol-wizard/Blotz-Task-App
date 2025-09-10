@@ -3,7 +3,6 @@ using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Security.KeyVault.Secrets;
 using BlotzTask.Extension;
 using BlotzTask.Infrastructure.Data;
-using BlotzTask.Infrastructure.Data.Seeding;
 using BlotzTask.Middleware;
 using BlotzTask.Modules.AiTask.Services;
 using BlotzTask.Modules.BreakDown;
@@ -17,13 +16,10 @@ using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Tasks.Services;
-using BlotzTask.Modules.Users.Domain;
-using BlotzTask.Modules.Users.Services;
+using BlotzTask.Modules.Users;
 using BlotzTask.Shared.Services;
 using BlotzTask.Shared.Store;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
 using Microsoft.OpenApi.Models;
@@ -68,29 +64,7 @@ builder.Services.AddSwaggerGen(options =>
     options.OperationFilter<SecurityRequirementsOperationFilter>();
 });
 
-// add httpcontext and identitycore for UserInforService
-builder.Services.AddIdentityCore<User>()
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<BlotzTaskDbContext>()
-    .AddDefaultTokenProviders();
-
-builder.Services.AddIdentityApiEndpoints<User>()
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<BlotzTaskDbContext>();
-builder.Services.AddAuthorization();
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-    options.Cookie.Name = "YourAppCookieName";
-    options.Cookie.HttpOnly = true;
-    options.ExpireTimeSpan = TimeSpan.FromDays(7);
-    options.LoginPath = "/Identity/Account/Login";
-    options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
-    options.SlidingExpiration = true;
-});
-
 //TODO : Move all services to module based registration
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ILabelService, LabelService>();
 builder.Services.AddScoped<TaskGenerationAiService>();
@@ -113,6 +87,7 @@ builder.Services.AddSingleton(new ChatHistoryStore(
 ));
 
 builder.Services.AddTaskModule();
+builder.Services.AddUserModule();
 builder.Services.AddLabelModule();
 
 if (builder.Environment.IsDevelopment())
@@ -132,18 +107,16 @@ if (builder.Environment.IsProduction())
     builder.Services.AddSingleton(secretClient);
 
     builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(secretClient.GetSecret("sql-connection-string").Value.Value.ToString()));
-}
-
-builder.Services.AddAzureOpenAi();
-
-if (builder.Environment.IsProduction())
-{
+    
     builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
     {
         var connectionString = builder.Configuration.GetSection("ApplicationInsights:ConnectionString").Value;
         options.ConnectionString = connectionString;
     });
 }
+
+builder.Services.AddAuth0(builder.Configuration);
+builder.Services.AddAzureOpenAi();
 
 // Register the Kernel as a singleton service
 builder.Services.AddSingleton<Kernel>(sp =>
@@ -206,33 +179,10 @@ var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
 
-app.MapIdentityApi<User>();
 app.MapHealthChecks("/health");
-// Configure the HTTP request pipeline.
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-
-    try
-    {
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-        var userManager = services.GetRequiredService<UserManager<User>>();
-
-        await BlotzContextSeed.SeedBlotzUserAsync(userManager, roleManager);
-
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the guest user.");
-    }
-}
-
-
 app.UseHttpsRedirection();
 
 app.UseCors("AllowSpecificOrigin");
