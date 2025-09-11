@@ -5,13 +5,14 @@ import { Controller, FormProvider, useForm } from "react-hook-form";
 import { convertSubtaskTimeForm } from "../utils/convert-subtask-time-form";
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 import EditTaskFormField, { taskEditFormSchema } from "../schemas/breakdown-task-edit-form-schema";
-import { AddSubtaskDTO } from "../models/addSubtaskDTO";
+import { AddSubtaskDTO } from "../models/add-subtask-dto";
+import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
 
 export const BreakdownTaskCard = ({
   subTask,
   openAddSubtaskBottomSheet,
 }: {
-  subTask: AddSubtaskDTO;
+  subTask: BreakdownSubtaskDTO;
   openAddSubtaskBottomSheet: (newSubtask: AddSubtaskDTO) => void;
 }) => {
   const [isChecked, setIsChecked] = useState(false);
@@ -27,8 +28,12 @@ export const BreakdownTaskCard = ({
     const values = form.getValues();
     const newSubtask: AddSubtaskDTO = {
       title: values.title,
+      description: "",
       duration: subTask.duration,
+      order: subTask.order,
+      isDone: false,
     };
+    console.log(subTask.duration);
     openAddSubtaskBottomSheet(newSubtask);
     setIsChecked((v) => !v);
   };
