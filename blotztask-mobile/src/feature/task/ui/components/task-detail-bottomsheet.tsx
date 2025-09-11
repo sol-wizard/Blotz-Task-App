@@ -13,6 +13,10 @@ import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
 import { useBottomSheetStore } from "../../store/bottomSheetStore";
 import { format, isBefore, startOfDay } from "date-fns";
+import { fetchSubtasksForTask } from "../../services/subtask-service";
+import SubtaskDetailBottomSheet, {
+  SubtaskDetailBottomSheetHandle,
+} from "./subtask-detail-bottomsheet";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
@@ -20,6 +24,10 @@ type TaskDetailBottomSheetProps = {
 
 const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
+  const subtaskSheetRef = useRef<SubtaskDetailBottomSheetHandle>(null);
+  const [subtasks, setSubtasks] = useState<any[]>([]);
+  const [loadingSubtasks, setLoadingSubtasks] = useState(false);
+  const [subtasksError, setSubtasksError] = useState<string | null>(null);
 
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(task);
   useEffect(() => {
@@ -53,7 +61,7 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
   const handleAiBreakdown = () => {
     if (!task) return;
     taskDetailModalRef.current?.dismiss();
-
+    closeTaskDetail();
     router.push({
       pathname: "/(protected)/ai-breakdown",
       params: {
@@ -65,6 +73,26 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
   const handleEditPress = () => {
     taskDetailModalRef.current?.dismiss();
     openEditTask();
+  };
+
+  const openSubtaskDetail = async () => {
+    if (!selectedTask?.id) return;
+
+    setLoadingSubtasks(true);
+    setSubtasksError(null);
+
+    try {
+      const data = await fetchSubtasksForTask(selectedTask.id);
+      setSubtasks(data);
+    } catch (e) {
+      setSubtasksError("Failed to load subtasks");
+    } finally {
+      setLoadingSubtasks(false);
+      closeTaskDetail();
+      taskDetailModalRef.current?.dismiss();
+
+      subtaskSheetRef.current?.present();
+    }
   };
 
   return (
@@ -162,12 +190,33 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
                   </Text>
                 </View>
               ) : null}
+
+              <View className="mt-4">
+                <Button
+                  mode="contained"
+                  onPress={openSubtaskDetail}
+                  loading={loadingSubtasks}
+                  disabled={!selectedTask?.id}
+                  style={{ borderRadius: 16, backgroundColor: "#111827" }}
+                  labelStyle={{ fontWeight: "bold" }}
+                >
+                  Open Subtasks
+                </Button>
+                {!!subtasksError && (
+                  <Text className="mt-2 text-red-600 text-xs">{subtasksError}</Text>
+                )}
+              </View>
             </>
           ) : (
             <Text>No task selected</Text>
           )}
         </BottomSheetView>
       </BottomSheetModal>
+      <SubtaskDetailBottomSheet
+        ref={subtaskSheetRef}
+        task={selectedTask}
+        initialSubtasks={subtasks}
+      />
     </>
   );
 };
