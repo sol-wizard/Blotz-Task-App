@@ -7,7 +7,7 @@ namespace BlotzTask.Modules.Labels.Services;
 
 public interface ILabelService
 {
-    public Task<List<LabelDto>> GetAllLabelsAsync();
+
     public Task<Label> GetLabelById(int id);
 
 }
@@ -21,25 +21,7 @@ public class LabelService : ILabelService
         _dbContext = dbContext;
     }
 
-    public async Task<List<LabelDto>> GetAllLabelsAsync()
-    {
-        try
-        {
-            return await _dbContext.Labels
-                .Select(label => new LabelDto
-                     {
-                         LabelId = label.LabelId,
-                         Name = label.Name,
-                         Color = label.Color,
-                         Description = label.Description
-                     }).ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            //TODO: Add some error log throw (havent create PBI)
-            throw;
-        }
-    }
+
     
     public async Task<Label> GetLabelById(int id)
     {
