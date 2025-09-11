@@ -1,6 +1,6 @@
 import UserMessage from "@/feature/ai-chat-hub/components/user-message";
 import { useBreakdownChat } from "@/feature/breakdown/hooks/useBreakdownChat";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import {
   View,
@@ -26,7 +26,6 @@ export default function AiBreakdownScreen() {
   const addSubtaskSheetRef = useRef<BottomSheetModal>(null);
 
   const { messages, isTyping } = useBreakdownChat(taskId);
-  console.log("message:", messages);
 
   const handleSelectSubtask = (subTask: AddSubtaskDTO) => {
     setSelectedSubtasks((prev) => {
@@ -52,7 +51,7 @@ export default function AiBreakdownScreen() {
   const handleAddSubtasks = async () => {
     try {
       await addSubtasks({ taskId: Number(taskId), subtasks: selectedSubtasks });
-      console.log("add subtasks successfully!");
+      router.back();
     } catch (error) {
       console.log("Failed to add subtasks:", error);
     }
