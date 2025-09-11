@@ -1,18 +1,18 @@
 import { TextInput, View, Text } from "react-native";
 import { useState } from "react";
-import { SubTask } from "../models/subtask";
 import { zodResolver } from "@hookform/resolvers/zod";
-import EditTaskFormField, { taskEditFormSchema } from "../services/breakdown-task-edit-form-schema";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import { convertSubtaskTimeForm } from "../services/utils/convert-subtask-time-form";
+import { convertSubtaskTimeForm } from "../utils/convert-subtask-time-form";
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
+import EditTaskFormField, { taskEditFormSchema } from "../schemas/breakdown-task-edit-form-schema";
+import { AddSubtaskDTO } from "../models/addSubtaskDTO";
 
 export const BreakdownTaskCard = ({
   subTask,
   openAddSubtaskBottomSheet,
 }: {
-  subTask: SubTask;
-  openAddSubtaskBottomSheet: (newSubtask: SubTask) => void;
+  subTask: AddSubtaskDTO;
+  openAddSubtaskBottomSheet: (newSubtask: AddSubtaskDTO) => void;
 }) => {
   const [isChecked, setIsChecked] = useState(false);
 
@@ -25,7 +25,7 @@ export const BreakdownTaskCard = ({
   });
   const handleCheckboxPress = async () => {
     const values = form.getValues();
-    const newSubtask: SubTask = {
+    const newSubtask: AddSubtaskDTO = {
       title: values.title,
       duration: subTask.duration,
     };

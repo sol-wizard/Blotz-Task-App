@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { BreakdownMessage } from "@/feature/breakdown/models/breakdown-message";
-import { SubTask } from "@/feature/breakdown/models/subtask";
+import { AddSubtaskDTO } from "@/feature/breakdown/models/addSubtaskDTO";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_URL;
 const BREAKDOWN_HUB_URL = `${API_BASE_URL}/ai-task-breakdown-chathub`;
@@ -41,7 +41,7 @@ export function useBreakdownChat(taskId: string) {
   };
 
   // Handler for receiving subtasks from the backend
-  const handleReceiveSubtasks = (subtasks: SubTask[]) => {
+  const handleReceiveSubtasks = (subtasks: AddSubtaskDTO[]) => {
     if (!subtasks || subtasks.length === 0) return;
 
     const botMessage: BreakdownMessage = {
