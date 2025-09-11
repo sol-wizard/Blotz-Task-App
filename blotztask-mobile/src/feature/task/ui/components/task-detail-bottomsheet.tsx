@@ -1,17 +1,11 @@
-import { useRef, useCallback, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { View, TouchableOpacity } from "react-native";
-import {
-  BottomSheetModal,
-  BottomSheetView,
-  BottomSheetBackdrop,
-  BottomSheetBackdropProps,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetView } from "@gorhom/bottom-sheet";
 import { Button, Text } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
-import { useBottomSheetStore } from "../../store/bottomSheetStore";
 import { format, isBefore, startOfDay } from "date-fns";
 
 type TaskDetailBottomSheetProps = {

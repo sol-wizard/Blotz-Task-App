@@ -6,7 +6,6 @@ import NoGoalsView from "./noGoalsView";
 import { fetchTasksForDate, toggleTaskCompletion, deleteTask } from "../../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
-import { useBottomSheetStore } from "../../store/bottomSheetStore";
 import TaskCard from "./task-card";
 import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";

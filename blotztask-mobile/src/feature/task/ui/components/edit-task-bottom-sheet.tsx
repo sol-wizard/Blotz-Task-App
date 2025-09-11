@@ -1,8 +1,5 @@
-import { useCallback, useEffect, useRef } from "react";
-import { BottomSheetBackdrop, BottomSheetView, BottomSheetModal } from "@gorhom/bottom-sheet";
+import { BottomSheetView } from "@gorhom/bottom-sheet";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-
-import { useBottomSheetStore } from "../../store/bottomSheetStore";
 import { EditTaskForm } from "../forms/edit-task-form";
 
 export const EditTaskBottomSheet = ({
