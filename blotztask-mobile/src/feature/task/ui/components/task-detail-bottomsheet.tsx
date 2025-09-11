@@ -1,12 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { View, TouchableOpacity } from "react-native";
-import { BottomSheetView } from "@gorhom/bottom-sheet";
+import {
+  BottomSheetView,
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetBackdropProps,
+} from "@gorhom/bottom-sheet";
 import { Button, Text } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
 import { format, isBefore, startOfDay } from "date-fns";
+import { fetchSubtasksForTask } from "../../services/subtask-service";
+import SubtaskDetailBottomSheet from "./subtask-detail-bottomsheet";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
@@ -15,6 +22,9 @@ type TaskDetailBottomSheetProps = {
 
 const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetProps) => {
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(task);
+  const [showSubtasks, setShowSubtasks] = useState(false);
+  const subtaskModalRef = useRef<BottomSheetModal>(null);
+
   useEffect(() => {
     setSelectedTask(task);
   }, [task]);
@@ -29,6 +39,31 @@ const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetP
       },
     });
   };
+
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        pressBehavior="close"
+        opacity={0.5}
+      />
+    ),
+    [],
+  );
+
+  // const openSubtaskDetail = async () => {
+  //   if (!selectedTask?.id) return;
+  //   setLoadingSubtasks(true);
+  //   try {
+  //     const data = await fetchSubtasksForTask(selectedTask.id);
+  //     setSubtasks(data);
+  //     setShowSubtasks(true);
+  //   } finally {
+  //     setLoadingSubtasks(false);
+  //   }
+  // };
 
   return (
     <>
@@ -111,11 +146,38 @@ const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetP
                 </Text>
               </View>
             ) : null}
+
+            <View className="mt-4">
+              <Button
+                mode="contained"
+                onPress={() => setShowSubtasks(true)}
+                disabled={!selectedTask?.id}
+                style={{ borderRadius: 16, backgroundColor: "#111827" }}
+                labelStyle={{ fontWeight: "bold" }}
+              >
+                Open Subtasks
+              </Button>
+            </View>
           </>
         ) : (
           <Text>No task selected</Text>
         )}
       </BottomSheetView>
+      <BottomSheetModal
+        ref={subtaskModalRef}
+        snapPoints={["60%", "90%"]}
+        enablePanDownToClose
+        onDismiss={() => setShowSubtasks(false)} // 手势关闭时同步回 state
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{
+          backgroundColor: "#FFFFFF",
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+        }}
+      >
+        {/* 子组件内部：useEffect 用 task.id 去 subtask-service 拉列表 + 计算总工时 */}
+        <SubtaskDetailBottomSheet task={selectedTask} />
+      </BottomSheetModal>
     </>
   );
 };
