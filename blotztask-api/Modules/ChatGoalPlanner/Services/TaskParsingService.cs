@@ -1,5 +1,7 @@
 using System.Text.Json;
+using BlotzTask.Modules.Labels.Commands;
 using BlotzTask.Modules.Labels.DTOs;
+using BlotzTask.Modules.Labels.Queries;
 using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
 
@@ -9,12 +11,10 @@ namespace BlotzTask.Modules.ChatGoalPlanner.Services;
 public class TaskParsingService
 {
     private readonly ILogger<TaskParsingService> _logger;
-    private readonly ILabelService _labelService; // Assuming this is needed for GoalPlannerExtractedTaskDto mapping
-
-    public TaskParsingService(ILogger<TaskParsingService> logger, ILabelService labelService)
+    
+    public TaskParsingService(ILogger<TaskParsingService> logger)
     {
         _logger = logger;
-        _labelService = labelService;
     }
 
     /// <summary>
@@ -125,8 +125,8 @@ public class TaskParsingService
             // Only fetch labels if the taskMapper is of type GoalPlannerExtractedTaskDto
             if (typeof(TTaskDto) == typeof(ExtractedTaskGoalPlanner))
             {
-                labels = _labelService.GetAllLabelsAsync().GetAwaiter().GetResult();
-                labelNames = labels.Select(label => label.Name).ToHashSet();
+                // labels = _labelService.GetAllLabelsAsync().GetAwaiter().GetResult();
+                // labelNames = labels.Select(label => label.Name).ToHashSet();
             }
 
             foreach (var taskElement in tasksArray.EnumerateArray())
