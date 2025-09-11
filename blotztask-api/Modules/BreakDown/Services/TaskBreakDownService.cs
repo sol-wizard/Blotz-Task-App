@@ -107,7 +107,8 @@ namespace BlotzTask.Modules.BreakDown.Services
                     return rawResult.Subtasks.Select(st => new SubTask
                     {
                         Title = st.Title,
-                        Duration = XmlConvert.ToTimeSpan(st.Duration)
+                        Duration = XmlConvert.ToTimeSpan(st.Duration),
+                        Order = st.Order,
                     }).ToList();
                 }
                 catch (JsonException ex)

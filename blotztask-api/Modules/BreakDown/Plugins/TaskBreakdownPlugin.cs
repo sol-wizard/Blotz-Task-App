@@ -8,7 +8,7 @@ public class TaskBreakdownPlugin
     [
         KernelFunction,
         Description(
-            "Break down a task into multiple subtasks with duration."
+            "Break down a task into multiple subtasks with duration and order."
         )
     ]
     public List<SubTaskWrapper> BreakdownTask(string taskJson)
