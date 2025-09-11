@@ -25,7 +25,6 @@ public class AddSubtasksCommandHandler
     {
         var parentTask = await _db.TaskItems
             .FirstOrDefaultAsync(t => t.Id == command.TaskId, ct);
-        Console.WriteLine("add subtasks,parenttask id:", parentTask);
 
         if (parentTask == null)
             throw new Exception($"Parent task {command.TaskId} not found.");
