@@ -16,9 +16,10 @@ import { format, isBefore, startOfDay } from "date-fns";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
+  handleEditPress: () => void;
 };
 
-const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
+const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetProps) => {
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(task);
   useEffect(() => {
     setSelectedTask(task);
@@ -34,8 +35,6 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
       },
     });
   };
-
-  const handleEditPress = () => {};
 
   return (
     <>

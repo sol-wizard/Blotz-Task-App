@@ -22,6 +22,7 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
   const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDetailDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
+  const editTaskModalRef = useRef<BottomSheetModal>(null);
 
   //TODO: Maybe we dont need this
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
@@ -65,6 +66,16 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
     taskDetailModalRef?.current?.present();
   };
 
+  const handleEditTaskSheetClose = () => {
+    editTaskModalRef?.current?.dismiss();
+    taskDetailModalRef?.current?.present();
+  };
+
+  const handleEditPress = () => {
+    taskDetailModalRef?.current?.dismiss();
+    editTaskModalRef?.current?.present();
+  };
+
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
     <TaskCard
       id={item.id.toString()}
@@ -99,7 +110,7 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
     }
   };
 
-  const renderTaskDetailsBackdrop = useCallback(
+  const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
         {...props}
@@ -151,21 +162,32 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
           <NoGoalsView />
         )}
       </CalendarProvider>
+
       <BottomSheetModal
         ref={taskDetailModalRef}
         snapPoints={["60%", "80%"]}
         enablePanDownToClose
-        backdropComponent={renderTaskDetailsBackdrop}
+        backdropComponent={renderBackdrop}
         backgroundStyle={{
           backgroundColor: "#FFFFFF",
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
         }}
       >
-        <TaskDetailBottomSheet task={selectedTask} />
+        <TaskDetailBottomSheet task={selectedTask} handleEditPress={handleEditPress} />
       </BottomSheetModal>
 
-      {selectedTask && <EditTaskBottomSheet task={selectedTask} />}
+      {selectedTask && (
+        <BottomSheetModal
+          ref={editTaskModalRef}
+          snapPoints={["55%"]}
+          keyboardBlurBehavior="restore"
+          backdropComponent={renderBackdrop}
+          enablePanDownToClose
+        >
+          <EditTaskBottomSheet task={selectedTask} handleClose={handleEditTaskSheetClose} />
+        </BottomSheetModal>
+      )}
 
       <Snackbar
         visible={snackbar.visible}
