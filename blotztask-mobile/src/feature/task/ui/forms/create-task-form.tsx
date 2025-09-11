@@ -36,6 +36,9 @@ export default function CreateTaskForm({
       labelId: undefined,
     },
   });
+  const {
+    formState: { errors },
+  } = form;
 
   const [showingDateTimePicker, setShowingDateTimePicker] = useState(false);
 
@@ -77,7 +80,9 @@ export default function CreateTaskForm({
               name="title"
               placeholder="Title"
               control={form.control}
-              className="bg-gray-50 rounded-2xl"
+              className={`bg-gray-50 rounded-2xl border ${
+                errors.title ? "border-red-500" : "border-transparent"
+              }`}
             />
           </View>
 
