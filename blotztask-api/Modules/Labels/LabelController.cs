@@ -1,4 +1,5 @@
 ﻿using BlotzTask.Modules.Labels.Commands;
+using BlotzTask.Modules.Labels.Queries;
 using BlotzTask.Modules.Labels.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,14 +10,16 @@ namespace BlotzTask.Modules.Labels;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
-public class LabelController(ILabelService _labelService, AddLabelCommandHandler addlabelCommandHandler) : ControllerBase
+public class LabelController(ILabelService _labelService, AddLabelCommandHandler addlabelCommandHandler, GetAllLabelsQueryHandler getAlllabelsQueryHandler) : ControllerBase
 {
 
     [HttpGet]
-    public async Task<IActionResult> GetAllLabels()
+    public async Task<IActionResult> GetAllLabels(CancellationToken ct)
     {
-        return Ok(await _labelService.GetAllLabelsAsync());
+        var result = getAlllabelsQueryHandler.Handle(ct);
+        return Ok(result);
     }
+    
         
     [HttpGet("{id}")]
     public async Task<IActionResult> GetLabelById(int id)

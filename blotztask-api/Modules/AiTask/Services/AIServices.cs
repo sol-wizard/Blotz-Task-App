@@ -22,7 +22,7 @@ public class TaskGenerationAiService
 
     public async Task<ExtractedTasksWrapper> GenerateResponseAsync(string prompt, string timezoneId, CancellationToken ct)
     {
-        var (labels, labelNames) = await GetLabelInfoAsync();
+        // var (labels, labelNames) = await GetLabelInfoAsync();
 
         var messages = new List<ChatMessage>
         {
@@ -72,25 +72,25 @@ public class TaskGenerationAiService
         );
 
         // tool schema -- what structure AI must follow
-        var tool = CreateExtractedTasksTool(labelNames);
+        // var tool = CreateExtractedTasksTool(labelNames);
         
-        var resultWrapper = await CallToolAndDeserializeAsync<ExtractedTasksWrapperRaw>(
-            toolFunctionName: "extract_tasks",
-            messages: messages,
-            tool: tool,
-            cancellationToken: ct
-            );
+        // var resultWrapper = await CallToolAndDeserializeAsync<ExtractedTasksWrapperRaw>(
+        //     toolFunctionName: "extract_tasks",
+        //     messages: messages,
+        //     tool: tool,
+        //     cancellationToken: ct
+        //     );
 
-        return ConvertToWrapperDto(resultWrapper, labels, labelNames);
+        return null;
     }
 
 
-    private async Task<(List<LabelDto> labels, HashSet<string> labelNames)> GetLabelInfoAsync()
-    {
-        var labels = await _labelService.GetAllLabelsAsync();
-        var labelNames = labels.Select(label => label.Name).ToHashSet();
-        return (labels, labelNames);
-    }
+    // private async Task<(List<LabelDto> labels, HashSet<string> labelNames)> GetLabelInfoAsync()
+    // {
+    //     var labels = await _labelService.GetAllLabelsAsync();
+    //     var labelNames = labels.Select(label => label.Name).ToHashSet();
+    //     return (labels, labelNames);
+    // }
 
     // give AI a standard structure to follow
     private ChatTool CreateExtractedTasksTool(HashSet<string> labelNames)
