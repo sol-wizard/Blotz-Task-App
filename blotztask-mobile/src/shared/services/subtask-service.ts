@@ -1,4 +1,4 @@
-import { SubtaskDTO } from "../models/subtask-dto";
+import { SubtaskDTO } from "../../feature/breakdown/models/subtask-dto";
 import { fetchWithAuth } from "./fetch-with-auth";
 
 export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
