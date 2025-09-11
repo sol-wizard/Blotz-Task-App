@@ -16,7 +16,7 @@ public class LabelController(ILabelService _labelService, AddLabelCommandHandler
     [HttpGet]
     public async Task<IActionResult> GetAllLabels(CancellationToken ct)
     {
-        var result = getAlllabelsQueryHandler.Handle(ct);
+        var result = await getAlllabelsQueryHandler.Handle(ct);
         return Ok(result);
     }
     

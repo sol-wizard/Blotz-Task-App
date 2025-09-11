@@ -1,12 +1,13 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { BreakdownTaskCard } from "./breakdown-task-card";
-import { AddSubtaskDTO } from "../models/addSubtaskDTO";
+import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
+import { AddSubtaskDTO } from "../models/add-subtask-dto";
 
 interface BreakdownBotMessageProps {
   text: string;
   parentTaskId: string;
-  subtasks?: AddSubtaskDTO[];
+  subtasks?: BreakdownSubtaskDTO[];
   openAddSubtaskBottomSheet: (subTask: AddSubtaskDTO) => void;
 }
 
