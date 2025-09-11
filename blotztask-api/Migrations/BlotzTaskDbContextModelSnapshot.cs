@@ -103,6 +103,9 @@ namespace BlotzTask.Migrations
                     b.Property<int>("LabelId")
                         .HasColumnType("int");
 
+                    b.Property<DateTimeOffset?>("StartTime")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -144,6 +147,9 @@ namespace BlotzTask.Migrations
 
                     b.Property<bool>("IsDone")
                         .HasColumnType("bit");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
 
                     b.Property<int>("ParentTaskId")
                         .HasColumnType("int");
