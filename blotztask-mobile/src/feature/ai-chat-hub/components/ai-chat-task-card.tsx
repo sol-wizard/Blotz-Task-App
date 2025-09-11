@@ -16,6 +16,7 @@ export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className
 
   const handleAddTask = async (task: AiTaskDTO) => {
     const newTask = convertAiTaskToAddTaskItemDTO(task);
+
     if (!isTaskAdded) {
       try {
         await addTaskItem(newTask);
