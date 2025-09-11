@@ -61,11 +61,11 @@ public class GoalPlannerAiService : IGoalPlannerAiService
     /// </returns>
     public async Task<ChatHistory> InitializeNewConversation(string conversationId)
     {
-        var labelNames = await GetLabelNamesAsync();
+        // var labelNames = await GetLabelNamesAsync();
 
         var chatHistory = new ChatHistory();
         chatHistory.AddSystemMessage(string.Format(GoalPlannerPrompts.SystemMessageTemplate,
-            DateTime.UtcNow, string.Join(", ", labelNames)));
+            DateTime.UtcNow));
 
         // Setting initial state needed for goal planner AI to work properly
         _conversationStateService.SetChatHistory(conversationId, chatHistory);
@@ -181,11 +181,11 @@ Consider:
         return rawTasks;
     }
 
-    private async Task<List<string>> GetLabelNamesAsync()
-    {
-        var labels = await _labelService.GetAllLabelsAsync();
-        return [.. labels.Select(label => label.Name)];
-    }
+    // private async Task<List<string>> GetLabelNamesAsync()
+    // {
+    //     // var labels = await _labelService.GetAllLabelsAsync();
+    //     // return [.. labels.Select(label => label.Name)];
+    // }
 
 }
 
