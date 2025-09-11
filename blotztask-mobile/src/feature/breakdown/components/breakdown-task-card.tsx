@@ -7,7 +7,6 @@ import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 import EditTaskFormField, { taskEditFormSchema } from "../schemas/breakdown-task-edit-form-schema";
 import { AddSubtaskDTO } from "../models/add-subtask-dto";
 import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
-import { formatDuration } from "date-fns";
 
 export const BreakdownTaskCard = ({
   subTask,
