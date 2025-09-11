@@ -17,7 +17,8 @@ import {
   AddSubtaskBottomSheet,
   AddSubtaskBottomSheetHandle,
 } from "@/feature/breakdown/components/add-subtask-bottom-sheet";
-import { AddSubtaskDTO } from "@/feature/breakdown/models/addSubtaskDTO";
+import { AddSubtaskDTO } from "@/feature/breakdown/models/add-subtask-dto";
+import { addSubtasks } from "@/shared/services/subtask-service";
 
 export default function AiBreakdownScreen() {
   const { id: taskId } = useLocalSearchParams<{ id?: string }>();
@@ -27,6 +28,7 @@ export default function AiBreakdownScreen() {
 
   // const [text, setText] = useState("");
   const { messages, isTyping } = useBreakdownChat(taskId);
+  console.log("message:", messages);
   // const handleSend = () => {
   //   sendMessage(text);
   //   setText("");
@@ -53,8 +55,12 @@ export default function AiBreakdownScreen() {
     });
   };
 
-  const handleAddSubtasks = () => {
-    console.log("Adding subtasks:", selectedSubtasks);
+  const handleAddSubtasks = async () => {
+    try {
+      await addSubtasks({ taskId: Number(taskId), newSubtasks: selectedSubtasks });
+    } catch (error) {
+      console.log("Failed to add subtasks:", error);
+    }
   };
 
   return (
