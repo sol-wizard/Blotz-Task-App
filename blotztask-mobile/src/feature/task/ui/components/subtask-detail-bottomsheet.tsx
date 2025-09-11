@@ -5,7 +5,6 @@ import React, {
   useState,
   useCallback,
   useEffect,
-  use,
 } from "react";
 import { View, Pressable } from "react-native";
 import {
@@ -178,7 +177,6 @@ const SubtaskDetailBottomSheet = forwardRef<SubtaskDetailBottomSheetHandle, Prop
           {/* Subtasks */}
           <View>
             {subtasks.map((s, i) => {
-              const isLast = i === subtasks.length - 1;
               return (
                 <View key={s.id} className="relative flex-row items-start py-4">
                   {/* Checkbox */}

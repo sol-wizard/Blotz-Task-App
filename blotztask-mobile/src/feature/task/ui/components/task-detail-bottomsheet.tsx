@@ -84,7 +84,7 @@ const TaskDetailBottomSheet = ({ task }: TaskDetailBottomSheetProps) => {
     try {
       const data = await fetchSubtasksForTask(selectedTask.id);
       setSubtasks(data);
-    } catch (e) {
+    } catch {
       setSubtasksError("Failed to load subtasks");
     } finally {
       setLoadingSubtasks(false);
