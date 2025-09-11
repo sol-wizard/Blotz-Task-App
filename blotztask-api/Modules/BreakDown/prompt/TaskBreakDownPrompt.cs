@@ -10,6 +10,7 @@ public class TaskBreakDownPrompt
         Each subtask must include:
         - title: A short descriptive name
         - duration: Time in minutes or hours, always converted into TimeSpan (e.g., 30 minutes = PT30M, 2 hours = PT2H).
+        - order: An integer indicating the sequence of the subtask (1 for the first, 2 for the second, etc.)
 
         Guidelines:
         - The total duration of subtasks should not exceed (EndTime - StartTime).
