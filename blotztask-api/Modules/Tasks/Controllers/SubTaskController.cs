@@ -7,7 +7,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class SubTaskController(UpdateSubtaskCommandHandler updateSubtaskCommandHandler, AddSubtasksCommandHandler addSubtasksCommandHandler, ILogger<SubTaskController> logger) : ControllerBase
+public class SubTaskController(UpdateSubtaskCommandHandler updateSubtaskCommandHandler, AddSubtasksCommandHandler addSubtasksCommandHandler) : ControllerBase
 {
     [HttpPut("{taskId}/subtasks/{subtaskId}")]
     public async Task<IActionResult> UpdateSubtask(
@@ -36,13 +36,7 @@ public class SubTaskController(UpdateSubtaskCommandHandler updateSubtaskCommandH
             return BadRequest("TaskId in route does not match request body.");
         }
         var message = await addSubtasksCommandHandler.Handle(command, ct);
-        logger.LogInformation("Received request to add {Count} subtasks to task {TaskId}", command.Subtasks.Count, command.TaskId);
-        // return Ok(message);
-        return Ok(new { 
-            message = message, 
-            count = command.Subtasks.Count,
-            taskId = command.TaskId
-        });
+        return Ok(message);
     }
         
 }

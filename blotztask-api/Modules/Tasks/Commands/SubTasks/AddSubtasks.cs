@@ -23,17 +23,14 @@ public class AddSubtasksCommandHandler
 
     public async Task<string> Handle(AddSubtasksCommand command, CancellationToken ct = default)
     {
-        // Load parent task including existing subtasks
         var parentTask = await _db.TaskItems
-            .Include(t => t.Subtasks) // Include existing subtasks
             .FirstOrDefaultAsync(t => t.Id == command.TaskId, ct);
 
         if (parentTask == null)
             throw new Exception($"Parent task {command.TaskId} not found.");
 
         var now = DateTime.UtcNow;
-
-        // Map DTOs to Subtask entities
+        
         foreach (var dto in command.Subtasks)
         {
             var subtask = new Subtask
@@ -48,12 +45,20 @@ public class AddSubtasksCommandHandler
                 UpdatedAt = now
             };
             
-            parentTask.Subtasks.Add(subtask);
+            _db.Subtasks.Add(subtask);
         }
-
-        // Save all changes
+        
         await _db.SaveChangesAsync(ct);
 
         return $"{command.Subtasks.Count} subtasks added to task {parentTask.Id}.";
     }
+}
+
+public class SubtaskDto
+{ 
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public TimeSpan? Duration { get; set; }
+    public int Order { get; set; }
+    public bool IsDone { get; set; } = false; // default for new subtasks
 }
