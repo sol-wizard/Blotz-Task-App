@@ -4,8 +4,6 @@ import { useRouter } from "expo-router";
 import { useLogout } from "@/shared/hooks/uselogout";
 
 export default function SettingsScreen() {
-  // const [showNotificationTester, setShowNotificationTester] = useState(false);
-
   const router = useRouter();
   const logout = useLogout();
 
@@ -19,20 +17,6 @@ export default function SettingsScreen() {
       <Text variant="headlineMedium" style={{ marginBottom: 16 }}>
         Settings
       </Text>
-
-      {/* <Button
-        mode="contained"
-        onPress={() => setShowNotificationTester(!showNotificationTester)}
-        style={{ marginTop: 16 }}
-      >
-        {showNotificationTester ? "Hide" : "Show"} Notification Tester
-      </Button> */}
-
-      {/* {showNotificationTester && (
-        <View style={{ width: "100%", marginTop: 16 }}>
-          <NotificationTester />
-        </View>
-      )} */}
 
       <Button mode="outlined" style={{ marginTop: 16 }} onPress={handleSignOut}>
         Sign Out
