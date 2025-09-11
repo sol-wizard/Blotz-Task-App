@@ -17,17 +17,17 @@ export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
 
 export async function addSubtasks({
   taskId,
-  newSubtasks,
+  subtasks,
 }: {
   taskId: number;
-  newSubtasks: AddSubtaskDTO[];
+  subtasks: AddSubtaskDTO[];
 }): Promise<void> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/tasks/${taskId}/subtasks`;
 
   try {
     await fetchWithAuth<void>(url, {
       method: "POST",
-      body: JSON.stringify({ taskId, newSubtasks }),
+      body: JSON.stringify({ taskId, subtasks }),
     });
   } catch (err: any) {
     console.error("Add subtasks failed:", err);

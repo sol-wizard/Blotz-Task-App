@@ -51,7 +51,8 @@ export default function AiBreakdownScreen() {
 
   const handleAddSubtasks = async () => {
     try {
-      await addSubtasks({ taskId: Number(taskId), newSubtasks: selectedSubtasks });
+      await addSubtasks({ taskId: Number(taskId), subtasks: selectedSubtasks });
+      console.log("add subtasks successfully!");
     } catch (error) {
       console.log("Failed to add subtasks:", error);
     }

@@ -33,6 +33,7 @@ export const BreakdownTaskCard = ({
       order: subTask.order,
       isDone: false,
     };
+    console.log(subTask.duration);
     openAddSubtaskBottomSheet(newSubtask);
     setIsChecked((v) => !v);
   };
