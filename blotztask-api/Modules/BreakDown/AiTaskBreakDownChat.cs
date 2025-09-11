@@ -82,4 +82,6 @@ public class SubTask
 {
     public string Title { get; set; } = string.Empty;
     public TimeSpan Duration { get; set; }
+    
+    public int Order { get; set; }
 }
