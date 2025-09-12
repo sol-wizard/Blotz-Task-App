@@ -4,6 +4,7 @@ using BlotzTask.Modules.AiTask.DTOs;
 using BlotzTask.Modules.BreakDown.prompt;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Shared.Store;
+using BlotzTask.Shared.Utils;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel;
 
@@ -50,7 +51,7 @@ namespace BlotzTask.Modules.BreakDown.Services
             TaskByIdItemDto task = await _getTaskByIdQueryHandler.Handle(query, ct);
 
             // Create chat history
-            var chatHistory = _chatHistoryStore.GetOrCreate(conversationId);
+            var chatHistory = _chatHistoryStore.GetOrCreate(TaskBreakdownChatKeyBuilder.BuildKey(conversationId));
             chatHistory.AddSystemMessage(TaskBreakDownPrompt.TaskBreakdownSystemMessage);
             chatHistory.AddUserMessage(TaskBreakDownPrompt.TaskBreakdownUserMessage(task));
 
