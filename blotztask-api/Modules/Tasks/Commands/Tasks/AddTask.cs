@@ -7,9 +7,9 @@ namespace BlotzTask.Modules.Tasks.Commands.Tasks;
 public class AddTaskCommand
 {
     [Required]
-    public required AddTaskItemDto TaskDetails { get; set; }
+    public required AddTaskItemDto TaskDetails { get; init; }
     [Required]
-    public required string UserId { get; set; }
+    public required Guid UserId { get; set; }
 }
 
 public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommandHandler> logger)

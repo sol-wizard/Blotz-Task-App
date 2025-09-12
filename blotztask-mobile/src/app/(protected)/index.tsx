@@ -11,8 +11,8 @@ const routes = [
   {
     key: "calendar",
     title: "Calendar",
-    focusedIcon: "calendar",
-    unfocusedIcon: "calendar-outline",
+    focusedIcon: "calendar-text",
+    unfocusedIcon: "calendar-blank",
   },
   {
     key: "settings",
@@ -22,14 +22,15 @@ const routes = [
   },
 ];
 
-const CalendarRoute: any = () => <CalendarPage />;
-
-const SettingsRoute = () => <SettingsScreen />;
-
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
   const insets = useSafeAreaInsets();
   const [isTaskCreationSheetVisible, setIsTaskCreationSheetVisible] = useState(false);
+  const [refreshFlag, setRefreshFlag] = useState(false);
+
+  const CalendarRoute: any = () => <CalendarPage refreshFlag={refreshFlag} />;
+
+  const SettingsRoute = () => <SettingsScreen />;
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
@@ -42,9 +43,18 @@ export default function ProtectedIndex() {
         navigationState={{ index, routes }}
         onIndexChange={setIndex}
         renderScene={renderScene}
+        barStyle={{ backgroundColor: "#F2F2F2", height: 90 }}
+        activeIndicatorStyle={{ backgroundColor: "transparent" }}
+        renderIcon={({ route, focused, color }) => (
+          <MaterialCommunityIcons
+            name={(focused ? route.focusedIcon : route.unfocusedIcon) as any}
+            size={24}
+            color={color}
+          />
+        )}
       />
 
-      <View className="absolute left-0 right-0 items-center" style={{ bottom: insets.bottom + 20 }}>
+      <View className="absolute left-0 right-0 items-center" style={{ bottom: insets.bottom }}>
         <Pressable
           onPress={() => setIsTaskCreationSheetVisible(true)}
           className="w-14 h-14 rounded-full bg-gray-200 items-center justify-center"
@@ -57,6 +67,7 @@ export default function ProtectedIndex() {
         <CreateTaskBottomSheet
           isVisible={isTaskCreationSheetVisible}
           onClose={setIsTaskCreationSheetVisible}
+          refreshCalendarPage={() => setRefreshFlag((flag) => !flag)}
         ></CreateTaskBottomSheet>
       )}
     </>

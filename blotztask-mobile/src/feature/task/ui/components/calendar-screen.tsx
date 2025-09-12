@@ -1,36 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Snackbar } from "react-native-paper";
 import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoGoalsView from "./noGoalsView";
-import {
-  fetchTasksForDate,
-  toggleTaskCompletion,
-  deleteTask,
-} from "../../services/task-service";
+import { fetchTasksForDate, toggleTaskCompletion, deleteTask } from "../../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
-import { useBottomSheetStore } from "../../store/bottomSheetStore";
 import TaskCard from "./task-card";
 import TaskDetailBottomSheet from "./task-detail-bottomsheet";
-import {
-  CalendarProvider,
-  DateData,
-  WeekCalendar,
-} from "react-native-calendars";
+import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
+import {
+  BottomSheetBackdrop,
+  BottomSheetBackdropProps,
+  BottomSheetModal,
+} from "@gorhom/bottom-sheet";
 
-export default function CalendarPage() {
+export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) {
   const [selectedDay, setSelectedDay] = useState(new Date());
-  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<
-    TaskDetailDTO[]
-  >([]);
+  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDetailDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const taskDetailModalRef = useRef<BottomSheetModal>(null);
+  const editTaskModalRef = useRef<BottomSheetModal>(null);
 
   //TODO: Maybe we dont need this
-  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(
-    undefined
-  );
+  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
 
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
@@ -39,7 +33,7 @@ export default function CalendarPage() {
 
   useEffect(() => {
     loadTask();
-  }, [selectedDay]);
+  }, [selectedDay, refreshFlag]);
 
   const loadTask = async () => {
     setIsLoading(true);
@@ -65,11 +59,20 @@ export default function CalendarPage() {
       console.error(e);
     }
   };
-  const { openTaskDetail } = useBottomSheetStore();
 
   const presentSheet = (task: TaskDetailDTO) => {
     setSelectedTask(task);
-    openTaskDetail();
+    taskDetailModalRef?.current?.present();
+  };
+
+  const handleEditTaskSheetClose = () => {
+    editTaskModalRef?.current?.dismiss();
+    taskDetailModalRef?.current?.present();
+  };
+
+  const handleEditPress = () => {
+    taskDetailModalRef?.current?.dismiss();
+    editTaskModalRef?.current?.present();
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
@@ -106,6 +109,19 @@ export default function CalendarPage() {
     }
   };
 
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        pressBehavior="close"
+        opacity={0.5}
+      />
+    ),
+    [],
+  );
+
   return (
     <SafeAreaView className="flex-1">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
@@ -115,9 +131,7 @@ export default function CalendarPage() {
         showTodayButton={false}
       >
         <WeekCalendar
-          onDayPress={(day: DateData) =>
-            setSelectedDay(new Date(day.dateString))
-          }
+          onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
           current={format(selectedDay, "yyyy-MM-dd")}
           theme={{
             selectedDayBackgroundColor: "#2d4150",
@@ -148,9 +162,31 @@ export default function CalendarPage() {
         )}
       </CalendarProvider>
 
-      <TaskDetailBottomSheet task={selectedTask} />
+      <BottomSheetModal
+        ref={taskDetailModalRef}
+        snapPoints={["60%", "80%"]}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{
+          backgroundColor: "#FFFFFF",
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+        }}
+      >
+        <TaskDetailBottomSheet task={selectedTask} handleEditPress={handleEditPress} />
+      </BottomSheetModal>
 
-      {selectedTask && <EditTaskBottomSheet task={selectedTask} />}
+      {selectedTask && (
+        <BottomSheetModal
+          ref={editTaskModalRef}
+          snapPoints={["55%"]}
+          keyboardBlurBehavior="restore"
+          backdropComponent={renderBackdrop}
+          enablePanDownToClose
+        >
+          <EditTaskBottomSheet task={selectedTask} handleClose={handleEditTaskSheetClose} />
+        </BottomSheetModal>
+      )}
 
       <Snackbar
         visible={snackbar.visible}
