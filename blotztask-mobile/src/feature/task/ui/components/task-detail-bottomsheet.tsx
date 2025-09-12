@@ -121,9 +121,7 @@ const TaskDetailBottomSheet = ({
             <View className="mt-4">
               <Button
                 mode="contained"
-                onPress={() => {
-                  selectedTask && onOpenSubtasks(selectedTask);
-                }}
+                onPress={() => (selectedTask ? onOpenSubtasks(selectedTask) : undefined)}
                 disabled={!selectedTask?.id}
                 style={{ borderRadius: 16, backgroundColor: "#111827" }}
                 labelStyle={{ fontWeight: "bold" }}
