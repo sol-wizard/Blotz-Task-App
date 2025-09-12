@@ -12,24 +12,16 @@ public class DeleteSubtaskCommand
     public int TaskId { get; set; }
 }
 
-public class DeleteSubtaskCommandHandler
+public class DeleteSubtaskCommandHandler(BlotzTaskDbContext db, ILogger<DeleteSubtaskCommandHandler> logger)
 {
-    private readonly BlotzTaskDbContext _db;
-
-    public DeleteSubtaskCommandHandler(BlotzTaskDbContext db)
-    {
-        _db = db;
-    }
-
-    public async Task<string> Handle(DeleteSubtaskCommand command, CancellationToken ct = default,
-        ILogger<DeleteSubtaskCommandHandler> logger = null!)
+    public async Task<string> Handle(DeleteSubtaskCommand command, CancellationToken ct = default)
     {
         logger?.LogInformation($"Deleting subtask {command.SubtaskId}");
-        var subtask = await _db.Subtasks.FindAsync(command.SubtaskId, ct);
+        var subtask = await db.Subtasks.FindAsync(command.SubtaskId, ct);
         if (subtask == null || subtask.ParentTaskId != command.TaskId)
             throw new Exception($"Subtask {command.SubtaskId} not found for task {command.TaskId}.");
-        _db.Subtasks.Remove(subtask);
-        await _db.SaveChangesAsync(ct);
+        db.Subtasks.Remove(subtask);
+        await db.SaveChangesAsync(ct);
         logger?.LogInformation($"Subtask {command.SubtaskId} deleted.");
         return $"Subtask {command.SubtaskId} deleted.";
     }
