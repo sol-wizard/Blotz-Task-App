@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Snackbar } from "react-native-paper";
 import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
-import NoGoalsView from "./no-goals-view";
+import NoTasksView from "./no-tasks-view";
 import { fetchTasksForDate, toggleTaskCompletion, deleteTask } from "../../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
@@ -130,7 +130,7 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
             keyExtractor={(task) => task.id.toString()}
           />
         ) : (
-          <NoGoalsView />
+          <NoTasksView />
         )}
       </CalendarProvider>
 
