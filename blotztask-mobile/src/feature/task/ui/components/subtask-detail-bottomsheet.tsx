@@ -1,11 +1,4 @@
-import React, {
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  useState,
-  useCallback,
-  useEffect,
-} from "react";
+import React, { useState, useEffect } from "react";
 import { View, Pressable } from "react-native";
 import { Text, ProgressBar } from "react-native-paper";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -22,7 +15,7 @@ export default function SubtaskDetail({ task }: Props) {
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalLabel, setTotalLabel] = useState(""); // 想用文案就放这
-  const [totalHours, setTotalHours] = useState(0); // 想用数字就放这
+  // const [totalHours, setTotalHours] = useState(0); // 想用数字就放这
 
   useEffect(() => {
     let cancelled = false;
@@ -30,7 +23,7 @@ export default function SubtaskDetail({ task }: Props) {
       if (!task?.id) {
         setList([]);
         setTotalLabel("");
-        setTotalHours(0);
+        // setTotalHours(0);
         return;
       }
       const items = await fetchSubtasksForTask(task.id);
@@ -40,7 +33,7 @@ export default function SubtaskDetail({ task }: Props) {
       // 直接把 items 传进去，避免重复请求
       const { hours, label } = await fetchTotalHoursForTask(task.id, items ?? []);
       if (cancelled) return;
-      setTotalHours(hours);
+      // setTotalHours(hours);
       setTotalLabel(label); // ← 这就是用 convertSubtaskTimeForm 得到的总工时“文案”
     })();
     return () => {

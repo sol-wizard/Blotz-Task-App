@@ -21,7 +21,7 @@ type TaskDetailBottomSheetProps = {
 
 const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetProps) => {
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(task);
-  const [showSubtasks, setShowSubtasks] = useState(false);
+  // const [showSubtasks, setShowSubtasks] = useState(false);
   const subtaskModalRef = useRef<BottomSheetModal>(null);
 
   useEffect(() => {
@@ -156,7 +156,7 @@ const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetP
         ref={subtaskModalRef}
         snapPoints={["60%", "90%"]}
         enablePanDownToClose
-        onDismiss={() => setShowSubtasks(false)} // 手势关闭时同步回 state
+        // onDismiss={() => setShowSubtasks(false)} // 手势关闭时同步回 state
         backdropComponent={renderBackdrop}
         backgroundStyle={{
           backgroundColor: "#FFFFFF",
