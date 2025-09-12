@@ -9,7 +9,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [Route("api/[controller]")]
 public class SubTaskController(UpdateSubtaskCommandHandler updateSubtaskCommandHandler, AddSubtasksCommandHandler addSubtasksCommandHandler, DeleteSubtaskCommandHandler deleteSubtaskCommandHandler) : ControllerBase
 {
-    [HttpPut("{taskId}/subtasks/{subtaskId}")]
+    [HttpPut("tasks/{taskId}/subtasks/{subtaskId}")]
     public async Task<IActionResult> UpdateSubtask(
         int taskId,
         int subtaskId,

@@ -5,7 +5,7 @@ import { fetchWithAuth } from "./fetch-with-auth";
 export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   const taskId = newSubtask.taskId;
   const subtaskId = newSubtask.subtaskId;
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/${taskId}/subtasks/${subtaskId}`;
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/tasks/${taskId}/subtasks/${subtaskId}`;
 
   try {
     await fetchWithAuth<void>(url, { method: "PUT", body: JSON.stringify({ ...newSubtask }) });
