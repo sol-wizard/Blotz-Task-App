@@ -154,9 +154,7 @@ const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetP
       </BottomSheetView>
       <BottomSheetModal
         ref={subtaskModalRef}
-        snapPoints={["60%", "90%"]}
         enablePanDownToClose
-        // onDismiss={() => setShowSubtasks(false)} // 手势关闭时同步回 state
         backdropComponent={renderBackdrop}
         backgroundStyle={{
           backgroundColor: "#FFFFFF",

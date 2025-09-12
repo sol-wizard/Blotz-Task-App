@@ -97,16 +97,16 @@ export async function fetchTotalHoursForTask(
 ): Promise<{ hours: number; label: string }> {
   const list = items ?? (await fetchSubtasksForTask(taskId));
 
-  // 累加总秒数（小时/分钟足够，秒缺省为 0）
+  // count total seconds
   const totalSeconds = list.reduce((sum, it) => {
     const [h, m, s] = parseHMStoParts(it?.duration);
     return sum + h * 3600 + m * 60 + s;
   }, 0);
 
-  // ① 文案：把总秒数转回 "H:MM:SS" → 交给 convertSubtaskTimeForm
+  // Return two formats:
   const label = convertSubtaskTimeForm(secondsToHMS(totalSeconds));
 
-  // ② 数值小时：给需要用数字的地方（不需要可不看）
+  // Keep one decimal place for hours
   const hours = Math.round((totalSeconds / 3600) * 10) / 10;
 
   return { hours, label };

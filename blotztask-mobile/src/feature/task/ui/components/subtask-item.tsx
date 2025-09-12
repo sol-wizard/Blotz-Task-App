@@ -14,10 +14,10 @@ type SubtaskItemProps = {
 export default function SubtaskItem({ item: s, onToggle }: SubtaskItemProps) {
   return (
     <View className="relative flex-row items-start py-4">
-      {/* 左列：复选框 */}
+      {/* Checkbox */}
       <CustomCheckbox checked={!!s?.isDone} onPress={() => onToggle(s.id)} />
 
-      {/* 右列：标题/时长/描述 */}
+      {/* Right column: Title/Duration/Description */}
       <View className="flex-1 ml-2">
         <View className="flex-row items-center justify-between">
           <Text

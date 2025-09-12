@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Pressable } from "react-native";
 import { Text, ProgressBar } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { TaskDetailTag } from "./task-detail-tag";
 import { COLORS } from "@/shared/constants/colors";
@@ -14,8 +15,8 @@ const COLOR = COLORS.primary;
 export default function SubtaskDetail({ task }: Props) {
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [totalLabel, setTotalLabel] = useState(""); // 想用文案就放这
-  // const [totalHours, setTotalHours] = useState(0); // 想用数字就放这
+  const [totalLabel, setTotalLabel] = useState("");
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     let cancelled = false;
@@ -23,30 +24,29 @@ export default function SubtaskDetail({ task }: Props) {
       if (!task?.id) {
         setList([]);
         setTotalLabel("");
-        // setTotalHours(0);
         return;
       }
+      setLoading(true);
       const items = await fetchSubtasksForTask(task.id);
       if (cancelled) return;
       setList(items ?? []);
 
-      // 直接把 items 传进去，避免重复请求
-      const { hours, label } = await fetchTotalHoursForTask(task.id, items ?? []);
+      const { label } = await fetchTotalHoursForTask(task.id, items ?? []);
       if (cancelled) return;
-      // setTotalHours(hours);
-      setTotalLabel(label); // ← 这就是用 convertSubtaskTimeForm 得到的总工时“文案”
+      setTotalLabel(label);
+      setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
   }, [task?.id]);
 
-  // 进度（本地 isDone；后续可换后端）
+  // Progress
   const completed = list.filter((s) => s?.isDone).length;
   const total = list.length || 1;
   const progress = completed / total;
 
-  // 本地切换（TODO：后续接“更新子任务”接口）
+  // Local toggle (TODO: later connect to "update subtask" interface)
   const toggle = (id: number) => {
     setList((prev) => prev.map((s) => (s.id === id ? { ...s, isDone: !s.isDone } : s)));
   };
@@ -57,8 +57,11 @@ export default function SubtaskDetail({ task }: Props) {
   };
 
   return (
-    <View className="flex-1 bg-white px-4 pt-3 pb-6">
-      {/* Header —— 右上角展示数字小时（你不需要 label） */}
+    <View
+      className="flex-1 bg-white px-4 pt-3"
+      style={{ paddingBottom: (insets.bottom ?? 0) + 16 }}
+    >
+      {/* Header */}
       <View className="flex-row items-start justify-between mb-2">
         <Text
           className="flex-1 text-gray-900 mr-3 text-[22px] leading-7"
