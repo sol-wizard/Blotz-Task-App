@@ -12,7 +12,6 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
 import { format, isBefore, startOfDay } from "date-fns";
-import SubtaskDetail from "./subtask-detail-bottomsheet";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
@@ -26,7 +25,6 @@ const TaskDetailBottomSheet = ({
   onOpenSubtasks,
 }: TaskDetailBottomSheetProps) => {
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(task);
-  const subtaskModalRef = useRef<BottomSheetModal>(null);
 
   useEffect(() => {
     setSelectedTask(task);
@@ -42,19 +40,6 @@ const TaskDetailBottomSheet = ({
       },
     });
   };
-
-  const renderBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        pressBehavior="close"
-        opacity={0.5}
-      />
-    ),
-    [],
-  );
 
   return (
     <>
