@@ -17,9 +17,14 @@ import SubtaskDetail from "./subtask-detail-bottomsheet";
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
   handleEditPress: () => void;
+  onOpenSubtasks: (task: TaskDetailDTO) => void;
 };
 
-const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetProps) => {
+const TaskDetailBottomSheet = ({
+  task,
+  handleEditPress,
+  onOpenSubtasks,
+}: TaskDetailBottomSheetProps) => {
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(task);
   const subtaskModalRef = useRef<BottomSheetModal>(null);
 
@@ -137,7 +142,7 @@ const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetP
               <Button
                 mode="contained"
                 onPress={() => {
-                  subtaskModalRef.current?.present();
+                  selectedTask && onOpenSubtasks(selectedTask);
                 }}
                 disabled={!selectedTask?.id}
                 style={{ borderRadius: 16, backgroundColor: "#111827" }}
@@ -151,20 +156,6 @@ const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetP
           <Text>No task selected</Text>
         )}
       </BottomSheetView>
-      <BottomSheetModal
-        ref={subtaskModalRef}
-        enablePanDownToClose
-        backdropComponent={renderBackdrop}
-        backgroundStyle={{
-          backgroundColor: "#FFFFFF",
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-        }}
-      >
-        <BottomSheetView className="flex-1 bg-white px-4 pt-3 pb-8">
-          <SubtaskDetail task={selectedTask} />
-        </BottomSheetView>
-      </BottomSheetModal>
     </>
   );
 };
