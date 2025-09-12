@@ -12,6 +12,7 @@ public class Subtask
     public required string Title { get; set; }
     public string? Description { get; set; }
     public TimeSpan? Duration { get; set; }
+    public int Order { get; init; }
     public bool IsDone { get; set; }
     public DateTime CreatedAt { get; init; }     
     public DateTime UpdatedAt { get; set; }
