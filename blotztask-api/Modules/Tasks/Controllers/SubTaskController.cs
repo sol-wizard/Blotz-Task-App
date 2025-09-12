@@ -7,7 +7,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class SubTaskController(UpdateSubtaskCommandHandler updateSubtaskCommandHandler, AddSubtasksCommandHandler addSubtasksCommandHandler) : ControllerBase
+public class SubTaskController(UpdateSubtaskCommandHandler updateSubtaskCommandHandler, AddSubtasksCommandHandler addSubtasksCommandHandler, DeleteSubtaskCommandHandler deleteSubtaskCommandHandler) : ControllerBase
 {
     [HttpPut("{taskId}/subtasks/{subtaskId}")]
     public async Task<IActionResult> UpdateSubtask(
@@ -36,6 +36,22 @@ public class SubTaskController(UpdateSubtaskCommandHandler updateSubtaskCommandH
             return BadRequest("TaskId in route does not match request body.");
         }
         var message = await addSubtasksCommandHandler.Handle(command, ct);
+        return Ok(message);
+    }
+
+    [HttpDelete("tasks/{taskId}/subtasks/{subtaskId}")]
+    public async Task<IActionResult> DeleteSubtask(
+        int taskId,
+        int subtaskId,
+        [FromBody] DeleteSubtaskCommand command,
+        CancellationToken ct)
+    {
+        if (taskId != command.TaskId || subtaskId != command.SubtaskId)
+        {
+            return BadRequest("TaskId or SubtaskId in route does not match request body.");
+        }
+        
+        var message = await deleteSubtaskCommandHandler.Handle(command, ct);
         return Ok(message);
     }
         
