@@ -21,8 +21,9 @@ public class AddSubtasksCommandHandler
         _db = db;
     }
 
-    public async Task<string> Handle(AddSubtasksCommand command, CancellationToken ct = default)
+    public async Task<string> Handle(AddSubtasksCommand command, CancellationToken ct = default, ILogger<AddSubtasksCommandHandler> logger = null!)
     {
+        logger?.LogInformation("Adding subtasks to task {TaskId}", command.TaskId);
         var parentTask = await _db.TaskItems
             .FirstOrDefaultAsync(t => t.Id == command.TaskId, ct);
 
@@ -50,7 +51,7 @@ public class AddSubtasksCommandHandler
         
         await _db.SaveChangesAsync(ct);
         
-
+        logger?.LogInformation("{Count} subtasks added to task {TaskId}", command.Subtasks.Count, parentTask.Id);
         return $"{command.Subtasks.Count} subtasks added to task {parentTask.Id}.";
     }
 }
