@@ -1,5 +1,7 @@
 using BlotzTask.Modules.ChatTaskGenerator.DTOs;
 using BlotzTask.Shared.DTOs;
+using BlotzTask.Shared.Store;
+using BlotzTask.Shared.Utils;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
@@ -7,6 +9,7 @@ public interface ITaskGenerateChatService
 {
     Task<AiTaskGenerateChatResult> HandleUserMessageAsync(
         ConversationMessage userMessage,
+        string conversationId,
         CancellationToken ct
     );
 }
@@ -14,30 +17,27 @@ public interface ITaskGenerateChatService
 public class TaskGenerateChatService : ITaskGenerateChatService
 {
     private readonly IAiTaskGenerateService _aiTaskGenerateService;
-    private readonly IChatHistoryManagerService _chatHistoryManagerService;
+    private readonly ChatHistoryStore _chatHistoryStore;
 
     public TaskGenerateChatService(
         IAiTaskGenerateService aiTaskGenerateService,
-        IChatHistoryManagerService chatHistoryManagerService
+        ChatHistoryStore chatHistoryStore
     )
     {
         _aiTaskGenerateService = aiTaskGenerateService;
-        _chatHistoryManagerService = chatHistoryManagerService;
+        _chatHistoryStore = chatHistoryStore;
     }
 
     public async Task<AiTaskGenerateChatResult> HandleUserMessageAsync(
         ConversationMessage userMessage,
+        string conversationId,
         CancellationToken ct
     )
     {
         string botContent;
         List<ExtractedTask>? tasks = null;
 
-        // If there's no chathistory, create a new converstaion
-        if (!_chatHistoryManagerService.TryGetChatHistory(out var chatHistory))
-        {
-            chatHistory = await _aiTaskGenerateService.InitializeNewConversation();
-        }
+        var chatHistory = _chatHistoryStore.GetOrCreate(AiGenerateTaskChatKeyBuilder.BuildKey(conversationId));
 
         chatHistory.AddUserMessage(userMessage.Content);
 

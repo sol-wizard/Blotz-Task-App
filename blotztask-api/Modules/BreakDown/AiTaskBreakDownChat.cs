@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using BlotzTask.Modules.BreakDown.Services;
 using BlotzTask.Shared.Store;
+using BlotzTask.Shared.Utils;
 
 namespace BlotzTask.Modules.BreakDown;
 
@@ -65,7 +66,7 @@ public class AiTaskBreakDownChat : Hub
             _logger.LogError(exception, $"Client {Context.ConnectionId} abnormal disconnected : {exception.Message}");
         }
 
-        _chatHistoryStore.Remove(Context.ConnectionId);
+        _chatHistoryStore.Remove(TaskBreakdownChatKeyBuilder.BuildKey(Context.ConnectionId));
 
         await base.OnDisconnectedAsync(exception);
     }

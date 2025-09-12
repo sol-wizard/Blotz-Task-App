@@ -1,6 +1,8 @@
 using BlotzTask.Modules.ChatTaskGenerator.DTOs;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Shared.Exceptions;
+using BlotzTask.Shared.Store;
+using BlotzTask.Shared.Utils;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
@@ -9,14 +11,17 @@ public class AiTaskGenerateChatHub : Hub
 {
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
     private readonly ITaskGenerateChatService _taskGenerateChatService;
+    private readonly ChatHistoryStore _chatHistoryStore;
 
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
-        ITaskGenerateChatService taskGenerateChatService
+        ITaskGenerateChatService taskGenerateChatService,
+        ChatHistoryStore chatHistoryStore
     )
     {
         _logger = logger;
         _taskGenerateChatService = taskGenerateChatService;
+        _chatHistoryStore = chatHistoryStore;
     }
 
     public override async Task OnConnectedAsync()
@@ -32,6 +37,7 @@ public class AiTaskGenerateChatHub : Hub
         _logger.LogInformation(
             $"User disconnected: {connectionId}. Exception: {exception?.Message}"
         );
+        _chatHistoryStore.Remove(AiGenerateTaskChatKeyBuilder.BuildKey(Context.ConnectionId));
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -53,7 +59,8 @@ public class AiTaskGenerateChatHub : Hub
         try
         {
             CancellationToken ct = Context.ConnectionAborted;
-            var result = await _taskGenerateChatService.HandleUserMessageAsync(userMsg, ct);
+            var conversationId = Context.Items["ConversationId"] as string;
+            var result = await _taskGenerateChatService.HandleUserMessageAsync(userMsg, conversationId, ct);
 
             if (result.IsConversationComplete)
             {
