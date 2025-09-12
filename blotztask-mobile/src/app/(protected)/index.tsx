@@ -11,8 +11,8 @@ const routes = [
   {
     key: "calendar",
     title: "Calendar",
-    focusedIcon: "calendar",
-    unfocusedIcon: "calendar-outline",
+    focusedIcon: "calendar-text",
+    unfocusedIcon: "calendar-blank",
   },
   {
     key: "settings",
