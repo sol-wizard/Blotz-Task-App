@@ -41,7 +41,7 @@ export default function SubtaskDetail({ task }: Props) {
     };
   }, [task?.id]);
 
-  // Progress
+  // TODO: this is a temporary method to change subtask isDone state and will be replaced after implementing the update subtask function
   const completed = list.filter((s) => s?.isDone).length;
   const total = list.length || 1;
   const progress = completed / total;

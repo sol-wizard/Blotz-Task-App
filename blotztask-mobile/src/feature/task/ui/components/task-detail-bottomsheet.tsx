@@ -21,7 +21,6 @@ type TaskDetailBottomSheetProps = {
 
 const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetProps) => {
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(task);
-  // const [showSubtasks, setShowSubtasks] = useState(false);
   const subtaskModalRef = useRef<BottomSheetModal>(null);
 
   useEffect(() => {

@@ -78,7 +78,6 @@ function parseHMStoParts(time?: string | null): [number, number, number] {
   const parts = String(time)
     .split(":")
     .map((n) => Number(n) || 0);
-  // 只关心前两段（小时、分钟）；秒没有就按 0
   if (parts.length === 1) return [0, parts[0], 0]; // "MM"
   if (parts.length === 2) return [parts[0], parts[1], 0]; // "HH:MM"
   return [parts[0], parts[1], parts[2]]; // "HH:MM:SS"
