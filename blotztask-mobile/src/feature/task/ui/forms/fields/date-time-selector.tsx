@@ -14,18 +14,20 @@ export const DateTimeSelector = ({
   const [timePart, setTimePart] = useState<Date>(defaultValue);
 
   useEffect(() => {
-    const merged = new Date(datePart);
-    merged.setHours(timePart.getHours(), timePart.getMinutes(), 0, 0);
-    changeDateTime(merged);
+    if (datePart) {
+      const merged = new Date(datePart);
+      if (timePart) {
+        merged.setHours(timePart.getHours(), timePart.getMinutes(), 0, 0);
+      }
+      changeDateTime(merged);
+    }
+    return;
   }, [datePart, timePart]);
 
   return (
     <View className="flex-col p-2">
-      <DatePicker value={new Date(defaultValue)} onChange={setDatePart} />
-      <TimePicker
-        defaultValue={new Date(defaultValue)}
-        onChange={setTimePart}
-      />
+      <DatePicker value={defaultValue} onChange={setDatePart} />
+      <TimePicker defaultValue={defaultValue} onChange={setTimePart} />
     </View>
   );
 };

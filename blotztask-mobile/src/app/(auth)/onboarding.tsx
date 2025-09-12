@@ -1,15 +1,8 @@
 import React from "react";
-import { View, StatusBar } from "react-native";
-import { Button } from "react-native-paper";
-import { useRouter } from "expo-router";
-import LottieView from "lottie-react-native";
+import { View, StatusBar, Image } from "react-native";
+import GetStartedButton from "@/feature/auth/components/get-started-button";
 
 export default function OnboardingScreen() {
-  const router = useRouter();
-
-  const handleGetStarted = () => {
-    router.replace("/(auth)/login");
-  };
 
   return (
     <>
@@ -23,45 +16,24 @@ export default function OnboardingScreen() {
           paddingHorizontal: 40,
         }}
       >
-        {/* Onboarding Animation */}
+
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <LottieView
-            source={require("../../../assets/images/onboarding.json")}
-            autoPlay
-            loop
+          <Image
+            source={require("../../../assets/images/blotz-logo.png")}
             style={{ width: 240, height: 240 }}
+            resizeMode="contain"
           />
         </View>
 
-        {/* Get Started Button */}
         <View
           style={{
             width: "100%",
             paddingBottom: 60,
           }}
         >
-          <Button
-            mode="contained"
-            onPress={handleGetStarted}
-            style={{
-              borderRadius: 12,
-              paddingVertical: 12,
-              backgroundColor: "#E5E7EB",
-            }}
-            labelStyle={{
-              fontSize: 16,
-              fontWeight: "500",
-              color: "#374151",
-              letterSpacing: 0.3,
-            }}
-            contentStyle={{
-              paddingVertical: 12,
-            }}
-          >
-            Let&apos;s Go!
-          </Button>
+          <GetStartedButton />
         </View>
       </View>
     </>
