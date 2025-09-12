@@ -12,8 +12,7 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
 import { format, isBefore, startOfDay } from "date-fns";
-import { fetchSubtasksForTask } from "../../services/subtask-service";
-import SubtaskDetailBottomSheet from "./subtask-detail-bottomsheet";
+import SubtaskDetail from "./subtask-detail-bottomsheet";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
@@ -52,18 +51,6 @@ const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetP
     ),
     [],
   );
-
-  // const openSubtaskDetail = async () => {
-  //   if (!selectedTask?.id) return;
-  //   setLoadingSubtasks(true);
-  //   try {
-  //     const data = await fetchSubtasksForTask(selectedTask.id);
-  //     setSubtasks(data);
-  //     setShowSubtasks(true);
-  //   } finally {
-  //     setLoadingSubtasks(false);
-  //   }
-  // };
 
   return (
     <>
@@ -150,7 +137,9 @@ const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetP
             <View className="mt-4">
               <Button
                 mode="contained"
-                onPress={() => setShowSubtasks(true)}
+                onPress={() => {
+                  subtaskModalRef.current?.present();
+                }}
                 disabled={!selectedTask?.id}
                 style={{ borderRadius: 16, backgroundColor: "#111827" }}
                 labelStyle={{ fontWeight: "bold" }}
@@ -175,8 +164,9 @@ const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetP
           borderTopRightRadius: 24,
         }}
       >
-        {/* 子组件内部：useEffect 用 task.id 去 subtask-service 拉列表 + 计算总工时 */}
-        <SubtaskDetailBottomSheet task={selectedTask} />
+        <BottomSheetView className="flex-1 bg-white px-4 pt-3 pb-8">
+          <SubtaskDetail task={selectedTask} />
+        </BottomSheetView>
       </BottomSheetModal>
     </>
   );
