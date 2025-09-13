@@ -10,8 +10,8 @@ import { router } from "expo-router";
 
 type Props = {
   task?: TaskDetailDTO;
-  subtasks: any[]; // ← 新增：父组件传入的子任务列表
-  totalTaskTime: string; // ← 新增：父组件传入的总时长字符串
+  subtasks: any[];
+  totalTaskTime: string;
   onToggleSubtask: (id: number) => void;
 };
 
