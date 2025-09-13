@@ -17,6 +17,7 @@ import {
   BottomSheetModal,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
+import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 
 export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -25,6 +26,8 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
   const editTaskModalRef = useRef<BottomSheetModal>(null);
   const subtaskModalRef = useRef<BottomSheetModal>(null);
+  const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
+  const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
 
   //TODO: Maybe we dont need this
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
@@ -125,12 +128,28 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
     [],
   );
 
-  const handleOpenSubtasks = (task: TaskDetailDTO) => {
+  const handleOpenSubtasks = async (task: TaskDetailDTO) => {
     setSelectedTask(task);
 
-    if (subtaskModalRef.current) {
-      subtaskModalRef.current.present();
+    try {
+      const items = await fetchSubtasksForTask(task.id);
+      setSubtasksForSelectedTask(items ?? []);
+
+      const { label } = await fetchTotalHoursForTask(task.id, items ?? []);
+      setTotalTimeForSelectedTask(label);
+    } catch (e) {
+      console.error(e);
+      setSubtasksForSelectedTask([]);
+      setTotalTimeForSelectedTask("");
     }
+
+    subtaskModalRef.current?.present();
+  };
+
+  const handleToggleSubtask = (id: number) => {
+    setSubtasksForSelectedTask((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, isDone: !s.isDone } : s)),
+    );
   };
 
   return (
@@ -214,7 +233,12 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
         }}
       >
         <BottomSheetView className="flex-1">
-          <SubtaskDetail task={selectedTask} />
+          <SubtaskDetail
+            task={selectedTask}
+            subtasks={subtasksForSelectedTask}
+            totalTaskTime={totalTimeForSelectedTask}
+            onToggleSubtask={handleToggleSubtask}
+          />
         </BottomSheetView>
       </BottomSheetModal>
 

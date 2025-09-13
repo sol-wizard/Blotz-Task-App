@@ -7,48 +7,29 @@ import { TaskDetailTag } from "./task-detail-tag";
 import { COLORS } from "@/shared/constants/colors";
 import SubtaskItem from "./subtask-item";
 import { router } from "expo-router";
-import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 
-type Props = { task?: TaskDetailDTO };
+type Props = {
+  task?: TaskDetailDTO;
+  subtasks: any[]; // ← 新增：父组件传入的子任务列表
+  totalTaskTime: string; // ← 新增：父组件传入的总时长字符串
+  onToggleSubtask: (id: number) => void;
+};
+
 const COLOR = COLORS.primary;
 
-export default function SubtaskDetail({ task }: Props) {
-  const [subtaskList, setSubtaskList] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [totalTaskTime, setTotalTaskTime] = useState("");
+export default function SubtaskDetail({ task, subtasks, totalTaskTime, onToggleSubtask }: Props) {
+  // const [subtaskList, setSubtaskList] = useState<any[]>([]);
+  // const [loading, setLoading] = useState(false);
   const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      if (!task?.id) {
-        setSubtaskList([]);
-        setTotalTaskTime("");
-        return;
-      }
-      setLoading(true);
-      const items = await fetchSubtasksForTask(task.id);
-      if (cancelled) return;
-      setSubtaskList(items ?? []);
-
-      const { label } = await fetchTotalHoursForTask(task.id, items ?? []);
-      if (cancelled) return;
-      setTotalTaskTime(label);
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [task?.id]);
-
   // TODO: this is a temporary method to change subtask isDone state and will be replaced after implementing the update subtask function
-  const completed = subtaskList.filter((s) => s?.isDone).length;
-  const total = subtaskList.length || 1;
+  const completed = subtasks.filter((s) => s?.isDone).length;
+  const total = subtasks.length || 1;
   const progress = completed / total;
 
   // Local toggle (TODO: later connect to "update subtask" interface)
   const toggle = (id: number) => {
-    setSubtaskList((prev) => prev.map((s) => (s.id === id ? { ...s, isDone: !s.isDone } : s)));
+    // subtasks((prev) => prev.map((s) => (s.id === id ? { ...s, isDone: !s.isDone } : s)));
   };
 
   const handleEditWithAI = () => {
@@ -73,29 +54,26 @@ export default function SubtaskDetail({ task }: Props) {
           {totalTaskTime}
         </Text>
       </View>
-
       <View className="flex-row items-center mb-3 gap-2 mt-1">
         <TaskDetailTag>Work</TaskDetailTag>
         <TaskDetailTag>{task?.isDone ? "Done" : "In progress"}</TaskDetailTag>
       </View>
-
       <View className="mb-2">
         <Text className="text-[12px] text-neutral-500 font-bold mb-1">
           {completed}/{total} Completed
         </Text>
         <ProgressBar progress={progress} color={COLOR} />
       </View>
-
       <View style={{ height: 1, backgroundColor: COLOR }} className="my-3" />
-
       <View>
-        {loading && subtaskList.length === 0 ? (
-          <Text className="text-[13px] text-neutral-500">Loading subtasks…</Text>
+        {subtasks.length === 0 ? (
+          <Text className="text-[13px] text-neutral-500">No subtasks</Text>
         ) : (
-          subtaskList.map((s) => <SubtaskItem key={s.id} item={s} onToggle={toggle} />)
+          subtasks.map((s) => (
+            <SubtaskItem key={s.id} item={s} onToggle={() => onToggleSubtask(s.id)} />
+          ))
         )}
       </View>
-
       <View className="mt-6">
         <Pressable
           onPress={handleEditWithAI}

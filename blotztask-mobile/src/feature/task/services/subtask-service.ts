@@ -1,5 +1,5 @@
 import { convertSubtaskTimeForm } from "@/feature/breakdown/utils/convert-subtask-time-form";
-import { parseHMStoParts, secondsToHMS } from "@/feature/task/util/time";
+import { parseHMStoParts, secondsToHMS } from "@/feature/task/util/getprogressbartime";
 
 // This is a mock service simulating fetching subtasks for a given task.
 export async function fetchSubtasksForTask(taskId: number): Promise<any[]> {

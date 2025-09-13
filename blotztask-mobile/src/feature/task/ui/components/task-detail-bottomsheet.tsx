@@ -7,10 +7,6 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { router } from "expo-router";
 import { TaskDetailTag } from "./task-detail-tag";
 import { format, isBefore, startOfDay } from "date-fns";
-import { fetchSubtasksForTask } from "../../services/subtask-service";
-import SubtaskDetailBottomSheet, {
-  SubtaskDetailBottomSheetHandle,
-} from "./subtask-detail-bottomsheet";
 
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
