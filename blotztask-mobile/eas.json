@@ -16,6 +16,7 @@
         "buildType": "apk"
       },
       "distribution": "internal",
+      "autoIncrement": true,
       "channel": "preview",
       "env": {
         "BUNDLE_IDENTIFIER": "com.Blotz.BlotzTask",
