@@ -49,6 +49,7 @@ public class AddSubtasksCommandHandler
         }
         
         await _db.SaveChangesAsync(ct);
+        
 
         return $"{command.Subtasks.Count} subtasks added to task {parentTask.Id}.";
     }

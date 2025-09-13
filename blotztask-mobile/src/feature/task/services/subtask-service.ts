@@ -1,3 +1,6 @@
+import { convertSubtaskTimeForm } from "@/feature/breakdown/utils/convert-subtask-time-form";
+import { parseHMStoParts, secondsToHMS } from "@/feature/task/util/time";
+
 // This is a mock service simulating fetching subtasks for a given task.
 export async function fetchSubtasksForTask(taskId: number): Promise<any[]> {
   const nowIso = new Date().toISOString();
@@ -70,3 +73,24 @@ export async function fetchSubtasksForTask(taskId: number): Promise<any[]> {
   return fetchWithAuth<any[]>(url, { method: "GET" });
 }
 */
+
+export async function fetchTotalHoursForTask(
+  taskId: number,
+  items?: Array<{ duration?: string | null }>,
+): Promise<{ hours: number; label: string }> {
+  const list = items ?? (await fetchSubtasksForTask(taskId));
+
+  // count total seconds
+  const totalSeconds = list.reduce((sum, it) => {
+    const [h, m, s] = parseHMStoParts(it?.duration);
+    return sum + h * 3600 + m * 60 + s;
+  }, 0);
+
+  // Return two formats:
+  const label = convertSubtaskTimeForm(secondsToHMS(totalSeconds));
+
+  // Keep one decimal place for hours
+  const hours = Math.round((totalSeconds / 3600) * 10) / 10;
+
+  return { hours, label };
+}

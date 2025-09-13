@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Snackbar } from "react-native-paper";
 import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
@@ -6,16 +6,25 @@ import NoTasksView from "./no-tasks-view";
 import { fetchTasksForDate, toggleTaskCompletion, deleteTask } from "../../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
-import { useBottomSheetStore } from "../../store/bottomSheetStore";
 import TaskCard from "./task-card";
 import TaskDetailBottomSheet from "./task-detail-bottomsheet";
+import SubtaskDetail from "./subtask-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
+import {
+  BottomSheetBackdrop,
+  BottomSheetBackdropProps,
+  BottomSheetModal,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 
 export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDetailDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const taskDetailModalRef = useRef<BottomSheetModal>(null);
+  const editTaskModalRef = useRef<BottomSheetModal>(null);
+  const subtaskModalRef = useRef<BottomSheetModal>(null);
 
   //TODO: Maybe we dont need this
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
@@ -53,11 +62,20 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
       console.error(e);
     }
   };
-  const { openTaskDetail } = useBottomSheetStore();
 
   const presentSheet = (task: TaskDetailDTO) => {
     setSelectedTask(task);
-    openTaskDetail();
+    taskDetailModalRef?.current?.present();
+  };
+
+  const handleEditTaskSheetClose = () => {
+    editTaskModalRef?.current?.dismiss();
+    taskDetailModalRef?.current?.present();
+  };
+
+  const handleEditPress = () => {
+    taskDetailModalRef?.current?.dismiss();
+    editTaskModalRef?.current?.present();
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
@@ -91,6 +109,27 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
         visible: true,
         text: "Delete Failed, please try again later",
       });
+    }
+  };
+
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        pressBehavior="close"
+        opacity={0.5}
+      />
+    ),
+    [],
+  );
+
+  const handleOpenSubtasks = (task: TaskDetailDTO) => {
+    setSelectedTask(task);
+
+    if (subtaskModalRef.current) {
+      subtaskModalRef.current.present();
     }
   };
 
@@ -134,9 +173,50 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
         )}
       </CalendarProvider>
 
-      <TaskDetailBottomSheet task={selectedTask} />
+      <BottomSheetModal
+        ref={taskDetailModalRef}
+        snapPoints={["60%", "80%"]}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{
+          backgroundColor: "#FFFFFF",
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+        }}
+      >
+        <TaskDetailBottomSheet
+          task={selectedTask}
+          handleEditPress={handleEditPress}
+          onOpenSubtasks={handleOpenSubtasks}
+        />
+      </BottomSheetModal>
 
-      {selectedTask && <EditTaskBottomSheet task={selectedTask} />}
+      {selectedTask && (
+        <BottomSheetModal
+          ref={editTaskModalRef}
+          snapPoints={["55%"]}
+          keyboardBlurBehavior="restore"
+          backdropComponent={renderBackdrop}
+          enablePanDownToClose
+        >
+          <EditTaskBottomSheet task={selectedTask} handleClose={handleEditTaskSheetClose} />
+        </BottomSheetModal>
+      )}
+
+      <BottomSheetModal
+        ref={subtaskModalRef}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{
+          backgroundColor: "#FFFFFF",
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+        }}
+      >
+        <BottomSheetView className="flex-1">
+          <SubtaskDetail task={selectedTask} />
+        </BottomSheetView>
+      </BottomSheetModal>
 
       <Snackbar
         visible={snackbar.visible}
