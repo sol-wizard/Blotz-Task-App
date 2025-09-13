@@ -22,7 +22,7 @@ public class SubTasksDto
     public int Order { get; init; }
 }
 
-public class GetSubtasksByTaskIdHandler(BlotzTaskDbContext db, ILogger<GetSubtasksByTaskIdHandler> logger)
+public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db, ILogger<GetSubtasksByTaskIdQueryHandler> logger)
 {
     public async Task<IEnumerable<SubTasksDto>> Handle(GetSubtasksByTaskIdQuery query, CancellationToken ct)
     {
