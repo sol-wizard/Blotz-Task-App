@@ -44,6 +44,10 @@
     }
   },
   "submit": {
-    "production": {}
+    "preivew": {
+        "ios": {
+          "ascAppId": "6752492404"
+        }
+      }
   }
 }
