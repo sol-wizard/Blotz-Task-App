@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { View, Pressable } from "react-native";
 import { Text, ProgressBar } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,11 +26,6 @@ export default function SubtaskDetail({ task, subtasks, totalTaskTime, onToggleS
   const completed = subtasks.filter((s) => s?.isDone).length;
   const total = subtasks.length || 1;
   const progress = completed / total;
-
-  // Local toggle (TODO: later connect to "update subtask" interface)
-  const toggle = (id: number) => {
-    // subtasks((prev) => prev.map((s) => (s.id === id ? { ...s, isDone: !s.isDone } : s)));
-  };
 
   const handleEditWithAI = () => {
     if (!task?.id) return;
