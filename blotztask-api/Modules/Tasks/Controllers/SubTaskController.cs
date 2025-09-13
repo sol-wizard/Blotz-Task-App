@@ -8,7 +8,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class SubTaskController(UpdateSubtaskCommandHandler updateSubtaskCommandHandler, AddSubtasksCommandHandler addSubtasksCommandHandler, GetSubtasksByTaskIdHandler getSubtasksByTaskIdHandler) : ControllerBase
+public class SubTaskController(UpdateSubtaskCommandHandler updateSubtaskCommandHandler, AddSubtasksCommandHandler addSubtasksCommandHandler, GetSubtasksByTaskIdQueryHandler getSubtasksByTaskIdQueryHandler) : ControllerBase
 {
     [HttpPut("{taskId}/subtasks/{subtaskId}")]
     public async Task<IActionResult> UpdateSubtask(
@@ -50,7 +50,7 @@ public class SubTaskController(UpdateSubtaskCommandHandler updateSubtaskCommandH
             UserId = userId,
             TaskId = taskId
         };
-        var results = await getSubtasksByTaskIdHandler.Handle(query, ct);
+        var results = await getSubtasksByTaskIdQueryHandler.Handle(query, ct);
         return Ok(results);
     }
         
