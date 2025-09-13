@@ -13,27 +13,27 @@ type Props = { task?: TaskDetailDTO };
 const COLOR = COLORS.primary;
 
 export default function SubtaskDetail({ task }: Props) {
-  const [list, setList] = useState<any[]>([]);
+  const [subtaskList, setSubtaskList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [totalLabel, setTotalLabel] = useState("");
+  const [totalTaskTime, setTotalTaskTime] = useState("");
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       if (!task?.id) {
-        setList([]);
-        setTotalLabel("");
+        setSubtaskList([]);
+        setTotalTaskTime("");
         return;
       }
       setLoading(true);
       const items = await fetchSubtasksForTask(task.id);
       if (cancelled) return;
-      setList(items ?? []);
+      setSubtaskList(items ?? []);
 
       const { label } = await fetchTotalHoursForTask(task.id, items ?? []);
       if (cancelled) return;
-      setTotalLabel(label);
+      setTotalTaskTime(label);
       setLoading(false);
     })();
     return () => {
@@ -42,13 +42,13 @@ export default function SubtaskDetail({ task }: Props) {
   }, [task?.id]);
 
   // TODO: this is a temporary method to change subtask isDone state and will be replaced after implementing the update subtask function
-  const completed = list.filter((s) => s?.isDone).length;
-  const total = list.length || 1;
+  const completed = subtaskList.filter((s) => s?.isDone).length;
+  const total = subtaskList.length || 1;
   const progress = completed / total;
 
   // Local toggle (TODO: later connect to "update subtask" interface)
   const toggle = (id: number) => {
-    setList((prev) => prev.map((s) => (s.id === id ? { ...s, isDone: !s.isDone } : s)));
+    setSubtaskList((prev) => prev.map((s) => (s.id === id ? { ...s, isDone: !s.isDone } : s)));
   };
 
   const handleEditWithAI = () => {
@@ -70,7 +70,7 @@ export default function SubtaskDetail({ task }: Props) {
           {task?.title ?? "Subtasks"}
         </Text>
         <Text style={{ color: COLOR, fontWeight: "800" }} className="text-sm">
-          {totalLabel}
+          {totalTaskTime}
         </Text>
       </View>
 
@@ -89,10 +89,10 @@ export default function SubtaskDetail({ task }: Props) {
       <View style={{ height: 1, backgroundColor: COLOR }} className="my-3" />
 
       <View>
-        {loading && list.length === 0 ? (
+        {loading && subtaskList.length === 0 ? (
           <Text className="text-[13px] text-neutral-500">Loading subtasks…</Text>
         ) : (
-          list.map((s) => <SubtaskItem key={s.id} item={s} onToggle={toggle} />)
+          subtaskList.map((s) => <SubtaskItem key={s.id} item={s} onToggle={toggle} />)
         )}
       </View>
 
