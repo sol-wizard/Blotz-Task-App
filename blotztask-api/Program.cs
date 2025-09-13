@@ -98,15 +98,14 @@ if (builder.Environment.IsDevelopment())
 
 if (builder.Environment.IsProduction())
 {
-    var keyVaultEndpoint = builder.Configuration.GetSection("KeyVault").GetValue<string>("VaultURI");
-
+    var keyVaultEndpoint = builder.Configuration["KeyVault:VaultURI"];
     builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultKeyVaultSecretManager());
-
     var secretClient = new SecretClient(new Uri(keyVaultEndpoint), new DefaultAzureCredential());
-
     builder.Services.AddSingleton(secretClient);
 
-    builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(secretClient.GetSecret("sql-connection-string").Value.Value.ToString()));
+    var sqlConnectionSecret = secretClient.GetSecret("sql-connection-string").Value.Value;
+    builder.Services.AddDbContext<BlotzTaskDbContext>(options => 
+        options.UseSqlServer(sqlConnectionSecret));
     
     builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
     {
@@ -179,6 +178,8 @@ var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
 
+// "Add root path for app service always on ping"
+app.MapGet("/", () => Results.Ok("Web API is running"));
 app.MapHealthChecks("/health");
 
 app.UseSwagger();
