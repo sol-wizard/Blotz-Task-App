@@ -31,5 +31,9 @@ export default function GetStartedButton() {
     }
   };
 
-  return <Button onPress={onPress} mode="contained">Get Started</Button>;
+  return (
+    <Button onPress={onPress} mode="contained">
+      Get Started
+    </Button>
+  );
 }
