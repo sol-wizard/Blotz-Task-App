@@ -8,13 +8,13 @@ namespace BlotzTask.Modules.Labels;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
-public class LabelController(AddLabelCommandHandler addlabelCommandHandler, GetAllLabelsQueryHandler getAlllabelsQueryHandler) : ControllerBase
+public class LabelController(GetAllLabelsQueryHandler getAllLabelsQueryHandler) : ControllerBase
 {
 
     [HttpGet]
     public async Task<IActionResult> GetAllLabels(CancellationToken ct)
     {
-        var result = await getAlllabelsQueryHandler.Handle(ct);
+        var result = await getAllLabelsQueryHandler.Handle(ct);
         return Ok(result);
     }
 }
