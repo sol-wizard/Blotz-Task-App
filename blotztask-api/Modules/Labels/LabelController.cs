@@ -1,5 +1,4 @@
-﻿using BlotzTask.Modules.Labels.Commands;
-using BlotzTask.Modules.Labels.Queries;
+﻿using BlotzTask.Modules.Labels.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
