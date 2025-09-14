@@ -13,7 +13,6 @@ using BlotzTask.Modules.ChatGoalPlanner.Services;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.ChatTaskGenerator.Plugins;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
-using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users;
@@ -66,7 +65,6 @@ builder.Services.AddSwaggerGen(options =>
 
 //TODO : Move all services to module based registration
 builder.Services.AddScoped<ITaskService, TaskService>();
-builder.Services.AddScoped<ILabelService, LabelService>();
 builder.Services.AddScoped<TaskGenerationAiService>();
 
 builder.Services.AddScoped<IConversationStateService, ConversationStateService>();
@@ -98,15 +96,14 @@ if (builder.Environment.IsDevelopment())
 
 if (builder.Environment.IsProduction())
 {
-    var keyVaultEndpoint = builder.Configuration.GetSection("KeyVault").GetValue<string>("VaultURI");
-
+    var keyVaultEndpoint = builder.Configuration["KeyVault:VaultURI"];
     builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultKeyVaultSecretManager());
-
     var secretClient = new SecretClient(new Uri(keyVaultEndpoint), new DefaultAzureCredential());
-
     builder.Services.AddSingleton(secretClient);
 
-    builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(secretClient.GetSecret("sql-connection-string").Value.Value.ToString()));
+    var sqlConnectionSecret = secretClient.GetSecret("sql-connection-string").Value.Value;
+    builder.Services.AddDbContext<BlotzTaskDbContext>(options => 
+        options.UseSqlServer(sqlConnectionSecret));
     
     builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
     {
@@ -179,6 +176,8 @@ var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
 
+// "Add root path for app service always on ping"
+app.MapGet("/", () => Results.Ok("Web API is running"));
 app.MapHealthChecks("/health");
 
 app.UseSwagger();
