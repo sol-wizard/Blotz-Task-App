@@ -30,7 +30,6 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
         task.EndTime = command.TaskDetails.EndTime;
         task.UpdatedAt = DateTime.UtcNow;
         task.LabelId = command.TaskDetails.LabelId;
-        task.HasTime = command.TaskDetails.HasTime;
         task.IsDone = command.TaskDetails.IsDone;
 
         db.TaskItems.Update(task);
