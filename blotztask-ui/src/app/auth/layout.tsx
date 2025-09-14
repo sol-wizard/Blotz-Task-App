@@ -3,7 +3,7 @@ import AuthButton from './components/auth-button';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex h-screen w-full overflow-hidden bg-[url('/assets/images/sign_in.png')] bg-cover bg-center bg-no-repeat">
+    <div className="relative flex h-screen w-full overflow-hidden">
       <div className="absolute top-4 right-4 md:top-8 md:right-8">
         <AuthButton />
       </div>
