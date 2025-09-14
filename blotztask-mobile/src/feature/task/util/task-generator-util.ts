@@ -7,7 +7,6 @@ export function toAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
     description: (form.description ?? "").trim(),
     startTime: form.startTime ?? undefined,
     endTime: form.endTime ?? undefined,
-    hasTime: false,
     labelId: form.labelId,
   };
 }

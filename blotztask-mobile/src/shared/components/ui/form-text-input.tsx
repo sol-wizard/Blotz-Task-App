@@ -1,19 +1,19 @@
-import { BottomSheetTextInput } from '@gorhom/bottom-sheet'
-import { Controller } from 'react-hook-form'
-import { TextInputProps } from 'react-native'
+import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { Controller } from "react-hook-form";
+import { TextInputProps } from "react-native";
 
 export function FormTextInput({
   name,
   placeholder,
   control,
-  className = '',
+  className = "",
   inputProps,
 }: {
-  name: string
-  placeholder: string
-  control: any
-  className?: string
-  inputProps?: TextInputProps
+  name: string;
+  placeholder: string;
+  control: any;
+  className?: string;
+  inputProps?: TextInputProps;
 }) {
   return (
     <Controller
@@ -29,5 +29,5 @@ export function FormTextInput({
         />
       )}
     />
-  )
+  );
 }
