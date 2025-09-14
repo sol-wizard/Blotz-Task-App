@@ -13,7 +13,6 @@ using BlotzTask.Modules.ChatGoalPlanner.Services;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.ChatTaskGenerator.Plugins;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
-using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users;
@@ -66,7 +65,6 @@ builder.Services.AddSwaggerGen(options =>
 
 //TODO : Move all services to module based registration
 builder.Services.AddScoped<ITaskService, TaskService>();
-builder.Services.AddScoped<ILabelService, LabelService>();
 builder.Services.AddScoped<TaskGenerationAiService>();
 
 builder.Services.AddScoped<IConversationStateService, ConversationStateService>();
