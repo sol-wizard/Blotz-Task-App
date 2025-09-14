@@ -19,6 +19,5 @@ public class TaskItem
     public AppUser User { get; set; }
     public required int LabelId { get; set; }
     public Label Label { get; set; }
-    public bool? HasTime { get; set; }
     public ICollection<Subtask> Subtasks { get; set; } = new List<Subtask>();
 }

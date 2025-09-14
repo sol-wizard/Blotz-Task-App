@@ -10,7 +10,6 @@ export function mapExtractedTaskDTOToAiTaskDTO(extractedTask: ExtractedTaskDTO):
     description: extractedTask.description ?? "",
     title: extractedTask.title,
     isAdded: false,
-    hasTime: false,
     startTime: extractedTask.start_time,
     endTime: extractedTask.end_time,
     labelId: extractedTask.label?.labelId,

@@ -33,7 +33,6 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
             CreatedAt = task.CreatedAt,
             UpdatedAt = task.UpdatedAt,
             LabelId = task.LabelId,
-            HasTime = task.HasTime
         };
 
         logger.LogInformation("Successfully fetched task with ID {TaskId} and Title {TaskTitle}", result.Id, result.Title);
@@ -52,6 +51,4 @@ public class TaskByIdItemDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public int? LabelId { get; set; }
-    public bool? HasTime { get; set; }
-
 }

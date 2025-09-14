@@ -6,6 +6,5 @@ export interface AiTaskDTO {
   isAdded: boolean;
   startTime: string;
   endTime: string;
-  hasTime: boolean;
   labelId?: number;
 }

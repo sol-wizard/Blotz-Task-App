@@ -128,11 +128,7 @@ export default function TaskCard({
           android_ripple={{ color: "#e5e7eb", borderless: true }}
           className="w-[30px] h-[30px] rounded-full border-2 border-neutral-300 items-center justify-center"
         >
-          <MaterialCommunityIcons
-            name="trash-can-outline"
-            size={22}
-            color="#6B7280"
-          />
+          <MaterialCommunityIcons name="trash-can-outline" size={22} color="#6B7280" />
         </Pressable>
       </Animated.View>
 
@@ -142,10 +138,7 @@ export default function TaskCard({
           <Pressable onPress={onPress}>
             <View className="flex-row items-center p-5">
               {/* Left combination: vertical bar + checkbox; overall added leftExtrasStyle */}
-              <Animated.View
-                style={leftExtrasStyle}
-                className="flex-row items-center mr-3"
-              >
+              <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
                 {/* Custom checkbox */}
                 <CustomCheckbox checked={checked} onPress={handleToggleComplete} />
                 {/* Grey dividing line */}

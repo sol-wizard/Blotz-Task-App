@@ -3,7 +3,6 @@ import { View, StatusBar, Image } from "react-native";
 import GetStartedButton from "@/feature/auth/components/get-started-button";
 
 export default function OnboardingScreen() {
-
   return (
     <>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
@@ -16,10 +15,7 @@ export default function OnboardingScreen() {
           paddingHorizontal: 40,
         }}
       >
-
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <Image
             source={require("../../../assets/images/blotz-logo.png")}
             style={{ width: 240, height: 240 }}
