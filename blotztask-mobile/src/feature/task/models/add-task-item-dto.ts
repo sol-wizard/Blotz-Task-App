@@ -4,5 +4,4 @@ export interface AddTaskItemDTO {
   startTime?: Date;
   endTime?: Date;
   labelId: number;
-  hasTime: boolean;
 }
