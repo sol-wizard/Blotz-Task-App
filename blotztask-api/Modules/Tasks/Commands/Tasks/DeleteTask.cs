@@ -36,7 +36,6 @@ public class DeleteTaskCommandHandler(BlotzTaskDbContext db, ILogger<DeleteTaskC
             DeletedAt = DateTime.UtcNow,
             UserId = taskItem.UserId,
             LabelId = taskItem.LabelId,
-            HasTime = taskItem.HasTime
         };
 
         db.DeletedTaskItems.Add(deletedTask);
@@ -58,5 +57,4 @@ public class EditTaskItemDto
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
     public int LabelId { get; set; }
-    public bool? HasTime { get; set; }
 }

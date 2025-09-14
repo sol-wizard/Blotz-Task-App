@@ -43,7 +43,6 @@ public class TaskService : ITaskService
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt,
                 Label = new LabelDto { LabelId = x.Label.LabelId, Name = x.Label.Name, Color = x.Label.Color },
-                HasTime = x.HasTime,
             })
             .ToListAsync(cancellationToken);
     }
@@ -73,7 +72,6 @@ public class TaskService : ITaskService
                         Name = task.Label.Name,
                         Color = task.Label.Color
                     },
-                    HasTime = task.HasTime
                 })
                 .ToListAsync();
         }
@@ -138,7 +136,6 @@ public class TaskService : ITaskService
             UpdatedAt = DateTime.UtcNow,
             UserId = deletedTask.UserId,
             LabelId = deletedTask.LabelId,
-            HasTime = deletedTask.HasTime,
         };
         try
         {
@@ -182,7 +179,6 @@ public class TaskService : ITaskService
                         Name = task.Label.Name,
                         Color = task.Label.Color
                     },
-                    HasTime = task.HasTime,
                 })
                 .ToListAsync();
         }
@@ -223,7 +219,6 @@ public class TaskService : ITaskService
                         Name = task.Label.Name,
                         Color = task.Label.Color
                     },
-                    HasTime = task.HasTime
                 })
                 .OrderBy(t => t.EndTime)
                 .ToListAsync();
@@ -321,7 +316,6 @@ public class TaskService : ITaskService
                         Name = t.Label.Name,
                         Color = t.Label.Color
                     },
-                    HasTime = t.HasTime
                 })
                 .ToListAsync();
         }

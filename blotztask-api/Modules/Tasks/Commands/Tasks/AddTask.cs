@@ -28,7 +28,6 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
             UserId = command.UserId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            HasTime = command.TaskDetails.HasTime
         };
 
         db.TaskItems.Add(newTask);
@@ -47,5 +46,4 @@ public class AddTaskItemDto
     public DateTimeOffset? EndTime { get; set; }
     public DateTimeOffset? StartTime { get; set; }
     public int LabelId { get; set; }
-    public bool HasTime { get; set; }
 }

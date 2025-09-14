@@ -39,7 +39,6 @@ export const EditTaskForm = ({ task, onSubmit, onCancel }: EditTaskFormProps) =>
       description: values.description ?? "",
       endTime: values.endTime,
       isDone: task?.isDone,
-      hasTime: !!values.endTime,
       repeat: values.repeat ?? "none",
       labelId: values.labelId,
     };
