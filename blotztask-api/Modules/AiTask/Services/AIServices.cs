@@ -1,6 +1,5 @@
 using BlotzTask.Modules.AiTask.DTOs;
 using BlotzTask.Modules.Labels.DTOs;
-using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
 using OpenAI.Chat;
 
@@ -10,14 +9,11 @@ namespace BlotzTask.Modules.AiTask.Services;
 public class TaskGenerationAiService
 {
     private readonly ChatClient _chatClient;
-    private readonly ILabelService _labelService;
     
     public TaskGenerationAiService(
-        ILabelService labelService,
         ChatClient chatClient)
     {
         _chatClient = chatClient;
-        _labelService = labelService;
     }
 
     public async Task<ExtractedTasksWrapper> GenerateResponseAsync(string prompt, string timezoneId, CancellationToken ct)

@@ -11,10 +11,16 @@ import { format, isBefore, startOfDay } from "date-fns";
 type TaskDetailBottomSheetProps = {
   task?: TaskDetailDTO;
   handleEditPress: () => void;
+  onOpenSubtasks: (task: TaskDetailDTO) => void;
 };
 
-const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetProps) => {
+const TaskDetailBottomSheet = ({
+  task,
+  handleEditPress,
+  onOpenSubtasks,
+}: TaskDetailBottomSheetProps) => {
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(task);
+
   useEffect(() => {
     setSelectedTask(task);
   }, [task]);
@@ -111,6 +117,18 @@ const TaskDetailBottomSheet = ({ task, handleEditPress }: TaskDetailBottomSheetP
                 </Text>
               </View>
             ) : null}
+
+            <View className="mt-4">
+              <Button
+                mode="contained"
+                onPress={() => (selectedTask ? onOpenSubtasks(selectedTask) : undefined)}
+                disabled={!selectedTask?.id}
+                style={{ borderRadius: 16, backgroundColor: "#111827" }}
+                labelStyle={{ fontWeight: "bold" }}
+              >
+                Open Subtasks
+              </Button>
+            </View>
           </>
         ) : (
           <Text>No task selected</Text>
