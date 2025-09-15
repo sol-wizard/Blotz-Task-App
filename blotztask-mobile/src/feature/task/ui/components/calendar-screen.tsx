@@ -2,19 +2,22 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Snackbar } from "react-native-paper";
 import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
-import NoGoalsView from "./noGoalsView";
+import NoTasksView from "./no-tasks-view";
 import { fetchTasksForDate, toggleTaskCompletion, deleteTask } from "../../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
 import TaskCard from "./task-card";
 import TaskDetailBottomSheet from "./task-detail-bottomsheet";
+import SubtaskDetail from "./subtask-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
   BottomSheetModal,
+  BottomSheetView,
 } from "@gorhom/bottom-sheet";
+import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 
 export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -22,6 +25,9 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
   const [isLoading, setIsLoading] = useState(false);
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
   const editTaskModalRef = useRef<BottomSheetModal>(null);
+  const subtaskModalRef = useRef<BottomSheetModal>(null);
+  const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
+  const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
 
   //TODO: Maybe we dont need this
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
@@ -122,6 +128,30 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
     [],
   );
 
+  const handleOpenSubtasks = async (task: TaskDetailDTO) => {
+    setSelectedTask(task);
+
+    try {
+      const items = await fetchSubtasksForTask(task.id);
+      setSubtasksForSelectedTask(items ?? []);
+
+      const { label } = await fetchTotalHoursForTask(task.id, items ?? []);
+      setTotalTimeForSelectedTask(label);
+    } catch (e) {
+      console.error(e);
+      setSubtasksForSelectedTask([]);
+      setTotalTimeForSelectedTask("");
+    }
+
+    subtaskModalRef.current?.present();
+  };
+
+  const handleToggleSubtask = (id: number) => {
+    setSubtasksForSelectedTask((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, isDone: !s.isDone } : s)),
+    );
+  };
+
   return (
     <SafeAreaView className="flex-1">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
@@ -158,7 +188,7 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
             keyExtractor={(task) => task.id.toString()}
           />
         ) : (
-          <NoGoalsView />
+          <NoTasksView />
         )}
       </CalendarProvider>
 
@@ -173,7 +203,11 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
           borderTopRightRadius: 24,
         }}
       >
-        <TaskDetailBottomSheet task={selectedTask} handleEditPress={handleEditPress} />
+        <TaskDetailBottomSheet
+          task={selectedTask}
+          handleEditPress={handleEditPress}
+          onOpenSubtasks={handleOpenSubtasks}
+        />
       </BottomSheetModal>
 
       {selectedTask && (
@@ -187,6 +221,26 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
           <EditTaskBottomSheet task={selectedTask} handleClose={handleEditTaskSheetClose} />
         </BottomSheetModal>
       )}
+
+      <BottomSheetModal
+        ref={subtaskModalRef}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        backgroundStyle={{
+          backgroundColor: "#FFFFFF",
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+        }}
+      >
+        <BottomSheetView className="flex-1">
+          <SubtaskDetail
+            task={selectedTask}
+            subtasks={subtasksForSelectedTask}
+            totalTaskTime={totalTimeForSelectedTask}
+            onToggleSubtask={handleToggleSubtask}
+          />
+        </BottomSheetView>
+      </BottomSheetModal>
 
       <Snackbar
         visible={snackbar.visible}

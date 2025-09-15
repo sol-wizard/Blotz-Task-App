@@ -41,7 +41,6 @@ export async function generateAiTask(prompt: string): Promise<AIAssistantRespons
     isDone: false,
     label: task.label,
     endTime: new Date(task.endTime),
-    hasTime: false, //TODO: Current AI generate task still not support time
   }));
 
   return {
