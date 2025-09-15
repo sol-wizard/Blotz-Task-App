@@ -1,8 +1,5 @@
 using System.Text.Json;
-using BlotzTask.Modules.Labels.Commands;
 using BlotzTask.Modules.Labels.DTOs;
-using BlotzTask.Modules.Labels.Queries;
-using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
 
 namespace BlotzTask.Modules.ChatGoalPlanner.Services;

@@ -1,5 +1,4 @@
 using BlotzTask.Modules.ChatGoalPlanner.Constants;
-using BlotzTask.Modules.Labels.Services;
 using BlotzTask.Shared.DTOs;
 using BlotzTask.Shared.Services;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -17,18 +16,15 @@ public interface IGoalPlannerAiService
 
 public class GoalPlannerAiService : IGoalPlannerAiService
 {
-    private readonly ILabelService _labelService;
     private readonly IConversationStateService _conversationStateService;
     private readonly TaskParsingService _taskParser;
     private readonly ISafeChatCompletionService _safeChatCompletionService;
 
     public GoalPlannerAiService(
-        ILabelService labelService,
         IConversationStateService conversationStateService,
         TaskParsingService taskParser,
         ISafeChatCompletionService safeChatCompletionService)
     {
-        _labelService = labelService;
         _conversationStateService = conversationStateService;
         _taskParser = taskParser;
         _safeChatCompletionService = safeChatCompletionService;
