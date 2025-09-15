@@ -26,3 +26,6 @@ expo-env.d.ts
 # Expo managed native projects
 ios/
 android/
+
+# secret
+keys/

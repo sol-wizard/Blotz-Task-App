@@ -13,7 +13,11 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.Blotz.BlotzTask",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Allow BlotzTask to access your photos so you can attach images to tasks.",
+        "NSPhotoLibraryAddUsageDescription": "Allow BlotzTask to save exported images to your photo library.",
+        "NSCameraUsageDescription": "Allow BlotzTask to use the camera for calls and taking photos.",
+        "NSMicrophoneUsageDescription": "Allow BlotzTask to use the microphone for voice and video calls."
       }
     },
     "android": {
