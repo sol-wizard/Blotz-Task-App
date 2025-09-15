@@ -17,6 +17,9 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
     public async Task<string> Handle(AddTaskCommand command, CancellationToken ct = default)
     {
         logger.LogInformation("Adding new task for user {UserId}", command.UserId);
+        
+        // Validate task times
+        ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime);
 
         var newTask = new TaskItem
         {
@@ -36,6 +39,27 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
         logger.LogInformation("Task {Id} was successfully added for user {UserId}", newTask.Id, command.UserId);
 
         return $"Task {newTask.Id} titled {newTask.Title} was successfully added.";
+    }
+    
+    private static void ValidateTaskTimes(DateTimeOffset? startTime, DateTimeOffset? endTime)
+    {
+        // If both exist, ensure startTime is before endTime
+        if (startTime.HasValue && endTime.HasValue && startTime >= endTime)
+        {
+            throw new ArgumentException("Start time must be earlier than end time.");
+        }
+
+        // If only one exists, ensure it's not in the past
+        var now = DateTimeOffset.UtcNow;
+        if (startTime.HasValue && startTime < now)
+        {
+            throw new ArgumentException("Start time cannot be in the past.");
+        }
+        if (endTime.HasValue && endTime < now)
+        {
+            throw new ArgumentException("End time cannot be in the past.");
+        }
+        // If neither exists, it's valid (floating task)
     }
 }
 
