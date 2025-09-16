@@ -131,6 +131,12 @@ export default function CreateTaskForm({
             <LabelSelect control={form.control} />
           </View>
         </View>
+        {errors.startTime && (
+          <Text className="text-red-500 text-sm mt-1">{errors.startTime.message}</Text>
+        )}
+        {errors.endTime && (
+          <Text className="text-red-500 text-sm mt-1">{errors.endTime.message}</Text>
+        )}
         {showingDateTimePicker && <StartEndDateTimePicker control={form.control} />}
 
         <Button
