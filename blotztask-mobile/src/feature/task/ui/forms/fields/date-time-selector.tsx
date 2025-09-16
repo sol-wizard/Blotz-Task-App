@@ -6,9 +6,13 @@ import { useEffect, useState } from "react";
 export const DateTimeSelector = ({
   defaultValue,
   changeDateTime,
+  defaultHours = 0,
+  defaultMinutes = 0,
 }: {
   defaultValue: Date;
   changeDateTime: (d: Date) => void;
+  defaultHours?: number;
+  defaultMinutes?: number;
 }) => {
   const [datePart, setDatePart] = useState<Date>(defaultValue);
   const [timePart, setTimePart] = useState<Date>(defaultValue);
@@ -18,6 +22,8 @@ export const DateTimeSelector = ({
       const merged = new Date(datePart);
       if (timePart) {
         merged.setHours(timePart.getHours(), timePart.getMinutes(), 0, 0);
+      } else {
+        merged.setHours(defaultHours, defaultMinutes, 0, 0);
       }
       changeDateTime(merged);
     }
