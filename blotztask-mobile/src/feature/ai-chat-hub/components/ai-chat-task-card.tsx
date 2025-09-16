@@ -42,13 +42,16 @@ export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className
 
         <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
         <View className="flex-col">
-          <TextInput
-            value={task.title}
-            onChangeText={(t) => onEditTask(task.id)}
-            style={{ fontSize: 16, fontWeight: "600" }}
-            multiline={true}
-            scrollEnabled={false}
-          />
+          <View className="flex-col flex-1">
+            <TextInput
+              className="flex-1 flex-shrink text-base font-semibold"
+              value={task.title}
+              onChangeText={(t) => onEditTask(task.id)}
+              style={{ fontSize: 16, fontWeight: "600", flexWrap: "wrap" }}
+              multiline={true}
+              scrollEnabled={false}
+            />
+          </View>
 
           {/* 
           Shows nothing if both times are missing.
