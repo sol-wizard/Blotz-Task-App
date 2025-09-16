@@ -18,11 +18,7 @@ export const taskFormSchema = z
       message: "End time cannot be earlier than start time",
       path: ["endTime"],
     },
-  )
-  .refine((data) => !data.startTime || data.startTime.getTime() >= Date.now(), {
-    message: "Start time must be in the future",
-    path: ["startTime"],
-  });
+  );
 
 export type TaskFormField = z.infer<typeof taskFormSchema>;
 
