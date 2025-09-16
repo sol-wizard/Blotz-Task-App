@@ -1,6 +1,6 @@
 import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
 import * as SecureStore from "expo-secure-store";
-import { clearSessionAndRedirect } from "./clearSessionAndRedirect";
+import { clearSessionAndRedirect } from "../util/clearSessionAndRedirect";
 
 export const fetchWithAuth = async <T>(url: string, options: RequestInit = {}): Promise<T> => {
   try {
