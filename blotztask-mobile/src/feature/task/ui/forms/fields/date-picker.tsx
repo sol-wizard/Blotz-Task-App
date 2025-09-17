@@ -51,30 +51,27 @@ export default function DatePicker({ value, onChange }: Props) {
         backdropOpacity={0.5}
         onBackdropPress={() => setOpenCalendar(false)}
         presentationStyle="overFullScreen"
-        statusBarTranslucent
       >
-        <View className="absolute inset-0 items-center justify-center px-4">
-          <View className="w-full max-w-md rounded-2xl bg-white p-4">
-            <View className="items-center">
-              <DateTimePicker
-                value={tempDate ?? new Date()}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "calendar"}
-                locale={Platform.OS === "ios" ? "en-GB" : undefined}
-                minimumDate={new Date(1900, 0, 1)}
-                onChange={onNativeChange}
-                style={{ alignSelf: "stretch" }}
-              />
-            </View>
+        <View className="w-full max-w-md rounded-2xl bg-white p-4">
+          <View className="items-center">
+            <DateTimePicker
+              value={tempDate ?? new Date()}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "calendar"}
+              locale={Platform.OS === "ios" ? "en-GB" : undefined}
+              minimumDate={new Date(1900, 0, 1)}
+              onChange={onNativeChange}
+              style={{ height: 220 }}
+            />
+          </View>
 
-            <View className="flex-row justify-end mt-2 space-x-3">
-              <Pressable onPress={handleCanel} className="px-4 py-2 rounded-lg">
-                <Text className="text-slate-600">Cancel</Text>
-              </Pressable>
-              <Pressable onPress={handleConfirm} className="px-4 py-2 rounded-lg bg-blue-500">
-                <Text className="text-white font-medium">Confirm</Text>
-              </Pressable>
-            </View>
+          <View className="flex-row justify-end mt-2 space-x-3">
+            <Pressable onPress={handleCanel} className="px-4 py-2 rounded-lg">
+              <Text className="text-slate-600">Cancel</Text>
+            </Pressable>
+            <Pressable onPress={handleConfirm} className="px-4 py-2 rounded-lg bg-blue-500">
+              <Text className="text-white font-medium">Confirm</Text>
+            </Pressable>
           </View>
         </View>
       </Modal>
