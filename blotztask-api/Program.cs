@@ -172,6 +172,8 @@ builder.Services.AddCors(options =>
         });
 });
 
+
+
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
@@ -187,7 +189,6 @@ app.UseHttpsRedirection();
 app.UseCors("AllowSpecificOrigin");
 app.UseAuthorization();
 
-app.MapSwagger().RequireAuthorization();
 app.MapControllers();
 app.MapHub<GoalPlannerChatHub>("/chatHub");
 app.MapHub<AiTaskGenerateChatHub>("/ai-task-generate-chathub");
