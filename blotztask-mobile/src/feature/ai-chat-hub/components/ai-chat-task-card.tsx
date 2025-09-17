@@ -29,10 +29,6 @@ export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className
     }
   };
 
-  const onEditTask = (id: string) => {
-    console.log("task edited");
-  };
-
   return (
     <View className="flex-row w-full items-center justify-between">
       <View
@@ -40,27 +36,13 @@ export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className
       >
         <CustomCheckbox checked={isTaskAdded} onPress={() => handleAddTask(task)} />
 
-        <View className="w-[5px] bg-gray-300 h-full min-h-[40px] mr-4 rounded-md" />
         <View className="flex-col">
-          <View className="flex-col flex-1">
-            <TextInput
-              className="flex-1 flex-shrink text-base font-semibold"
-              value={task.title}
-              onChangeText={(t) => onEditTask(task.id)}
-              style={{ fontSize: 16, fontWeight: "600", flexWrap: "wrap" }}
-              multiline={true}
-              scrollEnabled={false}
-            />
-          </View>
+          <Text className="flex-1 flex-shrink text-base font-semibold justify-center">
+            {task.title}
+          </Text>
 
-          {/* 
-          Shows nothing if both times are missing.
-          Shows only start or end time if just one exists.
-          Shows startTime - endTime if both exist.
-          */}
-
-          {task.startTime || task.endTime ? (
-            <View className="flex-row my-1">
+          {(task.startTime || task.endTime) && (
+            <View className="flex-row mt-1 items-center">
               <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
               <View className="flex-col ml-2">
                 {task.startTime && (
@@ -71,7 +53,7 @@ export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className
                 )}
               </View>
             </View>
-          ) : null}
+          )}
         </View>
       </View>
     </View>
