@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Snackbar } from "react-native-paper";
+import { FAB, Modal, Portal, Snackbar } from "react-native-paper";
 import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoTasksView from "./no-tasks-view";
@@ -18,6 +18,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
+import { AiVoiceInput } from "./ai-voice-input";
 
 export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -28,6 +29,7 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
   const subtaskModalRef = useRef<BottomSheetModal>(null);
   const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
   const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
+  const [aiInputModalVisible, setAiInputModalVisible] = useState(false);
 
   //TODO: Maybe we dont need this
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
@@ -191,6 +193,30 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
           <NoTasksView />
         )}
       </CalendarProvider>
+      <FAB
+        icon="star"
+        style={{
+          position: "absolute",
+          margin: 16,
+          width: 58,
+          right: 10,
+          bottom: 10,
+          backgroundColor: "#f65a83",
+        }}
+        onPress={() => setAiInputModalVisible(true)}
+      />
+      <Portal>
+        <Modal
+          visible={aiInputModalVisible}
+          onDismiss={() => setAiInputModalVisible(false)}
+          contentContainerStyle={{
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <AiVoiceInput />
+        </Modal>
+      </Portal>
 
       <BottomSheetModal
         ref={taskDetailModalRef}
