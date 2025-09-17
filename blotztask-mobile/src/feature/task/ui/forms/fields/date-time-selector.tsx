@@ -2,6 +2,7 @@ import { View } from "react-native";
 import DatePicker from "./date-picker";
 import { TimePicker } from "./time-picker";
 import { useEffect, useState } from "react";
+import { applyCreateTaskTimes } from "@/feature/task/services/task-service";
 
 export const DateTimeSelector = ({
   defaultValue,
@@ -18,17 +19,10 @@ export const DateTimeSelector = ({
   const [timePart, setTimePart] = useState<Date>(defaultValue);
 
   useEffect(() => {
-    if (datePart) {
-      const merged = new Date(datePart);
-      if (timePart) {
-        merged.setHours(timePart.getHours(), timePart.getMinutes(), 0, 0);
-      } else {
-        merged.setHours(defaultHours, defaultMinutes, 0, 0);
-      }
-      changeDateTime(merged);
-    }
-    return;
-  }, [datePart, timePart]);
+    if (!datePart) return;
+    const merged = applyCreateTaskTimes(datePart, timePart, defaultHours, defaultMinutes);
+    changeDateTime(merged);
+  }, [datePart, timePart, changeDateTime, defaultHours, defaultMinutes]);
 
   return (
     <View className="flex-col p-2">
