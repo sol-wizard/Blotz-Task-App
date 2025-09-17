@@ -41,9 +41,11 @@ export default function CreateTaskForm({
   } = form;
 
   const [showingDateTimePicker, setShowingDateTimePicker] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFormSubmit = async (data: any) => {
     try {
+      setIsSubmitting(true);
       const dto = toAddTaskItemDTO(data);
 
       await addTaskItem(dto);
@@ -57,8 +59,10 @@ export default function CreateTaskForm({
         labelId: undefined,
       });
       refreshCalendarPage();
+      setIsSubmitting(false);
     } catch (error) {
       console.error("Error adding action:", error);
+      setIsSubmitting(false);
     }
   };
 
@@ -136,13 +140,14 @@ export default function CreateTaskForm({
         <Button
           mode="contained"
           onPress={form.handleSubmit(handleFormSubmit)}
+          disabled={isSubmitting}
           style={{
             backgroundColor: "#E5E5E5",
             borderRadius: 16,
           }}
           labelStyle={{ color: "#111827", fontWeight: "700", fontSize: 18 }}
         >
-          Create
+          {isSubmitting ? "Creating..." : "Create"}
         </Button>
       </View>
     </FormProvider>
