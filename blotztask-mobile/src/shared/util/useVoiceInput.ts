@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import Voice from "@react-native-voice/voice";
+import Voice from "@react-native-community/voice";
 
 type UseVoiceInputOptions = {
   language?: string;
