@@ -1,4 +1,4 @@
-import { TextInput, View, Text } from "react-native";
+import { View, Text } from "react-native";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { useState } from "react";
 import { addTaskItem } from "@/feature/task/services/task-service";
@@ -30,14 +30,17 @@ export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className
   };
 
   return (
-    <View className="flex-row w-full items-center justify-between">
+    <View className="flex-row w-full items-center">
       <View
         className={`flex-row items-center rounded-2xl bg-white mb-3 px-4 py-3 flex-1 ${className}`}
       >
         <CustomCheckbox checked={isTaskAdded} onPress={() => handleAddTask(task)} />
 
-        <View className="flex-col">
-          <Text className="flex-1 flex-shrink text-base font-semibold justify-center">
+        <View className="flex-1 min-w-0 ml-3">
+          <Text
+            className="flex-shrink min-w-0 text-base font-semibold"
+            lineBreakStrategyIOS="hangul-word" // For IOS to handle Chinese/Japaness/Korean line break issue
+          >
             {task.title}
           </Text>
 
