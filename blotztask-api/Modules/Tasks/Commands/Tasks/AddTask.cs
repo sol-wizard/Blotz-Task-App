@@ -48,18 +48,6 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
         {
             throw new ArgumentException("Start time must be earlier than end time.");
         }
-
-        // If only one exists, ensure it's not in the past
-        // var now = DateTimeOffset.UtcNow;
-        // if (startTime.HasValue && startTime < now)
-        // {
-        //     throw new ArgumentException("Start time cannot be in the past.");
-        // }
-        // if (endTime.HasValue && endTime < now)
-        // {
-        //     throw new ArgumentException("End time cannot be in the past.");
-        // }
-        // If neither exists, it's valid (floating task)
     }
 }
 
