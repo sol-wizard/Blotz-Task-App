@@ -19,7 +19,7 @@
     "@quidone/react-native-wheel-picker": "^1.6.0",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.4.1",
-    "@react-native-voice/voice": "^3.2.4",
+    "@react-native-community/voice": "^1.1.9",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",

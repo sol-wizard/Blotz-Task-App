@@ -49,7 +49,7 @@
         }
       ],
       [
-        "@react-native-voice/voice",
+        "@react-native-community/voice",
         {
           "microphonePermission": "CUSTOM: Allow BlotzTask to access the microphone",
           "speechRecognitionPermission": "CUSTOM: Allow BlotzTask to securely recognize user speech"
