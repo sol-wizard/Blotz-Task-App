@@ -7,10 +7,16 @@ import { AiTaskCard } from "./ai-task-card";
 export const AiGeneratedTasks = ({
   tasks = [],
   backToVoiceInput,
+  goToConfirmUI,
 }: {
   tasks?: AiTaskDTO[];
   backToVoiceInput: () => void;
+  goToConfirmUI: () => void;
 }) => {
+  const handleAddTasks = () => {
+    console.log("Add some tasks successfully!");
+    goToConfirmUI();
+  };
   return (
     <View className="w-full rounded-2xl bg-blue-50 p-4 border border-blue-100">
       <View className="mb-3">
@@ -45,7 +51,7 @@ export const AiGeneratedTasks = ({
         </Pressable>
 
         <Pressable
-          onPress={() => console.log("Confirm pressed")}
+          onPress={handleAddTasks}
           hitSlop={8}
           className="flex-1 h-12 rounded-full bg-green-600 items-center justify-center"
           style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
