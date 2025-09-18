@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import Modal from "react-native-modal";
