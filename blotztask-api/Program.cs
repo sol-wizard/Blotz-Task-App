@@ -29,8 +29,6 @@ using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplicationInsightsTelemetry();
-
 // Configure Serilog to integrate with Microsoft.Extensions.Logging
 builder.Host.UseSerilog((context, services, configuration) =>
 {
