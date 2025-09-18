@@ -12,18 +12,12 @@ public class AddSubtasksCommand
     public List<SubtaskDto> Subtasks { get; set; } = new();
 }
 
-public class AddSubtasksCommandHandler
+public class AddSubtasksCommandHandler(BlotzTaskDbContext db, ILogger<AddSubtasksCommandHandler> logger)
 {
-    private readonly BlotzTaskDbContext _db;
-
-    public AddSubtasksCommandHandler(BlotzTaskDbContext db)
-    {
-        _db = db;
-    }
-
     public async Task<string> Handle(AddSubtasksCommand command, CancellationToken ct = default)
     {
-        var parentTask = await _db.TaskItems
+        logger?.LogInformation("Adding subtasks to task {TaskId}", command.TaskId);
+        var parentTask = await db.TaskItems
             .FirstOrDefaultAsync(t => t.Id == command.TaskId, ct);
 
         if (parentTask == null)
@@ -45,12 +39,12 @@ public class AddSubtasksCommandHandler
                 UpdatedAt = now
             };
             
-            _db.Subtasks.Add(subtask);
+            db.Subtasks.Add(subtask);
         }
         
-        await _db.SaveChangesAsync(ct);
+        await db.SaveChangesAsync(ct);
         
-
+        logger?.LogInformation("{Count} subtasks added to task {TaskId}", command.Subtasks.Count, parentTask.Id);
         return $"{command.Subtasks.Count} subtasks added to task {parentTask.Id}.";
     }
 }
