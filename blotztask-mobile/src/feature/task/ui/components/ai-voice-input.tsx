@@ -1,20 +1,36 @@
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState } from "react";
-import { Pressable, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { AiGeneratedTasks } from "./ai-generated-tasks";
+import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
 
 export const AiVoiceInput = () => {
   const { startListening, stopAndGetText, isListening } = useVoiceInput();
+  const [showTaskList, setShowTaskList] = useState(false);
   const [text, setText] = useState("");
+  const { messages, sendMessage, isTyping } = useAiTaskGenerator();
+
   const handleMicPressOut = async () => {
     const spoken = await stopAndGetText();
+
+    let newText = text;
     if (spoken) {
-      const newText = text?.length ? `${text.trim()} ${spoken}` : spoken;
+      newText = text?.length ? `${text.trim()} ${spoken}` : spoken;
       setText(newText);
     }
-    console.log("Here is your speaking content: ", text);
+
+    if (newText?.trim()) {
+      sendMessage(newText.trim());
+    }
   };
+  useEffect(() => {
+    const latest = messages.at(-2);
+    const shouldShowAiTasks = !!latest?.isBot && (latest?.tasks?.length ?? 0) > 0;
+    setShowTaskList(shouldShowAiTasks);
+    console.log("AiVoiceInput messages:", messages);
+  }, [messages]);
   return (
     <View className="w-[86%] rounded-3xl bg-white p-6 items-center">
       <View className="w-full flex-row items-center mb-5">
@@ -29,32 +45,43 @@ export const AiVoiceInput = () => {
         </View>
       </View>
 
-      <Pressable onLongPress={startListening} onPressOut={handleMicPressOut} delayLongPress={250}>
-        <LinearGradient
-          colors={["#FF4D79", "#A84DFF"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            width: 80,
-            height: 80,
-            borderRadius: 60,
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: "#000",
-            shadowOpacity: 0.2,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 6 },
-            elevation: 8,
-          }}
-        >
-          <Ionicons name="mic" size={40} color="#fff" />
-        </LinearGradient>
-      </Pressable>
-      {isListening ? (
-        <Text className="mt-4 text-gray-500">Ai is listening...</Text>
-      ) : (
-        <Text className="mt-4 text-gray-500">Click to start voice entry</Text>
+      {!showTaskList && (
+        <>
+          <Pressable
+            onLongPress={startListening}
+            onPressOut={handleMicPressOut}
+            delayLongPress={250}
+          >
+            <LinearGradient
+              colors={["#FF4D79", "#A84DFF"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 60,
+                alignItems: "center",
+                justifyContent: "center",
+                shadowColor: "#000",
+                shadowOpacity: 0.2,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: 8,
+              }}
+            >
+              <Ionicons name="mic" size={40} color="#fff" />
+            </LinearGradient>
+          </Pressable>
+
+          {isListening ? (
+            <Text className="mt-4 text-gray-500">AI is listening...</Text>
+          ) : (
+            <Text className="mt-4 text-gray-500">Click to start voice entry</Text>
+          )}
+        </>
       )}
+
+      {showTaskList && <AiGeneratedTasks tasks={messages.at(-2)?.tasks ?? []} />}
     </View>
   );
 };
