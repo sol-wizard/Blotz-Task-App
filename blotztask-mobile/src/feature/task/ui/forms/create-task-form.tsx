@@ -15,10 +15,8 @@ import { StartEndDateTimePicker } from "./fields/start-end-date-time-picker";
 
 export default function CreateTaskForm({
   handleTaskCreationSheetClose,
-  refreshCalendarPage,
 }: {
   handleTaskCreationSheetClose: (index: number) => void;
-  refreshCalendarPage: () => void;
 }) {
   const handleAiChat = () => {
     handleTaskCreationSheetClose(-1);
@@ -58,7 +56,6 @@ export default function CreateTaskForm({
         repeat: "none",
         labelId: undefined,
       });
-      refreshCalendarPage();
       setIsSubmitting(false);
     } catch (error) {
       console.error("Error adding action:", error);

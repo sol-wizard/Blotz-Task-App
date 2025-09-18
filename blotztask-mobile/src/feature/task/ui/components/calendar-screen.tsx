@@ -19,7 +19,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 
-export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) {
+export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDetailDTO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +39,7 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
 
   useEffect(() => {
     loadTask();
-  }, [selectedDay, refreshFlag]);
+  }, [selectedDay]);
 
   const loadTask = async () => {
     setIsLoading(true);
