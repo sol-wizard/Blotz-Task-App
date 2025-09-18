@@ -18,7 +18,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
-import { AiVoiceInput } from "./ai-voice-input";
+import { AiVoiceChatModal } from "./ai-voice-chat-modal";
 
 export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -214,7 +214,7 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
             alignItems: "center",
           }}
         >
-          <AiVoiceInput />
+          <AiVoiceChatModal />
         </Modal>
       </Portal>
 

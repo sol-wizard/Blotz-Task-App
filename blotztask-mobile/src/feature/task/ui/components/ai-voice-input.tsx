@@ -1,17 +1,23 @@
+import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { View, Text, Pressable } from "react-native";
 import { AiGeneratedTasks } from "./ai-generated-tasks";
-import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
 
-export const AiVoiceInput = () => {
+export const AiVoiceInput = ({
+  showTaskList,
+  setShowTaskList,
+  setShowConfirmUI,
+}: {
+  showTaskList: boolean;
+  setShowTaskList: (value: boolean) => void;
+  setShowConfirmUI: (value: boolean) => void;
+}) => {
   const { startListening, stopAndGetText, isListening } = useVoiceInput();
-  const [showTaskList, setShowTaskList] = useState(false);
   const [text, setText] = useState("");
   const { messages, sendMessage, isTyping } = useAiTaskGenerator();
-
   const handleMicPressOut = async () => {
     const spoken = await stopAndGetText();
 
@@ -25,6 +31,7 @@ export const AiVoiceInput = () => {
       sendMessage(newText.trim());
     }
   };
+
   useEffect(() => {
     const latest = messages.at(-2);
     const shouldShowAiTasks = !!latest?.isBot && (latest?.tasks?.length ?? 0) > 0;
@@ -32,7 +39,7 @@ export const AiVoiceInput = () => {
     console.log("AiVoiceInput messages:", messages);
   }, [messages]);
   return (
-    <View className="w-[86%] rounded-3xl bg-white p-6 items-center">
+    <>
       <View className="w-full flex-row items-center mb-5">
         <View className="w-9 h-9 rounded-full items-center justify-center mr-3 bg-pink-100">
           <Ionicons name="sparkles-outline" size={18} color="#9c27b0" />
@@ -86,8 +93,9 @@ export const AiVoiceInput = () => {
         <AiGeneratedTasks
           tasks={messages.at(-2)?.tasks ?? []}
           backToVoiceInput={() => setShowTaskList(false)}
+          goToConfirmUI={() => setShowConfirmUI(true)}
         />
       )}
-    </View>
+    </>
   );
 };
