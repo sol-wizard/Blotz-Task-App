@@ -29,6 +29,13 @@ using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddSingleton<TelemetryConfiguration>(sp =>
+{
+    var connStr = builder.Configuration["ApplicationInsights:ConnectionString"];
+    var tc = TelemetryConfiguration.CreateDefault();
+    tc.ConnectionString = connStr;
+    return tc;
+});
 // Configure Serilog to integrate with Microsoft.Extensions.Logging
 builder.Host.UseSerilog((context, services, configuration) =>
 {
@@ -102,12 +109,6 @@ if (builder.Environment.IsProduction())
     var sqlConnectionSecret = secretClient.GetSecret("sql-connection-string").Value.Value;
     builder.Services.AddDbContext<BlotzTaskDbContext>(options => 
         options.UseSqlServer(sqlConnectionSecret));
-    
-    builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
-    {
-        var connectionString = builder.Configuration.GetSection("ApplicationInsights:ConnectionString").Value;
-        options.ConnectionString = connectionString;
-    });
 }
 
 builder.Services.AddAuth0(builder.Configuration);
@@ -170,22 +171,24 @@ builder.Services.AddCors(options =>
         });
 });
 
-
-
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
+
+app.UseHttpsRedirection();
+app.UseCors("AllowSpecificOrigin");
+app.UseAuthentication();
+app.UseAuthorization();
 
 // "Add root path for app service always on ping"
 app.MapGet("/", () => Results.Ok("Web API is running"));
 app.MapHealthChecks("/health");
 
-app.UseSwagger();
-app.UseSwaggerUI();
-app.UseHttpsRedirection();
-
-app.UseCors("AllowSpecificOrigin");
-app.UseAuthorization();
+if (builder.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.MapControllers();
 app.MapHub<GoalPlannerChatHub>("/chatHub");
