@@ -1,10 +1,5 @@
-import { useVoiceInput } from "@/shared/util/useVoiceInput";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
-import { AiGeneratedTasks } from "./ai-generated-tasks";
-import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
+import React, { useState } from "react";
+import { View } from "react-native";
 import { TaskCreateSuccessDialog } from "./task-create-success-dialog";
 import { AiVoiceInput } from "./ai-voice-input";
 
