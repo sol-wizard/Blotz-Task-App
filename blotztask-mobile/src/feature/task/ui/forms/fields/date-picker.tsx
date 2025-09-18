@@ -4,6 +4,7 @@ import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/dat
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import Modal from "react-native-modal";
+import { Calendar } from "react-native-calendars";
 
 type Props = {
   value?: Date;
@@ -30,6 +31,8 @@ export default function DatePicker({ value, onChange }: Props) {
     setOpenCalendar(false);
   };
 
+  const markedDateString = format(tempDate ?? new Date(), "yyyy-MM-dd");
+
   return (
     <View className="pb-2">
       <Pressable
@@ -53,17 +56,21 @@ export default function DatePicker({ value, onChange }: Props) {
         presentationStyle="overFullScreen"
       >
         <View className="w-full max-w-md rounded-2xl bg-white p-4">
-          <View className="items-center">
-            <DateTimePicker
-              value={tempDate ?? new Date()}
-              mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "calendar"}
-              locale={Platform.OS === "ios" ? "en-GB" : undefined}
-              minimumDate={new Date(1900, 0, 1)}
-              onChange={onNativeChange}
-              style={{ height: 220 }}
-            />
-          </View>
+          <Calendar
+            theme={{
+              todayTextColor: "#3B82F6",
+              arrowColor: "#3B82F6",
+            }}
+            onDayPress={(date) => setTempDate(new Date(date.timestamp))}
+            markedDates={{
+              [markedDateString]: {
+                selected: true,
+                selectedColor: "#3B82F6",
+                selectedTextColor: "white",
+              },
+            }}
+            enableSwipeMonths={true}
+          />
 
           <View className="flex-row justify-end mt-2 space-x-3">
             <Pressable onPress={handleCanel} className="px-4 py-2 rounded-lg">
