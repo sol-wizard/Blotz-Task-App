@@ -1,16 +1,15 @@
 import { View, Text } from "react-native";
 import WheelPicker from "@quidone/react-native-wheel-picker";
-import { useEffect, useState } from "react";
 
 export const TimePicker = ({
   defaultValue,
   onChange,
 }: {
-  defaultValue: Date;
+  defaultValue: Date | undefined;
   onChange: (d: Date) => void;
 }) => {
-  const [hourValue, setHourValue] = useState(defaultValue?.getHours() || 0);
-  const [minValue, setMinValue] = useState(defaultValue?.getMinutes() || 0);
+  const currentHour = defaultValue?.getHours() || 0;
+  const currentMinute = defaultValue?.getMinutes() || 0;
 
   const hourData = [...Array(24).keys()].map((h) => ({
     value: h,
@@ -22,14 +21,12 @@ export const TimePicker = ({
     label: String(m).padStart(2, "0"),
   }));
 
-  useEffect(() => {
-    if (defaultValue) {
-      const merged = new Date(defaultValue);
-      merged.setHours(hourValue, minValue, 0, 0);
-      onChange(merged);
-    }
-    return;
-  }, [hourValue, minValue]);
+  const createTimeFromValues = (hour: number, minute: number) => {
+    const baseDate = defaultValue || new Date();
+    const mergedTime = new Date(baseDate);
+    mergedTime.setHours(hour, minute, 0, 0);
+    onChange(mergedTime);
+  };
 
   return (
     <View className="flex-row mb-4 border rounded-xl border-gray-200">
@@ -43,8 +40,10 @@ export const TimePicker = ({
           data={hourData}
           enableScrollByTapOnItem
           visibleItemCount={1}
-          value={hourValue}
-          onValueChanged={({ item: { value } }) => setHourValue(value)}
+          value={currentHour}
+          onValueChanged={({ item: { value } }) => {
+            createTimeFromValues(value, currentMinute);
+          }}
         />
 
         <Text className="font-bold text-2xl text-gray-600">:</Text>
@@ -58,8 +57,10 @@ export const TimePicker = ({
           data={minData}
           enableScrollByTapOnItem
           visibleItemCount={1}
-          value={minValue}
-          onValueChanged={({ item: { value } }) => setMinValue(value)}
+          value={currentMinute}
+          onValueChanged={({ item: { value } }) => {
+            createTimeFromValues(currentHour, value);
+          }}
         />
       </View>
     </View>

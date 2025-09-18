@@ -61,18 +61,3 @@ export async function deleteTask(taskId: number): Promise<void> {
     throw new Error("Delete task failed");
   }
 }
-
-export function applyCreateTaskTimes(
-  datePart: Date,
-  timePart: Date | undefined,
-  defaultHours: number = 0,
-  defaultMinutes: number = 0,
-): Date {
-  const merged = new Date(datePart);
-  if (timePart) {
-    merged.setHours(timePart.getHours(), timePart.getMinutes(), 0, 0);
-  } else {
-    merged.setHours(defaultHours, defaultMinutes, 0, 0);
-  }
-  return merged;
-}

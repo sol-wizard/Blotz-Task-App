@@ -30,8 +30,10 @@ export default function CreateTaskForm({
     defaultValues: {
       title: "",
       description: "",
-      startTime: undefined,
-      endTime: undefined,
+      startDate: undefined,
+      startTimeOnly: undefined,
+      endDate: undefined,
+      endTimeOnly: undefined,
       repeat: "none",
       labelId: undefined,
     },
@@ -51,8 +53,10 @@ export default function CreateTaskForm({
       form.reset({
         title: "",
         description: "",
-        startTime: undefined,
-        endTime: undefined,
+        startDate: undefined,
+        startTimeOnly: undefined,
+        endDate: undefined,
+        endTimeOnly: undefined,
         repeat: "none",
         labelId: undefined,
       });
@@ -110,12 +114,19 @@ export default function CreateTaskForm({
         <View className="flex-row gap-3 mb-8">
           <DateTimeSelectorTrigger
             handleTrigger={() => {
-              const start = form.getValues("startTime");
-              const end = form.getValues("endTime");
+              const startDate = form.getValues("startDate");
+              const startTimeOnly = form.getValues("startTimeOnly");
+              const endDate = form.getValues("endDate");
+              const endTimeOnly = form.getValues("endTimeOnly");
 
-              if ((start || end) && !showingDateTimePicker) {
-                form.setValue("startTime", undefined);
-                form.setValue("endTime", undefined);
+              if (
+                (startDate || startTimeOnly || endDate || endTimeOnly) &&
+                !showingDateTimePicker
+              ) {
+                form.setValue("startDate", undefined);
+                form.setValue("startTimeOnly", undefined);
+                form.setValue("endDate", undefined);
+                form.setValue("endTimeOnly", undefined);
               } else {
                 setShowingDateTimePicker((prev) => !prev);
               }
@@ -131,11 +142,11 @@ export default function CreateTaskForm({
             <LabelSelect control={form.control} />
           </View>
         </View>
-        {errors.startTime && (
-          <Text className="text-red-500 text-sm mt-1">{errors.startTime.message}</Text>
+        {(errors as any).startTimeOnly && (
+          <Text className="text-red-500 text-sm mt-1">{(errors as any).startTimeOnly.message}</Text>
         )}
-        {errors.endTime && (
-          <Text className="text-red-500 text-sm mt-1">{errors.endTime.message}</Text>
+        {(errors as any).endTimeOnly && (
+          <Text className="text-red-500 text-sm mt-1">{(errors as any).endTimeOnly.message}</Text>
         )}
         {showingDateTimePicker && <StartEndDateTimePicker control={form.control} />}
 
