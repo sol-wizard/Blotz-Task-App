@@ -45,7 +45,7 @@ export const AiVoiceInput = () => {
         </View>
       </View>
 
-      {!showTaskList && (
+      {!showTaskList && !isTyping && (
         <>
           <Pressable
             onLongPress={startListening}
@@ -80,8 +80,14 @@ export const AiVoiceInput = () => {
           )}
         </>
       )}
+      {isTyping && <Text>Ai is thinking...</Text>}
 
-      {showTaskList && <AiGeneratedTasks tasks={messages.at(-2)?.tasks ?? []} />}
+      {showTaskList && (
+        <AiGeneratedTasks
+          tasks={messages.at(-2)?.tasks ?? []}
+          backToVoiceInput={() => setShowTaskList(false)}
+        />
+      )}
     </View>
   );
 };
