@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
-import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { Pressable, Text, View } from "react-native";
+import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import Modal from "react-native-modal";
@@ -14,10 +14,6 @@ type Props = {
 export default function DatePicker({ value, onChange }: Props) {
   const [openCalendar, setOpenCalendar] = useState(false);
   const [tempDate, setTempDate] = useState<Date | undefined>(value);
-
-  const onNativeChange = (_: DateTimePickerEvent, selected?: Date) => {
-    if (selected) setTempDate(selected);
-  };
 
   const handleConfirm = () => {
     if (tempDate) {
