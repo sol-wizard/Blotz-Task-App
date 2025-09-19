@@ -191,7 +191,7 @@ export default function CalendarPage() {
       <Portal>
         <BottomSheetModal
           ref={aiVoiceInputModalRef}
-          snapPoints={["60%", "80%"]}
+          snapPoints={["70%", "80%"]}
           enablePanDownToClose
           backdropComponent={renderBackdrop}
           backgroundStyle={{

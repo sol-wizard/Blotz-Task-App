@@ -55,7 +55,8 @@
           "domain": "dev-k72xachs0fr6nebp.us.auth0.com"
         }
       ],
-      "patch-project"
+      "patch-project",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

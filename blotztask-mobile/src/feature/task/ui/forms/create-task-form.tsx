@@ -18,10 +18,6 @@ export default function CreateTaskForm({
 }: {
   handleTaskCreationSheetClose: (index: number) => void;
 }) {
-  const handleAiChat = () => {
-    handleTaskCreationSheetClose(-1);
-    router.push("/(protected)/ai-task-generator");
-  };
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onSubmit",
