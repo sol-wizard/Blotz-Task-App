@@ -1,16 +1,39 @@
 import { View, Text } from "react-native";
 import WheelPicker from "@quidone/react-native-wheel-picker";
-import { useEffect, useState } from "react";
 
 export const TimePicker = ({
-  defaultValue,
+  type,
+  hasDate,
+  value,
   onChange,
 }: {
-  defaultValue: Date;
+  type: "start" | "end";
+  hasDate: boolean;
+  value: Date | undefined;
   onChange: (d: Date) => void;
 }) => {
-  const [hourValue, setHourValue] = useState(defaultValue?.getHours() || 0);
-  const [minValue, setMinValue] = useState(defaultValue?.getMinutes() || 0);
+  const createTimeFromValues = (hour: number, minute: number) => {
+    const baseDate = value || new Date();
+    const time = new Date(baseDate);
+    time.setHours(hour, minute, 0, 0);
+    return time;
+  };
+
+  const getCurrentTime = () => {
+    if (value) {
+      return {
+        hour: value.getHours(),
+        minute: value.getMinutes(),
+      };
+    } else if (type === "start") {
+      return { hour: 0, minute: 0 };
+    } else {
+      // End time: 23:59 if has date, otherwise 00:00
+      return hasDate ? { hour: 23, minute: 59 } : { hour: 0, minute: 0 };
+    }
+  };
+
+  const { hour: currentHour, minute: currentMinute } = getCurrentTime();
 
   const hourData = [...Array(24).keys()].map((h) => ({
     value: h,
@@ -21,15 +44,6 @@ export const TimePicker = ({
     value: m,
     label: String(m).padStart(2, "0"),
   }));
-
-  useEffect(() => {
-    if (defaultValue) {
-      const merged = new Date(defaultValue);
-      merged.setHours(hourValue, minValue, 0, 0);
-      onChange(merged);
-    }
-    return;
-  }, [hourValue, minValue]);
 
   return (
     <View className="flex-row mb-4 border rounded-xl border-gray-200">
@@ -43,8 +57,11 @@ export const TimePicker = ({
           data={hourData}
           enableScrollByTapOnItem
           visibleItemCount={1}
-          value={hourValue}
-          onValueChanged={({ item: { value } }) => setHourValue(value)}
+          value={currentHour}
+          onValueChanged={({ item: { value } }) => {
+            const time = createTimeFromValues(value, currentMinute);
+            onChange(time);
+          }}
         />
 
         <Text className="font-bold text-2xl text-gray-600">:</Text>
@@ -58,8 +75,11 @@ export const TimePicker = ({
           data={minData}
           enableScrollByTapOnItem
           visibleItemCount={1}
-          value={minValue}
-          onValueChanged={({ item: { value } }) => setMinValue(value)}
+          value={currentMinute}
+          onValueChanged={({ item: { value } }) => {
+            const time = createTimeFromValues(currentHour, value);
+            onChange(time);
+          }}
         />
       </View>
     </View>
