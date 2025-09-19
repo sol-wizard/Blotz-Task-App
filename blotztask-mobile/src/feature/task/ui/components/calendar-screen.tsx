@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { FAB, Portal, Snackbar } from "react-native-paper";
-import { format, isSameDay } from "date-fns";
+import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoTasksView from "./no-tasks-view";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
