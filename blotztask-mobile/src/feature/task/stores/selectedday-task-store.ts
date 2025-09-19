@@ -7,7 +7,9 @@ import {
   deleteTask,
   fetchTasksForDate,
   toggleTaskCompletion,
+  updateTaskItem,
 } from "../services/task-service";
+import { EditTaskItemDTO } from "../models/edit-task-item-dto";
 
 interface SelectedDayTaskStore {
   selectedDay: Date;
@@ -18,6 +20,7 @@ interface SelectedDayTaskStore {
   addTask: (task: AddTaskItemDTO) => Promise<void>;
   toggleTask: (taskId: number) => Promise<void>;
   removeTask: (taskId: number) => Promise<void>;
+  saveEditedTask: (task: EditTaskItemDTO) => Promise<void>;
 }
 
 export const useSelectedDayTaskStore = create<SelectedDayTaskStore>((set, get) => ({
@@ -61,5 +64,15 @@ export const useSelectedDayTaskStore = create<SelectedDayTaskStore>((set, get) =
     set((state) => ({
       tasksForSelectedDay: state.tasksForSelectedDay.filter((t) => t.id !== taskId),
     }));
+  },
+
+  saveEditedTask: async (task) => {
+    try {
+      await updateTaskItem(task);
+      await get().loadTasks();
+    } catch (error) {
+      console.error("Failed to edit task:", error);
+      throw error;
+    }
   },
 }));
