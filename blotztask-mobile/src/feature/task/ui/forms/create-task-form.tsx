@@ -117,21 +117,7 @@ export default function CreateTaskForm({
 
         <View className="flex-row gap-3 mb-8">
           <DateTimeSelectorTrigger
-            handleTrigger={() => {
-              const startDate = form.getValues("startDate");
-              const startTime = form.getValues("startTime");
-              const endDate = form.getValues("endDate");
-              const endTime = form.getValues("endTime");
-
-              if ((startDate || startTime || endDate || endTime) && !showingDateTimePicker) {
-                form.setValue("startDate", undefined);
-                form.setValue("startTime", undefined);
-                form.setValue("endDate", undefined);
-                form.setValue("endTime", undefined);
-              } else {
-                setShowingDateTimePicker((prev) => !prev);
-              }
-            }}
+            handleTrigger={() => setShowingDateTimePicker((prev) => !prev)}
             control={form.control}
           />
 
