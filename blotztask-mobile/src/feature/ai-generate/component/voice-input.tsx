@@ -29,16 +29,14 @@ export const VoiceInput = ({
     }
   };
   return (
-    <>
-      <View className="items-center">
-        <Text className="text-black text-2xl font-bold text-center" style={{ fontFamily: "Baloo" }}>
-          Braindump tasks{"\n"}with your voice
-        </Text>
+    <View className="items-center">
+      <Text className="text-black text-4xl font-balooBold text-center mt-6 leading-snug">
+        Braindump tasks{"\n"}with your voice
+      </Text>
 
-        <Text className="text-gray-500 text-base text-center mt-2" style={{ fontFamily: "Baloo2" }}>
-          Just say your task, and I‘ll create it automatically
-        </Text>
-      </View>
+      <Text className="text-gray-500 font-baloo text-xl text-center mt-2">
+        Just say your task, and I‘ll create it automatically
+      </Text>
 
       <View className="mt-6">
         <Pressable
@@ -52,11 +50,11 @@ export const VoiceInput = ({
           </GradientCircle>
         </Pressable>
         {isListening ? (
-          <Text className="mt-4 text-gray-500">Recognising...</Text>
+          <Text className="text-lg mt-4 text-gray-500 font-baloo">Recognising...</Text>
         ) : (
-          <Text className="mt-4 text-gray-500">Hold and speak</Text>
+          <Text className="text-lg mt-4 text-gray-500 font-baloo">Hold and speak</Text>
         )}
       </View>
-    </>
+    </View>
   );
 };
