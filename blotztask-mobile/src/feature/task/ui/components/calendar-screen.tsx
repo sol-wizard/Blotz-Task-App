@@ -19,6 +19,7 @@ import {
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
 import { AiGenerateModal } from "@/feature/ai-generate/component/ai-generate-modal";
+import { GradientCircle } from "@/shared/components/common/gradient-circle";
 
 export default function CalendarPage() {
   const {
@@ -170,21 +171,24 @@ export default function CalendarPage() {
           <NoTasksView />
         )}
       </CalendarProvider>
-      <FAB
-        icon="star"
-        style={{
-          position: "absolute",
-          margin: 16,
-          width: 58,
-          right: 10,
-          bottom: 10,
-          backgroundColor: "#f65a83",
-        }}
-        onPress={() => {
-          aiVoiceInputModalRef?.current?.present();
-          console.log(!!aiVoiceInputModalRef.current);
-        }}
-      />
+      <GradientCircle>
+        <FAB
+          icon="star"
+          style={{
+            position: "absolute",
+            margin: 16,
+            width: 58,
+            right: 10,
+            bottom: 10,
+            backgroundColor: "#f65a83",
+          }}
+          onPress={() => {
+            aiVoiceInputModalRef?.current?.present();
+            console.log(!!aiVoiceInputModalRef.current);
+          }}
+        />
+      </GradientCircle>
+
       <Portal>
         <BottomSheetModal
           ref={aiVoiceInputModalRef}

@@ -1,3 +1,4 @@
+import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -46,25 +47,9 @@ export const VoiceInput = ({
           delayLongPress={250}
           style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
         >
-          <LinearGradient
-            colors={["#A3DC2F", "#2F80ED"]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={{
-              width: 90,
-              height: 90,
-              borderRadius: 60,
-              alignItems: "center",
-              justifyContent: "center",
-              shadowColor: "#000",
-              shadowOpacity: 0.2,
-              shadowRadius: 10,
-              shadowOffset: { width: 0, height: 6 },
-              elevation: 8,
-            }}
-          >
+          <GradientCircle>
             <Ionicons name="mic-outline" size={35} color="white" />
-          </LinearGradient>
+          </GradientCircle>
         </Pressable>
         {isListening ? (
           <Text className="mt-4 text-gray-500">Recognising...</Text>
