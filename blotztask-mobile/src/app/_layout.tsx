@@ -17,17 +17,17 @@ export default function RootLayout() {
   return (
     <Auth0Provider domain={domain} clientId={clientId}>
       <GestureHandlerRootView>
-        <PaperProvider theme={theme}>
-          <SafeAreaProvider>
-            <BottomSheetModalProvider>
+        <BottomSheetModalProvider>
+          <PaperProvider theme={theme}>
+            <SafeAreaProvider>
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="index" options={{ headerShown: false }} />
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                 <Stack.Screen name="(protected)" options={{ headerShown: false }} />
               </Stack>
-            </BottomSheetModalProvider>
-          </SafeAreaProvider>
-        </PaperProvider>
+            </SafeAreaProvider>
+          </PaperProvider>
+        </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </Auth0Provider>
   );
