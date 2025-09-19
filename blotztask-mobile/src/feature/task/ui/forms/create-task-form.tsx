@@ -1,6 +1,5 @@
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import TaskFormField, { taskFormSchema } from "@/feature/task/models/task-form-schema";
-import { addTaskItem } from "@/feature/task/services/task-service";
 import { toAddTaskItemDTO } from "@/feature/task/util/task-generator-util";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
@@ -12,13 +11,12 @@ import { DateTimeSelectorTrigger } from "./fields/date-time-selector-trigger";
 import { RepeatSelect } from "./fields/repeat-select";
 import { LabelSelect } from "./fields/label-select";
 import { StartEndDateTimePicker } from "./fields/start-end-date-time-picker";
+import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
 
 export default function CreateTaskForm({
   handleTaskCreationSheetClose,
-  refreshCalendarPage,
 }: {
   handleTaskCreationSheetClose: (index: number) => void;
-  refreshCalendarPage: () => void;
 }) {
   const handleAiChat = () => {
     handleTaskCreationSheetClose(-1);
@@ -42,6 +40,7 @@ export default function CreateTaskForm({
     formState: { errors },
   } = form;
 
+  const { addTask } = useSelectedDayTaskStore();
   const [showingDateTimePicker, setShowingDateTimePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -50,7 +49,7 @@ export default function CreateTaskForm({
       setIsSubmitting(true);
       const dto = toAddTaskItemDTO(data);
 
-      await addTaskItem(dto);
+      addTask(dto);
       handleTaskCreationSheetClose(-1);
       form.reset({
         title: "",
@@ -62,7 +61,6 @@ export default function CreateTaskForm({
         repeat: "none",
         labelId: undefined,
       });
-      refreshCalendarPage();
       setIsSubmitting(false);
     } catch (error) {
       console.error("Error adding action:", error);
