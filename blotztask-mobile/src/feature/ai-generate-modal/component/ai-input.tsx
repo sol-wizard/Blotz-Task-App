@@ -5,6 +5,7 @@ import { VoiceInput } from "./voice-input";
 import { TextInput } from "react-native-gesture-handler";
 import { AiGeneratedTasks } from "./ai-generated-tasks";
 import { InputModeSwitch } from "./input-mode-switch";
+import { WriteInput } from "./write-input";
 
 export const AiInput = ({
   showTaskList,
@@ -28,7 +29,7 @@ export const AiInput = ({
   return (
     <>
       {isVoiceInput && !isTyping && <VoiceInput text={text} setText={setText} />}
-      {!isVoiceInput && !isTyping && <TextInput></TextInput>}
+      {!isVoiceInput && !isTyping && <WriteInput text={text} setText={setText} />}
       <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} />
 
       {isTyping && <Text>Ai is thinking...</Text>}
