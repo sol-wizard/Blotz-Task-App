@@ -2,7 +2,6 @@ import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import TaskFormField, { taskFormSchema } from "@/feature/task/models/task-form-schema";
 import { toAddTaskItemDTO } from "@/feature/task/util/task-generator-util";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
