@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, ColorValue } from "react-native";
+import { ColorValue } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 type GradientColors = Readonly<[ColorValue, ColorValue, ...ColorValue[]]>;
