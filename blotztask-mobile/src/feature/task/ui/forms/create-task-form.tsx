@@ -28,7 +28,9 @@ export default function CreateTaskForm({
     defaultValues: {
       title: "",
       description: "",
+      startDate: undefined,
       startTime: undefined,
+      endDate: undefined,
       endTime: undefined,
       repeat: "none",
       labelId: undefined,
@@ -52,7 +54,9 @@ export default function CreateTaskForm({
       form.reset({
         title: "",
         description: "",
+        startDate: undefined,
         startTime: undefined,
+        endDate: undefined,
         endTime: undefined,
         repeat: "none",
         labelId: undefined,
@@ -123,6 +127,12 @@ export default function CreateTaskForm({
             <LabelSelect control={form.control} />
           </View>
         </View>
+        {(errors as any).startTime && (
+          <Text className="text-red-500 text-sm mt-1">{(errors as any).startTime.message}</Text>
+        )}
+        {(errors as any).endTime && (
+          <Text className="text-red-500 text-sm mt-1">{(errors as any).endTime.message}</Text>
+        )}
         {showingDateTimePicker && <StartEndDateTimePicker control={form.control} />}
 
         <Button
