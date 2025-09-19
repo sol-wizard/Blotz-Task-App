@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FAB, Portal, Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
@@ -9,7 +9,7 @@ import TaskCard from "./task-card";
 import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import SubtaskDetail from "./subtask-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
-import { ActivityIndicator, FlatList, SafeAreaView, View, Text } from "react-native";
+import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
@@ -19,7 +19,6 @@ import {
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
 import { AiGenerateModal } from "@/feature/ai-generate/component/ai-generate-modal";
-import { GradientCircle } from "@/shared/components/common/gradient-circle";
 
 export default function CalendarPage() {
   const {
