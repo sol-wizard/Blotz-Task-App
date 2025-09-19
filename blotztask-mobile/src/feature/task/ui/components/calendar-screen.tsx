@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Snackbar } from "react-native-paper";
-import { format, isSameDay } from "date-fns";
+import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoTasksView from "./no-tasks-view";
-import { fetchTasksForDate, toggleTaskCompletion, deleteTask } from "../../services/task-service";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
 import TaskCard from "./task-card";
@@ -18,11 +17,18 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
+import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
 
-export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) {
-  const [selectedDay, setSelectedDay] = useState(new Date());
-  const [tasksForSelectedDay, setTasksForSelectedDay] = useState<TaskDetailDTO[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+export default function CalendarPage() {
+  const {
+    selectedDay,
+    tasksForSelectedDay,
+    isLoading,
+    setSelectedDay,
+    loadTasks,
+    toggleTask,
+    removeTask,
+  } = useSelectedDayTaskStore();
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
   const editTaskModalRef = useRef<BottomSheetModal>(null);
   const subtaskModalRef = useRef<BottomSheetModal>(null);
@@ -38,39 +44,15 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
   });
 
   useEffect(() => {
-    loadTask();
-  }, [selectedDay, refreshFlag]);
-
-  const loadTask = async () => {
-    setIsLoading(true);
-    try {
-      const isToday = isSameDay(selectedDay, new Date());
-      const tasks = await fetchTasksForDate(selectedDay, isToday);
-      setTasksForSelectedDay(tasks);
-    } catch (e) {
-      console.error(e);
-      setTasksForSelectedDay([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleToggleTask = async (task: TaskDetailDTO) => {
-    try {
-      await toggleTaskCompletion(task.id);
-      const isToday = isSameDay(selectedDay, new Date());
-      const updatedTasks = await fetchTasksForDate(selectedDay, isToday);
-      setTasksForSelectedDay(updatedTasks);
-    } catch (e) {
-      console.error(e);
-    }
-  };
+    loadTasks();
+  }, [selectedDay]);
 
   const presentSheet = (task: TaskDetailDTO) => {
     setSelectedTask(task);
     taskDetailModalRef?.current?.present();
   };
 
+  // TODO: Update detail sheet after editing the selected task
   const handleEditTaskSheetClose = () => {
     editTaskModalRef?.current?.dismiss();
     taskDetailModalRef?.current?.present();
@@ -88,7 +70,7 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
       startTime={item.startTime}
       endTime={item.endTime}
       isCompleted={item.isDone}
-      onToggleComplete={() => handleToggleTask(item)}
+      onToggleComplete={() => toggleTask(item.id)}
       onPress={() => presentSheet(item)}
       onDelete={async () => {
         await handleDeleteTask(item.id);
@@ -98,16 +80,11 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
 
   const handleDeleteTask = async (taskId: number) => {
     try {
-      await deleteTask(taskId);
       //TODO: Should refresh the tasks for the selected day instead of deleting at frontend
-      setTasksForSelectedDay((prev) => prev.filter((t) => t.id !== taskId)); // delete at frontend
+      await removeTask(taskId);
       setSnackbar({ visible: true, text: "Delete Successful" });
     } catch (e) {
       console.error(e);
-      setSnackbar({
-        visible: true,
-        text: "Delete Failed, please try again later",
-      });
       setSnackbar({
         visible: true,
         text: "Delete Failed, please try again later",

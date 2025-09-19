@@ -7,11 +7,9 @@ import CreateTaskForm from "../forms/create-task-form";
 export const CreateTaskBottomSheet = ({
   isVisible,
   onClose,
-  refreshCalendarPage,
 }: {
   isVisible: boolean;
   onClose: (isVisible: boolean) => void;
-  refreshCalendarPage: () => void;
 }) => {
   const taskCreationBottomSheetRef = useRef<BottomSheet>(null);
 
@@ -50,10 +48,7 @@ export const CreateTaskBottomSheet = ({
           onClose={() => onClose(false)}
         >
           <BottomSheetView style={{ padding: 16 }}>
-            <CreateTaskForm
-              handleTaskCreationSheetClose={handleSheetChange}
-              refreshCalendarPage={refreshCalendarPage}
-            />
+            <CreateTaskForm handleTaskCreationSheetClose={handleSheetChange} />
           </BottomSheetView>
         </BottomSheet>
       </View>
