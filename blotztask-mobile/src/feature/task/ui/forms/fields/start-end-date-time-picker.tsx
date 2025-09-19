@@ -8,8 +8,8 @@ export const StartEndDateTimePicker = ({ control }: { control: any }) => {
   const endDate = useWatch({ control, name: "endDate" });
 
   return (
-    <View className="flex-col justify-between">
-      <View className="flex-row justify-between">
+    <View className="flex-row justify-between">
+      <View className="flex-col justify-between">
         <View className="flex-1">
           <Controller
             control={control}
@@ -34,7 +34,7 @@ export const StartEndDateTimePicker = ({ control }: { control: any }) => {
           />
         </View>
       </View>
-      <View className="flex-row justify-between">
+      <View className="flex-col justify-between">
         <View className="flex-1">
           <Controller
             control={control}
