@@ -10,7 +10,6 @@ export const AiGenerateModal = () => {
   const [text, setText] = useState("");
   const { aiGeneratedTasks, isTyping, sendMessage } = useAiTaskGenerator();
   const [isVoiceInput, setIsVoiceInput] = useState(true);
-  console.log("aiGeneratedTasks:", aiGeneratedTasks);
 
   return (
     <>
