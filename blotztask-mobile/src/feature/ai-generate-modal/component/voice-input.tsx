@@ -1,4 +1,3 @@
-import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -7,12 +6,14 @@ import { Pressable, View, Text } from "react-native";
 export const VoiceInput = ({
   text,
   setText,
+  sendMessage,
 }: {
   text: string;
   setText: (value: string) => void;
+  sendMessage: (v: string) => void;
 }) => {
   const { startListening, stopAndGetText, isListening } = useVoiceInput();
-  const { sendMessage } = useAiTaskGenerator();
+
   const handleMicPressOut = async () => {
     const spoken = await stopAndGetText();
 
