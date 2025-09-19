@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { TaskCreateSuccessDialog } from "./task-create-success-dialog";
-import { AiVoiceInput } from "./ai-voice-input";
+import { TaskCreateSuccessDialog } from "../../task/ui/components/task-create-success-dialog";
+import { AiInput } from "./ai-input";
 
 export const AiVoiceChatModal = () => {
   const [showTaskList, setShowTaskList] = useState(false);
@@ -15,7 +15,7 @@ export const AiVoiceChatModal = () => {
   return (
     <View className="w-[86%] rounded-3xl bg-white p-6 items-center">
       {!showTaskCreateSuccessUI && (
-        <AiVoiceInput
+        <AiInput
           showTaskList={showTaskList}
           setShowTaskList={setShowTaskList}
           setShowConfirmUI={setShowTaskCreateSuccessUI}

@@ -10,6 +10,7 @@ export function useAiTaskGenerator() {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [aiGeneratedTasks, setAiGeneratedTasks] = useState<AiTaskDTO[]>([]);
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -42,6 +43,7 @@ export function useAiTaskGenerator() {
 
     const mappedTasks: AiTaskDTO[] = receivedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
     console.log("mappedTasks,", mappedTasks);
+    setAiGeneratedTasks(mappedTasks);
 
     setMessages((prev = []) => [
       ...prev,
@@ -89,5 +91,5 @@ export function useAiTaskGenerator() {
     };
   }, []);
 
-  return { messages, sendMessage, isTyping };
+  return { aiGeneratedTasks, messages, sendMessage, isTyping };
 }

@@ -2,8 +2,8 @@ import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
-import { formatDateRange } from "../../util/format-date-range";
-import { formatSameDayTimeRange } from "../../util/format-same-day-time-range";
+import { formatDateRange } from "../../task/util/format-date-range";
+import { formatSameDayTimeRange } from "../../task/util/format-same-day-time-range";
 
 export const AiTaskCard = ({ task }: { task: AiTaskDTO }) => {
   const dateRange = formatDateRange({

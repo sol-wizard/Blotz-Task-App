@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { FAB, Modal, Portal, Snackbar } from "react-native-paper";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { FAB, Portal, Snackbar } from "react-native-paper";
 import { format, isSameDay } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoTasksView from "./no-tasks-view";
@@ -10,7 +10,7 @@ import TaskCard from "./task-card";
 import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import SubtaskDetail from "./subtask-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
-import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
+import { ActivityIndicator, FlatList, SafeAreaView, View, Text } from "react-native";
 import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
@@ -18,7 +18,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
-import { AiVoiceChatModal } from "./ai-voice-chat-modal";
+import { AiVoiceChatModal } from "../../../ai-generate-modal/component/ai-voice-chat-modal";
 
 export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) {
   const [selectedDay, setSelectedDay] = useState(new Date());
@@ -27,9 +27,9 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
   const editTaskModalRef = useRef<BottomSheetModal>(null);
   const subtaskModalRef = useRef<BottomSheetModal>(null);
+  const aiVoiceInputModalRef = useRef<BottomSheetModal>(null);
   const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
   const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
-  const [aiInputModalVisible, setAiInputModalVisible] = useState(false);
 
   //TODO: Maybe we dont need this
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
@@ -203,19 +203,27 @@ export default function CalendarPage({ refreshFlag }: { refreshFlag: boolean }) 
           bottom: 10,
           backgroundColor: "#f65a83",
         }}
-        onPress={() => setAiInputModalVisible(true)}
+        onPress={() => {
+          aiVoiceInputModalRef?.current?.present();
+          console.log(!!aiVoiceInputModalRef.current);
+        }}
       />
       <Portal>
-        <Modal
-          visible={aiInputModalVisible}
-          onDismiss={() => setAiInputModalVisible(false)}
-          contentContainerStyle={{
-            justifyContent: "center",
-            alignItems: "center",
+        <BottomSheetModal
+          ref={aiVoiceInputModalRef}
+          snapPoints={["60%", "80%"]}
+          enablePanDownToClose
+          backdropComponent={renderBackdrop}
+          backgroundStyle={{
+            backgroundColor: "#FFFFFF",
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
           }}
         >
-          <AiVoiceChatModal />
-        </Modal>
+          <BottomSheetView className="justify-center items-center">
+            <AiVoiceChatModal />
+          </BottomSheetView>
+        </BottomSheetModal>
       </Portal>
 
       <BottomSheetModal
