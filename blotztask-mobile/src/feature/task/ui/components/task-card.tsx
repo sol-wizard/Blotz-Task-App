@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Pressable, Text } from "react-native";
-
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
-
-// [ADDED] gesture and animation
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -27,7 +24,6 @@ interface TaskCardProps {
   onDelete?: (id: string) => Promise<void> | void;
 }
 
-// The width of the right action area (further left could reduce ACTION_WIDTH)
 const ACTION_WIDTH = 64;
 const OPEN_X = -ACTION_WIDTH;
 const OPEN_THRESHOLD = ACTION_WIDTH * 0.55;
