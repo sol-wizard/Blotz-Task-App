@@ -7,7 +7,7 @@ import Modal from "react-native-modal";
 
 type Props = {
   value?: Date;
-  onChange: (d: Date) => void;
+  onChange: (d: Date | undefined) => void;
 };
 
 export default function DatePicker({ value, onChange }: Props) {
@@ -27,6 +27,7 @@ export default function DatePicker({ value, onChange }: Props) {
 
   const handleCanel = () => {
     setTempDate(undefined);
+    onChange(undefined);
     setOpenCalendar(false);
   };
 
