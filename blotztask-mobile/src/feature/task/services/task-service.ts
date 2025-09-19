@@ -2,6 +2,7 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
 import { getStartOfDayUtc } from "../util/date-utils";
 import { AddTaskItemDTO } from "../models/add-task-item-dto";
+import { EditTaskItemDTO } from "../models/edit-task-item-dto";
 
 export async function fetchTasksForDate(
   date: Date,
@@ -37,7 +38,7 @@ export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<string> 
   }
 };
 
-export async function updateTaskItem(updatedTask: any): Promise<void> {
+export async function updateTaskItem(updatedTask: EditTaskItemDTO): Promise<void> {
   try {
     await fetchWithAuth<any>(`${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${updatedTask.id}`, {
       method: "PUT",
