@@ -10,7 +10,7 @@ export function InputModeSwitch({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <View className="flex-row items-center bg-blue-50 rounded-full p-1 mt-8">
+    <View className="flex-row items-center bg-blue-50 rounded-full p-1 mt-8 mb-6">
       <IconButton
         icon={value ? "microphone" : "microphone-outline"}
         size={20}
