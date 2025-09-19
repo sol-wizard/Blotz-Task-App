@@ -80,28 +80,15 @@ export default function CreateTaskForm({
           </View>
         </View>
 
-        <View className="flex-row items-center gap-3 mb-4">
-          <View className="flex-1">
-            <FormTextInput
-              name="title"
-              placeholder="Title"
-              control={form.control}
-              className={`bg-gray-50 rounded-2xl border ${
-                errors.title ? "border-red-500" : "border-transparent"
-              }`}
-            />
-          </View>
-
-          <Button
-            mode="outlined"
-            icon="flash"
-            onPress={handleAiChat}
-            style={{ borderRadius: 14, borderColor: "#E5E7EB" }}
-            contentStyle={{ height: 48, paddingHorizontal: 14 }}
-            labelStyle={{ fontSize: 14, color: "#444964" }}
-          >
-            AI Generate Task
-          </Button>
+        <View className="flex-1">
+          <FormTextInput
+            name="title"
+            placeholder="Title"
+            control={form.control}
+            className={`bg-gray-50 rounded-2xl border ${
+              errors.title ? "border-red-500" : "border-transparent"
+            }`}
+          />
         </View>
 
         <View className="mb-4">
