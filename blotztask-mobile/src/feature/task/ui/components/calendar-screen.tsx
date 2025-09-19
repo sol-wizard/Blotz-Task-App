@@ -52,6 +52,7 @@ export default function CalendarPage() {
     taskDetailModalRef?.current?.present();
   };
 
+  // TODO: Update detail sheet after editing the selected task
   const handleEditTaskSheetClose = () => {
     editTaskModalRef?.current?.dismiss();
     taskDetailModalRef?.current?.present();
