@@ -1,5 +1,6 @@
 import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
 import * as SecureStore from "expo-secure-store";
+import { clearSessionAndRedirect } from "../util/clearSessionAndRedirect";
 
 export const fetchWithAuth = async <T>(url: string, options: RequestInit = {}): Promise<T> => {
   try {
@@ -21,8 +22,13 @@ export const fetchWithAuth = async <T>(url: string, options: RequestInit = {}): 
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        console.warn("Token expired or unauthorized. Redirecting to login…");
+        await clearSessionAndRedirect();
+        throw new Error(`Unauthorized: ${url}`);
+      }
       console.error("API error:", response.status);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: : ${response.status}`);
     }
 
     const contentType = response.headers.get("content-type");
