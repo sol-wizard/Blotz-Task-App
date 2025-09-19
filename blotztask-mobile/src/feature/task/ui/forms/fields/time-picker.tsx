@@ -2,14 +2,38 @@ import { View, Text } from "react-native";
 import WheelPicker from "@quidone/react-native-wheel-picker";
 
 export const TimePicker = ({
+  type,
+  hasDate,
   defaultValue,
   onChange,
 }: {
+  type: "start" | "end";
+  hasDate: boolean;
   defaultValue: Date | undefined;
   onChange: (d: Date) => void;
 }) => {
-  const currentHour = defaultValue?.getHours() || 0;
-  const currentMinute = defaultValue?.getMinutes() || 0;
+  const createTimeFromValues = (hour: number, minute: number) => {
+    const baseDate = defaultValue || new Date();
+    const time = new Date(baseDate);
+    time.setHours(hour, minute, 0, 0);
+    return time;
+  };
+
+  const getCurrentTime = () => {
+    if (defaultValue) {
+      return {
+        hour: defaultValue.getHours(),
+        minute: defaultValue.getMinutes(),
+      };
+    } else if (type === "start") {
+      return { hour: 0, minute: 0 };
+    } else {
+      // End time: 23:59 if has date, otherwise 00:00
+      return hasDate ? { hour: 23, minute: 59 } : { hour: 0, minute: 0 };
+    }
+  };
+
+  const { hour: currentHour, minute: currentMinute } = getCurrentTime();
 
   const hourData = [...Array(24).keys()].map((h) => ({
     value: h,
@@ -20,13 +44,6 @@ export const TimePicker = ({
     value: m,
     label: String(m).padStart(2, "0"),
   }));
-
-  const createTimeFromValues = (hour: number, minute: number) => {
-    const baseDate = defaultValue || new Date();
-    const mergedTime = new Date(baseDate);
-    mergedTime.setHours(hour, minute, 0, 0);
-    onChange(mergedTime);
-  };
 
   return (
     <View className="flex-row mb-4 border rounded-xl border-gray-200">
@@ -42,7 +59,8 @@ export const TimePicker = ({
           visibleItemCount={1}
           value={currentHour}
           onValueChanged={({ item: { value } }) => {
-            createTimeFromValues(value, currentMinute);
+            const time = createTimeFromValues(value, currentMinute);
+            onChange(time);
           }}
         />
 
@@ -59,7 +77,8 @@ export const TimePicker = ({
           visibleItemCount={1}
           value={currentMinute}
           onValueChanged={({ item: { value } }) => {
-            createTimeFromValues(currentHour, value);
+            const time = createTimeFromValues(currentHour, value);
+            onChange(time);
           }}
         />
       </View>

@@ -7,31 +7,31 @@ export const taskFormSchema = z
     title: z.string().min(1, "Title is required").max(80, "Max 80 chars"),
     description: z.string().max(1000, "Max 1000 chars").optional().or(z.literal("")).optional(),
     startDate: z.date().optional(),
-    startTimeOnly: z.date().optional(),
+    startTime: z.date().optional(),
     endDate: z.date().optional(),
-    endTimeOnly: z.date().optional(),
+    endTime: z.date().optional(),
     repeat: RepeatEnum.optional(),
     labelId: z.number(),
   })
   .refine(
     (data) => {
       // If either side is partially filled, skip this check; let submit logic handle requiredness
-      const hasStart = !!data.startDate && !!data.startTimeOnly;
-      const hasEnd = !!data.endDate && !!data.endTimeOnly;
+      const hasStart = !!data.startDate && !!data.startTime;
+      const hasEnd = !!data.endDate && !!data.endTime;
       if (!hasStart || !hasEnd) return true;
 
       const start = new Date(
         new Date(data.startDate as Date).setHours(
-          (data.startTimeOnly as Date).getHours(),
-          (data.startTimeOnly as Date).getMinutes(),
+          (data.startTime as Date).getHours(),
+          (data.startTime as Date).getMinutes(),
           0,
           0,
         ),
       );
       const end = new Date(
         new Date(data.endDate as Date).setHours(
-          (data.endTimeOnly as Date).getHours(),
-          (data.endTimeOnly as Date).getMinutes(),
+          (data.endTime as Date).getHours(),
+          (data.endTime as Date).getMinutes(),
           0,
           0,
         ),
@@ -41,7 +41,7 @@ export const taskFormSchema = z
     },
     {
       message: "End time cannot be earlier than start time",
-      path: ["endTimeOnly"],
+      path: ["endTime"],
     },
   );
 

@@ -3,12 +3,10 @@ import TaskFormField from "../models/task-form-schema";
 
 export function toAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
   const start = form.startDate
-    ? applyDefaultTimeToDate(form.startDate, form.startTimeOnly, 0, 0)
+    ? applyDefaultTimeToDate(form.startDate, form.startTime, 0, 0)
     : undefined;
 
-  const end = form.endDate
-    ? applyDefaultTimeToDate(form.endDate, form.endTimeOnly, 23, 59)
-    : undefined;
+  const end = form.endDate ? applyDefaultTimeToDate(form.endDate, form.endTime, 23, 59) : undefined;
 
   return {
     title: (form.title ?? "").trim(),
@@ -19,15 +17,17 @@ export function toAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
   };
 }
 
+// This is for backup when the date is selected but time is unselected
+// Set starttime to 00:00 and endtime to 23:59
 export function applyDefaultTimeToDate(
-  datePart: Date,
-  timePart: Date | undefined,
-  defaultHours: number,
-  defaultMinutes: number,
+  date: Date,
+  time: Date | undefined,
+  defaultHours: 23 | 0,
+  defaultMinutes: 59 | 0,
 ): Date {
-  const merged = new Date(datePart);
-  if (timePart) {
-    merged.setHours(timePart.getHours(), timePart.getMinutes(), 0, 0);
+  const merged = new Date(date);
+  if (time) {
+    merged.setHours(time.getHours(), time.getMinutes(), 0, 0);
   } else {
     merged.setHours(defaultHours, defaultMinutes, 0, 0);
   }
