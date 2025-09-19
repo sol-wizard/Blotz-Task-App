@@ -27,7 +27,7 @@ export const StartEndDateTimePicker = ({ control }: { control: any }) => {
               <TimePicker
                 type="start"
                 hasDate={!!startDate}
-                defaultValue={value as Date | undefined}
+                value={value as Date | undefined}
                 onChange={onChange}
               />
             )}
@@ -52,7 +52,7 @@ export const StartEndDateTimePicker = ({ control }: { control: any }) => {
               <TimePicker
                 type="end"
                 hasDate={!!endDate}
-                defaultValue={value as Date | undefined}
+                value={value as Date | undefined}
                 onChange={onChange}
               />
             )}

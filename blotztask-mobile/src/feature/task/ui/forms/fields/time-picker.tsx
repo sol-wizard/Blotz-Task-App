@@ -4,26 +4,26 @@ import WheelPicker from "@quidone/react-native-wheel-picker";
 export const TimePicker = ({
   type,
   hasDate,
-  defaultValue,
+  value,
   onChange,
 }: {
   type: "start" | "end";
   hasDate: boolean;
-  defaultValue: Date | undefined;
+  value: Date | undefined;
   onChange: (d: Date) => void;
 }) => {
   const createTimeFromValues = (hour: number, minute: number) => {
-    const baseDate = defaultValue || new Date();
+    const baseDate = value || new Date();
     const time = new Date(baseDate);
     time.setHours(hour, minute, 0, 0);
     return time;
   };
 
   const getCurrentTime = () => {
-    if (defaultValue) {
+    if (value) {
       return {
-        hour: defaultValue.getHours(),
-        minute: defaultValue.getMinutes(),
+        hour: value.getHours(),
+        minute: value.getMinutes(),
       };
     } else if (type === "start") {
       return { hour: 0, minute: 0 };
