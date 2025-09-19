@@ -1,8 +1,8 @@
-// AiTasksPreview.tsx
 import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
+import { Ionicons } from "@expo/vector-icons";
 
 export function AiTasksPreview({
   tasks,
@@ -20,10 +20,17 @@ export function AiTasksPreview({
   }
 
   return (
-    <View>
+    <View className="mb-10 items-center">
       {tasks.map((task) => (
         <AiTaskCard key={task.id} task={task} handleTaskDelete={onDeleteTask} />
       ))}
+      <Pressable
+        onPress={() => console.log("Up button pressed")}
+        className="w-12 h-12 rounded-full bg-black items-center justify-center"
+        style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+      >
+        <Ionicons name="arrow-up" size={20} color="white" />
+      </Pressable>
     </View>
   );
 }
