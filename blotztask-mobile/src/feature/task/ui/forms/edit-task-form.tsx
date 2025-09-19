@@ -3,51 +3,53 @@ import { FormProvider, useForm } from "react-hook-form";
 import { View, Text, TouchableOpacity } from "react-native";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-
-import { updateTaskItem } from "../../services/task-service";
 import TaskFormField, { taskFormSchema } from "../../models/task-form-schema";
 import { RepeatSelect } from "./fields/repeat-select";
 import { LabelSelect } from "./fields/label-select";
+import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
+import { EditTaskItemDTO } from "../../models/edit-task-item-dto";
 
 export type EditTaskFormProps = {
   task: TaskDetailDTO;
-  onSubmit: () => void;
-  onCancel?: () => void;
+  onClose: () => void;
 };
-export const EditTaskForm = ({ task, onSubmit, onCancel }: EditTaskFormProps) => {
+
+export const EditTaskForm = ({ task, onClose }: EditTaskFormProps) => {
+  const defaultValues: EditTaskItemDTO = {
+    title: task.title,
+    description: task.description ?? "",
+    startTime: task.startTime ? new Date(task.startTime) : undefined,
+    endTime: task.endTime ? new Date(task.endTime) : undefined,
+    repeat: task.repeat ?? "none",
+    labelId: task.label?.labelId ?? undefined,
+    isDone: task.isDone,
+    id: task.id,
+  };
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
-    defaultValues: {
-      title: task.title,
-      description: task.description ?? "",
-      endTime: new Date(task.endTime),
-      repeat: "none",
-      labelId: task.label?.labelId ?? undefined,
-    },
+    defaultValues: defaultValues,
   });
 
   const {
     control,
     formState: { errors, isValid, isSubmitting },
   } = form;
+  const { saveEditedTask } = useSelectedDayTaskStore();
 
   const handleSubmit = form.handleSubmit(async (values: TaskFormField) => {
-    const updatedTask = {
+    const updatedTask: EditTaskItemDTO = {
       id: task?.id ?? 0,
       title: values.title,
       description: values.description ?? "",
+      startTime: values.startTime,
       endTime: values.endTime,
       isDone: task?.isDone,
       repeat: values.repeat ?? "none",
       labelId: values.labelId,
     };
-    try {
-      await updateTaskItem(updatedTask);
-    } catch (err) {
-      console.error("updateTaskItem failed", err);
-    }
-    onSubmit();
+    await saveEditedTask(updatedTask);
+    onClose();
   });
 
   return (
@@ -108,11 +110,7 @@ export const EditTaskForm = ({ task, onSubmit, onCancel }: EditTaskFormProps) =>
               {isSubmitting ? "saving..." : "Confirm"}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            className="mt-3 items-center"
-            onPress={onCancel}
-            disabled={isSubmitting}
-          >
+          <TouchableOpacity className="mt-3 items-center" onPress={onClose} disabled={isSubmitting}>
             <Text className="text-sm text-gray-500"> Cancel</Text>
           </TouchableOpacity>
         </View>

@@ -22,15 +22,13 @@ const routes = [
   },
 ];
 
+const CalendarRoute: any = () => <CalendarPage />;
+const SettingsRoute = () => <SettingsScreen />;
+
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
   const insets = useSafeAreaInsets();
   const [isTaskCreationSheetVisible, setIsTaskCreationSheetVisible] = useState(false);
-  const [refreshFlag, setRefreshFlag] = useState(false);
-
-  const CalendarRoute: any = () => <CalendarPage refreshFlag={refreshFlag} />;
-
-  const SettingsRoute = () => <SettingsScreen />;
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
@@ -67,7 +65,6 @@ export default function ProtectedIndex() {
         <CreateTaskBottomSheet
           isVisible={isTaskCreationSheetVisible}
           onClose={setIsTaskCreationSheetVisible}
-          refreshCalendarPage={() => setRefreshFlag((flag) => !flag)}
         ></CreateTaskBottomSheet>
       )}
     </>
