@@ -171,23 +171,22 @@ export default function CalendarPage() {
           <NoTasksView />
         )}
       </CalendarProvider>
-      <GradientCircle>
-        <FAB
-          icon="star"
-          style={{
-            position: "absolute",
-            margin: 16,
-            width: 58,
-            right: 10,
-            bottom: 10,
-            backgroundColor: "#f65a83",
-          }}
-          onPress={() => {
-            aiVoiceInputModalRef?.current?.present();
-            console.log(!!aiVoiceInputModalRef.current);
-          }}
-        />
-      </GradientCircle>
+
+      <FAB
+        icon="star"
+        style={{
+          position: "absolute",
+          margin: 16,
+          width: 58,
+          right: 10,
+          bottom: 10,
+          backgroundColor: "#f65a83",
+        }}
+        onPress={() => {
+          aiVoiceInputModalRef?.current?.present();
+          console.log(!!aiVoiceInputModalRef.current);
+        }}
+      />
 
       <Portal>
         <BottomSheetModal
