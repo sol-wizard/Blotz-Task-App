@@ -6,7 +6,7 @@ import { InputModeSwitch } from "./input-mode-switch";
 import { WriteInput } from "./write-input";
 import { AiTasksPreview } from "./ai-tasks-preview";
 
-export const AiInput = () => {
+export const AiGenerateModal = () => {
   const [text, setText] = useState("");
   const { aiGeneratedTasks, isTyping, sendMessage } = useAiTaskGenerator();
   const [isVoiceInput, setIsVoiceInput] = useState(true);
