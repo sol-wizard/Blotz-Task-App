@@ -39,6 +39,7 @@ export const VoiceInput = ({
       {isListening && (
         <TextInput
           value={displayText}
+          editable={false}
           placeholderTextColor="#D1D5DB"
           multiline
           className="text-xl font-bold text-gray-400 text-center"
