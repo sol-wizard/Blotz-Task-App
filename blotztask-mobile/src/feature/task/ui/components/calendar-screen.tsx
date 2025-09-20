@@ -18,7 +18,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
-import { AiGenerateModal } from "@/feature/ai-generate/component/ai-generate-modal";
+import { AiTaskGenerateModal } from "@/feature/ai-task-generate/component/ai-generate-modal";
 
 export default function CalendarPage() {
   const {
@@ -200,7 +200,7 @@ export default function CalendarPage() {
           }}
         >
           <BottomSheetView className="justify-center items-center">
-            <AiGenerateModal />
+            <AiTaskGenerateModal />
           </BottomSheetView>
         </BottomSheetModal>
       </Portal>

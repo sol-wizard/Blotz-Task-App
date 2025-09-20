@@ -6,7 +6,7 @@ import { Text } from "react-native";
 
 export type ModalType = "input" | "loading" | "task-preview";
 
-export const AiGenerateModal = () => {
+export const AiTaskGenerateModal = () => {
   const [text, setText] = useState("");
   const { aiGeneratedTasks, sendMessage } = useAiTaskGenerator();
   const [modalType, setModalType] = useState<ModalType>("input");
