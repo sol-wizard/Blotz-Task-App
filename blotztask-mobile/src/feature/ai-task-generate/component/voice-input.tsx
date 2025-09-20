@@ -2,7 +2,7 @@ import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View, Text, TextInput } from "react-native";
-import { ModalType } from "./ai-generate-modal";
+import { ModalType } from "../modals/modal-type";
 
 export const VoiceInput = ({
   text,
@@ -41,7 +41,7 @@ export const VoiceInput = ({
           value={displayText}
           placeholderTextColor="#D1D5DB"
           multiline
-          className="text-xl font-bold text-gray-400"
+          className="text-xl font-bold text-gray-400 text-center"
           style={{ fontFamily: "Baloo2-Regular" }}
         />
       )}
