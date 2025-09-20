@@ -1,4 +1,5 @@
 import { TextInput, View } from "react-native";
+import { ModalType } from "./ai-generate-modal";
 
 export const WriteInput = ({
   text,
