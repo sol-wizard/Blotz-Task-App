@@ -99,7 +99,7 @@ export default function TaskCard({
   const timePeriod = formatDateRange({ startTime, endTime });
 
   return (
-    <View className="relative mx-4 my-2 rounded-2xl bg-white shadow-sm shadow-black/10 elevation-3 overflow-hidden">
+    <View className="relative mx-4 my-2 rounded-2xl bg-white elevation-3 overflow-hidden">
       <Animated.View
         style={rightActionStyle}
         pointerEvents={actionsEnabled ? "auto" : "none"}

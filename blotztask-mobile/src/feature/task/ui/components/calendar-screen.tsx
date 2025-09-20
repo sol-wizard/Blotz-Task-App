@@ -132,7 +132,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1  bg-white">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
       <CalendarProvider
         date={format(selectedDay, "yyyy-MM-dd")}
