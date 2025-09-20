@@ -2,7 +2,7 @@ import { useState } from "react";
 import { InputModeSwitch } from "./input-mode-switch";
 import { VoiceInput } from "./voice-input";
 import { WriteInput } from "./write-input";
-import { ModalType } from "./ai-generate-modal";
+import { ModalType } from "../modals/modal-type";
 
 export const AiInput = ({
   text,

@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
 import { Text } from "react-native";
-
-export type ModalType = "input" | "loading" | "task-preview";
+import { ModalType } from "../modals/modal-type";
 
 export const AiTaskGenerateModal = () => {
   const [text, setText] = useState("");
