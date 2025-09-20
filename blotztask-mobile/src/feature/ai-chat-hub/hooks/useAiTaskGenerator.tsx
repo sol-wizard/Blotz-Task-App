@@ -6,6 +6,7 @@ import { AiTaskDTO } from "../models/ai-task-dto";
 import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 import { signalRService } from "../services/ai-task-generator-signalr-service";
 
+// TODO: messages, isTyping is no longer in use
 export function useAiTaskGenerator() {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
