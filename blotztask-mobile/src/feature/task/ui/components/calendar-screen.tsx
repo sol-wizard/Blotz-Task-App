@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Snackbar } from "react-native-paper";
+import { FAB, Portal, Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoTasksView from "./no-tasks-view";
@@ -18,6 +18,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
+import { AiTaskGenerateModal } from "@/feature/ai-task-generate/component/ai-generate-modal";
 
 export default function CalendarPage() {
   const {
@@ -32,6 +33,7 @@ export default function CalendarPage() {
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
   const editTaskModalRef = useRef<BottomSheetModal>(null);
   const subtaskModalRef = useRef<BottomSheetModal>(null);
+  const aiVoiceInputModalRef = useRef<BottomSheetModal>(null);
   const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
   const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
 
@@ -130,7 +132,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1  bg-white">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
       <CalendarProvider
         date={format(selectedDay, "yyyy-MM-dd")}
@@ -168,6 +170,40 @@ export default function CalendarPage() {
           <NoTasksView />
         )}
       </CalendarProvider>
+
+      <FAB
+        icon="star"
+        style={{
+          position: "absolute",
+          margin: 16,
+          width: 58,
+          right: 10,
+          bottom: 10,
+          backgroundColor: "#f65a83",
+        }}
+        onPress={() => {
+          aiVoiceInputModalRef?.current?.present();
+          console.log(!!aiVoiceInputModalRef.current);
+        }}
+      />
+
+      <Portal>
+        <BottomSheetModal
+          ref={aiVoiceInputModalRef}
+          snapPoints={["70%", "80%"]}
+          enablePanDownToClose
+          backdropComponent={renderBackdrop}
+          backgroundStyle={{
+            backgroundColor: "#FFFFFF",
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+          }}
+        >
+          <BottomSheetView className="justify-center items-center">
+            <AiTaskGenerateModal />
+          </BottomSheetView>
+        </BottomSheetModal>
+      </Portal>
 
       <BottomSheetModal
         ref={taskDetailModalRef}

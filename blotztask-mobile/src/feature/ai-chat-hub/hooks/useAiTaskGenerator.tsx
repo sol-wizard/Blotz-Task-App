@@ -6,10 +6,12 @@ import { AiTaskDTO } from "../models/ai-task-dto";
 import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 import { signalRService } from "../services/ai-task-generator-signalr-service";
 
+// TODO: messages, isTyping is no longer in use
 export function useAiTaskGenerator() {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [aiGeneratedTasks, setAiGeneratedTasks] = useState<AiTaskDTO[]>([]);
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -39,9 +41,10 @@ export function useAiTaskGenerator() {
 
   const receiveTasksHandler = (receivedTasks: ExtractedTaskDTO[]) => {
     if (!receivedTasks || receivedTasks.length === 0) return;
-    console.log("receivedTasks:", receivedTasks);
+
     const mappedTasks: AiTaskDTO[] = receivedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
     console.log("mappedTasks,", mappedTasks);
+    setAiGeneratedTasks(mappedTasks);
 
     setMessages((prev = []) => [
       ...prev,
@@ -89,5 +92,5 @@ export function useAiTaskGenerator() {
     };
   }, []);
 
-  return { messages, sendMessage, isTyping };
+  return { aiGeneratedTasks, messages, sendMessage, isTyping };
 }
