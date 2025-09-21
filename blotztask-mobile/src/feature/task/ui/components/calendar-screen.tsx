@@ -18,7 +18,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
-import { AiTaskGenerateModal } from "@/feature/ai-task-generate/component/ai-generate-modal";
+import { AiTaskGenerateModal } from "@/feature/ai-task-generate/component/ai-task-generate-modal";
 
 export default function CalendarPage() {
   const {
