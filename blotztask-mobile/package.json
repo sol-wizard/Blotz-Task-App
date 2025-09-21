@@ -66,7 +66,6 @@
     "react-native-uuid": "^2.0.3",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
-    "react-native-worklets": "^0.5.1",
     "tailwindcss": "^3.4.17",
     "zod": "^4.0.5",
     "zustand": "^5.0.8"
