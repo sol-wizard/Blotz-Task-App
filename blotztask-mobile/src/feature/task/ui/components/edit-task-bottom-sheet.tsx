@@ -11,7 +11,7 @@ export const EditTaskBottomSheet = ({
 }) => {
   return (
     <BottomSheetView style={{ padding: 16 }}>
-      <EditTaskForm task={task} onSubmit={handleClose} onCancel={handleClose} />
+      <EditTaskForm task={task} onClose={handleClose} />
     </BottomSheetView>
   );
 };

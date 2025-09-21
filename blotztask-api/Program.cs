@@ -38,7 +38,6 @@ builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
 
 //TODO : Move all services to module based registration
-builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<TaskGenerationAiService>();
 
 builder.Services.AddScoped<IConversationStateService, ConversationStateService>();
