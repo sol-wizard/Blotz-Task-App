@@ -29,8 +29,9 @@ using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddSerilogLogging();
-builder.AddApplicationInsights();
+builder
+    .AddSerilogLogging()
+    .AddApplicationInsights();
 
 // Add services to the container.
 builder.Services.AddSignalR();
