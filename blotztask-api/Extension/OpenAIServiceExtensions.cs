@@ -5,7 +5,7 @@ using Azure.AI.OpenAI;
 using Azure.Security.KeyVault.Secrets;
 using OpenAI.Chat;
 
-public static class ServiceCollectionExtensions
+public static class OpenAiServiceExtensions
 {
         public static IServiceCollection AddAzureOpenAi(this IServiceCollection services)
         {
