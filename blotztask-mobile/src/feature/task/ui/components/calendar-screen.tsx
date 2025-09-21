@@ -199,7 +199,7 @@ export default function CalendarPage() {
             borderTopRightRadius: 24,
           }}
         >
-          <BottomSheetView className="justify-center items-center">
+          <BottomSheetView className="justify-center items-center" style={{ minHeight: 400 }}>
             <AiTaskGenerateModal />
           </BottomSheetView>
         </BottomSheetModal>
