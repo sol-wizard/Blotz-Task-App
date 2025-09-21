@@ -29,44 +29,13 @@ using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<TelemetryConfiguration>(sp =>
-{
-    var connStr = builder.Configuration["ApplicationInsights:ConnectionString"];
-    var tc = TelemetryConfiguration.CreateDefault();
-    tc.ConnectionString = connStr;
-    return tc;
-});
-// Configure Serilog to integrate with Microsoft.Extensions.Logging
-builder.Host.UseSerilog((context, services, configuration) =>
-{
-    configuration
-        .ReadFrom.Configuration(context.Configuration)
-        .ReadFrom.Services(services)
-        .Enrich.FromLogContext()
-        .MinimumLevel.Debug()
-        .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-        .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
-        .WriteTo.ApplicationInsights(
-        services.GetRequiredService<TelemetryConfiguration>(),
-        TelemetryConverter.Traces);
-});
+builder.AddSerilogLogging();
+builder.AddApplicationInsights();
 
 // Add services to the container.
 builder.Services.AddSignalR();
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey
-    });
-    options.OperationFilter<SecurityRequirementsOperationFilter>();
-});
 
 //TODO : Move all services to module based registration
 builder.Services.AddScoped<ITaskService, TaskService>();
@@ -175,21 +144,19 @@ var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<UserContextMiddleware>();
 
-app.UseHttpsRedirection();
 app.UseCors("AllowSpecificOrigin");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// "Add root path for app service always on ping"
-app.MapGet("/", () => Results.Ok("Web API is running"));
+app.MapGet("/", () => Results.Content(
+    "<html><body><h1>Web API is running</h1></body></html>", 
+    "text/html"));
 app.MapHealthChecks("/health");
 
-if (builder.Environment.IsDevelopment())
+if (!app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseHttpsRedirection();
 }
-
 app.MapControllers();
 app.MapHub<GoalPlannerChatHub>("/chatHub");
 app.MapHub<AiTaskGenerateChatHub>("/ai-task-generate-chathub");
