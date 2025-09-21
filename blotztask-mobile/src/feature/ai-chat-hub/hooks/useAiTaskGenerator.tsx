@@ -24,7 +24,6 @@ export function useAiTaskGenerator() {
     };
 
     setMessages((prev = []) => [...prev, userMessage]);
-    console.log("send message:", userMessage);
     setModalType("loading");
     if (connection) {
       try {
