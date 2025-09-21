@@ -8,12 +8,10 @@ export const VoiceInput = ({
   text,
   setText,
   sendMessage,
-  setModalType,
 }: {
   text: string;
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
-  setModalType: (v: ModalType) => void;
 }) => {
   const { startListening, partialText, stopAndGetText, isListening } = useVoiceInput();
   const displayText = isListening
@@ -31,7 +29,6 @@ export const VoiceInput = ({
 
     if (newText?.trim()) {
       sendMessage(newText.trim());
-      setModalType("loading");
     }
   };
   return (
