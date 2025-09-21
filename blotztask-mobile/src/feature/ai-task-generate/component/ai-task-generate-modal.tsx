@@ -1,18 +1,12 @@
 import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
 import { Text } from "react-native";
-import { ModalType } from "../modals/modal-type";
 
 export const AiTaskGenerateModal = () => {
   const [text, setText] = useState("");
-  const { aiGeneratedTasks, sendMessage } = useAiTaskGenerator();
-  const [modalType, setModalType] = useState<ModalType>("input");
-
-  useEffect(() => {
-    if (aiGeneratedTasks.length > 0) setModalType("task-preview");
-  }, [aiGeneratedTasks.length]);
+  const { aiGeneratedTasks, sendMessage, modalType } = useAiTaskGenerator();
 
   switch (modalType) {
     case "task-preview":
@@ -28,13 +22,6 @@ export const AiTaskGenerateModal = () => {
 
     case "input":
     default:
-      return (
-        <AiInput
-          text={text}
-          setText={setText}
-          sendMessage={sendMessage}
-          setModalType={setModalType}
-        />
-      );
+      return <AiInput text={text} setText={setText} sendMessage={sendMessage} />;
   }
 };
