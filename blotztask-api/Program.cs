@@ -141,11 +141,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseMiddleware<UserContextMiddleware>();
 
 app.UseCors("AllowSpecificOrigin");
 app.UseAuthentication();
-app.UseAuthorization();
+app.UseAuthorization(); 
+app.UseMiddleware<UserContextMiddleware>();
 
 app.MapGet("/", () => Results.Content(
     "<html><body><h1>Web API is running</h1></body></html>", 

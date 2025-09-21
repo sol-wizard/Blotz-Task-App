@@ -72,7 +72,7 @@ public static class LoggingExtensions
                 }
             });
         }
-
+    
         return builder;
     }
 }
