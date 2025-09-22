@@ -40,7 +40,7 @@ export const AiBottomsheetFooter: React.FC<BottomSheetFooterProps & ExtraProps> 
 
   return (
     <BottomSheetFooter animatedFooterPosition={animatedFooterPosition} bottomInset={0}>
-      <View className="items-center">
+      <View className="items-center bg-white">
         {isVoiceInput && (
           <>
             <BottomSheetTouchableOpacity
