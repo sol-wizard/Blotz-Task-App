@@ -53,60 +53,59 @@ export const ToggleAiTaskGenerate = () => {
           aiVoiceInputModalRef.current?.present();
         }}
       />
-      <Portal>
-        <BottomSheetModal
-          ref={aiVoiceInputModalRef}
-          onDismiss={async () => {
-            try {
-              if (isListening) {
-                await handleMicPressOut();
-              }
-            } finally {
-              setText("");
-              disconnect();
+
+      <BottomSheetModal
+        ref={aiVoiceInputModalRef}
+        onDismiss={async () => {
+          try {
+            if (isListening) {
+              await handleMicPressOut();
             }
+          } finally {
+            setText("");
+            disconnect();
+          }
+        }}
+        snapPoints={["70%", "80%"]}
+        enablePanDownToClose
+        enableContentPanningGesture={false}
+        backdropComponent={renderBottomSheetBackdrop}
+        backgroundStyle={{
+          backgroundColor: "#FFFFFF",
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+        }}
+        footerComponent={(footerProps: BottomSheetFooterProps) => (
+          <AiBottomsheetFooter
+            {...footerProps}
+            modalType={modalType}
+            startListening={startListening}
+            handleMicPressOut={handleMicPressOut}
+            isListening={isListening}
+            isVoiceInput={isVoiceInput}
+            setIsVoiceInput={setIsVoiceInput}
+          />
+        )}
+      >
+        <BottomSheetScrollView
+          contentContainerStyle={{
+            alignItems: "center",
+            paddingTop: 8,
+            paddingBottom: 0,
           }}
-          snapPoints={["70%", "80%"]}
-          enablePanDownToClose
-          enableContentPanningGesture={false}
-          backdropComponent={renderBottomSheetBackdrop}
-          backgroundStyle={{
-            backgroundColor: "#FFFFFF",
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-          }}
-          footerComponent={(footerProps: BottomSheetFooterProps) => (
-            <AiBottomsheetFooter
-              {...footerProps}
-              modalType={modalType}
-              startListening={startListening}
-              handleMicPressOut={handleMicPressOut}
-              isListening={isListening}
-              isVoiceInput={isVoiceInput}
-              setIsVoiceInput={setIsVoiceInput}
-            />
-          )}
+          enableFooterMarginAdjustment
         >
-          <BottomSheetScrollView
-            contentContainerStyle={{
-              alignItems: "center",
-              paddingTop: 8,
-              paddingBottom: 0,
-            }}
-            enableFooterMarginAdjustment
-          >
-            <AiTaskGenerateModal
-              modalType={modalType}
-              aiGeneratedTasks={aiGeneratedTasks}
-              text={text}
-              setText={setText}
-              isListening={isListening}
-              isVoiceInput={isVoiceInput}
-              displayText={displayText}
-            />
-          </BottomSheetScrollView>
-        </BottomSheetModal>
-      </Portal>
+          <AiTaskGenerateModal
+            modalType={modalType}
+            aiGeneratedTasks={aiGeneratedTasks}
+            text={text}
+            setText={setText}
+            isListening={isListening}
+            isVoiceInput={isVoiceInput}
+            displayText={displayText}
+          />
+        </BottomSheetScrollView>
+      </BottomSheetModal>
     </>
   );
 };
