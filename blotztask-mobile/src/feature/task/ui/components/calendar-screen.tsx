@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
