@@ -13,6 +13,7 @@ export const AiInput = ({
   sendMessage: (v: string) => void;
 }) => {
   const [isVoiceInput, setIsVoiceInput] = useState(true);
+
   return (
     <>
       {isVoiceInput && <VoiceInput text={text} setText={setText} sendMessage={sendMessage} />}

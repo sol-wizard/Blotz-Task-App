@@ -1,8 +1,8 @@
+import React, { useMemo, useState } from "react";
+import { View, Text, TextInput, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
-import { Ionicons } from "@expo/vector-icons";
-import { Pressable, View, Text, TextInput } from "react-native";
-import { ModalType } from "../modals/modal-type";
 
 export const VoiceInput = ({
   text,
@@ -18,44 +18,74 @@ export const VoiceInput = ({
     ? [text, partialText].filter(Boolean).join(text ? " " : "")
     : text;
 
+  const [listenBlockH, setListenBlockH] = useState(0);
+  const [idleBlockH, setIdleBlockH] = useState(0);
+  const topMinHeight = Math.max(listenBlockH, idleBlockH);
+
   const handleMicPressOut = async () => {
     const spoken = await stopAndGetText();
-
     let newText = text;
     if (spoken) {
       newText = text?.length ? `${text.trim()} ${spoken}` : spoken;
       setText(newText);
     }
-
-    if (newText?.trim()) {
-      sendMessage(newText.trim());
-    }
+    if (newText?.trim()) sendMessage(newText.trim());
   };
+
   return (
     <View className="items-center">
-      {isListening && (
-        <TextInput
-          value={displayText}
-          editable={false}
-          placeholderTextColor="#D1D5DB"
-          multiline
-          className="text-xl font-bold text-gray-400 text-center"
-          style={{ fontFamily: "Baloo2-Regular" }}
-        />
-      )}
-      {!isListening && (
-        <>
+      <View style={{ minHeight: topMinHeight, width: "100%" }} className="items-center">
+        {isListening ? (
+          <TextInput
+            value={displayText}
+            editable={false}
+            placeholderTextColor="#D1D5DB"
+            multiline
+            className="text-xl font-bold text-gray-400 text-center"
+            style={{ fontFamily: "Baloo2-Regular" }}
+          />
+        ) : (
+          <>
+            <Text className="text-black text-4xl font-balooBold text-center mt-6 leading-snug">
+              Braindump tasks{"\n"}with your voice
+            </Text>
+            <Text className="text-gray-500 font-baloo text-xl text-center mt-2">
+              Just say your task, and I‘ll create it automatically
+            </Text>
+          </>
+        )}
+
+        {/* 隐藏版：仅用于测量两种状态的高度 */}
+        <View
+          pointerEvents="none"
+          style={{ position: "absolute", opacity: 0, width: "100%" }}
+          onLayout={(e) => setListenBlockH(e.nativeEvent.layout.height)}
+        >
+          <TextInput
+            value={"Some sample text"} // 可以保留为空；这里即便为空也会测量到行高
+            editable={false}
+            multiline
+            className="text-xl font-bold text-gray-400 text-center"
+            style={{ fontFamily: "Baloo2-Regular" }}
+          />
+        </View>
+
+        <View
+          pointerEvents="none"
+          style={{ position: "absolute", opacity: 0, width: "100%" }}
+          onLayout={(e) => setIdleBlockH(e.nativeEvent.layout.height)}
+        >
           <Text className="text-black text-4xl font-balooBold text-center mt-6 leading-snug">
             Braindump tasks{"\n"}with your voice
           </Text>
-
           <Text className="text-gray-500 font-baloo text-xl text-center mt-2">
             Just say your task, and I‘ll create it automatically
           </Text>
-        </>
-      )}
+        </View>
+      </View>
 
-      <View className="mt-6">
+      {/* 按钮区不会被上方内容高度变化影响 */}
+      <View className="mt-6 items-center">
         <Pressable
           onLongPress={startListening}
           onPressOut={handleMicPressOut}
