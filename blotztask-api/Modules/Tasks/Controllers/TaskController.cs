@@ -28,18 +28,18 @@ public class TaskController(
     }
 
     [HttpGet("by-date")]
-    public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery] DateTime startDateUtc, [FromQuery] bool includeFloatingForToday, CancellationToken ct)
+    public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery]GetTasksByDateRequest getTasksByDateRequest, CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
         {
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         }
-
+        
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDateUtc = startDateUtc,
-            IncludeFloatingForToday = includeFloatingForToday
+            StartDateUtc = getTasksByDateRequest.StartDateUtc,
+            IncludeFloatingForToday = getTasksByDateRequest.IncludeFloatingForToday
         };
 
         var result = await getTasksByDateQueryHandler.Handle(query, ct);

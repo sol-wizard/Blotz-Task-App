@@ -1,9 +1,19 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Labels.DTOs;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
+
+public class GetTasksByDateRequest
+{
+    [BindRequired]
+    public  DateTime StartDateUtc { get; set; }
+
+    [BindRequired]
+    public bool IncludeFloatingForToday { get; set; }
+}
 
 public class GetTasksByDateQuery
 {
