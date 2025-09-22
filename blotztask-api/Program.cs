@@ -1,5 +1,4 @@
 using Azure.Identity;
-using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Security.KeyVault.Secrets;
 using BlotzTask.Extension;
 using BlotzTask.Infrastructure.Data;
@@ -18,19 +17,17 @@ using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users;
 using BlotzTask.Shared.Services;
 using BlotzTask.Shared.Store;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
-using Microsoft.OpenApi.Models;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Serilog;
-using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddSerilogLogging();
-builder.AddApplicationInsights();
+builder
+    .AddSerilogLogging()
+    .AddApplicationInsights();
 
 // Add services to the container.
 builder.Services.AddSignalR();
@@ -81,6 +78,8 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddAuth0(builder.Configuration);
 builder.Services.AddAzureOpenAi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Register the Kernel as a singleton service
 builder.Services.AddSingleton<Kernel>(sp =>
@@ -156,6 +155,16 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger(); 
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlotzTask API V1");
+    });
+}
+
 app.MapControllers();
 app.MapHub<GoalPlannerChatHub>("/chatHub");
 app.MapHub<AiTaskGenerateChatHub>("/ai-task-generate-chathub");
