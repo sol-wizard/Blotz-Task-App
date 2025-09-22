@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { FAB, Portal, Snackbar } from "react-native-paper";
+import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
 import NoTasksView from "./no-tasks-view";
@@ -10,15 +10,9 @@ import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import SubtaskDetail from "./subtask-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
-import {
-  BottomSheetBackdrop,
-  BottomSheetBackdropProps,
-  BottomSheetModal,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
-import { AiTaskGenerateModal } from "@/feature/ai-task-generate/component/ai-task-generate-modal";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
 

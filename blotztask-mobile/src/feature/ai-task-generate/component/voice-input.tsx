@@ -2,7 +2,6 @@ import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, View, Text, TextInput } from "react-native";
-import { ModalType } from "../modals/modal-type";
 
 export const VoiceInput = ({
   text,

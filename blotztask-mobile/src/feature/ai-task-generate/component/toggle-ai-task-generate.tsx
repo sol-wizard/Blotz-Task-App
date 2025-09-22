@@ -29,6 +29,7 @@ export const ToggleAiTaskGenerate = () => {
           ref={aiVoiceInputModalRef}
           snapPoints={["70%", "80%"]}
           enablePanDownToClose
+          enableContentPanningGesture={false}
           backdropComponent={renderBottomSheetBackdrop}
           backgroundStyle={{
             backgroundColor: "#FFFFFF",
