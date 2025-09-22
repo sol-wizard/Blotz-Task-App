@@ -19,6 +19,7 @@ import {
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
 import { AiTaskGenerateModal } from "@/feature/ai-task-generate/component/ai-task-generate-modal";
+import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 
 export default function CalendarPage() {
   const {
@@ -93,19 +94,6 @@ export default function CalendarPage() {
       });
     }
   };
-
-  const renderBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        pressBehavior="close"
-        opacity={0.5}
-      />
-    ),
-    [],
-  );
 
   const handleOpenSubtasks = async (task: TaskDetailDTO) => {
     setSelectedTask(task);
@@ -192,7 +180,7 @@ export default function CalendarPage() {
           ref={aiVoiceInputModalRef}
           snapPoints={["70%", "80%"]}
           enablePanDownToClose
-          backdropComponent={renderBackdrop}
+          backdropComponent={renderBottomSheetBackdrop}
           backgroundStyle={{
             backgroundColor: "#FFFFFF",
             borderTopLeftRadius: 24,
@@ -209,7 +197,7 @@ export default function CalendarPage() {
         ref={taskDetailModalRef}
         snapPoints={["60%", "80%"]}
         enablePanDownToClose
-        backdropComponent={renderBackdrop}
+        backdropComponent={renderBottomSheetBackdrop}
         backgroundStyle={{
           backgroundColor: "#FFFFFF",
           borderTopLeftRadius: 24,
@@ -228,7 +216,7 @@ export default function CalendarPage() {
           ref={editTaskModalRef}
           snapPoints={["55%"]}
           keyboardBlurBehavior="restore"
-          backdropComponent={renderBackdrop}
+          backdropComponent={renderBottomSheetBackdrop}
           enablePanDownToClose
         >
           <EditTaskBottomSheet task={selectedTask} handleClose={handleEditTaskSheetClose} />
@@ -238,7 +226,7 @@ export default function CalendarPage() {
       <BottomSheetModal
         ref={subtaskModalRef}
         enablePanDownToClose
-        backdropComponent={renderBackdrop}
+        backdropComponent={renderBottomSheetBackdrop}
         backgroundStyle={{
           backgroundColor: "#FFFFFF",
           borderTopLeftRadius: 24,
