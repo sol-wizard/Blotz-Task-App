@@ -1,13 +1,26 @@
-import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
-import { useState } from "react";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
 import { Text } from "react-native";
+import { ModalType } from "../modals/modal-type";
+import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
 
-export const AiTaskGenerateModal = () => {
-  const [text, setText] = useState("");
-  const { aiGeneratedTasks, sendMessage, modalType } = useAiTaskGenerator();
-
+export const AiTaskGenerateModal = ({
+  modalType,
+  aiGeneratedTasks,
+  text,
+  setText,
+  isListening,
+  isVoiceInput,
+  displayText,
+}: {
+  modalType: ModalType;
+  aiGeneratedTasks: AiTaskDTO[];
+  text: string;
+  setText: (v: string) => void;
+  isListening: boolean;
+  isVoiceInput: boolean;
+  displayText: string;
+}) => {
   switch (modalType) {
     case "task-preview":
       return (
@@ -22,6 +35,14 @@ export const AiTaskGenerateModal = () => {
 
     case "input":
     default:
-      return <AiInput text={text} setText={setText} sendMessage={sendMessage} />;
+      return (
+        <AiInput
+          text={text}
+          setText={setText}
+          isListening={isListening}
+          isVoiceInput={isVoiceInput}
+          displayText={displayText}
+        />
+      );
   }
 };

@@ -57,6 +57,7 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}) {
   const stopAndGetText = async (): Promise<string> => {
     try {
       await Voice.stop();
+      console.log("voice recognization stopped");
     } catch {
       console.log("Error stopping voice recognition");
     }

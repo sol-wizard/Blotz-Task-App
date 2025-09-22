@@ -29,7 +29,6 @@ export default function CalendarPage() {
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
   const editTaskModalRef = useRef<BottomSheetModal>(null);
   const subtaskModalRef = useRef<BottomSheetModal>(null);
-
   const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
   const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
 
