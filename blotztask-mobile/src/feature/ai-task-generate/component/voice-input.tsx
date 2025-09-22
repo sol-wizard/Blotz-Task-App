@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, TextInput, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
@@ -46,7 +46,7 @@ export const VoiceInput = ({
           />
         ) : (
           <>
-            <Text className="text-black text-4xl font-balooBold text-center mt-6 leading-snug">
+            <Text className="text-black text-4xl font-balooBold text-center leading-snug">
               Braindump tasks{"\n"}with your voice
             </Text>
             <Text className="text-gray-500 font-baloo text-xl text-center mt-2">
@@ -54,21 +54,6 @@ export const VoiceInput = ({
             </Text>
           </>
         )}
-
-        {/* 隐藏版：仅用于测量两种状态的高度 */}
-        <View
-          pointerEvents="none"
-          style={{ position: "absolute", opacity: 0, width: "100%" }}
-          onLayout={(e) => setListenBlockH(e.nativeEvent.layout.height)}
-        >
-          <TextInput
-            value={"Some sample text"} // 可以保留为空；这里即便为空也会测量到行高
-            editable={false}
-            multiline
-            className="text-xl font-bold text-gray-400 text-center"
-            style={{ fontFamily: "Baloo2-Regular" }}
-          />
-        </View>
 
         <View
           pointerEvents="none"
@@ -97,9 +82,9 @@ export const VoiceInput = ({
           </GradientCircle>
         </Pressable>
         {isListening ? (
-          <Text className="text-lg mt-4 text-gray-500 font-baloo">Recognising...</Text>
+          <Text className="text-lg mt-4 mb-10 text-gray-500 font-baloo">Recognising...</Text>
         ) : (
-          <Text className="text-lg mt-4 text-gray-500 font-baloo">Hold and speak</Text>
+          <Text className="text-lg mt-4 mb-10 text-gray-500 font-baloo">Hold and speak</Text>
         )}
       </View>
     </View>
