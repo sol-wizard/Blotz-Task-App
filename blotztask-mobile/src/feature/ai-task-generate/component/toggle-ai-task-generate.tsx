@@ -1,5 +1,10 @@
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
-import { BottomSheetFooterProps, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
+import {
+  BottomSheetFooterProps,
+  BottomSheetModal,
+  BottomSheetScrollView,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { useRef, useState } from "react";
 import { FAB, Portal } from "react-native-paper";
 import { AiTaskGenerateModal } from "./ai-task-generate-modal";
@@ -82,7 +87,14 @@ export const ToggleAiTaskGenerate = () => {
             />
           )}
         >
-          <BottomSheetView className="justify-center items-center" style={{ minHeight: 400 }}>
+          <BottomSheetScrollView
+            contentContainerStyle={{
+              alignItems: "center",
+              paddingTop: 8,
+              paddingBottom: 0,
+            }}
+            enableFooterMarginAdjustment
+          >
             <AiTaskGenerateModal
               modalType={modalType}
               aiGeneratedTasks={aiGeneratedTasks}
@@ -92,7 +104,7 @@ export const ToggleAiTaskGenerate = () => {
               isVoiceInput={isVoiceInput}
               displayText={displayText}
             />
-          </BottomSheetView>
+          </BottomSheetScrollView>
         </BottomSheetModal>
       </Portal>
     </>

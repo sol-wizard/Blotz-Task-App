@@ -8,7 +8,7 @@ export const VoiceTextDisplay = ({
   displayText: string;
 }) => {
   return (
-    <View className="items-center mb-60">
+    <View className="items-center">
       {isListening && (
         <TextInput
           value={displayText}
