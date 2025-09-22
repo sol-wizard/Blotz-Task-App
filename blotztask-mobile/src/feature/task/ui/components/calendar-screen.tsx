@@ -20,6 +20,7 @@ import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/sub
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
 import { AiTaskGenerateModal } from "@/feature/ai-task-generate/component/ai-task-generate-modal";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
+import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
 
 export default function CalendarPage() {
   const {
@@ -34,7 +35,7 @@ export default function CalendarPage() {
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
   const editTaskModalRef = useRef<BottomSheetModal>(null);
   const subtaskModalRef = useRef<BottomSheetModal>(null);
-  const aiVoiceInputModalRef = useRef<BottomSheetModal>(null);
+
   const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
   const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
 
@@ -159,39 +160,7 @@ export default function CalendarPage() {
         )}
       </CalendarProvider>
 
-      <FAB
-        icon="star"
-        style={{
-          position: "absolute",
-          margin: 16,
-          width: 58,
-          right: 10,
-          bottom: 10,
-          backgroundColor: "#f65a83",
-        }}
-        onPress={() => {
-          aiVoiceInputModalRef?.current?.present();
-          console.log(!!aiVoiceInputModalRef.current);
-        }}
-      />
-
-      <Portal>
-        <BottomSheetModal
-          ref={aiVoiceInputModalRef}
-          snapPoints={["70%", "80%"]}
-          enablePanDownToClose
-          backdropComponent={renderBottomSheetBackdrop}
-          backgroundStyle={{
-            backgroundColor: "#FFFFFF",
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-          }}
-        >
-          <BottomSheetView className="justify-center items-center" style={{ minHeight: 400 }}>
-            <AiTaskGenerateModal />
-          </BottomSheetView>
-        </BottomSheetModal>
-      </Portal>
+      <ToggleAiTaskGenerate />
 
       <BottomSheetModal
         ref={taskDetailModalRef}
