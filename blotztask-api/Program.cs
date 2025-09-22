@@ -1,5 +1,4 @@
 using Azure.Identity;
-using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Security.KeyVault.Secrets;
 using BlotzTask.Extension;
 using BlotzTask.Infrastructure.Data;
@@ -18,50 +17,22 @@ using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users;
 using BlotzTask.Shared.Services;
 using BlotzTask.Shared.Store;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
-using Microsoft.OpenApi.Models;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Serilog;
-using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplicationInsightsTelemetry();
-
-// Configure Serilog to integrate with Microsoft.Extensions.Logging
-builder.Host.UseSerilog((context, services, configuration) =>
-{
-    configuration
-        .ReadFrom.Configuration(context.Configuration)
-        .ReadFrom.Services(services)
-        .Enrich.FromLogContext()
-        .MinimumLevel.Debug()
-        .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-        .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
-        .WriteTo.ApplicationInsights(
-        services.GetRequiredService<TelemetryConfiguration>(),
-        TelemetryConverter.Traces);
-});
+builder
+    .AddSerilogLogging()
+    .AddApplicationInsights();
 
 // Add services to the container.
 builder.Services.AddSignalR();
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey
-    });
-    options.OperationFilter<SecurityRequirementsOperationFilter>();
-});
 
 //TODO : Move all services to module based registration
 builder.Services.AddScoped<TaskGenerationAiService>();
@@ -103,16 +74,12 @@ if (builder.Environment.IsProduction())
     var sqlConnectionSecret = secretClient.GetSecret("sql-connection-string").Value.Value;
     builder.Services.AddDbContext<BlotzTaskDbContext>(options => 
         options.UseSqlServer(sqlConnectionSecret));
-    
-    builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
-    {
-        var connectionString = builder.Configuration.GetSection("ApplicationInsights:ConnectionString").Value;
-        options.ConnectionString = connectionString;
-    });
 }
 
 builder.Services.AddAuth0(builder.Configuration);
 builder.Services.AddAzureOpenAi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Register the Kernel as a singleton service
 builder.Services.AddSingleton<Kernel>(sp =>
@@ -171,22 +138,32 @@ builder.Services.AddCors(options =>
         });
 });
 
-
-
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseMiddleware<UserContextMiddleware>();
-
-// "Add root path for app service always on ping"
-app.MapGet("/", () => Results.Ok("Web API is running"));
-app.MapHealthChecks("/health");
-
-app.UseSwagger();
-app.UseSwaggerUI();
-app.UseHttpsRedirection();
 
 app.UseCors("AllowSpecificOrigin");
-app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization(); 
+app.UseMiddleware<UserContextMiddleware>();
+
+app.MapGet("/", () => Results.Content(
+    "<html><body><h1>Web API is running</h1></body></html>", 
+    "text/html"));
+app.MapHealthChecks("/health");
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger(); 
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlotzTask API V1");
+    });
+}
 
 app.MapControllers();
 app.MapHub<GoalPlannerChatHub>("/chatHub");
