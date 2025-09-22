@@ -19,6 +19,7 @@ export const ToggleAiTaskGenerate = () => {
 
   const handleMicPressOut = async () => {
     const spoken = await stopAndGetText();
+    console.log("spoken:", spoken);
 
     let newText = text;
     if (spoken) {
@@ -52,6 +53,7 @@ export const ToggleAiTaskGenerate = () => {
         <BottomSheetModal
           ref={aiVoiceInputModalRef}
           onDismiss={() => {
+            setText("");
             disconnect();
           }}
           snapPoints={["70%", "80%"]}
