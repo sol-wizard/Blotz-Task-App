@@ -19,7 +19,6 @@ export const ToggleAiTaskGenerate = () => {
 
   const handleMicPressOut = async () => {
     const spoken = await stopAndGetText();
-    console.log("spoken:", spoken);
 
     let newText = text;
     if (spoken) {
@@ -52,9 +51,15 @@ export const ToggleAiTaskGenerate = () => {
       <Portal>
         <BottomSheetModal
           ref={aiVoiceInputModalRef}
-          onDismiss={() => {
-            setText("");
-            disconnect();
+          onDismiss={async () => {
+            try {
+              if (isListening) {
+                await handleMicPressOut();
+              }
+            } finally {
+              setText("");
+              disconnect();
+            }
           }}
           snapPoints={["70%", "80%"]}
           enablePanDownToClose

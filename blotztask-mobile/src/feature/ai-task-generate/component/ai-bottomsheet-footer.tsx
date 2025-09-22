@@ -30,15 +30,21 @@ export const AiBottomsheetFooter: React.FC<BottomSheetFooterProps & ExtraProps> 
 }) => {
   if (modalType !== "input") return null;
 
+  const handleMicTap = async () => {
+    if (isListening) {
+      await handleMicPressOut();
+    } else {
+      await startListening();
+    }
+  };
+
   return (
     <BottomSheetFooter animatedFooterPosition={animatedFooterPosition} bottomInset={0}>
       <View className="items-center">
         {isVoiceInput && (
           <>
             <BottomSheetTouchableOpacity
-              onLongPress={startListening}
-              onPressOut={handleMicPressOut}
-              delayLongPress={250}
+              onPress={handleMicTap}
               activeOpacity={0.85}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
@@ -48,7 +54,7 @@ export const AiBottomsheetFooter: React.FC<BottomSheetFooterProps & ExtraProps> 
             </BottomSheetTouchableOpacity>
 
             <Text className="text-lg mt-4 text-gray-500 font-baloo">
-              {isListening ? "Recognising..." : "Hold and speak"}
+              {isListening ? "Recognising..." : "Touch and speak"}
             </Text>
           </>
         )}
