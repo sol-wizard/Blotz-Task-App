@@ -18,9 +18,7 @@ export const VoiceInput = ({
     ? [text, partialText].filter(Boolean).join(text ? " " : "")
     : text;
 
-  const [listenBlockH, setListenBlockH] = useState(0);
   const [idleBlockH, setIdleBlockH] = useState(0);
-  const topMinHeight = Math.max(listenBlockH, idleBlockH);
 
   const handleMicPressOut = async () => {
     const spoken = await stopAndGetText();
@@ -34,7 +32,7 @@ export const VoiceInput = ({
 
   return (
     <View className="items-center">
-      <View style={{ minHeight: topMinHeight, width: "100%" }} className="items-center">
+      <View style={{ minHeight: idleBlockH, width: "100%" }} className="items-center">
         {isListening ? (
           <TextInput
             value={displayText}
