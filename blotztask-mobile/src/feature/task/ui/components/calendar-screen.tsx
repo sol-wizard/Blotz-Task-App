@@ -154,7 +154,7 @@ export default function CalendarPage() {
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="small" />
           </View>
-        ) : filteredTasks.length > 0 ? (
+        ) : filteredTasks && filteredTasks.length > 0 ? (
           <FlatList
             className="flex-1"
             data={filteredTasks}
