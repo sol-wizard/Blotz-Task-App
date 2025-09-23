@@ -65,7 +65,6 @@ public class TaskGenerateChatService : ITaskGenerateChatService
                 Timestamp = DateTime.UtcNow,
                 IsBot = true,
             },
-            IsConversationComplete = false,
             Tasks = tasks,
         };
     }
