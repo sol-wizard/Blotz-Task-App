@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
-import CalendarPage from "@/feature/task/ui/components/calendar-screen";
+import CalendarScreen from "@/feature/task/ui/screens/calendar-screen";
 import SettingsScreen from "@/feature/settings/page/settings-screen";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,7 +22,7 @@ const routes = [
   },
 ];
 
-const CalendarRoute: any = () => <CalendarPage />;
+const CalendarRoute: any = () => <CalendarScreen />;
 const SettingsRoute = () => <SettingsScreen />;
 
 export default function ProtectedIndex() {

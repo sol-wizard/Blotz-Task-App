@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
-import CalendarHeader from "./calendar-header";
-import NoTasksView from "./no-tasks-view";
+import CalendarHeader from "../components/calender/calendar-header";
+import NoTasksView from "../components/calender/no-tasks-view";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
-import TaskCard from "./task-card";
-import TaskDetailBottomSheet from "./task-detail-bottomsheet";
-import SubtaskDetail from "./subtask-detail-bottomsheet";
+import { EditTaskBottomSheet } from "../components/edit-task-bottom-sheet";
+import TaskCard from "../components/task-card";
+import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
+import SubtaskDetail from "../components/subtask-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
@@ -16,7 +16,7 @@ import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
 
-export default function CalendarPage() {
+export default function CalendarScreen() {
   const {
     selectedDay,
     tasksForSelectedDay,
