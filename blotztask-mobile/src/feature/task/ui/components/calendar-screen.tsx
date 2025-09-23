@@ -12,7 +12,7 @@ import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
-import { LabelSelect } from "./label-select/label-select";
+import { LabelSelect, LabelType } from "./label-select/label-select";
 import { createLabelSelectItems, filterTasksByLabel } from "../../util/task-counts";
 import { EmptyState } from "./label-select/empty-state";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
@@ -34,9 +34,8 @@ export default function CalendarPage() {
 
   const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
   const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
-  const [selectedLabel, setSelectedLabel] = useState<string>("all");
+  const [selectedLabel, setSelectedLabel] = useState<LabelType>("all");
 
-  //TODO: Maybe we dont need this
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
 
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
