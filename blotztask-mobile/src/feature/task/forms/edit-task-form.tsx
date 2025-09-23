@@ -1,8 +1,8 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { EditTaskItemDTO } from "../../models/edit-task-item-dto";
-import { TaskFormField, taskFormSchema } from "../../models/task-form-schema";
+import { EditTaskItemDTO } from "../models/edit-task-item-dto";
+import { TaskFormField, taskFormSchema } from "../models/task-form-schema";
 import { FormProvider, useForm } from "react-hook-form";
-import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
+import { useSelectedDayTaskStore } from "../stores/selectedday-task-store";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { RepeatSelect } from "../components/form/repeat-select";
 import { LabelSelect } from "../components/form/label-select";

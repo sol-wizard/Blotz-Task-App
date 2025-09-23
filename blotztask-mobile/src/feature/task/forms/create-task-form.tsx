@@ -8,7 +8,7 @@ import { Button } from "react-native-paper";
 import { useState } from "react";
 import { DateTimeSelectorTrigger } from "../components/form/date-time-selector-trigger";
 import { StartEndDateTimePicker } from "../components/form/start-end-date-time-picker";
-import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
+import { useSelectedDayTaskStore } from "../stores/selectedday-task-store";
 import { RepeatSelect } from "../components/form/repeat-select";
 import { LabelSelect } from "../components/form/label-select";
 

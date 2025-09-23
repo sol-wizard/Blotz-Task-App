@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
-import CalendarHeader from "../components/calender/calendar-header";
 import NoTasksView from "../components/calender/no-tasks-view";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { EditTaskBottomSheet } from "../components/edit-task-bottom-sheet";
-import TaskCard from "../components/task-card";
-import TaskDetailBottomSheet from "../components/task-detail-bottomsheet";
-import SubtaskDetail from "../components/subtask-detail-bottomsheet";
+import { EditTaskBottomSheet } from "../components/ui/edit-task-bottom-sheet";
+import TaskCard from "../components/ui/task-card";
+import TaskDetailBottomSheet from "../components/ui/task-detail-bottomsheet";
+import SubtaskDetail from "../components/ui/subtask-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
-import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
+import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../services/subtask-service";
+import { useSelectedDayTaskStore } from "../stores/selectedday-task-store";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
+import CalendarHeader from "../components/calender/calendar-header";
 
 export default function CalendarScreen() {
   const {
