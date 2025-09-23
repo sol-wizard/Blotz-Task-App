@@ -55,14 +55,6 @@ public class AiTaskGenerateChatHub : Hub
             CancellationToken ct = Context.ConnectionAborted;
             var result = await _taskGenerateChatService.HandleUserMessageAsync(userMsg, ct);
 
-            if (result.IsConversationComplete)
-            {
-                await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
-                await Clients.Caller.SendAsync("BotTyping", false);
-                await Clients.Caller.SendAsync("ConversationCompleted");
-                return;
-            }
-
             if (result.Tasks != null)
             {
                 await Clients.Caller.SendAsync("ReceiveTasks", result.Tasks);
