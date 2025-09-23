@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Pressable, Text } from "react-native";
-
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
-
-// [ADDED] gesture and animation
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -27,7 +24,6 @@ interface TaskCardProps {
   onDelete?: (id: string) => Promise<void> | void;
 }
 
-// The width of the right action area (further left could reduce ACTION_WIDTH)
 const ACTION_WIDTH = 64;
 const OPEN_X = -ACTION_WIDTH;
 const OPEN_THRESHOLD = ACTION_WIDTH * 0.55;
@@ -103,26 +99,23 @@ export default function TaskCard({
   const timePeriod = formatDateRange({ startTime, endTime });
 
   return (
-    <View className="relative mx-4 my-2 rounded-2xl bg-white shadow-sm shadow-black/10 elevation-3 overflow-hidden">
-      {/* right action area */}
+    <View className="relative mx-4 my-2 rounded-2xl bg-white elevation-3 overflow-hidden">
       <Animated.View
         style={rightActionStyle}
         pointerEvents={actionsEnabled ? "auto" : "none"}
         className="absolute right-0 top-0 bottom-0 w-[64px] flex-row items-center justify-start z-10 px-2"
       >
-        {/* Grey dividing line */}
         <Animated.View
           pointerEvents="none"
           style={dividerStyle}
           className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-1.5"
         />
 
-        {/* Trash icon */}
         <Pressable
           onPress={async () => {
             if (!onDelete) return;
-            await onDelete(id); // Trigger parent delete handler
-            translateX.value = withTiming(0); // Reset position
+            await onDelete(id);
+            translateX.value = withTiming(0);
             runOnJS(setActionsEnabled)(false);
           }}
           android_ripple={{ color: "#e5e7eb", borderless: true }}
@@ -132,20 +125,16 @@ export default function TaskCard({
         </Pressable>
       </Animated.View>
 
-      {/* Gesture-driven content layer */}
       <GestureDetector gesture={pan}>
         <Animated.View style={cardStyle} className="bg-white rounded-2xl">
           <Pressable onPress={onPress}>
             <View className="flex-row items-center p-5">
-              {/* Left combination: vertical bar + checkbox; overall added leftExtrasStyle */}
               <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
-                {/* Custom checkbox */}
                 <CustomCheckbox checked={checked} onPress={handleToggleComplete} />
-                {/* Grey dividing line */}
+
                 <View className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-3" />
               </Animated.View>
 
-              {/* Content */}
               <View className="flex-1 justify-start pt-0">
                 <Text
                   className={`text-base font-bold ${checked ? "text-neutral-400 line-through" : "text-black"}`}
