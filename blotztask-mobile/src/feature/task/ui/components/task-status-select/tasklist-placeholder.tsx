@@ -3,13 +3,13 @@ import { View, Text } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface TaskListPlaceholderProps {
-  selectedLabel: string;
+  selectedStatus: string;
 }
 
 // TODO: Add more empty states instead of using default
-export function TaskListPlaceholder({ selectedLabel }: TaskListPlaceholderProps) {
+export function TaskListPlaceholder({ selectedStatus: selectedStatus }: TaskListPlaceholderProps) {
   const getEmptyStateContent = () => {
-    switch (selectedLabel) {
+    switch (selectedStatus) {
       case "todo":
         return {
           icon: "format-list-checks" as const,

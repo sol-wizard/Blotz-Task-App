@@ -1,32 +1,36 @@
 import React from "react";
 import { View, Text, Pressable, ScrollView, SafeAreaView } from "react-native";
 
-export interface LabelSelectItem {
-  id: LabelType;
-  label: string;
+export interface TaskStatusSelectItem {
+  id: TaskStatusType;
+  status: string;
   count: number;
 }
 
-export interface LabelSelectProps {
-  labels: LabelSelectItem[];
-  selectedLabelId: LabelType;
-  onChange: (value: LabelType) => void;
+export interface TaskStatusSelectProps {
+  statuses: TaskStatusSelectItem[];
+  selectedStatusId: TaskStatusType;
+  onChange: (value: TaskStatusType) => void;
 }
 
-export type LabelType = "all" | "todo" | "inprogress" | "done" | "overdue";
+export type TaskStatusType = "all" | "todo" | "inprogress" | "done" | "overdue";
 
-export function LabelSelect({ labels, selectedLabelId, onChange }: LabelSelectProps) {
+export function TaskStatusSelect({
+  statuses: taskStatuses,
+  selectedStatusId: selectedStatusId,
+  onChange,
+}: TaskStatusSelectProps) {
   return (
     <SafeAreaView>
       <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} className="mb-4">
         <View className="flex-row gap-2 px-4 items-center">
-          {labels.map((labelItem) => {
-            const isSelected = selectedLabelId === labelItem.id;
+          {taskStatuses.map((statusItem) => {
+            const isSelected = selectedStatusId === statusItem.id;
 
             return (
               <Pressable
-                key={labelItem.id}
-                onPress={() => onChange(labelItem.id)}
+                key={statusItem.id}
+                onPress={() => onChange(statusItem.id)}
                 className={`flex-row items-center gap-2 px-4 py-2 rounded-xl border ${
                   isSelected ? "bg-black" : "bg-white border-gray-300"
                 }`}
@@ -34,7 +38,7 @@ export function LabelSelect({ labels, selectedLabelId, onChange }: LabelSelectPr
                 <Text
                   className={`text-sm ${isSelected ? "text-white font-extrabold" : "text-gray-700"}`}
                 >
-                  {labelItem.label}
+                  {statusItem.status}
                 </Text>
                 <View
                   className={`px-2 py-0.5 rounded-full ${isSelected ? "bg-white" : "bg-gray-400"}`}
@@ -42,7 +46,7 @@ export function LabelSelect({ labels, selectedLabelId, onChange }: LabelSelectPr
                   <Text
                     className={`text-xs font-semibold ${isSelected ? "text-black font-bold" : "text-white"}`}
                   >
-                    {labelItem.count}
+                    {statusItem.count}
                   </Text>
                 </View>
               </Pressable>

@@ -1,5 +1,5 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { LabelSelectItem } from "../ui/components/label-select/label-select";
+import { TaskStatusSelectItem } from "../ui/components/task-status-select/task-status-select";
 
 // TODO: Reflect real data for in progress and overdue tasks
 export interface TaskCounts {
@@ -14,40 +14,43 @@ export function calculateTaskCounts(tasks: TaskDetailDTO[]): TaskCounts {
   return { todo, done };
 }
 
-export function createLabelSelectItems(tasks: TaskDetailDTO[]): LabelSelectItem[] {
+export function createStatusSelectItems(tasks: TaskDetailDTO[]): TaskStatusSelectItem[] {
   const counts = calculateTaskCounts(tasks);
 
   return [
     {
       id: "all",
-      label: "All",
+      status: "All",
       count: tasks.length,
     },
     {
       id: "todo",
-      label: "To Do",
+      status: "To Do",
       count: counts.todo,
     },
     {
       id: "inprogress",
-      label: "In Progress",
+      status: "In Progress",
       count: tasks.length,
     },
     {
       id: "done",
-      label: "Done",
+      status: "Done",
       count: counts.done,
     },
     {
       id: "overdue",
-      label: "Overdue",
+      status: "Overdue",
       count: tasks.length,
     },
   ];
 }
 
-export function filterTasksByLabel(tasks: TaskDetailDTO[], selectedLabel: string): TaskDetailDTO[] {
-  switch (selectedLabel) {
+export function filterTasksByStatus(
+  tasks: TaskDetailDTO[],
+  selectedStatus: string,
+): TaskDetailDTO[] {
+  switch (selectedStatus) {
     case "todo":
       return tasks.filter((task) => !task.isDone);
     case "done":
