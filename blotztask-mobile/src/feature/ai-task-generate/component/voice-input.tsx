@@ -43,28 +43,15 @@ export const VoiceInput = ({
             style={{ fontFamily: "Baloo2-Regular" }}
           />
         ) : (
-          <>
+          <View onLayout={(e) => setIdleBlockH(e.nativeEvent.layout.height)}>
             <Text className="text-black text-4xl font-balooBold text-center leading-snug">
               Braindump tasks{"\n"}with your voice
             </Text>
             <Text className="text-gray-500 font-baloo text-xl text-center mt-2">
               Just say your task, and I‘ll create it automatically
             </Text>
-          </>
+          </View>
         )}
-
-        <View
-          pointerEvents="none"
-          style={{ position: "absolute", opacity: 0, width: "100%" }}
-          onLayout={(e) => setIdleBlockH(e.nativeEvent.layout.height)}
-        >
-          <Text className="text-black text-4xl font-balooBold text-center mt-6 leading-snug">
-            Braindump tasks{"\n"}with your voice
-          </Text>
-          <Text className="text-gray-500 font-baloo text-xl text-center mt-2">
-            Just say your task, and I‘ll create it automatically
-          </Text>
-        </View>
       </View>
 
       <View className="mt-6 items-center">
