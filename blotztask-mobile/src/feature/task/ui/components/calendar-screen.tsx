@@ -12,11 +12,11 @@ import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
-import { LabelSelect, LabelType } from "./label-select/label-select";
-import { createLabelSelectItems, filterTasksByLabel } from "../../util/task-counts";
+import { TaskStatusSelect, TaskStatusType } from "./task-status-select/task-status-select";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
-import { TaskListPlaceholder } from "./label-select/tasklist-placeholder";
+import { TaskListPlaceholder } from "./task-status-select/tasklist-placeholder";
+import { createStatusSelectItems, filterTasksByStatus } from "../../util/task-counts";
 
 export default function CalendarPage() {
   const {
@@ -34,7 +34,7 @@ export default function CalendarPage() {
 
   const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
   const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
-  const [selectedLabel, setSelectedLabel] = useState<LabelType>("all");
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
 
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
 
@@ -116,9 +116,9 @@ export default function CalendarPage() {
     );
   };
 
-  // Calculate filtered tasks and label items
-  const filteredTasks = filterTasksByLabel(tasksForSelectedDay, selectedLabel);
-  const labels = createLabelSelectItems(tasksForSelectedDay);
+  // Calculate filtered tasks and status items
+  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus);
+  const taskStatuses = createStatusSelectItems(tasksForSelectedDay);
 
   return (
     <SafeAreaView className="flex-1  bg-white">
@@ -144,7 +144,11 @@ export default function CalendarPage() {
           firstDay={1}
         />
 
-        <LabelSelect labels={labels} selectedLabelId={selectedLabel} onChange={setSelectedLabel} />
+        <TaskStatusSelect
+          statuses={taskStatuses}
+          selectedStatusId={selectedStatus}
+          onChange={setSelectedStatus}
+        />
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
@@ -158,7 +162,7 @@ export default function CalendarPage() {
             keyExtractor={(task) => task.id.toString()}
           />
         ) : (
-          <TaskListPlaceholder selectedLabel={selectedLabel} />
+          <TaskListPlaceholder selectedStatus={selectedStatus} />
         )}
       </CalendarProvider>
 
