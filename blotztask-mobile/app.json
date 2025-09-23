@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "BlotzTask",
+    "icon": "./assets/images/blotz-icon.jpg",
     "slug": "BlotzTask",
     "owner": "blotztask",
     "version": "1.0.0",
@@ -17,8 +18,10 @@
         "NSPhotoLibraryUsageDescription": "Allow BlotzTask to access your photos so you can attach images to tasks.",
         "NSPhotoLibraryAddUsageDescription": "Allow BlotzTask to save exported images to your photo library.",
         "NSCameraUsageDescription": "Allow BlotzTask to use the camera for calls and taking photos.",
+        "NSSpeechRecognitionUsageDescription": "We use speech recognition so you can add tasks by voice.",
         "NSMicrophoneUsageDescription": "Allow BlotzTask to use the microphone for voice and video calls."
-      }
+      },
+      "appleTeamId": "LXC29JARY5"
     },
     "android": {
       "adaptiveIcon": {
@@ -36,6 +39,7 @@
       [
         "expo-splash-screen",
         {
+          "image": "./assets/images/blotz-logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
@@ -49,19 +53,13 @@
         }
       ],
       [
-        "@react-native-voice/voice",
-        {
-          "microphonePermission": "CUSTOM: Allow BlotzTask to access the microphone",
-          "speechRecognitionPermission": "CUSTOM: Allow BlotzTask to securely recognize user speech"
-        }
-      ],
-      [
         "react-native-auth0",
         {
           "domain": "dev-k72xachs0fr6nebp.us.auth0.com"
         }
       ],
-      "patch-project"
+      "patch-project",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
