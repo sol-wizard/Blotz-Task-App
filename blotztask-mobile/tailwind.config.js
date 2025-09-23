@@ -10,6 +10,10 @@ module.exports = {
       colors: {
         primary: COLORS.primary,
       },
+      fontFamily: {
+        baloo: ["BalooRegular"],
+        balooBold: ["BalooBold"],
+      },
     },
   },
   plugins: [],
