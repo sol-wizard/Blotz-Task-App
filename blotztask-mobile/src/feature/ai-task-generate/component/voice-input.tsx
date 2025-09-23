@@ -31,7 +31,7 @@ export const VoiceInput = ({
   };
 
   return (
-    <View className="items-center">
+    <View className="items-center mt-12">
       <View style={{ minHeight: idleBlockH, width: "100%" }} className="items-center">
         {isListening ? (
           <TextInput
@@ -44,7 +44,7 @@ export const VoiceInput = ({
           />
         ) : (
           <View onLayout={(e) => setIdleBlockH(e.nativeEvent.layout.height)}>
-            <Text className="text-black text-4xl font-balooBold text-center">
+            <Text className="text-black text-4xl font-balooBold text-center pt-2">
               Braindump tasks{"\n"}with your voice
             </Text>
             <Text className="text-gray-500 font-baloo text-xl text-center mt-2">
