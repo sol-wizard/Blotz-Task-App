@@ -131,7 +131,7 @@ export default function CalendarScreen() {
           onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
           current={format(selectedDay, "yyyy-MM-dd")}
           theme={{
-
+            calendarBackground: "#F5F9FA", // incoming
             selectedDayBackgroundColor: "#EBF0FE",
             selectedDayTextColor: "#2d4150",
             todayTextColor: "#2d4150",
@@ -144,6 +144,7 @@ export default function CalendarScreen() {
             textDayFontFamily: "InterBold",
             textDayHeaderFontFamily: "InterThin",
           }}
+
           dayComponent={({ date, state }) => {
             const isToday = format(new Date(), "yyyy-MM-dd") === date?.dateString;
             const isSelected = format(selectedDay, "yyyy-MM-dd") === date?.dateString;
@@ -170,6 +171,7 @@ export default function CalendarScreen() {
                 </View>
               </View>
             );
+
           }}
           allowShadow={false}
           firstDay={1}
