@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
-import NoTasksView from "./no-tasks-view";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
 import TaskCard from "./task-card";
@@ -13,8 +12,11 @@ import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
+import { TaskStatusSelect, TaskStatusType } from "./task-status-select/task-status-select";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
+import { TaskListPlaceholder } from "./task-status-select/tasklist-placeholder";
+import { createStatusSelectItems, filterTasksByStatus } from "../../util/task-counts";
 
 export default function CalendarPage() {
   const {
@@ -32,8 +34,8 @@ export default function CalendarPage() {
 
   const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
   const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
 
-  //TODO: Maybe we dont need this
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
 
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
@@ -114,6 +116,10 @@ export default function CalendarPage() {
     );
   };
 
+  // Calculate filtered tasks and status items
+  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus);
+  const taskStatuses = createStatusSelectItems(tasksForSelectedDay);
+
   return (
     <SafeAreaView className="flex-1  bg-white">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
@@ -138,19 +144,25 @@ export default function CalendarPage() {
           firstDay={1}
         />
 
+        <TaskStatusSelect
+          statuses={taskStatuses}
+          selectedStatusId={selectedStatus}
+          onChange={setSelectedStatus}
+        />
+
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="small" />
           </View>
-        ) : tasksForSelectedDay.length > 0 ? (
+        ) : filteredTasks && filteredTasks.length > 0 ? (
           <FlatList
             className="flex-1"
-            data={tasksForSelectedDay}
+            data={filteredTasks}
             renderItem={renderTask}
             keyExtractor={(task) => task.id.toString()}
           />
         ) : (
-          <NoTasksView />
+          <TaskListPlaceholder selectedStatus={selectedStatus} />
         )}
       </CalendarProvider>
 
