@@ -2,16 +2,18 @@ import React from "react";
 import { View, Text, Pressable, ScrollView, SafeAreaView } from "react-native";
 
 export interface LabelSelectItem {
-  id: string;
+  id: LabelType;
   label: string;
   count: number;
 }
 
 export interface LabelSelectProps {
   labelItems: LabelSelectItem[];
-  selectedLabel: string;
-  onChange: (value: string) => void;
+  selectedLabel: LabelType;
+  onChange: (value: LabelType) => void;
 }
+
+export type LabelType = "all" | "todo" | "inprogress" | "done" | "overdue";
 
 export function LabelSelect({ labelItems, selectedLabel, onChange }: LabelSelectProps) {
   return (
