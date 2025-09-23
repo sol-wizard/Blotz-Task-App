@@ -1,0 +1,53 @@
+import React from "react";
+import { View, Text, Pressable, ScrollView, SafeAreaView } from "react-native";
+
+export interface LabelSelectItem {
+  id: string;
+  label: string;
+  count: number;
+}
+
+export interface LabelSelectProps {
+  labelItems: LabelSelectItem[];
+  selectedLabel: string;
+  onChange: (value: string) => void;
+}
+
+export function LabelSelect({ labelItems, selectedLabel, onChange }: LabelSelectProps) {
+  return (
+    <SafeAreaView>
+      <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} className="mb-4">
+        <View className="flex-row gap-2 px-4 items-center">
+          {labelItems.map((labelItem) => {
+            const isSelected = selectedLabel === labelItem.id;
+
+            return (
+              <Pressable
+                key={labelItem.id}
+                onPress={() => onChange(labelItem.id)}
+                className={`flex-row items-center gap-2 px-4 py-2 rounded-xl border ${
+                  isSelected ? "bg-black" : "bg-white border-gray-300"
+                }`}
+              >
+                <Text
+                  className={`text-sm ${isSelected ? "text-white font-extrabold" : "text-gray-700"}`}
+                >
+                  {labelItem.label}
+                </Text>
+                <View
+                  className={`px-2 py-0.5 rounded-full ${isSelected ? "bg-white" : "bg-gray-400"}`}
+                >
+                  <Text
+                    className={`text-xs font-semibold ${isSelected ? "text-black font-bold" : "text-white"}`}
+                  >
+                    {labelItem.count}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
