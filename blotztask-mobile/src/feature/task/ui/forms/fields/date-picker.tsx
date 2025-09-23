@@ -28,6 +28,7 @@ export default function DatePicker({ value, onChange }: Props) {
   };
 
   const markedDateString = format(tempDate ?? new Date(), "yyyy-MM-dd");
+  const todayString = format(new Date(), "yyyy-MM-dd");
 
   return (
     <View className="pb-2">
@@ -61,8 +62,13 @@ export default function DatePicker({ value, onChange }: Props) {
             markedDates={{
               [markedDateString]: {
                 selected: true,
-                selectedColor: "#3B82F6",
+                selectedColor: "#EBF0FE",
                 selectedTextColor: "white",
+              },
+              [todayString]: {
+                today: true,
+                todayTextColor: "#3B82F6",
+                dotColor: "#000000",
               },
             }}
             enableSwipeMonths={true}

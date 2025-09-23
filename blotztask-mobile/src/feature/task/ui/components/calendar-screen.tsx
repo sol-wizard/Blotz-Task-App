@@ -126,13 +126,45 @@ export default function CalendarPage() {
           onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
           current={format(selectedDay, "yyyy-MM-dd")}
           theme={{
-            selectedDayBackgroundColor: "#2d4150",
-            todayTextColor: "#2d4150",
+            selectedDayBackgroundColor: "#EBF0FE",
+            selectedDayTextColor: "#000000",
+            todayTextColor: "#000000",
             arrowColor: "#2d4150",
             monthTextColor: "#2d4150",
             textMonthFontWeight: "bold",
             textDayFontWeight: "bold",
             textDayHeaderFontWeight: "bold",
+          }}
+          markingType="custom"
+          markedDates={{
+            [format(new Date(), "yyyy-MM-dd")]: {
+              customStyles: {
+                container: {
+                  backgroundColor: format(new Date(), "yyyy-MM-dd") === format(selectedDay, "yyyy-MM-dd") ? "#EBF0FE" : "transparent",
+                  borderRadius: 8,
+                },
+                text: {
+                  color: "#000000",
+                  fontWeight: "bold",
+                },
+              },
+              marked: true,
+              dotColor: "#44cf38",
+            },
+            [format(selectedDay, "yyyy-MM-dd")]: {
+              customStyles: {
+                container: {
+                  backgroundColor: "#EBF0FE",
+                  borderRadius: 8,
+                },
+                text: {
+                  color: "#000000",
+                  fontWeight: "bold",
+                },
+              },
+              marked: format(new Date(), "yyyy-MM-dd") === format(selectedDay, "yyyy-MM-dd"),
+              dotColor: "#44cf38",
+            },
           }}
           allowShadow={false}
           firstDay={1}
