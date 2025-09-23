@@ -46,9 +46,9 @@
   },
   "submit": {
     "preivew": {
-        "ios": {
-          "ascAppId": "6752492404"
-        }
+      "ios": {
+        "ascAppId": "6752492404"
       }
+    }
   }
 }

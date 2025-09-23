@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import Voice from "@react-native-voice/voice";
+import Voice from "@react-native-community/voice";
 
 type UseVoiceInputOptions = {
   language?: string;
@@ -8,7 +8,7 @@ type UseVoiceInputOptions = {
 
 export function useVoiceInput(options: UseVoiceInputOptions = {}) {
   const { language = "en-US", onFinalResult } = options;
-
+  const [partialText, setPartialText] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [interimText, setInterimText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -16,6 +16,10 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}) {
   const resultsRef = useRef<string[]>([]);
 
   useEffect(() => {
+    Voice.onSpeechPartialResults = (e: any) => {
+      const val = e.value?.[0] ?? "";
+      setPartialText(val); // ⭐ 持续更新
+    };
     Voice.onSpeechResults = (e: any) => {
       const values: string[] = e?.value ?? [];
       resultsRef.current = values;
@@ -37,6 +41,7 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}) {
   }, []);
 
   const startListening = async () => {
+    setPartialText("");
     setError(null);
     resultsRef.current = [];
     setInterimText("");
@@ -58,11 +63,13 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}) {
     const finalText = (resultsRef.current ?? []).join(" ").trim();
     if (finalText && onFinalResult) onFinalResult(finalText);
     setIsListening(false);
+    setPartialText("");
     return finalText;
   };
 
   return {
     isListening,
+    partialText,
     interimText,
     error,
     startListening,
