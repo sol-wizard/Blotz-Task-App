@@ -5,11 +5,15 @@ import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-chat-hub/util/map-e
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 import { signalRService } from "../services/ai-task-generator-signalr-service";
+import { ModalType } from "@/feature/ai-task-generate/modals/modal-type";
 
+// TODO: messages, isTyping is no longer in use
 export function useAiTaskGenerator() {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [aiGeneratedTasks, setAiGeneratedTasks] = useState<AiTaskDTO[]>([]);
+  const [modalType, setModalType] = useState<ModalType>("input");
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -20,28 +24,32 @@ export function useAiTaskGenerator() {
     };
 
     setMessages((prev = []) => [...prev, userMessage]);
-
+    setModalType("loading");
     if (connection) {
       try {
         await signalRService.invoke(connection, "SendMessage", "User", text.trim());
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
+        setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "input");
       }
     } else {
       console.warn("Cannot send message: Not connected.");
+      setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "input");
     }
   };
 
   const receiveMessageHandler = (msg: ConversationMessage) => {
     if (msg.isBot === false) return;
     setMessages((prev = []) => [...prev, msg]);
+    setModalType("task-preview");
   };
 
   const receiveTasksHandler = (receivedTasks: ExtractedTaskDTO[]) => {
     if (!receivedTasks || receivedTasks.length === 0) return;
-    console.log("receivedTasks:", receivedTasks);
+
     const mappedTasks: AiTaskDTO[] = receivedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
     console.log("mappedTasks,", mappedTasks);
+    setAiGeneratedTasks(mappedTasks);
 
     setMessages((prev = []) => [
       ...prev,
@@ -89,5 +97,12 @@ export function useAiTaskGenerator() {
     };
   }, []);
 
-  return { messages, sendMessage, isTyping };
+  return {
+    aiGeneratedTasks,
+    messages,
+    sendMessage,
+    isTyping,
+    modalType,
+    setModalType,
+  };
 }
