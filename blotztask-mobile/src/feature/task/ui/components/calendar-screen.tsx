@@ -14,9 +14,9 @@ import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/sub
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
 import { LabelSelect, LabelType } from "./label-select/label-select";
 import { createLabelSelectItems, filterTasksByLabel } from "../../util/task-counts";
-import { EmptyState } from "./label-select/empty-state";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
+import { TaskListPlaceholder } from "./label-select/tasklist-placeholder";
 
 export default function CalendarPage() {
   const {
@@ -162,7 +162,7 @@ export default function CalendarPage() {
             keyExtractor={(task) => task.id.toString()}
           />
         ) : (
-          <EmptyState selectedLabel={selectedLabel} />
+          <TaskListPlaceholder selectedLabel={selectedLabel} />
         )}
       </CalendarProvider>
 

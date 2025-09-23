@@ -2,12 +2,12 @@ import React from "react";
 import { View, Text } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-interface EmptyStateProps {
+interface TaskListPlaceholderProps {
   selectedLabel: string;
 }
 
 // TODO: Add more empty states instead of using default
-export function EmptyState({ selectedLabel }: EmptyStateProps) {
+export function TaskListPlaceholder({ selectedLabel }: TaskListPlaceholderProps) {
   const getEmptyStateContent = () => {
     switch (selectedLabel) {
       case "todo":
