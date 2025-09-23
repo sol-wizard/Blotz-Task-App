@@ -8,20 +8,20 @@ export interface LabelSelectItem {
 }
 
 export interface LabelSelectProps {
-  labelItems: LabelSelectItem[];
-  selectedLabel: LabelType;
+  labels: LabelSelectItem[];
+  selectedLabelId: LabelType;
   onChange: (value: LabelType) => void;
 }
 
 export type LabelType = "all" | "todo" | "inprogress" | "done" | "overdue";
 
-export function LabelSelect({ labelItems, selectedLabel, onChange }: LabelSelectProps) {
+export function LabelSelect({ labels, selectedLabelId, onChange }: LabelSelectProps) {
   return (
     <SafeAreaView>
       <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} className="mb-4">
         <View className="flex-row gap-2 px-4 items-center">
-          {labelItems.map((labelItem) => {
-            const isSelected = selectedLabel === labelItem.id;
+          {labels.map((labelItem) => {
+            const isSelected = selectedLabelId === labelItem.id;
 
             return (
               <Pressable
