@@ -144,7 +144,6 @@ export default function CalendarScreen() {
             textDayFontFamily: "InterBold",
             textDayHeaderFontFamily: "InterThin",
           }}
-
           dayComponent={({ date, state }) => {
             const isToday = format(new Date(), "yyyy-MM-dd") === date?.dateString;
             const isSelected = format(selectedDay, "yyyy-MM-dd") === date?.dateString;
@@ -171,7 +170,6 @@ export default function CalendarScreen() {
                 </View>
               </View>
             );
-
           }}
           allowShadow={false}
           firstDay={1}
