@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
@@ -9,17 +9,14 @@ import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import SubtaskDetail from "./subtask-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
-import {
-  BottomSheetBackdrop,
-  BottomSheetBackdropProps,
-  BottomSheetModal,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
 import { LabelSelect } from "./label-select/label-select";
 import { createLabelSelectItems, filterTasksByLabel } from "../../util/task-counts";
 import { EmptyState } from "./label-select/empty-state";
+import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
+import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
 
 export default function CalendarPage() {
   const {
@@ -34,6 +31,7 @@ export default function CalendarPage() {
   const taskDetailModalRef = useRef<BottomSheetModal>(null);
   const editTaskModalRef = useRef<BottomSheetModal>(null);
   const subtaskModalRef = useRef<BottomSheetModal>(null);
+
   const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
   const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
   const [selectedLabel, setSelectedLabel] = useState<string>("all");
@@ -95,19 +93,6 @@ export default function CalendarPage() {
     }
   };
 
-  const renderBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        pressBehavior="close"
-        opacity={0.5}
-      />
-    ),
-    [],
-  );
-
   const handleOpenSubtasks = async (task: TaskDetailDTO) => {
     setSelectedTask(task);
 
@@ -137,7 +122,7 @@ export default function CalendarPage() {
   const labelItems = createLabelSelectItems(tasksForSelectedDay);
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1  bg-white">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
       <CalendarProvider
         date={format(selectedDay, "yyyy-MM-dd")}
@@ -182,11 +167,13 @@ export default function CalendarPage() {
         )}
       </CalendarProvider>
 
+      <ToggleAiTaskGenerate />
+
       <BottomSheetModal
         ref={taskDetailModalRef}
         snapPoints={["60%", "80%"]}
         enablePanDownToClose
-        backdropComponent={renderBackdrop}
+        backdropComponent={renderBottomSheetBackdrop}
         backgroundStyle={{
           backgroundColor: "#FFFFFF",
           borderTopLeftRadius: 24,
@@ -205,7 +192,7 @@ export default function CalendarPage() {
           ref={editTaskModalRef}
           snapPoints={["55%"]}
           keyboardBlurBehavior="restore"
-          backdropComponent={renderBackdrop}
+          backdropComponent={renderBottomSheetBackdrop}
           enablePanDownToClose
         >
           <EditTaskBottomSheet task={selectedTask} handleClose={handleEditTaskSheetClose} />
@@ -215,7 +202,7 @@ export default function CalendarPage() {
       <BottomSheetModal
         ref={subtaskModalRef}
         enablePanDownToClose
-        backdropComponent={renderBackdrop}
+        backdropComponent={renderBottomSheetBackdrop}
         backgroundStyle={{
           backgroundColor: "#FFFFFF",
           borderTopLeftRadius: 24,
