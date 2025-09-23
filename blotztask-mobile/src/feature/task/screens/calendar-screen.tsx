@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
-import NoTasksView from "../components/calender/no-tasks-view";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskBottomSheet } from "../components/ui/edit-task-bottom-sheet";
 import TaskCard from "../components/ui/task-card";
@@ -12,9 +11,12 @@ import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../services/subtask-service";
 import { useSelectedDayTaskStore } from "../stores/selectedday-task-store";
+import CalendarHeader from "../components/calender/calendar-header";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
-import CalendarHeader from "../components/calender/calendar-header";
+import { TaskStatusSelect, TaskStatusType } from "../ui/components/task-status-select/task-status-select";
+import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
+import { TaskListPlaceholder } from "../ui/components/task-status-select/tasklist-placeholder";
 
 export default function CalendarScreen() {
   const {
@@ -32,8 +34,8 @@ export default function CalendarScreen() {
 
   const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
   const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
 
-  //TODO: Maybe we dont need this
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
 
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
@@ -114,6 +116,10 @@ export default function CalendarScreen() {
     );
   };
 
+  // Calculate filtered tasks and status items
+  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus);
+  const taskStatuses = createStatusSelectItems(tasksForSelectedDay);
+
   return (
     <SafeAreaView className="flex-1  bg-white">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
@@ -138,19 +144,25 @@ export default function CalendarScreen() {
           firstDay={1}
         />
 
+        <TaskStatusSelect
+          statuses={taskStatuses}
+          selectedStatusId={selectedStatus}
+          onChange={setSelectedStatus}
+        />
+
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="small" />
           </View>
-        ) : tasksForSelectedDay.length > 0 ? (
+        ) : filteredTasks && filteredTasks.length > 0 ? (
           <FlatList
             className="flex-1"
-            data={tasksForSelectedDay}
+            data={filteredTasks}
             renderItem={renderTask}
             keyExtractor={(task) => task.id.toString()}
           />
         ) : (
-          <NoTasksView />
+          <TaskListPlaceholder selectedStatus={selectedStatus} />
         )}
       </CalendarProvider>
 
