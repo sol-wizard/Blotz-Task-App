@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import CalendarHeader from "./calendar-header";
-import NoTasksView from "./no-tasks-view";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
 import TaskCard from "./task-card";
@@ -18,6 +17,9 @@ import {
 } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
+import { LabelSelect } from "./label-select/label-select";
+import { createLabelSelectItems, filterTasksByLabel } from "../../util/task-counts";
+import { EmptyState } from "./label-select/empty-state";
 
 export default function CalendarPage() {
   const {
@@ -34,6 +36,7 @@ export default function CalendarPage() {
   const subtaskModalRef = useRef<BottomSheetModal>(null);
   const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
   const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
+  const [selectedLabel, setSelectedLabel] = useState<string>("all");
 
   //TODO: Maybe we dont need this
   const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
@@ -129,6 +132,10 @@ export default function CalendarPage() {
     );
   };
 
+  // Calculate filtered tasks and label items
+  const filteredTasks = filterTasksByLabel(tasksForSelectedDay, selectedLabel);
+  const labelItems = createLabelSelectItems(tasksForSelectedDay);
+
   return (
     <SafeAreaView className="flex-1">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
@@ -153,19 +160,25 @@ export default function CalendarPage() {
           firstDay={1}
         />
 
+        <LabelSelect
+          labelItems={labelItems}
+          selectedLabel={selectedLabel}
+          onChange={setSelectedLabel}
+        />
+
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="small" />
           </View>
-        ) : tasksForSelectedDay.length > 0 ? (
+        ) : filteredTasks.length > 0 ? (
           <FlatList
             className="flex-1"
-            data={tasksForSelectedDay}
+            data={filteredTasks}
             renderItem={renderTask}
             keyExtractor={(task) => task.id.toString()}
           />
         ) : (
-          <NoTasksView />
+          <EmptyState selectedLabel={selectedLabel} />
         )}
       </CalendarProvider>
 
