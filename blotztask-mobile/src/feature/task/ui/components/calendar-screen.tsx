@@ -118,7 +118,7 @@ export default function CalendarPage() {
 
   // Calculate filtered tasks and label items
   const filteredTasks = filterTasksByLabel(tasksForSelectedDay, selectedLabel);
-  const labelItems = createLabelSelectItems(tasksForSelectedDay);
+  const labels = createLabelSelectItems(tasksForSelectedDay);
 
   return (
     <SafeAreaView className="flex-1  bg-white">
@@ -144,11 +144,7 @@ export default function CalendarPage() {
           firstDay={1}
         />
 
-        <LabelSelect
-          labelItems={labelItems}
-          selectedLabel={selectedLabel}
-          onChange={setSelectedLabel}
-        />
+        <LabelSelect labels={labels} selectedLabelId={selectedLabel} onChange={setSelectedLabel} />
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
