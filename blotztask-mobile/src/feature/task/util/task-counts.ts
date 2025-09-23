@@ -1,5 +1,8 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { TaskStatusSelectItem } from "../ui/components/task-status-select/task-status-select";
+import {
+  TaskStatusSelectItem,
+  TaskStatusType,
+} from "../ui/components/task-status-select/task-status-select";
 
 // TODO: Reflect real data for in progress and overdue tasks
 export interface TaskCounts {
@@ -31,7 +34,7 @@ export function createStatusSelectItems(tasks: TaskDetailDTO[]): TaskStatusSelec
     {
       id: "inprogress",
       status: "In Progress",
-      count: tasks.length,
+      count: 0,
     },
     {
       id: "done",
@@ -41,21 +44,26 @@ export function createStatusSelectItems(tasks: TaskDetailDTO[]): TaskStatusSelec
     {
       id: "overdue",
       status: "Overdue",
-      count: tasks.length,
+      count: 0,
     },
   ];
 }
 
 export function filterTasksByStatus(
   tasks: TaskDetailDTO[],
-  selectedStatus: string,
-): TaskDetailDTO[] {
+  selectedStatus: TaskStatusType,
+): TaskDetailDTO[] | null {
   switch (selectedStatus) {
     case "todo":
       return tasks.filter((task) => !task.isDone);
     case "done":
       return tasks.filter((task) => task.isDone);
     case "all":
+      return tasks;
+    case "overdue":
+      return null;
+    case "inprogress":
+      return null;
     default:
       return tasks;
   }
