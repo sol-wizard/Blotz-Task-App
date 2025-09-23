@@ -67,7 +67,6 @@ export const VoiceInput = ({
         </View>
       </View>
 
-      {/* 按钮区不会被上方内容高度变化影响 */}
       <View className="mt-6 items-center">
         <Pressable
           onLongPress={startListening}
