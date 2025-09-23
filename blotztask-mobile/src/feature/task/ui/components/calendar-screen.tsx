@@ -9,7 +9,7 @@ import TaskCard from "./task-card";
 import TaskDetailBottomSheet from "./task-detail-bottomsheet";
 import SubtaskDetail from "./subtask-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
-import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
+import { ActivityIndicator, FlatList, SafeAreaView, View, Text, Pressable } from "react-native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
 import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
@@ -135,36 +135,32 @@ export default function CalendarPage() {
             textDayFontWeight: "bold",
             textDayHeaderFontWeight: "bold",
           }}
-          markingType="custom"
-          markedDates={{
-            [format(new Date(), "yyyy-MM-dd")]: {
-              customStyles: {
-                container: {
-                  backgroundColor: format(new Date(), "yyyy-MM-dd") === format(selectedDay, "yyyy-MM-dd") ? "#EBF0FE" : "transparent",
-                  borderRadius: 8,
-                },
-                text: {
-                  color: "#000000",
-                  fontWeight: "bold",
-                },
-              },
-              marked: true,
-              dotColor: "#44cf38",
-            },
-            [format(selectedDay, "yyyy-MM-dd")]: {
-              customStyles: {
-                container: {
-                  backgroundColor: "#EBF0FE",
-                  borderRadius: 8,
-                },
-                text: {
-                  color: "#000000",
-                  fontWeight: "bold",
-                },
-              },
-              marked: format(new Date(), "yyyy-MM-dd") === format(selectedDay, "yyyy-MM-dd"),
-              dotColor: "#44cf38",
-            },
+          dayComponent={({ date, state }) => {
+            const isToday = format(new Date(), "yyyy-MM-dd") === date?.dateString;
+            const isSelected = format(selectedDay, "yyyy-MM-dd") === date?.dateString;
+            
+            return (
+              <View className="items-center justify-center w-10 h-12">
+                {isToday && (
+                  <View className="w-2 h-2 bg-green-500 rounded-full mb-1" />
+                )}
+                <View 
+                  className={`w-8 h-8 items-center justify-center ${
+                    isSelected ? "bg-blue-50 rounded-md" : ""
+                  }`}
+                >
+                  <Pressable onPress={() => date && setSelectedDay(new Date(date.dateString))}>
+                    <Text 
+                      className={`text-sm font-bold ${
+                        state === "disabled" ? "text-gray-300" : "text-black"
+                      }`}
+                    >
+                      {date?.day}
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            );
           }}
           allowShadow={false}
           firstDay={1}

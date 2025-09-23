@@ -39,8 +39,8 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         day_range_start: 'day-range-start',
         day_range_end: 'day-range-end',
         day_selected:
-          'bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white',
-        day_today: 'bg-gray-200 text-accent-foreground',
+          'bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white rounded-md',
+        day_today: 'relative text-accent-foreground before:content-[""] before:absolute before:-top-1 before:left-1/2 before:transform before:-translate-x-1/2 before:w-2 before:h-2 before:bg-green-500 before:rounded-full',
         day_outside:
           'day-outside text-muted-foreground opacity-50  aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30',
         day_disabled: 'text-muted-foreground opacity-50',
