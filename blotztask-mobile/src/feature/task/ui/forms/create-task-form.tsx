@@ -2,7 +2,6 @@ import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import TaskFormField, { taskFormSchema } from "@/feature/task/models/task-form-schema";
 import { toAddTaskItemDTO } from "@/feature/task/util/task-generator-util";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { router } from "expo-router";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
@@ -18,10 +17,6 @@ export default function CreateTaskForm({
 }: {
   handleTaskCreationSheetClose: (index: number) => void;
 }) {
-  const handleAiChat = () => {
-    handleTaskCreationSheetClose(-1);
-    router.push("/(protected)/ai-task-generator");
-  };
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onSubmit",
@@ -80,28 +75,15 @@ export default function CreateTaskForm({
           </View>
         </View>
 
-        <View className="flex-row items-center gap-3 mb-4">
-          <View className="flex-1">
-            <FormTextInput
-              name="title"
-              placeholder="Title"
-              control={form.control}
-              className={`bg-gray-50 rounded-2xl border ${
-                errors.title ? "border-red-500" : "border-transparent"
-              }`}
-            />
-          </View>
-
-          <Button
-            mode="outlined"
-            icon="flash"
-            onPress={handleAiChat}
-            style={{ borderRadius: 14, borderColor: "#E5E7EB" }}
-            contentStyle={{ height: 48, paddingHorizontal: 14 }}
-            labelStyle={{ fontSize: 14, color: "#444964" }}
-          >
-            AI Generate Task
-          </Button>
+        <View className="flex-1">
+          <FormTextInput
+            name="title"
+            placeholder="Title"
+            control={form.control}
+            className={`bg-gray-50 rounded-2xl border ${
+              errors.title ? "border-red-500" : "border-transparent"
+            }`}
+          />
         </View>
 
         <View className="mb-4">
