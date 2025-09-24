@@ -20,7 +20,6 @@ export const ToggleAiTaskGenerate = () => {
         }}
         onPress={() => {
           aiVoiceInputModalRef?.current?.present();
-          console.log(!!aiVoiceInputModalRef.current);
         }}
       />
 
@@ -38,7 +37,7 @@ export const ToggleAiTaskGenerate = () => {
         >
           <BottomSheetView
             className="flex-1 justify-between items-center"
-            style={{ minHeight: 400 }}
+            style={{ minHeight: 300 }}
           >
             <AiTaskGenerateModal />
           </BottomSheetView>
