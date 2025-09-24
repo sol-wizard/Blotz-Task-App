@@ -1,13 +1,13 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { FormProvider, useForm } from "react-hook-form";
-import { View, Text, TouchableOpacity } from "react-native";
-import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import TaskFormField, { taskFormSchema } from "../../models/task-form-schema";
-import { RepeatSelect } from "./fields/repeat-select";
-import { LabelSelect } from "./fields/label-select";
-import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
-import { EditTaskItemDTO } from "../../models/edit-task-item-dto";
+import { EditTaskItemDTO } from "../models/edit-task-item-dto";
+import { TaskFormField, taskFormSchema } from "../models/task-form-schema";
+import { FormProvider, useForm } from "react-hook-form";
+import { useSelectedDayTaskStore } from "../stores/selectedday-task-store";
+import { FormTextInput } from "@/shared/components/ui/form-text-input";
+import { RepeatSelect } from "../components/form/repeat-select";
+import { LabelSelect } from "../components/form/label-select";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { View, Text, TouchableOpacity } from "react-native";
 
 export type EditTaskFormProps = {
   task: TaskDetailDTO;
