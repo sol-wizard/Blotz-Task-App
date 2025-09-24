@@ -36,16 +36,16 @@ export const theme = {
   roundness: 10,
   colors: {
     ...MD3LightTheme.colors,
-    background: "#F5F9FA",
-    surface: "#F5F9FA",
-    surfaceVariant: "#F5F9FA",
-    primary: "#8C8C8C",
-    onPrimary: "#FFFFFF",
-    onSurface: "#444964",
-    onBackground: "#444964",
-    error: "#F56767",
-    heading: "#000000",
-    warning: "#F56767",
+    background: "#F5F9FA", // very light gray (app background)
+    surface: "#F5F9FA", // very light gray (card / surface background)
+    surfaceVariant: "#F5F9FA", // very light gray (alternative surface background)
+    primary: "#8C8C8C", // medium gray (primary button background)
+    onPrimary: "#FFFFFF", // white (text/icon on primary)
+    onSurface: "#444964", // dark gray (default text on surface)
+    onBackground: "#444964", // dark gray (default text on background)
+    error: "#F56767", // soft red (error / danger)
+    heading: "#000000", // pure black (headings / titles)
+    warning: "#F56767", // soft red (warning state)
   },
   fonts: configureFonts({ config: fonts }),
 };
