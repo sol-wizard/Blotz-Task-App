@@ -1,7 +1,6 @@
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import {
-  Baloo2_400Regular,
   Baloo2_600SemiBold,
   Baloo2_700Bold,
   Baloo2_800ExtraBold,
