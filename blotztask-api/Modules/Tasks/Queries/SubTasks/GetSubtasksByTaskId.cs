@@ -31,9 +31,9 @@ public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db, ILogger<GetS
         if (task is null)
         {
             logger.LogError("Task with task id not found");
-            return Enumerable.Empty<SubTasksDto>();
+            throw new KeyNotFoundException($"Task with id {query.TaskId} not found for user {query.UserId}.");
         }
-
+        
         var subtasks = await db.Subtasks
             .Where(st => st.ParentTaskId == query.TaskId)
             .OrderBy(st => st.Order)
