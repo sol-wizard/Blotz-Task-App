@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
-import CalendarHeader from "./calendar-header";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { EditTaskBottomSheet } from "./edit-task-bottom-sheet";
-import TaskCard from "./task-card";
-import TaskDetailBottomSheet from "./task-detail-bottomsheet";
-import SubtaskDetail from "./subtask-detail-bottomsheet";
+import { EditTaskBottomSheet } from "../components/ui/edit-task-bottom-sheet";
+import TaskCard from "../components/ui/task-card";
+import TaskDetailBottomSheet from "../components/ui/task-detail-bottomsheet";
+import SubtaskDetail from "../components/ui/subtask-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../../services/subtask-service";
-import { useSelectedDayTaskStore } from "../../stores/selectedday-task-store";
-import { TaskStatusSelect, TaskStatusType } from "./task-status-select/task-status-select";
+import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../services/subtask-service";
+import { useSelectedDayTaskStore } from "../stores/selectedday-task-store";
+import CalendarHeader from "../components/calender/calendar-header";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
-import { TaskListPlaceholder } from "./task-status-select/tasklist-placeholder";
-import { createStatusSelectItems, filterTasksByStatus } from "../../util/task-counts";
+import { TaskStatusSelect, TaskStatusType } from "../components/ui/task-status-select";
+import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
+import { TaskListPlaceholder } from "../components/calender/tasklist-placeholder";
 
-export default function CalendarPage() {
+export default function CalendarScreen() {
   const {
     selectedDay,
     tasksForSelectedDay,
@@ -42,6 +42,10 @@ export default function CalendarPage() {
     visible: false,
     text: "",
   });
+
+  // Calculate filtered tasks and status items
+  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus);
+  const taskStatuses = createStatusSelectItems(tasksForSelectedDay);
 
   useEffect(() => {
     loadTasks();
@@ -115,11 +119,6 @@ export default function CalendarPage() {
       prev.map((s) => (s.id === id ? { ...s, isDone: !s.isDone } : s)),
     );
   };
-
-  // Calculate filtered tasks and status items
-  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus);
-  const taskStatuses = createStatusSelectItems(tasksForSelectedDay);
-
   return (
     <SafeAreaView className="flex-1  bg-white">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />

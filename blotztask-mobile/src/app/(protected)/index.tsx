@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
-import CalendarPage from "@/feature/task/ui/components/calendar-screen";
+import CalendarScreen from "@/feature/task/screens/calendar-screen";
 import SettingsScreen from "@/feature/settings/page/settings-screen";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { CreateTaskBottomSheet } from "@/feature/task/ui/components/create-task-bottom-sheet";
+import { CreateTaskBottomSheet } from "@/feature/task/components/ui/create-task-bottom-sheet";
 
 const routes = [
   {
@@ -22,7 +22,7 @@ const routes = [
   },
 ];
 
-const CalendarRoute: any = () => <CalendarPage />;
+const CalendarRoute: any = () => <CalendarScreen />;
 const SettingsRoute = () => <SettingsScreen />;
 
 export default function ProtectedIndex() {
