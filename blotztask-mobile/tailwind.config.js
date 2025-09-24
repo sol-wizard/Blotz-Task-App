@@ -8,7 +8,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: COLORS.primary,
+        background: "#F5F9FA",
+        surface: "#FFFFFF",
+        warning: "#F56767",
+        textPrimary: "#000000",
+        textSecondary: "#444964",
       },
       fontFamily: {
         baloo: ["BalooRegular"],

@@ -1,10 +1,9 @@
 import React from "react";
-import { View, Pressable } from "react-native";
-import { Text, ProgressBar } from "react-native-paper";
+import { Text, View, Pressable } from "react-native";
+import { ProgressBar } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { TaskDetailTag } from "./task-detail-tag";
-import { COLORS } from "@/shared/constants/colors";
 import SubtaskItem from "./subtask-item";
 import { router } from "expo-router";
 
@@ -14,8 +13,6 @@ type Props = {
   totalTaskTime: string;
   onToggleSubtask: (id: number) => void;
 };
-
-const COLOR = COLORS.primary;
 
 export default function SubtaskDetail({ task, subtasks, totalTaskTime, onToggleSubtask }: Props) {
   // const [subtaskList, setSubtaskList] = useState<any[]>([]);
@@ -45,9 +42,7 @@ export default function SubtaskDetail({ task, subtasks, totalTaskTime, onToggleS
         >
           {task?.title ?? "Subtasks"}
         </Text>
-        <Text style={{ color: COLOR, fontWeight: "800" }} className="text-sm">
-          {totalTaskTime}
-        </Text>
+        <Text className="text-sm font-extrabold text-[#AEAEB2]">{totalTaskTime}</Text>
       </View>
       <View className="flex-row items-center mb-3 gap-2 mt-1">
         <TaskDetailTag>Work</TaskDetailTag>
@@ -57,9 +52,9 @@ export default function SubtaskDetail({ task, subtasks, totalTaskTime, onToggleS
         <Text className="text-[12px] text-neutral-500 font-bold mb-1">
           {completed}/{total} Completed
         </Text>
-        <ProgressBar progress={progress} color={COLOR} />
+        <ProgressBar progress={progress} color={"#AEAEB2"} />
       </View>
-      <View style={{ height: 1, backgroundColor: COLOR }} className="my-3" />
+      <View className="my-3 h-px bg-[#AEAEB2]" />
       <View>
         {subtasks.length === 0 ? (
           <Text className="text-[13px] text-neutral-500">No subtasks</Text>
