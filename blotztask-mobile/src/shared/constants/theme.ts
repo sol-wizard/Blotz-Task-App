@@ -39,6 +39,7 @@ export const theme = {
     surface: "#F5F9FA", // very light gray (card / surface background)
     surfaceVariant: "#F5F9FA", // very light gray (alternative surface background)
     primary: "#8C8C8C", // medium gray (primary button background)
+    secondary: "#D9D9D9",
     onPrimary: "#FFFFFF", // white (text/icon on primary)
     onSurface: "#444964", // dark gray (default text on surface)
     onBackground: "#444964", // dark gray (default text on background)
