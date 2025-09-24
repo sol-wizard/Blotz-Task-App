@@ -9,7 +9,7 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 public class GetTasksByDateRequest
 {
     [BindRequired]
-    public  DateTime StartDateUtc { get; set; }
+    public DateTime StartDateUtc { get; set; }
 
     [BindRequired]
     public bool IncludeFloatingForToday { get; set; }
@@ -41,7 +41,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                 (t.EndTime != null && t.EndTime >= query.StartDateUtc && t.EndTime < endDateUtc)
                 ||
                 // Floating tasks
-                (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null && !t.IsDone)
+                (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null)
             ))
             .Select(task => new TaskByDateItemDto
             {
