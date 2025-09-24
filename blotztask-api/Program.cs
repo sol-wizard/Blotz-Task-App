@@ -12,7 +12,6 @@ using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users;
-using BlotzTask.Shared.Services;
 using BlotzTask.Shared.Store;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
@@ -38,7 +37,6 @@ builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
 builder.Services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
 builder.Services.AddScoped<ITaskGenerateChatService, TaskGenerateChatService>();
 
-builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
 builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
 builder.Services.AddSingleton(new ChatHistoryStore(
     expiration: TimeSpan.FromMinutes(30),  // Sessions expire after 30 minutes of inactivity
