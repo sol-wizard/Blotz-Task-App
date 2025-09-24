@@ -14,9 +14,9 @@ import { useSelectedDayTaskStore } from "../stores/selectedday-task-store";
 import CalendarHeader from "../components/calender/calendar-header";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
-import { TaskStatusSelect, TaskStatusType } from "../ui/components/task-status-select/task-status-select";
+import { TaskStatusSelect, TaskStatusType } from "../components/ui/task-status-select";
 import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
-import { TaskListPlaceholder } from "../ui/components/task-status-select/tasklist-placeholder";
+import { TaskListPlaceholder } from "../components/calender/tasklist-placeholder";
 
 export default function CalendarScreen() {
   const {
