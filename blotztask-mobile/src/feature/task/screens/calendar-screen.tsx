@@ -43,6 +43,10 @@ export default function CalendarScreen() {
     text: "",
   });
 
+  // Calculate filtered tasks and status items
+  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus);
+  const taskStatuses = createStatusSelectItems(tasksForSelectedDay);
+
   useEffect(() => {
     loadTasks();
   }, [selectedDay]);
@@ -115,11 +119,6 @@ export default function CalendarScreen() {
       prev.map((s) => (s.id === id ? { ...s, isDone: !s.isDone } : s)),
     );
   };
-
-  // Calculate filtered tasks and status items
-  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus);
-  const taskStatuses = createStatusSelectItems(tasksForSelectedDay);
-
   return (
     <SafeAreaView className="flex-1  bg-white">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
