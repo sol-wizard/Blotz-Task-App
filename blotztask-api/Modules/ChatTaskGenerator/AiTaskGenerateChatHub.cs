@@ -49,11 +49,6 @@ public class AiTaskGenerateChatHub : Hub
         catch (TokenLimitExceededException ex)
         {
             _logger.LogError(ex, "Token limit exceeded: {Message}", ex.Message);
-
-            await Clients.Caller.SendAsync(
-                "TokenLimitExceeded",
-                new { errorType = "TokenLimitExceeded", message = ex.Message }
-            );
         }
     }
 }
