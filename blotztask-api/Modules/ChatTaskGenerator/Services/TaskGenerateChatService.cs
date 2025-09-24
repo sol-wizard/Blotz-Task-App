@@ -29,8 +29,6 @@ public class TaskGenerateChatService : ITaskGenerateChatService
         CancellationToken ct
     )
     {
-        List<ExtractedTask>? tasks = null;
-
         // If there's no chat history, create a new converstaion
         if (!_chatHistoryManagerService.TryGetChatHistory(out var chatHistory))
         {
@@ -39,8 +37,6 @@ public class TaskGenerateChatService : ITaskGenerateChatService
 
         chatHistory.AddUserMessage(userMessage);
 
-        var aiResponseTasks = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
-
-        return tasks;
+        return await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
     }
 }
