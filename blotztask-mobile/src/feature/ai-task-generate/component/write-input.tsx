@@ -36,7 +36,7 @@ export const WriteInput = ({
         }}
         returnKeyType="send"
         placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
-        placeholderTextColor="#D1D5DB"
+        placeholderTextColor={theme.colors.secondary}
         multiline
         className="w-full min-h-[100px] rounded-xl bg-white px-3 py-4 mt-4 text-xl text-gray-800 font-baloo text-left"
         style={{ textAlignVertical: "top" }} // 纵向顶对齐
