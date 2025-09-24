@@ -2,7 +2,7 @@ import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerat
 import { useState } from "react";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
-import { Text } from "react-native";
+import { AiThinkingModal } from "./ai-thinking-modal";
 
 export const AiTaskGenerateModal = () => {
   const [text, setText] = useState("");
@@ -18,7 +18,7 @@ export const AiTaskGenerateModal = () => {
       );
 
     case "loading":
-      return <Text>AI is thinking ...</Text>;
+      return <AiThinkingModal />;
 
     case "input":
     default:
