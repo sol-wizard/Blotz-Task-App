@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Microsoft.SemanticKernel;
+using BlotzTask.Modules.BreakDown.DTOs;
 
 namespace BlotzTask.Modules.BreakDown.Plugins;
 

@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Xml;
-using BlotzTask.Modules.AiTask.DTOs;
 using BlotzTask.Modules.BreakDown.prompt;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Modules.BreakDown.DTOs;
 using BlotzTask.Shared.Store;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel;
