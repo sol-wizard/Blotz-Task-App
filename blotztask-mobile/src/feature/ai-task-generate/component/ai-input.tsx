@@ -17,7 +17,7 @@ export const AiInput = ({
   return (
     <>
       {isVoiceInput && <VoiceInput text={text} setText={setText} sendMessage={sendMessage} />}
-      {!isVoiceInput && <WriteInput text={text} setText={setText} />}
+      {!isVoiceInput && <WriteInput text={text} setText={setText} sendMessage={sendMessage} />}
 
       <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} />
     </>

@@ -1,6 +1,7 @@
 import React from "react";
 import LottieView from "lottie-react-native";
 import { View, Text } from "react-native";
+import { ASSETS } from "@/shared/constants/assets";
 
 interface TypingAnimationProps {
   visible: boolean;
@@ -11,12 +12,7 @@ export default function TypingAnimation({ visible }: TypingAnimationProps) {
 
   return (
     <View>
-      <LottieView
-        source={require("../../../../assets/images/aiLoadingEffect.json")}
-        autoPlay
-        loop
-        style={{ width: 60, height: 40 }}
-      />
+      <LottieView source={ASSETS.aiLoadingEffect} autoPlay loop style={{ width: 60, height: 40 }} />
       <Text className="ml-2 text-sm text-gray-500 italic">AI is thinking…</Text>
     </View>
   );
