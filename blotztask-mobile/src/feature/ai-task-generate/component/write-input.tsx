@@ -19,16 +19,14 @@ export const WriteInput = ({
 
   return (
     <View className="w-full px-4 pt-3 pb-6">
-      <View className="w-full items-center">
-        <TextInput
-          value={text}
-          onChangeText={setText}
-          placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
-          placeholderTextColor="#D1D5DB"
-          multiline
-          className="w-[92%] min-h-[100px] rounded-xl border border-gray-300 bg-white px-3 py-2 text-lg text-gray-800 font-baloo"
-        />
-      </View>
+      <TextInput
+        value={text}
+        onChangeText={setText}
+        placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
+        placeholderTextColor="#D1D5DB"
+        multiline
+        className="w-[92%] min-h-[100px] rounded-xl border border-gray-300 bg-white px-3 py-2 text-lg text-gray-800 font-baloo"
+      />
 
       <Pressable
         onPress={handleConfirm}
