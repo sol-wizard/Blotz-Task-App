@@ -1,9 +1,9 @@
 import { View } from "react-native";
 
 export default function TaskDetailScreen() {
-return (
+  return (
     <View>
-        <p>Task Detail</p>
+      <p>Task Detail</p>
     </View>
-)
+  );
 }
