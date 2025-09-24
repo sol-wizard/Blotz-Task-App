@@ -23,7 +23,7 @@ export const WriteInput = ({
   };
 
   return (
-    <View className="px-4 pt-3 pb-6 w-[70%]">
+    <View className="w-full px-4 pt-3 pb-6">
       <TextInput
         value={text}
         onChangeText={handleChange}
@@ -36,9 +36,10 @@ export const WriteInput = ({
         }}
         returnKeyType="send"
         placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
-        placeholderTextColor={theme.colors.secondary}
+        placeholderTextColor="#D1D5DB"
         multiline
-        className="w-[70%] min-h-[100px] rounded-xl bg-white px-3 pt-8 text-xl text-left text-gray-800 font-baloo"
+        className="w-full min-h-[100px] rounded-xl bg-white px-3 py-4 mt-4 text-xl text-gray-800 font-baloo text-left"
+        style={{ textAlignVertical: "top" }} // 纵向顶对齐
       />
     </View>
   );
