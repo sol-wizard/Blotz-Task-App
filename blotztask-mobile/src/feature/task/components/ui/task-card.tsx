@@ -99,7 +99,7 @@ export default function TaskCard({
   const timePeriod = formatDateRange({ startTime, endTime });
 
   return (
-    <View className="relative mx-4 my-2 rounded-2xl bg-white elevation-3 overflow-hidden">
+    <View className="relative mx-4 my-2 rounded-2xl bg-white overflow-hidden">
       <Animated.View
         style={rightActionStyle}
         pointerEvents={actionsEnabled ? "auto" : "none"}
@@ -137,7 +137,7 @@ export default function TaskCard({
 
               <View className="flex-1 justify-start pt-0">
                 <Text
-                  className={`text-base font-bold ${checked ? "text-neutral-400 line-through" : "text-black"}`}
+                  className={`text-xl font-baloo ${checked ? "text-neutral-400 line-through" : "text-black"}`}
                 >
                   {title}
                 </Text>

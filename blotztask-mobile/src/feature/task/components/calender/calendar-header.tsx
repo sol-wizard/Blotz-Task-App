@@ -18,8 +18,10 @@ export default function CalendarHeader({ date }: { date: string }) {
   const { dayOfWeek, monthDay, year } = formDate(date);
 
   return (
-    <View className="flex-row justify-between items-center px-5 py-4 bg-white">
-      <Text className="text-2xl font-bold text-gray-800">{dayOfWeek}</Text>
+    <View className="flex-row justify-between items-center px-5">
+      <Text className="text-5xl font-bold text-gray-800 font-balooExtraBold items-end pt-10">
+        {dayOfWeek}
+      </Text>
       <View>
         <Text className="text-lg font-bold text-gray-600 text-right">{monthDay}</Text>
         <Text className="text-xl font-bold text-gray-600">{year}</Text>
