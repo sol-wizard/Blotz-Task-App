@@ -15,17 +15,17 @@ export default function SubtaskItem({ item: s, onToggle }: SubtaskItemProps) {
       <View className="flex-1 ml-2">
         <View className="flex-row items-center justify-between">
           <Text
-            className={`text-[15px] font-baloo ${s?.isDone ? "line-through text-[#AEAEB2]" : undefined}`}
+            className={`text-[15px] font-baloo ${s?.isDone ? "line-through text-tertiary" : undefined}`}
           >
             {s?.title}
           </Text>
-          <Text className="ml-3 text-sm font-baloo text-[#AEAEB2]">
+          <Text className="ml-3 text-sm font-baloo text-tertiary">
             {convertSubtaskTimeForm(s?.duration)}
           </Text>
         </View>
 
         <Text
-          className={`mt-1 text-[13px] font-semibold text-[#AEAEB2] ${s?.isDone ? "line-through" : ""}`}
+          className={`mt-1 text-[13px] font-semibold text-tertiary ${s?.isDone ? "line-through" : ""}`}
         >
           {s?.description ?? " "}
         </Text>

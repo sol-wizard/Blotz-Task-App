@@ -47,7 +47,7 @@ export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className
 
           {(task.startTime || task.endTime) && (
             <View className="flex-row mt-1 items-center">
-              <MaterialIcons name="schedule" size={20} color={"#AEAEB2"} />
+              <MaterialIcons name="schedule" size={20} color={"#8C8C8C"} />
               <View className="flex-col ml-2">
                 {task.startTime && (
                   <Text className="text-base text-primary">{formatTime(task.startTime)}</Text>

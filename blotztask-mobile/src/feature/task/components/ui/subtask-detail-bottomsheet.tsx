@@ -42,7 +42,7 @@ export default function SubtaskDetail({ task, subtasks, totalTaskTime, onToggleS
         >
           {task?.title ?? "Subtasks"}
         </Text>
-        <Text className="text-sm font-extrabold text-[#AEAEB2]">{totalTaskTime}</Text>
+        <Text className="text-sm font-extrabold text-tertiary">{totalTaskTime}</Text>
       </View>
       <View className="flex-row items-center mb-3 gap-2 mt-1">
         <TaskDetailTag>Work</TaskDetailTag>
@@ -52,9 +52,9 @@ export default function SubtaskDetail({ task, subtasks, totalTaskTime, onToggleS
         <Text className="text-[12px] text-neutral-500 font-bold mb-1">
           {completed}/{total} Completed
         </Text>
-        <ProgressBar progress={progress} color={"#AEAEB2"} />
+        <ProgressBar progress={progress} color={"#8C8C8C"} />
       </View>
-      <View className="my-3 h-px bg-[#AEAEB2]" />
+      <View className="my-3 h-px bg-tertiary" />
       <View>
         {subtasks.length === 0 ? (
           <Text className="text-[13px] text-neutral-500">No subtasks</Text>
