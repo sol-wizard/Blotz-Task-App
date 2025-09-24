@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View, Pressable } from "react-native";
-import { ProgressBar, useTheme } from "react-native-paper";
+import { ProgressBar } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { TaskDetailTag } from "./task-detail-tag";
