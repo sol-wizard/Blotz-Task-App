@@ -7,6 +7,7 @@
 export const LOTTIE_ANIMATIONS = {
   emptyBox: require("../../assets/images/empty-box.json"),
   aiLoadingEffect: require("../../assets/images/aiLoadingEffect.json"),
+  spinner: require("../../../assets/images/spinner.json"),
 } as const;
 
 // Images
