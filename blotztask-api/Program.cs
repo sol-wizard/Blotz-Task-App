@@ -3,19 +3,15 @@ using Azure.Security.KeyVault.Secrets;
 using BlotzTask.Extension;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Middleware;
-using BlotzTask.Modules.AiTask.Services;
 using BlotzTask.Modules.BreakDown;
 using BlotzTask.Modules.BreakDown.Plugins;
 using BlotzTask.Modules.BreakDown.Services;
-using BlotzTask.Modules.ChatGoalPlanner;
-using BlotzTask.Modules.ChatGoalPlanner.Services;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.ChatTaskGenerator.Plugins;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users;
-using BlotzTask.Shared.Services;
 using BlotzTask.Shared.Store;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
@@ -35,19 +31,12 @@ builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
 
 //TODO : Move all services to module based registration
-builder.Services.AddScoped<TaskGenerationAiService>();
-
-builder.Services.AddScoped<IConversationStateService, ConversationStateService>();
-builder.Services.AddScoped<IGoalPlannerAiService, GoalPlannerAiService>();
-builder.Services.AddScoped<IGoalPlannerChatService, GoalPlannerChatService>();
 builder.Services.AddScoped<IRecurringTaskService, RecurringTaskService>();
 
 builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
 builder.Services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
 builder.Services.AddScoped<ITaskGenerateChatService, TaskGenerateChatService>();
 
-builder.Services.AddScoped<TaskParsingService>();
-builder.Services.AddScoped<ISafeChatCompletionService, SafeChatCompletionService>();
 builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
 builder.Services.AddSingleton(new ChatHistoryStore(
     expiration: TimeSpan.FromMinutes(30),  // Sessions expire after 30 minutes of inactivity
@@ -166,7 +155,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapControllers();
-app.MapHub<GoalPlannerChatHub>("/chatHub");
 app.MapHub<AiTaskGenerateChatHub>("/ai-task-generate-chathub");
 app.MapHub<AiTaskBreakDownChat>("/ai-task-breakdown-chathub");
 app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
