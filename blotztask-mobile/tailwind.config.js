@@ -16,6 +16,9 @@ module.exports = {
       fontFamily: {
         baloo: ["BalooRegular"],
         balooBold: ["BalooBold"],
+        balooExtraBold: ["BalooExtraBold"],
+        interThin: ["InterThin"],
+        interBold: ["InterBold"],
       },
     },
   },
