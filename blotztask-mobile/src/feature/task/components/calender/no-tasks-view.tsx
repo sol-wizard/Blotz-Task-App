@@ -6,6 +6,7 @@ export default function NoTasksView() {
   return (
     <View className="flex-1 justify-center items-center p-5 bg-white">
       <LottieView
+      // TODO: This is very fragile hard coded path, is there alternative solution?
         source={require("../../../../../assets/images/empty-box.json")}
         autoPlay
         loop

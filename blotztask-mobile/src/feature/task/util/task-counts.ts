@@ -2,7 +2,7 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import {
   TaskStatusSelectItem,
   TaskStatusType,
-} from "../ui/components/task-status-select/task-status-select";
+} from "../components/ui/task-status-select";
 
 // TODO: Reflect real data for in progress and overdue tasks
 export interface TaskCounts {
