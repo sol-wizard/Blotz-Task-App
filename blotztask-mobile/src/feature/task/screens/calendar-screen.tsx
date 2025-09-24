@@ -161,7 +161,7 @@ export default function CalendarScreen() {
             keyExtractor={(task) => task.id.toString()}
           />
         ) : (
-          <TaskListPlaceholder />
+          <TaskListPlaceholder selectedStatus={selectedStatus} />
         )}
       </CalendarProvider>
 
