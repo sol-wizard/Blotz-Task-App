@@ -1,4 +1,5 @@
-import { TextInput, View, Pressable, Text } from "react-native";
+import { theme } from "@/shared/constants/theme";
+import { TextInput, View } from "react-native";
 
 export const WriteInput = ({
   text,
@@ -9,36 +10,36 @@ export const WriteInput = ({
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
 }) => {
-  const canSend = text.trim().length > 0;
-
-  const handleConfirm = () => {
-    if (!canSend) return;
-    sendMessage(text.trim());
-    setText("");
+  const handleChange = (value: string) => {
+    if (value.endsWith("\n")) {
+      const msg = value.trim();
+      if (msg.length > 0) {
+        sendMessage(msg);
+      }
+      setText("");
+      return;
+    }
+    setText(value);
   };
 
   return (
-    <View className="w-full px-4 pt-3 pb-6 justify-between h-60">
-      <View className="h-40">
-        <TextInput
-          value={text}
-          onChangeText={setText}
-          placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
-          placeholderTextColor="#D1D5DB"
-          multiline
-          className="w-[92%] min-h-[100px] rounded-xl  bg-white px-3 py-2 text-lg text-gray-800 font-baloo"
-        />
-      </View>
-
-      <Pressable
-        onPress={handleConfirm}
-        disabled={!canSend}
-        className={`mt-4 rounded-xl px-5 py-2 border bottom-10`}
-        accessibilityRole="button"
-        accessibilityState={{ disabled: !canSend }}
-      >
-        <Text className="font-balooBold">Confirm</Text>
-      </Pressable>
+    <View className="px-4 pt-3 pb-6 w-[70%]">
+      <TextInput
+        value={text}
+        onChangeText={handleChange}
+        onSubmitEditing={() => {
+          const msg = text.trim();
+          if (msg) {
+            sendMessage(msg);
+            setText("");
+          }
+        }}
+        returnKeyType="send"
+        placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
+        placeholderTextColor={theme.colors.secondary}
+        multiline
+        className="w-[70%] min-h-[100px] rounded-xl bg-white px-3 pt-8 text-xl text-left text-gray-800 font-baloo"
+      />
     </View>
   );
 };
