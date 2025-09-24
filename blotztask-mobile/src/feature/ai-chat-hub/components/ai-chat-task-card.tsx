@@ -2,11 +2,12 @@ import { View, Text } from "react-native";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
-import { COLORS } from "@/shared/constants/colors";
+
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 import { format, parseISO } from "date-fns";
 import { convertAiTaskToAddTaskItemDTO } from "../util/ai-task-generator-util";
 import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-store";
+import { theme } from "@/shared/constants/theme";
 
 const formatTime = (iso?: string, fmt: string = "MM-dd HH:mm"): string =>
   iso ? format(parseISO(iso), fmt) : "";
@@ -47,7 +48,7 @@ export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className
 
           {(task.startTime || task.endTime) && (
             <View className="flex-row mt-1 items-center">
-              <MaterialIcons name="schedule" size={20} color={COLORS.primary} />
+              <MaterialIcons name="schedule" size={20} color={theme.colors.primary} />
               <View className="flex-col ml-2">
                 {task.startTime && (
                   <Text className="text-base text-primary">{formatTime(task.startTime)}</Text>
