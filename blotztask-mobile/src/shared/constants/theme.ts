@@ -1,8 +1,7 @@
-// theme.ts
 import { MD3LightTheme, configureFonts } from "react-native-paper";
 import { MD3Typescale } from "react-native-paper/lib/typescript/types";
 
-const headingFamily = "Baloo-Bold"; // 你已在 Expo/Tailwind 中注册的家族名
+const headingFamily = "Baloo-Bold";
 const headingFamilySemibold = "Baloo-SemiBold";
 const bodyFamily = "Baloo2-Regular";
 const bodyFamilyMedium = "Baloo2-Medium";

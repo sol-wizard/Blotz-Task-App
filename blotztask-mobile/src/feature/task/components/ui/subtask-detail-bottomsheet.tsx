@@ -1,11 +1,12 @@
 import React from "react";
 import { Text, View, Pressable } from "react-native";
-import { ProgressBar } from "react-native-paper";
+import { ProgressBar, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { TaskDetailTag } from "./task-detail-tag";
 import SubtaskItem from "./subtask-item";
 import { router } from "expo-router";
+import { theme } from "@/shared/constants/theme";
 
 type Props = {
   task?: TaskDetailDTO;
@@ -52,7 +53,7 @@ export default function SubtaskDetail({ task, subtasks, totalTaskTime, onToggleS
         <Text className="text-[12px] text-neutral-500 font-bold mb-1">
           {completed}/{total} Completed
         </Text>
-        <ProgressBar progress={progress} color={"#8C8C8C"} />
+        <ProgressBar progress={progress} color={theme.colors.primary} />
       </View>
       <View className="my-3 h-px bg-tertiary" />
       <View>
