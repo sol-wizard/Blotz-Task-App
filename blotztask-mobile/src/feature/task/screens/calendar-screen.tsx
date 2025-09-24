@@ -120,7 +120,7 @@ export default function CalendarScreen() {
     );
   };
   return (
-    <SafeAreaView className="flex-1  bg-white">
+    <SafeAreaView className="flex-1">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
       <CalendarProvider
         date={format(selectedDay, "yyyy-MM-dd")}
@@ -131,14 +131,18 @@ export default function CalendarScreen() {
           onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
           current={format(selectedDay, "yyyy-MM-dd")}
           theme={{
+
             selectedDayBackgroundColor: "#EBF0FE",
-            selectedDayTextColor: "#000000",
-            todayTextColor: "#000000",
+            selectedDayTextColor: "#2d4150",
+            todayTextColor: "#2d4150",
+
             arrowColor: "#2d4150",
             monthTextColor: "#2d4150",
             textMonthFontWeight: "bold",
             textDayFontWeight: "bold",
             textDayHeaderFontWeight: "bold",
+            textDayFontFamily: "InterBold",
+            textDayHeaderFontFamily: "InterThin",
           }}
           dayComponent={({ date, state }) => {
             const isToday = format(new Date(), "yyyy-MM-dd") === date?.dateString;

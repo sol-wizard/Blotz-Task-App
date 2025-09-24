@@ -1,20 +1,30 @@
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import { Baloo2_400Regular, Baloo2_700Bold, useFonts } from "@expo-google-fonts/baloo-2";
+import {
+  Baloo2_600SemiBold,
+  Baloo2_700Bold,
+  Baloo2_800ExtraBold,
+  useFonts,
+} from "@expo-google-fonts/baloo-2";
 import { Stack } from "expo-router";
-import { MD3LightTheme, PaperProvider } from "react-native-paper";
+import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../../global.css";
 import React from "react";
 import { Auth0Provider } from "react-native-auth0";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { theme } from "@/shared/constants/theme";
+import { Inter_300Light, Inter_700Bold } from "@expo-google-fonts/inter";
 
 export default function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
   const clientId = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
   useFonts({
-    BalooRegular: Baloo2_400Regular,
+    BalooRegular: Baloo2_600SemiBold,
     BalooBold: Baloo2_700Bold,
+    BalooExtraBold: Baloo2_800ExtraBold,
+    InterThin: Inter_300Light,
+    InterBold: Inter_700Bold,
   });
 
   return (
@@ -35,11 +45,3 @@ export default function RootLayout() {
     </Auth0Provider>
   );
 }
-
-const theme = {
-  ...MD3LightTheme,
-  colors: {
-    ...MD3LightTheme.colors,
-    primary: "#6200ee",
-  },
-};
