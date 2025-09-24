@@ -1,4 +1,3 @@
-using BlotzTask.Modules.ChatTaskGenerator.DTOs;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.SignalR;
@@ -37,42 +36,19 @@ public class AiTaskGenerateChatHub : Hub
 
     public async Task SendMessage(string user, string message)
     {
-        var userMsg = new ConversationMessage
-        {
-            Sender = user,
-            Content = message,
-            Timestamp = DateTime.UtcNow,
-            IsBot = false,
-        };
-
-        await Clients.Caller.SendAsync("ReceiveMessage", userMsg);
-
-        // Send BotTyping signal to clients
-        await Clients.Caller.SendAsync("BotTyping", true);
-
         try
         {
             CancellationToken ct = Context.ConnectionAborted;
-            var result = await _taskGenerateChatService.HandleUserMessageAsync(userMsg, ct);
+            var recieveTasks = await _taskGenerateChatService.HandleUserMessageAsync(message, ct);
 
-            if (result.Tasks != null)
+            if (recieveTasks != null)
             {
-                await Clients.Caller.SendAsync("ReceiveTasks", result.Tasks);
+                await Clients.Caller.SendAsync("ReceiveTasks", recieveTasks);
             }
-
-            await Clients.Caller.SendAsync("ReceiveMessage", result.BotMessage);
-            await Clients.Caller.SendAsync("BotTyping", false);
         }
         catch (TokenLimitExceededException ex)
         {
             _logger.LogError(ex, "Token limit exceeded: {Message}", ex.Message);
-
-            await Clients.Caller.SendAsync("BotTyping", false);
-
-            await Clients.Caller.SendAsync(
-                "TokenLimitExceeded",
-                new { errorType = "TokenLimitExceeded", message = ex.Message }
-            );
         }
     }
 }
