@@ -1,17 +1,41 @@
 import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons } from "@expo/vector-icons";
+import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-store";
+import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-chat-hub/util/ai-task-generator-util";
+import { ModalType } from "../modals/modal-type";
+import { ScrollView } from "react-native-gesture-handler";
 
 export function AiTasksPreview({
   tasks,
-  onDeleteTask,
+  setModalType,
 }: {
   tasks: AiTaskDTO[];
-  onDeleteTask: (id: string) => void;
+  setModalType: (v: ModalType) => void;
 }) {
-  if (tasks.length === 0) {
+  const { addTask } = useSelectedDayTaskStore();
+  const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(tasks ?? []);
+
+  const onDeleteTask = (taskId: string) => {
+    setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
+  };
+
+  const handleAddTasks = async () => {
+    if (!localTasks.length) return;
+
+    try {
+      const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
+      await Promise.all(payloads.map(addTask));
+      setModalType("add-task-success");
+      setLocalTasks([]);
+    } catch (error) {
+      console.log("Add tasks failed", error);
+    }
+  };
+
+  if (!localTasks.length) {
     return (
       <View className="py-10 items-center">
         <Text className="text-gray-400">No AI-generated tasks</Text>
@@ -20,14 +44,20 @@ export function AiTasksPreview({
   }
 
   return (
-    <View className="mb-10 items-center">
-      {tasks.map((task) => (
-        <AiTaskCard key={task.id} task={task} handleTaskDelete={onDeleteTask} />
-      ))}
+    <View className="mb-10 items-center justify-between">
+      <ScrollView className="pb-5 w-full min-h-20">
+        {localTasks.map((task) => (
+          <AiTaskCard key={task.id} task={task} handleTaskDelete={onDeleteTask} />
+        ))}
+      </ScrollView>
+
       <Pressable
-        onPress={() => console.log("Up button pressed")}
-        className="w-12 h-12 rounded-full bg-black items-center justify-center"
+        onPress={handleAddTasks}
+        disabled={localTasks.length === 0}
+        className={`w-12 h-12 rounded-full items-center justify-center ${localTasks.length ? "bg-black" : "bg-gray-300"}`}
         style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+        accessibilityRole="button"
+        accessibilityLabel="Add all remaining AI tasks"
       >
         <Ionicons name="arrow-up" size={20} color="white" />
       </Pressable>

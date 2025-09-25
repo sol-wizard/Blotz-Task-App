@@ -1,1 +1,1 @@
-export type ModalType = "input" | "loading" | "task-preview";
+export type ModalType = "input" | "loading" | "task-preview" | "add-task-success";

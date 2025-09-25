@@ -29,8 +29,6 @@ export function useAiTaskGenerator() {
   };
 
   const receiveTasksHandler = (receivedTasks: ExtractedTaskDTO[]) => {
-    if (!receivedTasks || receivedTasks.length === 0) return;
-
     const mappedTasks: AiTaskDTO[] = receivedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
     console.log("mappedTasks,", mappedTasks);
 
