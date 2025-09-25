@@ -10,7 +10,7 @@ type Props = {
 
 export function AiTaskCard({ task, handleTaskDelete }: Props) {
   return (
-    <View className="bg-white rounded-lg flex-row items-center shadow w-80 h-20 justify-between pr-3 mt-3 mb-6 py-4 pl-6">
+    <View className="bg-white rounded-lg flex-row items-center shadow w-80 h-20 justify-between pr-3 mt-3 mb-6 py-4 pl-6 mx-4">
       <View className="w-2 h-full rounded-full bg-slate-400" />
       <Text numberOfLines={1} className="text-lg font-semibold text-[#2F3640]">
         {task.title}

@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-store";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-chat-hub/util/ai-task-generator-util";
 import { ModalType } from "../modals/modal-type";
+import { ScrollView } from "react-native-gesture-handler";
 
 export function AiTasksPreview({
   tasks,
@@ -43,12 +44,12 @@ export function AiTasksPreview({
   }
 
   return (
-    <View className="mb-10 items-center">
-      <View className="pb-5 w-full">
+    <View className="mb-10 items-center justify-between">
+      <ScrollView className="pb-5 w-full min-h-20">
         {localTasks.map((task) => (
           <AiTaskCard key={task.id} task={task} handleTaskDelete={onDeleteTask} />
         ))}
-      </View>
+      </ScrollView>
 
       <Pressable
         onPress={handleAddTasks}
