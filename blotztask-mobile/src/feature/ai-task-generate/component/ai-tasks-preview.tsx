@@ -27,7 +27,7 @@ export function AiTasksPreview({
 
     try {
       const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
-      await Promise.all(payloads.map((p) => Promise.resolve(addTask(p))));
+      await Promise.all(payloads.map(addTask));
       setModalType("add-task-success");
       setLocalTasks([]);
     } catch (error) {
