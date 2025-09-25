@@ -1,5 +1,5 @@
 import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,7 +30,7 @@ export function AiTasksPreview({
       setModalType("add-task-success");
       setLocalTasks([]);
     } catch (error) {
-      console.log("bulk add tasks failed", error);
+      console.log("Add tasks failed", error);
     }
   };
 
