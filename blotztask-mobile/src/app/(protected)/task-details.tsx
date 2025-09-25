@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, ScrollView, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { IconButton } from "react-native-paper";
 import { useLocalSearchParams } from "expo-router";
 import { TaskStatusType } from "@/feature/task/components/ui/task-status-select";
@@ -19,32 +19,29 @@ export default function TaskDetailsScreen() {
 
   return (
     <View className="flex-1 bg-lime-200">
-      <View>
-        {/* Top scrollable area */}
-        <ScrollView className="py-6 px-8">
-          {/* Task Status + Label */}
-          <View className="flex-row items-center mb-4">
-            <View className="px-3 py-1 rounded-xl border border-black">
-              <Text className={`text-sm font-medium text-black`}>
-                {taskStatus === "done" ? "Done" : "To Do"}
-              </Text>
+      <View className="py-6 px-8">
+        {/* Task Status + Label */}
+        <View className="flex-row items-center mb-4">
+          <View className="px-3 py-1 rounded-xl border border-black">
+            <Text className={`text-sm font-medium text-black`}>
+              {taskStatus === "done" ? "Done" : "To Do"}
+            </Text>
+          </View>
+          {label && (
+            <View className="ml-2 px-3 py-1 rounded-xl border border-black">
+              <Text className="text-sm font-medium text-black">{label}</Text>
             </View>
-            {label && (
-              <View className="ml-2 px-3 py-1 rounded-xl border border-black">
-                <Text className="text-sm font-medium text-black">{label}</Text>
-              </View>
-            )}
-          </View>
+          )}
+        </View>
 
-          {/* Task Title + Edit */}
-          <View className="flex-row items-start justify-center mb-4">
-            <Text className="flex-1 font-balooBold text-5xl leading-normal">{title}</Text>
-            <IconButton icon={"pencil"} onPress={handleEdit} iconColor="black" />
-          </View>
+        {/* Task Title + Edit */}
+        <View className="flex-row items-start justify-center mb-4">
+          <Text className="flex-1 font-balooBold text-5xl leading-normal">{title}</Text>
+          <IconButton icon={"pencil"} onPress={handleEdit} iconColor="black" />
+        </View>
 
-          {/* Task Date Range */}
-          <TaskDateRange startTime={startTime as string} endTime={endTime as string} />
-        </ScrollView>
+        {/* Task Date Range */}
+        <TaskDateRange startTime={startTime as string} endTime={endTime as string} />
       </View>
 
       {/* Tabs Switch*/}
