@@ -1,70 +1,28 @@
 import React, { useState } from "react";
-import { View, ScrollView, SafeAreaView, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, ScrollView, Text, TouchableOpacity } from "react-native";
 import { IconButton } from "react-native-paper";
 import { useLocalSearchParams } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
-import { format } from "date-fns";
 import { TaskStatusType } from "@/feature/task/components/ui/task-status-select";
+import TaskDateRange from "./components/task-details/task-date-range";
+import DetailsTab from "./components/task-details/details-tab";
+import SubtasksTab from "./components/task-details/subtasks-tab";
+
+type tabTypes = "Details" | "Subtasks";
 
 export default function TaskDetailsScreen() {
-  const { taskId, title, startTime, endTime, isDone, label } = useLocalSearchParams();
+  const { title, description, startTime, endTime, isDone, label } = useLocalSearchParams();
   const taskStatus: TaskStatusType = isDone === "true" ? "done" : "todo";
+  const [activeTab, setActiveTab] = useState<tabTypes>("Details");
 
-  const [activeTab, setActiveTab] = useState<"Details" | "Subtasks">("Details");
-
+  // TODO: Implement edit screen
   const handleEdit = () => console.log("task edit pressed");
 
-  const TaskDateRange = ({ startTime, endTime }: { startTime?: string; endTime?: string }) => {
-    const formatDate = (val?: string) => (val ? format(new Date(val), "dd/MM/yyyy hh:mm a") : "-");
-    return (
-      <View className="flex-row items-center justify-around mb-8">
-        {/* Start */}
-        <View className="flex-row items-center">
-          <View className="w-10 h-10 rounded-full border-2 border-gray-500 border-dashed justify-center items-center mr-2">
-            <MaterialIcons name="schedule" size={20} color="#6B7280" />
-          </View>
-          <View>
-            <Text className="font-baloo">Start from</Text>
-            <Text className="font-balooBold">{formatDate(startTime)}</Text>
-          </View>
-        </View>
-        {/* End */}
-        <View className="flex-row items-center">
-          <View className="w-10 h-10 rounded-full border-2 border-gray-500 border-dashed justify-center items-center mr-2">
-            <MaterialIcons name="schedule" size={20} color="#6B7280" />
-          </View>
-          <View>
-            <Text className="font-baloo">End at</Text>
-            <Text className="font-balooBold">{formatDate(endTime)}</Text>
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-  const DetailsTab = () => (
-    <ScrollView>
-      <Text>DETAILS TAB</Text>
-      <TextInput
-        placeholder="Add any task details..."
-        multiline
-        style={{ flex: 1, fontSize: 16, textAlignVertical: "top" }}
-      />
-    </ScrollView>
-  );
-
-  const SubtasksTab = () => (
-    <ScrollView>
-      <Text>SUBTASKS TAB</Text>
-      <Text>Subtasks content here</Text>
-    </ScrollView>
-  );
-
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-lime-200">
       <View>
-        <ScrollView className="px-4 py-6" contentContainerStyle={{ paddingBottom: 16 }}>
-          {/* Task Status and Label */}
+        {/* Top scrollable area */}
+        <ScrollView className="py-6 px-8">
+          {/* Task Status + Label */}
           <View className="flex-row items-center mb-4">
             <View className="px-3 py-1 rounded-xl border border-black">
               <Text className={`text-sm font-medium text-black`}>
@@ -79,36 +37,41 @@ export default function TaskDetailsScreen() {
           </View>
 
           {/* Task Title + Edit */}
-          <View className="flex-row items-start justify-center mb-8">
+          <View className="flex-row items-start justify-center mb-4">
             <Text className="flex-1 font-balooBold text-5xl leading-normal">{title}</Text>
             <IconButton icon={"pencil"} onPress={handleEdit} iconColor="black" />
           </View>
 
           {/* Task Date Range */}
           <TaskDateRange startTime={startTime as string} endTime={endTime as string} />
-
-          {/* Tabs Switch */}
-          <View className="flex-row justify-around my-4 border-b border-gray-300">
-            <TouchableOpacity onPress={() => setActiveTab("Details")}>
-              <Text
-                className={`text-lg font-bold ${activeTab === "Details" ? "text-blue-500" : "text-gray-500"}`}
-              >
-                Details
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setActiveTab("Subtasks")}>
-              <Text
-                className={`text-lg font-bold ${activeTab === "Subtasks" ? "text-blue-500" : "text-gray-500"}`}
-              >
-                Subtasks
-              </Text>
-            </TouchableOpacity>
-          </View>
         </ScrollView>
+      </View>
+
+      {/* Tabs Switch*/}
+      <View className="flex-1 pt-6 px-6 bg-white rounded-t-[3rem]">
+        <View className="flex-row justify-around mb-6">
+          <TouchableOpacity onPress={() => setActiveTab("Details")} className="flex-1 items-center">
+            <Text className={"text-lg font-balooBold pb-3"}>Details</Text>
+            {activeTab === "Details" && <View className="w-full h-1 bg-blue-100 rounded-full" />}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setActiveTab("Subtasks")}
+            className="flex-1 items-center"
+          >
+            <Text className={"text-lg font-balooBold pb-3"}>Subtasks</Text>
+            {activeTab === "Subtasks" && <View className="w-full h-1 bg-blue-100 rounded-full" />}
+          </TouchableOpacity>
+        </View>
 
         {/* Render the active tab */}
-        <View>{activeTab === "Details" ? <DetailsTab /> : <SubtasksTab />}</View>
+        <View className="flex-1 px-4">
+          {activeTab === "Details" ? (
+            <DetailsTab taskDescription={description as string} />
+          ) : (
+            <SubtasksTab />
+          )}
+        </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
