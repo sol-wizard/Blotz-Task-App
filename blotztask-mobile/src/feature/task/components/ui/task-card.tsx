@@ -14,14 +14,14 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { formatDateRange } from "../../util/format-date-range";
 
 interface TaskCardProps {
-  id: string;
+  id: number;
   title: string;
   startTime?: string;
   endTime?: string;
   isCompleted?: boolean;
-  onToggleComplete?: (id: string, completed: boolean) => void;
+  onToggleComplete?: (id: number, completed: boolean) => void;
   onPress?: () => void;
-  onDelete?: (id: string) => Promise<void> | void;
+  onDelete?: (id: number) => Promise<void> | void;
 }
 
 const ACTION_WIDTH = 64;
