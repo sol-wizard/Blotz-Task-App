@@ -3,15 +3,6 @@ using BlotzTask.Modules.Tasks.Domain.Entities;
 
 namespace BlotzTask.Modules.Labels.Domain;
 
-//TODO: Check if we need this 
-public enum LabelType
-{
-    Work,
-    Personal,
-    Academic,
-    Others
-}
-
 public class Label
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

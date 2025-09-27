@@ -4,6 +4,7 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250927123540_MakeTimeTypeNullable")]
+    partial class MakeTimeTypeNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -124,11 +127,11 @@ namespace BlotzTask.Migrations
 
                     b.ToTable("DeletedTaskItems", t =>
                         {
-                            t.HasCheckConstraint("CK_DeletedTaskItems_SingleTime_Equals", "([TimeType] IS NULL) OR ([TimeType] <> 0) OR ([StartTime] = [EndTime])");
+                            t.HasCheckConstraint("CK_DeletedTaskItems_SingleTimeValidation", "([TimeType] <> 0) OR ([StartTime] = [EndTime])");
 
-                            t.HasCheckConstraint("CK_DeletedTaskItems_Start_Before_Or_Equal_End", "([StartTime] IS NULL AND [EndTime] IS NULL) OR ([StartTime] <= [EndTime])");
+                            t.HasCheckConstraint("CK_DeletedTaskItems_TimeRangeValidation", "([StartTime] IS NULL AND [EndTime] IS NULL) OR ([StartTime] IS NOT NULL AND [EndTime] IS NOT NULL)");
 
-                            t.HasCheckConstraint("CK_DeletedTaskItems_Time_Presence", "(  ([TimeType] IS NULL AND [StartTime] IS NULL AND [EndTime] IS NULL)   OR  ([TimeType] IN (0,1) AND [StartTime] IS NOT NULL AND [EndTime] IS NOT NULL))");
+                            t.HasCheckConstraint("CK_DeletedTaskItems_TimeType_Valid", "([TimeType] IN (0,1)) OR ([StartTime] IS NULL AND [EndTime] IS NULL)");
                         });
                 });
 
@@ -225,11 +228,11 @@ namespace BlotzTask.Migrations
 
                     b.ToTable("TaskItems", t =>
                         {
-                            t.HasCheckConstraint("CK_TaskItems_SingleTime_Equals", "([TimeType] IS NULL) OR ([TimeType] <> 0) OR ([StartTime] = [EndTime])");
+                            t.HasCheckConstraint("CK_TaskItems_SingleTimeValidation", "([TimeType] <> 0) OR ([StartTime] = [EndTime])");
 
-                            t.HasCheckConstraint("CK_TaskItems_Start_Before_Or_Equal_End", "([StartTime] IS NULL AND [EndTime] IS NULL) OR ([StartTime] <= [EndTime])");
+                            t.HasCheckConstraint("CK_TaskItems_TimeRangeValidation", "([StartTime] IS NULL AND [EndTime] IS NULL) OR ([StartTime] IS NOT NULL AND [EndTime] IS NOT NULL)");
 
-                            t.HasCheckConstraint("CK_TaskItems_Time_Presence", "(  ([TimeType] IS NULL AND [StartTime] IS NULL AND [EndTime] IS NULL)   OR  ([TimeType] IN (0,1) AND [StartTime] IS NOT NULL AND [EndTime] IS NOT NULL))");
+                            t.HasCheckConstraint("CK_TaskItems_TimeType_Valid", "([TimeType] IN (0,1)) OR ([StartTime] IS NULL AND [EndTime] IS NULL)");
                         });
                 });
 

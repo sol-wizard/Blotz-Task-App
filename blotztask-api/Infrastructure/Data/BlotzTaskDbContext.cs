@@ -19,6 +19,8 @@ public class BlotzTaskDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SubtaskConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(TaskItemConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(DeletedTaskItemConfiguration).Assembly);
         modelBuilder.Entity<Label>().HasData(
             new Label
             {
