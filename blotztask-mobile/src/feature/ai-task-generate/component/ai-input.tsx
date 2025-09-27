@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { InputModeSwitch } from "./input-mode-switch";
 import { VoiceInput } from "./voice-input";
 import { WriteInput } from "./write-input";
@@ -7,13 +6,15 @@ export const AiInput = ({
   text,
   setText,
   sendMessage,
+  isVoiceInput,
+  setIsVoiceInput,
 }: {
   text: string;
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
+  isVoiceInput: boolean;
+  setIsVoiceInput: (v: boolean) => void;
 }) => {
-  const [isVoiceInput, setIsVoiceInput] = useState(true);
-
   return (
     <>
       {isVoiceInput ? (

@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, Pressable } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import { View, Text, TextInput, Pressable } from "react-native";
 
-export const VoiceInput = ({
+export const VoiceErrorModal = ({
   text,
   setText,
   sendMessage,
@@ -32,7 +32,7 @@ export const VoiceInput = ({
   };
 
   return (
-    <View className="items-center mt-12">
+    <View className="items-center mt-4">
       <View style={{ minHeight: idleBlockH, width: "100%" }} className="items-center">
         {isListening ? (
           <TextInput
@@ -44,12 +44,12 @@ export const VoiceInput = ({
             style={{ fontFamily: "Baloo2-Regular" }}
           />
         ) : (
-          <View onLayout={(e) => setIdleBlockH(e.nativeEvent.layout.height)}>
-            <Text className="text-black text-4xl font-balooBold text-center pt-2">
-              Braindump tasks{"\n"}with your voice
-            </Text>
-            <Text className="text-gray-500 font-baloo text-xl text-center mt-2">
-              Just say your task, and I&apos;ll create it automatically
+          <View
+            onLayout={(e) => setIdleBlockH(e.nativeEvent.layout.height)}
+            className="bg-background w-80 rounded-2xl py-6 px-4"
+          >
+            <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2">
+              Oops, that went over my head. Can you say it again
             </Text>
           </View>
         )}
@@ -69,7 +69,7 @@ export const VoiceInput = ({
         {isListening ? (
           <Text className="text-lg mt-4 mb-10 text-gray-500 font-baloo">Recognising...</Text>
         ) : (
-          <Text className="text-lg mt-4 mb-10 text-gray-500 font-baloo">Hold and speak</Text>
+          <Text className="text-lg mt-4 mb-10 text-gray-500 font-baloo">Try again</Text>
         )}
       </View>
     </View>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-chat-hub/util/map-extracted-to-task-dto";
 import { AiTaskDTO } from "../models/ai-task-dto";
@@ -6,10 +6,16 @@ import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 import { signalRService } from "../services/ai-task-generator-signalr-service";
 import { ModalType } from "@/feature/ai-task-generate/modals/modal-type";
 
-export function useAiTaskGenerator() {
+export function useAiTaskGenerator({ isVoiceInput }: { isVoiceInput: boolean }) {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedTasks, setAiGeneratedTasks] = useState<AiTaskDTO[]>([]);
   const [modalType, setModalType] = useState<ModalType>("input");
+
+  const isVoiceInputRef = useRef(isVoiceInput);
+
+  useEffect(() => {
+    isVoiceInputRef.current = isVoiceInput;
+  }, [isVoiceInput]);
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -20,11 +26,17 @@ export function useAiTaskGenerator() {
         await signalRService.invoke(connection, "SendMessage", "User", text.trim());
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
-        setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "input");
+        if (isVoiceInputRef.current) {
+          setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "voice-error");
+        }
+        setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "writing-error");
       }
     } else {
       console.warn("Cannot send message: Not connected.");
-      setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "input");
+      if (isVoiceInputRef.current) {
+        setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "voice-error");
+      }
+      setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "writing-error");
     }
   };
 
@@ -33,7 +45,11 @@ export function useAiTaskGenerator() {
     console.log("mappedTasks,", mappedTasks);
 
     setAiGeneratedTasks(mappedTasks);
-    setModalType("task-preview");
+    if (mappedTasks.length === 0) {
+      setModalType(isVoiceInputRef.current ? "voice-error" : "writing-error");
+    } else {
+      setModalType("task-preview");
+    }
   };
 
   useEffect(() => {
