@@ -7,13 +7,15 @@ export const AiInput = ({
   text,
   setText,
   sendMessage,
+  isVoiceInput,
+  setIsVoiceInput,
 }: {
   text: string;
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
+  isVoiceInput: boolean;
+  setIsVoiceInput: (v: boolean) => void;
 }) => {
-  const [isVoiceInput, setIsVoiceInput] = useState(true);
-
   return (
     <>
       {isVoiceInput ? (
