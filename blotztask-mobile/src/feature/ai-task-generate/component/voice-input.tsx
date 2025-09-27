@@ -28,6 +28,7 @@ export const VoiceInput = ({
       setText(newText);
     }
     if (newText?.trim()) sendMessage(newText.trim());
+    setText("");
   };
 
   return (

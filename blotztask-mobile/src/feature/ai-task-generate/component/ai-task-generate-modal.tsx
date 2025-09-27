@@ -5,6 +5,7 @@ import { AiInput } from "./ai-input";
 import { AiThinkingModal } from "./ai-thinking-modal";
 import { TaskAddedSuccess } from "./task-added-success";
 import { VoiceErrorModal } from "./voice-error-modal";
+import { WritingErrorModal } from "./writing-error-modal";
 
 export const AiTaskGenerateModal = () => {
   const [text, setText] = useState("");
@@ -24,10 +25,10 @@ export const AiTaskGenerateModal = () => {
       return <TaskAddedSuccess />;
 
     case "voice-error":
-      return <VoiceErrorModal />;
+      return <VoiceErrorModal text={text} setText={setText} sendMessage={sendMessage} />;
 
     case "writing-error":
-      return <VoiceErrorModal />;
+      return <WritingErrorModal />;
 
     case "input":
     default:
