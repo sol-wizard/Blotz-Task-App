@@ -2,7 +2,7 @@ import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
 import React, { useState } from "react";
 import { View, Pressable } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-store";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-chat-hub/util/ai-task-generator-util";
 import { ModalType } from "../modals/modal-type";
@@ -11,9 +11,11 @@ import { ScrollView } from "react-native-gesture-handler";
 export function AiTasksPreview({
   tasks,
   setModalType,
+  isVoiceInput,
 }: {
   tasks: AiTaskDTO[];
   setModalType: (v: ModalType) => void;
+  isVoiceInput: boolean;
 }) {
   const { addTask } = useSelectedDayTaskStore();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(tasks ?? []);
@@ -35,6 +37,10 @@ export function AiTasksPreview({
     }
   };
 
+  const handleGoBack = () => {
+    setModalType("input");
+  };
+
   return (
     <View className="mb-10 items-center justify-between">
       <ScrollView className="pb-5 w-full min-h-20">
@@ -42,17 +48,27 @@ export function AiTasksPreview({
           <AiTaskCard key={task.id} task={task} handleTaskDelete={onDeleteTask} />
         ))}
       </ScrollView>
-
-      <Pressable
-        onPress={handleAddTasks}
-        disabled={localTasks.length === 0}
-        className={`w-12 h-12 rounded-full items-center justify-center ${localTasks.length ? "bg-black" : "bg-gray-300"}`}
-        style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-        accessibilityRole="button"
-        accessibilityLabel="Add all remaining AI tasks"
-      >
-        <Ionicons name="arrow-up" size={20} color="white" />
-      </Pressable>
+      <View className="flex-row">
+        <Pressable
+          onPress={handleGoBack}
+          className="w-12 h-12 rounded-full items-center justify-center bg-black mx-2 font-bold"
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <MaterialCommunityIcons name="arrow-u-left-top" size={20} color="white" />
+        </Pressable>
+        <Pressable
+          onPress={handleAddTasks}
+          disabled={localTasks.length === 0}
+          className={`w-12 h-12 rounded-full items-center justify-center ${localTasks.length ? "bg-black" : "bg-gray-300"}`}
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Add all remaining AI tasks"
+        >
+          <Ionicons name="arrow-up" size={20} color="white" />
+        </Pressable>
+      </View>
     </View>
   );
 }

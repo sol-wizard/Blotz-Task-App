@@ -16,7 +16,13 @@ export const AiTaskGenerateModal = () => {
 
   switch (modalType) {
     case "task-preview":
-      return <AiTasksPreview tasks={aiGeneratedTasks} setModalType={setModalType} />;
+      return (
+        <AiTasksPreview
+          tasks={aiGeneratedTasks}
+          setModalType={setModalType}
+          isVoiceInput={isVoiceInput}
+        />
+      );
 
     case "loading":
       return <AiThinkingModal />;
