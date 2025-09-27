@@ -13,7 +13,7 @@ public class DeletedTaskItem
     public string? Description { get; set; }
     public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
-    public TaskTimeType TimeType { get; set; }
+    public TaskTimeType? TimeType { get; set; }
     public bool IsDone { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

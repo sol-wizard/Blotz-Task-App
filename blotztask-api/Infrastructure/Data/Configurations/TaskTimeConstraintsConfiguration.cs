@@ -12,7 +12,8 @@ public static class TaskTimeConstraintsConfiguration
 
         builder.ToTable(t =>
         {
-            t.HasCheckConstraint($"CK_{tableName}_TimeType_Valid", "[TimeType] IN (0,1)");
+            t.HasCheckConstraint($"CK_{tableName}_TimeType_Valid",
+                "([TimeType] IN (0,1) AND ([StartTime] IS NOT NULL AND [EndTime] IS NOT NULL)) OR ([StartTime] IS NULL AND [EndTime] IS NULL)");
             t.HasCheckConstraint($"CK_{tableName}_SingleTimeValidation", "([TimeType] <> 0) OR ([StartTime] = [EndTime])");
             t.HasCheckConstraint($"CK_{tableName}_TimeRangeValidation",
                 "([StartTime] IS NULL AND [EndTime] IS NULL) OR " +

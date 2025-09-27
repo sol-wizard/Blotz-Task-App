@@ -50,6 +50,6 @@ public class AddTaskItemDto
     public required string Description { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public DateTimeOffset? StartTime { get; set; }
-    public TaskTimeType TimeType { get; set; }
+    public TaskTimeType? TimeType { get; set; }
     public int LabelId { get; set; }
 }

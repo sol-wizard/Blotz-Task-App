@@ -4,6 +4,7 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250927114754_SupportSingleTime")]
+    partial class SupportSingleTime
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -103,7 +106,7 @@ namespace BlotzTask.Migrations
                     b.Property<DateTimeOffset?>("StartTime")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("TimeType")
+                    b.Property<int>("TimeType")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -128,7 +131,7 @@ namespace BlotzTask.Migrations
 
                             t.HasCheckConstraint("CK_DeletedTaskItems_TimeRangeValidation", "([StartTime] IS NULL AND [EndTime] IS NULL) OR ([StartTime] IS NOT NULL AND [EndTime] IS NOT NULL)");
 
-                            t.HasCheckConstraint("CK_DeletedTaskItems_TimeType_Valid", "([TimeType] IN (0,1) AND ([StartTime] IS NOT NULL AND [EndTime] IS NOT NULL)) OR ([StartTime] IS NULL AND [EndTime] IS NULL)");
+                            t.HasCheckConstraint("CK_DeletedTaskItems_TimeType_Valid", "[TimeType] IN (0,1)");
                         });
                 });
 
@@ -204,7 +207,7 @@ namespace BlotzTask.Migrations
                     b.Property<DateTimeOffset?>("StartTime")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("TimeType")
+                    b.Property<int>("TimeType")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -229,7 +232,7 @@ namespace BlotzTask.Migrations
 
                             t.HasCheckConstraint("CK_TaskItems_TimeRangeValidation", "([StartTime] IS NULL AND [EndTime] IS NULL) OR ([StartTime] IS NOT NULL AND [EndTime] IS NOT NULL)");
 
-                            t.HasCheckConstraint("CK_TaskItems_TimeType_Valid", "([TimeType] IN (0,1) AND ([StartTime] IS NOT NULL AND [EndTime] IS NOT NULL)) OR ([StartTime] IS NULL AND [EndTime] IS NULL)");
+                            t.HasCheckConstraint("CK_TaskItems_TimeType_Valid", "[TimeType] IN (0,1)");
                         });
                 });
 
