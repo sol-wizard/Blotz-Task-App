@@ -3,7 +3,6 @@ import { useVoiceInput } from "@/shared/util/useVoiceInput";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { View, Text, TextInput, Pressable } from "react-native";
-import { set } from "zod";
 
 export const VoiceErrorModal = ({
   text,

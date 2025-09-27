@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { InputModeSwitch } from "./input-mode-switch";
 import { VoiceInput } from "./voice-input";
 import { WriteInput } from "./write-input";
