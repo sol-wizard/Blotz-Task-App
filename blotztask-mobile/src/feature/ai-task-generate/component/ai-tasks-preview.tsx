@@ -81,7 +81,7 @@ export function AiTasksPreview({
             accessibilityLabel="Edit"
           >
             <GradientCircle size={60}>
-              <MaterialIcons name="edit" size={28} color="white" />
+              <MaterialCommunityIcons name="pencil-outline" size={35} color="white" />
             </GradientCircle>
           </Pressable>
         )}
