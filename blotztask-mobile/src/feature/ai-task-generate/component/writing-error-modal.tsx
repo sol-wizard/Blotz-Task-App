@@ -1,11 +1,49 @@
-import { View, Text } from "react-native";
+import { theme } from "@/shared/constants/theme";
+import { View, Text, TextInput } from "react-native";
 
-export const WritingErrorModal = () => {
+export const WritingErrorModal = ({
+  text,
+  setText,
+  sendMessage,
+}: {
+  text: string;
+  setText: (value: string) => void;
+  sendMessage: (v: string) => void;
+}) => {
+  const handleChange = (value: string) => {
+    if (value.endsWith("\n")) {
+      const msg = value.trim();
+      if (msg.length > 0) {
+        sendMessage(msg);
+      }
+      return;
+    }
+    setText(value);
+  };
   return (
-    <View>
-      <Text className="text-gray-400 p-5">
-        Sorry, we couldn't process your writing input. Please try again or switch to text input.
-      </Text>
+    <View className="w-full px-4 pt-3 pb-6 items-center">
+      <TextInput
+        value={text}
+        onChangeText={handleChange}
+        onSubmitEditing={() => {
+          const msg = text.trim();
+          if (msg) {
+            sendMessage(msg);
+            setText("");
+          }
+        }}
+        returnKeyType="send"
+        placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
+        placeholderTextColor={theme.colors.secondary}
+        multiline
+        className="w-full min-h-[100px] rounded-xl bg-white px-3 py-4 mt-4 text-xl text-gray-800 font-baloo text-left"
+        style={{ textAlignVertical: "top" }}
+      />
+      <View className="bg-background w-80 rounded-2xl py-6 px-4">
+        <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2">
+          Try again-be specific, like ‘Team meeting at 9am‘
+        </Text>
+      </View>
     </View>
   );
 };

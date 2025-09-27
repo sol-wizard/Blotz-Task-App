@@ -28,7 +28,7 @@ export const AiTaskGenerateModal = () => {
       return <VoiceErrorModal text={text} setText={setText} sendMessage={sendMessage} />;
 
     case "writing-error":
-      return <WritingErrorModal />;
+      return <WritingErrorModal text={text} setText={setText} sendMessage={sendMessage} />;
 
     case "input":
     default:

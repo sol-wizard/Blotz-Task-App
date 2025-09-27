@@ -16,7 +16,6 @@ export const WriteInput = ({
       if (msg.length > 0) {
         sendMessage(msg);
       }
-      setText("");
       return;
     }
     setText(value);
