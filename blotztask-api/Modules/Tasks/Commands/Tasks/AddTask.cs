@@ -1,6 +1,7 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Enums;
+using BlotzTask.Modules.Tasks.Shared;
 using System.ComponentModel.DataAnnotations;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;
@@ -19,8 +20,7 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
     {
         logger.LogInformation("Adding new task for user {UserId}", command.UserId);
 
-        // Validate task times
-        ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime);
+        TaskTimeValidator.ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime, command.TaskDetails.TimeType);
 
         var newTask = new TaskItem
         {
@@ -41,15 +41,6 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
         logger.LogInformation("Task {Id} was successfully added for user {UserId}", newTask.Id, command.UserId);
 
         return $"Task {newTask.Id} titled {newTask.Title} was successfully added.";
-    }
-
-    private static void ValidateTaskTimes(DateTimeOffset? startTime, DateTimeOffset? endTime)
-    {
-        // If both exist, ensure startTime is before endTime
-        if (startTime.HasValue && endTime.HasValue && startTime >= endTime)
-        {
-            throw new ArgumentException("Start time must be earlier than end time.");
-        }
     }
 }
 
