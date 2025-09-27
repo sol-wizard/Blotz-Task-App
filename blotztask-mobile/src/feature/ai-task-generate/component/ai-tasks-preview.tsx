@@ -51,7 +51,7 @@ export function AiTasksPreview({
       <View className="flex-row">
         <Pressable
           onPress={handleGoBack}
-          className="w-12 h-12 rounded-full items-center justify-center bg-black mx-2 font-bold"
+          className="w-12 h-12 rounded-full items-center justify-center bg-black mx-8 font-bold"
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityRole="button"
           accessibilityLabel="Go back"
@@ -61,7 +61,7 @@ export function AiTasksPreview({
         <Pressable
           onPress={handleAddTasks}
           disabled={localTasks.length === 0}
-          className={`w-12 h-12 rounded-full items-center justify-center ${localTasks.length ? "bg-black" : "bg-gray-300"}`}
+          className={`w-12 h-12 rounded-full items-center justify-center mx-8 ${localTasks.length ? "bg-black" : "bg-gray-300"}`}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityRole="button"
           accessibilityLabel="Add all remaining AI tasks"
