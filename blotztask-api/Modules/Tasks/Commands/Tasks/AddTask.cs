@@ -1,5 +1,6 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Entities;
+using BlotzTask.Modules.Tasks.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;
@@ -27,6 +28,7 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
             Description = command.TaskDetails.Description,
             StartTime = command.TaskDetails.StartTime,
             EndTime = command.TaskDetails.EndTime,
+            TimeType = command.TaskDetails.TimeType,
             LabelId = command.TaskDetails.LabelId,
             UserId = command.UserId,
             CreatedAt = DateTime.UtcNow,
@@ -57,5 +59,6 @@ public class AddTaskItemDto
     public required string Description { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public DateTimeOffset? StartTime { get; set; }
+    public TaskTimeType TimeType { get; set; }
     public int LabelId { get; set; }
 }
