@@ -1,5 +1,5 @@
 import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Pressable } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
@@ -7,18 +7,28 @@ import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-chat-hub/util/ai-task-generator-util";
 import { ModalType } from "../modals/modal-type";
 import { ScrollView } from "react-native-gesture-handler";
+import { GradientCircle } from "@/shared/components/common/gradient-circle";
+import { set } from "zod";
 
 export function AiTasksPreview({
   tasks,
   setModalType,
   isVoiceInput,
+  setText,
 }: {
   tasks: AiTaskDTO[];
   setModalType: (v: ModalType) => void;
   isVoiceInput: boolean;
+  setText: (v: string) => void;
 }) {
   const { addTask } = useSelectedDayTaskStore();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(tasks ?? []);
+
+  const isVoiceInputRef = useRef(isVoiceInput);
+
+  useEffect(() => {
+    isVoiceInputRef.current = isVoiceInput;
+  }, [isVoiceInput]);
 
   const onDeleteTask = (taskId: string) => {
     setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
@@ -41,6 +51,11 @@ export function AiTasksPreview({
     setModalType("input");
   };
 
+  const handleBacktoBlankEdit = () => {
+    setText("");
+    setModalType("input");
+  };
+
   return (
     <View className="mb-10 items-center justify-between">
       <ScrollView className="pb-5 w-full min-h-20">
@@ -48,7 +63,7 @@ export function AiTasksPreview({
           <AiTaskCard key={task.id} task={task} handleTaskDelete={onDeleteTask} />
         ))}
       </ScrollView>
-      <View className="flex-row">
+      <View className="flex-row justify-center items-center mb-4">
         <Pressable
           onPress={handleGoBack}
           className="w-12 h-12 rounded-full items-center justify-center bg-black mx-8 font-bold"
@@ -58,6 +73,18 @@ export function AiTasksPreview({
         >
           <MaterialCommunityIcons name="arrow-u-left-top" size={20} color="white" />
         </Pressable>
+        {!isVoiceInputRef.current && (
+          <Pressable
+            onPress={handleBacktoBlankEdit}
+            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Edit"
+          >
+            <GradientCircle size={60}>
+              <MaterialIcons name="edit" size={28} color="white" />
+            </GradientCircle>
+          </Pressable>
+        )}
         <Pressable
           onPress={handleAddTasks}
           disabled={localTasks.length === 0}

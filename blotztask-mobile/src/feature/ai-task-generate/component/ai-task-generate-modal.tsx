@@ -21,6 +21,7 @@ export const AiTaskGenerateModal = () => {
           tasks={aiGeneratedTasks}
           setModalType={setModalType}
           isVoiceInput={isVoiceInput}
+          setText={setText}
         />
       );
 
