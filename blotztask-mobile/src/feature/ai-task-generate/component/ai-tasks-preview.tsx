@@ -2,13 +2,12 @@ import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
 import { View, Pressable } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
-import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-store";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-chat-hub/util/ai-task-generator-util";
 import { ModalType } from "../modals/modal-type";
 import { ScrollView } from "react-native-gesture-handler";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
-import { set } from "zod";
 
 export function AiTasksPreview({
   tasks,
