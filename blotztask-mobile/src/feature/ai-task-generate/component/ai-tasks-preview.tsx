@@ -78,8 +78,9 @@ export function AiTasksPreview({
             style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
             accessibilityRole="button"
             accessibilityLabel="Edit"
+            className="mx-4"
           >
-            <GradientCircle size={60}>
+            <GradientCircle size={70}>
               <MaterialCommunityIcons name="pencil-outline" size={35} color="white" />
             </GradientCircle>
           </Pressable>
