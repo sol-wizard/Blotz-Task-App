@@ -1,22 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { EditTaskBottomSheet } from "../components/ui/edit-task-bottom-sheet";
 import TaskCard from "../components/ui/task-card";
-import TaskDetailBottomSheet from "../components/ui/task-detail-bottomsheet";
-import SubtaskDetail from "../components/ui/subtask-detail-bottomsheet";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
-import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
-import { fetchSubtasksForTask, fetchTotalHoursForTask } from "../services/subtask-service";
 import { useSelectedDayTaskStore } from "../stores/selectedday-task-store";
 import CalendarHeader from "../components/calender/calendar-header";
-import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
 import { TaskStatusSelect, TaskStatusType } from "../components/ui/task-status-select";
 import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
 import { TaskListPlaceholder } from "../components/calender/tasklist-placeholder";
+import { router } from "expo-router";
 
 export default function CalendarScreen() {
   const {
@@ -28,54 +23,43 @@ export default function CalendarScreen() {
     toggleTask,
     removeTask,
   } = useSelectedDayTaskStore();
-  const taskDetailModalRef = useRef<BottomSheetModal>(null);
-  const editTaskModalRef = useRef<BottomSheetModal>(null);
-  const subtaskModalRef = useRef<BottomSheetModal>(null);
-
-  const [subtasksForSelectedTask, setSubtasksForSelectedTask] = useState<any[]>([]);
-  const [totalTimeForSelectedTask, setTotalTimeForSelectedTask] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
-
-  const [selectedTask, setSelectedTask] = useState<TaskDetailDTO | undefined>(undefined);
-
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
     text: "",
   });
 
-  // Calculate filtered tasks and status items
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
   const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus);
   const taskStatuses = createStatusSelectItems(tasksForSelectedDay);
 
   useEffect(() => {
     loadTasks();
-  }, [selectedDay]);
+  }, [selectedDay, loadTasks]);
 
-  const presentSheet = (task: TaskDetailDTO) => {
-    setSelectedTask(task);
-    taskDetailModalRef?.current?.present();
-  };
-
-  // TODO: Update detail sheet after editing the selected task
-  const handleEditTaskSheetClose = () => {
-    editTaskModalRef?.current?.dismiss();
-    taskDetailModalRef?.current?.present();
-  };
-
-  const handleEditPress = () => {
-    taskDetailModalRef?.current?.dismiss();
-    editTaskModalRef?.current?.present();
+  const navigateToTaskDetails = (task: TaskDetailDTO) => {
+    router.push({
+      pathname: "/(protected)/task-details",
+      params: {
+        taskId: task.id.toString(),
+        title: task.title,
+        description: task.description,
+        startTime: task.startTime,
+        endTime: task.endTime,
+        isDone: task.isDone.toString(),
+        label: task.label?.name || "",
+      },
+    });
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
     <TaskCard
-      id={item.id.toString()}
+      id={item.id}
       title={item.title}
       startTime={item.startTime}
       endTime={item.endTime}
       isCompleted={item.isDone}
       onToggleComplete={() => toggleTask(item.id)}
-      onPress={() => presentSheet(item)}
+      onPress={() => navigateToTaskDetails(item)}
       onDelete={async () => {
         await handleDeleteTask(item.id);
       }}
@@ -84,7 +68,6 @@ export default function CalendarScreen() {
 
   const handleDeleteTask = async (taskId: number) => {
     try {
-      //TODO: Should refresh the tasks for the selected day instead of deleting at frontend
       await removeTask(taskId);
       setSnackbar({ visible: true, text: "Delete Successful" });
     } catch (e) {
@@ -96,29 +79,6 @@ export default function CalendarScreen() {
     }
   };
 
-  const handleOpenSubtasks = async (task: TaskDetailDTO) => {
-    setSelectedTask(task);
-
-    try {
-      const items = await fetchSubtasksForTask(task.id);
-      setSubtasksForSelectedTask(items ?? []);
-
-      const { label } = await fetchTotalHoursForTask(task.id, items ?? []);
-      setTotalTimeForSelectedTask(label);
-    } catch (e) {
-      console.error(e);
-      setSubtasksForSelectedTask([]);
-      setTotalTimeForSelectedTask("");
-    }
-
-    subtaskModalRef.current?.present();
-  };
-
-  const handleToggleSubtask = (id: number) => {
-    setSubtasksForSelectedTask((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, isDone: !s.isDone } : s)),
-    );
-  };
   return (
     <SafeAreaView className="flex-1">
       <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
@@ -169,56 +129,6 @@ export default function CalendarScreen() {
       </CalendarProvider>
 
       <ToggleAiTaskGenerate />
-
-      <BottomSheetModal
-        ref={taskDetailModalRef}
-        snapPoints={["60%", "80%"]}
-        enablePanDownToClose
-        backdropComponent={renderBottomSheetBackdrop}
-        backgroundStyle={{
-          backgroundColor: "#FFFFFF",
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-        }}
-      >
-        <TaskDetailBottomSheet
-          task={selectedTask}
-          handleEditPress={handleEditPress}
-          onOpenSubtasks={handleOpenSubtasks}
-        />
-      </BottomSheetModal>
-
-      {selectedTask && (
-        <BottomSheetModal
-          ref={editTaskModalRef}
-          snapPoints={["55%"]}
-          keyboardBlurBehavior="restore"
-          backdropComponent={renderBottomSheetBackdrop}
-          enablePanDownToClose
-        >
-          <EditTaskBottomSheet task={selectedTask} handleClose={handleEditTaskSheetClose} />
-        </BottomSheetModal>
-      )}
-
-      <BottomSheetModal
-        ref={subtaskModalRef}
-        enablePanDownToClose
-        backdropComponent={renderBottomSheetBackdrop}
-        backgroundStyle={{
-          backgroundColor: "#FFFFFF",
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-        }}
-      >
-        <BottomSheetView className="flex-1">
-          <SubtaskDetail
-            task={selectedTask}
-            subtasks={subtasksForSelectedTask}
-            totalTaskTime={totalTimeForSelectedTask}
-            onToggleSubtask={handleToggleSubtask}
-          />
-        </BottomSheetView>
-      </BottomSheetModal>
 
       <Snackbar
         visible={snackbar.visible}
