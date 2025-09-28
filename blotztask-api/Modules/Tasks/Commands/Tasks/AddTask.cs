@@ -1,5 +1,7 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Entities;
+using BlotzTask.Modules.Tasks.Enums;
+using BlotzTask.Modules.Tasks.Shared;
 using System.ComponentModel.DataAnnotations;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;
@@ -18,8 +20,7 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
     {
         logger.LogInformation("Adding new task for user {UserId}", command.UserId);
 
-        // Validate task times
-        ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime);
+        TaskTimeValidator.ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime, command.TaskDetails.TimeType);
 
         var newTask = new TaskItem
         {
@@ -27,6 +28,7 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
             Description = command.TaskDetails.Description,
             StartTime = command.TaskDetails.StartTime,
             EndTime = command.TaskDetails.EndTime,
+            TimeType = command.TaskDetails.TimeType,
             LabelId = command.TaskDetails.LabelId,
             UserId = command.UserId,
             CreatedAt = DateTime.UtcNow,
@@ -40,15 +42,6 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
 
         return $"Task {newTask.Id} titled {newTask.Title} was successfully added.";
     }
-
-    private static void ValidateTaskTimes(DateTimeOffset? startTime, DateTimeOffset? endTime)
-    {
-        // If both exist, ensure startTime is before endTime
-        if (startTime.HasValue && endTime.HasValue && startTime >= endTime)
-        {
-            throw new ArgumentException("Start time must be earlier than end time.");
-        }
-    }
 }
 
 public class AddTaskItemDto
@@ -57,5 +50,6 @@ public class AddTaskItemDto
     public required string Description { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public DateTimeOffset? StartTime { get; set; }
+    public TaskTimeType? TimeType { get; set; }
     public int LabelId { get; set; }
 }

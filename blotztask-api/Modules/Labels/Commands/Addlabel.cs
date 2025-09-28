@@ -1,8 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Labels.Domain;
-using BlotzTask.Modules.Labels.DTOs;
-
 namespace BlotzTask.Modules.Labels.Commands;
 
 public class AddLabelCommand
