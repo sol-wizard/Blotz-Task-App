@@ -32,7 +32,7 @@ export const AiTaskGenerateModal = () => {
     default:
       return (
         <AiInput
-          inputError={inputError}
+          generateTaskError={inputError}
           text={text}
           setText={setText}
           sendMessage={sendMessage}

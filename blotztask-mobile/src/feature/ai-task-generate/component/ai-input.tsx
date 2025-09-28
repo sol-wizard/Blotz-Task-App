@@ -8,21 +8,31 @@ export const AiInput = ({
   sendMessage,
   isVoiceInput,
   setIsVoiceInput,
-  inputError,
+  generateTaskError,
 }: {
   text: string;
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
   isVoiceInput: boolean;
   setIsVoiceInput: (v: boolean) => void;
-  inputError: boolean;
+  generateTaskError: boolean;
 }) => {
   return (
     <>
       {isVoiceInput ? (
-        <VoiceInput text={text} setText={setText} sendMessage={sendMessage} hasError={inputError} />
+        <VoiceInput
+          text={text}
+          setText={setText}
+          sendMessage={sendMessage}
+          hasError={generateTaskError}
+        />
       ) : (
-        <WriteInput text={text} setText={setText} sendMessage={sendMessage} hasError={inputError} />
+        <WriteInput
+          text={text}
+          setText={setText}
+          sendMessage={sendMessage}
+          hasError={generateTaskError}
+        />
       )}
 
       <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} />
