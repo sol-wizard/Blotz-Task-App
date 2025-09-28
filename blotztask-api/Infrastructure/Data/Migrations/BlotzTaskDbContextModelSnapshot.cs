@@ -44,7 +44,7 @@ namespace BlotzTask.Migrations
 
                     b.HasKey("LabelId");
 
-                    b.ToTable("Labels");
+                    b.ToTable("Labels", (string)null);
 
                     b.HasData(
                         new
@@ -103,9 +103,6 @@ namespace BlotzTask.Migrations
                     b.Property<DateTimeOffset?>("StartTime")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("TimeType")
-                        .HasColumnType("int");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -122,14 +119,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DeletedTaskItems", t =>
-                        {
-                            t.HasCheckConstraint("CK_DeletedTaskItems_SingleTime_Equals", "([TimeType] IS NULL) OR ([TimeType] <> 0) OR ([StartTime] = [EndTime])");
-
-                            t.HasCheckConstraint("CK_DeletedTaskItems_Start_Before_Or_Equal_End", "([StartTime] IS NULL AND [EndTime] IS NULL) OR ([StartTime] <= [EndTime])");
-
-                            t.HasCheckConstraint("CK_DeletedTaskItems_Time_Presence", "(  ([TimeType] IS NULL AND [StartTime] IS NULL AND [EndTime] IS NULL)   OR  ([TimeType] IN (0,1) AND [StartTime] IS NOT NULL AND [EndTime] IS NOT NULL))");
-                        });
+                    b.ToTable("DeletedTaskItems", (string)null);
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.Subtask", b =>
@@ -204,9 +194,6 @@ namespace BlotzTask.Migrations
                     b.Property<DateTimeOffset?>("StartTime")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("TimeType")
-                        .HasColumnType("int");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -223,14 +210,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TaskItems", t =>
-                        {
-                            t.HasCheckConstraint("CK_TaskItems_SingleTime_Equals", "([TimeType] IS NULL) OR ([TimeType] <> 0) OR ([StartTime] = [EndTime])");
-
-                            t.HasCheckConstraint("CK_TaskItems_Start_Before_Or_Equal_End", "([StartTime] IS NULL AND [EndTime] IS NULL) OR ([StartTime] <= [EndTime])");
-
-                            t.HasCheckConstraint("CK_TaskItems_Time_Presence", "(  ([TimeType] IS NULL AND [StartTime] IS NULL AND [EndTime] IS NULL)   OR  ([TimeType] IN (0,1) AND [StartTime] IS NOT NULL AND [EndTime] IS NOT NULL))");
-                        });
+                    b.ToTable("TaskItems", (string)null);
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Users.Domain.AppUser", b =>
@@ -264,19 +244,19 @@ namespace BlotzTask.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AppUsers");
+                    b.ToTable("AppUsers", (string)null);
 
                     b.HasData(
                         new
                         {
                             Id = new Guid("718ccb8f-ce52-4e51-8cfe-2a44cdca77d1"),
                             Auth0UserId = "auth0|68c03ab7a093c0727999a791",
-                            CreationAt = new DateTime(2025, 9, 10, 0, 34, 27, 575, DateTimeKind.Local).AddTicks(6080),
+                            CreationAt = new DateTime(2025, 9, 9, 22, 34, 27, 575, DateTimeKind.Local).AddTicks(6080),
                             DisplayName = "blotztest1@gmail.com",
                             Email = "blotztest1@gmail.com",
                             PictureUrl = "https://s.gravatar.com/avatar/d7eee1179900d1154cf2b3a64f7f91dd?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbl.png",
-                            SignUpAt = new DateTime(2025, 9, 10, 0, 33, 27, 955, DateTimeKind.Local),
-                            UpdatedAt = new DateTime(2025, 9, 10, 0, 34, 27, 575, DateTimeKind.Local).AddTicks(6080)
+                            SignUpAt = new DateTime(2025, 9, 9, 22, 33, 27, 955, DateTimeKind.Local),
+                            UpdatedAt = new DateTime(2025, 9, 9, 22, 34, 27, 575, DateTimeKind.Local).AddTicks(6080)
                         });
                 });
 
