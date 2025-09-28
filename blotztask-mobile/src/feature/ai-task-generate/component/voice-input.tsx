@@ -5,10 +5,12 @@ import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
 
 export const VoiceInput = ({
+  hasError,
   text,
   setText,
   sendMessage,
 }: {
+  hasError: boolean;
   text: string;
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
@@ -28,31 +30,44 @@ export const VoiceInput = ({
       setText(newText);
     }
     if (newText?.trim()) sendMessage(newText.trim());
+    setText("");
   };
 
   return (
     <View className="items-center mt-12">
-      <View style={{ minHeight: idleBlockH, width: "100%" }} className="items-center">
-        {isListening ? (
-          <TextInput
-            value={displayText}
-            editable={false}
-            placeholderTextColor="#D1D5DB"
-            multiline
-            className="text-xl font-bold text-gray-400 text-center"
-            style={{ fontFamily: "Baloo2-Regular" }}
-          />
-        ) : (
-          <View onLayout={(e) => setIdleBlockH(e.nativeEvent.layout.height)}>
-            <Text className="text-black text-4xl font-balooBold text-center pt-2">
-              Braindump tasks{"\n"}with your voice
-            </Text>
-            <Text className="text-gray-500 font-baloo text-xl text-center mt-2">
-              Just say your task, and I&apos;ll create it automatically
-            </Text>
-          </View>
-        )}
-      </View>
+      {hasError && (
+        <View
+          onLayout={(e) => setIdleBlockH(e.nativeEvent.layout.height)}
+          className="bg-background w-80 rounded-2xl py-6 px-4"
+        >
+          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2">
+            Oops, that went over my head. Can you say it again
+          </Text>
+        </View>
+      )}
+      {!hasError && (
+        <View style={{ minHeight: idleBlockH, width: "100%" }} className="items-center">
+          {isListening ? (
+            <TextInput
+              value={displayText}
+              editable={false}
+              placeholderTextColor="#D1D5DB"
+              multiline
+              className="text-xl font-bold text-gray-400 text-center"
+              style={{ fontFamily: "Baloo2-Regular" }}
+            />
+          ) : (
+            <View onLayout={(e) => setIdleBlockH(e.nativeEvent.layout.height)}>
+              <Text className="text-black text-4xl font-balooBold text-center pt-2">
+                Braindump tasks{"\n"}with your voice
+              </Text>
+              <Text className="text-gray-500 font-baloo text-xl text-center mt-2">
+                Just say your task, and I&apos;ll create it automatically
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
 
       <View className="mt-6 items-center">
         <Pressable

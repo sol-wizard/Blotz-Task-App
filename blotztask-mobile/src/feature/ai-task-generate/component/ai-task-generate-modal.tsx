@@ -7,19 +7,38 @@ import { TaskAddedSuccess } from "./task-added-success";
 
 export const AiTaskGenerateModal = () => {
   const [text, setText] = useState("");
-  const { aiGeneratedTasks, sendMessage, modalType, setModalType } = useAiTaskGenerator();
+  const [isVoiceInput, setIsVoiceInput] = useState(true);
+  const { aiGeneratedTasks, sendMessage, modalType, setModalType, inputError } =
+    useAiTaskGenerator();
 
   switch (modalType) {
     case "task-preview":
-      return <AiTasksPreview tasks={aiGeneratedTasks} setModalType={setModalType} />;
+      return (
+        <AiTasksPreview
+          tasks={aiGeneratedTasks}
+          setModalType={setModalType}
+          isVoiceInput={isVoiceInput}
+          setText={setText}
+        />
+      );
 
     case "loading":
       return <AiThinkingModal />;
+
     case "add-task-success":
       return <TaskAddedSuccess />;
 
     case "input":
     default:
-      return <AiInput text={text} setText={setText} sendMessage={sendMessage} />;
+      return (
+        <AiInput
+          generateTaskError={inputError}
+          text={text}
+          setText={setText}
+          sendMessage={sendMessage}
+          isVoiceInput={isVoiceInput}
+          setIsVoiceInput={setIsVoiceInput}
+        />
+      );
   }
 };
