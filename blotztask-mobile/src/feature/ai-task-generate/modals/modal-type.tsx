@@ -1,7 +1,1 @@
-export type ModalType =
-  | "input"
-  | "loading"
-  | "task-preview"
-  | "add-task-success"
-  | "voice-error"
-  | "writing-error";
+export type ModalType = "input" | "loading" | "task-preview" | "add-task-success";

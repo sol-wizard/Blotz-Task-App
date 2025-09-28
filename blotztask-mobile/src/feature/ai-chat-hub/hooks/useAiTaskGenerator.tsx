@@ -10,6 +10,7 @@ export function useAiTaskGenerator({ isVoiceInput }: { isVoiceInput: boolean }) 
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedTasks, setAiGeneratedTasks] = useState<AiTaskDTO[]>([]);
   const [modalType, setModalType] = useState<ModalType>("input");
+  const [inputError, setInputError] = useState<boolean>(false);
 
   const isVoiceInputRef = useRef(isVoiceInput);
 
@@ -26,17 +27,13 @@ export function useAiTaskGenerator({ isVoiceInput }: { isVoiceInput: boolean }) 
         await signalRService.invoke(connection, "SendMessage", "User", text.trim());
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
-        if (isVoiceInputRef.current) {
-          setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "voice-error");
-        }
-        setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "writing-error");
+        setInputError(true);
+        setModalType("input");
       }
     } else {
       console.warn("Cannot send message: Not connected.");
-      if (isVoiceInputRef.current) {
-        setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "voice-error");
-      }
-      setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "writing-error");
+      setInputError(true);
+      setModalType("input");
     }
   };
 
@@ -46,7 +43,8 @@ export function useAiTaskGenerator({ isVoiceInput }: { isVoiceInput: boolean }) 
 
     setAiGeneratedTasks(mappedTasks);
     if (mappedTasks.length === 0) {
-      setModalType(isVoiceInputRef.current ? "voice-error" : "writing-error");
+      setInputError(true);
+      setModalType("input");
     } else {
       setModalType("task-preview");
     }
@@ -80,6 +78,7 @@ export function useAiTaskGenerator({ isVoiceInput }: { isVoiceInput: boolean }) 
   }, []);
 
   return {
+    inputError,
     aiGeneratedTasks,
     sendMessage,
     modalType,
