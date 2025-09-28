@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-chat-hub/util/map-extracted-to-task-dto";
 import { AiTaskDTO } from "../models/ai-task-dto";
