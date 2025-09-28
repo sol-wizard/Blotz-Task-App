@@ -10,6 +10,7 @@ export function useAiTaskGenerator() {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedTasks, setAiGeneratedTasks] = useState<AiTaskDTO[]>([]);
   const [modalType, setModalType] = useState<ModalType>("input");
+  const [inputError, setInputError] = useState<boolean>(false);
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -20,11 +21,13 @@ export function useAiTaskGenerator() {
         await signalRService.invoke(connection, "SendMessage", "User", text.trim());
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
-        setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "input");
+        setInputError(true);
+        setModalType("input");
       }
     } else {
       console.warn("Cannot send message: Not connected.");
-      setModalType(aiGeneratedTasks.length > 0 ? "task-preview" : "input");
+      setInputError(true);
+      setModalType("input");
     }
   };
 
@@ -33,7 +36,12 @@ export function useAiTaskGenerator() {
     console.log("mappedTasks,", mappedTasks);
 
     setAiGeneratedTasks(mappedTasks);
-    setModalType("task-preview");
+    if (mappedTasks.length === 0) {
+      setInputError(true);
+      setModalType("input");
+    } else {
+      setModalType("task-preview");
+    }
   };
 
   useEffect(() => {
@@ -64,6 +72,7 @@ export function useAiTaskGenerator() {
   }, []);
 
   return {
+    inputError,
     aiGeneratedTasks,
     sendMessage,
     modalType,
