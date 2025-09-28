@@ -18,6 +18,7 @@
       "distribution": "internal",
       "autoIncrement": true,
       "channel": "preview",
+      "credentialsSource": "local",
       "env": {
         "BUNDLE_IDENTIFIER": "com.Blotz.BlotzTask",
         "EXPO_PUBLIC_URL": "https://wapp-blotztaskapp.azurewebsites.net/",
