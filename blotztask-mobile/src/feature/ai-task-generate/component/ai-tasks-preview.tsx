@@ -1,22 +1,33 @@
 import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
-import React, { useState } from "react";
-import { View, Text, Pressable } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Pressable } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-store";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-chat-hub/util/ai-task-generator-util";
 import { ModalType } from "../modals/modal-type";
 import { ScrollView } from "react-native-gesture-handler";
+import { GradientCircle } from "@/shared/components/common/gradient-circle";
 
 export function AiTasksPreview({
   tasks,
   setModalType,
+  isVoiceInput,
+  setText,
 }: {
   tasks: AiTaskDTO[];
   setModalType: (v: ModalType) => void;
+  isVoiceInput: boolean;
+  setText: (v: string) => void;
 }) {
   const { addTask } = useSelectedDayTaskStore();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(tasks ?? []);
+
+  const isVoiceInputRef = useRef(isVoiceInput);
+
+  useEffect(() => {
+    isVoiceInputRef.current = isVoiceInput;
+  }, [isVoiceInput]);
 
   const onDeleteTask = (taskId: string) => {
     setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
@@ -35,13 +46,14 @@ export function AiTasksPreview({
     }
   };
 
-  if (!localTasks.length) {
-    return (
-      <View className="py-10 items-center">
-        <Text className="text-gray-400">No AI-generated tasks</Text>
-      </View>
-    );
-  }
+  const handleGoBack = () => {
+    setModalType("input");
+  };
+
+  const handleBacktoBlankEdit = () => {
+    setText("");
+    setModalType("input");
+  };
 
   return (
     <View className="mb-10 items-center justify-between">
@@ -50,17 +62,40 @@ export function AiTasksPreview({
           <AiTaskCard key={task.id} task={task} handleTaskDelete={onDeleteTask} />
         ))}
       </ScrollView>
-
-      <Pressable
-        onPress={handleAddTasks}
-        disabled={localTasks.length === 0}
-        className={`w-12 h-12 rounded-full items-center justify-center ${localTasks.length ? "bg-black" : "bg-gray-300"}`}
-        style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-        accessibilityRole="button"
-        accessibilityLabel="Add all remaining AI tasks"
-      >
-        <Ionicons name="arrow-up" size={20} color="white" />
-      </Pressable>
+      <View className="flex-row justify-center items-center mb-4">
+        <Pressable
+          onPress={handleGoBack}
+          className="w-12 h-12 rounded-full items-center justify-center bg-black mx-8 font-bold"
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <MaterialCommunityIcons name="arrow-u-left-top" size={20} color="white" />
+        </Pressable>
+        {!isVoiceInputRef.current && (
+          <Pressable
+            onPress={handleBacktoBlankEdit}
+            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Edit"
+            className="mx-4"
+          >
+            <GradientCircle size={70}>
+              <MaterialCommunityIcons name="pencil-outline" size={35} color="white" />
+            </GradientCircle>
+          </Pressable>
+        )}
+        <Pressable
+          onPress={handleAddTasks}
+          disabled={localTasks.length === 0}
+          className={`w-12 h-12 rounded-full items-center justify-center mx-8 ${localTasks.length ? "bg-black" : "bg-gray-300"}`}
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Add all remaining AI tasks"
+        >
+          <Ionicons name="arrow-up" size={20} color="white" />
+        </Pressable>
+      </View>
     </View>
   );
 }

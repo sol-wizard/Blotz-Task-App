@@ -1,11 +1,13 @@
 import { theme } from "@/shared/constants/theme";
-import { TextInput, View } from "react-native";
+import { TextInput, View, Text } from "react-native";
 
 export const WriteInput = ({
+  hasError,
   text,
   setText,
   sendMessage,
 }: {
+  hasError: boolean;
   text: string;
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
@@ -16,14 +18,13 @@ export const WriteInput = ({
       if (msg.length > 0) {
         sendMessage(msg);
       }
-      setText("");
       return;
     }
     setText(value);
   };
 
   return (
-    <View className="w-full px-4 pt-3 pb-6">
+    <View className="w-full px-4 pt-3 pb-6 items-center">
       <TextInput
         value={text}
         onChangeText={handleChange}
@@ -41,6 +42,13 @@ export const WriteInput = ({
         className="w-full min-h-[100px] rounded-xl bg-white px-3 py-4 mt-4 text-xl text-gray-800 font-baloo text-left"
         style={{ textAlignVertical: "top" }}
       />
+      {hasError && (
+        <View className="bg-background w-80 rounded-2xl px-4 py-6 mb-4">
+          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2">
+            Try again-be specific, like ‘Team meeting at 9am‘
+          </Text>
+        </View>
+      )}
     </View>
   );
 };

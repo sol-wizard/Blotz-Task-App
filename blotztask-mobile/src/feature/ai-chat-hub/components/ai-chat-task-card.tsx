@@ -2,7 +2,6 @@ import { View, Text } from "react-native";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
-
 import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
 import { format, parseISO } from "date-fns";
 import { convertAiTaskToAddTaskItemDTO } from "../util/ai-task-generator-util";

@@ -29,3 +29,5 @@ android/
 
 # secret
 keys/
+credentials.json
+ios-builds/
