@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
-using BlotzTask.Modules.Tasks.DTOs;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using Microsoft.AspNetCore.Authorization;
