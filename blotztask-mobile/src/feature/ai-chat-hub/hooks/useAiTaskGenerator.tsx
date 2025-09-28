@@ -6,17 +6,11 @@ import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 import { signalRService } from "../services/ai-task-generator-signalr-service";
 import { ModalType } from "@/feature/ai-task-generate/modals/modal-type";
 
-export function useAiTaskGenerator({ isVoiceInput }: { isVoiceInput: boolean }) {
+export function useAiTaskGenerator() {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedTasks, setAiGeneratedTasks] = useState<AiTaskDTO[]>([]);
   const [modalType, setModalType] = useState<ModalType>("input");
   const [inputError, setInputError] = useState<boolean>(false);
-
-  const isVoiceInputRef = useRef(isVoiceInput);
-
-  useEffect(() => {
-    isVoiceInputRef.current = isVoiceInput;
-  }, [isVoiceInput]);
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;

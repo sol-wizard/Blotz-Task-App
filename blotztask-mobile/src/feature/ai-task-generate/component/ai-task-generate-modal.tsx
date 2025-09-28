@@ -8,11 +8,8 @@ import { TaskAddedSuccess } from "./task-added-success";
 export const AiTaskGenerateModal = () => {
   const [text, setText] = useState("");
   const [isVoiceInput, setIsVoiceInput] = useState(true);
-  const { aiGeneratedTasks, sendMessage, modalType, setModalType, inputError } = useAiTaskGenerator(
-    {
-      isVoiceInput,
-    },
-  );
+  const { aiGeneratedTasks, sendMessage, modalType, setModalType, inputError } =
+    useAiTaskGenerator();
 
   switch (modalType) {
     case "task-preview":
