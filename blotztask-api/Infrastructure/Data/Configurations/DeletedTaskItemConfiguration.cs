@@ -10,11 +10,11 @@ public class DeletedTaskItemConfiguration : IEntityTypeConfiguration<DeletedTask
     {
         builder.ToTable(t =>
         {
-            t.HasCheckConstraint($"CK_DeletedTaskItem_Time_Presence",
+            t.HasCheckConstraint($"CK_DeletedTaskItem_Time_Valid",
                 "(" +
                 "  ([TimeType] IS NULL AND [StartTime] IS NULL AND [EndTime] IS NULL)" +
                 "   OR" +
-                "  ([TimeType] IN (0,1) AND [StartTime] IS NOT NULL AND [EndTime] IS NOT NULL)" +
+                "  ([TimeType] IN NOT NULL AND [StartTime] IS NOT NULL AND [EndTime] IS NOT NULL)" +
                 ")");
 
             t.HasCheckConstraint($"CK_DeletedTaskItem_SingleTime_Equals",

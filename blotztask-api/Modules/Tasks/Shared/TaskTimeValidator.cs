@@ -9,34 +9,22 @@ public static class TaskTimeValidator
         if (timeType == null)
         {
             if (startTime.HasValue || endTime.HasValue)
-            {
                 throw new ArgumentException(
-                    "For tasks without TimeType, StartTime and EndTime must both be empty."
-                );
-            }
-        }
-        else
-        {
-            if (!startTime.HasValue || !endTime.HasValue)
-            {
-                throw new ArgumentException(
-                    "For tasks with TimeType, both StartTime and EndTime must be provided."
-                );
-            }
+                    "For tasks without TimeType, StartTime and EndTime must both be empty.");
 
-            if (timeType == TaskTimeType.SingleTime && startTime != endTime)
-            {
-                throw new ArgumentException(
-                    "For SingleTime tasks, StartTime and EndTime must be the same."
-                );
-            }
-
-            if (startTime > endTime)
-            {
-                throw new ArgumentException(
-                    "StartTime must be earlier than or equal to EndTime."
-                );
-            }
+            return;
         }
+
+        if (!startTime.HasValue || !endTime.HasValue)
+            throw new ArgumentException(
+                "For tasks with TimeType, both StartTime and EndTime must be provided.");
+
+        if (timeType == TaskTimeType.SingleTime && startTime != endTime)
+            throw new ArgumentException(
+                "For SingleTime tasks, StartTime and EndTime must be the same.");
+
+        if (startTime > endTime)
+            throw new ArgumentException(
+                "StartTime must be earlier than or equal to EndTime.");
     }
 }

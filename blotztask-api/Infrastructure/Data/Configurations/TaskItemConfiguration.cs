@@ -10,11 +10,11 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
     {
         builder.ToTable(t =>
         {
-            t.HasCheckConstraint($"CK_TaskItem_Time_Presence",
+            t.HasCheckConstraint($"CK_TaskItem_Time_Valid",
                 "(" +
                 "  ([TimeType] IS NULL AND [StartTime] IS NULL AND [EndTime] IS NULL)" +
                 "   OR" +
-                "  ([TimeType] IN (0,1) AND [StartTime] IS NOT NULL AND [EndTime] IS NOT NULL)" +
+                "  ([TimeType] IN NOT NULL AND [StartTime] IS NOT NULL AND [EndTime] IS NOT NULL)" +
                 ")");
 
             t.HasCheckConstraint($"CK_TaskItem_SingleTime_Equals",
