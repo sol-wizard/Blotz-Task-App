@@ -8,6 +8,20 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
 {
     public void Configure(EntityTypeBuilder<TaskItem> builder)
     {
-        builder.ConfigureTaskTime();
+        builder.ToTable(t =>
+        {
+            t.HasCheckConstraint($"CK_TaskItem_Time_Presence",
+                "(" +
+                "  ([TimeType] IS NULL AND [StartTime] IS NULL AND [EndTime] IS NULL)" +
+                "   OR" +
+                "  ([TimeType] IN (0,1) AND [StartTime] IS NOT NULL AND [EndTime] IS NOT NULL)" +
+                ")");
+
+            t.HasCheckConstraint($"CK_TaskItem_SingleTime_Equals",
+                "([TimeType] IS NULL) OR ([TimeType] <> 0) OR ([StartTime] = [EndTime])");
+
+            t.HasCheckConstraint($"CK_TaskItem_Start_Before_Or_Equal_End",
+                "([StartTime] IS NULL AND [EndTime] IS NULL) OR ([StartTime] <= [EndTime])");
+        });
     }
 }
