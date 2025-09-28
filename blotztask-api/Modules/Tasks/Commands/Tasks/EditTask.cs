@@ -1,5 +1,7 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Shared.Exceptions;
+using BlotzTask.Modules.Tasks.Enums;
+using BlotzTask.Modules.Tasks.Shared;
 using System.ComponentModel.DataAnnotations;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;
@@ -25,10 +27,13 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
             throw new NotFoundException($"Task with ID {command.TaskId} not found.");
         }
 
+        TaskTimeValidator.ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime, command.TaskDetails.TimeType);
+
         task.Title = command.TaskDetails.Title;
         task.Description = command.TaskDetails.Description;
         task.StartTime = command.TaskDetails.StartTime;
         task.EndTime = command.TaskDetails.EndTime;
+        task.TimeType = command.TaskDetails.TimeType;
         task.UpdatedAt = DateTime.UtcNow;
         task.LabelId = command.TaskDetails.LabelId;
         task.IsDone = command.TaskDetails.IsDone;
@@ -51,6 +56,7 @@ public class EditTaskItemDto
     public string? Description { get; set; }
     public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
+    public TaskTimeType? TimeType { get; set; }
     public bool IsDone { get; set; }
     public int LabelId { get; set; }
 }
