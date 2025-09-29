@@ -7,6 +7,7 @@ import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import { useSelectedDayTaskStore } from "../stores/selectedday-task-store";
 import CalendarHeader from "../components/calender/calendar-header";
+import TodayIndicator from "../components/calender/today-indicator";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
 import { TaskStatusSelect, TaskStatusType } from "../components/ui/task-status-select";
 import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
@@ -87,6 +88,7 @@ export default function CalendarScreen() {
         onDateChanged={(date: string) => setSelectedDay(new Date(date))}
         showTodayButton={false}
       >
+        <TodayIndicator selectedDay={selectedDay} />
         <WeekCalendar
           onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
           current={format(selectedDay, "yyyy-MM-dd")}

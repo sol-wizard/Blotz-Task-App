@@ -12,6 +12,7 @@ module.exports = {
         primary: "#000000",
         secondary: "#444964",
         tertiary: "#8C8C8C",
+        todayIndicator: "#EBF0FE",
       },
       fontFamily: {
         baloo: ["BalooRegular"],
