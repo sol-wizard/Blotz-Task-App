@@ -25,13 +25,13 @@ public class TaskController(
     }
 
     [HttpGet("by-date")]
-    public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery]GetTasksByDateRequest getTasksByDateRequest, CancellationToken ct)
+    public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery] GetTasksByDateRequest getTasksByDateRequest, CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
         {
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         }
-        
+
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
@@ -44,7 +44,7 @@ public class TaskController(
     }
 
     [HttpPost]
-    public async Task<string> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
+    public async Task<int> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
         {
@@ -57,8 +57,8 @@ public class TaskController(
             UserId = userId,
         };
 
-        var result = await addTaskCommandHandler.Handle(command, ct);
-        return result;
+        var newTaskId = await addTaskCommandHandler.Handle(command, ct);
+        return newTaskId;
     }
 
     [HttpPut("{id}")]
