@@ -6,7 +6,6 @@ import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { CreateTaskBottomSheet } from "@/feature/task/components/ui/create-task-bottom-sheet";
-import IdeasScreen from "./ideas";
 
 const routes = [
   {
