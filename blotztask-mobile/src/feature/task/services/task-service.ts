@@ -15,6 +15,13 @@ export async function fetchTasksForDate(
   return data;
 }
 
+export async function fetchFloatingTasks(): Promise<TaskDetailDTO[]> {
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/floating`;
+
+  const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: "GET" });
+  return data;
+}
+
 export async function toggleTaskCompletion(taskId: number): Promise<void> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/task-completion-status/${taskId}`;
 
