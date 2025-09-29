@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Dimensions } from "react-native";
-import { format, startOfWeek, differenceInDays } from "date-fns";
+import { startOfWeek, differenceInDays } from "date-fns";
 
 interface TodayIndicatorProps {
   selectedDay: Date;
