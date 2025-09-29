@@ -40,6 +40,17 @@ export default function ProtectedLayout() {
           headerBackButtonDisplayMode: "minimal",
         }}
       />
+      <Stack.Screen
+        name="task-edit"
+        options={{
+          headerShown: true,
+          headerShadowVisible: false,
+          headerTitle: "",
+          headerBackVisible: true,
+          headerTintColor: "#8E8E93",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
     </Stack>
   );
 }

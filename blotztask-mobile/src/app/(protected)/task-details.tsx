@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { IconButton } from "react-native-paper";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { TaskStatusType } from "@/feature/task/components/ui/task-status-select";
 import TaskDateRange from "../../feature/task/components/task-details/task-date-range";
 import DetailsTab from "../../feature/task/components/task-details/details-tab";
@@ -10,12 +10,17 @@ import SubtasksTab from "../../feature/task/components/task-details/subtasks-tab
 type tabTypes = "Details" | "Subtasks";
 
 export default function TaskDetailsScreen() {
-  const { title, description, startTime, endTime, isDone, label } = useLocalSearchParams();
+  const router = useRouter();
+  const { id, title, description, startTime, endTime, isDone, label } = useLocalSearchParams();
   const taskStatus: TaskStatusType = isDone === "true" ? "done" : "todo";
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
 
-  // TODO: Implement edit screen
-  const handleEdit = () => console.log("task edit pressed");
+  const handleEdit = () => {
+    router.push({
+      pathname: "/(protected)/task-edit",
+      params: { id },
+    });
+  };
 
   return (
     <View className="flex-1 bg-lime-200">
