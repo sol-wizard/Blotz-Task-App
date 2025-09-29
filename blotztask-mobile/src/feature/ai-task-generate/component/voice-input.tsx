@@ -15,7 +15,7 @@ export const VoiceInput = ({
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
 }) => {
-  const [language, setLanguage] = useState<"en" | "zh">("en");
+  const [language, setLanguage] = useState<"en" | "zh">("zh");
   const { startListening, partialText, stopAndGetText, isListening } = useVoiceInput({ language });
   const displayText = isListening
     ? [text, partialText].filter(Boolean).join(text ? " " : "")
