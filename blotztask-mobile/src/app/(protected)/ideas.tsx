@@ -1,4 +1,3 @@
-import { TaskListPlaceholder } from "@/feature/task/components/calender/tasklist-placeholder";
 import TaskCard from "@/feature/task/components/ui/task-card";
 import { fetchFloatingTasks } from "@/feature/task/services/task-service";
 import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-store";
@@ -6,7 +5,6 @@ import { theme } from "@/shared/constants/theme";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { useState, useEffect } from "react";
 import { View, Text, Pressable, ActivityIndicator, FlatList } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 import { Searchbar } from "react-native-paper";
 
 export default function IdeasScreen() {
