@@ -51,7 +51,7 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}) {
     resultsRef.current = [];
     setInterimText("");
     try {
-      await Voice.start(langMap[language]); // ✅ 映射成 en-US / zh-CN
+      await Voice.start(langMap[language]);
       setIsListening(true);
     } catch (err: any) {
       setError(err?.message ?? String(err));
