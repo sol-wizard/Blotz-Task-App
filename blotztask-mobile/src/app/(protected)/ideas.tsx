@@ -1,27 +1,50 @@
+import { TaskListPlaceholder } from "@/feature/task/components/calender/tasklist-placeholder";
+import TaskCard from "@/feature/task/components/ui/task-card";
 import { fetchFloatingTasks } from "@/feature/task/services/task-service";
+import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-store";
 import { theme } from "@/shared/constants/theme";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { useState, useEffect } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, FlatList } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import { Searchbar } from "react-native-paper";
 
 export default function IdeasScreen() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [floatingTasks, setFloatingTasks] = useState<TaskDetailDTO[]>([]);
+  const { toggleTask } = useSelectedDayTaskStore();
 
   useEffect(() => {
-    const getFloatingTasks = async () => {
+    const loadFloatingTasks = async () => {
       try {
         const tasks = await fetchFloatingTasks();
-        console.log("Floating tasks:", tasks);
-      } catch (error) {
-        console.error("Error fetching floating tasks:", error);
+        setFloatingTasks(tasks);
+        console.log("Fetched floating tasks:", tasks);
+      } catch (err) {
+        console.error("Error fetching floating tasks:", err);
+        setFloatingTasks([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    getFloatingTasks();
+    loadFloatingTasks();
   }, []);
 
+  const renderTask = ({ item }: { item: TaskDetailDTO }) => (
+    <TaskCard
+      id={item.id}
+      title={item.title}
+      startTime={item.startTime}
+      endTime={item.endTime}
+      isCompleted={item.isDone}
+      onToggleComplete={() => toggleTask(item.id)}
+    />
+  );
+
   return (
-    <View>
+    <View className="flex-1">
       <Text className="text-4xl font-bold text-gray-800 font-balooExtraBold pt-20 px-10">
         Ideas
       </Text>
@@ -43,6 +66,21 @@ export default function IdeasScreen() {
           }}
         />
       </View>
+      {isLoading && (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="small" />
+        </View>
+      )}
+      {!isLoading && floatingTasks.length > 0 && (
+        <ScrollView>
+          <FlatList
+            data={floatingTasks}
+            renderItem={renderTask}
+            keyExtractor={(task) => task.id.toString()}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+          />
+        </ScrollView>
+      )}
 
       <Pressable className="bg-[#9AD513] rounded-xl items-center py-4 w-68 mx-8 my-6">
         <Text className="text-white font-semibold text-lg">Add to today</Text>
