@@ -12,11 +12,18 @@ export default function SettingsScreen() {
     router.replace("/(auth)/onboarding");
   };
 
+  const goToIdeasPage = async () => {
+    router.push("/(protected)/ideas");
+  };
+
   return (
     <View className="flex-1 justify-center items-center p-6">
       <Text variant="headlineMedium" style={{ marginBottom: 16 }}>
         Settings
       </Text>
+      <Button mode="outlined" style={{ marginTop: 16 }} onPress={goToIdeasPage}>
+        Go to Ideas page
+      </Button>
 
       <Button mode="outlined" style={{ marginTop: 16 }} onPress={handleSignOut}>
         Sign Out

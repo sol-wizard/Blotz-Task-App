@@ -1,3 +1,4 @@
+import { theme } from "@/shared/constants/theme";
 import { Stack } from "expo-router";
 
 export default function ProtectedLayout() {
@@ -41,13 +42,16 @@ export default function ProtectedLayout() {
         }}
       />
       <Stack.Screen
-        name="task-edit"
+        name="ideas"
         options={{
           headerShown: true,
           headerShadowVisible: false,
           headerTitle: "",
           headerBackVisible: true,
-          headerTintColor: "#8E8E93",
+          headerStyle: {
+            backgroundColor: theme.colors.background,
+          },
+          headerTintColor: theme.colors.secondary,
           headerBackButtonDisplayMode: "minimal",
         }}
       />
