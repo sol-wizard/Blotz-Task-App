@@ -3,7 +3,6 @@ import { View, Text, TextInput, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
-import { ToggleButton } from "react-native-paper";
 
 export const VoiceInput = ({
   hasError,
