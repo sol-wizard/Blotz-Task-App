@@ -1,13 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import Voice from "@react-native-community/voice";
 
+type LangCode = "en" | "zh";
+
 type UseVoiceInputOptions = {
-  language?: string;
+  language?: LangCode;
   onFinalResult?: (text: string) => void;
 };
 
+const langMap: Record<LangCode, string> = {
+  en: "en-US",
+  zh: "zh-CN",
+};
+
 export function useVoiceInput(options: UseVoiceInputOptions = {}) {
-  const { language = "en-US", onFinalResult } = options;
+  const { language = "en", onFinalResult } = options;
   const [partialText, setPartialText] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [interimText, setInterimText] = useState("");
@@ -18,19 +25,17 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}) {
   useEffect(() => {
     Voice.onSpeechPartialResults = (e: any) => {
       const val = e.value?.[0] ?? "";
-      setPartialText(val); // ⭐ 持续更新
+      setPartialText(val);
     };
     Voice.onSpeechResults = (e: any) => {
       const values: string[] = e?.value ?? [];
       resultsRef.current = values;
       setInterimText(values.join(" "));
     };
-
     Voice.onSpeechError = (e: any) => {
       const msg = e?.error?.message ?? "Speech error";
       setError(msg);
     };
-
     Voice.onSpeechEnd = () => {
       setIsListening(false);
     };
@@ -46,7 +51,7 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}) {
     resultsRef.current = [];
     setInterimText("");
     try {
-      await Voice.start(language);
+      await Voice.start(langMap[language]);
       setIsListening(true);
     } catch (err: any) {
       setError(err?.message ?? String(err));

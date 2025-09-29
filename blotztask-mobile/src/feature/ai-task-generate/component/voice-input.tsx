@@ -15,7 +15,8 @@ export const VoiceInput = ({
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
 }) => {
-  const { startListening, partialText, stopAndGetText, isListening } = useVoiceInput();
+  const [language, setLanguage] = useState<"en" | "zh">("zh");
+  const { startListening, partialText, stopAndGetText, isListening } = useVoiceInput({ language });
   const displayText = isListening
     ? [text, partialText].filter(Boolean).join(text ? " " : "")
     : text;
@@ -58,9 +59,22 @@ export const VoiceInput = ({
             />
           ) : (
             <View onLayout={(e) => setIdleBlockH(e.nativeEvent.layout.height)}>
-              <Text className="text-black text-4xl font-balooBold text-center pt-2">
-                Braindump tasks{"\n"}with your voice
-              </Text>
+              <View className="flex-row items-start justify-between w-full px-2">
+                <View className="w-10 h-10" />
+
+                <Text className="flex-1 text-black text-4xl font-balooBold text-center pt-2">
+                  Braindump tasks{"\n"}with your voice
+                </Text>
+
+                <Pressable
+                  onPress={() => setLanguage((prev) => (prev === "en" ? "zh" : "en"))}
+                  className="w-10 h-10 bg-black rounded-full items-center justify-center"
+                >
+                  <Text className="text-white font-bold text-base">
+                    {language === "en" ? "EN" : "中"}
+                  </Text>
+                </Pressable>
+              </View>
               <Text className="text-gray-500 font-baloo text-xl text-center mt-2">
                 Just say your task, and I&apos;ll create it automatically
               </Text>
