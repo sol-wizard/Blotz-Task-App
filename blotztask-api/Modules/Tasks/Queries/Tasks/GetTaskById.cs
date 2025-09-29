@@ -1,8 +1,10 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Shared.Exceptions;
 using System.ComponentModel.DataAnnotations;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
+
 public class GetTasksByIdQuery
 {
     [Required]
@@ -30,9 +32,8 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
             StartTime = task.StartTime,
             EndTime = task.EndTime,
             IsDone = task.IsDone,
-            CreatedAt = task.CreatedAt,
-            UpdatedAt = task.UpdatedAt,
             LabelId = task.LabelId,
+            TimeType = task.TimeType,
         };
 
         logger.LogInformation("Successfully fetched task with ID {TaskId} and Title {TaskTitle}", result.Id, result.Title);
@@ -48,7 +49,6 @@ public class TaskByIdItemDto
     public string? Description { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
     public int? LabelId { get; set; }
+    public TaskTimeType? TimeType { get; set; }
 }
