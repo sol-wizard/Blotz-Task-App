@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Labels.DTOs;
+using BlotzTask.Modules.Tasks.Enums;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,6 +52,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                 StartTime = task.StartTime,
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
+                TimeType = task.TimeType,
                 Label = new LabelDto
                 {
                     LabelId = task.Label.LabelId,
@@ -74,4 +76,5 @@ public class TaskByDateItemDto
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
     public required LabelDto Label { get; set; }
+    public TaskTimeType? TimeType { get; set; }
 }
