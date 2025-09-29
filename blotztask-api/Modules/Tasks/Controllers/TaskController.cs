@@ -13,6 +13,7 @@ public class TaskController(
     TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
     AddTaskCommandHandler addTaskCommandHandler,
     GetTaskByIdQueryHandler getTaskByIdQueryHandler,
+    GetFloatingTasksQueryHandler getFloatingTasksQueryHandler,
     DeleteTaskCommandHandler deleteTaskCommandHandler,
     EditTaskCommandHandler editTaskCommandHandler
 ) : ControllerBase
@@ -40,6 +41,25 @@ public class TaskController(
         };
 
         var result = await getTasksByDateQueryHandler.Handle(query, ct);
+        return result;
+    }
+    
+    [HttpGet("floating")]
+    public async Task<IEnumerable<FloatingTaskItemDto>> GetFloatingTasks(
+        
+        CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+        {
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        }
+
+        var query = new GetFloatingTasksQuery
+        {
+            UserId = userId
+        };
+
+        var result = await getFloatingTasksQueryHandler.Handle(query, ct);
         return result;
     }
 

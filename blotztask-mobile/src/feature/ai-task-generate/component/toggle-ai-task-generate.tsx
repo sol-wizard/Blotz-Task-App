@@ -3,25 +3,28 @@ import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { FAB, Portal } from "react-native-paper";
 import { AiTaskGenerateModal } from "./ai-task-generate-modal";
 import { useRef } from "react";
+import { View } from "react-native";
+import { GradientCircle } from "@/shared/components/common/gradient-circle";
 
 export const ToggleAiTaskGenerate = () => {
   const aiVoiceInputModalRef = useRef<BottomSheetModal>(null);
   return (
     <>
-      <FAB
-        icon="star"
-        style={{
-          position: "absolute",
-          margin: 16,
-          width: 58,
-          right: 10,
-          bottom: 10,
-          backgroundColor: "#f65a83",
-        }}
-        onPress={() => {
-          aiVoiceInputModalRef?.current?.present();
-        }}
-      />
+      <View style={{ position: "absolute", right: 30, bottom: 30 }}>
+        <GradientCircle size={58} colors={["#A3DC2F", "#2F80ED"]}>
+          <FAB
+            icon="star"
+            customSize={58}
+            color="#fff"
+            style={{
+              backgroundColor: "transparent",
+              elevation: 0,
+              shadowColor: "transparent",
+            }}
+            onPress={() => aiVoiceInputModalRef?.current?.present()}
+          />
+        </GradientCircle>
+      </View>
 
       <Portal>
         <BottomSheetModal
