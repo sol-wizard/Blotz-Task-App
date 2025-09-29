@@ -41,10 +41,8 @@ export default function IdeasScreen() {
   );
 
   return (
-    <View className="flex-1">
-      <Text className="text-4xl font-bold text-gray-800 font-balooExtraBold pt-20 px-10">
-        Ideas
-      </Text>
+    <View className="flex-1 bg-background">
+      <Text className="text-4xl font-bold text-gray-800 font-balooExtraBold pt-4 px-10">Ideas</Text>
 
       <View className="bg-[#CDF79A] w-68 h-36 rounded-3xl mx-8 my-6">
         <Text className="font-baloo text-xl text-secondary my-4 ml-4">

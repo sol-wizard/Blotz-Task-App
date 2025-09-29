@@ -21,17 +21,10 @@ const routes = [
     focusedIcon: "bell",
     unfocusedIcon: "bell-outline",
   },
-  {
-    key: "ideas",
-    title: "Ideas",
-    focusedIcon: "bullseye-arrow",
-    unfocusedIcon: "bullseye",
-  },
 ];
 
 const CalendarRoute: any = () => <CalendarScreen />;
 const SettingsRoute = () => <SettingsScreen />;
-const IdeasRoute = () => <IdeasScreen />;
 
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
@@ -41,7 +34,6 @@ export default function ProtectedIndex() {
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
     settings: SettingsRoute,
-    ideas: IdeasRoute,
   });
 
   return (
