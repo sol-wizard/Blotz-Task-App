@@ -46,7 +46,7 @@ public class TaskController(
     
     [HttpGet("floating")]
     public async Task<IEnumerable<FloatingTaskItemDto>> GetFloatingTasks(
-        [FromQuery] GetFloatingTasksRequest request,
+        
         CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)

@@ -5,10 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
-public class GetFloatingTasksRequest
-{
-    
-}
 
 public class GetFloatingTasksQuery
 {
