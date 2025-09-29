@@ -20,7 +20,6 @@ export default function IdeasScreen() {
       try {
         const tasks = await fetchFloatingTasks();
         setFloatingTasks(tasks);
-        console.log("Fetched floating tasks:", tasks);
       } catch (err) {
         console.error("Error fetching floating tasks:", err);
         setFloatingTasks([]);
@@ -72,14 +71,12 @@ export default function IdeasScreen() {
         </View>
       )}
       {!isLoading && floatingTasks.length > 0 && (
-        <ScrollView>
-          <FlatList
-            data={floatingTasks}
-            renderItem={renderTask}
-            keyExtractor={(task) => task.id.toString()}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
-          />
-        </ScrollView>
+        <FlatList
+          data={floatingTasks}
+          renderItem={renderTask}
+          keyExtractor={(task) => task.id.toString()}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+        />
       )}
 
       <Pressable className="bg-[#9AD513] rounded-xl items-center py-4 w-68 mx-8 my-6">
