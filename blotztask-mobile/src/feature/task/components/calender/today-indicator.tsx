@@ -23,11 +23,13 @@ export default function TodayIndicator({ selectedDay }: TodayIndicatorProps) {
   // Get screen width
   const screenWidth = Dimensions.get("window").width;
 
-  // WeekCalendar usually has a left and right margin of about 20px, 
-  // and the width of each day is approximately (screenWidth - 40) / 7
-  const calendarPadding = 20;
+  // WeekCalendar default padding - this should be measured or configured properly
+  const calendarPadding = 16; // More realistic default padding for mobile
   const dayWidth = (screenWidth - calendarPadding * 2) / 7;
-  const leftOffset = calendarPadding + dayWidth * daysDiff + dayWidth / 2 - 6; // -6 is half of the width of the indicator dot
+  
+  // Indicator dot width is w-2 (8px in Tailwind), so half is 4px
+  const indicatorWidth = 8; // w-2 in Tailwind CSS = 8px
+  const leftOffset = calendarPadding + dayWidth * daysDiff + dayWidth / 2 - indicatorWidth / 2;
 
   return (
     <View className="h-2 relative" style={{ width: screenWidth }}>

@@ -94,8 +94,12 @@ export default function CalendarScreen() {
           current={format(selectedDay, "yyyy-MM-dd")}
           theme={{
             calendarBackground: "#F5F9FA",
-            selectedDayBackgroundColor: "#2d4150",
-            todayTextColor: "#2d4150",
+            selectedDayBackgroundColor: "#EBF0FE",
+            selectedDayTextColor: "#000000",
+            dayTextColor: "#D1D1D6",
+            todayTextColor: "#D1D1D6",
+            textDisabledColor: "#D1D1D6",
+            textSectionTitleColor: "#D1D1D6",
             arrowColor: "#2d4150",
             monthTextColor: "#2d4150",
             textMonthFontWeight: "bold",
