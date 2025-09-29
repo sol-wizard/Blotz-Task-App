@@ -39,7 +39,7 @@ export default function IdeasScreen() {
             backgroundColor: theme.colors.surface,
             marginHorizontal: 20,
             borderRadius: 30,
-            height: 20,
+            height: 40,
           }}
         />
       </View>
