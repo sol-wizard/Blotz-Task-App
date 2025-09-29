@@ -49,7 +49,7 @@ export default function ProtectedLayout() {
           headerTitle: "",
           headerBackVisible: true,
           headerStyle: {
-            backgroundColor: theme.colors.background, // Custom header background
+            backgroundColor: theme.colors.background,
           },
           headerTintColor: theme.colors.secondary,
           headerBackButtonDisplayMode: "minimal",

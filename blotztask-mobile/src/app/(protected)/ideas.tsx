@@ -1,16 +1,31 @@
+import { fetchFloatingTasks } from "@/feature/task/services/task-service";
 import { theme } from "@/shared/constants/theme";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, Pressable } from "react-native";
-
 import { Searchbar } from "react-native-paper";
 
 export default function IdeasScreen() {
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    const getFloatingTasks = async () => {
+      try {
+        const tasks = await fetchFloatingTasks();
+        console.log("Floating tasks:", tasks);
+      } catch (error) {
+        console.error("Error fetching floating tasks:", error);
+      }
+    };
+
+    getFloatingTasks();
+  }, []);
+
   return (
     <View>
       <Text className="text-4xl font-bold text-gray-800 font-balooExtraBold pt-20 px-10">
         Ideas
       </Text>
+
       <View className="bg-[#CDF79A] w-68 h-36 rounded-3xl mx-8 my-6">
         <Text className="font-baloo text-xl text-secondary my-4 ml-4">
           Ready to turn a spark into action?
