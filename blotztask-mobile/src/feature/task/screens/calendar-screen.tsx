@@ -12,6 +12,7 @@ import { TaskStatusSelect, TaskStatusType } from "../components/ui/task-status-s
 import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
 import { TaskListPlaceholder } from "../components/calender/tasklist-placeholder";
 import { router } from "expo-router";
+import { theme } from "@/shared/constants/theme";
 
 export default function CalendarScreen() {
   const {
@@ -92,15 +93,17 @@ export default function CalendarScreen() {
           current={format(selectedDay, "yyyy-MM-dd")}
           theme={{
             calendarBackground: "#F5F9FA",
-            selectedDayBackgroundColor: "#2d4150",
-            todayTextColor: "#2d4150",
-            arrowColor: "#2d4150",
-            monthTextColor: "#2d4150",
-            textMonthFontWeight: "bold",
+            selectedDayBackgroundColor: "#EBF0FE",
+            selectedDayTextColor: theme.colors.heading,
+            dayTextColor: theme.colors.disabled,
+            todayTextColor: theme.colors.disabled,
             textDayFontWeight: "bold",
-            textDayHeaderFontWeight: "bold",
             textDayFontFamily: "InterBold",
             textDayHeaderFontFamily: "InterThin",
+            textDayFontSize: 14,
+          }}
+          markedDates={{
+            [format(new Date(), "yyyy-MM-dd")]: { marked: true, dotColor: "#CDF79A" },
           }}
           allowShadow={false}
           firstDay={1}
