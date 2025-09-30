@@ -9,6 +9,7 @@ export async function fetchTasksForDate(
   includeFloatingForToday: boolean,
 ): Promise<TaskDetailDTO[]> {
   const startDateUtc = getStartOfDayUtc(date).toISOString();
+
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}&includeFloatingForToday=${includeFloatingForToday}`;
 
   const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: "GET" });
