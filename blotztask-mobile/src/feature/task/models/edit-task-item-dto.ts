@@ -1,4 +1,3 @@
-type RepeatEnum = "none" | "daily" | "weekly" | "monthly";
 export interface EditTaskItemDTO {
   id: number;
   title: string;
@@ -7,5 +6,5 @@ export interface EditTaskItemDTO {
   endTime?: Date;
   labelId: number;
   isDone: boolean;
-  repeat: RepeatEnum;
+  timeType?: "single" | "range";
 }

@@ -8,5 +8,5 @@ export interface TaskDetailDTO {
   label: LabelDTO;
   startTime: string;
   endTime: string;
-  repeat: "none" | "daily" | "weekly" | "monthly";
+  timeType?: "single" | "range";
 }
