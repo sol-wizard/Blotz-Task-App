@@ -76,68 +76,62 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
       <View>
         <Text>Title</Text>
         <FormTextInput name="title" placeholder="What needs to be done?" control={control} />
-
         <Text>Label</Text>
         <LabelSelect control={control} />
-
         <Text>Description</Text>
         <FormTextInput
           name="description"
           placeholder="Add details about this task (optional)"
           control={control}
         />
-
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Checkbox status={enableTime ? "checked" : "unchecked"} onPress={handleTimeToggle} />
           <Text>Time</Text>
         </View>
 
-        {enableTime && (
-          <View style={{ marginLeft: 20 }}>
-            <Controller
-              control={control}
-              name="timeType"
-              render={({ field: { onChange, value } }) => (
-                <RadioButton.Group
-                  onValueChange={(newValue) => {
-                    onChange(newValue);
-                    handleTimeTypeChange(newValue as "single" | "range");
-                  }}
-                  value={value ?? ""}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <RadioButton value="single" />
-                    <Text>Single Time</Text>
-                  </View>
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <RadioButton value="range" />
-                    <Text>Time Range</Text>
-                  </View>
-                </RadioButton.Group>
+        <View style={{ marginLeft: 20 }}>
+          <Controller
+            control={control}
+            name="timeType"
+            render={({ field: { onChange, value } }) => (
+              <RadioButton.Group
+                onValueChange={(newValue) => {
+                  onChange(newValue);
+                  handleTimeTypeChange(newValue as "single" | "range");
+                }}
+                value={value ?? ""}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <RadioButton value="single" disabled={!enableTime} />
+                  <Text>Single Time</Text>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <RadioButton value="range" disabled={!enableTime} />
+                  <Text>Time Range</Text>
+                </View>
+              </RadioButton.Group>
+            )}
+          />
+
+          {formTimeType === "single" && (
+            <View>
+              <Text>Select Time:</Text>
+              <SingleDateTimePicker control={control} setValue={setValue} />
+            </View>
+          )}
+
+          {formTimeType === "range" && (
+            <View>
+              {errors.startTime && (
+                <Text className="text-red-500 text-sm mt-1">{errors.startTime.message}</Text>
               )}
-            />
-
-            {formTimeType === "single" && (
-              <View>
-                <Text>Select Time:</Text>
-                <SingleDateTimePicker control={control} setValue={setValue} />
-              </View>
-            )}
-
-            {formTimeType === "range" && (
-              <View>
-                {errors.startTime && (
-                  <Text className="text-red-500 text-sm mt-1">{errors.startTime.message}</Text>
-                )}
-                {errors.endTime && (
-                  <Text className="text-red-500 text-sm mt-1">{errors.endTime.message}</Text>
-                )}
-                <StartEndDateTimePicker control={control} setValue={setValue} />
-              </View>
-            )}
-          </View>
-        )}
-
+              {errors.endTime && (
+                <Text className="text-red-500 text-sm mt-1">{errors.endTime.message}</Text>
+              )}
+              <StartEndDateTimePicker control={control} setValue={setValue} />
+            </View>
+          )}
+        </View>
         <Button
           title={mode === "create" ? "Create Task" : "Update Task"}
           onPress={handleSubmit(onSubmit)}
