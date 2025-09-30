@@ -1,7 +1,9 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Labels.DTOs;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Shared.Exceptions;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
@@ -16,28 +18,37 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
     public async Task<TaskByIdItemDto> Handle(GetTasksByIdQuery query, CancellationToken ct = default)
     {
         logger.LogInformation("Fetching task with ID {TaskId}.", query.TaskId);
+        
+        var result = await db.TaskItems.Where(t => t.Id == query.TaskId)
+            .Select(task => new TaskByIdItemDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                StartTime = task.StartTime,
+                EndTime = task.EndTime,
+                IsDone = task.IsDone,
+                Label = new LabelDto
+                {
+                    LabelId = task.Label.LabelId,
+                    Name = task.Label.Name,
+                    Color = task.Label.Color
+                },
+                TimeType = task.TimeType,
+            })
+            .FirstOrDefaultAsync(ct);
 
-        var task = await db.TaskItems.FindAsync(query.TaskId, ct);
-
-        if (task == null)
+        if (result != null)
         {
-            throw new NotFoundException($"Task with ID {query.TaskId} not found.");
+            logger.LogInformation("Successfully fetched task with ID {TaskId} and Title {TaskTitle}", result.Id,
+                result.Title);
+            return result;
         }
-
-        var result = new TaskByIdItemDto
+        else
         {
-            Id = task.Id,
-            Title = task.Title,
-            Description = task.Description,
-            StartTime = task.StartTime,
-            EndTime = task.EndTime,
-            IsDone = task.IsDone,
-            LabelId = task.LabelId,
-            TimeType = task.TimeType,
-        };
-
-        logger.LogInformation("Successfully fetched task with ID {TaskId} and Title {TaskTitle}", result.Id, result.Title);
-        return result;
+            logger.LogWarning("No task found with ID {TaskId}", query.TaskId);
+            throw new NotFoundException($"No task found with ID {query.TaskId}");
+        }
     }
 }
 
@@ -49,6 +60,6 @@ public class TaskByIdItemDto
     public string? Description { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
-    public int? LabelId { get; set; }
+    public required LabelDto Label { get; set; }
     public TaskTimeType? TimeType { get; set; }
 }
