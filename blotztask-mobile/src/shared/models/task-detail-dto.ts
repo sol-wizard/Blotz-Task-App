@@ -1,3 +1,4 @@
+import { TaskTimeType } from "@/feature/task/util/time-type-mapper";
 import { LabelDTO } from "./label-dto";
 
 export interface TaskDetailDTO {
@@ -8,5 +9,5 @@ export interface TaskDetailDTO {
   label: LabelDTO;
   startTime?: string;
   endTime?: string;
-  timeType?: "single" | "range";
+  timeType?: TaskTimeType;
 }
