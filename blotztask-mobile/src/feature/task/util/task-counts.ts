@@ -5,13 +5,28 @@ import { TaskStatusSelectItem, TaskStatusType } from "../components/ui/task-stat
 export interface TaskCounts {
   todo: number;
   done: number;
+  inProgress: number;
+  overdue: number;
 }
 
 export function calculateTaskCounts(tasks: TaskDetailDTO[]): TaskCounts {
   const todo = tasks.filter((task) => !task.isDone).length;
   const done = tasks.filter((task) => task.isDone).length;
 
-  return { todo, done };
+  const today = new Date();
+  const inProgress = tasks.filter((task) => {
+    if (!task.startTime || !task.endTime) return false;
+    const start = new Date(task.startTime);
+    const end = new Date(task.endTime);
+    return !task.isDone && today >= start && today < end;
+  }).length;
+  const overdue = tasks.filter((task) => {
+    if (!task.endTime) return false;
+    const end = new Date(task.endTime);
+    return !task.isDone && end < today;
+  }).length;
+
+  return { todo, done, inProgress, overdue };
 }
 
 export function createStatusSelectItems(tasks: TaskDetailDTO[]): TaskStatusSelectItem[] {
@@ -31,7 +46,7 @@ export function createStatusSelectItems(tasks: TaskDetailDTO[]): TaskStatusSelec
     {
       id: "inprogress",
       status: "In Progress",
-      count: 0,
+      count: counts.inProgress,
     },
     {
       id: "done",
@@ -41,7 +56,7 @@ export function createStatusSelectItems(tasks: TaskDetailDTO[]): TaskStatusSelec
     {
       id: "overdue",
       status: "Overdue",
-      count: 0,
+      count: counts.overdue,
     },
   ];
 }
@@ -50,6 +65,7 @@ export function filterTasksByStatus(
   tasks: TaskDetailDTO[],
   selectedStatus: TaskStatusType,
 ): TaskDetailDTO[] | null {
+  const today = new Date();
   switch (selectedStatus) {
     case "todo":
       return tasks.filter((task) => !task.isDone);
@@ -58,9 +74,18 @@ export function filterTasksByStatus(
     case "all":
       return tasks;
     case "overdue":
-      return null;
+      return tasks.filter((task) => {
+        if (!task.endTime) return false;
+        const end = new Date(task.endTime);
+        return !task.isDone && end < today;
+      });
     case "inprogress":
-      return null;
+      return tasks.filter((task) => {
+        if (!task.startTime || !task.endTime) return false;
+        const start = new Date(task.startTime);
+        const end = new Date(task.endTime);
+        return !task.isDone && today >= start && today < end;
+      });
     default:
       return tasks;
   }
