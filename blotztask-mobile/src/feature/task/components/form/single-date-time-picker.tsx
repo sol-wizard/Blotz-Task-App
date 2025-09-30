@@ -1,15 +1,16 @@
 import { View } from "react-native";
 import DatePicker from "./date-picker";
 import { TimePicker } from "./time-picker";
-import { Controller, Control, UseFormSetValue } from "react-hook-form";
+import { Controller, UseFormSetValue } from "react-hook-form";
 import { TaskFormField } from "../../models/task-form-schema";
 
-interface StartEndDateTimePickerProps {
-  control: Control<TaskFormField>;
+export const SingleDateTimePicker = ({
+  control,
+  setValue,
+}: {
+  control: any;
   setValue: UseFormSetValue<TaskFormField>;
-}
-
-export const StartEndDateTimePicker = ({ control, setValue }: StartEndDateTimePickerProps) => {
+}) => {
   return (
     <View className="flex-col">
       <View>
@@ -35,35 +36,6 @@ export const StartEndDateTimePicker = ({ control, setValue }: StartEndDateTimePi
         <Controller
           control={control}
           name="startTime"
-          render={({ field: { value, onChange } }) => (
-            <TimePicker value={value as Date | undefined} onChange={onChange} />
-          )}
-        />
-      </View>
-
-      <View>
-        <Controller
-          control={control}
-          name="endDate"
-          render={({ field: { value, onChange } }) => (
-            <DatePicker
-              value={value as Date | undefined}
-              onChange={(date) => {
-                onChange(date);
-                if (date) {
-                  const defaultEndTime = new Date(date);
-                  defaultEndTime.setHours(23, 59, 0, 0);
-                  setValue("endTime", defaultEndTime, { shouldValidate: true });
-                }
-              }}
-            />
-          )}
-        />
-      </View>
-      <View>
-        <Controller
-          control={control}
-          name="endTime"
           render={({ field: { value, onChange } }) => (
             <TimePicker value={value as Date | undefined} onChange={onChange} />
           )}

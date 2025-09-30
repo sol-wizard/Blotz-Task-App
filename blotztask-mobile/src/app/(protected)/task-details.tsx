@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { IconButton } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -6,19 +6,34 @@ import { TaskStatusType } from "@/feature/task/components/ui/task-status-select"
 import TaskDateRange from "../../feature/task/components/task-details/task-date-range";
 import DetailsTab from "../../feature/task/components/task-details/details-tab";
 import SubtasksTab from "../../feature/task/components/task-details/subtasks-tab";
+import { useSelectedTaskStore } from "@/feature/task/stores/selected-task-store";
+import { fetchTaskById } from "@/feature/task/services/task-service";
 
 type tabTypes = "Details" | "Subtasks";
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
-  const { id, title, description, startTime, endTime, isDone, label } = useLocalSearchParams();
-  const taskStatus: TaskStatusType = isDone === "true" ? "done" : "todo";
+  const { selectedTask, setSelectedTask } = useSelectedTaskStore();
+  const { taskId } = useLocalSearchParams();
+  const { isDone, title, description, label, startTime, endTime } = selectedTask || {};
+
+  const taskStatus: TaskStatusType = isDone ? "done" : "todo";
+  const labelName: string | undefined = label?.name;
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
+
+  // Fetch task if store is empty or id changed (handles refresh & direct links)
+  useEffect(() => {
+    if (!selectedTask || selectedTask.id !== Number(taskId)) {
+      fetchTaskById(Number(taskId)).then((task) => {
+        if (task) setSelectedTask(task);
+      });
+    }
+  }, [taskId, selectedTask, setSelectedTask]);
 
   const handleEdit = () => {
     router.push({
       pathname: "/(protected)/task-edit",
-      params: { id },
+      params: { taskId: taskId },
     });
   };
 
@@ -34,7 +49,7 @@ export default function TaskDetailsScreen() {
           </View>
           {label && (
             <View className="ml-2 px-3 py-1 rounded-xl border border-black">
-              <Text className="text-sm font-medium text-black">{label}</Text>
+              <Text className="text-sm font-medium text-black">{labelName}</Text>
             </View>
           )}
         </View>

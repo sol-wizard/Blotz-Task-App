@@ -20,10 +20,7 @@ export const EditTaskForm = ({ task, onClose }: EditTaskFormProps) => {
     description: task.description ?? "",
     startTime: task.startTime ? new Date(task.startTime) : undefined,
     endTime: task.endTime ? new Date(task.endTime) : undefined,
-    repeat: task.repeat ?? "none",
     labelId: task.label?.labelId ?? undefined,
-    isDone: task.isDone,
-    id: task.id,
   };
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
@@ -39,13 +36,10 @@ export const EditTaskForm = ({ task, onClose }: EditTaskFormProps) => {
 
   const handleSubmit = form.handleSubmit(async (values: TaskFormField) => {
     const updatedTask: EditTaskItemDTO = {
-      id: task?.id ?? 0,
       title: values.title,
-      description: values.description ?? "",
+      description: values.description,
       startTime: values.startTime,
       endTime: values.endTime,
-      isDone: task?.isDone,
-      repeat: values.repeat ?? "none",
       labelId: values.labelId,
     };
     await saveEditedTask(updatedTask);

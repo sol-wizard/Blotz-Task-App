@@ -2,11 +2,11 @@ import { LabelDTO } from "./label-dto";
 
 export interface TaskDetailDTO {
   id: number;
-  description: string;
+  description?: string;
   title: string;
   isDone: boolean;
   label: LabelDTO;
-  startTime: string;
-  endTime: string;
+  startTime?: string;
+  endTime?: string;
   timeType?: "single" | "range";
 }

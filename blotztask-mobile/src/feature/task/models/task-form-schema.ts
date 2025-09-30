@@ -1,7 +1,6 @@
 import z from "zod";
 
 const TimeTypeEnum = z.enum(["single", "range"]);
-// TODO: Add repeat and label check
 
 export const taskFormSchema = z
   .object({
@@ -14,23 +13,38 @@ export const taskFormSchema = z
     endTime: z.date().optional(),
     labelId: z.number(),
   })
-  .refine(
-    (data) => {
-      if (!data.timeType) return true;
+  .superRefine((data, ctx) => {
+    if (!data.timeType) return;
 
-      if (data.timeType === "single") {
-        // single tasks require startDate, startTime optional
-        return !!data.startDate;
+    if (data.timeType === "single") {
+      if (!data.startDate) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Start date is required for single time tasks",
+          path: ["startDate"],
+        });
+      }
+    }
+
+    if (data.timeType === "range") {
+      if (!data.startDate) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Start date is required",
+          path: ["startDate"],
+        });
       }
 
-      if (data.timeType === "range") {
-        // range tasks require startDate and endDate
-        if (!data.startDate || !data.endDate) return false;
+      if (!data.endDate) {
+        ctx.addIssue({
+          code: "custom",
+          message: "End date is required",
+          path: ["endDate"],
+        });
+      }
 
-        // If times are not provided, valid
-        if (!data.startTime || !data.endTime) return true;
-
-        // Compare start and end times only if both times provided
+      // Validate time ordering if both dates and times are present
+      if (data.startDate && data.endDate && data.startTime && data.endTime) {
         const start = new Date(
           new Date(data.startDate).setHours(
             data.startTime.getHours(),
@@ -43,16 +57,16 @@ export const taskFormSchema = z
           new Date(data.endDate).setHours(data.endTime.getHours(), data.endTime.getMinutes(), 0, 0),
         );
 
-        return end.getTime() >= start.getTime();
+        if (end.getTime() < start.getTime()) {
+          ctx.addIssue({
+            code: "custom",
+            message: "End time cannot be earlier than start time",
+            path: ["endTime"],
+          });
+        }
       }
-
-      return true;
-    },
-    {
-      message: "End time cannot be earlier than start time",
-      path: ["endTime"],
-    },
-  );
+    }
+  });
 
 export type TaskFormField = z.infer<typeof taskFormSchema>;
 

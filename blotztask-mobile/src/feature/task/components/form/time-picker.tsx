@@ -2,13 +2,9 @@ import { View, Text } from "react-native";
 import WheelPicker from "@quidone/react-native-wheel-picker";
 
 export const TimePicker = ({
-  type,
-  hasDate,
   value,
   onChange,
 }: {
-  type: "start" | "end";
-  hasDate: boolean;
   value: Date | undefined;
   onChange: (d: Date) => void;
 }) => {
@@ -25,11 +21,9 @@ export const TimePicker = ({
         hour: value.getHours(),
         minute: value.getMinutes(),
       };
-    } else if (type === "start") {
-      return { hour: 0, minute: 0 };
     } else {
-      // End time: 23:59 if has date, otherwise 00:00
-      return hasDate ? { hour: 23, minute: 59 } : { hour: 0, minute: 0 };
+      // Always show 00:00 initially when value is undefined
+      return { hour: 0, minute: 0 };
     }
   };
 

@@ -12,6 +12,7 @@ import { TaskStatusSelect, TaskStatusType } from "../components/ui/task-status-s
 import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
 import { TaskListPlaceholder } from "../components/calender/tasklist-placeholder";
 import { router } from "expo-router";
+import { useSelectedTaskStore } from "../stores/selected-task-store";
 
 export default function CalendarScreen() {
   const {
@@ -23,6 +24,7 @@ export default function CalendarScreen() {
     toggleTask,
     removeTask,
   } = useSelectedDayTaskStore();
+  const { setSelectedTask } = useSelectedTaskStore();
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
     text: "",
@@ -37,16 +39,11 @@ export default function CalendarScreen() {
   }, [selectedDay, loadTasks]);
 
   const navigateToTaskDetails = (task: TaskDetailDTO) => {
+    setSelectedTask(task);
     router.push({
       pathname: "/(protected)/task-details",
       params: {
         taskId: task.id.toString(),
-        title: task.title,
-        description: task.description,
-        startTime: task.startTime,
-        endTime: task.endTime,
-        isDone: task.isDone.toString(),
-        label: task.label?.name || "",
       },
     });
   };

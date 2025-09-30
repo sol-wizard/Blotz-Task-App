@@ -27,7 +27,6 @@ export default function CreateTaskForm({
       startTime: undefined,
       endDate: undefined,
       endTime: undefined,
-      repeat: "none",
       labelId: undefined,
     },
   });
@@ -53,7 +52,6 @@ export default function CreateTaskForm({
         startTime: undefined,
         endDate: undefined,
         endTime: undefined,
-        repeat: "none",
         labelId: undefined,
       });
       setIsSubmitting(false);
