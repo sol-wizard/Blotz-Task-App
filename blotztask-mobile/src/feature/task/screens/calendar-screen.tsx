@@ -96,10 +96,11 @@ export default function CalendarScreen() {
             selectedDayBackgroundColor: "#EBF0FE",
             selectedDayTextColor: theme.colors.heading,
             dayTextColor: theme.colors.disabled,
+            todayTextColor: theme.colors.disabled,
             textDayFontWeight: "bold",
             textDayFontFamily: "InterBold",
             textDayHeaderFontFamily: "InterThin",
-            textDayFontSize: 30,
+            textDayFontSize: 14,
           }}
           markedDates={{
             [format(new Date(), "yyyy-MM-dd")]: { marked: true, dotColor: "#CDF79A" },
