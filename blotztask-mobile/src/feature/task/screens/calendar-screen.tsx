@@ -7,12 +7,12 @@ import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import { useSelectedDayTaskStore } from "../stores/selectedday-task-store";
 import CalendarHeader from "../components/calender/calendar-header";
-import TodayIndicator from "../components/calender/today-indicator";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
 import { TaskStatusSelect, TaskStatusType } from "../components/ui/task-status-select";
 import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
 import { TaskListPlaceholder } from "../components/calender/tasklist-placeholder";
 import { router } from "expo-router";
+import { theme } from "@/shared/constants/theme";
 
 export default function CalendarScreen() {
   const {
@@ -88,25 +88,21 @@ export default function CalendarScreen() {
         onDateChanged={(date: string) => setSelectedDay(new Date(date))}
         showTodayButton={false}
       >
-        <TodayIndicator selectedDay={selectedDay} />
         <WeekCalendar
           onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
           current={format(selectedDay, "yyyy-MM-dd")}
           theme={{
             calendarBackground: "#F5F9FA",
             selectedDayBackgroundColor: "#EBF0FE",
-            selectedDayTextColor: "#000000",
-            dayTextColor: "#D1D1D6",
-            todayTextColor: "#D1D1D6",
-            textDisabledColor: "#D1D1D6",
-            textSectionTitleColor: "#D1D1D6",
-            arrowColor: "#2d4150",
-            monthTextColor: "#2d4150",
-            textMonthFontWeight: "bold",
+            selectedDayTextColor: theme.colors.heading,
+            dayTextColor: theme.colors.disabled,
             textDayFontWeight: "bold",
-            textDayHeaderFontWeight: "bold",
             textDayFontFamily: "InterBold",
             textDayHeaderFontFamily: "InterThin",
+            textDayFontSize: 30,
+          }}
+          markedDates={{
+            [format(new Date(), "yyyy-MM-dd")]: { marked: true, dotColor: "#CDF79A" },
           }}
           allowShadow={false}
           firstDay={1}

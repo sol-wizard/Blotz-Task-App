@@ -40,6 +40,7 @@ export const theme = {
     surfaceVariant: "#F5F9FA", // very light gray (alternative surface background)
     primary: "#8C8C8C", // medium gray (primary button background)
     secondary: "#D9D9D9",
+    disabled: "#D1D1D6",
     onPrimary: "#FFFFFF", // white (text/icon on primary)
     onSurface: "#444964", // dark gray (default text on surface)
     onBackground: "#444964", // dark gray (default text on background)
