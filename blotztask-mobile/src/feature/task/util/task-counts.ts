@@ -6,7 +6,6 @@ export interface TaskCounts {
   todo: number;
   done: number;
   inProgress: number;
-  overdue: number;
 }
 
 export function calculateTaskCounts(tasks: TaskDetailDTO[]): TaskCounts {
@@ -20,16 +19,17 @@ export function calculateTaskCounts(tasks: TaskDetailDTO[]): TaskCounts {
     const end = new Date(task.endTime);
     return !task.isDone && today >= start && today < end;
   }).length;
-  const overdue = tasks.filter((task) => {
-    if (!task.endTime) return false;
-    const end = new Date(task.endTime);
-    return !task.isDone && end < today;
-  }).length;
 
-  return { todo, done, inProgress, overdue };
+  return { todo, done, inProgress };
 }
 
-export function createStatusSelectItems(tasks: TaskDetailDTO[]): TaskStatusSelectItem[] {
+export function createStatusSelectItems({
+  tasks,
+  overdueTaskCount,
+}: {
+  tasks: TaskDetailDTO[];
+  overdueTaskCount: number;
+}): TaskStatusSelectItem[] {
   const counts = calculateTaskCounts(tasks);
 
   return [
@@ -56,7 +56,7 @@ export function createStatusSelectItems(tasks: TaskDetailDTO[]): TaskStatusSelec
     {
       id: "overdue",
       status: "Overdue",
-      count: counts.overdue,
+      count: overdueTaskCount,
     },
   ];
 }
@@ -64,6 +64,7 @@ export function createStatusSelectItems(tasks: TaskDetailDTO[]): TaskStatusSelec
 export function filterTasksByStatus(
   tasks: TaskDetailDTO[],
   selectedStatus: TaskStatusType,
+  overdueTasks: TaskDetailDTO[],
 ): TaskDetailDTO[] | null {
   const today = new Date();
   switch (selectedStatus) {
@@ -74,11 +75,7 @@ export function filterTasksByStatus(
     case "all":
       return tasks;
     case "overdue":
-      return tasks.filter((task) => {
-        if (!task.endTime) return false;
-        const end = new Date(task.endTime);
-        return !task.isDone && end < today;
-      });
+      return overdueTasks;
     case "inprogress":
       return tasks.filter((task) => {
         if (!task.startTime || !task.endTime) return false;

@@ -23,6 +23,7 @@ export default function CalendarScreen() {
     loadTasks,
     toggleTask,
     removeTask,
+    overdueTasks,
   } = useSelectedDayTaskStore();
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
@@ -30,8 +31,11 @@ export default function CalendarScreen() {
   });
 
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
-  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus);
-  const taskStatuses = createStatusSelectItems(tasksForSelectedDay);
+  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus, overdueTasks);
+  const taskStatuses = createStatusSelectItems({
+    tasks: tasksForSelectedDay,
+    overdueTaskCount: overdueTasks.length,
+  });
 
   useEffect(() => {
     loadTasks();
