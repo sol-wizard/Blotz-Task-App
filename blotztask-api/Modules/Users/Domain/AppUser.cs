@@ -1,3 +1,5 @@
+using BlotzTask.Modules.Labels.Domain;
+
 namespace BlotzTask.Modules.Users.Domain;
 
 public class AppUser
@@ -10,4 +12,5 @@ public class AppUser
     public DateTime SignUpAt { get; set; }
     public DateTime CreationAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public ICollection<Label> Labels { get; set; } = new List<Label>();
 }
