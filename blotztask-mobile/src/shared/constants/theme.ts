@@ -6,7 +6,7 @@ const headingFamilySemibold = "Baloo-SemiBold";
 const bodyFamily = "Baloo2-Regular";
 const bodyFamilyMedium = "Baloo2-Medium";
 
-// 自定义 MD3 字体映射：最大标题等用 Baloo，其它用 Baloo2
+// Custom MD3 font mapping: Use Baloo for the largest headings, etc., and Baloo2 for others
 const fonts: MD3Typescale = {
   ...MD3LightTheme.fonts,
   displayLarge: { ...MD3LightTheme.fonts.displayLarge, fontFamily: headingFamily },
@@ -40,6 +40,7 @@ export const theme = {
     surfaceVariant: "#F5F9FA", // very light gray (alternative surface background)
     primary: "#8C8C8C", // medium gray (primary button background)
     secondary: "#D9D9D9",
+    disabled: "#D1D1D6", // medium gray (disabled text for date figures not selected on calendar)
     onPrimary: "#FFFFFF", // white (text/icon on primary)
     onSurface: "#444964", // dark gray (default text on surface)
     onBackground: "#444964", // dark gray (default text on background)
