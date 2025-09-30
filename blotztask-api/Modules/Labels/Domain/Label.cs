@@ -13,8 +13,7 @@ public class Label
     public string Color { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public LabelScope Scope { get; set; }
-    [ForeignKey(nameof(User))]
-    public Guid? UserId { get; set; }
     public AppUser? User { get; set; }
+    public Guid? UserId { get; set; }
     public ICollection<TaskItem> TaskItems { get; set; } = new List<TaskItem>();
 }

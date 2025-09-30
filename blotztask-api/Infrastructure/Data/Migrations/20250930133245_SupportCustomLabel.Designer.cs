@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    [Migration("20250930040617_SupportCustomLabel")]
+    [Migration("20250930133245_SupportCustomLabel")]
     partial class SupportCustomLabel
     {
         /// <inheritdoc />
@@ -302,7 +302,7 @@ namespace BlotzTask.Migrations
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
-                        .WithMany("Labels")
+                        .WithMany()
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
@@ -365,11 +365,6 @@ namespace BlotzTask.Migrations
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
                 {
                     b.Navigation("Subtasks");
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.AppUser", b =>
-                {
-                    b.Navigation("Labels");
                 });
 #pragma warning restore 612, 618
         }
