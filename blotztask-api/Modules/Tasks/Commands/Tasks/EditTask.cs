@@ -36,7 +36,6 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
         task.TimeType = command.TaskDetails.TimeType;
         task.UpdatedAt = DateTime.UtcNow;
         task.LabelId = command.TaskDetails.LabelId;
-        task.IsDone = command.TaskDetails.IsDone;
 
         db.TaskItems.Update(task);
         await db.SaveChangesAsync(ct);
@@ -49,7 +48,6 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
 
 public class EditTaskItemDto
 {
-    public int Id { get; set; }
     [Required]
     [StringLength(200, ErrorMessage = "Title cannot be longer than 200 characters.")]
     public required string Title { get; set; }
@@ -57,6 +55,5 @@ public class EditTaskItemDto
     public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public TaskTimeType? TimeType { get; set; }
-    public bool IsDone { get; set; }
     public int LabelId { get; set; }
 }
