@@ -74,7 +74,7 @@ const TaskDetailBottomSheet = ({
             </View>
 
             <View className="flex-row items-center mb-3 gap-2 mt-1">
-              {selectedTask.label ? <TaskDetailTag>{selectedTask.label.name}</TaskDetailTag> : null}
+              <TaskDetailTag>{selectedTask.label?.name || "No Label"}</TaskDetailTag>
               <TaskDetailTag>
                 {selectedTask.isDone
                   ? "Done"

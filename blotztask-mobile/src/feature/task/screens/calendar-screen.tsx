@@ -51,7 +51,7 @@ export default function CalendarScreen() {
         startTime: task.startTime,
         endTime: task.endTime,
         isDone: task.isDone.toString(),
-        label: task.label?.name || "",
+        label: task.label?.name || "No Label",
       },
     });
   };
