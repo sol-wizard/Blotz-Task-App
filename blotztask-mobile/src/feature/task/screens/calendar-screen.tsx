@@ -23,6 +23,7 @@ export default function CalendarScreen() {
     loadTasks,
     toggleTask,
     removeTask,
+    overdueTasks,
   } = useSelectedDayTaskStore();
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
@@ -30,8 +31,11 @@ export default function CalendarScreen() {
   });
 
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
-  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus);
-  const taskStatuses = createStatusSelectItems(tasksForSelectedDay);
+  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus, overdueTasks);
+  const taskStatuses = createStatusSelectItems({
+    tasks: tasksForSelectedDay,
+    overdueTaskCount: overdueTasks.length,
+  });
 
   useEffect(() => {
     loadTasks();
@@ -53,18 +57,20 @@ export default function CalendarScreen() {
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
-    <TaskCard
-      id={item.id}
-      title={item.title}
-      startTime={item.startTime}
-      endTime={item.endTime}
-      isCompleted={item.isDone}
-      onToggleComplete={() => toggleTask(item.id)}
-      onPress={() => navigateToTaskDetails(item)}
-      onDelete={async () => {
-        await handleDeleteTask(item.id);
-      }}
-    />
+    <View className="shadow shadow-gray-300">
+      <TaskCard
+        id={item.id}
+        title={item.title}
+        startTime={item.startTime}
+        endTime={item.endTime}
+        isCompleted={item.isDone}
+        onToggleComplete={() => toggleTask(item.id)}
+        onPress={() => navigateToTaskDetails(item)}
+        onDelete={async () => {
+          await handleDeleteTask(item.id);
+        }}
+      />
+    </View>
   );
 
   const handleDeleteTask = async (taskId: number) => {
