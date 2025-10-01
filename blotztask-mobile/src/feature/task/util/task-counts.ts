@@ -100,10 +100,10 @@ export function filterTasksByStatus(
   }
 }
 
-function isTodo(task: TaskDetailDTO, now = new Date()): boolean {
+function isTodo(task: TaskDetailDTO): boolean {
   if (task.isDone) return false;
 
-  const nowTime = now.getTime();
+  const nowTime = new Date().getTime();
 
   if (task.endTime) {
     const endTime = new Date(task.endTime).getTime();
