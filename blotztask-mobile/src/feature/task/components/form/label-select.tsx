@@ -42,10 +42,17 @@ export function LabelSelect({ control }: { control: any }) {
                   style={{ borderRadius: 12, borderColor, borderWidth: 1 }}
                   labelStyle={{ fontSize: 12, color: "#444964" }}
                 >
-                  {selected?.name || "Add Label"}
+                  {selected?.name || "No Label"}
                 </Button>
               }
             >
+              <Menu.Item
+                onPress={() => {
+                  onChange(undefined);
+                  setVisible(false);
+                }}
+                title="No Label"
+              />
               {labels.map((opt) => (
                 <Menu.Item
                   key={opt.labelId}

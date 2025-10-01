@@ -21,7 +21,7 @@ public class DeletedTaskItem
     public required Guid UserId { get; set; }
     [ForeignKey("UserId")]
     public AppUser? User { get; set; }
-    public required int LabelId { get; set; }
+    public int? LabelId { get; set; }
     [ForeignKey("LabelId")]
     public Label? Label { get; set; }
 }
