@@ -62,12 +62,13 @@ export function AiTasksPreview({
   return (
     <View className="mb-10 items-center justify-between">
       <ScrollView className="pb-5 w-full min-h-20">
-        {localTasks.map((task) => (
+        {localTasks.map((task, index) => (
           <AiTaskCard
             key={task.id}
             task={task}
             handleTaskDelete={onDeleteTask}
             onTitleChange={onTitleChange}
+            index={index}
           />
         ))}
       </ScrollView>
