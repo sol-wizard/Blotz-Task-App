@@ -7,6 +7,7 @@ export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {
     description: task.description,
     startTime: new Date(task.startTime),
     endTime: new Date(task.endTime),
-    labelId: task.labelId ?? 6, // TODO: change it to ai generated task label
+    labelId: task.labelId,
+    timeType: 1,
   };
 }
