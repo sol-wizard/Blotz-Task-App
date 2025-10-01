@@ -9,7 +9,7 @@ export interface TaskCounts {
 }
 
 export function calculateTaskCounts(tasks: TaskDetailDTO[]): TaskCounts {
-  const todo = tasks.filter((task) => !task.isDone).length;
+  const todo = tasks.filter((task) => isTodo(task)).length;
   const done = tasks.filter((task) => task.isDone).length;
 
   const today = new Date();
@@ -31,12 +31,13 @@ export function createStatusSelectItems({
   overdueTaskCount: number;
 }): TaskStatusSelectItem[] {
   const counts = calculateTaskCounts(tasks);
+  const allTaskCount = counts.todo + counts.done + counts.inProgress + overdueTaskCount;
 
   return [
     {
       id: "all",
       status: "All",
-      count: tasks.length,
+      count: allTaskCount,
     },
     {
       id: "todo",
@@ -65,25 +66,54 @@ export function filterTasksByStatus(
   tasks: TaskDetailDTO[],
   selectedStatus: TaskStatusType,
   overdueTasks: TaskDetailDTO[],
-): TaskDetailDTO[] | null {
+): TaskDetailDTO[] {
   const today = new Date();
+  const todoTasks = tasks.filter((task) => isTodo(task));
+  const doneTasks = tasks.filter((task) => task.isDone);
+
+  const inProgressTasks = tasks.filter((task) => {
+    if (!task.startTime || !task.endTime) return false;
+    const start = new Date(task.startTime);
+    const end = new Date(task.endTime);
+    return !task.isDone && today >= start && today < end;
+  });
+  const allTasks = [...todoTasks, ...doneTasks, ...inProgressTasks, ...overdueTasks];
+
   switch (selectedStatus) {
     case "todo":
-      return tasks.filter((task) => !task.isDone);
+      return todoTasks;
+
     case "done":
-      return tasks.filter((task) => task.isDone);
-    case "all":
-      return tasks;
+      return doneTasks;
+
+    case "inprogress":
+      return inProgressTasks;
+
     case "overdue":
       return overdueTasks;
-    case "inprogress":
-      return tasks.filter((task) => {
-        if (!task.startTime || !task.endTime) return false;
-        const start = new Date(task.startTime);
-        const end = new Date(task.endTime);
-        return !task.isDone && today >= start && today < end;
-      });
+
+    case "all":
+      return allTasks;
+
     default:
-      return tasks;
+      return allTasks;
   }
+}
+
+function isTodo(task: TaskDetailDTO, now = new Date()): boolean {
+  if (task.isDone) return false;
+
+  const hasStart = Boolean(task.startTime);
+  const hasEnd = Boolean(task.endTime);
+
+  if (hasStart && hasEnd) {
+    const start = new Date(task.startTime);
+    const end = new Date(task.endTime);
+
+    if (start.getTime() !== end.getTime() && start < now) {
+      return false;
+    }
+  }
+
+  return true;
 }
