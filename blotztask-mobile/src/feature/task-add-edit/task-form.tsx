@@ -5,10 +5,10 @@ import { FormProvider, useForm } from "react-hook-form";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
-import { LabelSelect } from "../task/components/form/label-select";
 import { mapDtoToFormTimeType } from "./util/time-type-mapper";
 import { FormDivider } from "./components/form-divider";
 import { TimeSection } from "./components/time-section";
+import { LabelSelect } from "./components/label-select";
 
 type TaskFormProps = {
   mode: "create" | "edit";
