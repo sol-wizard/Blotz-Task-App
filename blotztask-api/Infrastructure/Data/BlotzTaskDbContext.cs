@@ -2,6 +2,7 @@
 using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
+using BlotzTask.Modules.Labels.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Infrastructure.Data;
@@ -21,34 +22,44 @@ public class BlotzTaskDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SubtaskConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TaskItemConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DeletedTaskItemConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(LabelConfiguration).Assembly);
+        
         modelBuilder.Entity<Label>().HasData(
             new Label
             {
                 LabelId = 6,
                 Name = "Work",
                 Color = "#7758FF",
-                Description = "Work related tasks"
+                Description = "Work related tasks",
+                Scope = LabelScope.Global,
+                UserId = null
             },
             new Label
             {
                 LabelId = 7,
                 Name = "Personal",
                 Color = "#FFDE23",
-                Description = "Personal tasks"
+                Description = "Personal tasks",
+                Scope = LabelScope.Global,
+                UserId = null
             },
             new Label
             {
                 LabelId = 8,
                 Name = "Academic",
                 Color = "#FF4747",
-                Description = "Academic tasks"
+                Description = "Academic tasks",
+                Scope = LabelScope.Global,
+                UserId = null
             },
             new Label
             {
                 LabelId = 9,
                 Name = "Others",
                 Color = "#09F1D6",
-                Description = "Other tasks"
+                Description = "Other tasks",
+                Scope = LabelScope.Global,
+                UserId = null
             }
         );
         
