@@ -46,7 +46,7 @@ export const EditTaskForm = ({ task, onClose }: EditTaskFormProps) => {
       endTime: values.endTime,
       isDone: task?.isDone,
       repeat: values.repeat ?? "none",
-      labelId: values.labelId,
+      labelId: values.labelId ?? undefined,
     };
     await saveEditedTask(updatedTask);
     onClose();

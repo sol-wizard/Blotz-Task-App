@@ -5,7 +5,7 @@ export interface TaskDetailDTO {
   description: string;
   title: string;
   isDone: boolean;
-  label: LabelDTO;
+  label?: LabelDTO;
   startTime: string;
   endTime: string;
   repeat: "none" | "daily" | "weekly" | "monthly";
