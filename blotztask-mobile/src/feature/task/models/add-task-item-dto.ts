@@ -1,4 +1,4 @@
-import { TaskTimeType } from "../util/time-type-mapper";
+import { TaskTimeType } from "../../task-add-edit/util/time-type-mapper";
 
 export interface AddTaskItemDTO {
   title: string;

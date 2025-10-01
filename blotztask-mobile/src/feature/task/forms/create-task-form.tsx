@@ -1,13 +1,13 @@
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
-import TaskFormField, { taskFormSchema } from "@/feature/task/models/task-form-schema";
-import { toAddTaskItemDTO } from "@/feature/task/util/task-generator-util";
+import TaskFormField, { taskFormSchema } from "@/feature/task-add-edit/models/task-form-schema";
+import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/task-dto-mapper";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormProvider, useForm } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
 import { useState } from "react";
 import { DateTimeSelectorTrigger } from "../components/form/date-time-selector-trigger";
-import { StartEndDateTimePicker } from "../components/form/start-end-date-time-picker";
+import { StartEndDateTimePicker } from "../../task-add-edit/components/time-pickers/start-end-date-time-picker";
 import { useSelectedDayTaskStore } from "../stores/selectedday-task-store";
 import { RepeatSelect } from "../components/form/repeat-select";
 import { LabelSelect } from "../components/form/label-select";
@@ -41,7 +41,7 @@ export default function CreateTaskForm({
   const handleFormSubmit = async (data: any) => {
     try {
       setIsSubmitting(true);
-      const dto = toAddTaskItemDTO(data);
+      const dto = mapFormToAddTaskItemDTO(data);
 
       addTask(dto);
       handleTaskCreationSheetClose(-1);

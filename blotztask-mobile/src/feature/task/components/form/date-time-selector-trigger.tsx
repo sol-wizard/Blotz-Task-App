@@ -1,7 +1,7 @@
 import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Control, useWatch } from "react-hook-form";
-import TaskFormField from "@/feature/task/models/task-form-schema";
+import TaskFormField from "@/feature/task-add-edit/models/task-form-schema";
 
 export const DateTimeSelectorTrigger = ({
   handleTrigger,

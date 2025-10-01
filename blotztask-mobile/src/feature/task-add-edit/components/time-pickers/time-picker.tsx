@@ -40,7 +40,7 @@ export const TimePicker = ({
   }));
 
   return (
-    <View className="flex-row mb-4 border rounded-xl border-gray-200">
+    <View className="flex-row border rounded-xl border-gray-200">
       <View className="w-32 h-10 bg-white flex-row justify-center items-center m-2">
         <WheelPicker
           style={{ backgroundColor: "transparent" }}

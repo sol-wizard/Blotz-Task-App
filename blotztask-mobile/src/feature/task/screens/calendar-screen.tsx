@@ -24,7 +24,7 @@ export default function CalendarScreen() {
     toggleTask,
     removeTask,
   } = useSelectedDayTaskStore();
-  const { setSelectedTask } = useSelectedTaskStore();
+  const { selectedTask, setSelectedTask } = useSelectedTaskStore();
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
     text: "",
@@ -36,7 +36,7 @@ export default function CalendarScreen() {
 
   useEffect(() => {
     loadTasks();
-  }, [selectedDay, loadTasks]);
+  }, [selectedDay, selectedTask, loadTasks]);
 
   const navigateToTaskDetails = (task: TaskDetailDTO) => {
     setSelectedTask(task);

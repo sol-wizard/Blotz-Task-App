@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 const TimeTypeEnum = z.enum(["single", "range"]);
 
@@ -7,6 +7,10 @@ export const taskFormSchema = z
     title: z.string().min(1, "Title is required").max(80, "Max 80 chars"),
     description: z.union([z.string().max(1000, "Max 1000 chars"), z.literal("")]).optional(),
     timeType: TimeTypeEnum.optional(),
+    // For single time
+    singleDate: z.date().optional(),
+    singleTime: z.date().optional(),
+    // For range time
     startDate: z.date().optional(),
     startTime: z.date().optional(),
     endDate: z.date().optional(),
@@ -17,11 +21,11 @@ export const taskFormSchema = z
     if (!data.timeType) return;
 
     if (data.timeType === "single") {
-      if (!data.startDate) {
+      if (!data.singleDate) {
         ctx.addIssue({
           code: "custom",
-          message: "Start date is required for single time tasks",
-          path: ["startDate"],
+          message: "Date is required",
+          path: ["singleDate"],
         });
       }
     }
@@ -43,7 +47,6 @@ export const taskFormSchema = z
         });
       }
 
-      // Validate time ordering if both dates and times are present
       if (data.startDate && data.endDate && data.startTime && data.endTime) {
         const start = new Date(
           new Date(data.startDate).setHours(

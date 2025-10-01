@@ -24,7 +24,8 @@ export function FormTextInput({
           onBlur={onBlur}
           onChangeText={onChange}
           value={value}
-          style={{ borderWidth: 1, marginBottom: 10, padding: 8 }}
+          multiline
+          className={className}
           {...inputProps}
         />
       )}

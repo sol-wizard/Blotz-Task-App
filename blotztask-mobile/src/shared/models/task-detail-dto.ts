@@ -1,4 +1,4 @@
-import { TaskTimeType } from "@/feature/task/util/time-type-mapper";
+import { TaskTimeType } from "@/feature/task-add-edit/util/time-type-mapper";
 import { LabelDTO } from "./label-dto";
 
 export interface TaskDetailDTO {

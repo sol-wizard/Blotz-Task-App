@@ -1,0 +1,136 @@
+import React, { useEffect, useState } from "react";
+import { View, Text, Pressable, ScrollView } from "react-native";
+import { EditTaskItemDTO } from "./models/edit-task-item-dto";
+import { FormProvider, useForm } from "react-hook-form";
+import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FormTextInput } from "@/shared/components/ui/form-text-input";
+import { LabelSelect } from "../task/components/form/label-select";
+import { mapDtoToFormTimeType } from "./util/time-type-mapper";
+import { FormDivider } from "./components/form-divider";
+import { TimeSection } from "./components/time-section";
+
+type TaskFormProps = {
+  mode: "create" | "edit";
+  defaultValues?: EditTaskItemDTO;
+  onSubmit: (data: TaskFormField) => void;
+};
+
+const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
+  const {
+    title = "",
+    description = "",
+    timeType,
+    startTime,
+    endTime,
+    labelId,
+  } = defaultValues || {};
+
+  console.group("🐛 TaskForm Component Render");
+  console.log("mode:", mode);
+  console.log("defaultValues (raw prop):", defaultValues);
+  console.groupEnd();
+
+  const mappedTimeType = mapDtoToFormTimeType(timeType);
+
+  const methods = useForm<TaskFormField>({
+    resolver: zodResolver(taskFormSchema),
+    mode: "onChange",
+    defaultValues: defaultValues
+      ? {
+          title,
+          description,
+          labelId,
+          timeType: mappedTimeType,
+          singleDate: mappedTimeType === "single" ? startTime : undefined,
+          singleTime: mappedTimeType === "single" ? startTime : undefined,
+          startDate: mappedTimeType === "range" ? startTime : undefined,
+          startTime: mappedTimeType === "range" ? startTime : undefined,
+          endDate: mappedTimeType === "range" ? endTime : undefined,
+          endTime: mappedTimeType === "range" ? endTime : undefined,
+        }
+      : undefined,
+  });
+
+  const { handleSubmit, formState, control, watch, setValue, resetField } = methods;
+  const { isValid, isSubmitting, errors } = formState;
+
+  const formTimeType = watch("timeType");
+  const [enableTime, setEnableTime] = useState(!!formTimeType);
+
+  useEffect(() => {
+    console.log("TaskForm - Form State:", {
+      isValid,
+      isSubmitting,
+      formTimeType,
+      enableTime,
+      values: methods.getValues(),
+      errors: errors,
+    });
+  }, [enableTime, errors, formTimeType, isSubmitting, isValid, methods]);
+
+  return (
+    <FormProvider {...methods}>
+      <View className="flex-1 relative">
+        <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
+          {/* Title Section */}
+          <View className="mb-8 bg-gray-200">
+            <FormTextInput
+              name="title"
+              placeholder="Title"
+              control={control}
+              className="font-balooBold text-5xl leading-normal"
+            />
+          </View>
+
+          {/* Category Section */}
+          <View className="mb-8">
+            <Text className="font-balooBold text-3xl leading-normal">Category</Text>
+            <LabelSelect control={control} />
+          </View>
+
+          <FormDivider />
+
+          {/* Description Section */}
+          <View className="mb-8">
+            <Text className="font-balooBold text-3xl leading-normal">Description</Text>
+            <FormTextInput
+              name="description"
+              placeholder="Add details about this task (optional)"
+              control={control}
+              className="bg-gray-200 font-baloo text-lg"
+            />
+          </View>
+
+          <FormDivider />
+
+          {/* Time Section */}
+          <TimeSection
+            control={control}
+            setValue={setValue}
+            resetField={resetField}
+            enableTime={enableTime}
+            setEnableTime={setEnableTime}
+          />
+        </ScrollView>
+
+        {/* Submit Button */}
+        <View className="absolute bottom-0 left-0 right-0 px-8 py-6 border-t border-gray-200">
+          <Pressable
+            onPress={handleSubmit(onSubmit)}
+            disabled={!isValid || isSubmitting}
+            className={`w-full py-4 rounded-lg items-center justify-center ${
+              !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
+            }`}
+          >
+            <Text className="font-balooBold text-lg text-black">
+              {mode === "create" ? "Create Task" : "Update Task"}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </FormProvider>
+  );
+};
+
+export default TaskForm;
