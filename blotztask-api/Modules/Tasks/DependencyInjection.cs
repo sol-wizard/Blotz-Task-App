@@ -22,11 +22,12 @@ public static class DependencyInjection
         services.AddScoped<GetTasksByDateQueryHandler>();
         services.AddScoped<GetTaskByIdQueryHandler>();
         services.AddScoped<GetFloatingTasksQueryHandler>();
-        
+        services.AddScoped<GetOverdueTasksQueryHandler>();
+
 
         return services;
     }
-    
+
     public static IServiceCollection AddLabelModule(this IServiceCollection services)
     {
         services.AddScoped<AddLabelCommandHandler>();

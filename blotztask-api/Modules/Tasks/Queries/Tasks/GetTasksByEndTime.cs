@@ -9,41 +9,43 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
 public class GetTasksByDateRequest
 {
-    [BindRequired]
-    public DateTime StartDateUtc { get; set; }
+    [BindRequired] public DateTime StartDateUtc { get; set; }
 
-    [BindRequired]
-    public bool IncludeFloatingForToday { get; set; }
+    [BindRequired] public bool IncludeFloatingForToday { get; set; }
 }
 
 public class GetTasksByDateQuery
 {
-    [Required]
-    public required Guid UserId { get; init; }
-    [Required]
-    public DateTime StartDateUtc { get; init; }
-    [Required]
-    public bool IncludeFloatingForToday { get; init; } = false;
+    [Required] public required Guid UserId { get; init; }
+
+    [Required] public DateTime StartDateUtc { get; init; }
+
+    [Required] public bool IncludeFloatingForToday { get; init; } = false;
 }
 
 public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksByDateQueryHandler> logger)
 {
     public async Task<List<TaskByDateItemDto>> Handle(GetTasksByDateQuery query, CancellationToken ct = default)
     {
-        logger.LogInformation("Fetching tasks by end time for user {UserId} up to {StartDateUtc}. Whether including floating tasks for today is {IncludeFloatingForToday}",
+        logger.LogInformation(
+            "Fetching tasks by end time for user {UserId} up to {StartDateUtc}. Whether including floating tasks for today is {IncludeFloatingForToday}",
             query.UserId, query.StartDateUtc, query.IncludeFloatingForToday);
 
-        DateTime endDateUtc = query.StartDateUtc.AddDays(1);
+        var endDateUtc = query.StartDateUtc.AddDays(1);
 
         var tasks = await db.TaskItems
             .Where(t => t.UserId == query.UserId &&
-            (
-                // Tasks in date range
-                (t.EndTime != null && t.EndTime >= query.StartDateUtc && t.EndTime < endDateUtc)
-                ||
-                // Floating tasks
-                (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null)
-            ))
+                        (
+                            // Tasks in date range
+                            (t.EndTime != null && t.StartTime != null && t.StartTime <= query.StartDateUtc &&
+                             t.EndTime >= query.StartDateUtc)
+                            ||
+                            (t.EndTime != null && t.StartTime != null && t.StartTime >= query.StartDateUtc &&
+                             t.StartTime < endDateUtc)
+                            ||
+                            // Floating tasks
+                            (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null)
+                        ))
             .Select(task => new TaskByDateItemDto
             {
                 Id = task.Id,
@@ -58,7 +60,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                     LabelId = task.Label.LabelId,
                     Name = task.Label.Name,
                     Color = task.Label.Color
-                },
+                }
             })
             .ToListAsync(ct);
 

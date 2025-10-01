@@ -5,6 +5,7 @@ import { isSameDay } from "date-fns";
 import {
   addTaskItem,
   deleteTask,
+  fetchOverdueTasks,
   fetchTasksForDate,
   toggleTaskCompletion,
   updateTaskItem,
@@ -21,11 +22,13 @@ interface SelectedDayTaskStore {
   toggleTask: (taskId: number) => Promise<void>;
   removeTask: (taskId: number) => Promise<void>;
   saveEditedTask: (task: EditTaskItemDTO) => Promise<void>;
+  overdueTasks: TaskDetailDTO[];
 }
 
 export const useSelectedDayTaskStore = create<SelectedDayTaskStore>((set, get) => ({
   selectedDay: new Date(),
   tasksForSelectedDay: [],
+  overdueTasks: [],
   isLoading: false,
   setSelectedDay: (day) => set({ selectedDay: day }),
 
@@ -35,6 +38,8 @@ export const useSelectedDayTaskStore = create<SelectedDayTaskStore>((set, get) =
     try {
       const isToday = isSameDay(selectedDay, new Date());
       const tasks = await fetchTasksForDate(selectedDay, isToday);
+      const overdueTasks = await fetchOverdueTasks();
+      set({ overdueTasks: overdueTasks });
       set({ tasksForSelectedDay: tasks });
     } catch (e) {
       console.error(e);

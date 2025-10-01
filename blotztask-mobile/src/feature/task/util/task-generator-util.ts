@@ -5,14 +5,17 @@ export function toAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
   const start = form.startDate
     ? applyDefaultTimeToDate(form.startDate, form.startTime, 0, 0)
     : undefined;
-
+  let timeType = 0;
   const end = form.endDate ? applyDefaultTimeToDate(form.endDate, form.endTime, 23, 59) : undefined;
-
+  if (start && end) {
+    timeType = 1;
+  }
   return {
     title: (form.title ?? "").trim(),
     description: (form.description ?? "").trim(),
     startTime: start,
     endTime: end,
+    timeType: timeType,
     labelId: form.labelId,
   };
 }
