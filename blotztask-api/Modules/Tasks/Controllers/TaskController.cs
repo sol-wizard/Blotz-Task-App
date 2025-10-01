@@ -1,5 +1,5 @@
-using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
+using BlotzTask.Modules.Tasks.Queries.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,6 +14,7 @@ public class TaskController(
     AddTaskCommandHandler addTaskCommandHandler,
     GetTaskByIdQueryHandler getTaskByIdQueryHandler,
     GetFloatingTasksQueryHandler getFloatingTasksQueryHandler,
+    GetOverdueTasksQueryHandler getOverdueTasksQueryHandler,
     DeleteTaskCommandHandler deleteTaskCommandHandler,
     EditTaskCommandHandler editTaskCommandHandler
 ) : ControllerBase
@@ -26,13 +27,12 @@ public class TaskController(
     }
 
     [HttpGet("by-date")]
-    public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate([FromQuery]GetTasksByDateRequest getTasksByDateRequest, CancellationToken ct)
+    public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate(
+        [FromQuery] GetTasksByDateRequest getTasksByDateRequest, CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-        {
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
-        }
-        
+
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
@@ -43,16 +43,13 @@ public class TaskController(
         var result = await getTasksByDateQueryHandler.Handle(query, ct);
         return result;
     }
-    
+
     [HttpGet("floating")]
     public async Task<IEnumerable<FloatingTaskItemDto>> GetFloatingTasks(
-        
         CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-        {
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
-        }
 
         var query = new GetFloatingTasksQuery
         {
@@ -63,18 +60,32 @@ public class TaskController(
         return result;
     }
 
+    [HttpGet("overdue")]
+    public async Task<IEnumerable<OverdueTaskItemDto>> GetOverdueTasks(
+        CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        var query = new GetOverdueTasksQuery
+        {
+            UserId = userId
+        };
+
+        var result = await getOverdueTasksQueryHandler.Handle(query, ct);
+        return result;
+    }
+
     [HttpPost]
     public async Task<string> AddTask([FromBody] AddTaskItemDto addtaskItem, CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-        {
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
-        }
 
         var command = new AddTaskCommand
         {
             TaskDetails = addtaskItem,
-            UserId = userId,
+            UserId = userId
         };
 
         var result = await addTaskCommandHandler.Handle(command, ct);
@@ -94,15 +105,13 @@ public class TaskController(
     {
         var command = new TaskStatusUpdateCommand
         {
-            TaskId = id,
+            TaskId = id
         };
 
         var result = await taskStatusUpdateCommandHandler.Handle(command, ct);
 
         if (result == null)
-        {
             throw new InvalidOperationException($"Task status update failed: no valid data returned for task ID {id}.");
-        }
 
         return result;
     }

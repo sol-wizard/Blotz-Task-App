@@ -12,6 +12,7 @@ import Animated, {
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { formatDateRange } from "../../util/format-date-range";
+import { format, parseISO } from "date-fns";
 
 interface TaskCardProps {
   id: number;
@@ -134,16 +135,25 @@ export default function TaskCard({
 
                 <View className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-3" />
               </Animated.View>
-
-              <View className="flex-1 justify-start pt-0">
-                <Text
-                  className={`text-xl font-baloo ${checked ? "text-neutral-400 line-through" : "text-black"}`}
-                >
-                  {title}
-                </Text>
-                {timePeriod && (
-                  <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
-                    {timePeriod}
+              <View className="flex-1 flex-row justify-between items-center">
+                <View className="justify-start pt-0">
+                  <Text
+                    className={`text-xl font-baloo ${checked ? "text-neutral-400 line-through" : "text-black"}`}
+                  >
+                    {title}
+                  </Text>
+                  {timePeriod && (
+                    <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
+                      {timePeriod}
+                    </Text>
+                  )}
+                </View>
+                {endTime && new Date(endTime).getTime() <= new Date().getTime() && !checked && (
+                  <Text className="text-warning font-baloo text-lg">Late</Text>
+                )}
+                {endTime && new Date(endTime).getTime() > new Date().getTime() && (
+                  <Text className="text-tertiary font-baloo text-lg">
+                    {format(parseISO(endTime), "H:mm")}
                   </Text>
                 )}
               </View>
