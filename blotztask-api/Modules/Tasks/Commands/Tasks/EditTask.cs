@@ -58,5 +58,5 @@ public class EditTaskItemDto
     public DateTimeOffset? EndTime { get; set; }
     public TaskTimeType? TimeType { get; set; }
     public bool IsDone { get; set; }
-    public int LabelId { get; set; }
+    public int? LabelId { get; set; }
 }

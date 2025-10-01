@@ -11,7 +11,7 @@ export const taskFormSchema = z
     endDate: z.date().optional(),
     endTime: z.date().optional(),
     repeat: RepeatEnum.optional(),
-    labelId: z.number(),
+    labelId: z.number().optional(),
   })
   .refine(
     (data) => {
