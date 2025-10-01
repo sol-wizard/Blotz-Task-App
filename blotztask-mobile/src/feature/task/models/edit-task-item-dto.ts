@@ -5,7 +5,7 @@ export interface EditTaskItemDTO {
   description?: string;
   startTime?: Date;
   endTime?: Date;
-  labelId: number;
+  labelId?: number;
   isDone: boolean;
   repeat: RepeatEnum;
 }
