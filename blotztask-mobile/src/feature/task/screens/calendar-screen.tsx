@@ -57,18 +57,20 @@ export default function CalendarScreen() {
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
-    <TaskCard
-      id={item.id}
-      title={item.title}
-      startTime={item.startTime}
-      endTime={item.endTime}
-      isCompleted={item.isDone}
-      onToggleComplete={() => toggleTask(item.id)}
-      onPress={() => navigateToTaskDetails(item)}
-      onDelete={async () => {
-        await handleDeleteTask(item.id);
-      }}
-    />
+    <View className="shadow shadow-gray-300">
+      <TaskCard
+        id={item.id}
+        title={item.title}
+        startTime={item.startTime}
+        endTime={item.endTime}
+        isCompleted={item.isDone}
+        onToggleComplete={() => toggleTask(item.id)}
+        onPress={() => navigateToTaskDetails(item)}
+        onDelete={async () => {
+          await handleDeleteTask(item.id);
+        }}
+      />
+    </View>
   );
 
   const handleDeleteTask = async (taskId: number) => {
