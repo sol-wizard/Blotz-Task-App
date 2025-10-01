@@ -103,17 +103,10 @@ export function filterTasksByStatus(
 function isTodo(task: TaskDetailDTO): boolean {
   if (task.isDone) return false;
 
-  const nowTime = new Date().getTime();
+  const nowTime = Date.now();
 
-  if (task.endTime) {
-    const endTime = new Date(task.endTime).getTime();
-    if (endTime <= nowTime) return false;
-  }
-
-  if (task.startTime) {
-    const startTime = new Date(task.startTime).getTime();
-    if (startTime <= nowTime) return false;
-  }
+  if (task.endTime && new Date(task.endTime).getTime() <= nowTime) return false;
+  if (task.startTime && new Date(task.startTime).getTime() <= nowTime) return false;
 
   return true;
 }
