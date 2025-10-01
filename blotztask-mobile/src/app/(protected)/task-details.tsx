@@ -27,11 +27,9 @@ export default function TaskDetailsScreen() {
               {taskStatus === "done" ? "Done" : "To Do"}
             </Text>
           </View>
-          {label && (
-            <View className="ml-2 px-3 py-1 rounded-xl border border-black">
-              <Text className="text-sm font-medium text-black">{label}</Text>
-            </View>
-          )}
+          <View className="ml-2 px-3 py-1 rounded-xl border border-black">
+            <Text className="text-sm font-medium text-black">{label || "No Label"}</Text>
+          </View>
         </View>
 
         {/* Task Title + Edit */}
