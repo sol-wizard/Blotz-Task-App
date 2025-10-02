@@ -1,7 +1,6 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
-import { getStartOfDayUtc } from "../util/date-utils";
-import { EditTaskItemDTO } from "../../task-add-edit/models/edit-task-item-dto";
+import { EditTaskItemDTO } from "../../feature/task-add-edit/models/edit-task-item-dto";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 
 export async function fetchTasksForDate(
