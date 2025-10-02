@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { View, Pressable } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-store";
+import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../modals/bottom-sheet-type";
 import { ScrollView } from "react-native-gesture-handler";
