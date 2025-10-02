@@ -92,7 +92,7 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
         </ScrollView>
 
         {/* Submit Button */}
-        <View className="absolute bottom-0 left-0 right-0 px-8 py-6 border-t border-gray-200">
+        <View className="px-8 py-6">
           <Pressable
             onPress={handleSubmit(onSubmit)}
             disabled={!isValid || isSubmitting}
