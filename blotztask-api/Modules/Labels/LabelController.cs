@@ -13,7 +13,11 @@ public class LabelController(GetAllLabelsQueryHandler getAllLabelsQueryHandler) 
     [HttpGet]
     public async Task<IActionResult> GetAllLabels(CancellationToken ct)
     {
-        var result = await getAllLabelsQueryHandler.Handle(ct);
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        var query = new GetAllLabelsQuery { UserId = userId };
+        var result = await getAllLabelsQueryHandler.Handle(query, ct);
         return Ok(result);
     }
 }
