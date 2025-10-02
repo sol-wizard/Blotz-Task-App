@@ -2,18 +2,22 @@ import React, { useState, useEffect } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import TaskCard from "../components/ui/task-card";
+
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
-import { useSelectedDayTaskStore } from "../stores/selectedday-task-store";
-import CalendarHeader from "../components/calender/calendar-header";
-import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/component/toggle-ai-task-generate";
-import { TaskStatusSelect, TaskStatusType } from "../components/ui/task-status-select";
+import { useSelectedDayTaskStore } from "../../../shared/stores/selectedday-task-store";
+
+import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
+
 import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
-import { TaskListPlaceholder } from "../components/calender/tasklist-placeholder";
+
 import { router } from "expo-router";
 import { theme } from "@/shared/constants/theme";
-import { useSelectedTaskStore } from "../stores/selected-task-store";
+import { useSelectedTaskStore } from "../../../shared/stores/selected-task-store";
+import { TaskStatusSelect, TaskStatusType } from "../components/task-status-select";
+import TaskCard from "../components/task-card";
+import CalendarHeader from "../components/calendar-header";
+import { TaskListPlaceholder } from "../components/tasklist-placeholder";
 
 export default function CalendarScreen() {
   const {
