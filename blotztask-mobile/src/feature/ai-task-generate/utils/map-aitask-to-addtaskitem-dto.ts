@@ -1,5 +1,5 @@
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
-import { AiTaskDTO } from "../models/ai-task-dto";
+import { AiTaskDTO } from "../modals/ai-task-dto";
 
 export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {
   if (!task.startTime || !task.endTime)
