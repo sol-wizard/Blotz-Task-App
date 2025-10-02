@@ -69,7 +69,11 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
           <View className="flex-row items-center ml-2">
             <MaterialIcons name="schedule" size={16} color={theme.colors.primary} />
             <Text className="text-sm font-medium ml-1" style={{ color: theme.colors.primary }}>
-              {`${format(parseISO(task.startTime), "HH:mm")} - ${format(parseISO(task.endTime), "HH:mm")}`}
+              {task.startTime && task.endTime
+                ? `${format(parseISO(task.startTime), "HH:mm")} - ${format(parseISO(task.endTime), "HH:mm")}`
+                : task.startTime
+                  ? format(parseISO(task.startTime), "HH:mm")
+                  : format(parseISO(task.endTime), "HH:mm")}
             </Text>
           </View>
         ) : null}
