@@ -1,5 +1,4 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { AddTaskItemDTO } from "../models/add-task-item-dto";
 import { create } from "zustand";
 import { isSameDay } from "date-fns";
 import {
@@ -9,6 +8,7 @@ import {
   fetchTasksForDate,
   toggleTaskCompletion,
 } from "../services/task-service";
+import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 
 interface SelectedDayTaskStore {
   selectedDay: Date;
