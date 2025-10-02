@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text } from "react-native";
 import LottieView from "lottie-react-native";
-import emptyBoxAnimation from "../../../../../assets/images/empty-box.json";
+import { ASSETS } from "@/shared/constants/assets";
 
 interface TaskListPlaceholderProps {
   selectedStatus: string;
@@ -36,7 +36,7 @@ export function TaskListPlaceholder({ selectedStatus }: TaskListPlaceholderProps
   return (
     <View className="flex-1 items-center justify-center px-4">
       <LottieView
-        source={emptyBoxAnimation}
+        source={ASSETS.emptyBox}
         autoPlay
         loop
         style={{ width: 160, height: 160, marginBottom: 16 }}

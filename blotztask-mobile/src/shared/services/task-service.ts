@@ -1,14 +1,14 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
-import { getStartOfDayUtc } from "../util/date-utils";
-import { EditTaskItemDTO } from "../../task-add-edit/models/edit-task-item-dto";
+import { EditTaskItemDTO } from "../../feature/task-add-edit/models/edit-task-item-dto";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 
 export async function fetchTasksForDate(
   date: Date,
   includeFloatingForToday: boolean,
 ): Promise<TaskDetailDTO[]> {
-  const startDateUtc = getStartOfDayUtc(date).toISOString();
+  const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+  const startDateUtc = startOfDay.toISOString();
 
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}&includeFloatingForToday=${includeFloatingForToday}`;
 

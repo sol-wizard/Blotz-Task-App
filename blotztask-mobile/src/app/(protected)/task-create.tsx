@@ -4,7 +4,7 @@ import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-ta
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Text } from "react-native";
-import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-store";
+import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
 
 const TaskCreateScreen = () => {
   const router = useRouter();
