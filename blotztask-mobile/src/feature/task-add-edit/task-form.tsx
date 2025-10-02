@@ -26,11 +26,6 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
     labelId,
   } = defaultValues || {};
 
-  console.group("🐛 TaskForm Component Render");
-  console.log("mode:", mode);
-  console.log("defaultValues (raw prop):", defaultValues);
-  console.groupEnd();
-
   const mappedTimeType = mapDtoToFormTimeType(timeType);
 
   const methods = useForm<TaskFormField>({
@@ -53,21 +48,10 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
   });
 
   const { handleSubmit, formState, control, watch, setValue, resetField } = methods;
-  const { isValid, isSubmitting, errors } = formState;
+  const { isValid, isSubmitting } = formState;
 
   const formTimeType = watch("timeType");
   const [enableTime, setEnableTime] = useState(!!formTimeType);
-
-  useEffect(() => {
-    console.log("TaskForm - Form State:", {
-      isValid,
-      isSubmitting,
-      formTimeType,
-      enableTime,
-      values: methods.getValues(),
-      errors: errors,
-    });
-  }, [enableTime, errors, formTimeType, isSubmitting, isValid, methods]);
 
   return (
     <FormProvider {...methods}>
