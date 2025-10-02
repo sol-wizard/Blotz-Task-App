@@ -21,12 +21,12 @@ export const TimeSection = ({
   setEnableTime,
 }: TimeSectionProps) => {
   const clearTimeValues = () => {
-    resetField("singleDate");
-    resetField("singleTime");
-    resetField("startDate");
-    resetField("startTime");
-    resetField("endDate");
-    resetField("endTime");
+    setValue("singleDate", null, { shouldValidate: true });
+    setValue("singleTime", null, { shouldValidate: true });
+    setValue("startDate", null, { shouldValidate: true });
+    setValue("startTime", null, { shouldValidate: true });
+    setValue("endDate", null, { shouldValidate: true });
+    setValue("endTime", null, { shouldValidate: true });
   };
 
   const handleTimeToggle = () => {
@@ -64,8 +64,10 @@ export const TimeSection = ({
           render={({ field: { onChange, value } }) => (
             <RadioButton.Group
               onValueChange={(newValue) => {
-                onChange(newValue);
-                clearTimeValues();
+                if (newValue !== value) {
+                  onChange(newValue);
+                  clearTimeValues();
+                }
               }}
               value={enableTime ? (value ?? "") : ""}
             >
