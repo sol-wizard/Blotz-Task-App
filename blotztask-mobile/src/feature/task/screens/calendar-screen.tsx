@@ -47,9 +47,6 @@ export default function CalendarScreen() {
     setSelectedTask(task);
     router.push({
       pathname: "/(protected)/task-details",
-      params: {
-        taskId: task.id.toString(),
-      },
     });
   };
 
