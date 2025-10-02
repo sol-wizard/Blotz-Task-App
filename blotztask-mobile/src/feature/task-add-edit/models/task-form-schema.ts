@@ -15,7 +15,7 @@ export const taskFormSchema = z
     startTime: z.date().optional(),
     endDate: z.date().optional(),
     endTime: z.date().optional(),
-    labelId: z.number(),
+    labelId: z.number().optional(),
   })
   .superRefine((data, ctx) => {
     if (!data.timeType) return;

@@ -100,20 +100,13 @@ export function filterTasksByStatus(
   }
 }
 
-function isTodo(task: TaskDetailDTO, now = new Date()): boolean {
+function isTodo(task: TaskDetailDTO): boolean {
   if (task.isDone) return false;
 
-  const hasStart = Boolean(task.startTime);
-  const hasEnd = Boolean(task.endTime);
+  const nowTime = Date.now();
 
-  if (hasStart && hasEnd) {
-    const start = new Date(task.startTime);
-    const end = new Date(task.endTime);
-
-    if (start.getTime() !== end.getTime() && start < now) {
-      return false;
-    }
-  }
+  if (task.endTime && new Date(task.endTime).getTime() <= nowTime) return false;
+  if (task.startTime && new Date(task.startTime).getTime() <= nowTime) return false;
 
   return true;
 }

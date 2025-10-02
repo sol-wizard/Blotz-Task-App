@@ -6,6 +6,6 @@ export interface EditTaskItemDTO {
   description?: string;
   startTime?: Date;
   endTime?: Date;
-  labelId: number;
+  labelId?: number;
   timeType?: TaskTimeType;
 }

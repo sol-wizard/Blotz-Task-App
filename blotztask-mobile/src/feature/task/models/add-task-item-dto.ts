@@ -5,7 +5,6 @@ export interface AddTaskItemDTO {
   description?: string;
   startTime?: Date;
   endTime?: Date;
-  timeType: number;
-  labelId: number;
+  labelId?: number;
   timeType?: TaskTimeType;
 }
