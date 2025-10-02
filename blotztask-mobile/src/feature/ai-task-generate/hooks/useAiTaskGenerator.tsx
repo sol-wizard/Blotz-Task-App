@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-chat-hub/util/map-extracted-to-task-dto";
-import { AiTaskDTO } from "../models/ai-task-dto";
-import { ExtractedTaskDTO } from "../models/extracted-task-dto";
-import { signalRService } from "../services/ai-task-generator-signalr-service";
-import { ModalType } from "@/feature/ai-task-generate/modals/modal-type";
+import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-task-generate/utils/map-extracted-to-task-dto";
+import { BottomSheetType } from "@/feature/ai-task-generate/modals/bottom-sheet-type";
+import { AiTaskDTO } from "../modals/ai-task-dto";
+import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
+import { ExtractedTaskDTO } from "../modals/extracted-task-dto";
 
 export function useAiTaskGenerator() {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedTasks, setAiGeneratedTasks] = useState<AiTaskDTO[]>([]);
-  const [modalType, setModalType] = useState<ModalType>("input");
+  const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [inputError, setInputError] = useState<boolean>(false);
 
   const sendMessage = async (text: string) => {
