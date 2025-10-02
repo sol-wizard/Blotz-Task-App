@@ -28,7 +28,7 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
                 StartTime = task.StartTime,
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
-                Label = new LabelDto
+                Label = task.Label == null ? null : new LabelDto
                 {
                     LabelId = task.Label.LabelId,
                     Name = task.Label.Name,
