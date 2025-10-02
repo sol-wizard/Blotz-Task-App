@@ -33,6 +33,10 @@ export function AiTasksPreview({
     setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
+  const onTitleChange = (taskId: string, newTitle: string) => {
+    setLocalTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, title: newTitle } : t)));
+  };
+
   const handleAddTasks = async () => {
     if (!localTasks.length) return;
 
@@ -58,8 +62,14 @@ export function AiTasksPreview({
   return (
     <View className="mb-10 items-center justify-between">
       <ScrollView className="pb-5 w-full min-h-20">
-        {localTasks.map((task) => (
-          <AiTaskCard key={task.id} task={task} handleTaskDelete={onDeleteTask} />
+        {localTasks.map((task, index) => (
+          <AiTaskCard
+            key={task.id}
+            task={task}
+            handleTaskDelete={onDeleteTask}
+            onTitleChange={onTitleChange}
+            index={index}
+          />
         ))}
       </ScrollView>
       <View className="flex-row justify-center items-center mb-4">
