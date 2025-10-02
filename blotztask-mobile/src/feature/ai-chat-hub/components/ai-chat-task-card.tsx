@@ -8,9 +8,6 @@ import { convertAiTaskToAddTaskItemDTO } from "../util/ai-task-generator-util";
 import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-store";
 import { theme } from "@/shared/constants/theme";
 
-const formatTime = (iso?: string, fmt: string = "MM-dd HH:mm"): string =>
-  iso ? format(parseISO(iso), fmt) : "";
-
 export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className?: string }) => {
   const [isTaskAdded, setTaskIsAdded] = useState(task.isAdded);
   const { addTask } = useSelectedDayTaskStore();
@@ -50,10 +47,14 @@ export const AIChatTaskCard = ({ task, className }: { task: AiTaskDTO; className
               <MaterialIcons name="schedule" size={20} color={theme.colors.primary} />
               <View className="flex-col ml-2">
                 {task.startTime && (
-                  <Text className="text-base text-primary">{formatTime(task.startTime)}</Text>
+                  <Text className="text-base text-primary">
+                    {format(parseISO(task.startTime), "MM-dd HH:mm")}
+                  </Text>
                 )}
                 {task.endTime && (
-                  <Text className="text-base text-primary">{formatTime(task.endTime)}</Text>
+                  <Text className="text-base text-primary">
+                    {format(parseISO(task.startTime), "MM-dd HH:mm")}
+                  </Text>
                 )}
               </View>
             </View>
