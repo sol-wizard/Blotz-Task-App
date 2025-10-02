@@ -1,5 +1,5 @@
 import { View, TextInput } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 type DetailsTabProps = {
   taskDescription?: string;
@@ -7,6 +7,10 @@ type DetailsTabProps = {
 
 const DetailsTab = ({ taskDescription }: DetailsTabProps) => {
   const [descriptionText, setDescriptionText] = useState(taskDescription || "");
+
+  useEffect(() => {
+    setDescriptionText(taskDescription || "");
+  }, [taskDescription]);
 
   return (
     <View className="bg-gray-100 rounded-xl p-4 min-h-80">

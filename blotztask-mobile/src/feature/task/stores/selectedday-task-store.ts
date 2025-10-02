@@ -1,5 +1,4 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { AddTaskItemDTO } from "../models/add-task-item-dto";
 import { create } from "zustand";
 import { isSameDay } from "date-fns";
 import {
@@ -8,9 +7,8 @@ import {
   fetchOverdueTasks,
   fetchTasksForDate,
   toggleTaskCompletion,
-  updateTaskItem,
 } from "../services/task-service";
-import { EditTaskItemDTO } from "../models/edit-task-item-dto";
+import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 
 interface SelectedDayTaskStore {
   selectedDay: Date;
@@ -21,7 +19,6 @@ interface SelectedDayTaskStore {
   addTask: (task: AddTaskItemDTO) => Promise<void>;
   toggleTask: (taskId: number) => Promise<void>;
   removeTask: (taskId: number) => Promise<void>;
-  saveEditedTask: (task: EditTaskItemDTO) => Promise<void>;
   overdueTasks: TaskDetailDTO[];
 }
 
@@ -67,15 +64,5 @@ export const useSelectedDayTaskStore = create<SelectedDayTaskStore>((set, get) =
   removeTask: async (taskId) => {
     await deleteTask(taskId);
     await get().loadTasks();
-  },
-
-  saveEditedTask: async (task) => {
-    try {
-      await updateTaskItem(task);
-      await get().loadTasks();
-    } catch (error) {
-      console.error("Failed to edit task:", error);
-      throw error;
-    }
   },
 }));

@@ -3,7 +3,7 @@ import { View, Text, Pressable, TextInput, Keyboard } from "react-native";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
 import { theme } from "@/shared/constants/theme";
-import { formatTimeRange } from "../util/format-time";
+import { format, parseISO } from "date-fns";
 
 type Props = {
   task: AiTaskDTO;
@@ -70,7 +70,7 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
           <View className="flex-row items-center ml-2">
             <MaterialIcons name="schedule" size={16} color={theme.colors.primary} />
             <Text className="text-sm font-medium ml-1" style={{ color: theme.colors.primary }}>
-              {formatTimeRange(task.startTime, task.endTime)}
+              {`${format(parseISO(task.startTime), "HH:mm")} - ${format(parseISO(task.endTime), "HH:mm")}`}
             </Text>
           </View>
         ) : null}
