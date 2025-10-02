@@ -1,4 +1,4 @@
-import { AddTaskItemDTO } from "@/feature/task/models/add-task-item-dto";
+import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { AiTaskDTO } from "../models/ai-task-dto";
 
 export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {

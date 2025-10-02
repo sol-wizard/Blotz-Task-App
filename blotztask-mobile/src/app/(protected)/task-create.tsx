@@ -1,6 +1,6 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
 import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
-import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/task-dto-mapper";
+import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-task-dto-mapper";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Text } from "react-native";

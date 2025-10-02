@@ -1,4 +1,4 @@
-import { AddTaskItemDTO } from "../../task/models/add-task-item-dto";
+import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { TaskFormField } from "../models/task-form-schema";
 import { mapFormToDtoTimeType, TaskTimeType } from "./time-type-mapper";
 

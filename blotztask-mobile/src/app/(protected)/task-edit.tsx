@@ -2,7 +2,7 @@ import TaskForm from "@/feature/task-add-edit/task-form";
 import { EditTaskItemDTO } from "@/feature/task-add-edit/models/edit-task-item-dto";
 import { fetchTaskById, updateTaskItem } from "@/feature/task/services/task-service";
 import { useSelectedTaskStore } from "@/feature/task/stores/selected-task-store";
-import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/task-dto-mapper";
+import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-task-dto-mapper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Text } from "react-native";
