@@ -1,6 +1,7 @@
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { AiTaskDTO } from "../modals/ai-task-dto";
 
+// TODO: handle invalid date, need to be changed after backend support
 export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {
   if (!task.startTime || !task.endTime)
     return {
