@@ -2,13 +2,17 @@ import { View, Text } from "react-native";
 
 const formDate = (dateString: string) => {
   const dateObj = new Date(`${dateString}T00:00:00`);
-  const dayOfWeek = dateObj.toLocaleString("default", { weekday: "short" });
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set the time part to zero (hours, minutes, seconds, and milliseconds are all set to 0) for date comparison.
+
+  const isToday = dateObj.getTime() === today.getTime();
+
   const month = dateObj.toLocaleString("default", { month: "short" });
   const day = dateObj.getDate();
   const year = dateObj.getFullYear();
 
   return {
-    dayOfWeek,
+    dayOfWeek: isToday ? "Today" : `${day} ${month}`,
     monthDay: `${month} ${day}`,
     year: year.toString(),
   };

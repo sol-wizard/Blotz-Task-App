@@ -68,7 +68,6 @@ export function AiTasksPreview({
             task={task}
             handleTaskDelete={onDeleteTask}
             onTitleChange={onTitleChange}
-            index={index}
           />
         ))}
       </ScrollView>
