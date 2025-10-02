@@ -38,6 +38,7 @@ export default function CalendarScreen() {
 
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
+
   const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus, overdueTasks);
   const taskStatuses = createStatusSelectItems({
     tasks: tasksForSelectedDay,

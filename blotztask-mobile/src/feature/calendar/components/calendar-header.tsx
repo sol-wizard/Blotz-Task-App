@@ -8,16 +8,19 @@ const formDate = (dateString: string) => {
 
   const isToday = dateObj.getTime() === today.getTime();
 
+
   const month = dateObj.toLocaleString("default", { month: "short" });
   const day = dateObj.getDate();
   const year = dateObj.getFullYear();
 
   return {
     dayOfWeek: isToday ? "Today" : `${day} ${month}`,
+
     monthDay: `${month} ${day}`,
     year: year.toString(),
   };
 };
+
 
 interface CalendarHeaderProps {
   date: string;
@@ -30,6 +33,7 @@ export default function CalendarHeader({
   isCalendarVisible,
   onToggleCalendar,
 }: CalendarHeaderProps) {
+
   const { dayOfWeek, monthDay, year } = formDate(date);
 
   return (
@@ -46,6 +50,7 @@ export default function CalendarHeader({
           />
         </TouchableOpacity>
       </View>
+
       <View>
         <Text className="text-lg font-bold text-gray-600 text-right">{monthDay}</Text>
         <Text className="text-xl font-bold text-gray-600">{year}</Text>
