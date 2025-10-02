@@ -47,8 +47,6 @@ export const theme = {
     error: "#F56767", // soft red (error / danger)
     heading: "#000000", // pure black (headings / titles)
     warning: "#F56767", // soft red (warning state)
-    primaryAiTaskCardColor: "#c1e49f",
-    secondaryAiTaskCardColor: "#bad5fa",
   },
   fonts: configureFonts({ config: fonts }),
 };

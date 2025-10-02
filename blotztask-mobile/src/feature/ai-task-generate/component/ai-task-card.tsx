@@ -9,16 +9,11 @@ type Props = {
   task: AiTaskDTO;
   handleTaskDelete: (taskId: string) => void;
   onTitleChange?: (taskId: string, newTitle: string) => void;
-  index?: number; // Add the index parameter for color alternation
 };
 
-export function AiTaskCard({ task, handleTaskDelete, onTitleChange, index = 0 }: Props) {
+export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(task.title);
-
-  // Define alternating colors using theme colors
-  const colors = [theme.colors.primaryAiTaskCardColor, theme.colors.secondaryAiTaskCardColor];
-  const switchTaskColor = colors[index % 2];
 
   const commitEdit = () => {
     const trimmed = draftTitle.trim();
@@ -34,7 +29,7 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange, index = 0 }:
 
   return (
     <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
-      <View className="w-2 h-full rounded-full" style={{ backgroundColor: switchTaskColor }} />
+      <View className="w-2 h-full rounded-full bg-slate-400" />
 
       <View className="flex-1 flex-row items-center justify-between ml-4">
         {isEditing ? (
