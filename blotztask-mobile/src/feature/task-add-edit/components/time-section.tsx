@@ -1,4 +1,4 @@
-import { Control, Controller, UseFormResetField, UseFormSetValue } from "react-hook-form";
+import { Control, Controller, UseFormSetValue } from "react-hook-form";
 import { View, Text } from "react-native";
 import { Checkbox, RadioButton } from "react-native-paper";
 import { SingleTimeSelect } from "./single-time-select";
@@ -8,18 +8,11 @@ import { TaskFormField } from "../models/task-form-schema";
 type TimeSectionProps = {
   control: Control<TaskFormField>;
   setValue: UseFormSetValue<TaskFormField>;
-  resetField: UseFormResetField<TaskFormField>;
   enableTime: boolean;
   setEnableTime: (value: boolean) => void;
 };
 
-export const TimeSection = ({
-  control,
-  setValue,
-  resetField,
-  enableTime,
-  setEnableTime,
-}: TimeSectionProps) => {
+export const TimeSection = ({ control, setValue, enableTime, setEnableTime }: TimeSectionProps) => {
   const clearTimeValues = () => {
     setValue("singleDate", null, { shouldValidate: true });
     setValue("singleTime", null, { shouldValidate: true });

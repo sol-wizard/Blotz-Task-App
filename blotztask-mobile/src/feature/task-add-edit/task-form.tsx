@@ -40,7 +40,7 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
     },
   });
 
-  const { handleSubmit, formState, control, watch, setValue, resetField } = methods;
+  const { handleSubmit, formState, control, watch, setValue } = methods;
   const { isValid, isSubmitting } = formState;
 
   const formTimeType = watch("timeType");
@@ -85,7 +85,6 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
           <TimeSection
             control={control}
             setValue={setValue}
-            resetField={resetField}
             enableTime={enableTime}
             setEnableTime={setEnableTime}
           />
