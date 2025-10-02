@@ -1,9 +1,15 @@
+using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Labels.Commands;
 using BlotzTask.Modules.Labels.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Labels.Queries;
+
+public class GetAllLabelsQuery
+{
+    [Required] public required Guid UserId { get; init; }
+}
 
 public class LabelDTO
 {
@@ -17,11 +23,13 @@ public class LabelDTO
 
 public class GetAllLabelsQueryHandler(BlotzTaskDbContext db, ILogger<AddLabelCommandHandler> logger)
 {
-    public async Task<List<LabelDTO>> Handle(CancellationToken ct = default)
+    public async Task<List<LabelDTO>> Handle(GetAllLabelsQuery query, CancellationToken ct = default)
     {
-        logger.LogInformation("Fetching all labels from database...");
+        logger.LogInformation("Fetching all labels (Global + Custom for user {UserId}) from database...", query.UserId);
 
         return await db.Labels
+            .Where(l => l.Scope == LabelScope.Global 
+                     || (l.Scope == LabelScope.Custom && l.UserId == query.UserId))
             .Select(l => new LabelDTO
             {
                 LabelId = l.LabelId,
@@ -32,5 +40,4 @@ public class GetAllLabelsQueryHandler(BlotzTaskDbContext db, ILogger<AddLabelCom
                 UserId = l.UserId
             }).ToListAsync(ct);
     }
-
 }
