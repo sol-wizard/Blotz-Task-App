@@ -1,7 +1,7 @@
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { FAB, Portal } from "react-native-paper";
-import { AiTaskGenerateModal } from "./ai-task-generate-modal";
+import { AiTaskGenerateModal } from "./component/ai-task-generate-modal";
 import { useRef } from "react";
 import { View } from "react-native";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";

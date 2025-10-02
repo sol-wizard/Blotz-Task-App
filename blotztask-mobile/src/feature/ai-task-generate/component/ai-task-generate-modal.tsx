@@ -1,9 +1,9 @@
-import { useAiTaskGenerator } from "@/feature/ai-chat-hub/hooks/useAiTaskGenerator";
 import { useState } from "react";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
 import { AiThinkingModal } from "./ai-thinking-modal";
 import { TaskAddedSuccess } from "./task-added-success";
+import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 
 export const AiTaskGenerateModal = () => {
   const [text, setText] = useState("");

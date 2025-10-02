@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { IconButton } from "react-native-paper";
 import { useRouter } from "expo-router";
-import { TaskStatusType } from "@/feature/task/components/ui/task-status-select";
-import TaskDateRange from "../../feature/task/components/task-details/task-date-range";
-import DetailsTab from "../../feature/task/components/task-details/details-tab";
-import SubtasksTab from "../../feature/task/components/task-details/subtasks-tab";
-import { useSelectedTaskStore } from "@/feature/task/stores/selected-task-store";
+import TaskDateRange from "../../feature/task-details/components/task-date-range";
+import DetailsTab from "../../feature/task-details/components/details-tab";
+import SubtasksTab from "../../feature/task-details/components/subtasks-tab";
+import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
+import { TaskStatusType } from "@/feature/calendar/components/task-status-select";
 
 type tabTypes = "Details" | "Subtasks";
 

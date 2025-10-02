@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
-import CalendarScreen from "@/feature/task/screens/calendar-screen";
-import SettingsScreen from "@/feature/settings/page/settings-screen";
+import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
+import SettingsScreen from "@/feature/settings/settings-screen";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";

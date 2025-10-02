@@ -3,10 +3,11 @@ import { Text, View, Pressable } from "react-native";
 import { ProgressBar } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { TaskDetailTag } from "./task-detail-tag";
+
 import SubtaskItem from "./subtask-item";
 import { router } from "expo-router";
 import { theme } from "@/shared/constants/theme";
+import TaskDetailTag from "./task-detail-tag";
 
 type Props = {
   task?: TaskDetailDTO;
