@@ -100,7 +100,7 @@ export default function CalendarScreen() {
             textDayFontWeight: "bold",
             textDayFontFamily: "InterBold",
             textDayHeaderFontFamily: "InterThin",
-            textDayFontSize: 14,
+            textDayFontSize: 16,
           }}
           markedDates={{
             [format(new Date(), "yyyy-MM-dd")]: { marked: true, dotColor: "#CDF79A" },
