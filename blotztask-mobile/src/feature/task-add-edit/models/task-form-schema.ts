@@ -5,17 +5,17 @@ const TimeTypeEnum = z.enum(["single", "range"]);
 export const taskFormSchema = z
   .object({
     title: z.string().min(1, "Title is required").max(80, "Max 80 chars"),
-    description: z.union([z.string().max(1000, "Max 1000 chars"), z.literal("")]).optional(),
-    timeType: TimeTypeEnum.optional(),
+    description: z.union([z.string().max(1000, "Max 1000 chars"), z.literal("")]).nullable(),
+    timeType: TimeTypeEnum.nullable(),
     // For single time
-    singleDate: z.date().optional(),
-    singleTime: z.date().optional(),
+    singleDate: z.date().nullable(),
+    singleTime: z.date().nullable(),
     // For range time
-    startDate: z.date().optional(),
-    startTime: z.date().optional(),
-    endDate: z.date().optional(),
-    endTime: z.date().optional(),
-    labelId: z.number().optional(),
+    startDate: z.date().nullable(),
+    startTime: z.date().nullable(),
+    endDate: z.date().nullable(),
+    endTime: z.date().nullable(),
+    labelId: z.number().nullable(),
   })
   .superRefine((data, ctx) => {
     if (!data.timeType) return;

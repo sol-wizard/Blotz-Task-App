@@ -38,7 +38,7 @@ export const TimeSection = ({
       // Default to single when enabling time
       setValue("timeType", "single", { shouldValidate: true });
     } else {
-      setValue("timeType", undefined, { shouldValidate: true });
+      setValue("timeType", null, { shouldValidate: true });
     }
   };
 

@@ -3,16 +3,16 @@ import { TaskFormField } from "../models/task-form-schema";
 import { mapFormToDtoTimeType, TaskTimeType } from "./time-type-mapper";
 
 export function mapFormToAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
-  const taskTimeType = mapFormToDtoTimeType(form.timeType);
+  const taskTimeType = mapFormToDtoTimeType(form.timeType ?? undefined);
 
   const { start, end } = getStartEndDates(
     taskTimeType,
-    form.singleDate,
-    form.singleTime,
-    form.startDate,
-    form.startTime,
-    form.endDate,
-    form.endTime,
+    form.singleDate ?? undefined,
+    form.singleTime ?? undefined,
+    form.startDate ?? undefined,
+    form.startTime ?? undefined,
+    form.endDate ?? undefined,
+    form.endTime ?? undefined,
   );
 
   return {
@@ -21,7 +21,7 @@ export function mapFormToAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
     startTime: start,
     endTime: end,
     timeType: taskTimeType,
-    labelId: form.labelId,
+    labelId: form.labelId ?? undefined,
   };
 }
 

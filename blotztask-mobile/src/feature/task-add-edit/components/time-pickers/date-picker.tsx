@@ -6,13 +6,13 @@ import Modal from "react-native-modal";
 import { Calendar } from "react-native-calendars";
 
 type Props = {
-  value?: Date;
-  onChange: (d: Date | undefined) => void;
+  value: Date | null;
+  onChange: (d: Date | null) => void;
 };
 
 export default function DatePicker({ value, onChange }: Props) {
   const [openCalendar, setOpenCalendar] = useState(false);
-  const [tempDate, setTempDate] = useState<Date | undefined>(value);
+  const [tempDate, setTempDate] = useState<Date | null>(value);
 
   const handleConfirm = () => {
     if (tempDate) {
@@ -22,8 +22,8 @@ export default function DatePicker({ value, onChange }: Props) {
   };
 
   const handleCanel = () => {
-    setTempDate(undefined);
-    onChange(undefined);
+    setTempDate(null);
+    onChange(null);
     setOpenCalendar(false);
   };
 

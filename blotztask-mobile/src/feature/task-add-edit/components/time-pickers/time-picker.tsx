@@ -5,7 +5,7 @@ export const TimePicker = ({
   value,
   onChange,
 }: {
-  value: Date | undefined;
+  value: Date | null;
   onChange: (d: Date) => void;
 }) => {
   const createTimeFromValues = (hour: number, minute: number) => {
@@ -22,7 +22,7 @@ export const TimePicker = ({
         minute: value.getMinutes(),
       };
     } else {
-      // Always show 00:00 initially when value is undefined
+      // Always show 00:00 initially when value is null
       return { hour: 0, minute: 0 };
     }
   };

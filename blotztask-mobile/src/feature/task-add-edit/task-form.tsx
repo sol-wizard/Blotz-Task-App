@@ -17,34 +17,27 @@ type TaskFormProps = {
 };
 
 const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
-  const {
-    title = "",
-    description = "",
-    timeType,
-    startTime,
-    endTime,
-    labelId,
-  } = defaultValues || {};
+  const { title, description, timeType, startTime, endTime, labelId } = defaultValues || {};
 
   const mappedTimeType = mapDtoToFormTimeType(timeType);
+  const isSingle = mappedTimeType === "single";
+  const isRange = mappedTimeType === "range";
 
   const methods = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
-    defaultValues: defaultValues
-      ? {
-          title,
-          description,
-          labelId,
-          timeType: mappedTimeType,
-          singleDate: mappedTimeType === "single" ? startTime : undefined,
-          singleTime: mappedTimeType === "single" ? startTime : undefined,
-          startDate: mappedTimeType === "range" ? startTime : undefined,
-          startTime: mappedTimeType === "range" ? startTime : undefined,
-          endDate: mappedTimeType === "range" ? endTime : undefined,
-          endTime: mappedTimeType === "range" ? endTime : undefined,
-        }
-      : undefined,
+    defaultValues: {
+      title: title ?? "",
+      description: description ?? "",
+      labelId: labelId ?? null,
+      timeType: mappedTimeType ?? null,
+      singleDate: isSingle ? (startTime ?? null) : null,
+      singleTime: isSingle ? (startTime ?? null) : null,
+      startDate: isRange ? (startTime ?? null) : null,
+      startTime: isRange ? (startTime ?? null) : null,
+      endDate: isRange ? (endTime ?? null) : null,
+      endTime: isRange ? (endTime ?? null) : null,
+    },
   });
 
   const { handleSubmit, formState, control, watch, setValue, resetField } = methods;
