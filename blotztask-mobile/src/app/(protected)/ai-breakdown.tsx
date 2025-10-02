@@ -1,4 +1,3 @@
-import UserMessage from "@/feature/ai-chat-hub/components/user-message";
 import { useBreakdownChat } from "@/feature/breakdown/hooks/useBreakdownChat";
 import { router, useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
@@ -72,18 +71,17 @@ export default function AiBreakdownScreen() {
               keyboardShouldPersistTaps="handled"
             >
               {messages &&
-                messages.map((msg, index) =>
-                  msg.isBot ? (
-                    <BreakdownBotMessage
-                      key={index}
-                      parentTaskId={taskId as string}
-                      text={msg.content}
-                      subtasks={msg.subtasks}
-                      openAddSubtaskBottomSheet={handleSelectSubtask}
-                    />
-                  ) : (
-                    <UserMessage key={index} text={msg.content} />
-                  ),
+                messages.map(
+                  (msg, index) =>
+                    msg.isBot ?? (
+                      <BreakdownBotMessage
+                        key={index}
+                        parentTaskId={taskId as string}
+                        text={msg.content}
+                        subtasks={msg.subtasks}
+                        openAddSubtaskBottomSheet={handleSelectSubtask}
+                      />
+                    ),
                 )}
               {isTyping && (
                 <View className="mb-4">

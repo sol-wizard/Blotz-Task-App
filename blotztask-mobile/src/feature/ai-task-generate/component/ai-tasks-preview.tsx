@@ -1,11 +1,11 @@
-import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
+import { AiTaskDTO } from "@/feature/ai-task-generate/modals/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
 import { View, Pressable } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useSelectedDayTaskStore } from "@/feature/task/stores/selectedday-task-store";
-import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-chat-hub/util/ai-task-generator-util";
-import { ModalType } from "../modals/modal-type";
+import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
+import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
+import { BottomSheetType } from "../modals/bottom-sheet-type";
 import { ScrollView } from "react-native-gesture-handler";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 
@@ -16,7 +16,7 @@ export function AiTasksPreview({
   setText,
 }: {
   tasks: AiTaskDTO[];
-  setModalType: (v: ModalType) => void;
+  setModalType: (v: BottomSheetType) => void;
   isVoiceInput: boolean;
   setText: (v: string) => void;
 }) {
@@ -62,13 +62,12 @@ export function AiTasksPreview({
   return (
     <View className="mb-10 items-center justify-between">
       <ScrollView className="pb-5 w-full min-h-20">
-        {localTasks.map((task, index) => (
+        {localTasks.map((task) => (
           <AiTaskCard
             key={task.id}
             task={task}
             handleTaskDelete={onDeleteTask}
             onTitleChange={onTitleChange}
-            index={index}
           />
         ))}
       </ScrollView>

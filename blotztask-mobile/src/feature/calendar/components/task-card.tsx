@@ -11,8 +11,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { formatDateRange } from "../../util/format-date-range";
+
 import { format, parseISO } from "date-fns";
+import { formatDateRange } from "../util/format-date-range";
 
 interface TaskCardProps {
   id: number;

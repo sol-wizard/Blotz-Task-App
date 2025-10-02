@@ -1,7 +1,7 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
 import { EditTaskItemDTO } from "@/feature/task-add-edit/models/edit-task-item-dto";
-import { fetchTaskById, updateTaskItem } from "@/feature/task/services/task-service";
-import { useSelectedTaskStore } from "@/feature/task/stores/selected-task-store";
+import { fetchTaskById, updateTaskItem } from "@/shared/services/task-service";
+import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
 import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-task-dto-mapper";
 import { useRouter } from "expo-router";
 import { Text } from "react-native";
