@@ -48,7 +48,7 @@ export function LabelSelect({ control }: { control: any }) {
             >
               <Menu.Item
                 onPress={() => {
-                  onChange(undefined);
+                  onChange(null);
                   setVisible(false);
                 }}
                 title="No Label"
