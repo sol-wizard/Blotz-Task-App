@@ -14,6 +14,8 @@ export const LOTTIE_ANIMATIONS = {
 export const IMAGES = {
   blotzIcon: require("../../../assets/images/blotz-icon.jpg"),
   blotzLogo: require("../../../assets/images/blotz-logo.png"),
+  whiteBun: require("../../../assets/images/bun-white.png"),
+  greenBun: require("../../../assets/images/bun-green.png"),
 } as const;
 
 // Export all assets for convenience
