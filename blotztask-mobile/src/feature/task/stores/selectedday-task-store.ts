@@ -63,8 +63,6 @@ export const useSelectedDayTaskStore = create<SelectedDayTaskStore>((set, get) =
 
   removeTask: async (taskId) => {
     await deleteTask(taskId);
-    set((state) => ({
-      tasksForSelectedDay: state.tasksForSelectedDay.filter((t) => t.id !== taskId),
-    }));
+    await get().loadTasks();
   },
 }));
