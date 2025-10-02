@@ -19,7 +19,6 @@ const formDate = (dateString: string) => {
   };
 };
 
-
 interface CalendarHeaderProps {
   date: string;
   isCalendarVisible: boolean;
@@ -31,7 +30,6 @@ export default function CalendarHeader({
   isCalendarVisible,
   onToggleCalendar,
 }: CalendarHeaderProps) {
-
   const { dayOfWeek, monthDay, year } = formDate(date);
 
   return (
@@ -48,7 +46,6 @@ export default function CalendarHeader({
           />
         </TouchableOpacity>
       </View>
-
       <View>
         <Text className="text-lg font-bold text-gray-600 text-right">{monthDay}</Text>
         <Text className="text-xl font-bold text-gray-600">{year}</Text>
