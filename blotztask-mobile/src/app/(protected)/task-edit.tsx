@@ -31,7 +31,7 @@ const TaskEditScreen = () => {
     ...selectedTask,
     startTime: selectedTask.startTime ? new Date(selectedTask.startTime) : undefined,
     endTime: selectedTask.endTime ? new Date(selectedTask.endTime) : undefined,
-    labelId: selectedTask.label.labelId,
+    labelId: selectedTask.label ? selectedTask.label.labelId : undefined,
   };
 
   const handleTaskSubmit = async (formValues: TaskFormField) => {

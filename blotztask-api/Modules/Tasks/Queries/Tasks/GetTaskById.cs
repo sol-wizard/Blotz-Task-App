@@ -18,7 +18,7 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
     public async Task<TaskByIdItemDto> Handle(GetTasksByIdQuery query, CancellationToken ct = default)
     {
         logger.LogInformation("Fetching task with ID {TaskId}.", query.TaskId);
-        
+
         var result = await db.TaskItems.Where(t => t.Id == query.TaskId)
             .Select(task => new TaskByIdItemDto
             {
@@ -60,6 +60,6 @@ public class TaskByIdItemDto
     public string? Description { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
-    public required LabelDto Label { get; set; }
+    public LabelDto? Label { get; set; }
     public TaskTimeType? TimeType { get; set; }
 }

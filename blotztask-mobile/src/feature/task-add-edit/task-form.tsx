@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { FormProvider, useForm } from "react-hook-form";
