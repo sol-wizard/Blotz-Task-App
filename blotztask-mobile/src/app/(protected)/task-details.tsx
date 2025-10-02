@@ -1,21 +1,29 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { IconButton } from "react-native-paper";
-import { useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import { TaskStatusType } from "@/feature/task/components/ui/task-status-select";
 import TaskDateRange from "../../feature/task/components/task-details/task-date-range";
 import DetailsTab from "../../feature/task/components/task-details/details-tab";
 import SubtasksTab from "../../feature/task/components/task-details/subtasks-tab";
+import { useSelectedTaskStore } from "@/feature/task/stores/selected-task-store";
 
 type tabTypes = "Details" | "Subtasks";
 
 export default function TaskDetailsScreen() {
-  const { title, description, startTime, endTime, isDone, label } = useLocalSearchParams();
-  const taskStatus: TaskStatusType = isDone === "true" ? "done" : "todo";
+  const router = useRouter();
+  const { selectedTask } = useSelectedTaskStore();
+  const { isDone, title, description, label, startTime, endTime } = selectedTask || {};
+
+  const taskStatus: TaskStatusType = isDone ? "done" : "todo";
+  const labelName: string | undefined = label?.name;
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
 
-  // TODO: Implement edit screen
-  const handleEdit = () => console.log("task edit pressed");
+  const handleEdit = () => {
+    router.push({
+      pathname: "/(protected)/task-edit",
+    });
+  };
 
   return (
     <View className="flex-1 bg-lime-200">
@@ -27,9 +35,11 @@ export default function TaskDetailsScreen() {
               {taskStatus === "done" ? "Done" : "To Do"}
             </Text>
           </View>
-          <View className="ml-2 px-3 py-1 rounded-xl border border-black">
-            <Text className="text-sm font-medium text-black">{label || "No Label"}</Text>
-          </View>
+          {label && (
+            <View className="ml-2 px-3 py-1 rounded-xl border border-black">
+              <Text className="text-sm font-medium text-black">{labelName}</Text>
+            </View>
+          )}
         </View>
 
         {/* Task Title + Edit */}

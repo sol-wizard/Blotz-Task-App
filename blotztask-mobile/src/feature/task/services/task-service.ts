@@ -1,8 +1,8 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
 import { getStartOfDayUtc } from "../util/date-utils";
-import { AddTaskItemDTO } from "../models/add-task-item-dto";
-import { EditTaskItemDTO } from "../models/edit-task-item-dto";
+import { EditTaskItemDTO } from "../../task-add-edit/models/edit-task-item-dto";
+import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 
 export async function fetchTasksForDate(
   date: Date,
@@ -14,6 +14,12 @@ export async function fetchTasksForDate(
 
   const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: "GET" });
   return data;
+}
+
+export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`;
+  const taskData = await fetchWithAuth<TaskDetailDTO>(url, { method: "GET" });
+  return taskData;
 }
 
 export async function fetchFloatingTasks(): Promise<TaskDetailDTO[]> {
@@ -36,9 +42,9 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
   await fetchWithAuth<unknown>(url, { method: "PUT" });
 }
 
-export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<string> => {
+export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<number> => {
   try {
-    const result = await fetchWithAuth<string>(`${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`, {
+    const newTaskId = await fetchWithAuth<number>(`${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -46,7 +52,7 @@ export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<string> 
       body: JSON.stringify(addTaskForm),
     });
 
-    return result;
+    return newTaskId;
   } catch (error) {
     console.error("Error adding task:", error);
     throw error;
