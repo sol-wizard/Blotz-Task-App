@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, TextInput } from "react-native";
-import { format, parseISO } from "date-fns";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { View, Text, Pressable, TextInput, Keyboard } from "react-native";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { AiTaskDTO } from "@/feature/ai-chat-hub/models/ai-task-dto";
+import { theme } from "@/shared/constants/theme";
+import { formatTimeRange } from "../util/format-time";
 
 type Props = {
   task: AiTaskDTO;
@@ -15,21 +16,25 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange, index = 0 }:
   const [isEditing, setIsEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(task.title);
 
-  // Define alternating colors
-  const colors = ["#c1e49f", "#bad5fa"];
-  const barColor = colors[index % 2];
+  // Define alternating colors using theme colors
+  const colors = [theme.colors.primaryAiTaskCardColor, theme.colors.secondaryAiTaskCardColor];
+  const switchTaskColor = colors[index % 2];
 
   const commitEdit = () => {
     const trimmed = draftTitle.trim();
     if (trimmed && trimmed !== task.title) {
       onTitleChange?.(task.id, trimmed);
+    } else if (!trimmed) {
+      // Reset to original title if empty
+      setDraftTitle(task.title);
     }
     setIsEditing(false);
+    Keyboard.dismiss();
   };
 
   return (
-    <View className="bg-white rounded-lg flex-row items-center shadow w-80 h-20 justify-between pr-3 mt-3 mb-6 py-4 pl-6 mx-4">
-      <View className="w-2 h-full rounded-full" style={{ backgroundColor: barColor }} />
+    <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
+      <View className="w-2 h-full rounded-full" style={{ backgroundColor: switchTaskColor }} />
 
       <View className="flex-1 flex-row items-center justify-between ml-4">
         {isEditing ? (
@@ -40,22 +45,39 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange, index = 0 }:
             onSubmitEditing={commitEdit}
             autoFocus
             returnKeyType="done"
-            className="flex-1 mr-3 text-lg font-extrabold text-[#2F3640]"
+            className="flex-1 mr-3 text-lg font-semibold"
+            style={{ color: theme.colors.onSurface }}
             placeholder="Task title"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={theme.colors.disabled}
+            accessibilityLabel="Edit task title"
+            accessibilityHint="Double tap to edit task title"
           />
         ) : (
-          <Pressable className="flex-1 mr-3" onPress={() => setIsEditing(true)}>
-            <Text numberOfLines={1} className="text-lg font-extrabold text-[#2F3640]">
+          <Pressable
+            className="flex-1 mr-3"
+            onPress={() => setIsEditing(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`Task: ${task.title}`}
+            accessibilityHint="Double tap to edit task title"
+          >
+            <Text
+              numberOfLines={1}
+              className="text-lg font-semibold"
+              style={{ color: theme.colors.onSurface }}
+              lineBreakStrategyIOS="hangul-word"
+            >
               {task.title}
             </Text>
           </Pressable>
         )}
 
         {task.startTime || task.endTime ? (
-          <Text className="text-base font-semibold text-neutral-400">
-            {formatTimeRange(task.startTime, task.endTime)}
-          </Text>
+          <View className="flex-row items-center ml-2">
+            <MaterialIcons name="schedule" size={16} color={theme.colors.primary} />
+            <Text className="text-sm font-medium ml-1" style={{ color: theme.colors.primary }}>
+              {formatTimeRange(task.startTime, task.endTime)}
+            </Text>
+          </View>
         ) : null}
       </View>
 
@@ -69,20 +91,4 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange, index = 0 }:
       </Pressable>
     </View>
   );
-}
-
-function formatTime(iso?: string) {
-  if (!iso) return "";
-  try {
-    return format(parseISO(iso), "HH:mm");
-  } catch {
-    return "";
-  }
-}
-
-function formatTimeRange(start?: string, end?: string) {
-  const s = formatTime(start);
-  const e = formatTime(end);
-  if (s && e) return `${s} - ${e}`;
-  return s || e || "";
 }
