@@ -1,4 +1,5 @@
-type RepeatEnum = "none" | "daily" | "weekly" | "monthly";
+import { TaskTimeType } from "../util/time-type-mapper";
+
 export interface EditTaskItemDTO {
   id: number;
   title: string;
@@ -6,6 +7,5 @@ export interface EditTaskItemDTO {
   startTime?: Date;
   endTime?: Date;
   labelId?: number;
-  isDone: boolean;
-  repeat: RepeatEnum;
+  timeType?: TaskTimeType;
 }
