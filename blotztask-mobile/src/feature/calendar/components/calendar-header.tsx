@@ -8,14 +8,12 @@ const formDate = (dateString: string) => {
 
   const isToday = dateObj.getTime() === today.getTime();
 
-
   const month = dateObj.toLocaleString("default", { month: "short" });
   const day = dateObj.getDate();
   const year = dateObj.getFullYear();
 
   return {
     dayOfWeek: isToday ? "Today" : `${day} ${month}`,
-
     monthDay: `${month} ${day}`,
     year: year.toString(),
   };
