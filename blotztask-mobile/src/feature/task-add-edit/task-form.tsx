@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from "react";
+// TaskForm.tsx
+import React, { useState, useMemo } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { FormProvider, useForm } from "react-hook-form";
-import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FormTextInput } from "@/shared/components/ui/form-text-input";
+import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
+import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { mapDtoToFormTimeType } from "./util/time-type-mapper";
-import { FormDivider } from "./components/form-divider";
-// import { TimeSection } from "./components/time-section";
-import { LabelSelect } from "./components/label-select";
 import DateSection from "./components/date-section/date-section";
 import TimeSelectSingleDay from "./components/time-sections/time-select-single-day";
 import TimeSelectRangeDay from "./components/time-sections/time-select-range-day";
 import { isSameDay } from "date-fns";
+import { FormTextInput } from "@/shared/components/ui/form-text-input";
+import { LabelSelect } from "./components/label-select";
+import { FormDivider } from "./components/form-divider";
 
 type TaskFormProps = {
   mode: "create" | "edit";
@@ -22,7 +22,6 @@ type TaskFormProps = {
 
 const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
   const { title, description, timeType, startTime, endTime, labelId } = defaultValues || {};
-
   const mappedTimeType = mapDtoToFormTimeType(timeType);
 
   const methods = useForm<TaskFormField>({
@@ -40,48 +39,29 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
     },
   });
 
-  const { handleSubmit, formState, control, watch, setValue } = methods;
+  const { handleSubmit, formState, control, setValue, watch } = methods;
   const { isValid, isSubmitting } = formState;
 
   const formTimeType = watch("timeType");
-  const formStartDate = watch("startDate");
-  const formEndDate = watch("endDate");
-  const [enableDate, setEnableDate] = useState(!!formTimeType);
 
-  // const [enableTime, setEnableTime] = useState(!!formTimeType);
-
-  // Check if dates are on the same day
-  const getDefaultDateType = () => {
-    if (formTimeType === "single") {
-      return "1-day";
-    }
-    if (formTimeType === "range" && formStartDate && formEndDate) {
-      if (isSameDay(formEndDate, formStartDate)) {
-        return "1-day";
-      } else {
-        return "multi-day";
-      }
+  // Compute defaultDateType once
+  const defaultDateType = useMemo(() => {
+    if (mappedTimeType === "single") return "1-day";
+    if (mappedTimeType === "range" && startTime && endTime) {
+      return isSameDay(startTime, endTime) ? "1-day" : "multi-day";
     }
     return undefined;
-  };
+  }, []);
 
-  const defaultDateType = getDefaultDateType();
-
-  useEffect(() => {
-    console.log("TaskForm - Form State:", {
-      isValid,
-      isSubmitting,
-      formTimeType,
-      enableDate,
-      values: methods.getValues(),
-    });
-  }, [enableDate, formTimeType, isSubmitting, isValid, methods]);
+  // Lift activeTab and enableDate to TaskForm
+  const [enableDate, setEnableDate] = useState(!!formTimeType);
+  const [activeTab, setActiveTab] = useState<"1-day" | "multi-day" | undefined>(defaultDateType);
 
   return (
     <FormProvider {...methods}>
       <View className="flex-1 relative">
         <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
-          {/* Title Section */}
+          {/* Title */}
           <View className="mb-8 bg-gray-200">
             <FormTextInput
               name="title"
@@ -91,7 +71,7 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
             />
           </View>
 
-          {/* Category Section */}
+          {/* Category */}
           <View className="mb-8">
             <Text className="font-balooBold text-3xl leading-normal">Category</Text>
             <LabelSelect control={control} />
@@ -99,7 +79,7 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
 
           <FormDivider />
 
-          {/* Description Section */}
+          {/* Description */}
           <View className="mb-8">
             <Text className="font-balooBold text-3xl leading-normal">Description</Text>
             <FormTextInput
@@ -116,37 +96,18 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
           <DateSection
             control={control}
             setValue={setValue}
-            defaultDateType={defaultDateType}
-            dateState={{
-              enableDate,
-              setEnableDate,
-            }}
+            dateState={{ enableDate, setEnableDate }}
+            activeTabState={{ activeTab, setActiveTab }} // pass down activeTab
           />
 
           <FormDivider />
 
-          {/* Time Section for single day */}
-
-          <TimeSelectSingleDay />
-
-          <FormDivider />
-
-          {/* Time Section for day range */}
-
-          <TimeSelectRangeDay />
-
-          <FormDivider />
-
-          {/* Time Section */}
-          {/* <TimeSection
-            control={control}
-            setValue={setValue}
-            enableTime={enableTime}
-            setEnableTime={setEnableTime}
-          /> */}
+          {/* Conditional Time Sections */}
+          {enableDate && activeTab === "1-day" && <TimeSelectSingleDay />}
+          {enableDate && activeTab === "multi-day" && <TimeSelectRangeDay />}
         </ScrollView>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <View className="px-8 py-6">
           <Pressable
             onPress={handleSubmit(onSubmit)}

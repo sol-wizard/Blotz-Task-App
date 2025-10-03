@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import React, { useState } from "react";
+import React from "react";
 import { Checkbox } from "react-native-paper";
 import DateSelectSingleDay from "./date-select-single-day";
 import DateSelectRangeDay from "./date-select-range-day";
@@ -9,10 +9,13 @@ import { Control, UseFormSetValue, useWatch } from "react-hook-form";
 interface DateSectionProps {
   control: Control<TaskFormField>;
   setValue: UseFormSetValue<TaskFormField>;
-  defaultDateType: "1-day" | "multi-day" | undefined;
   dateState: {
     enableDate: boolean;
     setEnableDate: React.Dispatch<React.SetStateAction<boolean>>;
+  };
+  activeTabState: {
+    activeTab: "1-day" | "multi-day" | undefined;
+    setActiveTab: React.Dispatch<React.SetStateAction<"1-day" | "multi-day" | undefined>>;
   };
 }
 
@@ -37,9 +40,9 @@ const handleDateChange = (start: Date, end: Date, setValue: UseFormSetValue<Task
   setValue("endTime", endTime, { shouldValidate: true });
 };
 
-const DateSection = ({ control, defaultDateType, setValue, dateState }: DateSectionProps) => {
+const DateSection = ({ control, setValue, dateState, activeTabState }: DateSectionProps) => {
   const { enableDate, setEnableDate } = dateState;
-  const [activeTab, setActiveTab] = useState<"1-day" | "multi-day" | undefined>(defaultDateType);
+  const { activeTab, setActiveTab } = activeTabState;
   const startDate = useWatch({ control, name: "startDate" });
   const endDate = useWatch({ control, name: "endDate" });
 
