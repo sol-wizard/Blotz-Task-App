@@ -9,6 +9,7 @@ import { mapDtoToFormTimeType } from "./util/time-type-mapper";
 import { FormDivider } from "./components/form-divider";
 import { TimeSection } from "./components/time-section";
 import { LabelSelect } from "./components/label-select";
+import DateSection from "./components/date-section";
 
 type TaskFormProps = {
   mode: "create" | "edit";
@@ -78,6 +79,11 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
               className="bg-gray-200 font-baloo text-lg"
             />
           </View>
+
+          <FormDivider />
+
+          {/* Date Section */}
+          <DateSection />
 
           <FormDivider />
 

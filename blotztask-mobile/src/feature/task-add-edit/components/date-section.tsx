@@ -1,0 +1,63 @@
+import { View, Text, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { Checkbox } from "react-native-paper";
+
+const DateSection = () => {
+  const [activeTab, setActiveTab] = useState<"1-day" | "multi-day">("1-day");
+
+  return (
+    <View className="flex-col gap-4 mb-8">
+      <View className="flex-row items-center justify-between">
+        {/* Date Label */}
+        <View className="flex-row gap-2 items-center">
+          <View className="bg-blue-100 rounded-lg" style={{ transform: [{ scale: 0.7 }] }}>
+            <Checkbox status={"checked"} onPress={() => {}} color="#B0D0FA" />
+          </View>
+          <Text className="font-balooBold text-3xl leading-normal">Date</Text>
+        </View>
+
+        {/* Segmented Control */}
+        <View className="flex-row items-stretch p-1 rounded-xl overflow-hidden bg-gray-200 flex-1 max-w-60 self-end">
+          <TouchableOpacity
+            className={`flex-1 px-4 py-2 items-center justify-center rounded-xl ${
+              activeTab === "1-day" ? "bg-white" : "bg-transparent"
+            }`}
+            onPress={() => setActiveTab("1-day")}
+          >
+            <Text className={`${activeTab === "1-day" ? "font-semibold" : ""} text-black`}>
+              1 Day
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className={`flex-1 px-4 py-2 items-center justify-center rounded-xl ${
+              activeTab === "multi-day" ? "bg-white" : "bg-transparent"
+            }`}
+            onPress={() => setActiveTab("multi-day")}
+          >
+            <Text className={`${activeTab === "multi-day" ? "font-semibold" : ""} text-black`}>
+              Multi-Day
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Content */}
+      <View className="mt-4">
+        {activeTab === "1-day" ? (
+          <View>
+            <Text className="text-lg font-semibold">1-day</Text>
+            <Text>Content for 1-day view</Text>
+          </View>
+        ) : (
+          <View>
+            <Text className="text-lg font-semibold">Multi-day</Text>
+            <Text>Content for Multi-day view</Text>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+};
+
+export default DateSection;
