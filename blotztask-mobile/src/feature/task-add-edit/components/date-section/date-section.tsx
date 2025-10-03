@@ -59,47 +59,51 @@ const DateSection = ({ control, defaultDateType, setValue, dateState }: DateSect
         </View>
 
         {/* Segmented Control */}
-        <View className="flex-row items-stretch p-1 rounded-xl overflow-hidden bg-gray-200 flex-[0.75]">
-          <TouchableOpacity
-            className={`flex-1 px-4 py-2 items-center justify-center rounded-xl ${
-              activeTab === "1-day" ? "bg-white" : "bg-transparent"
-            }`}
-            onPress={() => setActiveTab("1-day")}
-            disabled={!enableDate}
-          >
-            <Text className={`${activeTab === "1-day" ? "font-semibold" : ""} text-black`}>
-              1 Day
-            </Text>
-          </TouchableOpacity>
+        {enableDate && (
+          <View className="flex-row items-stretch p-1 rounded-xl overflow-hidden bg-gray-200 flex-[0.75]">
+            <TouchableOpacity
+              className={`flex-1 px-4 py-2 items-center justify-center rounded-xl ${
+                activeTab === "1-day" ? "bg-white" : "bg-transparent"
+              }`}
+              onPress={() => setActiveTab("1-day")}
+              disabled={!enableDate}
+            >
+              <Text className={`${activeTab === "1-day" ? "font-semibold" : ""} text-black`}>
+                1 Day
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            className={`flex-1 px-4 py-2 items-center justify-center rounded-xl ${
-              activeTab === "multi-day" ? "bg-white" : "bg-transparent"
-            }`}
-            onPress={() => setActiveTab("multi-day")}
-            disabled={!enableDate}
-          >
-            <Text className={`${activeTab === "multi-day" ? "font-semibold" : ""} text-black`}>
-              Multi-Day
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Content */}
-      <View className="mt-4">
-        {activeTab === "1-day" ? (
-          <View>
-            <Text className="text-lg font-semibold mb-2">1-day</Text>
-            <DateSelectSingleDay />
-          </View>
-        ) : (
-          <View>
-            <Text className="text-lg font-semibold mb-2">Multi-day</Text>
-            <DateSelectRangeDay />
+            <TouchableOpacity
+              className={`flex-1 px-4 py-2 items-center justify-center rounded-xl ${
+                activeTab === "multi-day" ? "bg-white" : "bg-transparent"
+              }`}
+              onPress={() => setActiveTab("multi-day")}
+              disabled={!enableDate}
+            >
+              <Text className={`${activeTab === "multi-day" ? "font-semibold" : ""} text-black`}>
+                Multi-Day
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
+
+      {/* Content */}
+      {enableDate && (
+        <View className="mt-4">
+          {activeTab === "1-day" ? (
+            <View>
+              <Text className="text-lg font-semibold mb-2">1-day</Text>
+              <DateSelectSingleDay />
+            </View>
+          ) : (
+            <View>
+              <Text className="text-lg font-semibold mb-2">Multi-day</Text>
+              <DateSelectRangeDay />
+            </View>
+          )}
+        </View>
+      )}
     </View>
   );
 };
