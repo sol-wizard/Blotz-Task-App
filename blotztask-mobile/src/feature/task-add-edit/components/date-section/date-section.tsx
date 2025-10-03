@@ -23,10 +23,25 @@ const clearTimeValues = (setValue: UseFormSetValue<TaskFormField>) => {
   setValue("endTime", null, { shouldValidate: true });
 };
 
+const handleDateChange = (start: Date, end: Date, setValue: UseFormSetValue<TaskFormField>) => {
+  setValue("startDate", start, { shouldValidate: true });
+  setValue("endDate", end, { shouldValidate: true });
+
+  const startTime = new Date(start);
+  startTime.setHours(0, 0, 0, 0);
+
+  const endTime = new Date(end);
+  endTime.setHours(23, 59, 0, 0);
+
+  setValue("startTime", startTime, { shouldValidate: true });
+  setValue("endTime", endTime, { shouldValidate: true });
+};
+
 const DateSection = ({ control, defaultDateType, setValue, dateState }: DateSectionProps) => {
   const { enableDate, setEnableDate } = dateState;
   const [activeTab, setActiveTab] = useState<"1-day" | "multi-day" | undefined>(defaultDateType);
-  const startTime = useWatch({ control, name: "startTime" });
+  const startDate = useWatch({ control, name: "startDate" });
+  const endDate = useWatch({ control, name: "endDate" });
 
   const handleDateToggle = () => {
     const newEnableDate = !enableDate;
@@ -91,29 +106,20 @@ const DateSection = ({ control, defaultDateType, setValue, dateState }: DateSect
       {enableDate && (
         <View className="mt-4">
           {activeTab === "1-day" ? (
-            <View>
-              <Text className="text-lg font-semibold mb-2">1-day</Text>
-              <DateSelectSingleDay
-                onChange={({ selectedDate }) => {
-                  setValue("startDate", selectedDate, { shouldValidate: true });
-                  setValue("endDate", selectedDate, { shouldValidate: true });
-
-                  const startTime = new Date(selectedDate);
-                  startTime.setHours(0, 0, 0, 0);
-                  const endTime = new Date(selectedDate);
-                  endTime.setHours(23, 59, 0, 0);
-
-                  setValue("startTime", startTime, { shouldValidate: true });
-                  setValue("endTime", endTime, { shouldValidate: true });
-                }}
-                defaultValue={startTime}
-              />
-            </View>
+            <DateSelectSingleDay
+              defaultValue={startDate}
+              onChange={({ selectedDate }) =>
+                handleDateChange(selectedDate, selectedDate, setValue)
+              }
+            />
           ) : (
-            <View>
-              <Text className="text-lg font-semibold mb-2">Multi-day</Text>
-              <DateSelectRangeDay />
-            </View>
+            <DateSelectRangeDay
+              defaultStart={startDate}
+              defaultEnd={endDate}
+              onChange={({ selectedStart, selectedEnd }) =>
+                handleDateChange(selectedStart, selectedEnd, setValue)
+              }
+            />
           )}
         </View>
       )}
