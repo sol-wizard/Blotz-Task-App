@@ -113,8 +113,33 @@ public class AiTaskGenerateService : IAiTaskGenerateService
         {
             _logger.LogError(
                 ex,
-                "Semantic Kernel FunctionChoiceBehavior.Required for TaskExtraction failed."
+                "Semantic Kernel FunctionChoiceBehavior.Required for TaskExtraction failed. " +
+                "Exception Type: {ExceptionType}, Message: {ExceptionMessage}, " +
+                "ChatHistory Count: {ChatHistoryCount}, Function Name: {FunctionName}",
+                ex.GetType().Name,
+                ex.Message,
+                tempHistory.Count,
+                extractTasksFunction.Name
             );
+
+            // Log additional debug information
+            _logger.LogDebug(
+                "Function details - Plugin: {PluginName}, Function: {FunctionName}, " +
+                "Execution Settings: {ExecutionSettings}",
+                extractTasksFunction.PluginName,
+                extractTasksFunction.Name,
+                JsonSerializer.Serialize(executionSettings)
+            );
+
+            // Log the last user message for context
+            var lastUserMessage = tempHistory.LastOrDefault(m => m.Role == AuthorRole.User);
+            if (lastUserMessage != null)
+            {
+                _logger.LogDebug(
+                    "Last user message content: {UserMessageContent}",
+                    lastUserMessage.Content
+                );
+            }
 
             return null;
         }
@@ -125,7 +150,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
     ///  Initializes a new conversation by creating a new ChatHistory object
     ///  and setting the system message.
     ///  </summary>
-    /// <returns>A Task that represents the asynchronous operation, containing the initialized ChatHistory.</returns
+    /// <returns>A Task that represents the asynchronous operation, containing the initialized ChatHistory.</returns>
     /// <exception cref="ArgumentException">Thrown when the conversationId is null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the conversation state service fails to set
     /// the chat history.</exception>
