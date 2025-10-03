@@ -23,8 +23,14 @@ export default function CalendarHeader({
       <TouchableOpacity onPress={onToggleCalendar} className="pt-5" activeOpacity={0.7}>
         <Ionicons
           name={isCalendarVisible ? "chevron-up" : "chevron-down"}
-          size={34}
+          size={22}
           className="text-gray-800"
+          style={{
+            fontWeight: "800",
+            textShadowColor: "#1F2937",
+            textShadowOffset: { width: 0.7, height: 0.7 },
+            textShadowRadius: 0.7,
+          }}
         />
       </TouchableOpacity>
     </View>
