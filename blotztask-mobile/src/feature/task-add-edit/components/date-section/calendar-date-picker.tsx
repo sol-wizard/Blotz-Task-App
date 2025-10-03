@@ -57,17 +57,32 @@ const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
 
   const onDayPress = (day: { dateString: string }) => {
     if (!allowRangeSelection) {
+      // Single date selection allowed
       setStartDate(day.dateString);
       setEndDate(null);
       return;
     }
 
-    if (!startDate || (startDate && endDate)) {
+    // Range selection
+    if (!startDate) {
+      // First click → set start date
       setStartDate(day.dateString);
       setEndDate(null);
-    } else if (new Date(day.dateString) >= new Date(startDate)) {
-      setEndDate(day.dateString);
+    } else if (!endDate) {
+      // Second click → must be after start date and not same day
+      if (day.dateString === startDate) {
+        // Do nothing if same as start date
+        return;
+      }
+      if (new Date(day.dateString) > new Date(startDate)) {
+        setEndDate(day.dateString);
+      } else {
+        // If user selects a date before startDate, reset startDate
+        setStartDate(day.dateString);
+        setEndDate(null);
+      }
     } else {
+      // Both dates already selected → start a new range
       setStartDate(day.dateString);
       setEndDate(null);
     }
@@ -133,7 +148,13 @@ const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
           <TouchableOpacity onPress={handleClose} className="px-4 py-2 rounded-lg bg-gray-200">
             <Text className="text-gray-700 font-medium">Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleConfirm} className="px-4 py-2 rounded-lg bg-lime-400">
+          <TouchableOpacity
+            onPress={handleConfirm}
+            className={`px-4 py-2 rounded-lg ${
+              allowRangeSelection && (!startDate || !endDate) ? "bg-gray-300" : "bg-lime-400"
+            }`}
+            disabled={allowRangeSelection && (!startDate || !endDate)}
+          >
             <Text className="text-white font-medium">Confirm</Text>
           </TouchableOpacity>
         </View>
