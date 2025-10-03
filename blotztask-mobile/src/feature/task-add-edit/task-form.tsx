@@ -10,6 +10,8 @@ import { FormDivider } from "./components/form-divider";
 import { TimeSection } from "./components/time-section";
 import { LabelSelect } from "./components/label-select";
 import DateSection from "./components/date-section/date-section";
+import TimeSelectSingleDay from "./components/time-sections/time-select-single-day";
+import TimeSelectRangeDay from "./components/time-sections/time-select-range-day";
 
 type TaskFormProps = {
   mode: "create" | "edit";
@@ -84,6 +86,18 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
 
           {/* Date Section */}
           <DateSection />
+
+          <FormDivider />
+
+          {/* Time Section for single day */}
+
+          <TimeSelectSingleDay />
+
+          <FormDivider />
+
+          {/* Time Section for day range */}
+
+          <TimeSelectRangeDay />
 
           <FormDivider />
 
