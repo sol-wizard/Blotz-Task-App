@@ -9,7 +9,7 @@ import { mapDtoToFormTimeType } from "./util/time-type-mapper";
 import { FormDivider } from "./components/form-divider";
 import { TimeSection } from "./components/time-section";
 import { LabelSelect } from "./components/label-select";
-import DateSection from "./components/date-section";
+import DateSection from "./components/date-section/date-section";
 
 type TaskFormProps = {
   mode: "create" | "edit";
