@@ -52,8 +52,7 @@ const DateSelectSingleDay = () => {
         allowRangeSelection={false}
         visible={showCalendar}
         onClose={() => setShowCalendar(false)}
-        onSave={(date) => {
-          setSelected(date || "Select Date");
+        onSave={() => {
           setShowCalendar(false);
         }}
       />

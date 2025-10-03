@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import { Checkbox } from "react-native-paper";
 import DateSelectSingleDay from "./date-select-single-day";
+import DateSelectRangeDay from "./date-select-range-day";
 
 const DateSection = () => {
   const [activeTab, setActiveTab] = useState<"1-day" | "multi-day">("1-day");
@@ -58,7 +59,7 @@ const DateSection = () => {
         ) : (
           <View>
             <Text className="text-lg font-semibold mb-2">Multi-day</Text>
-            <Text>Content for Multi-day view</Text>
+            <DateSelectRangeDay />
           </View>
         )}
       </View>
