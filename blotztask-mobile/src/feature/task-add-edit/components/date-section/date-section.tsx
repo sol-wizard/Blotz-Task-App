@@ -18,11 +18,21 @@ interface DateSectionProps {
     activeTab: "1-day" | "multi-day" | undefined;
     setActiveTab: React.Dispatch<React.SetStateAction<"1-day" | "multi-day" | undefined>>;
   };
+  watchedValues: {
+    formStartDate: Date | null;
+  };
 }
 
-const DateSection = ({ control, setValue, dateState, activeTabState }: DateSectionProps) => {
+const DateSection = ({
+  control,
+  setValue,
+  dateState,
+  activeTabState,
+  watchedValues,
+}: DateSectionProps) => {
   const { enableDate, setEnableDate } = dateState;
   const { activeTab, setActiveTab } = activeTabState;
+  const { formStartDate } = watchedValues;
 
   const handleDateToggle = () => {
     const newEnableDate = !enableDate;
@@ -92,6 +102,7 @@ const DateSection = ({ control, setValue, dateState, activeTabState }: DateSecti
               setValue={setValue}
               nameStart="startDate"
               nameEnd="endDate"
+              startDate={formStartDate}
             />
           ) : (
             <DateSelectRangeDay

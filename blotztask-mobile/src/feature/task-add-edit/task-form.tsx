@@ -60,7 +60,7 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
   const { handleSubmit, formState, control, setValue, watch } = methods;
   const { isValid, isSubmitting } = formState;
 
-  const formTimeType = watch("timeType");
+  const [formStartDate, formTimeType] = watch(["startDate", "timeType"]);
 
   const defaultDateType = useMemo(() => {
     if (mappedTimeType === "single") return "1-day";
@@ -124,6 +124,7 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
             setValue={setValue}
             dateState={{ enableDate, setEnableDate }}
             activeTabState={{ activeTab, setActiveTab }}
+            watchedValues={{ formStartDate }}
           />
 
           <FormDivider />

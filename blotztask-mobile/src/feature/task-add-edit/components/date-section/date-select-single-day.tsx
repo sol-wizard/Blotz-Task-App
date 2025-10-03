@@ -3,7 +3,7 @@ import { View, Text } from "react-native";
 import CalendarDatePicker from "./calendar-date-picker";
 import { RadioButton } from "react-native-paper";
 import { isSameDay } from "date-fns";
-import { Controller, Control, UseFormSetValue, useWatch } from "react-hook-form";
+import { Controller, Control, UseFormSetValue } from "react-hook-form";
 import { TaskFormField } from "../../models/task-form-schema";
 import { resetDefaultTimeValues } from "../../task-form";
 
@@ -12,6 +12,7 @@ interface DateSelectSingleDayProps {
   setValue: UseFormSetValue<TaskFormField>;
   nameStart: "startDate";
   nameEnd: "endDate";
+  startDate: Date | null;
 }
 
 const getInitialSelected = (value: Date | null) => {
@@ -33,11 +34,10 @@ const DateSelectSingleDay = ({
   setValue,
   nameStart,
   nameEnd,
+  startDate,
 }: DateSelectSingleDayProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
-  // Watch the current form value for startDate
-  const watchedStartDate = useWatch({ control, name: "startDate" });
-  const [selected, setSelected] = useState(getInitialSelected(watchedStartDate ?? null));
+  const [selected, setSelected] = useState(getInitialSelected(startDate ?? null));
 
   return (
     <View className="w-full">
