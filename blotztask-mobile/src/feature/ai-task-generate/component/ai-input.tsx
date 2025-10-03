@@ -9,6 +9,7 @@ export const AiInput = ({
   isVoiceInput,
   setIsVoiceInput,
   generateTaskError,
+  setInputError,
 }: {
   text: string;
   setText: (value: string) => void;
@@ -16,6 +17,7 @@ export const AiInput = ({
   isVoiceInput: boolean;
   setIsVoiceInput: (v: boolean) => void;
   generateTaskError: boolean;
+  setInputError: (v: boolean) => void;
 }) => {
   return (
     <>
@@ -25,6 +27,7 @@ export const AiInput = ({
           setText={setText}
           sendMessage={sendMessage}
           hasError={generateTaskError}
+          setInputError={setInputError}
         />
       ) : (
         <WriteInput

@@ -1,5 +1,6 @@
+import { ASSETS } from "@/shared/constants/assets";
 import { theme } from "@/shared/constants/theme";
-import { TextInput, View, Text } from "react-native";
+import { TextInput, View, Text, Image } from "react-native";
 
 export const WriteInput = ({
   hasError,
@@ -43,10 +44,11 @@ export const WriteInput = ({
         style={{ textAlignVertical: "top" }}
       />
       {hasError && (
-        <View className="bg-background w-80 rounded-2xl px-4 py-6 mb-4">
-          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2">
+        <View className="bg-background rounded-2xl px-4 py-6 mb-4 w-96 flex-row">
+          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2 w-72">
             Try again-be specific, like ‘Team meeting at 9am‘
           </Text>
+          <Image source={ASSETS.greenBun} className="w-20 h-20" />
         </View>
       )}
     </View>
