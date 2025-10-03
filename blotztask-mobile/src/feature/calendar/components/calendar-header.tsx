@@ -16,7 +16,7 @@ const formDate = (dateString: string) => {
 };
 
 export default function CalendarHeader({ date }: { date: string }) {
-  const { dayOfWeek, monthDay, year } = formDate(date);
+  const { dayOfWeek} = formDate(date);
 
   return (
     <View className="flex-row justify-between items-center px-5">
