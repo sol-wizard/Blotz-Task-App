@@ -40,7 +40,10 @@ export const VoiceInput = ({
   return (
     <View className="items-center mt-12">
       {hasError && (
-        <View className="bg-background rounded-2xl py-6 px-4 flex-row w-96">
+        <View
+          className="bg-background rounded-2xl py-6 px-4 flex-row w-96"
+          style={{ minHeight: idleBlockH, width: "100%" }}
+        >
           <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2 w-72">
             Oops, that went over my head. Can you say it again
           </Text>
