@@ -10,11 +10,13 @@ export const VoiceInput = ({
   text,
   setText,
   sendMessage,
+  setInputError,
 }: {
   hasError: boolean;
   text: string;
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
+  setInputError: (v: boolean) => void;
 }) => {
   const [language, setLanguage] = useState<"en" | "zh">("zh");
   const { startListening, partialText, stopAndGetText, isListening } = useVoiceInput({ language });
@@ -84,7 +86,10 @@ export const VoiceInput = ({
 
       <View className="mt-6 items-center">
         <Pressable
-          onLongPress={startListening}
+          onLongPress={async () => {
+            setInputError(false);
+            await startListening();
+          }}
           onPressOut={handleMicPressOut}
           delayLongPress={250}
           style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}

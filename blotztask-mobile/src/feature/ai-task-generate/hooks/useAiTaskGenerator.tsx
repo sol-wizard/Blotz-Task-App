@@ -73,6 +73,7 @@ export function useAiTaskGenerator() {
 
   return {
     inputError,
+    setInputError,
     aiGeneratedTasks,
     sendMessage,
     modalType,
