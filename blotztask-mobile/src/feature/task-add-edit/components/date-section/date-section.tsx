@@ -4,7 +4,7 @@ import { Checkbox } from "react-native-paper";
 import DateSelectSingleDay from "./date-select-single-day";
 import DateSelectRangeDay from "./date-select-range-day";
 import { TaskFormField } from "../../models/task-form-schema";
-import { Control, UseFormSetValue } from "react-hook-form";
+import { Control, UseFormSetValue, useWatch } from "react-hook-form";
 
 interface DateSectionProps {
   control: Control<TaskFormField>;
@@ -16,28 +16,27 @@ interface DateSectionProps {
   };
 }
 
+const clearTimeValues = (setValue: UseFormSetValue<TaskFormField>) => {
+  setValue("startDate", null, { shouldValidate: true });
+  setValue("startTime", null, { shouldValidate: true });
+  setValue("endDate", null, { shouldValidate: true });
+  setValue("endTime", null, { shouldValidate: true });
+};
+
 const DateSection = ({ control, defaultDateType, setValue, dateState }: DateSectionProps) => {
   const { enableDate, setEnableDate } = dateState;
   const [activeTab, setActiveTab] = useState<"1-day" | "multi-day" | undefined>(defaultDateType);
-
-  const clearTimeValues = () => {
-    setValue("singleDate", null, { shouldValidate: true });
-    setValue("singleTime", null, { shouldValidate: true });
-    setValue("startDate", null, { shouldValidate: true });
-    setValue("startTime", null, { shouldValidate: true });
-    setValue("endDate", null, { shouldValidate: true });
-    setValue("endTime", null, { shouldValidate: true });
-  };
+  const startTime = useWatch({ control, name: "startTime" });
 
   const handleDateToggle = () => {
     const newEnableDate = !enableDate;
     setEnableDate(newEnableDate);
-    clearTimeValues();
+    clearTimeValues(setValue);
 
     if (newEnableDate) {
-      // Default to single when enabling date
-      setValue("timeType", "single", { shouldValidate: true });
       setActiveTab("1-day");
+      // Default to range type, that is, time range 00:00 - 23:59 when enabling date
+      setValue("timeType", "range", { shouldValidate: true });
     } else {
       setValue("timeType", null, { shouldValidate: true });
       setActiveTab(undefined); // reset activeTab when disabled
@@ -94,7 +93,21 @@ const DateSection = ({ control, defaultDateType, setValue, dateState }: DateSect
           {activeTab === "1-day" ? (
             <View>
               <Text className="text-lg font-semibold mb-2">1-day</Text>
-              <DateSelectSingleDay />
+              <DateSelectSingleDay
+                onChange={({ selectedDate }) => {
+                  setValue("startDate", selectedDate, { shouldValidate: true });
+                  setValue("endDate", selectedDate, { shouldValidate: true });
+
+                  const startTime = new Date(selectedDate);
+                  startTime.setHours(0, 0, 0, 0);
+                  const endTime = new Date(selectedDate);
+                  endTime.setHours(23, 59, 0, 0);
+
+                  setValue("startTime", startTime, { shouldValidate: true });
+                  setValue("endTime", endTime, { shouldValidate: true });
+                }}
+                defaultValue={startTime}
+              />
             </View>
           ) : (
             <View>
