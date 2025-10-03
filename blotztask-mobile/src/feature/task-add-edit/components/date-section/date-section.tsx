@@ -4,7 +4,8 @@ import { Checkbox } from "react-native-paper";
 import DateSelectSingleDay from "./date-select-single-day";
 import DateSelectRangeDay from "./date-select-range-day";
 import { TaskFormField } from "../../models/task-form-schema";
-import { Control, UseFormSetValue, useWatch } from "react-hook-form";
+import { Control, UseFormSetValue } from "react-hook-form";
+import { clearDateValues } from "../../task-form";
 
 interface DateSectionProps {
   control: Control<TaskFormField>;
@@ -19,37 +20,14 @@ interface DateSectionProps {
   };
 }
 
-const clearTimeValues = (setValue: UseFormSetValue<TaskFormField>) => {
-  setValue("startDate", null, { shouldValidate: true });
-  setValue("startTime", null, { shouldValidate: true });
-  setValue("endDate", null, { shouldValidate: true });
-  setValue("endTime", null, { shouldValidate: true });
-};
-
-const handleDateChange = (start: Date, end: Date, setValue: UseFormSetValue<TaskFormField>) => {
-  setValue("startDate", start, { shouldValidate: true });
-  setValue("endDate", end, { shouldValidate: true });
-
-  const startTime = new Date(start);
-  startTime.setHours(0, 0, 0, 0);
-
-  const endTime = new Date(end);
-  endTime.setHours(23, 59, 0, 0);
-
-  setValue("startTime", startTime, { shouldValidate: true });
-  setValue("endTime", endTime, { shouldValidate: true });
-};
-
 const DateSection = ({ control, setValue, dateState, activeTabState }: DateSectionProps) => {
   const { enableDate, setEnableDate } = dateState;
   const { activeTab, setActiveTab } = activeTabState;
-  const startDate = useWatch({ control, name: "startDate" });
-  const endDate = useWatch({ control, name: "endDate" });
 
   const handleDateToggle = () => {
     const newEnableDate = !enableDate;
     setEnableDate(newEnableDate);
-    clearTimeValues(setValue);
+    clearDateValues(setValue);
 
     if (newEnableDate) {
       setActiveTab("1-day");
@@ -110,18 +88,17 @@ const DateSection = ({ control, setValue, dateState, activeTabState }: DateSecti
         <View className="mt-4">
           {activeTab === "1-day" ? (
             <DateSelectSingleDay
-              defaultValue={startDate}
-              onChange={({ selectedDate }) =>
-                handleDateChange(selectedDate, selectedDate, setValue)
-              }
+              control={control}
+              setValue={setValue}
+              nameStart="startDate"
+              nameEnd="endDate"
             />
           ) : (
             <DateSelectRangeDay
-              defaultStart={startDate}
-              defaultEnd={endDate}
-              onChange={({ selectedStart, selectedEnd }) =>
-                handleDateChange(selectedStart, selectedEnd, setValue)
-              }
+              control={control}
+              setValue={setValue}
+              nameStart="startDate"
+              nameEnd="endDate"
             />
           )}
         </View>

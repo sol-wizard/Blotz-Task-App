@@ -1,12 +1,16 @@
 import { View, Text, Pressable } from "react-native";
 import React, { useState } from "react";
 import { format } from "date-fns";
+import { Controller, Control, UseFormSetValue } from "react-hook-form";
 import CalendarDatePicker from "./calendar-date-picker";
+import { TaskFormField } from "../../models/task-form-schema";
+import { resetDefaultTimeValues } from "../../task-form";
 
 interface DateSelectRangeDayProps {
-  onChange: (value: { selectedStart: Date; selectedEnd: Date }) => void;
-  defaultStart?: Date | null;
-  defaultEnd?: Date | null;
+  control: Control<TaskFormField>;
+  setValue: UseFormSetValue<TaskFormField>;
+  nameStart: "startDate";
+  nameEnd: "endDate";
 }
 
 const DateInput = ({
@@ -35,40 +39,49 @@ const DateInput = ({
   );
 };
 
-const DateSelectRangeDay = ({
-  onChange,
-  defaultStart = null,
-  defaultEnd = null,
-}: DateSelectRangeDayProps) => {
+const DateSelectRangeDay = ({ control, setValue, nameStart, nameEnd }: DateSelectRangeDayProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
-  const [startDate, setStartDate] = useState<Date | null>(defaultStart ?? null);
-  const [endDate, setEndDate] = useState<Date | null>(defaultEnd ?? null);
-
-  const openCalendar = () => setShowCalendar(true);
 
   return (
-    <View>
-      <View className="flex-col gap-2 items-start justify-center">
-        <DateInput label="Start Date" date={startDate} onPress={openCalendar} />
-        <DateInput label="End Date" date={endDate} onPress={openCalendar} />
-      </View>
+    <Controller
+      control={control}
+      name={nameStart}
+      render={({ field: { onChange: onChangeStart, value: startDate } }) => (
+        <Controller
+          control={control}
+          name={nameEnd}
+          render={({ field: { onChange: onChangeEnd, value: endDate } }) => (
+            <View>
+              <View className="flex-col gap-2 items-start justify-center">
+                <DateInput
+                  label="Start Date"
+                  date={startDate}
+                  onPress={() => setShowCalendar(true)}
+                />
+                <DateInput label="End Date" date={endDate} onPress={() => setShowCalendar(true)} />
+              </View>
 
-      {/* Calendar Modal */}
-      <CalendarDatePicker
-        allowRangeSelection={true}
-        visible={showCalendar}
-        onClose={() => setShowCalendar(false)}
-        onSave={(start, end) => {
-          const startD = start ? new Date(start) : null;
-          const endD = end ? new Date(end) : null;
+              <CalendarDatePicker
+                allowRangeSelection
+                visible={showCalendar}
+                onClose={() => setShowCalendar(false)}
+                onSave={(start, end) => {
+                  const startD = start ? new Date(start) : null;
+                  const endD = end ? new Date(end) : null;
 
-          setStartDate(startD);
-          setEndDate(endD);
-          onChange({ selectedStart: startD!, selectedEnd: endD! });
-          setShowCalendar(false);
-        }}
-      />
-    </View>
+                  onChangeStart(startD);
+                  onChangeEnd(endD);
+                  if (startD && endD) {
+                    resetDefaultTimeValues(startD, endD, setValue);
+                  }
+                  setShowCalendar(false);
+                }}
+              />
+            </View>
+          )}
+        />
+      )}
+    />
   );
 };
 
