@@ -1,19 +1,22 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable } from "react-native";
+import { View, Text, TextInput, Pressable, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
+import { ASSETS } from "@/shared/constants/assets";
 
 export const VoiceInput = ({
   hasError,
   text,
   setText,
   sendMessage,
+  setInputError,
 }: {
   hasError: boolean;
   text: string;
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
+  setInputError: (v: boolean) => void;
 }) => {
   const [language, setLanguage] = useState<"en" | "zh">("zh");
   const { startListening, partialText, stopAndGetText, isListening } = useVoiceInput({ language });
@@ -38,12 +41,13 @@ export const VoiceInput = ({
     <View className="items-center mt-12">
       {hasError && (
         <View
-          onLayout={(e) => setIdleBlockH(e.nativeEvent.layout.height)}
-          className="bg-background w-80 rounded-2xl py-6 px-4"
+          className="bg-background rounded-2xl py-6 px-4 flex-row w-96"
+          style={{ minHeight: idleBlockH }}
         >
-          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2">
+          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2 w-72">
             Oops, that went over my head. Can you say it again
           </Text>
+          <Image source={ASSETS.greenBun} className="w-20 h-20" />
         </View>
       )}
       {!hasError && (
@@ -85,7 +89,10 @@ export const VoiceInput = ({
 
       <View className="mt-6 items-center">
         <Pressable
-          onLongPress={startListening}
+          onLongPress={async () => {
+            setInputError(false);
+            await startListening();
+          }}
           onPressOut={handleMicPressOut}
           delayLongPress={250}
           style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}

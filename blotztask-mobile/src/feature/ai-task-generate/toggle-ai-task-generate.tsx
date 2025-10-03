@@ -5,6 +5,7 @@ import { AiTaskGenerateModal } from "./component/ai-task-generate-modal";
 import { useRef } from "react";
 import { View } from "react-native";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
+import { ASSETS } from "@/shared/constants/assets";
 
 export const ToggleAiTaskGenerate = () => {
   const aiVoiceInputModalRef = useRef<BottomSheetModal>(null);
@@ -13,7 +14,7 @@ export const ToggleAiTaskGenerate = () => {
       <View style={{ position: "absolute", right: 30, bottom: 30 }}>
         <GradientCircle size={58} colors={["#A3DC2F", "#2F80ED"]}>
           <FAB
-            icon="star"
+            icon={ASSETS.whiteBun}
             customSize={58}
             color="#fff"
             style={{
