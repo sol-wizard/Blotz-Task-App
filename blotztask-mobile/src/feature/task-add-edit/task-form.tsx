@@ -7,11 +7,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { mapDtoToFormTimeType } from "./util/time-type-mapper";
 import { FormDivider } from "./components/form-divider";
-import { TimeSection } from "./components/time-section";
+// import { TimeSection } from "./components/time-section";
 import { LabelSelect } from "./components/label-select";
 import DateSection from "./components/date-section/date-section";
 import TimeSelectSingleDay from "./components/time-sections/time-select-single-day";
 import TimeSelectRangeDay from "./components/time-sections/time-select-range-day";
+import { isSameDay } from "date-fns";
 
 type TaskFormProps = {
   mode: "create" | "edit";
@@ -23,6 +24,7 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
   const { title, description, timeType, startTime, endTime, labelId } = defaultValues || {};
 
   const mappedTimeType = mapDtoToFormTimeType(timeType);
+
   const isSingle = mappedTimeType === "single";
   const isRange = mappedTimeType === "range";
 
@@ -47,7 +49,28 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
   const { isValid, isSubmitting } = formState;
 
   const formTimeType = watch("timeType");
-  const [enableTime, setEnableTime] = useState(!!formTimeType);
+  const formStartDate = watch("startDate");
+  const formEndDate = watch("endDate");
+  const [enableDate, setEnableDate] = useState(!!formTimeType);
+
+  // const [enableTime, setEnableTime] = useState(!!formTimeType);
+
+  // Check if dates are on the same day
+  const getDefaultDateType = () => {
+    if (formTimeType === "single") {
+      return "1-day";
+    }
+    if (formTimeType === "range" && formStartDate && formEndDate) {
+      if (isSameDay(formEndDate, formStartDate)) {
+        return "1-day";
+      } else {
+        return "multi-day";
+      }
+    }
+    return undefined;
+  };
+
+  const defaultDateType = getDefaultDateType();
 
   return (
     <FormProvider {...methods}>
@@ -85,7 +108,15 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
           <FormDivider />
 
           {/* Date Section */}
-          <DateSection />
+          <DateSection
+            control={control}
+            setValue={setValue}
+            defaultDateType={defaultDateType}
+            dateState={{
+              enableDate,
+              setEnableDate,
+            }}
+          />
 
           <FormDivider />
 
@@ -102,12 +133,12 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
           <FormDivider />
 
           {/* Time Section */}
-          <TimeSection
+          {/* <TimeSection
             control={control}
             setValue={setValue}
             enableTime={enableTime}
             setEnableTime={setEnableTime}
-          />
+          /> */}
         </ScrollView>
 
         {/* Submit Button */}

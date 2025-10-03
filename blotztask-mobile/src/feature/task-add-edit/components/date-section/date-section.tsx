@@ -3,11 +3,46 @@ import React, { useState } from "react";
 import { Checkbox } from "react-native-paper";
 import DateSelectSingleDay from "./date-select-single-day";
 import DateSelectRangeDay from "./date-select-range-day";
+import { TaskFormField } from "../../models/task-form-schema";
+import { Control, UseFormSetValue } from "react-hook-form";
 
-const DateSection = () => {
-  const [activeTab, setActiveTab] = useState<"1-day" | "multi-day">("1-day");
-  const [checked, setChecked] = useState(true);
+interface DateSectionProps {
+  control: Control<TaskFormField>;
+  setValue: UseFormSetValue<TaskFormField>;
+  defaultDateType: "1-day" | "multi-day" | undefined;
+  dateState: {
+    enableDate: boolean;
+    setEnableDate: React.Dispatch<React.SetStateAction<boolean>>;
+  };
+}
 
+const DateSection = ({ control, defaultDateType, setValue, dateState }: DateSectionProps) => {
+  const { enableDate, setEnableDate } = dateState;
+  const [activeTab, setActiveTab] = useState<"1-day" | "multi-day" | undefined>(defaultDateType);
+
+  const clearTimeValues = () => {
+    setValue("singleDate", null, { shouldValidate: true });
+    setValue("singleTime", null, { shouldValidate: true });
+    setValue("startDate", null, { shouldValidate: true });
+    setValue("startTime", null, { shouldValidate: true });
+    setValue("endDate", null, { shouldValidate: true });
+    setValue("endTime", null, { shouldValidate: true });
+  };
+
+  const handleDateToggle = () => {
+    const newEnableDate = !enableDate;
+    setEnableDate(newEnableDate);
+    clearTimeValues();
+
+    if (newEnableDate) {
+      // Default to single when enabling date
+      setValue("timeType", "single", { shouldValidate: true });
+      setActiveTab("1-day");
+    } else {
+      setValue("timeType", null, { shouldValidate: true });
+      setActiveTab(undefined); // reset activeTab when disabled
+    }
+  };
   return (
     <View className="flex-col gap-4 mb-8">
       <View className="flex-row items-center justify-between">
@@ -15,8 +50,8 @@ const DateSection = () => {
         <View className="flex-row gap-2 items-center ">
           <View className="bg-blue-100 rounded-lg" style={{ transform: [{ scale: 0.7 }] }}>
             <Checkbox
-              status={checked ? "checked" : "unchecked"}
-              onPress={() => setChecked(!checked)}
+              status={enableDate ? "checked" : "unchecked"}
+              onPress={handleDateToggle}
               color="#B0D0FA"
             />
           </View>
@@ -30,6 +65,7 @@ const DateSection = () => {
               activeTab === "1-day" ? "bg-white" : "bg-transparent"
             }`}
             onPress={() => setActiveTab("1-day")}
+            disabled={!enableDate}
           >
             <Text className={`${activeTab === "1-day" ? "font-semibold" : ""} text-black`}>
               1 Day
@@ -41,6 +77,7 @@ const DateSection = () => {
               activeTab === "multi-day" ? "bg-white" : "bg-transparent"
             }`}
             onPress={() => setActiveTab("multi-day")}
+            disabled={!enableDate}
           >
             <Text className={`${activeTab === "multi-day" ? "font-semibold" : ""} text-black`}>
               Multi-Day
