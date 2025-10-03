@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { FormProvider, useForm } from "react-hook-form";
@@ -25,9 +25,6 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
 
   const mappedTimeType = mapDtoToFormTimeType(timeType);
 
-  const isSingle = mappedTimeType === "single";
-  const isRange = mappedTimeType === "range";
-
   const methods = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
@@ -36,12 +33,10 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
       description: description ?? "",
       labelId: labelId ?? null,
       timeType: mappedTimeType ?? null,
-      singleDate: isSingle ? (startTime ?? null) : null,
-      singleTime: isSingle ? (startTime ?? null) : null,
-      startDate: isRange ? (startTime ?? null) : null,
-      startTime: isRange ? (startTime ?? null) : null,
-      endDate: isRange ? (endTime ?? null) : null,
-      endTime: isRange ? (endTime ?? null) : null,
+      startDate: startTime ?? null,
+      startTime: startTime ?? null,
+      endDate: endTime ?? null,
+      endTime: endTime ?? null,
     },
   });
 
@@ -71,6 +66,16 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
   };
 
   const defaultDateType = getDefaultDateType();
+
+  useEffect(() => {
+    console.log("TaskForm - Form State:", {
+      isValid,
+      isSubmitting,
+      formTimeType,
+      enableDate,
+      values: methods.getValues(),
+    });
+  }, [enableDate, formTimeType, isSubmitting, isValid, methods]);
 
   return (
     <FormProvider {...methods}>

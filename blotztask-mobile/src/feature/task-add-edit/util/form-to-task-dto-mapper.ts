@@ -7,8 +7,6 @@ export function mapFormToAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
 
   const { start, end } = getStartEndDates(
     taskTimeType,
-    form.singleDate ?? undefined,
-    form.singleTime ?? undefined,
     form.startDate ?? undefined,
     form.startTime ?? undefined,
     form.endDate ?? undefined,
@@ -38,15 +36,13 @@ const mergeDateTime = (date: Date, time: Date | undefined): Date => {
 // Calculates the start and end Date objects for a task based on its time type and form input.
 function getStartEndDates(
   timeType: TaskTimeType | undefined,
-  singleDate: Date | undefined,
-  singleTime: Date | undefined,
   startDate: Date | undefined,
   startTime: Date | undefined,
   endDate: Date | undefined,
   endTime: Date | undefined,
 ): { start?: Date; end?: Date } {
   if (timeType === TaskTimeType.Single) {
-    const start = singleDate ? mergeDateTime(singleDate, singleTime) : undefined;
+    const start = startDate ? mergeDateTime(startDate, startTime) : undefined;
     return { start, end: start };
   }
   if (timeType === TaskTimeType.Range) {
