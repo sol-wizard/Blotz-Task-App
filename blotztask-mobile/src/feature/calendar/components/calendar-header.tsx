@@ -1,4 +1,5 @@
 import { View, Text } from "react-native";
+import UserProfile from "./UserProfile";
 
 const formDate = (dateString: string) => {
   const dateObj = new Date(`${dateString}T00:00:00`);
@@ -22,10 +23,8 @@ export default function CalendarHeader({ date }: { date: string }) {
       <Text className="text-5xl font-bold text-gray-800 font-balooExtraBold items-end pt-10">
         {dayOfWeek}
       </Text>
-      <View>
-        <Text className="text-lg font-bold text-gray-600 text-right">{monthDay}</Text>
-        <Text className="text-xl font-bold text-gray-600">{year}</Text>
-      </View>
+     
+     <UserProfile />
     </View>
   );
 }
