@@ -14,7 +14,6 @@ export function useAiTaskGenerator() {
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
-
     setModalType("loading");
     if (connection) {
       try {
@@ -73,6 +72,7 @@ export function useAiTaskGenerator() {
 
   return {
     inputError,
+    setInputError,
     aiGeneratedTasks,
     sendMessage,
     modalType,
