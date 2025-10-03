@@ -8,7 +8,7 @@ import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 export const AiTaskGenerateModal = () => {
   const [text, setText] = useState("");
   const [isVoiceInput, setIsVoiceInput] = useState(true);
-  const { aiGeneratedTasks, sendMessage, modalType, setModalType, inputError } =
+  const { aiGeneratedTasks, sendMessage, modalType, setModalType, inputError, setInputError } =
     useAiTaskGenerator();
 
   switch (modalType) {
@@ -33,6 +33,7 @@ export const AiTaskGenerateModal = () => {
       return (
         <AiInput
           generateTaskError={inputError}
+          setInputError={setInputError}
           text={text}
           setText={setText}
           sendMessage={sendMessage}
