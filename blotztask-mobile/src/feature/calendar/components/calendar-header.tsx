@@ -1,23 +1,6 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
-const formDate = (dateString: string) => {
-  const dateObj = new Date(`${dateString}T00:00:00`);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Set the time part to zero (hours, minutes, seconds, and milliseconds are all set to 0) for date comparison.
-
-  const isToday = dateObj.getTime() === today.getTime();
-
-  const month = dateObj.toLocaleString("default", { month: "short" });
-  const day = dateObj.getDate();
-  const year = dateObj.getFullYear();
-
-  return {
-    dayOfWeek: isToday ? "Today" : `${day} ${month}`,
-    monthDay: `${month} ${day}`,
-    year: year.toString(),
-  };
-};
+import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
 
 interface CalendarHeaderProps {
   date: string;
@@ -30,7 +13,7 @@ export default function CalendarHeader({
   isCalendarVisible,
   onToggleCalendar,
 }: CalendarHeaderProps) {
-  const { dayOfWeek, monthDay, year } = formDate(date);
+  const { dayOfWeek, monthDay, year } = formatCalendarDate(date);
 
   return (
     <View className="flex-row items-center gap-3 px-5">
