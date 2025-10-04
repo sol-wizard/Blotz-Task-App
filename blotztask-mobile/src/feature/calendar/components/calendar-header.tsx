@@ -13,7 +13,7 @@ export default function CalendarHeader({
   isCalendarVisible,
   onToggleCalendar,
 }: CalendarHeaderProps) {
-  const { dayOfWeek, monthDay, year } = formatCalendarDate(date);
+  const { dayOfWeek } = formatCalendarDate(date);
 
   return (
     <View className="flex-row items-center gap-3 px-5">
