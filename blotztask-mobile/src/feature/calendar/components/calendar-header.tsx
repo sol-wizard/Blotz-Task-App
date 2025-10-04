@@ -1,31 +1,38 @@
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
 
-const formDate = (dateString: string) => {
-  const dateObj = new Date(`${dateString}T00:00:00`);
-  const dayOfWeek = dateObj.toLocaleString("default", { weekday: "short" });
-  const month = dateObj.toLocaleString("default", { month: "short" });
-  const day = dateObj.getDate();
-  const year = dateObj.getFullYear();
+interface CalendarHeaderProps {
+  date: string;
+  isCalendarVisible: boolean;
+  onToggleCalendar: () => void;
+}
 
-  return {
-    dayOfWeek,
-    monthDay: `${month} ${day}`,
-    year: year.toString(),
-  };
-};
-
-export default function CalendarHeader({ date }: { date: string }) {
-  const { dayOfWeek, monthDay, year } = formDate(date);
+export default function CalendarHeader({
+  date,
+  isCalendarVisible,
+  onToggleCalendar,
+}: CalendarHeaderProps) {
+  const { dayOfWeek } = formatCalendarDate(date);
 
   return (
-    <View className="flex-row justify-between items-center px-5">
+    <View className="flex-row items-center gap-3 px-5">
       <Text className="text-5xl font-bold text-gray-800 font-balooExtraBold items-end pt-10">
         {dayOfWeek}
       </Text>
-      <View>
-        <Text className="text-lg font-bold text-gray-600 text-right">{monthDay}</Text>
-        <Text className="text-xl font-bold text-gray-600">{year}</Text>
-      </View>
+      <TouchableOpacity onPress={onToggleCalendar} className="pt-5" activeOpacity={0.7}>
+        <Ionicons
+          name={isCalendarVisible ? "chevron-up" : "chevron-down"}
+          size={22}
+          className="text-gray-800"
+          style={{
+            fontWeight: "800",
+            textShadowColor: "#1F2937",
+            textShadowOffset: { width: 0.7, height: 0.7 },
+            textShadowRadius: 0.7,
+          }}
+        />
+      </TouchableOpacity>
     </View>
   );
 }
