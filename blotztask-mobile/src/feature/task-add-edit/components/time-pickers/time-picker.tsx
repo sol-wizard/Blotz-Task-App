@@ -40,42 +40,40 @@ export const TimePicker = ({
   }));
 
   return (
-    <View className="flex-row border rounded-xl border-gray-200">
-      <View className="w-32 h-10 bg-white flex-row justify-center items-center m-2">
-        <WheelPicker
-          style={{ backgroundColor: "transparent" }}
-          contentContainerStyle={{ backgroundColor: "transparent" }}
-          overlayItemStyle={{ backgroundColor: "transparent" }}
-          itemTextStyle={{ backgroundColor: "transparent", fontSize: 18 }}
-          width={60}
-          data={hourData}
-          enableScrollByTapOnItem
-          visibleItemCount={1}
-          value={currentHour}
-          onValueChanged={({ item: { value } }) => {
-            const time = createTimeFromValues(value, currentMinute);
-            onChange(time);
-          }}
-        />
+    <View className="w-32 h-10 bg-white flex-row justify-center items-center m-2 rounded-xl">
+      <WheelPicker
+        style={{ backgroundColor: "transparent" }}
+        contentContainerStyle={{ backgroundColor: "transparent" }}
+        overlayItemStyle={{ backgroundColor: "transparent" }}
+        itemTextStyle={{ backgroundColor: "transparent", fontSize: 18 }}
+        width={60}
+        data={hourData}
+        enableScrollByTapOnItem
+        visibleItemCount={1}
+        value={currentHour}
+        onValueChanged={({ item: { value } }) => {
+          const time = createTimeFromValues(value, currentMinute);
+          onChange(time);
+        }}
+      />
 
-        <Text className="font-bold text-2xl text-gray-600">:</Text>
+      <Text className="font-bold text-2xl text-gray-600">:</Text>
 
-        <WheelPicker
-          style={{ backgroundColor: "transparent" }}
-          contentContainerStyle={{ backgroundColor: "transparent" }}
-          overlayItemStyle={{ backgroundColor: "transparent" }}
-          itemTextStyle={{ backgroundColor: "transparent", fontSize: 18 }}
-          width={60}
-          data={minData}
-          enableScrollByTapOnItem
-          visibleItemCount={1}
-          value={currentMinute}
-          onValueChanged={({ item: { value } }) => {
-            const time = createTimeFromValues(currentHour, value);
-            onChange(time);
-          }}
-        />
-      </View>
+      <WheelPicker
+        style={{ backgroundColor: "transparent" }}
+        contentContainerStyle={{ backgroundColor: "transparent" }}
+        overlayItemStyle={{ backgroundColor: "transparent" }}
+        itemTextStyle={{ backgroundColor: "transparent", fontSize: 18 }}
+        width={60}
+        data={minData}
+        enableScrollByTapOnItem
+        visibleItemCount={1}
+        value={currentMinute}
+        onValueChanged={({ item: { value } }) => {
+          const time = createTimeFromValues(currentHour, value);
+          onChange(time);
+        }}
+      />
     </View>
   );
 };

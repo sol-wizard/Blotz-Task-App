@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { EditTaskItemDTO } from "./models/edit-task-item-dto";
-import { FormProvider, useForm } from "react-hook-form";
-import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
+import { FormProvider, useForm, UseFormSetValue } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FormTextInput } from "@/shared/components/ui/form-text-input";
+import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
+import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { mapDtoToFormTimeType } from "./util/time-type-mapper";
-import { FormDivider } from "./components/form-divider";
-import { TimeSection } from "./components/time-section";
+import DateSection from "./components/date-section/date-section";
+import { isSameDay } from "date-fns";
+import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
+import { FormDivider } from "./components/form-divider";
+import TimeSection from "./components/time-sections/time-section";
 
 type TaskFormProps = {
   mode: "create" | "edit";
@@ -16,12 +18,29 @@ type TaskFormProps = {
   onSubmit: (data: TaskFormField) => void;
 };
 
+export const clearDateValues = (setValue: UseFormSetValue<TaskFormField>) => {
+  setValue("startDate", null, { shouldValidate: true });
+  setValue("startTime", null, { shouldValidate: true });
+  setValue("endDate", null, { shouldValidate: true });
+  setValue("endTime", null, { shouldValidate: true });
+};
+
+export const resetDefaultTimeValues = (
+  start: Date,
+  end: Date,
+  setValue: UseFormSetValue<TaskFormField>,
+) => {
+  const startTime = new Date(start);
+  const endTime = new Date(end);
+  startTime.setHours(0, 0, 0, 0);
+  endTime.setHours(23, 59, 0, 0);
+  setValue("startTime", startTime, { shouldValidate: true });
+  setValue("endTime", endTime, { shouldValidate: true });
+};
+
 const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
   const { title, description, timeType, startTime, endTime, labelId } = defaultValues || {};
-
   const mappedTimeType = mapDtoToFormTimeType(timeType);
-  const isSingle = mappedTimeType === "single";
-  const isRange = mappedTimeType === "range";
 
   const methods = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
@@ -31,26 +50,44 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
       description: description ?? "",
       labelId: labelId ?? null,
       timeType: mappedTimeType ?? null,
-      singleDate: isSingle ? (startTime ?? null) : null,
-      singleTime: isSingle ? (startTime ?? null) : null,
-      startDate: isRange ? (startTime ?? null) : null,
-      startTime: isRange ? (startTime ?? null) : null,
-      endDate: isRange ? (endTime ?? null) : null,
-      endTime: isRange ? (endTime ?? null) : null,
+      startDate: startTime ?? null,
+      startTime: startTime ?? null,
+      endDate: endTime ?? null,
+      endTime: endTime ?? null,
     },
   });
 
-  const { handleSubmit, formState, control, watch, setValue, resetField } = methods;
+  const { handleSubmit, formState, control, setValue, watch } = methods;
   const { isValid, isSubmitting } = formState;
 
-  const formTimeType = watch("timeType");
-  const [enableTime, setEnableTime] = useState(!!formTimeType);
+  const [formStartDate, formTimeType] = watch(["startDate", "timeType"]);
+
+  const defaultDateType = useMemo(() => {
+    if (mappedTimeType === "single") return "1-day";
+    if (mappedTimeType === "range" && startTime && endTime) {
+      return isSameDay(startTime, endTime) ? "1-day" : "multi-day";
+    }
+    return undefined;
+  }, []);
+
+  const [enableDate, setEnableDate] = useState(!!formTimeType);
+  const [activeTab, setActiveTab] = useState<"1-day" | "multi-day" | undefined>(defaultDateType);
+
+  useEffect(() => {
+    console.log("TaskForm - Form State:", {
+      isValid,
+      isSubmitting,
+      formTimeType,
+      enableDate,
+      values: methods.getValues(),
+    });
+  }, [enableDate, formTimeType, isSubmitting, isValid, methods]);
 
   return (
     <FormProvider {...methods}>
       <View className="flex-1 relative">
         <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
-          {/* Title Section */}
+          {/* Title */}
           <View className="mb-8 bg-gray-200">
             <FormTextInput
               name="title"
@@ -60,7 +97,7 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
             />
           </View>
 
-          {/* Category Section */}
+          {/* Category */}
           <View className="mb-8">
             <Text className="font-balooBold text-3xl leading-normal">Category</Text>
             <LabelSelect control={control} />
@@ -68,7 +105,7 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
 
           <FormDivider />
 
-          {/* Description Section */}
+          {/* Description */}
           <View className="mb-8">
             <Text className="font-balooBold text-3xl leading-normal">Description</Text>
             <FormTextInput
@@ -81,17 +118,26 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
 
           <FormDivider />
 
-          {/* Time Section */}
+          {/* Date Section */}
+          <DateSection
+            control={control}
+            setValue={setValue}
+            dateState={{ enableDate, setEnableDate }}
+            activeTabState={{ activeTab, setActiveTab }}
+            watchedValues={{ formStartDate }}
+          />
+
+          <FormDivider />
+
           <TimeSection
             control={control}
             setValue={setValue}
-            resetField={resetField}
-            enableTime={enableTime}
-            setEnableTime={setEnableTime}
+            enableDate={enableDate}
+            activeTab={activeTab}
           />
         </ScrollView>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <View className="px-8 py-6">
           <Pressable
             onPress={handleSubmit(onSubmit)}
