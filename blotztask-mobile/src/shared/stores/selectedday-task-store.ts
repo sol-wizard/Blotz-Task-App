@@ -9,10 +9,14 @@ import {
   toggleTaskCompletion,
 } from "../services/task-service";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { ReminderDTO } from "@/feature/settings/modals/reminder-dto";
+import { fetchTodayReminder } from "@/feature/settings/services/ai-reminder-service";
 
 interface SelectedDayTaskStore {
   selectedDay: Date;
   tasksForSelectedDay: TaskDetailDTO[];
+  reminder: ReminderDTO | null;
+  getReminder: () => Promise<void>;
   isLoading: boolean;
   setSelectedDay: (day: Date) => void;
   loadTasks: () => Promise<void>;
@@ -28,6 +32,7 @@ export const useSelectedDayTaskStore = create<SelectedDayTaskStore>((set, get) =
   overdueTasks: [],
   isLoading: false,
   setSelectedDay: (day) => set({ selectedDay: day }),
+  reminder: null,
 
   loadTasks: async () => {
     const { selectedDay } = get();
@@ -36,13 +41,24 @@ export const useSelectedDayTaskStore = create<SelectedDayTaskStore>((set, get) =
       const isToday = isSameDay(selectedDay, new Date());
       const tasks = await fetchTasksForDate(selectedDay, isToday);
       const overdueTasks = await fetchOverdueTasks();
+      const reminder = await fetchTodayReminder();
       set({ overdueTasks: overdueTasks });
       set({ tasksForSelectedDay: tasks });
+      set({ reminder: reminder });
     } catch (e) {
       console.error(e);
       set({ tasksForSelectedDay: [] });
     } finally {
       set({ isLoading: false });
+    }
+  },
+  getReminder: async () => {
+    try {
+      await fetchTodayReminder();
+      await get().loadTasks();
+    } catch (error) {
+      console.error("Failed to get reminder:", error);
+      throw error;
     }
   },
 
