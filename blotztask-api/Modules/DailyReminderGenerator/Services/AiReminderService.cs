@@ -1,5 +1,6 @@
 using System.Text.Json;
 using BlotzTask.Modules.DailyReminderGenerator.Dtos;
+using BlotzTask.Modules.DailyReminderGenerator.Prompt;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -35,11 +36,11 @@ public class AiReminderService
         };
         var todayTasks = (await _getTasksByDate.Handle(query, ct)).ToList();
         _logger.LogInformation("Fetched {TotalTasks} tasks for today (including floating).", todayTasks.Count);
-        
+
         var todoTasks = todayTasks
             .Where(t => !t.IsDone)
             .ToList();
-        
+
         _logger.LogInformation("Fetched {TotalTasks} todo tasks for today (including floating).", todoTasks.Count);
 
         if (todoTasks.Count == 0) return null;
@@ -49,11 +50,16 @@ public class AiReminderService
             todayUtc = DateTimeOffset.UtcNow,
             tasks = todoTasks
         });
-        
-        
+        _logger.LogInformation(
+            "Prepared tasks JSON for model. JsonLength={JsonLength}",
+            tasksJson.Length);
+
 
         var history = new ChatHistory();
+        history.AddSystemMessage(AiReminderPrompts.ReminderGenerationSystemMessage(DateTimeOffset.UtcNow.UtcDateTime));
+
         history.AddUserMessage(tasksJson);
+
         var generateReminderFunction = _kernel.Plugins["ReminderGenerationPlugin"]["GenerateReminder"];
         var reminderSettings = new PromptExecutionSettings
         {
@@ -61,7 +67,7 @@ public class AiReminderService
                 new[] { generateReminderFunction }
             )
         };
-        
+
         _logger.LogDebug(
             "Invoking SK function. Plugin={Plugin}, Function={Function}, Settings={Settings}",
             generateReminderFunction.PluginName,
@@ -83,7 +89,7 @@ public class AiReminderService
                 _logger.LogWarning("Model returned empty content. Returning null (HTTP 204).");
                 return null;
             }
-            
+
             var reminder = JsonSerializer.Deserialize<ReminderResult>(content!,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             if (reminder?.TaskId is null || string.IsNullOrWhiteSpace(reminder.ReminderText))
@@ -92,7 +98,7 @@ public class AiReminderService
                     reminder?.TaskId, !string.IsNullOrWhiteSpace(reminder?.ReminderText));
                 return null;
             }
-                
+
             if (!todoTasks.Any(t => t.Id == reminder.TaskId.Value)) return null;
 
             return reminder;

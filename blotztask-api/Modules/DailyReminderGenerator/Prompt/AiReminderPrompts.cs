@@ -15,7 +15,7 @@ public class AiReminderPrompts
                   - Output STRICT JSON only:
                   {
                     "taskId": "<int or null>",
-                    "tipText": "<<=140 chars>",
+                    "reminderText": "<<=140 chars>",
                     "confidence": 0..1
                   }
                   - Tip tone: warm, concise, motivating.
