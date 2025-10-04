@@ -18,6 +18,7 @@ import { TaskStatusSelect, TaskStatusType } from "../components/task-status-sele
 import TaskCard from "../components/task-card";
 import CalendarHeader from "../components/calendar-header";
 import { TaskListPlaceholder } from "../components/tasklist-placeholder";
+import { TodayReminder } from "@/feature/settings/components/today-reminder";
 
 export default function CalendarScreen() {
   const {
@@ -29,6 +30,7 @@ export default function CalendarScreen() {
     toggleTask,
     removeTask,
     overdueTasks,
+    reminder,
   } = useSelectedDayTaskStore();
   const { selectedTask, setSelectedTask } = useSelectedTaskStore();
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
@@ -118,6 +120,7 @@ export default function CalendarScreen() {
           selectedStatusId={selectedStatus}
           onChange={setSelectedStatus}
         />
+        {reminder && <TodayReminder reminder={reminder} />}
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">

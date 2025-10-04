@@ -2,11 +2,12 @@ import { View } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { useLogout } from "@/shared/hooks/uselogout";
-import { fetchTodayReminder } from "./services/ai-reminder-service";
+import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const logout = useLogout();
+  const { getReminder } = useSelectedDayTaskStore();
 
   const handleSignOut = async () => {
     await logout();
@@ -14,8 +15,7 @@ export default function SettingsScreen() {
   };
 
   const handleGetReminder = async () => {
-    const reminder = await fetchTodayReminder();
-    console.log("Today's Reminder:", reminder);
+    getReminder();
   };
 
   const goToIdeasPage = async () => {
