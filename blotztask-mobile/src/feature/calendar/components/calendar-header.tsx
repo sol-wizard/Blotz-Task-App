@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import UserProfile from "./UserProfile";
+import UserProfile from "./user-profile";
 
 const formDate = (dateString: string) => {
   const dateObj = new Date(`${dateString}T00:00:00`);

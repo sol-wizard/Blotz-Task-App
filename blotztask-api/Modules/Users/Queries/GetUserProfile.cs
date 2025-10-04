@@ -30,7 +30,7 @@ public class GetUserProfileQueryHandler(BlotzTaskDbContext db, ILogger<GetUserPr
 
         if (user == null)
         {
-            logger.LogError("Proile image not found for user {UserId}", query.UserId);
+            logger.LogError("User Not Found.");
             throw new NotFoundException($"Cannot find user: {query.UserId}.");
         }
 
