@@ -1,6 +1,5 @@
 import { View, Image} from "react-native";
 import { useState, useEffect } from "react";
-import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
 import { UserProfileDTO } from "@/shared/models/user-profile-dto";
 import { IMAGES } from "@/shared/constants/assets";
 import { fetchUserProfile } from "@/shared/services/user-service"; 
