@@ -1,5 +1,10 @@
 import { isSameDay } from "date-fns";
 
+/**
+ * Formats a date string for calendar display
+ * @param dateString - Date string in format YYYY-MM-DD
+ * @returns Object containing the day of week display string
+ */
 export const formatCalendarDate = (dateString: string) => {
   const dateObj = new Date(`${dateString}T00:00:00`);
   const today = new Date();
@@ -8,11 +13,8 @@ export const formatCalendarDate = (dateString: string) => {
 
   const month = dateObj.toLocaleString("default", { month: "short" });
   const day = dateObj.getDate();
-  const year = dateObj.getFullYear();
 
   return {
     dayOfWeek: isToday ? "Today" : `${day} ${month}`,
-    monthDay: `${month} ${day}`,
-    year: year.toString(),
   };
 };
