@@ -37,6 +37,7 @@ export default function CalendarScreen() {
   });
 
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
+  const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus, overdueTasks);
   const taskStatuses = createStatusSelectItems({
     tasks: tasksForSelectedDay,
@@ -86,32 +87,38 @@ export default function CalendarScreen() {
 
   return (
     <SafeAreaView className="flex-1">
-      <CalendarHeader date={format(selectedDay, "yyyy-MM-dd")} />
+      <CalendarHeader
+        date={format(selectedDay, "yyyy-MM-dd")}
+        isCalendarVisible={isCalendarVisible}
+        onToggleCalendar={() => setIsCalendarVisible(!isCalendarVisible)}
+      />
       <CalendarProvider
         date={format(selectedDay, "yyyy-MM-dd")}
         onDateChanged={(date: string) => setSelectedDay(new Date(date))}
         showTodayButton={false}
       >
-        <WeekCalendar
-          onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
-          current={format(selectedDay, "yyyy-MM-dd")}
-          theme={{
-            calendarBackground: "#F5F9FA",
-            selectedDayBackgroundColor: "#EBF0FE",
-            selectedDayTextColor: theme.colors.heading,
-            dayTextColor: theme.colors.disabled,
-            todayTextColor: theme.colors.disabled,
-            textDayFontWeight: "bold",
-            textDayFontFamily: "InterBold",
-            textDayHeaderFontFamily: "InterThin",
-            textDayFontSize: 16,
-          }}
-          markedDates={{
-            [format(new Date(), "yyyy-MM-dd")]: { marked: true, dotColor: "#CDF79A" },
-          }}
-          allowShadow={false}
-          firstDay={1}
-        />
+        {isCalendarVisible && (
+          <WeekCalendar
+            onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
+            current={format(selectedDay, "yyyy-MM-dd")}
+            theme={{
+              calendarBackground: "#F5F9FA",
+              selectedDayBackgroundColor: "#EBF0FE",
+              selectedDayTextColor: theme.colors.heading,
+              dayTextColor: theme.colors.disabled,
+              todayTextColor: theme.colors.disabled,
+              textDayFontWeight: "bold",
+              textDayFontFamily: "InterBold",
+              textDayHeaderFontFamily: "InterThin",
+              textDayFontSize: 16,
+            }}
+            markedDates={{
+              [format(new Date(), "yyyy-MM-dd")]: { marked: true, dotColor: "#CDF79A" },
+            }}
+            allowShadow={false}
+            firstDay={1}
+          />
+        )}
 
         <TaskStatusSelect
           statuses={taskStatuses}
