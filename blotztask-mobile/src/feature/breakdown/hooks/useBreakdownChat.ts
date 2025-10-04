@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import * as signalR from "@microsoft/signalr";
 import { BreakdownMessage } from "@/feature/breakdown/models/breakdown-message";
 import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
@@ -53,29 +53,32 @@ export function useBreakdownChat(taskId: string) {
     setMessages((prev) => [...prev, botMessage]);
   };
 
-  const startConnection = async (connection: signalR.HubConnection) => {
-    try {
-      await connection.start();
+  const startConnection = useCallback(
+    async (connection: signalR.HubConnection) => {
+      try {
+        await connection.start();
 
-      // Register event handlers
-      connection.on("BotTyping", handleBotTyping);
-      connection.on("ReceiveSubtasks", handleReceiveSubtasks);
+        // Register event handlers
+        connection.on("BotTyping", handleBotTyping);
+        connection.on("ReceiveSubtasks", handleReceiveSubtasks);
 
-      console.log("Connected to Breakdown SignalR hub!", BREAKDOWN_HUB_URL);
+        console.log("Connected to Breakdown SignalR hub!", BREAKDOWN_HUB_URL);
 
-      // Automatically trigger initial breakdown once connected
-      if (!hasInitialBreakdown) {
-        try {
-          await connection.invoke("BreakdownTask", taskId);
-          setHasInitialBreakdown(true);
-        } catch (error) {
-          console.error("Error invoking BreakdownTask:", error);
+        // Automatically trigger initial breakdown once connected
+        if (!hasInitialBreakdown) {
+          try {
+            await connection.invoke("BreakdownTask", taskId);
+            setHasInitialBreakdown(true);
+          } catch (error) {
+            console.error("Error invoking BreakdownTask:", error);
+          }
         }
+      } catch (error) {
+        console.error("Error connecting to Breakdown SignalR:", error);
       }
-    } catch (error) {
-      console.error("Error connecting to Breakdown SignalR:", error);
-    }
-  };
+    },
+    [hasInitialBreakdown, taskId],
+  );
 
   useEffect(() => {
     const newConnection = new signalR.HubConnectionBuilder()
@@ -96,6 +99,7 @@ export function useBreakdownChat(taskId: string) {
         })
         .catch((error) => console.error("Error stopping Breakdown SignalR connection:", error));
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
