@@ -1,19 +1,12 @@
 import { View, Text } from "react-native";
 import React, { useState } from "react";
-import { Checkbox, RadioButton } from "react-native-paper";
+import { RadioButton } from "react-native-paper";
 import { TimePicker } from "../time-pickers/time-picker";
 
 const TimeSelectRangeDay = () => {
   const [selected, setSelected] = useState("");
   return (
     <View>
-      <View className="flex-row gap-2">
-        <View className="bg-blue-100 rounded-lg" style={{ transform: [{ scale: 0.7 }] }}>
-          <Checkbox status={"checked"} onPress={() => {}} color="#B0D0FA" />
-        </View>
-        <Text className="font-balooBold text-3xl leading-normal">Time</Text>
-      </View>
-
       <RadioButton.Group
         onValueChange={(value) => {
           setSelected(value);
