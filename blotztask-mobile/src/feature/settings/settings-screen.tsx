@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { useLogout } from "@/shared/hooks/uselogout";
+import { fetchTodayReminder } from "./services/ai-reminder-service";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -10,6 +11,11 @@ export default function SettingsScreen() {
   const handleSignOut = async () => {
     await logout();
     router.replace("/(auth)/onboarding");
+  };
+
+  const handleGetReminder = async () => {
+    const reminder = await fetchTodayReminder();
+    console.log("Today's Reminder:", reminder);
   };
 
   const goToIdeasPage = async () => {
@@ -23,6 +29,9 @@ export default function SettingsScreen() {
       </Text>
       <Button mode="outlined" style={{ marginTop: 16 }} onPress={goToIdeasPage}>
         Go to Ideas page
+      </Button>
+      <Button mode="outlined" style={{ marginTop: 16 }} onPress={handleGetReminder}>
+        Get Today's Reminder
       </Button>
 
       <Button mode="outlined" style={{ marginTop: 16 }} onPress={handleSignOut}>
