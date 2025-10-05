@@ -1,5 +1,6 @@
 using System.Text.Json;
 using BlotzTask.Modules.Users.Commands;
+using BlotzTask.Modules.Users.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +9,7 @@ namespace BlotzTask.Modules.Users;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class UserController(SyncUserCommandHandler syncUserCommandHandler, ILogger<UserController> logger, IConfiguration configuration) : ControllerBase
+public class UserController(SyncUserCommandHandler syncUserCommandHandler, GetUserProfileQueryHandler getUserProfileQueryHandler, ILogger<UserController> logger, IConfiguration configuration) : ControllerBase
 {
     [HttpPost("user-sync")]
     [AllowAnonymous]
@@ -29,4 +30,20 @@ public class UserController(SyncUserCommandHandler syncUserCommandHandler, ILogg
         var result = await syncUserCommandHandler.Handle(new SyncUserCommand(user), ct);
         return Ok(result);
     }
+
+    [HttpGet]
+    public async Task<UserProfileDTO> GetUserProfile(CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new InvalidOperationException("UserProfile not found");
+        
+        var query = new GetUserProfileQuery
+        {
+            UserId = userId
+        };
+        
+        return await getUserProfileQueryHandler.Handle(query, ct);;
+    }
 }
+
+
