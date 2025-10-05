@@ -56,82 +56,77 @@ export const TimePicker12H = ({
   }));
 
   return (
-    <View className="bg-gray-100 p-4 rounded-lg">
-      <View className="flex-row justify-center items-center gap-2">
-        {/* Hour Picker */}
-        <View className="w-16 h-32 bg-white rounded-xl">
-          <WheelPicker
-            style={{ backgroundColor: "transparent" }}
-            contentContainerStyle={{ backgroundColor: "transparent" }}
-            overlayItemStyle={{ backgroundColor: "transparent" }}
-            itemTextStyle={{ backgroundColor: "transparent", fontSize: 18 }}
-            width={60}
-            data={hourData}
-            enableScrollByTapOnItem
-            visibleItemCount={3}
-            value={currentHour12}
-            onValueChanged={({ item: { value } }) => {
-              const time = createTimeFromValues(value, currentMinute, currentIsPM);
-              onChange(time);
-            }}
-          />
-        </View>
+    <View className="flex-row items-center gap-4">
+      {/* Time Picker - Compact like existing design */}
+      <View className="w-32 h-10 bg-white flex-row justify-center items-center rounded-xl">
+        <WheelPicker
+          style={{ backgroundColor: "transparent" }}
+          contentContainerStyle={{ backgroundColor: "transparent" }}
+          overlayItemStyle={{ backgroundColor: "transparent" }}
+          itemTextStyle={{ backgroundColor: "transparent", fontSize: 18 }}
+          width={60}
+          data={hourData}
+          enableScrollByTapOnItem
+          visibleItemCount={1}
+          value={currentHour12}
+          onValueChanged={({ item: { value } }) => {
+            const time = createTimeFromValues(value, currentMinute, currentIsPM);
+            onChange(time);
+          }}
+        />
 
-        <Text className="font-balooBold text-2xl text-gray-600">:</Text>
+        <Text className="font-bold text-2xl text-gray-600">:</Text>
 
-        {/* Minute Picker */}
-        <View className="w-16 h-32 bg-white rounded-xl">
-          <WheelPicker
-            style={{ backgroundColor: "transparent" }}
-            contentContainerStyle={{ backgroundColor: "transparent" }}
-            overlayItemStyle={{ backgroundColor: "transparent" }}
-            itemTextStyle={{ backgroundColor: "transparent", fontSize: 18 }}
-            width={60}
-            data={minData}
-            enableScrollByTapOnItem
-            visibleItemCount={3}
-            value={currentMinute}
-            onValueChanged={({ item: { value } }) => {
-              const time = createTimeFromValues(currentHour12, value, currentIsPM);
-              onChange(time);
-            }}
-          />
-        </View>
+        <WheelPicker
+          style={{ backgroundColor: "transparent" }}
+          contentContainerStyle={{ backgroundColor: "transparent" }}
+          overlayItemStyle={{ backgroundColor: "transparent" }}
+          itemTextStyle={{ backgroundColor: "transparent", fontSize: 18 }}
+          width={60}
+          data={minData}
+          enableScrollByTapOnItem
+          visibleItemCount={1}
+          value={currentMinute}
+          onValueChanged={({ item: { value } }) => {
+            const time = createTimeFromValues(currentHour12, value, currentIsPM);
+            onChange(time);
+          }}
+        />
+      </View>
 
-        {/* AM/PM Toggle */}
-        <View className="ml-4 bg-white rounded-lg overflow-hidden border border-gray-200">
-          <Pressable
-            onPress={() => {
-              const time = createTimeFromValues(currentHour12, currentMinute, false);
-              onChange(time);
-            }}
-            className={`px-3 py-2 ${
-              !currentIsPM ? 'bg-blue-500' : 'bg-white'
-            }`}
-          >
-            <Text className={`font-balooBold text-sm ${
-              !currentIsPM ? 'text-white' : 'text-gray-600'
-            }`}>
-              AM
-            </Text>
-          </Pressable>
-          <View className="h-px bg-gray-200" />
-          <Pressable
-            onPress={() => {
-              const time = createTimeFromValues(currentHour12, currentMinute, true);
-              onChange(time);
-            }}
-            className={`px-3 py-2 ${
-              currentIsPM ? 'bg-blue-500' : 'bg-white'
-            }`}
-          >
-            <Text className={`font-balooBold text-sm ${
-              currentIsPM ? 'text-white' : 'text-gray-600'
-            }`}>
-              PM
-            </Text>
-          </Pressable>
-        </View>
+      {/* AM/PM Toggle - Compact buttons */}
+      <View className="flex-row bg-gray-100 rounded-lg overflow-hidden">
+        <Pressable
+          onPress={() => {
+            const time = createTimeFromValues(currentHour12, currentMinute, false);
+            onChange(time);
+          }}
+          className={`px-4 py-2 ${
+            !currentIsPM ? 'bg-blue-500' : 'bg-transparent'
+          }`}
+        >
+          <Text className={`font-balooBold text-sm ${
+            !currentIsPM ? 'text-white' : 'text-gray-600'
+          }`}>
+            AM
+          </Text>
+        </Pressable>
+        
+        <Pressable
+          onPress={() => {
+            const time = createTimeFromValues(currentHour12, currentMinute, true);
+            onChange(time);
+          }}
+          className={`px-4 py-2 ${
+            currentIsPM ? 'bg-blue-500' : 'bg-transparent'
+          }`}
+        >
+          <Text className={`font-balooBold text-sm ${
+            currentIsPM ? 'text-white' : 'text-gray-600'
+          }`}>
+            PM
+          </Text>
+        </Pressable>
       </View>
     </View>
   );

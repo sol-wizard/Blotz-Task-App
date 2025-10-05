@@ -1,41 +1,20 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { FormProvider, useForm, UseFormSetValue } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { mapDtoToFormTimeType } from "./util/time-type-mapper";
 import DateSection from "./components/date-section/date-section";
-// import { isSameDay } from "date-fns";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "./components/form-divider";
-// import TimeSection from "./components/time-sections/time-section";
+import TimeSection from "./components/time-sections/time-section";
 
 type TaskFormProps = {
   mode: "create" | "edit";
   defaultValues?: EditTaskItemDTO;
   onSubmit: (data: TaskFormField) => void;
-};
-
-export const clearDateValues = (setValue: UseFormSetValue<TaskFormField>) => {
-  setValue("startDate", null, { shouldValidate: true });
-  setValue("startTime", null, { shouldValidate: true });
-  setValue("endDate", null, { shouldValidate: true });
-  setValue("endTime", null, { shouldValidate: true });
-};
-
-export const resetDefaultTimeValues = (
-  start: Date,
-  end: Date,
-  setValue: UseFormSetValue<TaskFormField>,
-) => {
-  const startTime = new Date(start);
-  const endTime = new Date(end);
-  startTime.setHours(0, 0, 0, 0);
-  endTime.setHours(23, 59, 0, 0);
-  setValue("startTime", startTime, { shouldValidate: true });
-  setValue("endTime", endTime, { shouldValidate: true });
 };
 
 const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
@@ -49,36 +28,16 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
       description: defaultValues?.description ?? "",
       labelId: defaultValues?.labelId ?? null,
       timeType: mappedTimeType ?? null,
-      startDate: mappedTimeType === "range" ? (defaultValues?.startTime ?? null) : null,
-      startTime: mappedTimeType === "range" ? (defaultValues?.startTime ?? null) : null,
-      endDate: mappedTimeType === "range" ? (defaultValues?.endTime ?? null) : null,
-      endTime: mappedTimeType === "range" ? (defaultValues?.endTime ?? null) : null,
+      startDate: defaultValues?.startTime ?? null,
+      startTime: defaultValues?.startTime ?? null,
+      endDate: defaultValues?.endTime ?? null,
+      endTime: defaultValues?.endTime ?? null,
     },
   });
 
 
-  const { handleSubmit, formState, control, watch, setValue } = form;
+  const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
-
-  const formTimeType = watch("timeType");
-
-  // const defaultDateType = useMemo(() => {
-  //   if (mappedTimeType === "single") return "1-day";
-  //   if (mappedTimeType === "range" && startTime && endTime) {
-  //     return isSameDay(startTime, endTime) ? "1-day" : "multi-day";
-  //   }
-  //   return undefined;
-  // }, []);
-
-
-  useEffect(() => {
-    console.log("TaskForm - Form State:", {
-      isValid,
-      isSubmitting,
-      formTimeType,
-      values: form.getValues(),
-    });
-  }, [formTimeType, isSubmitting, isValid, form]);
 
   return (
     <FormProvider {...form}>
@@ -124,12 +83,10 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
 
           <FormDivider />
 
-          {/* <TimeSection
+          <TimeSection
             control={control}
             setValue={setValue}
-            enableDate={enableDate}
-            activeTab={activeTab}
-          /> */}
+          />
         </ScrollView>
 
         {/* Submit */}

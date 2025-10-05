@@ -4,7 +4,7 @@ import { Checkbox } from "react-native-paper";
 import { resetDefaultTimeValues } from "../../task-form";
 import { Control, UseFormSetValue } from "react-hook-form";
 import { TaskFormField } from "../../models/task-form-schema";
-import { isSameDay } from "date-fns";
+import { isSameDay, isSameMinute } from "date-fns";
 import TimeToggleGroup, { TimeToggleType } from "./time-toggle-group";
 import TimeSelectSingle from "./time-select-single";
 import TimeSelectRange from "./time-select-range";
@@ -15,8 +15,24 @@ interface TimeSectionProps {
 }
 
 const TimeSection = ({ control, setValue }: TimeSectionProps) => {
-  const [isTimeExpanded, setIsTimeExpanded] = useState(false);
-  const [timeToggle, setTimeToggle] = useState<TimeToggleType>(TimeToggleType.SINGLE_TIME);
+  // Determine initial time toggle based on existing form values
+  const getInitialTimeToggle = () => {
+    const defaultValues = control._defaultValues;
+    const startTime = defaultValues?.startTime;
+    const endTime = defaultValues?.endTime;
+    
+    
+    // If both times exist and they're different (down to the minute), it's a time range
+    if (startTime && endTime && !isSameMinute(startTime, endTime)) {
+      return TimeToggleType.TIME_RANGE;
+    }
+    
+    // Default to single time in all other cases
+    return TimeToggleType.SINGLE_TIME;
+  };
+
+  const [isTimeExpanded, setIsTimeExpanded] = useState(true);
+  const [timeToggle, setTimeToggle] = useState<TimeToggleType>(getInitialTimeToggle());
   
   //Time is disable for multi-day task
   const isMultiDayTask = () => {
@@ -36,7 +52,12 @@ const TimeSection = ({ control, setValue }: TimeSectionProps) => {
   const handleTimeToggle = () => {
     const newIsTimeExpanded = !isTimeExpanded;
     setIsTimeExpanded(newIsTimeExpanded);
-    resetDefaultTimeValues(new Date(), new Date(), setValue);
+    
+    // Only reset time values if there are no existing time values
+    const formValues = control._formValues;
+    if (!formValues?.startTime && !formValues?.endTime) {
+      resetDefaultTimeValues(new Date(), new Date(), setValue);
+    }
   };
   
   return (
@@ -54,14 +75,13 @@ const TimeSection = ({ control, setValue }: TimeSectionProps) => {
           <Text className="font-balooBold text-3xl leading-normal">Time</Text>
         </View>
 
-        {isTimeExpanded && (
-          <View className="flex-[0.75]">
-            <TimeToggleGroup
-              value={timeToggle}
-              onValueChange={setTimeToggle}
-            />
-          </View>
-        )}
+        {/* Time Toggle - Always visible */}
+        <View className="flex-[0.75]">
+          <TimeToggleGroup
+            value={timeToggle}
+            onValueChange={setTimeToggle}
+          />
+        </View>
       </View>
 
       {isTimeExpanded && (

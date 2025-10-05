@@ -13,8 +13,8 @@ const TimeSelectRange = ({ control, setValue }: TimeSelectRangeProps) => {
   return (
     <View className="gap-6">
       {/* Start Time */}
-      <View className="items-center">
-        <Text className="text-lg font-balooBold mb-4 text-gray-700">Start Time</Text>
+      <View className="flex-row items-center gap-4">
+        <Text className="text-lg font-balooBold text-gray-700">Start Time</Text>
         <Controller
           control={control}
           name="startTime"
@@ -28,8 +28,8 @@ const TimeSelectRange = ({ control, setValue }: TimeSelectRangeProps) => {
       </View>
       
       {/* End Time */}
-      <View className="items-center">
-        <Text className="text-lg font-balooBold mb-4 text-gray-700">End Time</Text>
+      <View className="flex-row items-center gap-4">
+        <Text className="text-lg font-balooBold text-gray-700">End Time</Text>
         <Controller
           control={control}
           name="endTime"
