@@ -1,11 +1,12 @@
-import { View, Text, TouchableOpacity } from "react-native";
-import React from "react";
+import { View, Text } from "react-native";
+import React, { useState } from "react";
 import { Checkbox } from "react-native-paper";
-import DateSelectSingleDay from "./date-select-single-day";
-import DateSelectRangeDay from "./date-select-range-day";
+import DateToggleGroup, { DateToggleType } from "./date-toggle-group";
 import { TaskFormField } from "../../models/task-form-schema";
 import { Control, UseFormSetValue } from "react-hook-form";
 import { clearDateValues } from "../../task-form";
+import DateSelectSingleDay from "./date-select-single-day";
+import DateSelectRangeDay from "./date-select-range-day";
 
 interface DateSectionProps {
   control: Control<TaskFormField>;
@@ -14,10 +15,10 @@ interface DateSectionProps {
     enableDate: boolean;
     setEnableDate: React.Dispatch<React.SetStateAction<boolean>>;
   };
-  activeTabState: {
-    activeTab: "1-day" | "multi-day" | undefined;
-    setActiveTab: React.Dispatch<React.SetStateAction<"1-day" | "multi-day" | undefined>>;
-  };
+  // activeTabState: {
+  //   activeTab: "1-day" | "multi-day" | undefined;
+  //   setActiveTab: React.Dispatch<React.SetStateAction<"1-day" | "multi-day" | undefined>>;
+  // };
   watchedValues: {
     formStartDate: Date | null;
   };
@@ -27,12 +28,12 @@ const DateSection = ({
   control,
   setValue,
   dateState,
-  activeTabState,
+  // activeTabState,
   watchedValues,
 }: DateSectionProps) => {
   const { enableDate, setEnableDate } = dateState;
-  const { activeTab, setActiveTab } = activeTabState;
-  const { formStartDate } = watchedValues;
+  const [activeDateType, setActiveDateType] = useState<DateToggleType>(DateToggleType.SINGLE_DAY);
+  // const { formStartDate } = watchedValues;
 
   const handleDateToggle = () => {
     const newEnableDate = !enableDate;
@@ -40,12 +41,12 @@ const DateSection = ({
     clearDateValues(setValue);
 
     if (newEnableDate) {
-      setActiveTab("1-day");
+      // setActiveTab("1-day");
       // Default to range type, that is, time range 00:00 - 23:59 when enabling date
       setValue("timeType", "range", { shouldValidate: true });
     } else {
       setValue("timeType", null, { shouldValidate: true });
-      setActiveTab(undefined); // reset activeTab when disabled
+      // setActiveTab(undefined); // reset activeTab when disabled
     }
   };
   return (
@@ -65,30 +66,11 @@ const DateSection = ({
 
         {/* Segmented Control */}
         {enableDate && (
-          <View className="flex-row items-stretch p-1 rounded-xl overflow-hidden bg-gray-200 flex-[0.75]">
-            <TouchableOpacity
-              className={`flex-1 px-4 py-2 items-center justify-center rounded-xl ${
-                activeTab === "1-day" ? "bg-white" : "bg-transparent"
-              }`}
-              onPress={() => setActiveTab("1-day")}
-              disabled={!enableDate}
-            >
-              <Text className={`${activeTab === "1-day" ? "font-semibold" : ""} text-black`}>
-                1 Day
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className={`flex-1 px-4 py-2 items-center justify-center rounded-xl ${
-                activeTab === "multi-day" ? "bg-white" : "bg-transparent"
-              }`}
-              onPress={() => setActiveTab("multi-day")}
-              disabled={!enableDate}
-            >
-              <Text className={`${activeTab === "multi-day" ? "font-semibold" : ""} text-black`}>
-                Multi-Day
-              </Text>
-            </TouchableOpacity>
+          <View className="flex-[0.75]">
+            <DateToggleGroup
+              value={activeDateType}
+              onValueChange={setActiveDateType}
+            />
           </View>
         )}
       </View>
@@ -96,13 +78,10 @@ const DateSection = ({
       {/* Content */}
       {enableDate && (
         <View className="mt-4">
-          {activeTab === "1-day" ? (
+          {activeDateType === DateToggleType.SINGLE_DAY ? (
             <DateSelectSingleDay
               control={control}
               setValue={setValue}
-              nameStart="startDate"
-              nameEnd="endDate"
-              startDate={formStartDate}
             />
           ) : (
             <DateSelectRangeDay
