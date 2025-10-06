@@ -37,8 +37,6 @@ export const ToggleAiTaskGenerate = () => {
         }}
         snapPoints={snapPoints}
         keyboardBehavior={Platform.OS === "ios" ? "extend" : "interactive"}
-        keyboardBlurBehavior="restore"
-        enableHandlePanningGesture={true}
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}

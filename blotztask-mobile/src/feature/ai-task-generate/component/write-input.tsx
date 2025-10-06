@@ -1,8 +1,7 @@
 import { ASSETS } from "@/shared/constants/assets";
 import { theme } from "@/shared/constants/theme";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
-import { useRef } from "react";
-import { View, Text, Image, Keyboard, TextInput } from "react-native";
+import { View, Text, Image, Keyboard } from "react-native";
 
 export const WriteInput = ({
   hasError,
