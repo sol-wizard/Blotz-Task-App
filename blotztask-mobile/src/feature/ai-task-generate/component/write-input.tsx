@@ -1,6 +1,8 @@
 import { ASSETS } from "@/shared/constants/assets";
 import { theme } from "@/shared/constants/theme";
-import { TextInput, View, Text, Image } from "react-native";
+import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { useRef } from "react";
+import { View, Text, Image, Keyboard, TextInput } from "react-native";
 
 export const WriteInput = ({
   hasError,
@@ -13,12 +15,17 @@ export const WriteInput = ({
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
 }) => {
+  const sendAndDismiss = (msg: string) => {
+    const val = msg.trim();
+    if (!val) return;
+    sendMessage(val);
+    setText("");
+    Keyboard.dismiss();
+  };
+
   const handleChange = (value: string) => {
     if (value.endsWith("\n")) {
-      const msg = value.trim();
-      if (msg.length > 0) {
-        sendMessage(msg);
-      }
+      sendAndDismiss(value);
       return;
     }
     setText(value);
@@ -26,17 +33,12 @@ export const WriteInput = ({
 
   return (
     <View className="w-full px-4 pt-3 pb-6 items-center">
-      <TextInput
+      <BottomSheetTextInput
         value={text}
         onChangeText={handleChange}
-        onSubmitEditing={() => {
-          const msg = text.trim();
-          if (msg) {
-            sendMessage(msg);
-            setText("");
-          }
-        }}
-        returnKeyType="send"
+        onSubmitEditing={() => sendAndDismiss(text)}
+        returnKeyType="done"
+        enablesReturnKeyAutomatically
         placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
         placeholderTextColor={theme.colors.secondary}
         multiline

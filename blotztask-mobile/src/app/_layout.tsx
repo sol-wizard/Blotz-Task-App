@@ -10,7 +10,7 @@ import {
 import { Inter_300Light, Inter_700Bold } from "@expo-google-fonts/inter";
 /* eslint-enable camelcase */
 import { Stack } from "expo-router";
-import { PaperProvider } from "react-native-paper";
+import { PaperProvider, Portal } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../../global.css";
 import React from "react";
@@ -34,17 +34,19 @@ export default function RootLayout() {
   return (
     <Auth0Provider domain={domain} clientId={clientId}>
       <GestureHandlerRootView>
-        <BottomSheetModalProvider>
-          <PaperProvider theme={theme}>
-            <SafeAreaProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-              </Stack>
-            </SafeAreaProvider>
-          </PaperProvider>
-        </BottomSheetModalProvider>
+        <PaperProvider theme={theme}>
+          <BottomSheetModalProvider>
+            <Portal.Host>
+              <SafeAreaProvider>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+                </Stack>
+              </SafeAreaProvider>
+            </Portal.Host>
+          </BottomSheetModalProvider>
+        </PaperProvider>
       </GestureHandlerRootView>
     </Auth0Provider>
   );
