@@ -1,20 +1,22 @@
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
-import BottomSheetKeyboardAvoidingView, {
-  BottomSheetModal,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
-import { FAB, Portal } from "react-native-paper";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { AiTaskGenerateModal } from "./component/ai-task-generate-modal";
-import { useMemo, useRef } from "react";
-import { Pressable, View, Image, Platform, KeyboardAvoidingView } from "react-native";
+import { useEffect, useMemo, useRef } from "react";
+import { Pressable, View, Image, Platform, Keyboard } from "react-native";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { ASSETS } from "@/shared/constants/assets";
-import BottomSheet from "@gorhom/bottom-sheet";
 
 export const ToggleAiTaskGenerate = () => {
   const aiVoiceInputModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["50%", "70%"], []);
   const openSheet = () => aiVoiceInputModalRef.current?.present();
+  useEffect(() => {
+    const sub = Keyboard.addListener("keyboardDidHide", () => {
+      aiVoiceInputModalRef.current?.collapse();
+    });
+    return () => sub.remove();
+  }, []);
+
   return (
     <>
       <View pointerEvents="box-none" className="absolute right-7 bottom-7 z-50">
@@ -37,12 +39,14 @@ export const ToggleAiTaskGenerate = () => {
         }}
         snapPoints={snapPoints}
         keyboardBehavior={Platform.OS === "ios" ? "extend" : "interactive"}
+        keyboardBlurBehavior="restore"
+        enableContentPanningGesture={false}
+        enableHandlePanningGesture={true}
+        enablePanDownToClose={false}
       >
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
-          <BottomSheetView className="justify-between items-center" style={{ minHeight: 300 }}>
-            <AiTaskGenerateModal />
-          </BottomSheetView>
-        </KeyboardAvoidingView>
+        <BottomSheetView className="justify-between items-center" style={{ minHeight: 300 }}>
+          <AiTaskGenerateModal />
+        </BottomSheetView>
       </BottomSheetModal>
     </>
   );
