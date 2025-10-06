@@ -1,21 +1,15 @@
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { AiTaskGenerateModal } from "./component/ai-task-generate-modal";
-import { useEffect, useMemo, useRef } from "react";
+import { useRef } from "react";
 import { Pressable, View, Image, Platform, Keyboard } from "react-native";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { ASSETS } from "@/shared/constants/assets";
 
 export const ToggleAiTaskGenerate = () => {
   const aiVoiceInputModalRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ["50%", "70%"], []);
+
   const openSheet = () => aiVoiceInputModalRef.current?.present();
-  useEffect(() => {
-    const sub = Keyboard.addListener("keyboardDidHide", () => {
-      aiVoiceInputModalRef.current?.collapse();
-    });
-    return () => sub.remove();
-  }, []);
 
   return (
     <>
@@ -37,7 +31,7 @@ export const ToggleAiTaskGenerate = () => {
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
         }}
-        snapPoints={snapPoints}
+        snapPoints={["50%", "70%"]}
         keyboardBehavior={Platform.OS === "ios" ? "extend" : "interactive"}
         keyboardBlurBehavior="restore"
         enableContentPanningGesture={false}
@@ -45,7 +39,7 @@ export const ToggleAiTaskGenerate = () => {
         enablePanDownToClose={false}
       >
         <BottomSheetView className="justify-between items-center" style={{ minHeight: 300 }}>
-          <AiTaskGenerateModal />
+          <AiTaskGenerateModal sheetRef={aiVoiceInputModalRef} />
         </BottomSheetView>
       </BottomSheetModal>
     </>

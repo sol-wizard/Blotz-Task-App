@@ -1,14 +1,16 @@
 import { ASSETS } from "@/shared/constants/assets";
 import { theme } from "@/shared/constants/theme";
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { View, Text, Image, Keyboard } from "react-native";
 
 export const WriteInput = ({
+  sheetRef,
   hasError,
   text,
   setText,
   sendMessage,
 }: {
+  sheetRef: React.RefObject<BottomSheetModal | null>;
   hasError: boolean;
   text: string;
   setText: (value: string) => void;
@@ -20,6 +22,7 @@ export const WriteInput = ({
     sendMessage(val);
     setText("");
     Keyboard.dismiss();
+    sheetRef.current?.collapse();
   };
 
   const handleChange = (value: string) => {
@@ -43,6 +46,9 @@ export const WriteInput = ({
         multiline
         className="w-full min-h-[100px] rounded-xl bg-white px-3 py-4 mt-4 text-xl text-gray-800 font-baloo text-left"
         style={{ textAlignVertical: "top" }}
+        onBlur={() => {
+          sheetRef.current?.collapse();
+        }}
       />
       {hasError && (
         <View className="bg-background rounded-2xl px-4 py-6 mb-4 w-96 flex-row">
