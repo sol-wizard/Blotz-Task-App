@@ -38,11 +38,7 @@ export const ToggleAiTaskGenerate = () => {
         snapPoints={snapPoints}
         keyboardBehavior={Platform.OS === "ios" ? "extend" : "interactive"}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={0}
-          className="flex-1"
-        >
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
           <BottomSheetView className="justify-between items-center" style={{ minHeight: 300 }}>
             <AiTaskGenerateModal />
           </BottomSheetView>
