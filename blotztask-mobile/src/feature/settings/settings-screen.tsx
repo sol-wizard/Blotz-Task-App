@@ -31,7 +31,7 @@ export default function SettingsScreen() {
         Go to Ideas page
       </Button>
       <Button mode="outlined" style={{ marginTop: 16 }} onPress={handleGetReminder}>
-        Get Today's Reminder
+        Get Today&apos;s Reminder
       </Button>
 
       <Button mode="outlined" style={{ marginTop: 16 }} onPress={handleSignOut}>
