@@ -46,9 +46,6 @@ export const WriteInput = ({
         multiline
         className="w-full min-h-[100px] rounded-xl bg-white px-3 py-4 mt-4 text-xl text-gray-800 font-baloo text-left"
         style={{ textAlignVertical: "top" }}
-        onBlur={() => {
-          sheetRef.current?.collapse();
-        }}
       />
       {hasError && (
         <View className="bg-background rounded-2xl px-4 py-6 mb-4 w-96 flex-row">
