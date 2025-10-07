@@ -32,7 +32,7 @@ public static class AiTaskGeneratorPrompts
                       RESPONSE RULES (STRICT):
                   - ALWAYS respond with a SINGLE JSON object, with EXACTLY these fields:
                     {
-                      "tasks": [
+                      "extractedTasks": [
                         {
                           "title": "string",
                           "description": "string",
@@ -46,7 +46,7 @@ public static class AiTaskGeneratorPrompts
 
                   - When there is an error:
                     {
-                      "task": [],
+                      "extractedTasks": [],
                       "isSuccess": false,
                       "errorMessage": "short reason here"
                     }

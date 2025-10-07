@@ -7,7 +7,7 @@ public class AiGenerateTaskWrapper
 {
     [JsonPropertyName("isSuccess")] public bool IsSuccess { get; set; }
 
-    [JsonPropertyName("tasks")] public List<ExtractedTask> ExtractedTasks { get; set; } = new();
+    [JsonPropertyName("extractedTasks")] public List<ExtractedTask> ExtractedTasks { get; set; } = new();
 
     [JsonPropertyName("errorMessage")] public string ErrorMessage { get; set; } = "";
 }
