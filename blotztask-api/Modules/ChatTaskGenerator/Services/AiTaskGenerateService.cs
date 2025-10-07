@@ -97,9 +97,13 @@ public class AiTaskGenerateService : IAiTaskGenerateService
         }
         catch (TokenLimitExceededException ex)
         {
-            _logger.LogError(ex, "Token limit exceeded during AI task generation.");
+            _logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
 
-            return null;
+            return new AiGenerateTaskWrapper
+            {
+                IsSuccess = false,
+                ErrorMessage = "You have exceeded token rate limit of your current pricing tier."
+            };
         }
         catch (Exception ex)
         {

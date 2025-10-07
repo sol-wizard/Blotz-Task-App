@@ -52,7 +52,6 @@ public class AiTaskGenerateChatHub : Hub
             var ct = Context.ConnectionAborted;
             var chatHistory = _chatHistoryManagerService.GetChatHistory();
 
-
             chatHistory.AddUserMessage(message);
             var receiveMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
 
