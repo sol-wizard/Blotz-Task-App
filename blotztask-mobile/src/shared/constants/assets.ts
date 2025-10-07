@@ -9,7 +9,6 @@ export const LOTTIE_ANIMATIONS = {
   aiLoadingEffect: require("../../../assets/animations/aiLoadingEffect.json"),
   spinner: require("../../../assets/animations/spinner.json"),
   voiceWave: require("../../../assets/animations/voice-wave.json"),
-  searchMicWave: require("../../../assets/animations/search-mic-wave.json"),
 } as const;
 
 // Images
