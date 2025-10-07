@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "BlotzTask",
-    "icon": "./assets/images/blotz-icon.jpg",
+    "icon": "./assets/images/blotz-icon.png",
     "slug": "BlotzTask",
     "owner": "blotztask",
     "version": "1.0.0",
@@ -21,7 +21,8 @@
         "NSSpeechRecognitionUsageDescription": "We use speech recognition so you can add tasks by voice.",
         "NSMicrophoneUsageDescription": "Allow BlotzTask to use the microphone for voice and video calls."
       },
-      "appleTeamId": "LXC29JARY5"
+      "appleTeamId": "LXC29JARY5",
+      "icon": "./assets/images/blotz-icon.png"
     },
     "android": {
       "adaptiveIcon": {
