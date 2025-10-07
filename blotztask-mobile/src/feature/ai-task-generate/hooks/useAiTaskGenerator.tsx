@@ -32,7 +32,9 @@ export function useAiTaskGenerator() {
 
   const receiveTasksHandler = (receivedAiMessage: AiGeneratedTaskWrapperDTO) => {
     console.log("Received tasks from SignalR:", receivedAiMessage);
-    const mappedTasks: AiTaskDTO[] = receivedAiMessage.tasks.map(mapExtractedTaskDTOToAiTaskDTO);
+    const mappedTasks: AiTaskDTO[] = receivedAiMessage.extractedTasks.map(
+      mapExtractedTaskDTOToAiTaskDTO,
+    );
     console.log("mappedTasks,", mappedTasks);
 
     setAiGeneratedTasks(mappedTasks);

@@ -12,10 +12,9 @@ public class TaskExtractionPlugin
             "User input text that may contain one or more actionable tasks. If the text is in Mandarin, return the tasks in Chinese.")]
         string input)
     {
-        // You can implement mock logic here or leave it empty if it's only a prompt function.
         return """
                {
-                 "tasks": [
+                 "extractedTasks": [
                    {
                      "title": "",
                      "description": "",

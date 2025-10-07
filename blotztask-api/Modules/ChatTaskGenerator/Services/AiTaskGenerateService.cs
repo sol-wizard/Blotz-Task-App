@@ -47,34 +47,12 @@ public class AiTaskGenerateService : IAiTaskGenerateService
 
         try
         {
-            _logger.LogInformation("chat history with user message: {chatHistory}", chatHistory);
             var chatResults = await _chatCompletionService.GetChatMessageContentsAsync(
                 chatHistory,
                 executionSettings,
                 _kernel,
                 ct
             );
-
-            var newChatHistory = _chatHistoryManagerService.GetChatHistory();
-            _logger.LogInformation("=== ChatHistory AFTER ({Count}) ===", newChatHistory?.Count ?? 0);
-            if (newChatHistory != null)
-                for (var i = 0; i < newChatHistory.Count; i++)
-                {
-                    var m = newChatHistory[i];
-                    foreach (var item in m.Items)
-                        if (item is FunctionCallContent fc)
-                            _logger.LogInformation("  -> FunctionCall Name={Name} Args={Args}", fc.FunctionName,
-                                fc.Arguments);
-                        else if (item is FunctionResultContent fr)
-                            _logger.LogInformation("  -> FunctionResult Name={Name} Result={Result}", fr.FunctionName,
-                                fr.Result);
-                    var source = m.Role == AuthorRole.User ? "USER"
-                        : m.Role == AuthorRole.Assistant ? "AI"
-                        : m.Role.ToString();
-                    _logger.LogInformation("[{Idx}] Source={Source} IsEmpty={Empty} Len={Len}\n{Content}",
-                        i, source, string.IsNullOrWhiteSpace(m.Content), m.Content?.Length ?? 0, m.Content ?? "");
-                }
-
 
             var functionResultMessage = chatResults.LastOrDefault();
 
