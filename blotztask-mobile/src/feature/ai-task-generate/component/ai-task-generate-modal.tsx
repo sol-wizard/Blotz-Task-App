@@ -4,8 +4,13 @@ import { AiInput } from "./ai-input";
 import { AiThinkingModal } from "./ai-thinking-modal";
 import { TaskAddedSuccess } from "./task-added-success";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
-export const AiTaskGenerateModal = () => {
+export const AiTaskGenerateModal = ({
+  sheetRef,
+}: {
+  sheetRef: React.RefObject<BottomSheetModal | null>;
+}) => {
   const [text, setText] = useState("");
   const [isVoiceInput, setIsVoiceInput] = useState(true);
   const { aiGeneratedTasks, sendMessage, modalType, setModalType, inputError, setInputError } =
@@ -39,6 +44,7 @@ export const AiTaskGenerateModal = () => {
           sendMessage={sendMessage}
           isVoiceInput={isVoiceInput}
           setIsVoiceInput={setIsVoiceInput}
+          sheetRef={sheetRef}
         />
       );
   }
