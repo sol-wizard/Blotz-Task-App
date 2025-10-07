@@ -61,7 +61,7 @@ export function AiTasksPreview({
 
   return (
     <View className="mb-10 items-center justify-between">
-      <ScrollView className="pb-5 w-full min-h-20">
+      <ScrollView className="pb-5 w-full min-h-20 max-h-80">
         {localTasks.map((task) => (
           <AiTaskCard
             key={task.id}

@@ -1,24 +1,33 @@
 import { ASSETS } from "@/shared/constants/assets";
 import { theme } from "@/shared/constants/theme";
-import { TextInput, View, Text, Image } from "react-native";
+import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { View, Text, Image, Keyboard } from "react-native";
 
 export const WriteInput = ({
+  sheetRef,
   hasError,
   text,
   setText,
   sendMessage,
 }: {
+  sheetRef: React.RefObject<BottomSheetModal | null>;
   hasError: boolean;
   text: string;
   setText: (value: string) => void;
   sendMessage: (v: string) => void;
 }) => {
+  const sendAndDismiss = (msg: string) => {
+    const val = msg.trim();
+    if (!val) return;
+    sendMessage(val);
+    setText("");
+    Keyboard.dismiss();
+    sheetRef.current?.collapse();
+  };
+
   const handleChange = (value: string) => {
     if (value.endsWith("\n")) {
-      const msg = value.trim();
-      if (msg.length > 0) {
-        sendMessage(msg);
-      }
+      sendAndDismiss(value);
       return;
     }
     setText(value);
@@ -26,17 +35,12 @@ export const WriteInput = ({
 
   return (
     <View className="w-full px-4 pt-3 pb-6 items-center">
-      <TextInput
+      <BottomSheetTextInput
         value={text}
         onChangeText={handleChange}
-        onSubmitEditing={() => {
-          const msg = text.trim();
-          if (msg) {
-            sendMessage(msg);
-            setText("");
-          }
-        }}
-        returnKeyType="send"
+        onSubmitEditing={() => sendAndDismiss(text)}
+        returnKeyType="done"
+        enablesReturnKeyAutomatically
         placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
         placeholderTextColor={theme.colors.secondary}
         multiline
