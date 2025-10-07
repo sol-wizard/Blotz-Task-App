@@ -122,14 +122,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                 extractTasksFunction.Name
             );
 
-            // Log additional debug information
-            _logger.LogDebug(
-                "Function details - Plugin: {PluginName}, Function: {FunctionName}, " +
-                "Execution Settings: {ExecutionSettings}",
-                extractTasksFunction.PluginName,
-                extractTasksFunction.Name,
-                JsonSerializer.Serialize(executionSettings)
-            );
+           
 
             // Log the last user message for context
             var lastUserMessage = tempHistory.LastOrDefault(m => m.Role == AuthorRole.User);
