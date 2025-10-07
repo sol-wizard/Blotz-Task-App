@@ -1,5 +1,6 @@
 using System.Text.Json;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
@@ -31,66 +32,79 @@ public class AiTaskGenerateService : IAiTaskGenerateService
         _kernel = kernel;
     }
 
-   
+
     public async Task<AiGenerateTaskWrapper?> GenerateAiResponse(
         CancellationToken ct
     )
     {
         var chatHistory = _chatHistoryManagerService.GetChatHistory();
 
-        var extractTasksFunction = _kernel.Plugins["TaskExtractionPlugin"]["ExtractTasks"];
+
         var executionSettings = new OpenAIPromptExecutionSettings
         {
-            Temperature = 0.4f,
-            FunctionChoiceBehavior = FunctionChoiceBehavior.Required(
-                new[] { extractTasksFunction }
-            )
+            ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
         };
-
-
-        var chatResults = await _chatCompletionService.GetChatMessageContentsAsync(
-            chatHistory,
-            executionSettings,
-            _kernel,
-            ct
-        );
-
-        var functionResultMessage = chatResults.LastOrDefault();
-
-        if (functionResultMessage == null)
-        {
-            _logger.LogWarning(
-                "Chat completion returned no messages. ChatHistory count: {Count}, Model: {ModelId}",
-                chatHistory.Count,
-                executionSettings.ModelId ?? "unknown"
-            );
-            return null;
-        }
-
 
         try
         {
-            var aiGenerateTaskWrapper = JsonSerializer.Deserialize<AiGenerateTaskWrapper>(
-                functionResultMessage.Content,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            var chatResults = await _chatCompletionService.GetChatMessageContentsAsync(
+                chatHistory,
+                executionSettings,
+                _kernel,
+                ct
             );
 
-            if (aiGenerateTaskWrapper != null)
+
+            var functionResultMessage = chatResults.LastOrDefault();
+
+            if (functionResultMessage == null)
             {
-                chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateTaskWrapper));
-                return aiGenerateTaskWrapper;
+                _logger.LogWarning(
+                    "Chat completion returned no messages. ChatHistory count: {Count}, Model: {ModelId}",
+                    chatHistory.Count,
+                    executionSettings.ModelId ?? "unknown"
+                );
+                return null;
             }
+
+
+            try
+            {
+                var aiGenerateTaskWrapper = JsonSerializer.Deserialize<AiGenerateTaskWrapper>(
+                    functionResultMessage.Content,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+
+                if (aiGenerateTaskWrapper != null)
+                {
+                    chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateTaskWrapper));
+                    return aiGenerateTaskWrapper;
+                }
+
+                return null;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to deserialize function result content into ExtractedTaskResponse. Content: {Content}",
+                    functionResultMessage.Content
+                );
+
+
+                return null;
+            }
+        }
+        catch (TokenLimitExceededException ex)
+        {
+            _logger.LogError(ex, "Token limit exceeded during AI task generation.");
 
             return null;
         }
-        catch (JsonException ex)
+        catch (Exception ex)
         {
-            _logger.LogError(
-                ex,
-                "Failed to deserialize function result content into ExtractedTaskResponse. Content: {Content}",
-                functionResultMessage.Content
-            );
-
+            _logger.LogError(ex, "Unrecoverable error during AI Chat Completion. (Network, API Key, etc.)");
+            _logger.LogInformation("FULL EXCEPTION DETAILS: {ExceptionMessage}", ex.ToString());
             return null;
         }
     }

@@ -4,7 +4,7 @@ import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-task-generate/utils
 import { BottomSheetType } from "@/feature/ai-task-generate/modals/bottom-sheet-type";
 import { AiTaskDTO } from "../modals/ai-task-dto";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
-import { ExtractedTaskDTO } from "../modals/extracted-task-dto";
+import { AiGeneratedTaskWrapperDTO } from "../modals/ai-generate-task-wrapper";
 
 export function useAiTaskGenerator() {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
@@ -30,8 +30,9 @@ export function useAiTaskGenerator() {
     }
   };
 
-  const receiveTasksHandler = (receivedTasks: ExtractedTaskDTO[]) => {
-    const mappedTasks: AiTaskDTO[] = receivedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
+  const receiveTasksHandler = (receivedAiMessage: AiGeneratedTaskWrapperDTO) => {
+    console.log("Received tasks from SignalR:", receivedAiMessage);
+    const mappedTasks: AiTaskDTO[] = receivedAiMessage.tasks.map(mapExtractedTaskDTOToAiTaskDTO);
     console.log("mappedTasks,", mappedTasks);
 
     setAiGeneratedTasks(mappedTasks);

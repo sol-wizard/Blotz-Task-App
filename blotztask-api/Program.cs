@@ -33,8 +33,8 @@ builder.Services.AddHealthChecks();
 //TODO : Move all services to module based registration
 builder.Services.AddScoped<IRecurringTaskService, RecurringTaskService>();
 
+builder.Services.AddSingleton<IChatHistoryManagerService, ChatHistoryManagerService>();
 builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
-builder.Services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
 
 
 builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
@@ -97,7 +97,7 @@ builder.Services.AddSingleton<Kernel>(sp =>
         endpoint,
         apiKey
     );
-    builder.Services.AddLogging(services => services.AddConsole().SetMinimumLevel(LogLevel.Trace));
+
     kernelBuilder.Plugins.AddFromObject(new TaskExtractionPlugin(), "TaskExtractionPlugin");
     kernelBuilder.Plugins.AddFromObject(new TaskBreakdownPlugin(), "TaskBreakdownPlugin");
 

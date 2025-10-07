@@ -15,6 +15,12 @@ public interface IChatHistoryManagerService
 public class ChatHistoryManagerService : IChatHistoryManagerService
 {
     private static ChatHistory? _chatHistory;
+    private readonly ILogger<ChatHistoryManagerService> _logger;
+
+    public ChatHistoryManagerService(ILogger<ChatHistoryManagerService> logger)
+    {
+        _logger = logger;
+    }
 
     public ChatHistory GetChatHistory()
     {
@@ -47,6 +53,13 @@ public class ChatHistoryManagerService : IChatHistoryManagerService
 
     public Task<ChatHistory> InitializeNewConversation()
     {
+        
+        if (_chatHistory != null)
+        {
+            return Task.FromResult(_chatHistory);
+        }
+
+    
         var chatHistory = new ChatHistory();
         chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(DateTime.Now));
 

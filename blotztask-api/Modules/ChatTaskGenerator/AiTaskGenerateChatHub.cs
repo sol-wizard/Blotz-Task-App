@@ -1,5 +1,4 @@
 using BlotzTask.Modules.ChatTaskGenerator.Services;
-using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
@@ -24,12 +23,16 @@ public class AiTaskGenerateChatHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        var connectionId = Context.ConnectionId;
-        _logger.LogInformation($"User connected: {connectionId}");
-        if (!_chatHistoryManagerService.TryGetChatHistory(out var chatHistory))
+        try
+        {
             await _chatHistoryManagerService.InitializeNewConversation();
-
-        await base.OnConnectedAsync();
+            await base.OnConnectedAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "OnConnectedAsync crashed for {cid}", Context.ConnectionId);
+            throw;
+        }
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -49,15 +52,17 @@ public class AiTaskGenerateChatHub : Hub
             var ct = Context.ConnectionAborted;
             var chatHistory = _chatHistoryManagerService.GetChatHistory();
 
+
             chatHistory.AddUserMessage(message);
+            var receiveMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
 
-            var recieveTasks = await _aiTaskGenerateService.GenerateAiResponse(ct);
-
-            if (recieveTasks != null) await Clients.Caller.SendAsync("ReceiveTasks", recieveTasks);
+            if (receiveMessage != null) await Clients.Caller.SendAsync("ReceiveTasks", receiveMessage);
         }
-        catch (TokenLimitExceededException ex)
+
+        catch (Exception ex)
         {
-            _logger.LogError(ex, "Token limit exceeded: {Message}", ex.Message);
+            _logger.LogError(ex, "💥 SendMessage crashed for user={user}", user);
+            throw;
         }
     }
 }
