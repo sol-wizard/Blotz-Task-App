@@ -9,6 +9,7 @@ using BlotzTask.Modules.BreakDown.Services;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.ChatTaskGenerator.Plugins;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
+using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Tasks.Services;
 using BlotzTask.Modules.Users;
