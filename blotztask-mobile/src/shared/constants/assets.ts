@@ -12,7 +12,7 @@ export const LOTTIE_ANIMATIONS = {
 
 // Images
 export const IMAGES = {
-  blotzIcon: require("../../../assets/images/blotz-icon.jpg"),
+  blotzIcon: require("../../../assets/images/blotz-icon.png"),
   blotzLogo: require("../../../assets/images/blotz-logo.png"),
   whiteBun: require("../../../assets/images/bun-white.png"),
   greenBun: require("../../../assets/images/bun-green.png"),
