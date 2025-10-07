@@ -4,7 +4,6 @@ import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
-import { mapDtoToFormTimeType } from "./util/time-type-mapper";
 import DateSection from "./components/date-section/date-section";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
@@ -18,8 +17,6 @@ type TaskFormProps = {
 };
 
 const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
-  const mappedTimeType = mapDtoToFormTimeType(defaultValues?.timeType);
-
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
@@ -27,14 +24,12 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
       title: defaultValues?.title ?? "",
       description: defaultValues?.description ?? "",
       labelId: defaultValues?.labelId ?? null,
-      timeType: mappedTimeType ?? null,
       startDate: defaultValues?.startTime ?? null,
       startTime: defaultValues?.startTime ?? null,
       endDate: defaultValues?.endTime ?? null,
       endTime: defaultValues?.endTime ?? null,
     },
   });
-
 
   const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
@@ -76,17 +71,11 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
           <FormDivider />
 
           {/* Date Section */}
-          <DateSection
-            control={control}
-            setValue={setValue}
-          />
+          <DateSection control={control} setValue={setValue} />
 
           <FormDivider />
 
-          <TimeSection
-            control={control}
-            setValue={setValue}
-          />
+          <TimeSection control={control} setValue={setValue} />
         </ScrollView>
 
         {/* Submit */}

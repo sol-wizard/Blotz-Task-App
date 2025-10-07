@@ -1,5 +1,9 @@
-import { TaskTimeType } from "@/feature/task-add-edit/util/time-type-mapper";
 import { LabelDTO } from "./label-dto";
+
+export enum TaskTimeType {
+  Single = 0,
+  Range = 1,
+}
 
 export interface TaskDetailDTO {
   id: number;

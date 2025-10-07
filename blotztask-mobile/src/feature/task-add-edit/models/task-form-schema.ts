@@ -1,12 +1,9 @@
 import { z } from "zod";
 
-const TimeTypeEnum = z.enum(["single", "range"]);
-
 export const taskFormSchema = z
   .object({
     title: z.string().min(1, "Title is required").max(80, "Max 80 chars"),
     description: z.union([z.string().max(1000, "Max 1000 chars"), z.literal("")]).nullable(),
-    timeType: TimeTypeEnum.nullable(),
     startDate: z.date().nullable(),
     startTime: z.date().nullable(),
     endDate: z.date().nullable(),
@@ -14,26 +11,6 @@ export const taskFormSchema = z
     labelId: z.number().nullable(),
   })
   .superRefine((data, ctx) => {
-    if (!data.timeType) return;
-
-    if (data.timeType === "range") {
-      if (!data.startDate) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Start Date is required",
-          path: ["startDate"],
-        });
-      }
-
-      if (!data.endDate) {
-        ctx.addIssue({
-          code: "custom",
-          message: "End date is required",
-          path: ["endDate"],
-        });
-      }
-    }
-
     if (data.startDate && data.startTime && data.endDate && data.endTime) {
       const start = new Date(
         new Date(data.startDate).setHours(
