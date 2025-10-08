@@ -14,27 +14,21 @@ const getDisplayDates = (
   endDate: Date | null,
   dateToggle: DateToggleType,
 ) => {
-  let displayStartDate: Date | null = null;
-  let displayEndDate: Date | null = null;
+  const sameDay = startDate && endDate ? isSameDay(startDate, endDate) : false;
 
   if (dateToggle === DateToggleType.SINGLE_DAY) {
-    if (startDate && endDate && isSameDay(startDate, endDate)) {
-      displayStartDate = startDate;
-    } else {
-      displayStartDate = null;
-    }
-    displayEndDate = null;
-  } else {
-    if (startDate && endDate && isSameDay(startDate, endDate)) {
-      displayStartDate = null;
-      displayEndDate = null;
-    } else {
-      displayStartDate = startDate || null;
-      displayEndDate = endDate && startDate && !isSameDay(startDate, endDate) ? endDate : null;
-    }
+    // Single day tab: show start only if both dates exist and are same
+    return {
+      displayStartDate: sameDay ? startDate : null,
+      displayEndDate: null,
+    };
   }
 
-  return { displayStartDate, displayEndDate };
+  // Multi-day tab
+  return {
+    displayStartDate: sameDay ? null : startDate || null,
+    displayEndDate: sameDay ? null : endDate || null,
+  };
 };
 
 interface DateSectionProps {
