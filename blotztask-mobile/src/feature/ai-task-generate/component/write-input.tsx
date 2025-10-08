@@ -1,36 +1,35 @@
 import { ASSETS } from "@/shared/constants/assets";
 import { theme } from "@/shared/constants/theme";
 import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { useState } from "react";
 import { View, Text, Image, Keyboard } from "react-native";
 
 export const WriteInput = ({
   sheetRef,
   hasError,
-  text,
-  setText,
   sendMessage,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
   hasError: boolean;
-  text: string;
-  setText: (value: string) => void;
   sendMessage: (v: string) => void;
 }) => {
+  const [text, setText] = useState("");
+
   const sendAndDismiss = (msg: string) => {
     const val = msg.trim();
     if (!val) return;
+    console.log("Sending message in writing:", val);
     sendMessage(val);
-    setText("");
     Keyboard.dismiss();
     sheetRef.current?.collapse();
   };
 
   const handleChange = (value: string) => {
+    setText(value);
     if (value.endsWith("\n")) {
       sendAndDismiss(value);
       return;
     }
-    setText(value);
   };
 
   return (

@@ -99,7 +99,7 @@ builder.Services.AddSingleton<Kernel>(sp =>
         apiKey
     );
 
-    kernelBuilder.Plugins.AddFromObject(new TaskExtractionPlugin(), "TaskExtractionPlugin");
+    
     kernelBuilder.Plugins.AddFromObject(new TaskBreakdownPlugin(), "TaskBreakdownPlugin");
 
     return kernelBuilder.Build();

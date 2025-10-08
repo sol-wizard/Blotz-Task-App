@@ -25,8 +25,8 @@ public static class AiTaskGeneratorPrompts
                       - Otherwise, keep the "title" and "description" in the user's input language. 
 
                       Error handling rule:
-                      - If the input does NOT contain any actionable task, set "isSuccess" to false, "errorMessage" to a short reason, and return "task" as an empty array [].
-                      - If extraction succeeds, set "isSuccess" to true, "errorMessage" to an empty string "", and "task" MUST contain at least one item.
+                      - If the input does NOT contain any actionable task, set "isSuccess" to false, "errorMessage" to a short reason, and return "extractedTasks" as an empty array [].
+                      - If extraction succeeds, set "isSuccess" to true, "errorMessage" to an empty string "", and "extractedTasks" MUST contain at least one item.
 
 
                       RESPONSE RULES (STRICT):

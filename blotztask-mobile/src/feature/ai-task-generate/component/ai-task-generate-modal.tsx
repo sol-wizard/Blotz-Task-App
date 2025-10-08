@@ -11,7 +11,6 @@ export const AiTaskGenerateModal = ({
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
 }) => {
-  const [text, setText] = useState("");
   const [isVoiceInput, setIsVoiceInput] = useState(true);
   const { aiGeneratedTasks, sendMessage, modalType, setModalType, inputError, setInputError } =
     useAiTaskGenerator();
@@ -23,7 +22,6 @@ export const AiTaskGenerateModal = ({
           tasks={aiGeneratedTasks}
           setModalType={setModalType}
           isVoiceInput={isVoiceInput}
-          setText={setText}
         />
       );
 
@@ -39,8 +37,6 @@ export const AiTaskGenerateModal = ({
         <AiInput
           generateTaskError={inputError}
           setInputError={setInputError}
-          text={text}
-          setText={setText}
           sendMessage={sendMessage}
           isVoiceInput={isVoiceInput}
           setIsVoiceInput={setIsVoiceInput}

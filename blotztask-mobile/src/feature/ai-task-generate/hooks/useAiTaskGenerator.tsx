@@ -17,6 +17,7 @@ export function useAiTaskGenerator() {
     setModalType("loading");
     if (connection) {
       try {
+        console.log("Sending message to SignalR:", text);
         await signalRService.invoke(connection, "SendMessage", "User", text);
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
@@ -38,7 +39,7 @@ export function useAiTaskGenerator() {
     console.log("mappedTasks,", mappedTasks);
 
     setAiGeneratedTasks(mappedTasks);
-    if (mappedTasks.length === 0) {
+    if (!receivedAiMessage.isSuccess) {
       setInputError(true);
       setModalType("input");
     } else {

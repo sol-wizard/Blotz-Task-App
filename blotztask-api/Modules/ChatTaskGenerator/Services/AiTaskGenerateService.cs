@@ -3,6 +3,7 @@ using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
@@ -38,11 +39,12 @@ public class AiTaskGenerateService : IAiTaskGenerateService
     {
         var chatHistory = _chatHistoryManagerService.GetChatHistory();
 
-        var extractFn = _kernel.Plugins["TaskExtractionPlugin"]["ExtractTasksFromText"];
+        
 
-        var executionSettings = new PromptExecutionSettings
+        var executionSettings = new OpenAIPromptExecutionSettings
         {
-            FunctionChoiceBehavior = FunctionChoiceBehavior.Required(new[] { extractFn })
+            Temperature = 0.2f
+            
         };
 
         try
@@ -54,7 +56,59 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                 ct
             );
 
+
             var functionResultMessage = chatResults.LastOrDefault();
+            if (functionResultMessage != null)
+            {
+                // 1. 打印消息的角色 (Role)
+                _logger.LogInformation("AI Final Message Role: {Role}", functionResultMessage.Role);
+
+                // 2. 检查并打印消息的内容项 (Items) - 看它是否是 FunctionCall/FunctionResult 等
+                foreach (var item in functionResultMessage.Items)
+                    if (item is FunctionCallContent fc)
+                        _logger.LogInformation("  -> Final Item Type: FunctionCall, Name={Name}", fc.FunctionName);
+                    else if (item is FunctionResultContent fr)
+                        _logger.LogInformation("  -> Final Item Type: FunctionResult, Name={Name}", fr.FunctionName);
+                    else if (item is TextContent tc)
+                        _logger.LogInformation("  -> Final Item Type: Text");
+                    else
+                        _logger.LogInformation("  -> Final Item Type: {Type}", item.GetType().Name);
+
+                // 3. 打印消息的实际内容
+                _logger.LogInformation("AI Final Message Content:\n{Content}", functionResultMessage.Content);
+            }
+
+
+            var newChatHistory = _chatHistoryManagerService.GetChatHistory();
+
+            _logger.LogInformation("=== ChatHistory AFTER ({Count}) ===", newChatHistory?.Count ?? 0);
+
+            if (newChatHistory != null)
+
+                for (var i = 0; i < newChatHistory.Count; i++)
+
+                {
+                    var m = newChatHistory[i];
+
+                    foreach (var item in m.Items)
+
+                        if (item is FunctionCallContent fc)
+
+                            _logger.LogInformation(" -> FunctionCall Name={Name} Args={Args}", fc.FunctionName,
+                                fc.Arguments);
+
+                        else if (item is FunctionResultContent fr)
+
+                            _logger.LogInformation(" -> FunctionResult Name={Name} Result={Result}", fr.FunctionName,
+                                fr.Result);
+
+                    var source = m.Role == AuthorRole.User ? "USER"
+                        : m.Role == AuthorRole.Assistant ? "AI"
+                        : m.Role.ToString();
+
+                    _logger.LogInformation("[{Idx}] Source={Source} IsEmpty={Empty} Len={Len}\n{Content}",
+                        i, source, string.IsNullOrWhiteSpace(m.Content), m.Content?.Length ?? 0, m.Content ?? "");
+                }
 
             if (functionResultMessage == null)
             {

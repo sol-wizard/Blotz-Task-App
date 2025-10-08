@@ -7,17 +7,14 @@ import { ASSETS } from "@/shared/constants/assets";
 
 export const VoiceInput = ({
   hasError,
-  text,
-  setText,
   sendMessage,
   setInputError,
 }: {
   hasError: boolean;
-  text: string;
-  setText: (value: string) => void;
   sendMessage: (v: string) => void;
   setInputError: (v: boolean) => void;
 }) => {
+  const [text, setText] = useState("");
   const [language, setLanguage] = useState<"en" | "zh">("zh");
   const { startListening, partialText, stopAndGetText, isListening } = useVoiceInput({ language });
   const displayText = isListening

@@ -13,12 +13,10 @@ export function AiTasksPreview({
   tasks,
   setModalType,
   isVoiceInput,
-  setText,
 }: {
   tasks: AiTaskDTO[];
   setModalType: (v: BottomSheetType) => void;
   isVoiceInput: boolean;
-  setText: (v: string) => void;
 }) {
   const { addTask } = useSelectedDayTaskStore();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(tasks ?? []);
@@ -54,11 +52,6 @@ export function AiTasksPreview({
     setModalType("input");
   };
 
-  const handleBacktoBlankEdit = () => {
-    setText("");
-    setModalType("input");
-  };
-
   return (
     <View className="mb-10 items-center justify-between">
       <ScrollView className="pb-5 w-full min-h-20 max-h-80">
@@ -83,7 +76,7 @@ export function AiTasksPreview({
         </Pressable>
         {!isVoiceInputRef.current && (
           <Pressable
-            onPress={handleBacktoBlankEdit}
+            onPress={handleGoBack}
             style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
             accessibilityRole="button"
             accessibilityLabel="Edit"
