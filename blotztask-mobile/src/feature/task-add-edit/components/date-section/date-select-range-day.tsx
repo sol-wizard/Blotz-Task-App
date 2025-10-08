@@ -1,14 +1,12 @@
 import { View, Text, Pressable } from "react-native";
 import React, { useState } from "react";
 import { format } from "date-fns";
-import { Controller, Control, UseFormSetValue } from "react-hook-form";
+import { Controller, Control } from "react-hook-form";
 import CalendarDatePicker from "./calendar-date-picker";
 import { TaskFormField } from "../../models/task-form-schema";
-import { resetDefaultTimeValues } from "../../task-form";
 
 interface DateSelectRangeDayProps {
   control: Control<TaskFormField>;
-  setValue: UseFormSetValue<TaskFormField>;
   nameStart: "startDate";
   nameEnd: "endDate";
 }
@@ -39,7 +37,7 @@ const DateInput = ({
   );
 };
 
-const DateSelectRangeDay = ({ control, setValue, nameStart, nameEnd }: DateSelectRangeDayProps) => {
+const DateSelectRangeDay = ({ control, nameStart, nameEnd }: DateSelectRangeDayProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
 
   return (
@@ -71,9 +69,6 @@ const DateSelectRangeDay = ({ control, setValue, nameStart, nameEnd }: DateSelec
 
                   onChangeStart(startD);
                   onChangeEnd(endD);
-                  if (startD && endD) {
-                    resetDefaultTimeValues(startD, endD, setValue);
-                  }
                   setShowCalendar(false);
                 }}
               />

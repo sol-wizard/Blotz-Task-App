@@ -13,27 +13,27 @@ import TimeSection from "./components/time-sections/time-section";
 type TaskFormProps =
   | {
       mode: "create";
-      defaultValues?: undefined;
+      dto?: undefined;
       onSubmit: (data: TaskFormField) => void;
     }
   | {
       mode: "edit";
-      defaultValues: EditTaskItemDTO;
+      dto: EditTaskItemDTO;
       onSubmit: (data: TaskFormField) => void;
     };
 
-const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
+const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
     defaultValues: {
-      title: defaultValues?.title ?? "",
-      description: defaultValues?.description ?? "",
-      labelId: defaultValues?.labelId ?? null,
-      startDate: defaultValues?.startTime ?? null,
-      startTime: defaultValues?.startTime ?? null,
-      endDate: defaultValues?.endTime ?? null,
-      endTime: defaultValues?.endTime ?? null,
+      title: dto?.title ?? "",
+      description: dto?.description ?? "",
+      labelId: dto?.labelId ?? null,
+      startDate: dto?.startTime ?? null,
+      startTime: dto?.startTime ?? null,
+      endDate: dto?.endTime ?? null,
+      endTime: dto?.endTime ?? null,
     },
   });
 
@@ -42,7 +42,7 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
 
   const [isFloatingTask, setIsFloatingTask] = useState(() => {
     if (mode === "create") return false; // Default to non-floating task creation
-    return !defaultValues.timeType; // Floating if editing task timeType is undefined
+    return !dto.timeType; // Floating if editing task timeType is undefined
   });
 
   // When submitting, clear dates/times if floating
@@ -112,7 +112,7 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
           {!isFloatingTask && (
             <>
               {/* Date Section */}
-              <DateSection control={control} setValue={setValue} defaultValues={defaultValues} />
+              <DateSection control={control} setValue={setValue} dto={dto} />
 
               <FormDivider />
 

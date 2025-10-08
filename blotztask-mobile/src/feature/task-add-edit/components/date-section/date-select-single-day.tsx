@@ -3,26 +3,22 @@ import { View, Text, Pressable } from "react-native";
 import CalendarDatePicker from "./calendar-date-picker";
 import { Controller, Control, UseFormSetValue } from "react-hook-form";
 import { TaskFormField } from "../../models/task-form-schema";
-import { resetDefaultTimeValues } from "../../task-form";
 import { format } from "date-fns";
 
 interface DateSelectSingleDayProps {
   control: Control<TaskFormField>;
   setValue: UseFormSetValue<TaskFormField>;
+  nameStart: "startDate";
 }
 
-
-const DateSelectSingleDay = ({
-  control,
-  setValue,
-}: DateSelectSingleDayProps) => {
+const DateSelectSingleDay = ({ control, setValue, nameStart }: DateSelectSingleDayProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
 
   return (
     <View className="w-full">
       <Controller
         control={control}
-        name="startDate"
+        name={nameStart}
         render={({ field: { onChange, value } }) => {
           return (
             <>
@@ -48,7 +44,6 @@ const DateSelectSingleDay = ({
                     // Set both start and end date to the same value for single day
                     onChange(newDate);
                     setValue("endDate", newDate);
-                    resetDefaultTimeValues(newDate, newDate, setValue);
                   }
                 }}
               />
