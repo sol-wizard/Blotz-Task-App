@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,11 +10,17 @@ import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "./components/form-divider";
 import TimeSection from "./components/time-sections/time-section";
 
-type TaskFormProps = {
-  mode: "create" | "edit";
-  defaultValues?: EditTaskItemDTO;
-  onSubmit: (data: TaskFormField) => void;
-};
+type TaskFormProps =
+  | {
+      mode: "create";
+      defaultValues?: undefined;
+      onSubmit: (data: TaskFormField) => void;
+    }
+  | {
+      mode: "edit";
+      defaultValues: EditTaskItemDTO;
+      onSubmit: (data: TaskFormField) => void;
+    };
 
 const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
   const form = useForm<TaskFormField>({
@@ -33,6 +39,26 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
 
   const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
+
+  const [isFloatingTask, setIsFloatingTask] = useState(() => {
+    if (mode === "create") return false; // Default to non-floating task creation
+    return !defaultValues.timeType; // Floating if editing task timeType is undefined
+  });
+
+  // When submitting, clear dates/times if floating
+  const handleFormSubmit = (data: TaskFormField) => {
+    if (isFloatingTask) {
+      onSubmit({
+        ...data,
+        startDate: null,
+        startTime: null,
+        endDate: null,
+        endTime: null,
+      });
+    } else {
+      onSubmit(data);
+    }
+  };
 
   return (
     <FormProvider {...form}>
@@ -68,20 +94,37 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
             />
           </View> */}
 
+          {/* <FormDivider /> */}
+
+          <Pressable
+            onPress={() => setIsFloatingTask((prev) => !prev)}
+            className={`w-full py-3 mb-6 rounded-lg items-center justify-center ${
+              isFloatingTask ? "bg-blue-400" : "bg-lime-300"
+            }`}
+          >
+            <Text className="font-balooBold text-lg text-black">
+              {isFloatingTask ? "Floating Task Enabled" : "Enable Floating Task"}
+            </Text>
+          </Pressable>
+
           <FormDivider />
 
-          {/* Date Section */}
-          <DateSection control={control} setValue={setValue} />
+          {!isFloatingTask && (
+            <>
+              {/* Date Section */}
+              <DateSection control={control} setValue={setValue} defaultValues={defaultValues} />
 
-          <FormDivider />
+              <FormDivider />
 
-          <TimeSection control={control} setValue={setValue} />
+              <TimeSection control={control} setValue={setValue} />
+            </>
+          )}
         </ScrollView>
 
         {/* Submit */}
         <View className="px-8 py-6">
           <Pressable
-            onPress={handleSubmit(onSubmit)}
+            onPress={handleSubmit(handleFormSubmit)}
             disabled={!isValid || isSubmitting}
             className={`w-full py-4 rounded-lg items-center justify-center ${
               !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
