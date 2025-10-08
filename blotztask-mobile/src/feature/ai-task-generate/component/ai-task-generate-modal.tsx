@@ -6,7 +6,6 @@ import { TaskAddedSuccess } from "./task-added-success";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
-import { AiTaskDTO } from "../models/ai-task-dto";
 
 export const AiTaskGenerateModal = ({
   sheetRef,
