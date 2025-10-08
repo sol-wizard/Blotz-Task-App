@@ -1,20 +1,20 @@
 import { View, Text, Pressable } from "react-native";
 import React, { useState } from "react";
-import { isSameDay } from "date-fns";
 import DateToggleGroup, { DateToggleType } from "./date-toggle-group";
 import { TaskFormField } from "../../models/task-form-schema";
-import { Control, UseFormSetValue, useWatch } from "react-hook-form";
+import { Control, UseFormSetValue } from "react-hook-form";
 import DateSelectSingleDay from "./date-select-single-day";
 import DateSelectRangeDay from "./date-select-range-day";
 import { EditTaskItemDTO } from "../../models/edit-task-item-dto";
 import { MaterialIcons } from "@expo/vector-icons";
+import { isMultiDay } from "../../util/dateHelpers";
 
 const getDisplayDates = (
   startDate: Date | null,
   endDate: Date | null,
   dateToggle: DateToggleType,
 ) => {
-  const sameDay = startDate && endDate ? isSameDay(startDate, endDate) : false;
+  const sameDay = !isMultiDay(startDate, endDate);
 
   if (dateToggle === DateToggleType.SINGLE_DAY) {
     // Single day tab: show start only if both dates exist and are same
@@ -35,16 +35,18 @@ interface DateSectionProps {
   control: Control<TaskFormField>;
   setValue: UseFormSetValue<TaskFormField>;
   dto?: EditTaskItemDTO;
+  startDate: Date | null;
+  endDate: Date | null;
 }
 
-const DateSection = ({ control, setValue, dto }: DateSectionProps) => {
+const DateSection = ({ control, setValue, dto, startDate, endDate }: DateSectionProps) => {
   // Simple approach: check if existing dates span multiple days
   const getInitialDateToggle = () => {
     const startTime = dto?.startTime;
     const endTime = dto?.endTime;
 
     // Only set to multi-day if both dates exist AND they're different days
-    if (startTime && endTime && !isSameDay(startTime, endTime)) {
+    if (isMultiDay(startTime ?? null, endTime ?? null)) {
       return DateToggleType.MULTI_DAY;
     }
 
@@ -58,9 +60,6 @@ const DateSection = ({ control, setValue, dto }: DateSectionProps) => {
   const handleToggleExpand = () => {
     setIsExpanded(!isExpanded);
   };
-
-  const startDate = useWatch({ control, name: "startDate" });
-  const endDate = useWatch({ control, name: "endDate" });
 
   const { displayStartDate, displayEndDate } = getDisplayDates(startDate, endDate, dateToggle);
 

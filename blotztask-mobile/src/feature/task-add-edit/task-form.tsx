@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
@@ -9,6 +9,7 @@ import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "./components/form-divider";
 import TimeSection from "./components/time-sections/time-section";
+import { isMultiDay } from "./util/dateHelpers";
 
 type TaskFormProps =
   | {
@@ -59,6 +60,11 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       onSubmit(data);
     }
   };
+
+  const startDate = useWatch({ control, name: "startDate" });
+  const endDate = useWatch({ control, name: "endDate" });
+
+  const isMultiDayTask = isMultiDay(startDate, endDate);
 
   return (
     <FormProvider {...form}>
@@ -112,11 +118,22 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           {!isFloatingTask && (
             <>
               {/* Date Section */}
-              <DateSection control={control} setValue={setValue} dto={dto} />
+              <DateSection
+                control={control}
+                setValue={setValue}
+                dto={dto}
+                startDate={startDate} // pass watched value
+                endDate={endDate} // pass watched value
+              />
 
               <FormDivider />
 
-              <TimeSection control={control} setValue={setValue} />
+              <TimeSection
+                control={control}
+                setValue={setValue}
+                dto={dto}
+                isMultiDayTask={isMultiDayTask}
+              />
             </>
           )}
         </ScrollView>
