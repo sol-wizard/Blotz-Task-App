@@ -8,10 +8,12 @@ export const WriteInput = ({
   sheetRef,
   hasError,
   sendMessage,
+  errorMessage,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
   hasError: boolean;
   sendMessage: (v: string) => void;
+  errorMessage?: string;
 }) => {
   const [text, setText] = useState("");
 
@@ -48,9 +50,7 @@ export const WriteInput = ({
       />
       {hasError && (
         <View className="bg-background rounded-2xl px-4 py-6 mb-4 w-96 flex-row">
-          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2 w-72">
-            Try again-be specific, like ‘Team meeting at 9am‘
-          </Text>
+          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2 w-72">{errorMessage}</Text>
           <Image source={ASSETS.greenBun} className="w-20 h-20" />
         </View>
       )}

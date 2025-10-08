@@ -5,6 +5,8 @@ import { AiThinkingModal } from "./ai-thinking-modal";
 import { TaskAddedSuccess } from "./task-added-success";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
+import { AiTaskDTO } from "../models/ai-task-dto";
 
 export const AiTaskGenerateModal = ({
   sheetRef,
@@ -12,8 +14,10 @@ export const AiTaskGenerateModal = ({
   sheetRef: React.RefObject<BottomSheetModal | null>;
 }) => {
   const [isVoiceInput, setIsVoiceInput] = useState(true);
-  const { aiGeneratedTasks, sendMessage, modalType, setModalType, inputError, setInputError } =
+  const { aiGeneratedMessage, sendMessage, modalType, setModalType, inputError, setInputError } =
     useAiTaskGenerator();
+
+  const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
 
   switch (modalType) {
     case "task-preview":
@@ -41,6 +45,7 @@ export const AiTaskGenerateModal = ({
           isVoiceInput={isVoiceInput}
           setIsVoiceInput={setIsVoiceInput}
           sheetRef={sheetRef}
+          errorMessage={aiGeneratedMessage?.errorMessage}
         />
       );
   }

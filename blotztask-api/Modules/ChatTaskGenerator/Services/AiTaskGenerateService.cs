@@ -9,12 +9,12 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<AiGenerateTaskWrapper?> GenerateAiResponse(CancellationToken ct);
+    Task<AiGenerateTaskWrapper> GenerateAiResponse(CancellationToken ct);
 }
 
 public class AiTaskGenerateService : IAiTaskGenerateService
 {
-    private readonly IChatCompletionService _chatCompletionService; // TODO: use safeChatCompletionService
+    private readonly IChatCompletionService _chatCompletionService;
     private readonly IChatHistoryManagerService _chatHistoryManagerService;
     private readonly Kernel _kernel;
     private readonly ILogger<AiTaskGenerateService> _logger;
@@ -32,19 +32,13 @@ public class AiTaskGenerateService : IAiTaskGenerateService
         _kernel = kernel;
     }
 
-
-    public async Task<AiGenerateTaskWrapper?> GenerateAiResponse(
-        CancellationToken ct
-    )
+    public async Task<AiGenerateTaskWrapper> GenerateAiResponse(CancellationToken ct)
     {
         var chatHistory = _chatHistoryManagerService.GetChatHistory();
-
-        
 
         var executionSettings = new OpenAIPromptExecutionSettings
         {
             Temperature = 0.2f
-            
         };
 
         try
@@ -56,59 +50,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                 ct
             );
 
-
             var functionResultMessage = chatResults.LastOrDefault();
-            if (functionResultMessage != null)
-            {
-                // 1. 打印消息的角色 (Role)
-                _logger.LogInformation("AI Final Message Role: {Role}", functionResultMessage.Role);
-
-                // 2. 检查并打印消息的内容项 (Items) - 看它是否是 FunctionCall/FunctionResult 等
-                foreach (var item in functionResultMessage.Items)
-                    if (item is FunctionCallContent fc)
-                        _logger.LogInformation("  -> Final Item Type: FunctionCall, Name={Name}", fc.FunctionName);
-                    else if (item is FunctionResultContent fr)
-                        _logger.LogInformation("  -> Final Item Type: FunctionResult, Name={Name}", fr.FunctionName);
-                    else if (item is TextContent tc)
-                        _logger.LogInformation("  -> Final Item Type: Text");
-                    else
-                        _logger.LogInformation("  -> Final Item Type: {Type}", item.GetType().Name);
-
-                // 3. 打印消息的实际内容
-                _logger.LogInformation("AI Final Message Content:\n{Content}", functionResultMessage.Content);
-            }
-
-
-            var newChatHistory = _chatHistoryManagerService.GetChatHistory();
-
-            _logger.LogInformation("=== ChatHistory AFTER ({Count}) ===", newChatHistory?.Count ?? 0);
-
-            if (newChatHistory != null)
-
-                for (var i = 0; i < newChatHistory.Count; i++)
-
-                {
-                    var m = newChatHistory[i];
-
-                    foreach (var item in m.Items)
-
-                        if (item is FunctionCallContent fc)
-
-                            _logger.LogInformation(" -> FunctionCall Name={Name} Args={Args}", fc.FunctionName,
-                                fc.Arguments);
-
-                        else if (item is FunctionResultContent fr)
-
-                            _logger.LogInformation(" -> FunctionResult Name={Name} Result={Result}", fr.FunctionName,
-                                fr.Result);
-
-                    var source = m.Role == AuthorRole.User ? "USER"
-                        : m.Role == AuthorRole.Assistant ? "AI"
-                        : m.Role.ToString();
-
-                    _logger.LogInformation("[{Idx}] Source={Source} IsEmpty={Empty} Len={Len}\n{Content}",
-                        i, source, string.IsNullOrWhiteSpace(m.Content), m.Content?.Length ?? 0, m.Content ?? "");
-                }
 
             if (functionResultMessage == null)
             {
@@ -117,9 +59,14 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                     chatHistory.Count,
                     executionSettings.ModelId ?? "unknown"
                 );
-                return null;
+                return Error("AI returned no messages.");
             }
 
+            if (string.IsNullOrWhiteSpace(functionResultMessage.Content))
+            {
+                _logger.LogWarning("AI response content is empty.");
+                return Error("AI returned empty content.");
+            }
 
             try
             {
@@ -128,41 +75,44 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                 );
 
-                if (aiGenerateTaskWrapper != null)
+                if (aiGenerateTaskWrapper == null)
                 {
-                    chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateTaskWrapper));
-                    return aiGenerateTaskWrapper;
+                    _logger.LogWarning("Deserialized object is null.");
+                    return Error("AI deserialization failed.");
                 }
 
-                return null;
+                chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateTaskWrapper));
+                return aiGenerateTaskWrapper;
             }
             catch (JsonException ex)
             {
-                _logger.LogError(
-                    ex,
-                    "Failed to deserialize function result content into ExtractedTaskResponse. Content: {Content}",
-                    functionResultMessage.Content
-                );
-
-
-                return null;
+                _logger.LogError(ex, "Failed to deserialize AI response: {Content}", functionResultMessage.Content);
+                return Error("AI returned invalid JSON format.");
             }
         }
         catch (TokenLimitExceededException ex)
         {
             _logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
-
-            return new AiGenerateTaskWrapper
-            {
-                IsSuccess = false,
-                ErrorMessage = "You have exceeded token rate limit of your current pricing tier."
-            };
+            return Error("You have exceeded token rate limit of your current pricing tier.");
+        }
+        catch (HttpOperationException ex) when (
+            ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            _logger.LogWarning(ex, "Request blocked by Azure OpenAI content filter.");
+            return Error("Your message triggered safety filters. Please rephrase and try again.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unrecoverable error during AI Chat Completion. (Network, API Key, etc.)");
-            _logger.LogInformation("FULL EXCEPTION DETAILS: {ExceptionMessage}", ex.ToString());
-            return null;
+            _logger.LogWarning("FULL EXCEPTION DETAILS: {ExceptionMessage}", ex.ToString());
+            return Error("An unhandled exception occurred during AI task generation.");
         }
     }
+    
+    private AiGenerateTaskWrapper Error(string message) =>
+        new()
+        {
+            IsSuccess = false,
+            ErrorMessage = message
+        };
 }

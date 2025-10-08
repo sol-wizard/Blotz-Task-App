@@ -10,6 +10,7 @@ export const AiInput = ({
   setIsVoiceInput,
   generateTaskError,
   setInputError,
+  errorMessage,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
   sendMessage: (v: string) => void;
@@ -17,6 +18,7 @@ export const AiInput = ({
   setIsVoiceInput: (v: boolean) => void;
   generateTaskError: boolean;
   setInputError: (v: boolean) => void;
+  errorMessage?: string;
 }) => {
   return (
     <>
@@ -25,9 +27,15 @@ export const AiInput = ({
           sendMessage={sendMessage}
           hasError={generateTaskError}
           setInputError={setInputError}
+          errorMessage={errorMessage}
         />
       ) : (
-        <WriteInput sendMessage={sendMessage} hasError={generateTaskError} sheetRef={sheetRef} />
+        <WriteInput
+          sendMessage={sendMessage}
+          hasError={generateTaskError}
+          sheetRef={sheetRef}
+          errorMessage={errorMessage}
+        />
       )}
 
       <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} />

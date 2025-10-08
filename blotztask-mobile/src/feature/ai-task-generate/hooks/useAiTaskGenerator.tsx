@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-task-generate/utils/map-extracted-to-task-dto";
-import { BottomSheetType } from "@/feature/ai-task-generate/modals/bottom-sheet-type";
-import { AiTaskDTO } from "../modals/ai-task-dto";
+import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
+import { AiTaskDTO } from "../models/ai-task-dto";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
-import { AiGeneratedTaskWrapperDTO } from "../modals/ai-generate-task-wrapper";
+import { AiGeneratedTaskWrapperDTO } from "../models/ai-generate-task-wrapper";
 
 export function useAiTaskGenerator() {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-  const [aiGeneratedTasks, setAiGeneratedTasks] = useState<AiTaskDTO[]>([]);
+  const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiGeneratedTaskWrapperDTO>();
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [inputError, setInputError] = useState<boolean>(false);
 
@@ -32,13 +32,7 @@ export function useAiTaskGenerator() {
   };
 
   const receiveTasksHandler = (receivedAiMessage: AiGeneratedTaskWrapperDTO) => {
-    console.log("Received tasks from SignalR:", receivedAiMessage);
-    const mappedTasks: AiTaskDTO[] = receivedAiMessage.extractedTasks.map(
-      mapExtractedTaskDTOToAiTaskDTO,
-    );
-    console.log("mappedTasks,", mappedTasks);
-
-    setAiGeneratedTasks(mappedTasks);
+    setAiGeneratedMessage(receivedAiMessage);
     if (!receivedAiMessage.isSuccess) {
       setInputError(true);
       setModalType("input");
@@ -77,7 +71,7 @@ export function useAiTaskGenerator() {
   return {
     inputError,
     setInputError,
-    aiGeneratedTasks,
+    aiGeneratedMessage,
     sendMessage,
     modalType,
     setModalType,

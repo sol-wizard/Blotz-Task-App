@@ -1,11 +1,11 @@
-import { AiTaskDTO } from "@/feature/ai-task-generate/modals/ai-task-dto";
+import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
 import { View, Pressable } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
-import { BottomSheetType } from "../modals/bottom-sheet-type";
+import { BottomSheetType } from "../models/bottom-sheet-type";
 import { ScrollView } from "react-native-gesture-handler";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 
@@ -14,7 +14,7 @@ export function AiTasksPreview({
   setModalType,
   isVoiceInput,
 }: {
-  tasks: AiTaskDTO[];
+  tasks?: AiTaskDTO[];
   setModalType: (v: BottomSheetType) => void;
   isVoiceInput: boolean;
 }) {
