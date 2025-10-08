@@ -7,7 +7,7 @@ import DateSelectSingleDay from "./date-select-single-day";
 import DateSelectRangeDay from "./date-select-range-day";
 import { EditTaskItemDTO } from "../../models/edit-task-item-dto";
 import { MaterialIcons } from "@expo/vector-icons";
-import { isMultiDay } from "../../util/dateHelpers";
+import { isMultiDay } from "../../util/date-time-helpers";
 
 const getDisplayDates = (
   startDate: Date | null,

@@ -11,10 +11,7 @@ interface TimeToggleGroupProps {
   onValueChange: (value: TimeToggleType) => void;
 }
 
-const TimeToggleGroup = ({
-  value,
-  onValueChange,
-}: TimeToggleGroupProps) => {
+const TimeToggleGroup = ({ value, onValueChange }: TimeToggleGroupProps) => {
   return (
     <SegmentedButtons
       value={value}

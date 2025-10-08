@@ -9,7 +9,7 @@ import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "./components/form-divider";
 import TimeSection from "./components/time-sections/time-section";
-import { isMultiDay } from "./util/dateHelpers";
+import { isMultiDay } from "./util/date-time-helpers";
 
 type TaskFormProps =
   | {
@@ -128,6 +128,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
               <FormDivider />
 
+              {/* Time Section */}
               <TimeSection
                 control={control}
                 setValue={setValue}
