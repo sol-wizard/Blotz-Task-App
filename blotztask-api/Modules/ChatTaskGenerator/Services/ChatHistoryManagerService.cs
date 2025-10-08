@@ -5,7 +5,6 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IChatHistoryManagerService
 {
-    bool TryGetChatHistory(out ChatHistory chatHistory);
     void SetChatHistory(ChatHistory chatHistory);
     void RemoveConversation();
     Task<ChatHistory> InitializeNewConversation();
@@ -29,17 +28,6 @@ public class ChatHistoryManagerService : IChatHistoryManagerService
         return _chatHistory;
     }
 
-    public bool TryGetChatHistory(out ChatHistory chatHistory)
-    {
-        if (_chatHistory != null)
-        {
-            chatHistory = _chatHistory;
-            return true;
-        }
-
-        chatHistory = null!;
-        return false;
-    }
 
     public void SetChatHistory(ChatHistory chatHistory)
     {
@@ -53,13 +41,9 @@ public class ChatHistoryManagerService : IChatHistoryManagerService
 
     public Task<ChatHistory> InitializeNewConversation()
     {
-        
-        if (_chatHistory != null)
-        {
-            return Task.FromResult(_chatHistory);
-        }
+        if (_chatHistory != null) return Task.FromResult(_chatHistory);
 
-    
+
         var chatHistory = new ChatHistory();
         chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(DateTime.Now));
 

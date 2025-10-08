@@ -23,16 +23,8 @@ public class AiTaskGenerateChatHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        try
-        {
-            await _chatHistoryManagerService.InitializeNewConversation();
-            await base.OnConnectedAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "OnConnectedAsync crashed for {cid}", Context.ConnectionId);
-            throw;
-        }
+        await _chatHistoryManagerService.InitializeNewConversation();
+        await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -60,7 +52,7 @@ public class AiTaskGenerateChatHub : Hub
 
         catch (Exception ex)
         {
-            _logger.LogError(ex, "💥 SendMessage crashed for user={user}", user);
+            _logger.LogError(ex, "SendMessage crashed for user={user}", user);
             throw;
         }
     }
