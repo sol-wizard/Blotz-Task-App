@@ -1,23 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useLayoutEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { IconButton } from "react-native-paper";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsTab from "../../feature/task-details/components/details-tab";
 import SubtasksTab from "../../feature/task-details/components/subtasks-tab";
 import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
 import { TaskStatusType } from "@/feature/calendar/components/task-status-select";
+import { theme } from "@/shared/constants/theme";
 
 type tabTypes = "Details" | "Subtasks";
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { selectedTask } = useSelectedTaskStore();
   const { isDone, title, description, label, startTime, endTime } = selectedTask || {};
 
   const taskStatus: TaskStatusType = isDone ? "done" : "todo";
   const labelName: string | undefined = label?.name;
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
+
+  // Use label color or fallback to grey
+  const headerBackgroundColor = label?.color ?? theme.colors.labelFallback;
+
+  // Dynamically set header background color based on label
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerStyle: {
+        backgroundColor: headerBackgroundColor,
+      },
+    });
+  }, [navigation, headerBackgroundColor]);
 
   const handleEdit = () => {
     router.push({
@@ -26,7 +40,7 @@ export default function TaskDetailsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-lime-200">
+    <View className="flex-1" style={{ backgroundColor: headerBackgroundColor }}>
       <View className="py-6 px-8">
         {/* Task Status + Label */}
         <View className="flex-row items-center mb-4">

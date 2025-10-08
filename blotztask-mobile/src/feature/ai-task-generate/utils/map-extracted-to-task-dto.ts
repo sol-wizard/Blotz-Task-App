@@ -12,5 +12,6 @@ export function mapExtractedTaskDTOToAiTaskDTO(extractedTask: ExtractedTaskDTO):
     startTime: extractedTask.start_time,
     endTime: extractedTask.end_time,
     labelId: extractedTask.label?.labelId,
+    labelColor: extractedTask.label?.color,
   };
 }
