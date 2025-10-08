@@ -57,12 +57,12 @@ const TimeSection = ({ control, setValue, dto, isMultiDayTask = false }: TimeSec
           <Text className="font-balooBold text-3xl leading-normal">Time</Text>
         </View>
 
-        {/* Time Toggle - Always visible */}
+        {/* Time Toggle */}
         <View className="flex-[0.75]">
           <TimeToggleGroup value={timeToggle} onValueChange={setTimeToggle} />
         </View>
       </View>
-      {isTimeExpanded && (
+      {isTimeExpanded && !isMultiDayTask && (
         <View className="mt-4">
           {timeToggle === TimeToggleType.SINGLE_TIME ? (
             <TimeSelectSingle control={control} setValue={setValue} />
