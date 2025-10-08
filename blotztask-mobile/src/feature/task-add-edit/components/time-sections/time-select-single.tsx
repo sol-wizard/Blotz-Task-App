@@ -22,7 +22,7 @@ const TimeSelectSingle = ({ control, setValue }: TimeSelectSingleProps) => {
             onChange={(time) => {
               onChange(time);
               // Set the same time for both start and end
-              setValue("endTime", time);
+              setValue("endTime", time, { shouldValidate: true });
             }}
           />
         )}
