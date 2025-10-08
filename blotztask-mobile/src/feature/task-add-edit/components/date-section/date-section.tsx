@@ -3,11 +3,39 @@ import React, { useState } from "react";
 import { isSameDay } from "date-fns";
 import DateToggleGroup, { DateToggleType } from "./date-toggle-group";
 import { TaskFormField } from "../../models/task-form-schema";
-import { Control, UseFormSetValue } from "react-hook-form";
+import { Control, UseFormSetValue, useWatch } from "react-hook-form";
 import DateSelectSingleDay from "./date-select-single-day";
 import DateSelectRangeDay from "./date-select-range-day";
 import { EditTaskItemDTO } from "../../models/edit-task-item-dto";
 import { MaterialIcons } from "@expo/vector-icons";
+
+const getDisplayDates = (
+  startDate: Date | null,
+  endDate: Date | null,
+  dateToggle: DateToggleType,
+) => {
+  let displayStartDate: Date | null = null;
+  let displayEndDate: Date | null = null;
+
+  if (dateToggle === DateToggleType.SINGLE_DAY) {
+    if (startDate && endDate && isSameDay(startDate, endDate)) {
+      displayStartDate = startDate;
+    } else {
+      displayStartDate = null;
+    }
+    displayEndDate = null;
+  } else {
+    if (startDate && endDate && isSameDay(startDate, endDate)) {
+      displayStartDate = null;
+      displayEndDate = null;
+    } else {
+      displayStartDate = startDate || null;
+      displayEndDate = endDate && startDate && !isSameDay(startDate, endDate) ? endDate : null;
+    }
+  }
+
+  return { displayStartDate, displayEndDate };
+};
 
 interface DateSectionProps {
   control: Control<TaskFormField>;
@@ -36,6 +64,12 @@ const DateSection = ({ control, setValue, dto }: DateSectionProps) => {
   const handleToggleExpand = () => {
     setIsExpanded(!isExpanded);
   };
+
+  const startDate = useWatch({ control, name: "startDate" });
+  const endDate = useWatch({ control, name: "endDate" });
+
+  const { displayStartDate, displayEndDate } = getDisplayDates(startDate, endDate, dateToggle);
+
   return (
     <View className="flex-col gap-4 mb-8">
       <View className="flex-row items-center justify-between">
@@ -58,9 +92,20 @@ const DateSection = ({ control, setValue, dto }: DateSectionProps) => {
       {isExpanded && (
         <View className="mt-4">
           {dateToggle === DateToggleType.SINGLE_DAY ? (
-            <DateSelectSingleDay control={control} setValue={setValue} nameStart="startDate" />
+            <DateSelectSingleDay
+              control={control}
+              setValue={setValue}
+              nameStart="startDate"
+              displayDate={displayStartDate}
+            />
           ) : (
-            <DateSelectRangeDay control={control} nameStart="startDate" nameEnd="endDate" />
+            <DateSelectRangeDay
+              control={control}
+              nameStart="startDate"
+              nameEnd="endDate"
+              displayStartDate={displayStartDate}
+              displayEndDate={displayEndDate}
+            />
           )}
         </View>
       )}

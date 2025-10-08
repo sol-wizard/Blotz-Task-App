@@ -9,9 +9,15 @@ interface DateSelectSingleDayProps {
   control: Control<TaskFormField>;
   setValue: UseFormSetValue<TaskFormField>;
   nameStart: "startDate";
+  displayDate: Date | null;
 }
 
-const DateSelectSingleDay = ({ control, setValue, nameStart }: DateSelectSingleDayProps) => {
+const DateSelectSingleDay = ({
+  control,
+  setValue,
+  nameStart,
+  displayDate,
+}: DateSelectSingleDayProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
 
   return (
@@ -19,7 +25,7 @@ const DateSelectSingleDay = ({ control, setValue, nameStart }: DateSelectSingleD
       <Controller
         control={control}
         name={nameStart}
-        render={({ field: { onChange, value } }) => {
+        render={({ field: { onChange } }) => {
           return (
             <>
               {/* Date Picker Button */}
@@ -28,7 +34,7 @@ const DateSelectSingleDay = ({ control, setValue, nameStart }: DateSelectSingleD
                 className="bg-gray-100 p-4 rounded-lg border border-gray-300"
               >
                 <Text className="text-lg text-gray-700">
-                  {value ? format(value, "MMM dd, yyyy") : "Select Date"}
+                  {displayDate ? format(displayDate, "MMM dd, yyyy") : "Select Date"}
                 </Text>
               </Pressable>
 
@@ -43,7 +49,7 @@ const DateSelectSingleDay = ({ control, setValue, nameStart }: DateSelectSingleD
                     const newDate = new Date(selectedDate);
                     // Set both start and end date to the same value for single day
                     onChange(newDate);
-                    setValue("endDate", newDate);
+                    setValue("endDate", newDate, { shouldValidate: true });
                   }
                 }}
               />

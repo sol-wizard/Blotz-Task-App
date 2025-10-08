@@ -9,6 +9,8 @@ interface DateSelectRangeDayProps {
   control: Control<TaskFormField>;
   nameStart: "startDate";
   nameEnd: "endDate";
+  displayStartDate: Date | null;
+  displayEndDate: Date | null;
 }
 
 const DateInput = ({
@@ -37,26 +39,36 @@ const DateInput = ({
   );
 };
 
-const DateSelectRangeDay = ({ control, nameStart, nameEnd }: DateSelectRangeDayProps) => {
+const DateSelectRangeDay = ({
+  control,
+  nameStart,
+  nameEnd,
+  displayStartDate,
+  displayEndDate,
+}: DateSelectRangeDayProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
 
   return (
     <Controller
       control={control}
       name={nameStart}
-      render={({ field: { onChange: onChangeStart, value: startDate } }) => (
+      render={({ field: { onChange: onChangeStart } }) => (
         <Controller
           control={control}
           name={nameEnd}
-          render={({ field: { onChange: onChangeEnd, value: endDate } }) => (
+          render={({ field: { onChange: onChangeEnd } }) => (
             <View>
               <View className="flex-col gap-2 items-start justify-center">
                 <DateInput
                   label="Start Date"
-                  date={startDate}
+                  date={displayStartDate}
                   onPress={() => setShowCalendar(true)}
                 />
-                <DateInput label="End Date" date={endDate} onPress={() => setShowCalendar(true)} />
+                <DateInput
+                  label="End Date"
+                  date={displayEndDate}
+                  onPress={() => setShowCalendar(true)}
+                />
               </View>
 
               <CalendarDatePicker
