@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,6 +64,12 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const startDate = useWatch({ control, name: "startDate" });
   const endDate = useWatch({ control, name: "endDate" });
 
+  const allValues = useWatch({ control });
+
+  useEffect(() => {
+    console.log("Current form values:", allValues);
+  }, [allValues]);
+
   const isMultiDayTask = isMultiDay(startDate, endDate);
 
   return (
@@ -109,7 +115,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             }`}
           >
             <Text className="font-balooBold text-lg text-black">
-              {isFloatingTask ? "Floating Task Enabled" : "Enable Floating Task"}
+              {isFloatingTask ? "No Datetime Task enabled" : "Enable No Datetime Task"}
             </Text>
           </Pressable>
 

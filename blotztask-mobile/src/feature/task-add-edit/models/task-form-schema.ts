@@ -24,8 +24,6 @@ export const taskFormSchema = z
         const end = new Date(
           new Date(data.endDate).setHours(data.endTime.getHours(), data.endTime.getMinutes(), 0, 0),
         );
-        console.log("end", end);
-        console.log("start", start);
         return end.getTime() >= start.getTime();
       }
     },

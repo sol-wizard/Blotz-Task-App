@@ -67,7 +67,7 @@ const TimeSection = ({ control, setValue, dto, isMultiDayTask = false }: TimeSec
           {timeToggle === TimeToggleType.SINGLE_TIME ? (
             <TimeSelectSingle control={control} setValue={setValue} />
           ) : (
-            <TimeSelectRange control={control} setValue={setValue} />
+            <TimeSelectRange control={control} />
           )}
         </View>
       )}
