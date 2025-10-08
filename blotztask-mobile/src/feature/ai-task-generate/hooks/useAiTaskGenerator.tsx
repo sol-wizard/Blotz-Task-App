@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-task-generate/utils/map-extracted-to-task-dto";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
-import { AiTaskDTO } from "../models/ai-task-dto";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
 import { AiGeneratedTaskWrapperDTO } from "../models/ai-generate-task-wrapper";
 
