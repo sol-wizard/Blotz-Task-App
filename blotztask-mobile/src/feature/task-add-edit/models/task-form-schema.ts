@@ -10,29 +10,30 @@ export const taskFormSchema = z
     endTime: z.date().nullable(),
     labelId: z.number().nullable(),
   })
-  .superRefine((data, ctx) => {
-    if (data.startDate && data.startTime && data.endDate && data.endTime) {
-      const start = new Date(
-        new Date(data.startDate).setHours(
-          data.startTime.getHours(),
-          data.startTime.getMinutes(),
-          0,
-          0,
-        ),
-      );
-      const end = new Date(
-        new Date(data.endDate).setHours(data.endTime.getHours(), data.endTime.getMinutes(), 0, 0),
-      );
-
-      if (end.getTime() < start.getTime()) {
-        ctx.addIssue({
-          code: "custom",
-          message: "End time cannot be earlier than start time",
-          path: ["endTime"],
-        });
+  .refine(
+    (data) => {
+      if (data.startDate && data.startTime && data.endDate && data.endTime) {
+        const start = new Date(
+          new Date(data.startDate).setHours(
+            data.startTime.getHours(),
+            data.startTime.getMinutes(),
+            0,
+            0,
+          ),
+        );
+        const end = new Date(
+          new Date(data.endDate).setHours(data.endTime.getHours(), data.endTime.getMinutes(), 0, 0),
+        );
+        console.log("end", end);
+        console.log("start", start);
+        return end.getTime() >= start.getTime();
       }
-    }
-  });
+    },
+    {
+      message: "End time cannot be earlier than start time",
+      path: ["endTime"],
+    },
+  );
 
 export type TaskFormField = z.infer<typeof taskFormSchema>;
 
