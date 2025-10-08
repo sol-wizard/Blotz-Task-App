@@ -31,6 +31,7 @@ public static class DependencyInjection
     public static IServiceCollection AddLabelModule(this IServiceCollection services)
     {
         services.AddScoped<AddLabelCommandHandler>();
+        services.AddScoped<DeleteCustomLabelCommandHandler>();
         services.AddScoped<GetAllLabelsQueryHandler>();
         return services;
     }
