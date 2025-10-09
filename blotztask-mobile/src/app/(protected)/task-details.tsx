@@ -7,6 +7,7 @@ import DetailsTab from "../../feature/task-details/components/details-tab";
 import SubtasksTab from "../../feature/task-details/components/subtasks-tab";
 import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
 import { TaskStatusType } from "@/feature/calendar/components/task-status-select";
+import { theme } from "@/shared/constants/theme";
 
 type tabTypes = "Details" | "Subtasks";
 
@@ -19,6 +20,9 @@ export default function TaskDetailsScreen() {
   const labelName: string | undefined = label?.name;
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
 
+  // Use label color or fallback to grey
+  const headerBackgroundColor = label?.color ?? theme.colors.fallback;
+
   const handleEdit = () => {
     router.push({
       pathname: "/(protected)/task-edit",
@@ -26,7 +30,7 @@ export default function TaskDetailsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-lime-200">
+    <View className="flex-1" style={{ backgroundColor: headerBackgroundColor }}>
       <View className="py-6 px-8">
         {/* Task Status + Label */}
         <View className="flex-row items-center mb-4">

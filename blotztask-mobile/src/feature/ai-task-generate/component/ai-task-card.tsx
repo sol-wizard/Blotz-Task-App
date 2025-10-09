@@ -15,6 +15,9 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(task.title);
 
+  // Use fallback color for divider
+  const dividerColor = theme.colors.disabled;
+
   const handleEdit = () => {
     const trimmed = draftTitle.trim();
     if (trimmed && trimmed !== task.title) {
@@ -28,7 +31,7 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
 
   return (
     <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
-      <View className="w-2 h-full rounded-full bg-[#C2E49F]" />
+      <View className="w-2 h-full rounded-full" style={{ backgroundColor: dividerColor }} />
 
       <View className="flex-1 flex-row items-center justify-between ml-4">
         {isEditing ? (
