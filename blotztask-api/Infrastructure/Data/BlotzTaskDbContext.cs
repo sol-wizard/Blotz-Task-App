@@ -1,4 +1,4 @@
-﻿using BlotzTask.Infrastructure.Data.Configurations;
+using BlotzTask.Infrastructure.Data.Configurations;
 using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
@@ -55,9 +55,9 @@ public class BlotzTaskDbContext : DbContext
             new Label
             {
                 LabelId = 9,
-                Name = "Workout",
+                Name = "Health",
                 Color = "#bad5fa",
-                Description = "Workout related tasks",
+                Description = "Health related tasks",
                 Scope = LabelScope.Global,
                 UserId = null
             }

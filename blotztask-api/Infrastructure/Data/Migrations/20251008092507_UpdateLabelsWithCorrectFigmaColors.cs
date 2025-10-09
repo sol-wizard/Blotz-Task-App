@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -15,28 +15,28 @@ namespace BlotzTask.Migrations
                 keyColumn: "LabelId",
                 keyValue: 6,
                 columns: new[] { "Color", "Name" },
-                values: new object[] { "#c2e49f", "work" });
+                values: new object[] { "#c2e49f", "Work", "Work related tasks", "Work" });
 
             migrationBuilder.UpdateData(
                 table: "Labels",
                 keyColumn: "LabelId",
                 keyValue: 7,
                 columns: new[] { "Color", "Description", "Name" },
-                values: new object[] { "#cce7db", "Life related tasks", "life" });
+                values: new object[] { "#cce7db", "Life related tasks", "Life" });
 
             migrationBuilder.UpdateData(
                 table: "Labels",
                 keyColumn: "LabelId",
                 keyValue: 8,
                 columns: new[] { "Color", "Description", "Name" },
-                values: new object[] { "#d6faf9", "Learning related tasks", "learning" });
+                values: new object[] { "#d6faf9", "Learning related tasks", "Learning" });
 
             migrationBuilder.UpdateData(
                 table: "Labels",
                 keyColumn: "LabelId",
                 keyValue: 9,
                 columns: new[] { "Color", "Description", "Name" },
-                values: new object[] { "#bad5fa", "Workout related tasks", "workout" });
+                values: new object[] { "#bad5fa", "Health related tasks", "Health" });
         }
 
         /// <inheritdoc />
