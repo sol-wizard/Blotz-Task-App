@@ -21,7 +21,7 @@ export default function TaskDetailsScreen() {
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
 
   // Use label color or fallback to grey
-  const headerBackgroundColor = label?.color ?? theme.colors.labelFallback;
+  const headerBackgroundColor = label?.color ?? theme.colors.fallback;
 
   const handleEdit = () => {
     router.push({

@@ -6,4 +6,5 @@ export interface AiTaskDTO {
   startTime: string;
   endTime: string;
   labelId?: number;
+  labelColor?: string;
 }

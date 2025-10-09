@@ -22,7 +22,7 @@ export default function ProtectedLayout() {
         name="task-details"
         options={() => {
           const { selectedTask } = useSelectedTaskStore.getState();
-          const headerBackgroundColor = selectedTask?.label?.color ?? theme.colors.labelFallback;
+          const headerBackgroundColor = selectedTask?.label?.color ?? theme.colors.fallback;
 
           return {
             headerShown: true,

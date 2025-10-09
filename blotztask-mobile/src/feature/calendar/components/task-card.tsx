@@ -52,7 +52,7 @@ export default function TaskCard({
   const translateX = useSharedValue(0);
 
   // Use label color or fallback to grey
-  const dividerColor = labelColor ?? theme.colors.labelFallback;
+  const dividerColor = labelColor ?? theme.colors.disabled;
 
   useEffect(() => {
     setChecked(isCompleted);

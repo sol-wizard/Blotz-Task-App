@@ -15,8 +15,8 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(task.title);
 
-  // Use label color or fallback to grey
-  const dividerColor = task.labelColor ?? theme.colors.labelFallback;
+  // Use fallback color for divider
+  const dividerColor = theme.colors.disabled;
 
   const handleEdit = () => {
     const trimmed = draftTitle.trim();
