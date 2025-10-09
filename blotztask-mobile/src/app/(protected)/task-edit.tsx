@@ -48,7 +48,7 @@ const TaskEditScreen = () => {
   return (
     <TaskForm
       mode="edit"
-      defaultValues={taskEditData}
+      dto={taskEditData}
       onSubmit={(task) => {
         handleTaskSubmit(task);
       }}
