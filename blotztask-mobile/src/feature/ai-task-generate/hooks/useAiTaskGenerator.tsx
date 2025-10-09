@@ -15,7 +15,6 @@ export function useAiTaskGenerator() {
     setModalType("loading");
     if (connection) {
       try {
-        console.log("Sending message to SignalR:", text);
         await signalRService.invoke(connection, "SendMessage", "User", text);
       } catch (error) {
         console.error("Error invoking SendMessage:", error);

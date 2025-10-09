@@ -20,7 +20,6 @@ export const WriteInput = ({
   const sendAndDismiss = (msg: string) => {
     const val = msg.trim();
     if (!val) return;
-    console.log("Sending message in writing:", val);
     sendMessage(val);
     Keyboard.dismiss();
     sheetRef.current?.collapse();
