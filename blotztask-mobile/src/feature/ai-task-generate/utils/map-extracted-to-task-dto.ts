@@ -1,5 +1,5 @@
-import { ExtractedTaskDTO } from "../modals/extracted-task-dto";
-import { AiTaskDTO } from "../modals/ai-task-dto";
+import { ExtractedTaskDTO } from "../models/extracted-task-dto";
+import { AiTaskDTO } from "../models/ai-task-dto";
 import uuid from "react-native-uuid";
 
 export function mapExtractedTaskDTOToAiTaskDTO(extractedTask: ExtractedTaskDTO): AiTaskDTO {
