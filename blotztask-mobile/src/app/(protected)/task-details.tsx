@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { IconButton } from "react-native-paper";
 import { useRouter, useNavigation } from "expo-router";
@@ -25,7 +25,7 @@ export default function TaskDetailsScreen() {
   const headerBackgroundColor = label?.color ?? theme.colors.labelFallback;
 
   // Dynamically set header background color based on label
-  useLayoutEffect(() => {
+  useEffect(() => {
     navigation.setOptions({
       headerStyle: {
         backgroundColor: headerBackgroundColor,
