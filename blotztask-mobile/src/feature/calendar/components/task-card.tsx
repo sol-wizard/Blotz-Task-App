@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { theme } from "@/shared/constants/theme";
 
 import { format, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
@@ -21,6 +22,7 @@ interface TaskCardProps {
   startTime?: string;
   endTime?: string;
   isCompleted?: boolean;
+  labelColor?: string;
   onToggleComplete?: (id: number, completed: boolean) => void;
   onPress?: () => void;
   onDelete?: (id: number) => Promise<void> | void;
@@ -36,6 +38,7 @@ export default function TaskCard({
   startTime,
   endTime,
   isCompleted = false,
+  labelColor,
   onToggleComplete,
   onPress,
   onDelete,
@@ -47,6 +50,9 @@ export default function TaskCard({
 
   // negative value indicates left swipe
   const translateX = useSharedValue(0);
+
+  // Use label color or fallback to grey
+  const dividerColor = labelColor ?? theme.colors.disabled;
 
   useEffect(() => {
     setChecked(isCompleted);
@@ -134,7 +140,10 @@ export default function TaskCard({
               <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
                 <CustomCheckbox checked={checked} onPress={handleToggleComplete} />
 
-                <View className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-3" />
+                <View
+                  className="w-[6px] h-[30px] rounded-[3px] mr-3"
+                  style={{ backgroundColor: dividerColor }}
+                />
               </Animated.View>
               <View className="flex-1 flex-row justify-between items-center">
                 <View className="justify-start pt-0">

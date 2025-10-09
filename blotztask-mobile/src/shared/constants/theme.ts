@@ -47,6 +47,7 @@ export const theme = {
     error: "#F56767", // soft red (error / danger)
     heading: "#000000", // pure black (headings / titles)
     warning: "#F56767", // soft red (warning state)
+    fallback: "#f5f9fa", // grey fallback for tasks without labels
   },
   fonts: configureFonts({ config: fonts }),
 };

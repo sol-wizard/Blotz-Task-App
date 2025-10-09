@@ -7,7 +7,6 @@ using BlotzTask.Modules.BreakDown;
 using BlotzTask.Modules.BreakDown.Plugins;
 using BlotzTask.Modules.BreakDown.Services;
 using BlotzTask.Modules.ChatTaskGenerator;
-using BlotzTask.Modules.ChatTaskGenerator.Plugins;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Tasks;
@@ -34,14 +33,14 @@ builder.Services.AddHealthChecks();
 //TODO : Move all services to module based registration
 builder.Services.AddScoped<IRecurringTaskService, RecurringTaskService>();
 
+builder.Services.AddSingleton<IChatHistoryManagerService, ChatHistoryManagerService>();
 builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
-builder.Services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
-builder.Services.AddScoped<ITaskGenerateChatService, TaskGenerateChatService>();
+
 
 builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
 builder.Services.AddSingleton(new ChatHistoryStore(
-    expiration: TimeSpan.FromMinutes(30),  // Sessions expire after 30 minutes of inactivity
-    cleanupInterval: TimeSpan.FromMinutes(5) // Scanning every 5 minutes
+    TimeSpan.FromMinutes(30), // Sessions expire after 30 minutes of inactivity
+    TimeSpan.FromMinutes(5) // Scanning every 5 minutes
 ));
 
 builder.Services.AddTaskModule();
@@ -62,7 +61,7 @@ if (builder.Environment.IsProduction())
     builder.Services.AddSingleton(secretClient);
 
     var sqlConnectionSecret = secretClient.GetSecret("sql-connection-string").Value.Value;
-    builder.Services.AddDbContext<BlotzTaskDbContext>(options => 
+    builder.Services.AddDbContext<BlotzTaskDbContext>(options =>
         options.UseSqlServer(sqlConnectionSecret));
 }
 
@@ -82,7 +81,6 @@ builder.Services.AddSingleton<Kernel>(sp =>
     var apiKey = config["AzureOpenAI:ApiKey"];
 
     if (secretClient != null && builder.Environment.IsProduction())
-    {
         try
         {
             apiKey = secretClient.GetSecret("azureopenai-apikey").Value.Value;
@@ -91,17 +89,16 @@ builder.Services.AddSingleton<Kernel>(sp =>
         {
             logger.LogError(ex, "Failed to retrieve API key from Azure Key Vault");
         }
-    }
 
     var kernelBuilder = Kernel.CreateBuilder();
-    
+
     kernelBuilder.AddAzureOpenAIChatCompletion(
-        deploymentName: deploymentId,
-        endpoint: endpoint,
-        apiKey: apiKey
+        deploymentId,
+        endpoint,
+        apiKey
     );
+
     
-    kernelBuilder.Plugins.AddFromObject(new TaskExtractionPlugin(), "TaskExtractionPlugin");
     kernelBuilder.Plugins.AddFromObject(new TaskBreakdownPlugin(), "TaskBreakdownPlugin");
 
     return kernelBuilder.Build();
@@ -120,10 +117,11 @@ builder.Services.AddCors(options =>
         builder =>
         {
             builder.WithOrigins("http://localhost:3000" // DEV frontend origin
-                , "http://localhost:8081" // DEV mobile app origin
-                , "https://blotz-task-app.vercel.app") // Prod frontend origin    
+                    , "http://localhost:8081" // DEV mobile app origin
+                    , "https://blotz-task-app.vercel.app") // Prod frontend origin    
                 .WithMethods("GET", "POST", "OPTIONS", "PUT", "DELETE") // Specify allowed methods
-                .WithHeaders("Content-Type", "Authorization", "x-signalr-user-agent", "x-requested-with") // Added SignalR headers
+                .WithHeaders("Content-Type", "Authorization", "x-signalr-user-agent",
+                    "x-requested-with") // Added SignalR headers
                 .AllowCredentials(); // TODO: anti-csrf need to be built.
         });
 });
@@ -133,26 +131,20 @@ app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseCors("AllowSpecificOrigin");
 app.UseAuthentication();
-app.UseAuthorization(); 
+app.UseAuthorization();
 app.UseMiddleware<UserContextMiddleware>();
 
 app.MapGet("/", () => Results.Content(
-    "<html><body><h1>Web API is running</h1></body></html>", 
+    "<html><body><h1>Web API is running</h1></body></html>",
     "text/html"));
 app.MapHealthChecks("/health");
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+if (!app.Environment.IsDevelopment()) app.UseHttpsRedirection();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger(); 
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlotzTask API V1");
-    });
+    app.UseSwagger();
+    app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "BlotzTask API V1"); });
 }
 
 app.MapControllers();
