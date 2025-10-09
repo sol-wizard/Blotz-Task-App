@@ -63,6 +63,7 @@ export default function CalendarScreen() {
         startTime={item.startTime}
         endTime={item.endTime}
         isCompleted={item.isDone}
+        labelColor={item.label?.color}
         onToggleComplete={() => toggleTask(item.id)}
         onPress={() => navigateToTaskDetails(item)}
         onDelete={async () => {
