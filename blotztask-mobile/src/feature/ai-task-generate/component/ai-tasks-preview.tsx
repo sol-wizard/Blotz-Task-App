@@ -1,11 +1,11 @@
-import { AiTaskDTO } from "@/feature/ai-task-generate/modals/ai-task-dto";
+import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
 import { View, Pressable } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
-import { BottomSheetType } from "../modals/bottom-sheet-type";
+import { BottomSheetType } from "../models/bottom-sheet-type";
 import { ScrollView } from "react-native-gesture-handler";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 
@@ -13,12 +13,10 @@ export function AiTasksPreview({
   tasks,
   setModalType,
   isVoiceInput,
-  setText,
 }: {
-  tasks: AiTaskDTO[];
+  tasks?: AiTaskDTO[];
   setModalType: (v: BottomSheetType) => void;
   isVoiceInput: boolean;
-  setText: (v: string) => void;
 }) {
   const { addTask } = useSelectedDayTaskStore();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(tasks ?? []);
@@ -54,11 +52,6 @@ export function AiTasksPreview({
     setModalType("input");
   };
 
-  const handleBacktoBlankEdit = () => {
-    setText("");
-    setModalType("input");
-  };
-
   return (
     <View className="mb-10 items-center justify-between">
       <ScrollView className="pb-5 w-full min-h-20 max-h-80">
@@ -83,7 +76,7 @@ export function AiTasksPreview({
         </Pressable>
         {!isVoiceInputRef.current && (
           <Pressable
-            onPress={handleBacktoBlankEdit}
+            onPress={handleGoBack}
             style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
             accessibilityRole="button"
             accessibilityLabel="Edit"
