@@ -6,35 +6,28 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using BlotzTask.Shared.Exceptions;
 
 namespace BlotzTask.Modules.Labels.Commands
 {
     public class DeleteCustomLabelCommand
     {
-        [Required]
-        public int LabelId { get; set; }
-        [Required]
-        public string Name { get; set; }
-        public LabelScope Scope { get; set; }
-
-        public Guid? UserId { get; set; }
+        public required int LabelId { get; set; }
+        public required Guid UserId { get; set; }
     }
-    public class DeleteCustomLabelResult
-    {
-        public string Message { get; set; } = string.Empty;
-    }
+    
     public class DeleteCustomLabelCommandHandler(BlotzTaskDbContext _blotzTaskDbContext,ILogger<DeleteCustomLabelCommandHandler> logger)
     {
 
-        public async Task<DeleteCustomLabelResult> Handle(DeleteCustomLabelCommand command, CancellationToken ct)
+        public async Task<string> Handle(DeleteCustomLabelCommand command, CancellationToken ct)
         {
             var label = await _blotzTaskDbContext.Labels
                 .FirstOrDefaultAsync(l => l.LabelId == command.LabelId
                                    && l.Scope == LabelScope.Custom
                                    && l.UserId == command.UserId, ct);
-            logger.LogInformation("Delete {scope} label {id}", command.Scope, command.LabelId);
+            
             if (label == null)
-                throw new Exception("Label not found or no permission to delete.");
+                throw new NotFoundException("Label not found or no permission to delete.");
             var taskUsingLabel = await _blotzTaskDbContext.TaskItems
                 .Where(l => l.LabelId == label.LabelId)
                 .ToListAsync(ct);
@@ -46,10 +39,8 @@ namespace BlotzTask.Modules.Labels.Commands
 
             _blotzTaskDbContext.Labels.Remove(label);
             await _blotzTaskDbContext.SaveChangesAsync(ct);
-            return new DeleteCustomLabelResult
-            {
-                Message = $"Label deleted.{taskUsingLabel.Count} tasks has updated to 'No Label'"
-            };
+            logger.LogInformation("Delete label {id}:{labelName}",label.LabelId,label.Name);
+            return $"Label {command.LabelId} deleted successfully.";
                 
             
         
