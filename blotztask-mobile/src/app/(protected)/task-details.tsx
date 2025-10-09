@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { IconButton } from "react-native-paper";
-import { useRouter, useNavigation } from "expo-router";
+import { useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsTab from "../../feature/task-details/components/details-tab";
 import SubtasksTab from "../../feature/task-details/components/subtasks-tab";
@@ -13,7 +13,6 @@ type tabTypes = "Details" | "Subtasks";
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
   const { selectedTask } = useSelectedTaskStore();
   const { isDone, title, description, label, startTime, endTime } = selectedTask || {};
 
@@ -23,15 +22,6 @@ export default function TaskDetailsScreen() {
 
   // Use label color or fallback to grey
   const headerBackgroundColor = label?.color ?? theme.colors.labelFallback;
-
-  // Dynamically set header background color based on label
-  useEffect(() => {
-    navigation.setOptions({
-      headerStyle: {
-        backgroundColor: headerBackgroundColor,
-      },
-    });
-  }, [navigation, headerBackgroundColor]);
 
   const handleEdit = () => {
     router.push({
