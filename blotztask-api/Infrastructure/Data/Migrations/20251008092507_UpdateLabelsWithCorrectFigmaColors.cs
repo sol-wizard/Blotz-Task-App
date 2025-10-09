@@ -14,8 +14,8 @@ namespace BlotzTask.Migrations
                 table: "Labels",
                 keyColumn: "LabelId",
                 keyValue: 6,
-                columns: new[] { "Color", "Name" },
-                values: new object[] { "#c2e49f", "Work", "Work related tasks", "Work" });
+                columns: new[] { "Color", "Description" },
+                values: new object[] { "#c2e49f", "Work related tasks" });
 
             migrationBuilder.UpdateData(
                 table: "Labels",
@@ -46,8 +46,8 @@ namespace BlotzTask.Migrations
                 table: "Labels",
                 keyColumn: "LabelId",
                 keyValue: 6,
-                columns: new[] { "Color", "Name" },
-                values: new object[] { "#7758FF", "Work" });
+                columns: new[] { "Color", "Description" },
+                values: new object[] { "#7758FF", "Work related tasks" });
 
             migrationBuilder.UpdateData(
                 table: "Labels",
