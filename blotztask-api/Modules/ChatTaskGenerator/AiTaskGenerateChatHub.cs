@@ -1,4 +1,6 @@
+using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
+using BlotzTask.Shared.DTOs;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.SignalR;
 
@@ -6,31 +8,35 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 
 public class AiTaskGenerateChatHub : Hub
 {
+    private readonly IAiTaskGenerateService _aiTaskGenerateService;
+    private readonly IChatHistoryManagerService _chatHistoryManagerService;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
-    private readonly ITaskGenerateChatService _taskGenerateChatService;
+
 
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
-        ITaskGenerateChatService taskGenerateChatService
+        IChatHistoryManagerService chatHistoryManagerService,
+        IAiTaskGenerateService aiTaskGenerateService
     )
     {
         _logger = logger;
-        _taskGenerateChatService = taskGenerateChatService;
+        _chatHistoryManagerService = chatHistoryManagerService;
+        _aiTaskGenerateService = aiTaskGenerateService;
     }
 
     public override async Task OnConnectedAsync()
     {
-        string connectionId = Context.ConnectionId;
-        _logger.LogInformation($"User connected: {connectionId}");
+        await _chatHistoryManagerService.InitializeNewConversation();
         await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        string connectionId = Context.ConnectionId;
+        var connectionId = Context.ConnectionId;
         _logger.LogInformation(
             $"User disconnected: {connectionId}. Exception: {exception?.Message}"
         );
+        _chatHistoryManagerService.RemoveConversation();
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -38,17 +44,23 @@ public class AiTaskGenerateChatHub : Hub
     {
         try
         {
-            CancellationToken ct = Context.ConnectionAborted;
-            var recieveTasks = await _taskGenerateChatService.HandleUserMessageAsync(message, ct);
+            var ct = Context.ConnectionAborted;
+            var chatHistory = _chatHistoryManagerService.GetChatHistory();
 
-            if (recieveTasks != null)
-            {
-                await Clients.Caller.SendAsync("ReceiveTasks", recieveTasks);
-            }
+            chatHistory.AddUserMessage(message);
+            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
+
+            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage);
         }
-        catch (TokenLimitExceededException ex)
+        catch (AiTaskGenerationException ex)
         {
-            _logger.LogError(ex, "Token limit exceeded: {Message}", ex.Message);
+            var aiServiceError = new AiGenerateMessage
+            {
+                IsSuccess = false,
+                ErrorMessage = ex.Message
+            };
+            await Clients.Caller.SendAsync("ReceiveMessage", aiServiceError);
         }
+        
     }
 }

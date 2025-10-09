@@ -1,36 +1,36 @@
 import { ASSETS } from "@/shared/constants/assets";
 import { theme } from "@/shared/constants/theme";
 import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { useState } from "react";
 import { View, Text, Image, Keyboard } from "react-native";
 
 export const WriteInput = ({
   sheetRef,
   hasError,
-  text,
-  setText,
   sendMessage,
+  errorMessage,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
   hasError: boolean;
-  text: string;
-  setText: (value: string) => void;
   sendMessage: (v: string) => void;
+  errorMessage?: string;
 }) => {
+  const [text, setText] = useState("");
+
   const sendAndDismiss = (msg: string) => {
     const val = msg.trim();
     if (!val) return;
     sendMessage(val);
-    setText("");
     Keyboard.dismiss();
     sheetRef.current?.collapse();
   };
 
   const handleChange = (value: string) => {
+    setText(value);
     if (value.endsWith("\n")) {
       sendAndDismiss(value);
       return;
     }
-    setText(value);
   };
 
   return (
@@ -49,9 +49,7 @@ export const WriteInput = ({
       />
       {hasError && (
         <View className="bg-background rounded-2xl px-4 py-6 mb-4 w-96 flex-row">
-          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2 w-72">
-            Try again-be specific, like ‘Team meeting at 9am‘
-          </Text>
+          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2 w-72">{errorMessage}</Text>
           <Image source={ASSETS.greenBun} className="w-20 h-20" />
         </View>
       )}
