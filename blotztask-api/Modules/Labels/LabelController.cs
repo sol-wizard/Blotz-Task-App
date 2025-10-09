@@ -33,7 +33,7 @@ public class LabelController(
         return await getLabelTaskCountQueryHandler.Handle(query, ct);
     }
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteCustomLabel(int id, CancellationToken ct)
+    public async Task<string> DeleteCustomLabel(int id, CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
@@ -42,8 +42,7 @@ public class LabelController(
             LabelId = id,
             UserId = userId
         };
-        var result = await deleteCustomLabelCommandHandler.Handle(command, ct);
-        return Ok(result);
+        return await deleteCustomLabelCommandHandler.Handle(command, ct);
 
     }
 }

@@ -12,7 +12,9 @@ namespace BlotzTask.Modules.Labels.Commands
 {
     public class DeleteCustomLabelCommand
     {
+        [Required]
         public required int LabelId { get; set; }
+        [Required]
         public required Guid UserId { get; set; }
     }
     
