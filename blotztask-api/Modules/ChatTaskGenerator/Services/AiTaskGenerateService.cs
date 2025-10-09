@@ -1,9 +1,11 @@
+using System.Diagnostics;
 using System.Text.Json;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using OpenTelemetry.Trace;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
@@ -14,6 +16,7 @@ public interface IAiTaskGenerateService
 
 public class AiTaskGenerateService : IAiTaskGenerateService
 {
+    private static readonly ActivitySource OtelSource = new("ai-service");
     private readonly IChatCompletionService _chatCompletionService;
     private readonly IChatHistoryManagerService _chatHistoryManagerService;
     private readonly Kernel _kernel;
@@ -35,6 +38,29 @@ public class AiTaskGenerateService : IAiTaskGenerateService
     public async Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct)
     {
         var chatHistory = _chatHistoryManagerService.GetChatHistory();
+
+        var lastUserMessageContent = chatHistory
+            .Where(message => message.Role == AuthorRole.User)
+            .Select(message => message.Content)
+            .LastOrDefault();
+
+        _logger.LogInformation("OtelSource.HasListeners={Has}", OtelSource.HasListeners());
+        using var activity = OtelSource.StartActivity("ai.chat.completion", ActivityKind.Client);
+        if (activity is null) _logger.LogWarning("OTel Activity is null. Check AddSource name & TracerProvider setup.");
+
+
+        activity?.SetTag("gen_ai.input.content", lastUserMessageContent);
+        activity?.AddEvent(new ActivityEvent("gen_ai.input", tags: new ActivityTagsCollection
+        {
+            { "content", lastUserMessageContent }
+        }));
+
+        if (activity != null)
+            foreach (var ev in activity.Events)
+            {
+                Console.WriteLine($"Event: {ev.Name}");
+                foreach (var tag in ev.Tags) Console.WriteLine($"   {tag.Key}: {tag.Value}");
+            }
 
         var executionSettings = new OpenAIPromptExecutionSettings
         {
@@ -62,6 +88,13 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                 throw new AiNoMessageReturnedException();
             }
 
+            var outputContent = functionResultMessage.Content ?? "";
+            activity?.SetTag("gen_ai.output.content", outputContent);
+            activity?.AddEvent(new ActivityEvent("gen_ai.output", tags: new ActivityTagsCollection
+            {
+                { "content", outputContent }
+            }));
+
             if (string.IsNullOrWhiteSpace(functionResultMessage.Content))
             {
                 _logger.LogWarning("AI response content is empty.");
@@ -82,6 +115,19 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                 }
 
                 chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateMessage));
+
+                try
+                {
+                    // 正常执行调用
+                    activity?.SetStatus(ActivityStatusCode.Ok);
+                }
+                catch (Exception ex)
+                {
+                    activity?.RecordException(ex);
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                    throw;
+                }
+
                 return aiGenerateMessage;
             }
             catch (JsonException ex)

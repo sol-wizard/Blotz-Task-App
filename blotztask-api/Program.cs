@@ -17,6 +17,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using OpenTelemetry;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +28,29 @@ var builder = WebApplication.CreateBuilder(args);
 builder
     .AddSerilogLogging()
     .AddApplicationInsights();
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(res => res.AddService(
+        "ai-service",
+        serviceVersion: "1.0.0"))
+    .WithTracing(tracing =>
+    {
+        tracing
+            .AddAspNetCoreInstrumentation(o => o.RecordException = true)
+            .AddHttpClientInstrumentation(o => o.RecordException = true)
+            // 你的自定义 ActivitySource
+            .AddSource("ai-service")
+            .AddProcessor(new SpanDebugProcessor())
+            .AddOtlpExporter(options =>
+            {
+                options.Protocol = OtlpExportProtocol.HttpProtobuf;
+                options.Endpoint = new Uri("https://us.cloud.langfuse.com/api/public/otel/v1/traces");
+                options.Headers =
+                    "Authorization=Basic cGstbGYtYjIwYTU4OTUtZDRiZS00NmI1LTg3MTgtYmQ0ZmYwMWQ4YWExOnNrLWxmLTNjNzEyYTFiLWM5ZTEtNDM2Zi1hYjVlLThiMzQ0MmRjZDJkYQ==";
+                options.ExportProcessorType = ExportProcessorType.Simple;
+            });
+    });
+
 
 // Add services to the container.
 builder.Services.AddSignalR();
@@ -98,7 +125,7 @@ builder.Services.AddSingleton<Kernel>(sp =>
         apiKey
     );
 
-    
+
     kernelBuilder.Plugins.AddFromObject(new TaskBreakdownPlugin(), "TaskBreakdownPlugin");
 
     return kernelBuilder.Build();
