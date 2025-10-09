@@ -1,4 +1,4 @@
-﻿using BlotzTask.Infrastructure.Data.Configurations;
+using BlotzTask.Infrastructure.Data.Configurations;
 using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
@@ -29,7 +29,7 @@ public class BlotzTaskDbContext : DbContext
             {
                 LabelId = 6,
                 Name = "Work",
-                Color = "#7758FF",
+                Color = "#c2e49f",
                 Description = "Work related tasks",
                 Scope = LabelScope.Global,
                 UserId = null
@@ -37,27 +37,27 @@ public class BlotzTaskDbContext : DbContext
             new Label
             {
                 LabelId = 7,
-                Name = "Personal",
-                Color = "#FFDE23",
-                Description = "Personal tasks",
+                Name = "Life",
+                Color = "#cce7db",
+                Description = "Life related tasks",
                 Scope = LabelScope.Global,
                 UserId = null
             },
             new Label
             {
                 LabelId = 8,
-                Name = "Academic",
-                Color = "#FF4747",
-                Description = "Academic tasks",
+                Name = "Learning",
+                Color = "#d6faf9",
+                Description = "Learning related tasks",
                 Scope = LabelScope.Global,
                 UserId = null
             },
             new Label
             {
                 LabelId = 9,
-                Name = "Others",
-                Color = "#09F1D6",
-                Description = "Other tasks",
+                Name = "Health",
+                Color = "#bad5fa",
+                Description = "Health related tasks",
                 Scope = LabelScope.Global,
                 UserId = null
             }
