@@ -5,16 +5,18 @@ import { AiThinkingModal } from "./ai-thinking-modal";
 import { TaskAddedSuccess } from "./task-added-success";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 
 export const AiTaskGenerateModal = ({
   sheetRef,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
 }) => {
-  const [text, setText] = useState("");
   const [isVoiceInput, setIsVoiceInput] = useState(true);
-  const { aiGeneratedTasks, sendMessage, modalType, setModalType, inputError, setInputError } =
+  const { aiGeneratedMessage, sendMessage, modalType, setModalType, inputError, setInputError } =
     useAiTaskGenerator();
+
+  const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
 
   switch (modalType) {
     case "task-preview":
@@ -23,7 +25,6 @@ export const AiTaskGenerateModal = ({
           tasks={aiGeneratedTasks}
           setModalType={setModalType}
           isVoiceInput={isVoiceInput}
-          setText={setText}
         />
       );
 
@@ -39,12 +40,11 @@ export const AiTaskGenerateModal = ({
         <AiInput
           generateTaskError={inputError}
           setInputError={setInputError}
-          text={text}
-          setText={setText}
           sendMessage={sendMessage}
           isVoiceInput={isVoiceInput}
           setIsVoiceInput={setIsVoiceInput}
           sheetRef={sheetRef}
+          errorMessage={aiGeneratedMessage?.errorMessage}
         />
       );
   }

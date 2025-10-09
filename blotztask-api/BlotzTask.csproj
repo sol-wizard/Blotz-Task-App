@@ -32,8 +32,4 @@
     <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="4.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Modules\ChatTaskGenerator\Plugins\" />
-  </ItemGroup>
 </Project>

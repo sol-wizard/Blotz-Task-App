@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-task-generate/utils/map-extracted-to-task-dto";
-import { BottomSheetType } from "@/feature/ai-task-generate/modals/bottom-sheet-type";
-import { AiTaskDTO } from "../modals/ai-task-dto";
+import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
-import { ExtractedTaskDTO } from "../modals/extracted-task-dto";
+import { AiResultMessageDTO } from "../models/ai-result-message";
 
 export function useAiTaskGenerator() {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-  const [aiGeneratedTasks, setAiGeneratedTasks] = useState<AiTaskDTO[]>([]);
+  const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [inputError, setInputError] = useState<boolean>(false);
 
@@ -17,7 +15,7 @@ export function useAiTaskGenerator() {
     setModalType("loading");
     if (connection) {
       try {
-        await signalRService.invoke(connection, "SendMessage", "User", text.trim());
+        await signalRService.invoke(connection, "SendMessage", "User", text);
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
         setInputError(true);
@@ -30,12 +28,9 @@ export function useAiTaskGenerator() {
     }
   };
 
-  const receiveTasksHandler = (receivedTasks: ExtractedTaskDTO[]) => {
-    const mappedTasks: AiTaskDTO[] = receivedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
-    console.log("mappedTasks,", mappedTasks);
-
-    setAiGeneratedTasks(mappedTasks);
-    if (mappedTasks.length === 0) {
+  const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
+    setAiGeneratedMessage(receivedAiMessage);
+    if (!receivedAiMessage.isSuccess) {
       setInputError(true);
       setModalType("input");
     } else {
@@ -50,7 +45,7 @@ export function useAiTaskGenerator() {
     const startConnection = async () => {
       try {
         await newConnection.start();
-        newConnection.on("ReceiveTasks", receiveTasksHandler);
+        newConnection.on("ReceiveMessage", receiveMessageHandler);
         console.log("Connected to SignalR hub!");
       } catch (error) {
         console.error("Error connecting to SignalR:", error);
@@ -64,7 +59,7 @@ export function useAiTaskGenerator() {
         .stop()
         .then(() => {
           console.log("SignalR Connection Stopped.");
-          newConnection.off("ReceiveTasks", receiveTasksHandler);
+          newConnection.off("ReceiveTasks", receiveMessageHandler);
         })
         .catch((error) => console.error("Error stopping SignalR connection:", error));
     };
@@ -73,7 +68,7 @@ export function useAiTaskGenerator() {
   return {
     inputError,
     setInputError,
-    aiGeneratedTasks,
+    aiGeneratedMessage,
     sendMessage,
     modalType,
     setModalType,
