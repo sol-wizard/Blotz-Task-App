@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
-import { AiGeneratedMessageDTO } from "../models/ai-generated-message";
+import { AiResultMessageDTO } from "../models/ai-result-message";
 
 export function useAiTaskGenerator() {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-  const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiGeneratedMessageDTO>();
+  const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [inputError, setInputError] = useState<boolean>(false);
 
@@ -28,7 +28,7 @@ export function useAiTaskGenerator() {
     }
   };
 
-  const receiveMessageHandler = (receivedAiMessage: AiGeneratedMessageDTO) => {
+  const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
     setAiGeneratedMessage(receivedAiMessage);
     if (!receivedAiMessage.isSuccess) {
       setInputError(true);

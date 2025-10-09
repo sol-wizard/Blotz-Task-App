@@ -1,6 +1,6 @@
 import { ExtractedTaskDTO } from "./extracted-task-dto";
 
-export interface AiGeneratedMessageDTO {
+export interface AiResultMessageDTO {
   isSuccess: boolean;
   extractedTasks: ExtractedTaskDTO[];
   errorMessage?: string;

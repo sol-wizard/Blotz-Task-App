@@ -48,9 +48,9 @@ public class AiTaskGenerateChatHub : Hub
             var chatHistory = _chatHistoryManagerService.GetChatHistory();
 
             chatHistory.AddUserMessage(message);
-            var receiveMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
+            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
 
-            await Clients.Caller.SendAsync("ReceiveMessage", receiveMessage);
+            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage);
         }
         catch (AiTaskGenerationException ex)
         {
