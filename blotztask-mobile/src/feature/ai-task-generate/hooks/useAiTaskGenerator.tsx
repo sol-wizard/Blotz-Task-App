@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
-import { AiGeneratedTaskWrapperDTO } from "../models/ai-generate-task-wrapper";
+import { AiGeneratedMessageDTO } from "../models/ai-generated-message";
 
 export function useAiTaskGenerator() {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-  const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiGeneratedTaskWrapperDTO>();
+  const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiGeneratedMessageDTO>();
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [inputError, setInputError] = useState<boolean>(false);
 
@@ -29,7 +29,7 @@ export function useAiTaskGenerator() {
     }
   };
 
-  const receiveTasksHandler = (receivedAiMessage: AiGeneratedTaskWrapperDTO) => {
+  const receiveMessageHandler = (receivedAiMessage: AiGeneratedMessageDTO) => {
     setAiGeneratedMessage(receivedAiMessage);
     if (!receivedAiMessage.isSuccess) {
       setInputError(true);
@@ -46,7 +46,7 @@ export function useAiTaskGenerator() {
     const startConnection = async () => {
       try {
         await newConnection.start();
-        newConnection.on("ReceiveTasks", receiveTasksHandler);
+        newConnection.on("ReceiveMessage", receiveMessageHandler);
         console.log("Connected to SignalR hub!");
       } catch (error) {
         console.error("Error connecting to SignalR:", error);
@@ -60,7 +60,7 @@ export function useAiTaskGenerator() {
         .stop()
         .then(() => {
           console.log("SignalR Connection Stopped.");
-          newConnection.off("ReceiveTasks", receiveTasksHandler);
+          newConnection.off("ReceiveTasks", receiveMessageHandler);
         })
         .catch((error) => console.error("Error stopping SignalR connection:", error));
     };

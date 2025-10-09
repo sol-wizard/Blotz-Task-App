@@ -3,7 +3,7 @@ using BlotzTask.Shared.DTOs;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
-public class AiGenerateTaskWrapper
+public class AiGenerateMessage
 {
     [JsonPropertyName("isSuccess")] public bool IsSuccess { get; set; }
 

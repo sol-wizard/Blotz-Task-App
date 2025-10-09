@@ -9,7 +9,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<AiGenerateTaskWrapper> GenerateAiResponse(CancellationToken ct);
+    Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct);
 }
 
 public class AiTaskGenerateService : IAiTaskGenerateService
@@ -32,7 +32,7 @@ public class AiTaskGenerateService : IAiTaskGenerateService
         _kernel = kernel;
     }
 
-    public async Task<AiGenerateTaskWrapper> GenerateAiResponse(CancellationToken ct)
+    public async Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct)
     {
         var chatHistory = _chatHistoryManagerService.GetChatHistory();
 
@@ -59,60 +59,59 @@ public class AiTaskGenerateService : IAiTaskGenerateService
                     chatHistory.Count,
                     executionSettings.ModelId ?? "unknown"
                 );
-                return Error("AI returned no messages.");
+                throw new AiNoMessageReturnedException();
             }
 
             if (string.IsNullOrWhiteSpace(functionResultMessage.Content))
             {
                 _logger.LogWarning("AI response content is empty.");
-                return Error("AI returned empty content.");
+                throw new AiEmptyResponseException();
             }
 
             try
             {
-                var aiGenerateTaskWrapper = JsonSerializer.Deserialize<AiGenerateTaskWrapper>(
+                var aiGenerateMessage = JsonSerializer.Deserialize<AiGenerateMessage>(
                     functionResultMessage.Content,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                 );
 
-                if (aiGenerateTaskWrapper == null)
+                if (aiGenerateMessage == null)
                 {
                     _logger.LogWarning("Deserialized object is null.");
-                    return Error("AI deserialization failed.");
+                    throw new AiInvalidJsonException(functionResultMessage.Content);
                 }
 
-                chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateTaskWrapper));
-                return aiGenerateTaskWrapper;
+                chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateMessage));
+                return aiGenerateMessage;
             }
             catch (JsonException ex)
             {
                 _logger.LogError(ex, "Failed to deserialize AI response: {Content}", functionResultMessage.Content);
-                return Error("AI returned invalid JSON format.");
+                throw new AiInvalidJsonException(functionResultMessage.Content, ex);
             }
+        }
+        catch (OperationCanceledException oce)
+        {
+            _logger.LogInformation(oce, "AI task generation cancelled.");
+            throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
         }
         catch (TokenLimitExceededException ex)
         {
             _logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
-            return Error("You have exceeded token rate limit of your current pricing tier.");
+            throw new AiTokenLimitedException();
         }
         catch (HttpOperationException ex) when (
             ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase)
         )
         {
             _logger.LogWarning(ex, "Request blocked by Azure OpenAI content filter.");
-            return Error("Your message triggered safety filters. Please rephrase and try again.");
+            throw new AiContentFilterException();
         }
         catch (Exception ex)
         {
             _logger.LogWarning("FULL EXCEPTION DETAILS: {ExceptionMessage}", ex.ToString());
-            return Error("An unhandled exception occurred during AI task generation.");
+            throw new AiTaskGenerationException(AiErrorCode.Unknown,
+                "An unhandled exception occurred during AI task generation.", ex);
         }
     }
-    
-    private AiGenerateTaskWrapper Error(string message) =>
-        new()
-        {
-            IsSuccess = false,
-            ErrorMessage = message
-        };
 }

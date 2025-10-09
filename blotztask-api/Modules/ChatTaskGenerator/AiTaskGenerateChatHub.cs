@@ -1,4 +1,7 @@
+using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
+using BlotzTask.Shared.DTOs;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
@@ -47,13 +50,17 @@ public class AiTaskGenerateChatHub : Hub
             chatHistory.AddUserMessage(message);
             var receiveMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
 
-            if (receiveMessage != null) await Clients.Caller.SendAsync("ReceiveTasks", receiveMessage);
+            await Clients.Caller.SendAsync("ReceiveMessage", receiveMessage);
         }
-
-        catch (Exception ex)
+        catch (AiTaskGenerationException ex)
         {
-            _logger.LogError(ex, "SendMessage crashed for user={user}", user);
-            throw;
+            var aiServiceError = new AiGenerateMessage
+            {
+                IsSuccess = false,
+                ErrorMessage = ex.Message
+            };
+            await Clients.Caller.SendAsync("ReceiveMessage", aiServiceError);
         }
+        
     }
 }
