@@ -46,8 +46,8 @@ export const TimePicker12H = ({
 
       return { hour12, minute, isPM };
     } else {
-      // Default to null values
-      return { hour12: null, minute: null, isPM: null };
+      // Default to null values, but isPM defaults to false (AM)
+      return { hour12: null, minute: null, isPM: false };
     }
   };
 
