@@ -1,56 +1,82 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { EditTaskItemDTO } from "./models/edit-task-item-dto";
-import { FormProvider, useForm } from "react-hook-form";
-import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
+import { EditTaskItemDTO } from "./models/edit-task-item-dto";
+import DateSection from "./components/date-section/date-section";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
-import { mapDtoToFormTimeType } from "./util/time-type-mapper";
-import { FormDivider } from "./components/form-divider";
-import { TimeSection } from "./components/time-section";
 import { LabelSelect } from "./components/label-select";
+import { FormDivider } from "./components/form-divider";
+import TimeSection from "./components/time-sections/time-section";
+import { isMultiDay } from "./util/date-time-helpers";
 
-type TaskFormProps = {
-  mode: "create" | "edit";
-  defaultValues?: EditTaskItemDTO;
-  onSubmit: (data: TaskFormField) => void;
-};
+type TaskFormProps =
+  | {
+      mode: "create";
+      dto?: undefined;
+      onSubmit: (data: TaskFormField) => void;
+    }
+  | {
+      mode: "edit";
+      dto: EditTaskItemDTO;
+      onSubmit: (data: TaskFormField) => void;
+    };
 
-const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
-  const { title, description, timeType, startTime, endTime, labelId } = defaultValues || {};
-
-  const mappedTimeType = mapDtoToFormTimeType(timeType);
-  const isSingle = mappedTimeType === "single";
-  const isRange = mappedTimeType === "range";
-
-  const methods = useForm<TaskFormField>({
+const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
+  const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
     defaultValues: {
-      title: title ?? "",
-      description: description ?? "",
-      labelId: labelId ?? null,
-      timeType: mappedTimeType ?? null,
-      singleDate: isSingle ? (startTime ?? null) : null,
-      singleTime: isSingle ? (startTime ?? null) : null,
-      startDate: isRange ? (startTime ?? null) : null,
-      startTime: isRange ? (startTime ?? null) : null,
-      endDate: isRange ? (endTime ?? null) : null,
-      endTime: isRange ? (endTime ?? null) : null,
+      title: dto?.title ?? "",
+      description: dto?.description ?? "",
+      labelId: dto?.labelId ?? null,
+      startDate: dto?.startTime ?? null,
+      startTime: dto?.startTime ?? null,
+      endDate: dto?.endTime ?? null,
+      endTime: dto?.endTime ?? null,
     },
   });
 
-  const { handleSubmit, formState, control, watch, setValue, resetField } = methods;
+  const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
 
-  const formTimeType = watch("timeType");
-  const [enableTime, setEnableTime] = useState(!!formTimeType);
+  const [isFloatingTask, setIsFloatingTask] = useState(() => {
+    if (mode === "create") return false; // Default to non-floating task creation
+    return !dto.timeType; // Floating if editing task timeType is undefined
+  });
+
+  // When submitting, clear dates/times if floating
+  const handleFormSubmit = (data: TaskFormField) => {
+    if (isFloatingTask) {
+      onSubmit({
+        ...data,
+        startDate: null,
+        startTime: null,
+        endDate: null,
+        endTime: null,
+      });
+    } else {
+      onSubmit(data);
+    }
+  };
+
+  const startDate = useWatch({ control, name: "startDate" });
+  const endDate = useWatch({ control, name: "endDate" });
+
+  const allValues = useWatch({ control });
+
+  useEffect(() => {
+    console.log("Current form values:", allValues);
+  }, [allValues]);
+
+  const isMultiDayTask = isMultiDay(startDate, endDate);
 
   return (
-    <FormProvider {...methods}>
+    <FormProvider {...form}>
       <View className="flex-1 relative">
         <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
-          {/* Title Section */}
+          {/* Title */}
           <View className="mb-8 bg-gray-200">
             <FormTextInput
               name="title"
@@ -60,7 +86,7 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
             />
           </View>
 
-          {/* Category Section */}
+          {/* Category */}
           <View className="mb-8">
             <Text className="font-balooBold text-3xl leading-normal">Category</Text>
             <LabelSelect control={control} />
@@ -69,7 +95,8 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
           <FormDivider />
 
           {/* Description Section */}
-          <View className="mb-8">
+          {/* TODO: Remove description section for now and waiting for design */}
+          {/* <View className="mb-8">
             <Text className="font-balooBold text-3xl leading-normal">Description</Text>
             <FormTextInput
               name="description"
@@ -77,24 +104,51 @@ const TaskForm = ({ mode, defaultValues, onSubmit }: TaskFormProps) => {
               control={control}
               className="bg-gray-200 font-baloo text-lg"
             />
-          </View>
+          </View> */}
+
+          {/* <FormDivider /> */}
+
+          <Pressable
+            onPress={() => setIsFloatingTask((prev) => !prev)}
+            className={`w-full py-3 mb-6 rounded-lg items-center justify-center ${
+              isFloatingTask ? "bg-blue-400" : "bg-lime-300"
+            }`}
+          >
+            <Text className="font-balooBold text-lg text-black">
+              {isFloatingTask ? "No Datetime Task enabled" : "Enable No Datetime Task"}
+            </Text>
+          </Pressable>
 
           <FormDivider />
 
-          {/* Time Section */}
-          <TimeSection
-            control={control}
-            setValue={setValue}
-            resetField={resetField}
-            enableTime={enableTime}
-            setEnableTime={setEnableTime}
-          />
+          {!isFloatingTask && (
+            <>
+              {/* Date Section */}
+              <DateSection
+                control={control}
+                setValue={setValue}
+                dto={dto}
+                startDate={startDate} // pass watched value
+                endDate={endDate} // pass watched value
+              />
+
+              <FormDivider />
+
+              {/* Time Section */}
+              <TimeSection
+                control={control}
+                setValue={setValue}
+                dto={dto}
+                isMultiDayTask={isMultiDayTask}
+              />
+            </>
+          )}
         </ScrollView>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <View className="px-8 py-6">
           <Pressable
-            onPress={handleSubmit(onSubmit)}
+            onPress={handleSubmit(handleFormSubmit)}
             disabled={!isValid || isSubmitting}
             className={`w-full py-4 rounded-lg items-center justify-center ${
               !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
