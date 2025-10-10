@@ -1,5 +1,5 @@
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
-import { AiTaskDTO } from "../modals/ai-task-dto";
+import { AiTaskDTO } from "../models/ai-task-dto";
 
 // TODO: handle invalid date, need to be changed after backend support
 export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {

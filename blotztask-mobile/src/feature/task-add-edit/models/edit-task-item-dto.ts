@@ -1,4 +1,4 @@
-import { TaskTimeType } from "../util/time-type-mapper";
+import { TaskTimeType } from "@/shared/models/task-detail-dto";
 
 export interface EditTaskItemDTO {
   id: number;
@@ -7,5 +7,5 @@ export interface EditTaskItemDTO {
   startTime?: Date;
   endTime?: Date;
   labelId?: number;
-  timeType?: TaskTimeType;
+  timeType: TaskTimeType | null;
 }
