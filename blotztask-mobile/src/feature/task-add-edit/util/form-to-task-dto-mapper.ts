@@ -2,6 +2,7 @@ import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { TaskFormField } from "../models/task-form-schema";
 import { isSameMinute } from "date-fns";
 import { TaskTimeType } from "@/shared/models/task-detail-dto";
+import { isMultiDay } from "./date-time-helpers";
 
 export function mapFormToAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
   const { startDate, startTime, endDate, endTime } = form;
@@ -10,6 +11,11 @@ export function mapFormToAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
   const end = endDate != null ? mergeDateTime(endDate, endTime ?? undefined) : undefined;
 
   const taskTimeType = getTimeType(start, end);
+
+  if (taskTimeType === TaskTimeType.Range && isMultiDay(startDate, endDate)) {
+    start?.setHours(0, 0, 0, 0);
+    end?.setHours(23, 59, 0, 0);
+  }
 
   return {
     title: form.title.trim(),
@@ -29,9 +35,9 @@ function mergeDateTime(date: Date, time?: Date): Date {
   return merged;
 }
 
-function getTimeType(start?: Date, end?: Date): TaskTimeType | undefined {
+function getTimeType(start?: Date, end?: Date): TaskTimeType | null {
   if (!start || !end) {
-    return undefined;
+    return null;
   }
 
   return isSameMinute(start, end) ? TaskTimeType.Single : TaskTimeType.Range;

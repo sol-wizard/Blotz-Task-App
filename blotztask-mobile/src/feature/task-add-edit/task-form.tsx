@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,7 +43,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const [isFloatingTask, setIsFloatingTask] = useState(() => {
     if (mode === "create") return false; // Default to non-floating task creation
-    return !dto.timeType; // Floating if editing task timeType is undefined
+    return dto.timeType === null; // Floating if editing task timeType is null
   });
 
   // When submitting, clear dates/times if floating
@@ -63,12 +63,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const startDate = useWatch({ control, name: "startDate" });
   const endDate = useWatch({ control, name: "endDate" });
-
-  const allValues = useWatch({ control });
-
-  useEffect(() => {
-    console.log("Current form values:", allValues);
-  }, [allValues]);
 
   const isMultiDayTask = isMultiDay(startDate, endDate);
 

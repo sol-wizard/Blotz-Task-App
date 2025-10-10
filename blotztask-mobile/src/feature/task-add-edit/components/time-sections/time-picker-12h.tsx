@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
-import { View, Text, Pressable } from "react-native";
-import WheelPicker from "@quidone/react-native-wheel-picker";
+import { useState } from "react";
+import { View, Text, Pressable, Modal } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 export const TimePicker12H = ({
   value,
@@ -9,181 +9,101 @@ export const TimePicker12H = ({
   value: Date | null;
   onChange: (d: Date) => void;
 }) => {
-  const createTimeFromValues = (
-    hour12: number | null,
-    minute: number | null,
-    isPM: boolean | null,
-  ) => {
-    if (hour12 === null || minute === null || isPM === null) {
-      return null;
-    }
-    const baseDate = value || new Date();
-    const time = new Date(baseDate);
+  const [showPicker, setShowPicker] = useState(false);
+  const [tempDate, setTempDate] = useState(value || new Date());
 
-    let hour24 = hour12;
-    if (isPM && hour12 !== 12) {
-      hour24 = hour12 + 12;
-    } else if (!isPM && hour12 === 12) {
-      hour24 = 0;
-    }
-
-    time.setHours(hour24, minute, 0, 0);
-    return time;
-  };
-
-  const getCurrentTime = () => {
-    if (value) {
-      const hour24 = value.getHours();
-      const minute = value.getMinutes();
-      const isPM = hour24 >= 12;
-
-      let hour12 = hour24;
-      if (hour24 === 0) {
-        hour12 = 12;
-      } else if (hour24 > 12) {
-        hour12 = hour24 - 12;
-      }
-
-      return { hour12, minute, isPM };
-    } else {
-      // Default to null values, but isPM defaults to false (AM)
-      return { hour12: null, minute: null, isPM: false };
+  const handleChange = (event: any, selectedDate?: Date) => {
+    // Update temp date as user scrolls
+    if (selectedDate) {
+      setTempDate(selectedDate);
     }
   };
 
-  const { hour12: initialHour12, minute: initialMinute, isPM: initialIsPM } = getCurrentTime();
+  const handleOpenPicker = () => {
+    setTempDate(value || new Date());
+    setShowPicker(true);
+  };
 
-  const [hour12, setHour12] = useState<number | null>(initialHour12);
-  const [minute, setMinute] = useState<number | null>(initialMinute);
-  const [isPM, setIsPM] = useState<boolean | null>(initialIsPM);
+  const handleConfirm = () => {
+    onChange(tempDate);
+    setShowPicker(false);
+  };
 
-  // Sync internal state when value prop changes
-  useEffect(() => {
-    const { hour12: newHour12, minute: newMinute, isPM: newIsPM } = getCurrentTime();
-    setHour12(newHour12);
-    setMinute(newMinute);
-    setIsPM(newIsPM);
-  }, [value]);
+  const handleCancel = () => {
+    setShowPicker(false);
+  };
 
-  // Memoize hour and minute data
-  const hourData = useMemo(
-    () => [
-      { value: null, label: "--" },
-      ...[...Array(12).keys()].map((h) => ({
-        value: h + 1, // 1-12
-        label: String(h + 1).padStart(2, "0"),
-      })),
-    ],
-    [],
-  );
+  const formatTime = (date: Date | null) => {
+    if (!date) return null;
 
-  const minData = useMemo(
-    () => [
-      { value: null, label: "--" },
-      ...[...Array(60).keys()].map((m) => ({
-        value: m,
-        label: String(m).padStart(2, "0"),
-      })),
-    ],
-    [],
-  );
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? "PM" : "AM";
 
-  // Update onChange only when values are not null and changed
-  useEffect(() => {
-    if (hour12 !== null && minute !== null && isPM !== null) {
-      if (value) {
-        const currentHour24 = value.getHours();
-        const currentMinute = value.getMinutes();
-        const currentIsPM = currentHour24 >= 12;
+    hours = hours % 12;
+    hours = hours ? hours : 12; // 0 should be 12
 
-        let currentHour12 = currentHour24;
-        if (currentHour24 === 0) {
-          currentHour12 = 12;
-        } else if (currentHour24 > 12) {
-          currentHour12 = currentHour24 - 12;
-        }
+    const hoursStr = String(hours).padStart(2, "0");
+    const minutesStr = String(minutes).padStart(2, "0");
 
-        if (currentHour12 !== hour12 || currentMinute !== minute || currentIsPM !== isPM) {
-          const newTime = createTimeFromValues(hour12, minute, isPM);
-          if (newTime) {
-            onChange(newTime);
-          }
-        }
-      } else {
-        // If no value, just call onChange with current state
-        const newTime = createTimeFromValues(hour12, minute, isPM);
-        if (newTime) {
-          onChange(newTime);
-        }
-      }
-    }
-  }, [hour12, minute, isPM]);
+    return { hoursStr, minutesStr, ampm };
+  };
+
+  const timeDisplay = formatTime(value);
 
   return (
-    <View className="flex-row items-center gap-4">
-      {/* Time Picker - Compact like existing design */}
-      <View className="w-32 h-10 bg-white flex-row justify-center items-center rounded-xl">
-        <WheelPicker
-          style={{ backgroundColor: "transparent" }}
-          contentContainerStyle={{ backgroundColor: "transparent" }}
-          overlayItemStyle={{ backgroundColor: "transparent" }}
-          itemTextStyle={{ backgroundColor: "transparent", fontSize: 18 }}
-          width={60}
-          data={hourData}
-          enableScrollByTapOnItem
-          visibleItemCount={1}
-          value={hour12}
-          onValueChanged={({ item: { value } }) => {
-            setHour12(value);
-          }}
-        />
+    <View>
+      {/* Display Button */}
+      <Pressable
+        onPress={handleOpenPicker}
+        className="flex-row items-center bg-white rounded-xl px-4 py-3 active:bg-gray-50"
+      >
+        {timeDisplay ? (
+          <>
+            <Text className="text-2xl font-semibold text-gray-800">
+              {timeDisplay.hoursStr}:{timeDisplay.minutesStr}
+            </Text>
+            <Text className="text-lg font-semibold text-blue-500 ml-2">{timeDisplay.ampm}</Text>
+          </>
+        ) : (
+          <Text className="text-lg font-medium text-gray-400">Select Time</Text>
+        )}
+      </Pressable>
 
-        <Text className="font-bold text-2xl text-gray-600">:</Text>
+      {/* Modal with Spinner Picker (Both Platforms) */}
+      {showPicker && (
+        <Modal visible={showPicker} transparent animationType="slide" onRequestClose={handleCancel}>
+          <View className="flex-1 justify-end">
+            {/* Backdrop */}
+            <Pressable className="flex-1 bg-black/30" onPress={handleCancel} />
 
-        <WheelPicker
-          style={{ backgroundColor: "transparent" }}
-          contentContainerStyle={{ backgroundColor: "transparent" }}
-          overlayItemStyle={{ backgroundColor: "transparent" }}
-          itemTextStyle={{ backgroundColor: "transparent", fontSize: 18 }}
-          width={60}
-          data={minData}
-          enableScrollByTapOnItem
-          visibleItemCount={1}
-          value={minute}
-          onValueChanged={({ item: { value } }) => {
-            setMinute(value);
-          }}
-        />
-      </View>
+            {/* Picker Container */}
+            <View className="bg-white rounded-t-3xl">
+              {/* Header */}
+              <View className="border-b border-gray-200 flex-row justify-between items-center px-4 py-3">
+                <Pressable onPress={handleCancel}>
+                  <Text className="text-blue-500 text-base font-semibold">Cancel</Text>
+                </Pressable>
+                <Text className="text-base font-semibold text-gray-800">Select Time</Text>
+                <Pressable onPress={handleConfirm}>
+                  <Text className="text-blue-500 text-base font-bold">Done</Text>
+                </Pressable>
+              </View>
 
-      {/* AM/PM Toggle - Compact buttons */}
-      <View className="flex-row bg-gray-100 rounded-lg overflow-hidden">
-        <Pressable
-          onPress={() => {
-            setIsPM(false);
-          }}
-          className={`px-4 py-2 ${isPM === false ? "bg-blue-500" : "bg-transparent"}`}
-        >
-          <Text
-            className={`font-balooBold text-sm ${isPM === false ? "text-white" : "text-gray-600"}`}
-          >
-            AM
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => {
-            setIsPM(true);
-          }}
-          className={`px-4 py-2 ${isPM === true ? "bg-blue-500" : "bg-transparent"}`}
-        >
-          <Text
-            className={`font-balooBold text-sm ${isPM === true ? "text-white" : "text-gray-600"}`}
-          >
-            PM
-          </Text>
-        </Pressable>
-      </View>
+              <View className="items-center">
+                {/* Picker */}
+                <DateTimePicker
+                  value={tempDate}
+                  mode="time"
+                  display="spinner"
+                  onChange={handleChange}
+                  style={{ height: 200 }}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
