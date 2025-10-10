@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, Image } from "react-native";
+import { View, Text, TextInput, Pressable, Image, Vibration } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
 import { ASSETS } from "@/shared/constants/assets";
+import * as Haptics from "expo-haptics";
+import { VoiceWaves } from "@/shared/components/common/voice-wave";
 
 export const VoiceInput = ({
   hasError,
@@ -24,6 +26,7 @@ export const VoiceInput = ({
     : text;
 
   const [idleBlockH, setIdleBlockH] = useState(0);
+  const [showVoiceWave, setShowVoiceWave] = useState(false);
 
   const handleMicPressOut = async () => {
     const spoken = await stopAndGetText();
@@ -34,6 +37,7 @@ export const VoiceInput = ({
     }
     if (newText?.trim()) sendMessage(newText.trim());
     setText("");
+    setShowVoiceWave(false);
   };
 
   return (
@@ -88,16 +92,31 @@ export const VoiceInput = ({
         <Pressable
           onLongPress={async () => {
             setInputError(false);
+            try {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            } catch {
+              Vibration.vibrate(10);
+            }
+            setShowVoiceWave(true);
             await startListening();
           }}
           onPressOut={handleMicPressOut}
           delayLongPress={250}
           style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
         >
-          <GradientCircle>
-            <Ionicons name="mic-outline" size={35} color="white" />
-          </GradientCircle>
+          <View className="items-center justify-center relative">
+            {showVoiceWave && (
+              <View style={{ position: "absolute" }}>
+                <VoiceWaves />
+              </View>
+            )}
+
+            <GradientCircle>
+              <Ionicons name="mic-outline" size={35} color="white" />
+            </GradientCircle>
+          </View>
         </Pressable>
+
         {isListening ? (
           <Text className="text-lg mt-4 mb-10 text-gray-500 font-baloo">Recognising...</Text>
         ) : (
