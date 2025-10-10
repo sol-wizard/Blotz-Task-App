@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -14,8 +14,8 @@ namespace BlotzTask.Migrations
                 table: "Labels",
                 keyColumn: "LabelId",
                 keyValue: 6,
-                columns: new[] { "Color", "Description" },
-                values: new object[] { "#c2e49f", "Work related tasks" });
+                column: "Color",
+                value: "#c2e49f");
 
             migrationBuilder.UpdateData(
                 table: "Labels",
@@ -46,8 +46,8 @@ namespace BlotzTask.Migrations
                 table: "Labels",
                 keyColumn: "LabelId",
                 keyValue: 6,
-                columns: new[] { "Color", "Description" },
-                values: new object[] { "#7758FF", "Work related tasks" });
+                column: "Color",
+                value: "#7758FF");
 
             migrationBuilder.UpdateData(
                 table: "Labels",
