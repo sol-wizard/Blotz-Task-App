@@ -76,7 +76,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
               name="title"
               placeholder="Title"
               control={control}
-              className="font-balooBold text-5xl leading-normal p-2 rounded-xl border border-gray-300 "
+              className="font-balooBold text-5xl leading-normal p-2  border border-gray-300 "
               inputProps={{
                 multiline: false,
               }}
