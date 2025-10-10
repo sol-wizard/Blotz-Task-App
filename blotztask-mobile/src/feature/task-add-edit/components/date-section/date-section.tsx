@@ -63,6 +63,8 @@ const DateSection = ({ control, setValue, dto, startDate, endDate }: DateSection
 
   const { displayStartDate, displayEndDate } = getDisplayDates(startDate, endDate, dateToggle);
 
+  const isSingleDayTask = isSingleDay(startDate, endDate);
+
   return (
     <View className="flex-col gap-4 mb-8">
       <View className="flex-row items-center justify-between">
@@ -90,6 +92,7 @@ const DateSection = ({ control, setValue, dto, startDate, endDate }: DateSection
               setValue={setValue}
               nameStart="startDate"
               displayDate={displayStartDate}
+              isSingleDayTask={isSingleDayTask}
             />
           ) : (
             <DateSelectRangeDay
