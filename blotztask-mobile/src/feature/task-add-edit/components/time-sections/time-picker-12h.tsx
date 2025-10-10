@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, Platform, Modal } from "react-native";
+import { View, Text, Pressable, Modal } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 export const TimePicker12H = ({
@@ -13,16 +13,9 @@ export const TimePicker12H = ({
   const [tempDate, setTempDate] = useState(value || new Date());
 
   const handleChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === "android") {
-      setShowPicker(false);
-      if (event.type === "set" && selectedDate) {
-        onChange(selectedDate);
-      }
-    } else {
-      // iOS - update temp date as user scrolls
-      if (selectedDate) {
-        setTempDate(selectedDate);
-      }
+    // Update temp date as user scrolls
+    if (selectedDate) {
+      setTempDate(selectedDate);
     }
   };
 
@@ -31,12 +24,12 @@ export const TimePicker12H = ({
     setShowPicker(true);
   };
 
-  const handleIOSConfirm = () => {
+  const handleConfirm = () => {
     onChange(tempDate);
     setShowPicker(false);
   };
 
-  const handleIOSCancel = () => {
+  const handleCancel = () => {
     setShowPicker(false);
   };
 
@@ -77,38 +70,22 @@ export const TimePicker12H = ({
         )}
       </Pressable>
 
-      {/* Android: Native Dialog Picker */}
-      {Platform.OS === "android" && showPicker && (
-        <DateTimePicker
-          value={tempDate}
-          mode="time"
-          is24Hour={false}
-          display="default"
-          onChange={handleChange}
-        />
-      )}
-
-      {/* iOS: Modal with Spinner Picker */}
-      {Platform.OS === "ios" && showPicker && (
-        <Modal
-          visible={showPicker}
-          transparent
-          animationType="slide"
-          onRequestClose={handleIOSCancel}
-        >
+      {/* Modal with Spinner Picker (Both Platforms) */}
+      {showPicker && (
+        <Modal visible={showPicker} transparent animationType="slide" onRequestClose={handleCancel}>
           <View className="flex-1 justify-end">
             {/* Backdrop */}
-            <Pressable className="flex-1 bg-black/30" onPress={handleIOSCancel} />
+            <Pressable className="flex-1 bg-black/30" onPress={handleCancel} />
 
             {/* Picker Container */}
             <View className="bg-white rounded-t-3xl">
               {/* Header */}
               <View className="border-b border-gray-200 flex-row justify-between items-center px-4 py-3">
-                <Pressable onPress={handleIOSCancel}>
+                <Pressable onPress={handleCancel}>
                   <Text className="text-blue-500 text-base font-semibold">Cancel</Text>
                 </Pressable>
                 <Text className="text-base font-semibold text-gray-800">Select Time</Text>
-                <Pressable onPress={handleIOSConfirm}>
+                <Pressable onPress={handleConfirm}>
                   <Text className="text-blue-500 text-base font-bold">Done</Text>
                 </Pressable>
               </View>
