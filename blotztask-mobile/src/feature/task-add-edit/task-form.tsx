@@ -43,8 +43,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const [isFloatingTask, setIsFloatingTask] = useState(() => {
     if (mode === "create") return false; // Default to non-floating task creation
-    console.log(dto.timeType);
-    return dto.timeType === undefined; // Floating if editing task timeType is undefined
+    return dto.timeType === null; // Floating if editing task timeType is null
   });
 
   // When submitting, clear dates/times if floating

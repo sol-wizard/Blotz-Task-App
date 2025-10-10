@@ -35,9 +35,9 @@ function mergeDateTime(date: Date, time?: Date): Date {
   return merged;
 }
 
-function getTimeType(start?: Date, end?: Date): TaskTimeType | undefined {
+function getTimeType(start?: Date, end?: Date): TaskTimeType | null {
   if (!start || !end) {
-    return undefined;
+    return null;
   }
 
   return isSameMinute(start, end) ? TaskTimeType.Single : TaskTimeType.Range;
