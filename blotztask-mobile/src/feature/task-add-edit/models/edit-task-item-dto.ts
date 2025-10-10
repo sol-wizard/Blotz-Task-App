@@ -7,5 +7,5 @@ export interface EditTaskItemDTO {
   startTime?: Date;
   endTime?: Date;
   labelId?: number;
-  timeType?: TaskTimeType;
+  timeType: TaskTimeType | null;
 }
