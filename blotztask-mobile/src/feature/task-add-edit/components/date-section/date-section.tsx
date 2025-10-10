@@ -55,7 +55,7 @@ const DateSection = ({ control, setValue, dto, startDate, endDate }: DateSection
   };
 
   const [dateToggle, setDateToggle] = useState<DateToggleType>(getInitialDateToggle());
-  const [isExpanded, setIsExpanded] = useState(!!dto?.timeType);
+  const [isExpanded, setIsExpanded] = useState(dto?.timeType !== null);
 
   const handleToggleExpand = () => {
     setIsExpanded(!isExpanded);

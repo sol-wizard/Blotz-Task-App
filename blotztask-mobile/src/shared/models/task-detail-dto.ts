@@ -13,5 +13,5 @@ export interface TaskDetailDTO {
   label?: LabelDTO;
   startTime?: string;
   endTime?: string;
-  timeType?: TaskTimeType;
+  timeType: TaskTimeType | null;
 }
