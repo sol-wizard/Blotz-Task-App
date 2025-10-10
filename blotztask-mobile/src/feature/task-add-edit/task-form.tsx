@@ -9,7 +9,7 @@ import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "./components/form-divider";
 import TimeSection from "./components/time-sections/time-section";
-import { isMultiDay } from "./util/date-time-helpers";
+import { isMultiDay, isSingleDay } from "./util/date-time-helpers";
 
 type TaskFormProps =
   | {
@@ -63,8 +63,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const startDate = useWatch({ control, name: "startDate" });
   const endDate = useWatch({ control, name: "endDate" });
-
   const isMultiDayTask = isMultiDay(startDate, endDate);
+  const isSingleDayTask = isSingleDay(startDate, endDate);
 
   return (
     <FormProvider {...form}>
@@ -134,6 +134,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 setValue={setValue}
                 dto={dto}
                 isMultiDayTask={isMultiDayTask}
+                isSingleDayTask={isSingleDayTask}
               />
             </>
           )}

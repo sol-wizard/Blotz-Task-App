@@ -7,14 +7,14 @@ import DateSelectSingleDay from "./date-select-single-day";
 import DateSelectRangeDay from "./date-select-range-day";
 import { EditTaskItemDTO } from "../../models/edit-task-item-dto";
 import { MaterialIcons } from "@expo/vector-icons";
-import { isMultiDay } from "../../util/date-time-helpers";
+import { isMultiDay, isSingleDay } from "../../util/date-time-helpers";
 
 const getDisplayDates = (
   startDate: Date | null,
   endDate: Date | null,
   dateToggle: DateToggleType,
 ) => {
-  const sameDay = !isMultiDay(startDate, endDate);
+  const sameDay = isSingleDay(startDate, endDate);
 
   if (dateToggle === DateToggleType.SINGLE_DAY) {
     // Single day tab: show start only if both dates exist and are same
