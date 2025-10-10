@@ -22,6 +22,7 @@ const TimeToggleGroup = ({ value, onValueChange }: TimeToggleGroupProps) => {
           label: "Single Time",
           style: {
             borderRadius: 8, // Less rounded, more rectangular
+            backgroundColor: value === TimeToggleType.SINGLE_TIME ? "#bef264" : "#eee",
           },
         },
         {
@@ -29,6 +30,7 @@ const TimeToggleGroup = ({ value, onValueChange }: TimeToggleGroupProps) => {
           label: "Time Range",
           style: {
             borderRadius: 8, // Less rounded, more rectangular
+            backgroundColor: value === TimeToggleType.TIME_RANGE ? "#bef264" : "#eee",
           },
         },
       ]}

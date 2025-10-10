@@ -11,10 +11,7 @@ interface DateToggleGroupProps {
   onValueChange: (value: DateToggleType) => void;
 }
 
-const DateToggleGroup = ({
-  value,
-  onValueChange,
-}: DateToggleGroupProps) => {
+const DateToggleGroup = ({ value, onValueChange }: DateToggleGroupProps) => {
   return (
     <SegmentedButtons
       value={value}
@@ -25,6 +22,7 @@ const DateToggleGroup = ({
           label: "1-day",
           style: {
             borderRadius: 8, // Less rounded, more rectangular
+            backgroundColor: value === DateToggleType.SINGLE_DAY ? "#bef264" : "#eee",
           },
         },
         {
@@ -32,6 +30,7 @@ const DateToggleGroup = ({
           label: "Multi-day",
           style: {
             borderRadius: 8, // Less rounded, more rectangular
+            backgroundColor: value === DateToggleType.MULTI_DAY ? "#bef264" : "#eee",
           },
         },
       ]}
