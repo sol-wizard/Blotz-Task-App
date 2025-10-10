@@ -90,14 +90,16 @@ export const TimePicker12H = ({
                 </Pressable>
               </View>
 
-              {/* Picker */}
-              <DateTimePicker
-                value={tempDate}
-                mode="time"
-                display="spinner"
-                onChange={handleChange}
-                style={{ height: 200 }}
-              />
+              <View className="items-center">
+                {/* Picker */}
+                <DateTimePicker
+                  value={tempDate}
+                  mode="time"
+                  display="spinner"
+                  onChange={handleChange}
+                  style={{ height: 200 }}
+                />
+              </View>
             </View>
           </View>
         </Modal>
