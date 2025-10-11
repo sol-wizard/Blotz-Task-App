@@ -1,13 +1,14 @@
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { AiTaskDTO } from "../models/ai-task-dto";
 
-// TODO: handle invalid date, need to be changed after backend support
+// TODO: handle invalid date, need to be changed after backend support (Do we still need this?)
 export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {
   if (!task.startTime || !task.endTime)
     return {
       title: task.title,
       description: task.description,
       labelId: task.labelId,
+      timeType: null,
     };
   let timeType = 1;
   if (task.startTime === task.endTime) {
