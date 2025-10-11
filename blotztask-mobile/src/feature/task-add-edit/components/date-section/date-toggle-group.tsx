@@ -19,18 +19,30 @@ const DateToggleGroup = ({ value, onValueChange }: DateToggleGroupProps) => {
       buttons={[
         {
           value: DateToggleType.SINGLE_DAY,
-          label: "1-day",
+          label: "Single",
           style: {
             borderRadius: 8, // Less rounded, more rectangular
-            backgroundColor: value === DateToggleType.SINGLE_DAY ? "#bef264" : "#eee",
+            backgroundColor: value === DateToggleType.SINGLE_DAY ? "#bef264" : "white",
+            borderColor: "#d1d5db",
+          },
+          labelStyle: {
+            fontFamily: "BalooRegular",
+            fontSize: 16,
+            lineHeight: 22,
           },
         },
         {
           value: DateToggleType.MULTI_DAY,
-          label: "Multi-day",
+          label: "Range",
           style: {
             borderRadius: 8, // Less rounded, more rectangular
-            backgroundColor: value === DateToggleType.MULTI_DAY ? "#bef264" : "#eee",
+            backgroundColor: value === DateToggleType.MULTI_DAY ? "#bef264" : "white",
+            borderColor: "#d1d5db",
+          },
+          labelStyle: {
+            fontFamily: "BalooRegular",
+            fontSize: 16,
+            lineHeight: 22,
           },
         },
       ]}

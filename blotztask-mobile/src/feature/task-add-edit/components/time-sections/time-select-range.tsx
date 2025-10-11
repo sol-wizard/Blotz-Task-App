@@ -8,32 +8,34 @@ interface TimeSelectRangeProps {
   control: Control<TaskFormField>;
 }
 
+interface TimeInputProps {
+  label: string;
+  name: keyof TaskFormField;
+  control: Control<TaskFormField>;
+}
+
+const TimeInput: React.FC<TimeInputProps> = ({ label, name, control }) => {
+  return (
+    <View className="flex-row items-center gap-4">
+      <Text className="text-xl font-baloo w-[100px]">{label}</Text>
+      <Controller
+        control={control}
+        name={name}
+        render={({ field: { value, onChange } }) => (
+          <TimePicker12H value={value as Date | null} onChange={onChange} />
+        )}
+      />
+    </View>
+  );
+};
 const TimeSelectRange = ({ control }: TimeSelectRangeProps) => {
   return (
-    <View className="gap-6">
+    <View className="gap-2">
       {/* Start Time */}
-      <View className="flex-row items-center gap-4">
-        <Text className="text-lg font-balooBold text-gray-700">Start Time</Text>
-        <Controller
-          control={control}
-          name="startTime"
-          render={({ field: { value, onChange } }) => (
-            <TimePicker12H value={value as Date | null} onChange={onChange} />
-          )}
-        />
-      </View>
+      <TimeInput label="Start Time" name="startTime" control={control} />
 
       {/* End Time */}
-      <View className="flex-row items-center gap-4">
-        <Text className="text-lg font-balooBold text-gray-700">End Time</Text>
-        <Controller
-          control={control}
-          name="endTime"
-          render={({ field: { value, onChange } }) => (
-            <TimePicker12H value={value as Date | null} onChange={onChange} />
-          )}
-        />
-      </View>
+      <TimeInput label="End Time" name="endTime" control={control} />
     </View>
   );
 };

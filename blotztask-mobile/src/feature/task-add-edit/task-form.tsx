@@ -9,7 +9,7 @@ import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "./components/form-divider";
 import TimeSection from "./components/time-sections/time-section";
-import { isMultiDay } from "./util/date-time-helpers";
+import { isMultiDay, isSingleDay } from "./util/date-time-helpers";
 
 type TaskFormProps =
   | {
@@ -63,20 +63,23 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const startDate = useWatch({ control, name: "startDate" });
   const endDate = useWatch({ control, name: "endDate" });
-
   const isMultiDayTask = isMultiDay(startDate, endDate);
+  const isSingleDayTask = isSingleDay(startDate, endDate);
 
   return (
     <FormProvider {...form}>
       <View className="flex-1 relative">
         <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Title */}
-          <View className="mb-8 bg-gray-200">
+          <View className="mb-8 bg-white">
             <FormTextInput
               name="title"
               placeholder="Title"
               control={control}
-              className="font-balooBold text-5xl leading-normal"
+              className="font-balooBold text-5xl leading-normal p-2  border border-gray-300 "
+              inputProps={{
+                multiline: false,
+              }}
             />
           </View>
 
@@ -108,7 +111,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
               isFloatingTask ? "bg-blue-400" : "bg-lime-300"
             }`}
           >
-            <Text className="font-balooBold text-lg text-black">
+            <Text className="font-balooBold text-xl text-black">
               {isFloatingTask ? "No Datetime Task enabled" : "Enable No Datetime Task"}
             </Text>
           </Pressable>
@@ -134,6 +137,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 setValue={setValue}
                 dto={dto}
                 isMultiDayTask={isMultiDayTask}
+                isSingleDayTask={isSingleDayTask}
               />
             </>
           )}
@@ -148,7 +152,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
               !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
             }`}
           >
-            <Text className="font-balooBold text-lg text-black">
+            <Text className="font-balooBold text-xl text-black">
               {mode === "create" ? "Create Task" : "Update Task"}
             </Text>
           </Pressable>

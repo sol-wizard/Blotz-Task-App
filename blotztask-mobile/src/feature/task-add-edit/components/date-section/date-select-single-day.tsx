@@ -10,6 +10,7 @@ interface DateSelectSingleDayProps {
   setValue: UseFormSetValue<TaskFormField>;
   nameStart: "startDate";
   displayDate: Date | null;
+  isSingleDayTask?: boolean;
 }
 
 const DateSelectSingleDay = ({
@@ -17,6 +18,7 @@ const DateSelectSingleDay = ({
   setValue,
   nameStart,
   displayDate,
+  isSingleDayTask = true,
 }: DateSelectSingleDayProps) => {
   const [showCalendar, setShowCalendar] = useState(false);
 
@@ -31,9 +33,11 @@ const DateSelectSingleDay = ({
               {/* Date Picker Button */}
               <Pressable
                 onPress={() => setShowCalendar(true)}
-                className="bg-gray-100 p-4 rounded-lg border border-gray-300"
+                className="bg-white p-4 rounded-xl border border-gray-300 active:bg-gray-50"
               >
-                <Text className="text-lg text-gray-700">
+                <Text
+                  className={`font-baloo text-xl ${isSingleDayTask ? "text-slate-700" : "text-slate-400"}`}
+                >
                   {displayDate ? format(displayDate, "MMM dd, yyyy") : "Select Date"}
                 </Text>
               </Pressable>
