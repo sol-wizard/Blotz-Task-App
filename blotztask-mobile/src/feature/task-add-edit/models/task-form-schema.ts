@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isMultiDay } from "../util/date-time-helpers";
+import { isSingleDay } from "../util/date-time-helpers";
 
 export const taskFormSchema = z
   .object({
@@ -36,7 +36,7 @@ export const taskFormSchema = z
   )
   .refine(
     (data) => {
-      if (data.startDate && data.endDate && !isMultiDay(data.startDate, data.endDate)) {
+      if (isSingleDay(data.startDate, data.endDate)) {
         return data.startTime !== null && data.endTime !== null;
       }
       return true;

@@ -19,18 +19,30 @@ const TimeToggleGroup = ({ value, onValueChange }: TimeToggleGroupProps) => {
       buttons={[
         {
           value: TimeToggleType.SINGLE_TIME,
-          label: "Single Time",
+          label: "Single",
           style: {
             borderRadius: 8, // Less rounded, more rectangular
-            backgroundColor: value === TimeToggleType.SINGLE_TIME ? "#bef264" : "#eee",
+            backgroundColor: value === TimeToggleType.SINGLE_TIME ? "#bef264" : "white",
+            borderColor: "#d1d5db",
+          },
+          labelStyle: {
+            fontFamily: "BalooRegular",
+            fontSize: 16,
+            lineHeight: 22,
           },
         },
         {
           value: TimeToggleType.TIME_RANGE,
-          label: "Time Range",
+          label: "Range",
           style: {
             borderRadius: 8, // Less rounded, more rectangular
-            backgroundColor: value === TimeToggleType.TIME_RANGE ? "#bef264" : "#eee",
+            backgroundColor: value === TimeToggleType.TIME_RANGE ? "#bef264" : "white",
+            borderColor: "#d1d5db",
+          },
+          labelStyle: {
+            fontFamily: "BalooRegular",
+            fontSize: 16,
+            lineHeight: 22,
           },
         },
       ]}

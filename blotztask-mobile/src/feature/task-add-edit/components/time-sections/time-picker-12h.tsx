@@ -56,17 +56,17 @@ export const TimePicker12H = ({
       {/* Display Button */}
       <Pressable
         onPress={handleOpenPicker}
-        className="flex-row items-center bg-white rounded-xl px-4 py-3 active:bg-gray-50"
+        className="flex-row items-center bg-white rounded-xl px-3 py-2 active:bg-gray-50 border-gray-300 border"
       >
         {timeDisplay ? (
           <>
-            <Text className="text-2xl font-semibold text-gray-800">
+            <Text className="text-xl font-baloo text-gray-800">
               {timeDisplay.hoursStr}:{timeDisplay.minutesStr}
             </Text>
-            <Text className="text-lg font-semibold text-blue-500 ml-2">{timeDisplay.ampm}</Text>
+            <Text className="text-xl font-baloo text-blue-500 ml-2">{timeDisplay.ampm}</Text>
           </>
         ) : (
-          <Text className="text-lg font-medium text-gray-400">Select Time</Text>
+          <Text className="text-xl font-baloo text-gray-400">Select Time</Text>
         )}
       </Pressable>
 
