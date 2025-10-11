@@ -14,11 +14,16 @@ public static class AiTaskGeneratorPrompts
                       - For general or vague intentions, generate a single simple task with an appropriate title.
                       - Do NOT create subtasks such as planning or preparation unless explicitly stated.
                       - If no clear description is provided or implied, leave the description field empty.
+
+                      TASK TIME RULES (STRICT):
+                      - You may create time for the task if you can infer a specific time frame from the context, but do not assume a time if none is mentioned.
+                      - There can only be three type of task:
+                        1. Floating Task: start_time = end_time = null
+                        2. Single Time Task: start_time = end_time, start_time != null
+                        3. Range Time Task: start_time < end_time, start_time != null, end_time != null
                       - If an end time or time frame is implied, set a reasonable start_time. 
                       - If a start time or time frame is implied, set a reasonable end_time. 
-                      - You may invent a reasonable time if you can infer a specific time frame from the context, but do not assume a time if none is mentioned.
-                      - If no start time is provided or implied, set the start_time field to an empty string.
-                      - If no end time is provided or implied, set the end_time field to an empty string.
+                      - If only start time or end time is provided and the other one cannot be reasonably inferred, set them to be equal.
                       
                       Output language rule:
                       - If the user's input is in Chinese (Mandarin), you MUST write the "title" and "description" in Chinese.
