@@ -25,13 +25,13 @@ const DateInput = ({
   const formatDate = (date: Date | null) => (date ? format(date, "MM/dd/yy") : "MM/DD/YY");
 
   return (
-    <View className="flex-row justify-between gap-4 items-center">
-      <Text className="w-20">{label}</Text>
+    <View className="flex-row justify-between gap-2 items-center">
+      <Text className="w-[100px] font-baloo text-xl">{label}</Text>
       <Pressable
         onPress={onPress}
-        className="flex-row items-center justify-center px-3 py-2 rounded-xl border border-gray-300 bg-white"
+        className="flex-row items-center justify-center px-3 py-2 rounded-xl border border-gray-300 bg-white active:bg-gray-50"
       >
-        <Text className={`text-base ${date ? "text-slate-700" : "text-slate-400"}`}>
+        <Text className={`font-baloo text-xl ${date ? "text-slate-700" : "text-slate-400"}`}>
           {formatDate(date)}
         </Text>
       </Pressable>

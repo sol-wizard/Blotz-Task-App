@@ -12,7 +12,7 @@ interface TimeSelectSingleProps {
 const TimeSelectSingle = ({ control, setValue }: TimeSelectSingleProps) => {
   return (
     <View className="flex-row items-center gap-4">
-      <Text className="text-lg font-balooBold text-gray-700">Single Time</Text>
+      <Text className="text-xl font-baloo w-[100px]">Single Time</Text>
       <Controller
         control={control}
         name="startTime"
