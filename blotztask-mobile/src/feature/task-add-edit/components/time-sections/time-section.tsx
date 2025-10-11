@@ -1,5 +1,5 @@
 import { View, Text, Pressable } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Control, UseFormSetValue } from "react-hook-form";
 import { TaskFormField } from "../../models/task-form-schema";
 import TimeToggleGroup, { TimeToggleType } from "./time-toggle-group";
@@ -14,9 +14,16 @@ interface TimeSectionProps {
   setValue: UseFormSetValue<TaskFormField>;
   dto?: EditTaskItemDTO;
   isMultiDayTask?: boolean;
+  isSingleDayTask?: boolean;
 }
 
-const TimeSection = ({ control, setValue, dto, isMultiDayTask = false }: TimeSectionProps) => {
+const TimeSection = ({
+  control,
+  setValue,
+  dto,
+  isMultiDayTask = false,
+  isSingleDayTask = true,
+}: TimeSectionProps) => {
   // Determine initial time toggle based on existing form values
   const getInitialTimeToggle = () => {
     const startTime = dto?.startTime;
@@ -31,7 +38,8 @@ const TimeSection = ({ control, setValue, dto, isMultiDayTask = false }: TimeSec
     return TimeToggleType.SINGLE_TIME;
   };
 
-  const [isTimeExpanded, setIsTimeExpanded] = useState(!isMultiDayTask);
+  const [isTimeExpanded, setIsTimeExpanded] = useState(isSingleDayTask);
+
   const [timeToggle, setTimeToggle] = useState<TimeToggleType>(getInitialTimeToggle());
 
   const handleTimeToggle = () => {
@@ -39,6 +47,12 @@ const TimeSection = ({ control, setValue, dto, isMultiDayTask = false }: TimeSec
     const newIsTimeExpanded = !isTimeExpanded;
     setIsTimeExpanded(newIsTimeExpanded);
   };
+
+  useEffect(() => {
+    if (isSingleDayTask) {
+      setIsTimeExpanded(true);
+    }
+  }, [isSingleDayTask]);
 
   return (
     <View
