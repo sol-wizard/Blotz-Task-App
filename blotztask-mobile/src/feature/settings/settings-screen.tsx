@@ -26,7 +26,7 @@ export default function SettingsScreen() {
         style={{ marginTop: 16 }}
         onPress={() => router.push("/(protected)/all-tasks")}
       >
-        All Tasks (Temporary)
+        Go to All Tasks page
       </Button>
       <Button mode="outlined" style={{ marginTop: 16 }} onPress={goToIdeasPage}>
         Go to Ideas page

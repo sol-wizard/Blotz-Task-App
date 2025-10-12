@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Snackbar, IconButton } from "react-native-paper";
+import { Snackbar } from "react-native-paper";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, SafeAreaView, View, Text } from "react-native";
 import { createStatusSelectItems, filterTasksByStatus } from "@/feature/calendar/util/task-counts";
@@ -15,6 +15,7 @@ import UserProfile from "@/feature/calendar/components/user-profile";
 export default function AllTasksScreen() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
   const { selectedTask, setSelectedTask } = useSelectedTaskStore();
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
@@ -22,7 +23,8 @@ export default function AllTasksScreen() {
     text: "",
   });
 
-  // Calculate overdue tasks from the all tasks list
+  // For "All Tasks" page, we don't have overdue tasks in the same way
+  // We'll calculate overdue tasks from the all tasks list
   const overdueTasks = tasks.filter(
     (task) =>
       !task.isDone && task.endTime && new Date(task.endTime).getTime() <= new Date().getTime(),
@@ -36,14 +38,11 @@ export default function AllTasksScreen() {
 
   const fetchTasks = async () => {
     try {
+      setError(null);
       const data = await getAllTasks();
       setTasks(data);
     } catch (err: any) {
-      console.error(err);
-      setSnackbar({
-        visible: true,
-        text: "Failed to load tasks",
-      });
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -110,15 +109,12 @@ export default function AllTasksScreen() {
 
   return (
     <SafeAreaView className="flex-1">
-      {/* Header with back button */}
-      <View className="flex-row items-center px-5 pt-2">
-        <IconButton icon="arrow-left" size={24} onPress={() => router.back()} iconColor="#6B7280" />
-        <View className="flex-1 flex-row items-center justify-between">
-          <Text className="text-5xl font-bold text-gray-800 font-balooExtraBold items-end pt-8">
-            All Tasks
-          </Text>
-          <UserProfile />
-        </View>
+      {/* Header without calendar toggle */}
+      <View className="flex-row items-center justify-between px-5">
+        <Text className="text-5xl font-bold text-gray-800 font-balooExtraBold items-end pt-10">
+          All Tasks
+        </Text>
+        <UserProfile />
       </View>
 
       <TaskStatusSelect
