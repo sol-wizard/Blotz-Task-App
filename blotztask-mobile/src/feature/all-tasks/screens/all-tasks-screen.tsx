@@ -15,7 +15,6 @@ import UserProfile from "@/feature/calendar/components/user-profile";
 export default function AllTasksScreen() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
   const { selectedTask, setSelectedTask } = useSelectedTaskStore();
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
@@ -38,11 +37,10 @@ export default function AllTasksScreen() {
 
   const fetchTasks = async () => {
     try {
-      setError(null);
       const data = await getAllTasks();
       setTasks(data);
     } catch (err: any) {
-      setError(err.message);
+      console.error("Failed to fetch tasks:", err.message);
     } finally {
       setLoading(false);
     }
