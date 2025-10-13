@@ -6,7 +6,7 @@ import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
-import { FormDivider } from "./components/form-divider";
+import { FormDivider } from "../../shared/components/ui/form-divider";
 
 import { ReminderTab } from "./components/reminder-tab";
 import { EventTab } from "./components/event-tab";
