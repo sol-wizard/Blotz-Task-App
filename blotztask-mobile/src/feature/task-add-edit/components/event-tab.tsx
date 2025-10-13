@@ -1,6 +1,6 @@
 import { Controller } from "react-hook-form";
 import { View, Text, Pressable } from "react-native";
-import { format } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { useState } from "react";
 
 import CalendarDatePicker from "./calendar-date-picker";
@@ -51,7 +51,7 @@ export const EventTab = ({ control }: Props) => {
                   visible={showCalendar}
                   onClose={() => setShowCalendar(false)}
                   onSave={(start, end) => {
-                    const startD = start ? new Date(start) : null;
+                    const startD = start ? startOfDay(new Date(start)) : null;
                     const endD = end ? new Date(end) : null;
                     onChangeStart(startD);
                     onChangeEnd(endD);
