@@ -23,18 +23,24 @@ export const EventTab = ({ control }: Props) => {
             name="endDate"
             render={({ field: { onChange: onChangeEnd, value: endValue } }) => (
               <View>
-                <View className="flex-row justify-between">
-                  <Text className="font-baloo text-xl">Start</Text>
-                  <Pressable onPress={() => setShowCalendar((prev) => !prev)}>
-                    <Text className="font-baloo text-xl">
+                <View className="flex-row justify-between mb-3">
+                  <Text className="font-baloo text-secondary text-2xl mt-1">Start</Text>
+                  <Pressable
+                    onPress={() => setShowCalendar((prev) => !prev)}
+                    className="bg-background px-4 py-2 rounded-xl"
+                  >
+                    <Text className="text-xl font-baloo text-secondary">
                       {startValue ? format(startValue, "MMM dd, yyyy") : "Select Date"}
                     </Text>
                   </Pressable>
                 </View>
                 <View className="flex-row justify-between">
-                  <Text className="font-baloo text-xl">End</Text>
-                  <Pressable onPress={() => setShowCalendar((prev) => !prev)}>
-                    <Text className="font-baloo text-xl">
+                  <Text className="font-baloo text-secondary text-2xl mt-1">End</Text>
+                  <Pressable
+                    onPress={() => setShowCalendar((prev) => !prev)}
+                    className="bg-background px-4 py-2 rounded-xl"
+                  >
+                    <Text className="text-xl font-baloo text-secondary">
                       {endValue ? format(endValue, "MMM dd, yyyy") : "Select Date"}
                     </Text>
                   </Pressable>

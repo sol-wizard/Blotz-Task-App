@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "./components/form-divider";
-import { SegmentButton } from "./components/segment-button";
+
 import { ReminderTab } from "./components/reminder-tab";
 import { EventTab } from "./components/event-tab";
+import { SegmentButton } from "./components/segment-button";
 
 type TaskFormProps =
   | {
@@ -51,25 +52,24 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       <View className="flex-1 relative bg-white">
         <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Title */}
-          <View className="mb-8 bg-white">
+          <View className="mb-4 bg-white">
             <FormTextInput
               name="title"
-              placeholder="Title"
+              placeholder="New Task"
               control={control}
-              className="font-balooBold text-5xl leading-normal p-2  border border-gray-300 "
+              className="font-balooBold text-5xl leading-normal"
               inputProps={{
                 multiline: false,
               }}
             />
           </View>
 
-          <View className="mb-8">
-            <Text className="font-balooBold text-3xl leading-normal">Description</Text>
+          <View className="mb-8 py-3 bg-background rounded-2xl px-4">
             <FormTextInput
               name="description"
-              placeholder="Add details about this task (optional)"
+              placeholder="Add a note"
               control={control}
-              className="bg-gray-200 font-baloo text-lg"
+              className="font-baloo text-lg text-tertiary"
             />
           </View>
 

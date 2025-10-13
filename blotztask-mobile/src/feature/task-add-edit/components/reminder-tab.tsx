@@ -28,9 +28,12 @@ export const ReminderTab = ({ control }: Props) => {
           return (
             <View className="mb-4">
               <View className="flex-row justify-between">
-                <Text>Date</Text>
-                <Pressable onPress={() => setShowCalendar((prev) => !prev)}>
-                  <Text className="font-baloo text-xl">{displayText}</Text>
+                <Text className="font-baloo text-secondary text-2xl mt-1">Date</Text>
+                <Pressable
+                  onPress={() => setShowCalendar((prev) => !prev)}
+                  className="bg-background px-4 py-2 rounded-xl"
+                >
+                  <Text className="text-xl font-baloo text-secondary">{displayText}</Text>
                 </Pressable>
               </View>
 
@@ -83,13 +86,16 @@ export const ReminderTab = ({ control }: Props) => {
           };
 
           return (
-            <View>
+            <View className="justify-center">
               <View className="flex-row justify-between">
-                <Text>Time</Text>
+                <Text className="font-baloo text-secondary text-2xl mt-1">Time</Text>
 
-                <Pressable onPress={() => setShowTimePicker((prev) => !prev)}>
-                  <Text className="font-baloo text-lg text-slate-700">
-                    {value ? format(value, "hh:mm a") : "Select a time"}
+                <Pressable
+                  onPress={() => setShowTimePicker((prev) => !prev)}
+                  className="bg-background px-4 py-2 rounded-xl"
+                >
+                  <Text className="text-xl font-baloo text-secondary ">
+                    {value ? format(value, "hh:mm a") : "Select time"}
                   </Text>
                 </Pressable>
               </View>

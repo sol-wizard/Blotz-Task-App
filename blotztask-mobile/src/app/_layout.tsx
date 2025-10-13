@@ -27,14 +27,13 @@ export default function RootLayout() {
     InterThin: Inter_300Light,
     InterBold: Inter_700Bold,
   });
-  /* eslint-enable camelcase */
 
   return (
     <Auth0Provider domain={domain} clientId={clientId}>
-      <GestureHandlerRootView>
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <PaperProvider theme={theme}>
-          <BottomSheetModalProvider>
-            <Portal.Host>
+          <Portal.Host>
+            <BottomSheetModalProvider>
               <SafeAreaProvider>
                 <Stack screenOptions={{ headerShown: false }}>
                   <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -42,8 +41,8 @@ export default function RootLayout() {
                   <Stack.Screen name="(protected)" options={{ headerShown: false }} />
                 </Stack>
               </SafeAreaProvider>
-            </Portal.Host>
-          </BottomSheetModalProvider>
+            </BottomSheetModalProvider>
+          </Portal.Host>
         </PaperProvider>
       </GestureHandlerRootView>
     </Auth0Provider>

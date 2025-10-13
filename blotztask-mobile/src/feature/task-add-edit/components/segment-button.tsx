@@ -8,7 +8,7 @@ interface SegmentButtonProps {
 
 export const SegmentButton: React.FC<SegmentButtonProps> = ({ value, setValue }) => {
   return (
-    <View className="w-60">
+    <View className="w-60 mb-6">
       <SegmentedButtons
         value={value}
         onValueChange={setValue}
@@ -16,6 +16,11 @@ export const SegmentButton: React.FC<SegmentButtonProps> = ({ value, setValue })
           { value: "reminder", label: "Reminder" },
           { value: "event", label: "Event" },
         ]}
+        theme={{
+          colors: {
+            secondaryContainer: "#9AD513",
+          },
+        }}
       />
     </View>
   );
