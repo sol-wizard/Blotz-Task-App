@@ -4,12 +4,9 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
-import DateSection from "./components/date-section/date-section";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "./components/form-divider";
-import TimeSection from "./components/time-sections/time-section";
-import { isMultiDay, isSingleDay } from "./util/date-time-helpers";
 import { SegmentButton } from "./components/segment-button";
 import { ReminderTab } from "./components/reminder-tab";
 import { EventTab } from "./components/event-tab";
@@ -41,19 +38,13 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     },
   });
 
-  const { handleSubmit, formState, control, setValue } = form;
+  const { handleSubmit, formState, control } = form;
   const { isValid, isSubmitting } = formState;
   const [isActiveTab, setIsActiveTab] = useState("reminder");
 
-  // When submitting, clear dates/times if floating
   const handleFormSubmit = (data: TaskFormField) => {
     onSubmit(data);
   };
-
-  const startDate = useWatch({ control, name: "startDate" });
-  const endDate = useWatch({ control, name: "endDate" });
-  const isMultiDayTask = isMultiDay(startDate, endDate);
-  const isSingleDayTask = isSingleDay(startDate, endDate);
 
   return (
     <FormProvider {...form}>
