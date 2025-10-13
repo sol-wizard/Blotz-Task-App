@@ -18,7 +18,7 @@ export const ReminderTab = ({ control }: Props) => {
   const { setValue } = useFormContext();
 
   return (
-    <View>
+    <View className="mb-4">
       <Controller
         control={control}
         name="startDate"

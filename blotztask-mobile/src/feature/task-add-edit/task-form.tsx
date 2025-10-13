@@ -11,6 +11,9 @@ import { FormDivider } from "./components/form-divider";
 import { ReminderTab } from "./components/reminder-tab";
 import { EventTab } from "./components/event-tab";
 import { SegmentButton } from "./components/segment-button";
+import { isEqual } from "date-fns";
+import { combineDateTime } from "./util/combine-date-time";
+import { SegmentValue } from "./models/segment-value";
 
 type TaskFormProps =
   | {
@@ -25,23 +28,30 @@ type TaskFormProps =
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
+  const defaultValues: TaskFormField = {
+    title: dto?.title ?? "",
+    description: dto?.description ?? "",
+    labelId: dto?.labelId ?? null,
+    startDate: dto?.startTime ?? null,
+    startTime: dto?.startTime ?? null,
+    endDate: dto?.endTime ?? null,
+    endTime: dto?.endTime ?? null,
+  };
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
-    defaultValues: {
-      title: dto?.title ?? "",
-      description: dto?.description ?? "",
-      labelId: dto?.labelId ?? null,
-      startDate: dto?.startTime ?? null,
-      startTime: dto?.startTime ?? null,
-      endDate: dto?.endTime ?? null,
-      endTime: dto?.endTime ?? null,
-    },
+    defaultValues: defaultValues,
   });
 
   const { handleSubmit, formState, control } = form;
   const { isValid, isSubmitting } = formState;
-  const [isActiveTab, setIsActiveTab] = useState("reminder");
+
+  const startCombined = combineDateTime(defaultValues.startDate, defaultValues.startTime);
+  const endCombined = combineDateTime(defaultValues.endDate, defaultValues.endTime);
+  const initialTab: SegmentValue =
+    !startCombined || !endCombined || isEqual(startCombined, endCombined) ? "reminder" : "event";
+
+  const [isActiveTab, setIsActiveTab] = useState<SegmentValue>(initialTab);
 
   const handleFormSubmit = (data: TaskFormField) => {
     onSubmit(data);
