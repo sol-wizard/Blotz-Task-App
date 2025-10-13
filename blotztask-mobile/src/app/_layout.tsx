@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
+/* eslint-disable camelcase */
 import {
   Baloo2_600SemiBold,
   Baloo2_700Bold,
@@ -8,6 +9,7 @@ import {
   useFonts,
 } from "@expo-google-fonts/baloo-2";
 import { Inter_300Light, Inter_700Bold } from "@expo-google-fonts/inter";
+/* eslint-enable camelcase */
 import { Stack } from "expo-router";
 import { PaperProvider, Portal } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -21,6 +23,7 @@ export default function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
   const clientId = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
 
+  /* eslint-disable camelcase */
   useFonts({
     BalooRegular: Baloo2_600SemiBold,
     BalooBold: Baloo2_700Bold,

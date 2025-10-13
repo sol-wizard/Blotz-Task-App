@@ -83,3 +83,10 @@ export async function deleteTask(taskId: number): Promise<void> {
     throw new Error("Delete task failed");
   }
 }
+
+export async function getAllTasks(): Promise<TaskDetailDTO[]> {
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/all`;
+
+  const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: "GET" });
+  return data;
+}
