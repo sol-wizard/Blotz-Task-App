@@ -11,7 +11,8 @@ import { FormDivider } from "./components/form-divider";
 import TimeSection from "./components/time-sections/time-section";
 import { isMultiDay, isSingleDay } from "./util/date-time-helpers";
 import { SegmentButton } from "./components/segment-button";
-import { Reminder } from "./components/reminder";
+import { ReminderTab } from "./components/reminder-tab";
+import { EventTab } from "./components/event-tab";
 
 type TaskFormProps =
   | {
@@ -84,7 +85,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           <FormDivider />
           <SegmentButton value={isActiveTab} setValue={setIsActiveTab} />
 
-          {isActiveTab === "reminder" && <Reminder control={control} />}
+          {isActiveTab === "reminder" && <ReminderTab control={control} />}
+          {isActiveTab === "event" && <EventTab control={control} />}
           <FormDivider />
 
           <View className="mb-8">

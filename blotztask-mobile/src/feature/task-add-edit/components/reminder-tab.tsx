@@ -9,7 +9,7 @@ type Props = {
   control: any;
 };
 
-export const Reminder = ({ control }: Props) => {
+export const ReminderTab = ({ control }: Props) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
