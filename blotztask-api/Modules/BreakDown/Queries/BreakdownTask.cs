@@ -6,28 +6,28 @@ using BlotzTask.Modules.BreakDown.prompt;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace BlotzTask.Modules.BreakDown.Commands;
-public class BreakdownTaskCommand
+namespace BlotzTask.Modules.BreakDown.Queries;
+public class GetTaskBreakdownQuery
 {
     [Required]
     public required int TaskId { get; init; }
 }
 
-public class BreakdownTaskCommandHandler(
-    ILogger<BreakdownTaskCommandHandler> logger,
+public class BreakdownTaskQueryHandler(
+    ILogger<BreakdownTaskQueryHandler> logger,
     GetTaskByIdQueryHandler getTaskByIdQueryHandler, 
     IChatCompletionService chatCompletionService) 
 {
-    public async Task<List<SubTask>> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
+    public async Task<List<SubTask>> Handle(GetTaskBreakdownQuery query, CancellationToken ct = default)
     {
-        logger.LogInformation("Breaking down task {TaskId}", command.TaskId);
+        logger.LogInformation("Breaking down task {TaskId}", query.TaskId);
         
-        var query = new GetTasksByIdQuery { TaskId = command.TaskId };
-        var task = await getTaskByIdQueryHandler.Handle(query, ct);
+        var getTasksByIdquery = new GetTasksByIdQuery { TaskId = query.TaskId };
+        var task = await getTaskByIdQueryHandler.Handle(getTasksByIdquery, ct);
 
         if (task == null)
         {
-            throw new ArgumentException($"Task with ID {command.TaskId} not found.");
+            throw new ArgumentException($"Task with ID {query.TaskId} not found.");
         }
         
         try
@@ -109,7 +109,7 @@ public class BreakdownTaskCommandHandler(
             logger.LogError(
                 ex,
                 "Unexpected error during BreakdownTask. TaskId: {TaskId}, Task: {@Task}, Exception: {Exception}, StackTrace: {StackTrace}, InnerException: {InnerException}",
-                command.TaskId,
+                query.TaskId,
                 task,
                 ex,
                 ex.StackTrace,
