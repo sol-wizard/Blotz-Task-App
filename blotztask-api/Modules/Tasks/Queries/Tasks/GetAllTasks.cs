@@ -18,7 +18,6 @@ public class GetAllTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetAllTasksQ
         var tasks = await db.TaskItems
             .Where(t => t.UserId == query.UserId)
             .OrderByDescending(t => t.StartTime ?? DateTimeOffset.MinValue)
-            .ThenByDescending(t => t.CreatedAt)
             .Select(task => new AllTaskItemDto
             {
                 Id = task.Id,
@@ -27,7 +26,6 @@ public class GetAllTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetAllTasksQ
                 StartTime = task.StartTime,
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
-                CreatedAt = task.CreatedAt,
                 Label = task.Label != null ? new LabelDto
                 {
                     LabelId = task.Label.LabelId,
@@ -50,6 +48,5 @@ public class AllTaskItemDto
     public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
-    public DateTime CreatedAt { get; set; }
     public LabelDto? Label { get; set; }
 }
