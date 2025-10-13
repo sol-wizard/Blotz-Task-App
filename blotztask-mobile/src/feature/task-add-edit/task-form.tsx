@@ -108,7 +108,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         </ScrollView>
 
         {/* Submit */}
-        <View className="px-8 py-6">
+        <View className="px-8 py-6 mb-10">
           <Pressable
             onPress={handleSubmit(handleFormSubmit)}
             disabled={!isValid || isSubmitting}
