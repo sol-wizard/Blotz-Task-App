@@ -3,7 +3,7 @@ import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-task-dto-mapper";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { SafeAreaView, Text, View } from "react-native";
+import { SafeAreaView, Text } from "react-native";
 import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
 
 function TaskCreateScreen() {
