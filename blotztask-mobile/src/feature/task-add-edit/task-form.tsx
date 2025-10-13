@@ -10,6 +10,8 @@ import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "./components/form-divider";
 import TimeSection from "./components/time-sections/time-section";
 import { isMultiDay, isSingleDay } from "./util/date-time-helpers";
+import { SegmentButton } from "./components/segment-button";
+import { Reminder } from "./components/reminder";
 
 type TaskFormProps =
   | {
@@ -40,25 +42,11 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
-
-  const [isFloatingTask, setIsFloatingTask] = useState(() => {
-    if (mode === "create") return false; // Default to non-floating task creation
-    return dto.timeType === null; // Floating if editing task timeType is null
-  });
+  const [isActiveTab, setIsActiveTab] = useState("reminder");
 
   // When submitting, clear dates/times if floating
   const handleFormSubmit = (data: TaskFormField) => {
-    if (isFloatingTask) {
-      onSubmit({
-        ...data,
-        startDate: null,
-        startTime: null,
-        endDate: null,
-        endTime: null,
-      });
-    } else {
-      onSubmit(data);
-    }
+    onSubmit(data);
   };
 
   const startDate = useWatch({ control, name: "startDate" });
@@ -68,7 +56,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   return (
     <FormProvider {...form}>
-      <View className="flex-1 relative">
+      <View className="flex-1 relative bg-white">
         <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Title */}
           <View className="mb-8 bg-white">
@@ -83,17 +71,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             />
           </View>
 
-          {/* Category */}
           <View className="mb-8">
-            <Text className="font-balooBold text-3xl leading-normal">Category</Text>
-            <LabelSelect control={control} />
-          </View>
-
-          <FormDivider />
-
-          {/* Description Section */}
-          {/* TODO: Remove description section for now and waiting for design */}
-          {/* <View className="mb-8">
             <Text className="font-balooBold text-3xl leading-normal">Description</Text>
             <FormTextInput
               name="description"
@@ -101,46 +79,20 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
               control={control}
               className="bg-gray-200 font-baloo text-lg"
             />
-          </View> */}
-
-          {/* <FormDivider /> */}
-
-          <Pressable
-            onPress={() => setIsFloatingTask((prev) => !prev)}
-            className={`w-full py-3 mb-6 rounded-lg items-center justify-center ${
-              isFloatingTask ? "bg-blue-400" : "bg-lime-300"
-            }`}
-          >
-            <Text className="font-balooBold text-xl text-black">
-              {isFloatingTask ? "No Datetime Task enabled" : "Enable No Datetime Task"}
-            </Text>
-          </Pressable>
+          </View>
 
           <FormDivider />
+          <SegmentButton value={isActiveTab} setValue={setIsActiveTab} />
 
-          {!isFloatingTask && (
-            <>
-              {/* Date Section */}
-              <DateSection
-                control={control}
-                setValue={setValue}
-                dto={dto}
-                startDate={startDate} // pass watched value
-                endDate={endDate} // pass watched value
-              />
+          {isActiveTab === "reminder" && <Reminder control={control} />}
+          <FormDivider />
 
-              <FormDivider />
+          <View className="mb-8">
+            <Text className="font-balooBold text-3xl leading-normal">Category</Text>
+            <LabelSelect control={control} />
+          </View>
 
-              {/* Time Section */}
-              <TimeSection
-                control={control}
-                setValue={setValue}
-                dto={dto}
-                isMultiDayTask={isMultiDayTask}
-                isSingleDayTask={isSingleDayTask}
-              />
-            </>
-          )}
+          <FormDivider />
         </ScrollView>
 
         {/* Submit */}
