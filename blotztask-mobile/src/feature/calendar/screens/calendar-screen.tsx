@@ -2,15 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import { useSelectedDayTaskStore } from "../../../shared/stores/selectedday-task-store";
-
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
-
 import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
-
 import { router } from "expo-router";
 import { theme } from "@/shared/constants/theme";
 import { useSelectedTaskStore } from "../../../shared/stores/selected-task-store";

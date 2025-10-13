@@ -2,13 +2,16 @@ import { View } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { useLogout } from "@/shared/hooks/uselogout";
+import { usePostHog } from "posthog-react-native";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const logout = useLogout();
+  const posthog = usePostHog();
 
   const handleSignOut = async () => {
     await logout();
+    posthog.reset();
     router.replace("/(auth)/onboarding");
   };
 
