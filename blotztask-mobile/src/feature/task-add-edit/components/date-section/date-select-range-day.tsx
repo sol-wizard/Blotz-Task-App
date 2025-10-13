@@ -2,7 +2,7 @@ import { View, Text, Pressable } from "react-native";
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Controller, Control } from "react-hook-form";
-import CalendarDatePicker from "./calendar-date-picker";
+import CalendarDatePicker from "../calendar-date-picker";
 import { TaskFormField } from "../../models/task-form-schema";
 
 interface DateSelectRangeDayProps {

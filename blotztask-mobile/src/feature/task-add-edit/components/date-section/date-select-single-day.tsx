@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Text, Pressable } from "react-native";
-import CalendarDatePicker from "./calendar-date-picker";
+import CalendarDatePicker from "../calendar-date-picker";
 import { Controller, Control, UseFormSetValue } from "react-hook-form";
 import { TaskFormField } from "../../models/task-form-schema";
 import { format } from "date-fns";

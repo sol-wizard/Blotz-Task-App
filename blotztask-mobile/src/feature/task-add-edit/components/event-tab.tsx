@@ -3,7 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import { format } from "date-fns";
 import { useState } from "react";
 
-import CalendarDatePicker from "./date-section/calendar-date-picker";
+import CalendarDatePicker from "./calendar-date-picker";
 
 type Props = {
   control: any;
