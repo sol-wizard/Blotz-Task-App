@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import {
