@@ -15,7 +15,6 @@ export const AiTaskGenerateModal = ({
   const [isVoiceInput, setIsVoiceInput] = useState(true);
   const { aiGeneratedMessage, sendMessage, modalType, setModalType, inputError, setInputError } =
     useAiTaskGenerator();
-
   const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
 
   switch (modalType) {
