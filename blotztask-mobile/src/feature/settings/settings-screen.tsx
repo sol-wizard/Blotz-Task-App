@@ -21,6 +21,13 @@ export default function SettingsScreen() {
       <Text variant="headlineMedium" style={{ marginBottom: 16 }}>
         Settings
       </Text>
+      <Button
+        mode="outlined"
+        style={{ marginTop: 16 }}
+        onPress={() => router.push("/(protected)/all-tasks")}
+      >
+        Go to All Tasks page
+      </Button>
       <Button mode="outlined" style={{ marginTop: 16 }} onPress={goToIdeasPage}>
         Go to Ideas page
       </Button>
