@@ -23,7 +23,7 @@ export const EventTab = ({ control }: Props) => {
             name="endDate"
             render={({ field: { onChange: onChangeEnd, value: endValue } }) => (
               <View>
-                <View className="flex-row justify-between mb-3">
+                <View className="flex-row justify-between mb-4">
                   <Text className="font-baloo text-secondary text-2xl mt-1">Start</Text>
                   <Pressable
                     onPress={() => setShowCalendar((prev) => !prev)}

@@ -43,7 +43,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     defaultValues: defaultValues,
   });
 
-  const { handleSubmit, formState, control } = form;
+  const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
 
   const startCombined = combineDateTime(defaultValues.startDate, defaultValues.startTime);
@@ -55,6 +55,15 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const handleFormSubmit = (data: TaskFormField) => {
     onSubmit(data);
+  };
+
+  const handleTabChange = (next: SegmentValue) => {
+    setIsActiveTab(next);
+
+    setValue("startDate", null);
+    setValue("startTime", null);
+    setValue("endDate", null);
+    setValue("endTime", null);
   };
 
   return (
@@ -84,7 +93,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           </View>
 
           <FormDivider />
-          <SegmentButton value={isActiveTab} setValue={setIsActiveTab} />
+          <SegmentButton value={isActiveTab} setValue={handleTabChange} />
 
           {isActiveTab === "reminder" && <ReminderTab control={control} />}
           {isActiveTab === "event" && <EventTab control={control} />}
