@@ -16,7 +16,8 @@ public class TaskController(
     GetFloatingTasksQueryHandler getFloatingTasksQueryHandler,
     GetOverdueTasksQueryHandler getOverdueTasksQueryHandler,
     DeleteTaskCommandHandler deleteTaskCommandHandler,
-    EditTaskCommandHandler editTaskCommandHandler
+    EditTaskCommandHandler editTaskCommandHandler,
+    GetAllTasksQueryHandler getAllTasksQueryHandler
 ) : ControllerBase
 {
     [HttpGet("{id}")]
@@ -74,6 +75,16 @@ public class TaskController(
 
         var result = await getOverdueTasksQueryHandler.Handle(query, ct);
         return result;
+    }
+
+    [HttpGet("all")]
+    public async Task<IEnumerable<AllTaskItemDto>> GetAllTasks(CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        var query = new GetAllTasksQuery { UserId = userId };
+        return await getAllTasksQueryHandler.Handle(query, ct);
     }
 
     [HttpPost]
