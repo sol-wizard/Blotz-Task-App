@@ -13,7 +13,7 @@ import { EventTab } from "./components/event-tab";
 import { SegmentButton } from "./components/segment-button";
 import { isEqual } from "date-fns";
 import { combineDateTime } from "./util/combine-date-time";
-import { SegmentValue } from "./models/segment-value";
+import { SegmentButtonValue } from "./models/segment-button-value";
 
 type TaskFormProps =
   | {
@@ -48,16 +48,16 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const startCombined = combineDateTime(defaultValues.startDate, defaultValues.startTime);
   const endCombined = combineDateTime(defaultValues.endDate, defaultValues.endTime);
-  const initialTab: SegmentValue =
+  const initialTab: SegmentButtonValue =
     !startCombined || !endCombined || isEqual(startCombined, endCombined) ? "reminder" : "event";
 
-  const [isActiveTab, setIsActiveTab] = useState<SegmentValue>(initialTab);
+  const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
 
   const handleFormSubmit = (data: TaskFormField) => {
     onSubmit(data);
   };
 
-  const handleTabChange = (next: SegmentValue) => {
+  const handleTabChange = (next: SegmentButtonValue) => {
     setIsActiveTab(next);
 
     setValue("startDate", null);

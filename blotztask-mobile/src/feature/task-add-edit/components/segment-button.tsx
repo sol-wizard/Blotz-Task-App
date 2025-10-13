@@ -1,10 +1,10 @@
 import { View } from "react-native";
 import { SegmentedButtons } from "react-native-paper";
-import { SegmentValue } from "../models/segment-value";
+import { SegmentButtonValue } from "../models/segment-button-value";
 
 interface SegmentButtonProps {
-  value: SegmentValue;
-  setValue: (v: SegmentValue) => void;
+  value: SegmentButtonValue;
+  setValue: (v: SegmentButtonValue) => void;
 }
 
 export const SegmentButton: React.FC<SegmentButtonProps> = ({ value, setValue }) => {
@@ -12,7 +12,7 @@ export const SegmentButton: React.FC<SegmentButtonProps> = ({ value, setValue })
     <View className="w-60 mb-6">
       <SegmentedButtons
         value={value}
-        onValueChange={(v) => setValue(v as SegmentValue)}
+        onValueChange={(v) => setValue(v as SegmentButtonValue)}
         buttons={
           [
             { value: "reminder", label: "Reminder" },
