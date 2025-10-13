@@ -67,8 +67,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   };
 
   return (
-    <FormProvider {...form}>
-      <View className="flex-1 relative bg-white">
+    <View className=" bg-white">
+      <FormProvider {...form}>
         <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Title */}
           <View className="mb-4 bg-white">
@@ -108,7 +108,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         </ScrollView>
 
         {/* Submit */}
-        <View className="px-8 py-6 mb-10">
+        <View className="px-8 py-6">
           <Pressable
             onPress={handleSubmit(handleFormSubmit)}
             disabled={!isValid || isSubmitting}
@@ -121,8 +121,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             </Text>
           </Pressable>
         </View>
-      </View>
-    </FormProvider>
+      </FormProvider>
+    </View>
   );
 };
 

@@ -3,6 +3,7 @@ import { BottomNavigation } from "react-native-paper";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import SettingsScreen from "@/feature/settings/settings-screen";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import TaskCreateScreen from "./task-create";
 
 const routes = [
   {
@@ -11,7 +12,12 @@ const routes = [
     focusedIcon: "calendar-text",
     unfocusedIcon: "calendar-blank",
   },
-
+  {
+    key: "taskcreate",
+    title: "Task Create",
+    focusedIcon: "plus",
+    unfocusedIcon: "plus",
+  },
   {
     key: "settings",
     title: "Setting",
@@ -22,12 +28,14 @@ const routes = [
 
 const CalendarRoute: any = () => <CalendarScreen />;
 const SettingsRoute = () => <SettingsScreen />;
+const TaskCreateRoute = () => <TaskCreateScreen />;
 
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
+    taskcreate: TaskCreateRoute,
     settings: SettingsRoute,
   });
 
