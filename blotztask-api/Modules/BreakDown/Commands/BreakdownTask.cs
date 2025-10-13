@@ -6,28 +6,28 @@ using BlotzTask.Modules.BreakDown.prompt;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-namespace BlotzTask.Modules.BreakDown.Queries;
-public class GetTaskBreakdownQuery
+namespace BlotzTask.Modules.BreakDown.Commands;
+public class BreakdownTaskCommand
 {
     [Required]
     public required int TaskId { get; init; }
 }
 
-public class BreakdownTaskQueryHandler(
-    ILogger<BreakdownTaskQueryHandler> logger,
+public class BreakdownTaskCommandHandler(
+    ILogger<BreakdownTaskCommandHandler> logger,
     GetTaskByIdQueryHandler getTaskByIdQueryHandler, 
     IChatCompletionService chatCompletionService) 
 {
-    public async Task<List<SubTask>> Handle(GetTaskBreakdownQuery query, CancellationToken ct = default)
+    public async Task<List<SubTask>> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
     {
-        logger.LogInformation("Breaking down task {TaskId}", query.TaskId);
+        logger.LogInformation("Breaking down task {TaskId}", command.TaskId);
         
-        var getTasksByIdquery = new GetTasksByIdQuery { TaskId = query.TaskId };
-        var task = await getTaskByIdQueryHandler.Handle(getTasksByIdquery, ct);
+        var query = new GetTasksByIdQuery { TaskId = command.TaskId };
+        var task = await getTaskByIdQueryHandler.Handle(query, ct);
 
         if (task == null)
         {
-            throw new ArgumentException($"Task with ID {query.TaskId} not found.");
+            throw new ArgumentException($"Task with ID {command.TaskId} not found.");
         }
         
         try
@@ -109,7 +109,7 @@ public class BreakdownTaskQueryHandler(
             logger.LogError(
                 ex,
                 "Unexpected error during BreakdownTask. TaskId: {TaskId}, Task: {@Task}, Exception: {Exception}, StackTrace: {StackTrace}, InnerException: {InnerException}",
-                query.TaskId,
+                command.TaskId,
                 task,
                 ex,
                 ex.StackTrace,

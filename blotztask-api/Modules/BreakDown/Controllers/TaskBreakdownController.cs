@@ -1,4 +1,4 @@
-using BlotzTask.Modules.BreakDown.Queries;
+using BlotzTask.Modules.BreakDown.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,28 +9,28 @@ namespace BlotzTask.Modules.BreakDown.Controllers;
 [Authorize]
 public class TaskBreakdownController : ControllerBase
 {
-    private readonly BreakdownTaskQueryHandler _breakdownTaskQueryHandler;
+    private readonly BreakdownTaskCommandHandler _breakdownTaskCommandHandler;
     private readonly ILogger<TaskBreakdownController> _logger;
 
     public TaskBreakdownController(
-        BreakdownTaskQueryHandler breakdownTaskQueryHandler,
+        BreakdownTaskCommandHandler breakdownTaskCommandHandler,
         ILogger<TaskBreakdownController> logger)
     {
-        _breakdownTaskQueryHandler = breakdownTaskQueryHandler;
+        _breakdownTaskCommandHandler = breakdownTaskCommandHandler;
         _logger = logger;
     }
 
-    [HttpGet("{taskId}")]
+    [HttpPost("{taskId}")]
     public async Task<List<SubTask>> BreakdownTask(string taskId, CancellationToken ct)
     {
         _logger.LogInformation("BreakdownTask called with taskId: {TaskId}", taskId);
 
-        var query = new GetTaskBreakdownQuery
+        var command = new BreakdownTaskCommand
         {
             TaskId = int.Parse(taskId)
         };
 
-        var result = await _breakdownTaskQueryHandler.Handle(query, ct);
+        var result = await _breakdownTaskCommandHandler.Handle(command, ct);
 
         return result;
     }
