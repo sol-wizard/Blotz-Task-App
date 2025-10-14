@@ -40,6 +40,7 @@ export const theme = {
     surfaceVariant: "#F5F9FA", // very light gray (alternative surface background)
     primary: "#8C8C8C", // medium gray (primary button background)
     secondary: "#D9D9D9",
+    tertiary: "#444964", // dark gray (default text on background)
     disabled: "#D1D1D6", // medium gray (disabled text for date figures not selected on calendar)
     onPrimary: "#FFFFFF", // white (text/icon on primary)
     onSurface: "#444964", // dark gray (default text on surface)
@@ -48,7 +49,7 @@ export const theme = {
     heading: "#000000", // pure black (headings / titles)
     warning: "#F56767", // soft red (warning state)
     fallback: "#f5f9fa", // grey fallback for tasks without labels
-    tertiary: "#444964", // dark gray (default text on background)
+    dashline: "#8c8c8c", // medium gray (default text on background)
   },
   fonts: configureFonts({ config: fonts }),
 };
