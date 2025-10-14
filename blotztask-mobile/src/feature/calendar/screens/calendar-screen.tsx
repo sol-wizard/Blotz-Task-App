@@ -14,6 +14,7 @@ import { TaskStatusSelect, TaskStatusType } from "../components/task-status-sele
 import TaskCard from "../components/task-card";
 import CalendarHeader from "../components/calendar-header";
 import { TaskListPlaceholder } from "../components/tasklist-placeholder";
+import { usePostHog } from "posthog-react-native";
 
 export default function CalendarScreen() {
   const {
@@ -31,7 +32,7 @@ export default function CalendarScreen() {
     visible: false,
     text: "",
   });
-
+  const posthog = usePostHog();
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus, overdueTasks);
@@ -42,6 +43,7 @@ export default function CalendarScreen() {
 
   useEffect(() => {
     loadTasks();
+    posthog.capture("user_load_calendar_screen");
   }, [selectedDay, selectedTask, loadTasks]);
 
   const navigateToTaskDetails = (task: TaskDetailDTO) => {
