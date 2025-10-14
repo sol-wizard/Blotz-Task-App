@@ -16,7 +16,6 @@ export const taskFormSchema = z
     (data) => {
       const start = combineDateTime(data.startDate, data.startTime);
       const end = combineDateTime(data.endDate, data.endTime);
-      console.log("start & end:", start, end);
       if (!start || !end) return true;
 
       return isBefore(start, end) || isEqual(start, end);

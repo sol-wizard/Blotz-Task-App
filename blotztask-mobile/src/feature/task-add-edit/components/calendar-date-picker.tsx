@@ -83,7 +83,6 @@ const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
       return;
     }
 
-    // 已有 start & end -> 开启新一轮选择
     setStartDate(day.dateString);
     setEndDate(null);
   };
@@ -91,7 +90,6 @@ const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
   const markedDates: MarkedDates = (() => {
     if (!startDate) return {};
 
-    // Single date selected → show as circle
     if (!endDate) {
       return {
         [startDate]: {
