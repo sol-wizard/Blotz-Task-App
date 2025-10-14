@@ -122,9 +122,13 @@ const SubtasksTab = () => {
     <View className="flex-1">
       {/* Top Action Bar */}
       <View className="flex-row justify-between items-center mb-4">
-        <TouchableOpacity onPress={handleRefresh} className="p-2">
-          <MaterialIcons name="sync" size={28} color={theme.colors.heading} />
-        </TouchableOpacity>
+        {isEditMode ? (
+          <View className="p-2 w-11 h-11" />
+        ) : (
+          <TouchableOpacity onPress={handleRefresh} className="p-2">
+            <MaterialIcons name="sync" size={28} color={theme.colors.heading} />
+          </TouchableOpacity>
+        )}
         {isEditMode ? (
           <TouchableOpacity
             onPress={handleEdit}
