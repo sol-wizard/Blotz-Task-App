@@ -71,11 +71,6 @@ export default function TimePicker({
       className="mx-auto w-[320px] rounded-xl overflow-hidden"
       style={{ height: itemHeight * visibleItemCount }}
     >
-      <View className="absolute left-0 right-0 top-1/2 -translate-y-1/2" pointerEvents="none">
-        <View className="mx-0 h-[0.5px] bg-[#cfd3df] my-[22px]" />
-        <View className="mx-0 h-[0.5px] bg-[#cfd3df] my-[22px]" />
-      </View>
-
       <View className="flex-1 flex-row items-center justify-center">
         <WheelPicker
           data={HOURS}
