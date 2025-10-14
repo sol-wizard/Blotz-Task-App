@@ -1,18 +1,30 @@
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { CustomRadioCheckbox } from "@/shared/components/ui/custom-radio-checkbox";
 import { convertSubtaskTimeForm } from "@/feature/breakdown/utils/convert-subtask-time-form";
 import { theme } from "@/shared/constants/theme";
+import { MaterialIcons } from "@expo/vector-icons";
 
 type SubtaskItemProps = {
   item: any;
   onToggle: (id: number) => void;
   color?: string;
+  isEditMode?: boolean;
+  onDelete?: (id: number) => void;
 };
 
-export default function SubtaskItem({ item: s, onToggle, color }: SubtaskItemProps) {
+export default function SubtaskItem({ item: s, onToggle, color, isEditMode = false, onDelete }: SubtaskItemProps) {
   return (
     <View className="relative flex-row items-center py-2.5">
-      <CustomRadioCheckbox checked={!!s?.isDone} onPress={() => onToggle(s.id)} color={color} />
+      {isEditMode ? (
+        <TouchableOpacity
+          onPress={() => onDelete?.(s.id)}
+          className="w-6 h-6 mr-4 items-center justify-center"
+        >
+          <MaterialIcons name="close" size={24} color={theme.colors.heading} />
+        </TouchableOpacity>
+      ) : (
+        <CustomRadioCheckbox checked={!!s?.isDone} onPress={() => onToggle(s.id)} color={color} />
+      )}
       
       <Text
         className="text-sm min-w-[50px]"
