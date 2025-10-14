@@ -74,8 +74,8 @@ const SubtasksTab = () => {
   const handleToggle = (id: number) => {
     setSubtasks((prev) =>
       prev.map((subtask) =>
-        subtask.id === id ? { ...subtask, isDone: !subtask.isDone } : subtask
-      )
+        subtask.id === id ? { ...subtask, isDone: !subtask.isDone } : subtask,
+      ),
     );
   };
 
@@ -95,23 +95,19 @@ const SubtasksTab = () => {
   };
 
   const handleDelete = (id: number) => {
-    Alert.alert(
-      "Delete Subtask",
-      "Are you sure you want to delete this subtask?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
+    Alert.alert("Delete Subtask", "Are you sure you want to delete this subtask?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          setSubtasks((prev) => prev.filter((subtask) => subtask.id !== id));
         },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            setSubtasks((prev) => prev.filter((subtask) => subtask.id !== id));
-          },
-        },
-      ]
-    );
+      },
+    ]);
   };
 
   if (subtasks.length === 0) {
@@ -152,12 +148,15 @@ const SubtasksTab = () => {
 
       {/* Subtasks List */}
       <View className="flex-1">
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 8 }}
+        >
           {subtasks.map((subtask) => (
-            <SubtaskItem 
-              key={subtask.id} 
-              item={subtask} 
-              onToggle={handleToggle} 
+            <SubtaskItem
+              key={subtask.id}
+              item={subtask}
+              onToggle={handleToggle}
               color={taskColor}
               isEditMode={isEditMode}
               onDelete={handleDelete}
@@ -178,7 +177,7 @@ const SubtasksTab = () => {
         >
           <Text
             className="py font-baloo"
-            style={{ 
+            style={{
               color: "#8BC34A",
               fontSize: 18,
               textAlign: "center",
@@ -202,7 +201,7 @@ const SubtasksTab = () => {
         >
           <Text
             className="py font-baloo"
-            style={{ 
+            style={{
               color: theme.colors.dashline,
               fontSize: 18,
               textAlign: "center",

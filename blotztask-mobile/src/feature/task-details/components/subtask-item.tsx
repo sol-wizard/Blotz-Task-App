@@ -12,7 +12,13 @@ type SubtaskItemProps = {
   onDelete?: (id: number) => void;
 };
 
-export default function SubtaskItem({ item: s, onToggle, color, isEditMode = false, onDelete }: SubtaskItemProps) {
+export default function SubtaskItem({
+  item: s,
+  onToggle,
+  color,
+  isEditMode = false,
+  onDelete,
+}: SubtaskItemProps) {
   return (
     <View className="relative flex-row items-center py-2.5">
       {isEditMode ? (
@@ -25,21 +31,19 @@ export default function SubtaskItem({ item: s, onToggle, color, isEditMode = fal
       ) : (
         <CustomRadioCheckbox checked={!!s?.isDone} onPress={() => onToggle(s.id)} color={color} />
       )}
-      
+
       <Text
         className="text-sm min-w-[50px]"
-        style={{ 
+        style={{
           color: theme.colors.heading,
-          fontWeight: "600"
+          fontWeight: "600",
         }}
       >
         {convertSubtaskTimeForm(s?.duration)}
       </Text>
 
       <Text
-        className={`flex-1 text-[15px] font-baloo ml-3 ${
-          s?.isDone ? "line-through" : ""
-        }`}
+        className={`flex-1 text-[15px] font-baloo ml-3 ${s?.isDone ? "line-through" : ""}`}
         style={{ color: s?.isDone ? theme.colors.disabled : theme.colors.tertiary }}
       >
         {s?.title}

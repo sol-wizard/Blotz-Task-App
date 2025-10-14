@@ -50,6 +50,8 @@ export const theme = {
     warning: "#F56767", // soft red (warning state)
     fallback: "#f5f9fa", // grey fallback for tasks without labels
     dashline: "#8c8c8c", // medium gray (default text on background)
+    taskItem: "#f5f9fa", 
+    taskItemTime: "#ebf0fe",
   },
   fonts: configureFonts({ config: fonts }),
 };
