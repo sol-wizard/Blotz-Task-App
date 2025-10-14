@@ -8,17 +8,20 @@ import * as Haptics from "expo-haptics";
 import { VoiceWaves } from "@/shared/components/common/voice-wave";
 
 export const VoiceInput = ({
+  text,
+  setText,
   hasError,
   sendMessage,
   setInputError,
   errorMessage,
 }: {
+  text: string;
+  setText: (v: string) => void;
   hasError: boolean;
   sendMessage: (v: string) => void;
   setInputError: (v: boolean) => void;
   errorMessage?: string;
 }) => {
-  const [text, setText] = useState("");
   const [language, setLanguage] = useState<"en" | "zh">("zh");
   const { startListening, partialText, stopAndGetText, isListening } = useVoiceInput({ language });
   const displayText = isListening
@@ -36,7 +39,7 @@ export const VoiceInput = ({
       setText(newText);
     }
     if (newText?.trim()) sendMessage(newText.trim());
-    setText("");
+
     setShowVoiceWave(false);
   };
 
@@ -91,6 +94,7 @@ export const VoiceInput = ({
       <View className="mt-6 items-center">
         <Pressable
           onLongPress={async () => {
+            setText("");
             setInputError(false);
             try {
               await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -98,6 +102,7 @@ export const VoiceInput = ({
               Vibration.vibrate(10);
             }
             setShowVoiceWave(true);
+
             await startListening();
           }}
           onPressOut={handleMicPressOut}
