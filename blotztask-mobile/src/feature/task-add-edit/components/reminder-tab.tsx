@@ -3,7 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import { format, parseISO } from "date-fns";
 import { useState } from "react";
 import { Calendar, DateData } from "react-native-calendars";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import TimePicker from "./time-picker";
 
 type Props = {
   control: any;
@@ -101,17 +101,7 @@ export const ReminderTab = ({ control }: Props) => {
               </View>
               <View className="items-center">
                 {showTimePicker && (
-                  <DateTimePicker
-                    value={value ?? new Date()}
-                    mode="time"
-                    display="spinner"
-                    onChange={(_, selectedDate) => {
-                      if (selectedDate) {
-                        handleChange(selectedDate);
-                      }
-                    }}
-                    textColor="#000"
-                  />
+                  <TimePicker value={value} onChange={(v: Date) => handleChange(v)} />
                 )}
               </View>
             </View>

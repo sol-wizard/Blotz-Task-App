@@ -12,8 +12,10 @@ export function mapFormToAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
 
   const taskTimeType = getTimeType(start, end);
 
-  if (taskTimeType === TaskTimeType.Range && isMultiDay(startDate, endDate)) {
+  if (taskTimeType === TaskTimeType.Range && isMultiDay(startDate, endDate) && startTime === null) {
     start?.setHours(0, 0, 0, 0);
+  }
+  if (taskTimeType === TaskTimeType.Range && isMultiDay(startDate, endDate) && endTime === null) {
     end?.setHours(23, 59, 0, 0);
   }
 

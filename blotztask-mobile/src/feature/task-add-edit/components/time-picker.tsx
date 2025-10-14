@@ -63,7 +63,6 @@ export default function TimePicker({
 
     const base = value ?? new Date();
     const out = mergeToDate(base, h, m, md);
-    console.log("combineWheelValue:", out);
     onChange?.(out);
   };
 

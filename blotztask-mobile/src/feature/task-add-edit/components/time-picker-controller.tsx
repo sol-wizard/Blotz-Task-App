@@ -19,7 +19,6 @@ export const TimePickerController = ({ control, name }: { control: any; name: st
           };
 
           const handleConfirm = () => {
-            console.log("time value:", value);
             setShowModal(false);
           };
 
@@ -55,9 +54,12 @@ export const TimePickerController = ({ control, name }: { control: any; name: st
                       </TouchableOpacity>
                       <TouchableOpacity
                         onPress={handleConfirm}
-                        className="px-4 py-2 rounded-lg bg-[##9AD513]"
+                        className={`px-4 py-2 rounded-lg ${value ? "bg-[#9AD513]" : "bg-gray-200"}`}
+                        disabled={value == null}
                       >
-                        <Text className="text-white font-medium">Confirm</Text>
+                        <Text className={`font-medium ${value ? "text-white" : "text-black"}`}>
+                          Confirm
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   </View>
