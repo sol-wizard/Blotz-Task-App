@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
+import { fetchUserProfile } from "@/shared/services/user-service";
+import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
@@ -15,9 +17,18 @@ export default function Index() {
   const checkAuthStatus = async () => {
     try {
       const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
-      setIsAuthenticated(!!token);
+
+      if (!token) {
+        setIsAuthenticated(false);
+        return;
+      }
+
+      // Prefetch data for authenticated users
+      await Promise.all([fetchUserProfile(), useSelectedDayTaskStore.getState().loadTasks()]);
+
+      setIsAuthenticated(true);
     } catch (error) {
-      console.error("Error checking auth status:", error);
+      console.error("Error during initialization:", error);
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
@@ -32,10 +43,5 @@ export default function Index() {
     );
   }
 
-  if (isAuthenticated) {
-    return <Redirect href="/(protected)" />;
-  }
-
-  // Show onboarding screen for unauthenticated users
-  return <Redirect href="/(auth)/onboarding" />;
+  return <Redirect href={isAuthenticated ? "/(protected)" : "/(auth)/onboarding"} />;
 }

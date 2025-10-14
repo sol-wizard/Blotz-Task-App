@@ -6,6 +6,7 @@ import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-ta
 import { useRouter } from "expo-router";
 import { Text } from "react-native";
 import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
+import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
 
 const TaskEditScreen = () => {
   const { selectedTask, setSelectedTask } = useSelectedTaskStore();
@@ -36,6 +37,7 @@ const TaskEditScreen = () => {
       const updatedTask = await fetchTaskById(selectedTask.id);
       if (updatedTask) {
         setSelectedTask(updatedTask);
+        useSelectedDayTaskStore.getState().updateTaskInStore(updatedTask);
         router.back();
       }
 

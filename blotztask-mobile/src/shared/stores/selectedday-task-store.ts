@@ -20,6 +20,7 @@ interface SelectedDayTaskStore {
   toggleTask: (taskId: number) => Promise<void>;
   removeTask: (taskId: number) => Promise<void>;
   overdueTasks: TaskDetailDTO[];
+  updateTaskInStore: (updatedTask: TaskDetailDTO) => void;
 }
 
 export const useSelectedDayTaskStore = create<SelectedDayTaskStore>((set, get) => ({
@@ -27,7 +28,10 @@ export const useSelectedDayTaskStore = create<SelectedDayTaskStore>((set, get) =
   tasksForSelectedDay: [],
   overdueTasks: [],
   isLoading: false,
-  setSelectedDay: (day) => set({ selectedDay: day }),
+  setSelectedDay: async (day) => {
+    set({ selectedDay: day });
+    await get().loadTasks();
+  },
 
   loadTasks: async () => {
     const { selectedDay } = get();
@@ -64,5 +68,13 @@ export const useSelectedDayTaskStore = create<SelectedDayTaskStore>((set, get) =
   removeTask: async (taskId) => {
     await deleteTask(taskId);
     await get().loadTasks();
+  },
+
+  updateTaskInStore: (updatedTask: TaskDetailDTO) => {
+    set((state) => ({
+      tasksForSelectedDay: state.tasksForSelectedDay.map((t) =>
+        t.id === updatedTask.id ? updatedTask : t,
+      ),
+    }));
   },
 }));
