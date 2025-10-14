@@ -18,7 +18,7 @@ function TaskCreateScreen() {
       const dto = mapFormToAddTaskItemDTO(formValues);
       addTask(dto);
 
-      router.back();
+      router.push("/(protected)");
       console.log("Task created successfully");
     } catch (error) {
       console.error("Failed to create task:", error);
