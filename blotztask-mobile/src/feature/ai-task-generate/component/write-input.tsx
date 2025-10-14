@@ -5,18 +5,20 @@ import { useState } from "react";
 import { View, Text, Image, Keyboard } from "react-native";
 
 export const WriteInput = ({
+  text,
+  setText,
   sheetRef,
   hasError,
   sendMessage,
   errorMessage,
 }: {
+  text: string;
+  setText: (v: string) => void;
   sheetRef: React.RefObject<BottomSheetModal | null>;
   hasError: boolean;
   sendMessage: (v: string) => void;
   errorMessage?: string;
 }) => {
-  const [text, setText] = useState("");
-
   const sendAndDismiss = (msg: string) => {
     const val = msg.trim();
     if (!val) return;

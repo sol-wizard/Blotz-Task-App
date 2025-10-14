@@ -9,18 +9,23 @@ import { BottomSheetType } from "../models/bottom-sheet-type";
 import { ScrollView } from "react-native-gesture-handler";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { usePostHog } from "posthog-react-native";
+import { AiResultMessageDTO } from "../models/ai-result-message";
+import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 
 export function AiTasksPreview({
-  tasks,
+  aiMessage,
   setModalType,
   isVoiceInput,
+  userInput,
 }: {
-  tasks?: AiTaskDTO[];
+  aiMessage?: AiResultMessageDTO;
   setModalType: (v: BottomSheetType) => void;
   isVoiceInput: boolean;
+  userInput: string;
 }) {
   const { addTask } = useSelectedDayTaskStore();
-  const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(tasks ?? []);
+  const aiGeneratedTasks = aiMessage?.extractedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
+  const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiGeneratedTasks ?? []);
   const posthog = usePostHog();
   const isVoiceInputRef = useRef(isVoiceInput);
   const finishedRef = useRef<boolean>(false);
@@ -46,9 +51,11 @@ export function AiTasksPreview({
       finishedRef.current = true;
 
       posthog.capture("ai_task_interaction_completed", {
-        ai_generate_task_count: tasks?.length ?? 0,
-        outcome: "accepted",
+        ai_output: JSON.stringify(aiMessage),
+        user_input: userInput,
+        ai_generate_task_count: aiGeneratedTasks?.length ?? 0,
         user_add_task_count: payloads.length ?? 0,
+        outcome: "accepted",
         is_voice_input: isVoiceInput,
       });
 
@@ -62,7 +69,9 @@ export function AiTasksPreview({
   const handleGoBack = () => {
     setModalType("input");
     posthog.capture("ai_task_interaction_completed", {
-      ai_generate_task_count: tasks?.length ?? 0,
+      ai_output: JSON.stringify(aiMessage),
+      user_input: userInput,
+      ai_generate_task_count: aiGeneratedTasks?.length ?? 0,
       outcome: "go_back",
       user_add_task_count: 0,
       is_voice_input: isVoiceInput,
@@ -73,9 +82,11 @@ export function AiTasksPreview({
     return () => {
       if (!finishedRef.current) {
         posthog.capture("ai_task_interaction_completed", {
+          ai_output: JSON.stringify(aiMessage),
+          user_input: userInput,
           outcome: "abandoned",
           is_voice_input: isVoiceInput,
-          ai_generated_task_count: tasks?.length ?? 0,
+          ai_generated_task_count: aiGeneratedTasks?.length ?? 0,
           user_add_task_count: 0,
         });
       }
