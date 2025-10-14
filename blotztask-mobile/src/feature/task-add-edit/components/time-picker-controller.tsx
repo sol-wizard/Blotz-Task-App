@@ -57,9 +57,7 @@ export const TimePickerController = ({ control, name }: { control: any; name: st
                         className={`px-4 py-2 rounded-lg ${value ? "bg-[#9AD513]" : "bg-gray-200"}`}
                         disabled={value == null}
                       >
-                        <Text className={`font-medium ${value ? "text-white" : "text-black"}`}>
-                          Confirm
-                        </Text>
+                        <Text className="text-white font-medium">Confirm</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
