@@ -1,9 +1,12 @@
 import { Controller } from "react-hook-form";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, TouchableOpacity } from "react-native";
 import { format, startOfDay } from "date-fns";
 import { useState } from "react";
 
 import CalendarDatePicker from "./calendar-date-picker";
+import TimePicker from "./time-picker";
+import Modal from "react-native-modal";
+import { TimePickerController } from "./time-picker-controller";
 
 type Props = {
   control: any;
@@ -11,6 +14,8 @@ type Props = {
 
 export const EventTab = ({ control }: Props) => {
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
 
   return (
     <View>
@@ -25,25 +30,36 @@ export const EventTab = ({ control }: Props) => {
               <View>
                 <View className="flex-row justify-between mb-4">
                   <Text className="font-baloo text-secondary text-2xl mt-1">Start</Text>
-                  <Pressable
-                    onPress={() => setShowCalendar((prev) => !prev)}
-                    className="bg-background px-4 py-2 rounded-xl"
-                  >
-                    <Text className="text-xl font-baloo text-secondary">
-                      {startValue ? format(startValue, "MMM dd, yyyy") : "Select Date"}
-                    </Text>
-                  </Pressable>
+
+                  <View className="flex-row">
+                    <Pressable
+                      onPress={() => setShowCalendar((prev) => !prev)}
+                      className="bg-background px-4 py-2 rounded-xl mr-2"
+                    >
+                      <Text className="text-xl font-baloo text-secondary">
+                        {startValue ? format(startValue, "MMM dd, yyyy") : "Select Date"}
+                      </Text>
+                    </Pressable>
+
+                    <TimePickerController control={control} name="startTime" />
+                  </View>
                 </View>
+
                 <View className="flex-row justify-between">
                   <Text className="font-baloo text-secondary text-2xl mt-1">End</Text>
-                  <Pressable
-                    onPress={() => setShowCalendar((prev) => !prev)}
-                    className="bg-background px-4 py-2 rounded-xl"
-                  >
-                    <Text className="text-xl font-baloo text-secondary">
-                      {endValue ? format(endValue, "MMM dd, yyyy") : "Select Date"}
-                    </Text>
-                  </Pressable>
+
+                  <View className="flex-row">
+                    <Pressable
+                      onPress={() => setShowCalendar((prev) => !prev)}
+                      className="bg-background px-4 py-2 rounded-xl mr-2"
+                    >
+                      <Text className="text-xl font-baloo text-secondary">
+                        {endValue ? format(endValue, "MMM dd, yyyy") : "Select Date"}
+                      </Text>
+                    </Pressable>
+
+                    <TimePickerController control={control} name="endTime" />
+                  </View>
                 </View>
 
                 <CalendarDatePicker
