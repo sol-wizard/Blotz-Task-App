@@ -1,11 +1,8 @@
 import { Controller } from "react-hook-form";
-import { View, Text, Pressable, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { format, startOfDay } from "date-fns";
 import { useState } from "react";
-
 import CalendarDatePicker from "./calendar-date-picker";
-import TimePicker from "./time-picker";
-import Modal from "react-native-modal";
 import { TimePickerController } from "./time-picker-controller";
 
 type Props = {
@@ -14,8 +11,6 @@ type Props = {
 
 export const EventTab = ({ control }: Props) => {
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
-  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
 
   return (
     <View>
