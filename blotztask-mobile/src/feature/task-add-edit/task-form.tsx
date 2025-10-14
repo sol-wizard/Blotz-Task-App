@@ -67,7 +67,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   };
 
   return (
-    <View className=" bg-white">
+    <View className="flex-1 bg-white">
       <FormProvider {...form}>
         <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Title */}

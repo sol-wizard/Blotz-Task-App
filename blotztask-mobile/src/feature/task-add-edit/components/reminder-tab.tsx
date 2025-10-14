@@ -1,4 +1,4 @@
-import { Controller, useFormContext } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { View, Text, Pressable } from "react-native";
 import { format, parseISO } from "date-fns";
 import { useState } from "react";
@@ -14,8 +14,6 @@ export const ReminderTab = ({ control }: Props) => {
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-
-  const { setValue } = useFormContext();
 
   return (
     <View className="mb-4">
