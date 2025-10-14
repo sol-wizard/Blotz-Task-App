@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Text } from "react-native";
 import WheelPicker, { type PickerItem } from "@quidone/react-native-wheel-picker";
 
