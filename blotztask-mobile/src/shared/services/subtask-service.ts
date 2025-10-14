@@ -1,6 +1,31 @@
 import { AddSubtaskDTO } from "@/feature/breakdown/models/add-subtask-dto";
 import { SubtaskDTO } from "../../feature/breakdown/models/subtask-dto";
 import { fetchWithAuth } from "./fetch-with-auth";
+import { BreakdownSubtaskDTO } from "@/feature/breakdown/models/breakdown-subtask-dto";
+
+export const createBreakDownSubtasks = async (taskId: number) => {
+  if (!taskId) return;
+
+  try {
+    const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/TaskBreakdown/${taskId}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.error("Failed to fetch subtasks", response.statusText);
+      return;
+    }
+
+    const data: BreakdownSubtaskDTO[] = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching subtasks:", error);
+  }
+};
 
 export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   const taskId = newSubtask.taskId;
