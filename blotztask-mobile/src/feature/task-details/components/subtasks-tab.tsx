@@ -107,10 +107,14 @@ const SubtasksTab = () => {
       {/* Top Action Bar */}
       <View className="flex-row justify-between items-center mb-4">
         <TouchableOpacity onPress={handleRefresh} className="p-2">
-          <MaterialIcons name="refresh" size={28} color={theme.colors.heading} />
+          <MaterialIcons name="sync" size={28} color={theme.colors.heading} />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleEdit} className="p-2">
-          <MaterialIcons name="edit" size={24} color={theme.colors.heading} />
+        <TouchableOpacity
+          onPress={handleEdit}
+          className="w-10 h-10 rounded-full items-center justify-center"
+          style={{ backgroundColor: theme.colors.heading }}
+        >
+          <MaterialIcons name="edit" size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
