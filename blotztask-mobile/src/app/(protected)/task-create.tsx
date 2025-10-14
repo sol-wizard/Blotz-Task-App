@@ -18,8 +18,7 @@ const TaskCreateScreen = () => {
       setIsSubmitting(true);
 
       const dto = mapFormToAddTaskItemDTO(formValues);
-      addTask(dto);
-      posthog.capture("manual_task_creation");
+      await addTask(dto);
 
       router.back();
       console.log("Task created successfully");

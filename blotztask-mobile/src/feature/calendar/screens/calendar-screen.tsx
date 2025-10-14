@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -21,12 +21,11 @@ export default function CalendarScreen() {
     tasksForSelectedDay,
     isLoading,
     setSelectedDay,
-    loadTasks,
     toggleTask,
     removeTask,
     overdueTasks,
   } = useSelectedDayTaskStore();
-  const { selectedTask, setSelectedTask } = useSelectedTaskStore();
+  const { setSelectedTask } = useSelectedTaskStore();
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
     text: "",
@@ -38,10 +37,6 @@ export default function CalendarScreen() {
     tasks: tasksForSelectedDay,
     overdueTaskCount: overdueTasks.length,
   });
-
-  useEffect(() => {
-    loadTasks();
-  }, [selectedDay, selectedTask, loadTasks]);
 
   const navigateToTaskDetails = (task: TaskDetailDTO) => {
     setSelectedTask(task);

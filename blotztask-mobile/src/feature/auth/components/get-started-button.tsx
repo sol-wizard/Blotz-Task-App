@@ -25,7 +25,6 @@ export default function GetStartedButton() {
 
         if (user) {
           posthog.identify(user.sub);
-          console.log("PostHog identify success:", user.sub);
         }
 
         router.replace("/(protected)");
