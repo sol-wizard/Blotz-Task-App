@@ -68,19 +68,24 @@ const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
     if (!startDate) {
       setStartDate(day.dateString);
       setEndDate(null);
-    } else if (!endDate) {
-      if (day.dateString === startDate) return;
+      return;
+    }
 
-      if (isAfter(parseISO(day.dateString), parseISO(startDate))) {
+    if (!endDate) {
+      if (day.dateString === startDate) {
+        setEndDate(startDate);
+      } else if (isAfter(parseISO(day.dateString), parseISO(startDate))) {
         setEndDate(day.dateString);
       } else {
         setStartDate(day.dateString);
         setEndDate(null);
       }
-    } else {
-      setStartDate(day.dateString);
-      setEndDate(null);
+      return;
     }
+
+    // 已有 start & end -> 开启新一轮选择
+    setStartDate(day.dateString);
+    setEndDate(null);
   };
 
   const markedDates: MarkedDates = (() => {

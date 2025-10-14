@@ -30,7 +30,7 @@ export const TimePickerController = ({ control, name }: { control: any; name: st
                   className="bg-background px-4 py-2 rounded-xl"
                 >
                   <Text className="text-xl font-baloo text-secondary ">
-                    {value ? format(value, "hh:mm a") : "Select time"}
+                    {value ? format(value, "hh:mm a") : "Select Time"}
                   </Text>
                 </Pressable>
               </View>
