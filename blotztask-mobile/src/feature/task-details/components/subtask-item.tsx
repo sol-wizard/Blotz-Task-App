@@ -1,16 +1,17 @@
 import { View, Text } from "react-native";
-import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
+import { CustomRadioCheckbox } from "@/shared/components/ui/custom-radio-checkbox";
 import { convertSubtaskTimeForm } from "@/feature/breakdown/utils/convert-subtask-time-form";
 
 type SubtaskItemProps = {
   item: any;
   onToggle: (id: number) => void;
+  color?: string;
 };
 
-export default function SubtaskItem({ item: s, onToggle }: SubtaskItemProps) {
+export default function SubtaskItem({ item: s, onToggle, color }: SubtaskItemProps) {
   return (
     <View className="relative flex-row items-start py-4">
-      <CustomCheckbox checked={!!s?.isDone} onPress={() => onToggle(s.id)} />
+      <CustomRadioCheckbox checked={!!s?.isDone} onPress={() => onToggle(s.id)} color={color} />
 
       <View className="flex-1 ml-2">
         <View className="flex-row items-center justify-between">

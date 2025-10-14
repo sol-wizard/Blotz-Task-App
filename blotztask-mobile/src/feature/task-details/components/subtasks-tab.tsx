@@ -1,8 +1,71 @@
-import { Text } from "react-native";
-import React from "react";
+import { View, Text, ScrollView } from "react-native";
+import React, { useState } from "react";
+import SubtaskItem from "./subtask-item";
+import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
+import { theme } from "@/shared/constants/theme";
+
+// Mock data for subtasks
+const MOCK_SUBTASKS = [
+  {
+    id: 1,
+    title: "Research user requirements",
+    description: "Gather and analyze user feedback",
+    duration: "02:00:00",
+    isDone: true,
+  },
+  {
+    id: 2,
+    title: "Design mockups",
+    description: "Create wireframes and high-fidelity designs",
+    duration: "03:30:00",
+    isDone: false,
+  },
+  {
+    id: 3,
+    title: "Implement frontend components",
+    description: "Build React components for the UI",
+    duration: "05:00:00",
+    isDone: false,
+  },
+  {
+    id: 4,
+    title: "Write unit tests",
+    description: "Test all new components",
+    duration: "01:30:00",
+    isDone: false,
+  },
+];
 
 const SubtasksTab = () => {
-  return <Text>Subtasks content here</Text>;
+  const [subtasks, setSubtasks] = useState(MOCK_SUBTASKS);
+  const { selectedTask } = useSelectedTaskStore();
+  const taskColor = selectedTask?.label?.color ?? theme.colors.disabled;
+
+  const handleToggle = (id: number) => {
+    setSubtasks((prev) =>
+      prev.map((subtask) =>
+        subtask.id === id ? { ...subtask, isDone: !subtask.isDone } : subtask
+      )
+    );
+  };
+
+  if (subtasks.length === 0) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-base font-baloo text-tertiary">No subtasks yet</Text>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <View className="pb-4">
+        {subtasks.map((subtask) => (
+          <SubtaskItem key={subtask.id} item={subtask} onToggle={handleToggle} color={taskColor} />
+        ))}
+      </View>
+    </ScrollView>
+  );
 };
 
 export default SubtasksTab;
