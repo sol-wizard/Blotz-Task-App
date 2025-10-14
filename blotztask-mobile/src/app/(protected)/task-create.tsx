@@ -16,7 +16,7 @@ function TaskCreateScreen() {
       setIsSubmitting(true);
 
       const dto = mapFormToAddTaskItemDTO(formValues);
-      addTask(dto);
+      await addTask(dto);
 
       router.push("/(protected)");
       console.log("Task created successfully");
