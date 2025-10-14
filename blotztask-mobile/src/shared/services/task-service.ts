@@ -2,7 +2,6 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
 import { EditTaskItemDTO } from "../../feature/task-add-edit/models/edit-task-item-dto";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
-import { usePostHog } from "posthog-react-native";
 
 export async function fetchTasksForDate(
   date: Date,
