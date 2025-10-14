@@ -2,9 +2,9 @@
 
 namespace BlotzTask.Modules.BreakDown.DTOs;
 
-public class BreakdownTasksWrapper
+public class GeneratedSubTaskList
 {
     [JsonPropertyName("subtasks")]
-    public List<SubTaskWrapper> Subtasks { get; set; } = new();
+    public List<GeneratedSubTask> Subtasks { get; set; } = new();
 
 }
