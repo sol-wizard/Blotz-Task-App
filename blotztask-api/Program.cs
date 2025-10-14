@@ -4,8 +4,6 @@ using BlotzTask.Extension;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Middleware;
 using BlotzTask.Modules.BreakDown;
-using BlotzTask.Modules.BreakDown.Plugins;
-using BlotzTask.Modules.BreakDown.Services;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.Labels;
@@ -37,7 +35,7 @@ builder.Services.AddSingleton<IChatHistoryManagerService, ChatHistoryManagerServ
 builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
 
 
-builder.Services.AddScoped<ITaskBreakdownService, TaskBreakdownService>();
+
 builder.Services.AddSingleton(new ChatHistoryStore(
     TimeSpan.FromMinutes(30), // Sessions expire after 30 minutes of inactivity
     TimeSpan.FromMinutes(5) // Scanning every 5 minutes
@@ -46,6 +44,7 @@ builder.Services.AddSingleton(new ChatHistoryStore(
 builder.Services.AddTaskModule();
 builder.Services.AddUserModule();
 builder.Services.AddLabelModule();
+builder.Services.AddTaskBreakdownModule();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -98,9 +97,6 @@ builder.Services.AddSingleton<Kernel>(sp =>
         apiKey
     );
 
-    
-    kernelBuilder.Plugins.AddFromObject(new TaskBreakdownPlugin(), "TaskBreakdownPlugin");
-
     return kernelBuilder.Build();
 });
 
@@ -149,6 +145,5 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 app.MapHub<AiTaskGenerateChatHub>("/ai-task-generate-chathub");
-app.MapHub<AiTaskBreakDownChat>("/ai-task-breakdown-chathub");
 app.Lifetime.ApplicationStopped.Register(Log.CloseAndFlush);
 app.Run();
