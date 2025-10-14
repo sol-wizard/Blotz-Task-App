@@ -60,15 +60,31 @@ export default function TaskDetailsScreen() {
       <View className="flex-1 pt-6 px-6 bg-white rounded-t-[3rem]">
         <View className="flex-row justify-around mb-6">
           <TouchableOpacity onPress={() => setActiveTab("Details")} className="flex-1 items-center">
-            <Text className={"text-lg font-balooBold pb-3"}>Details</Text>
-            {activeTab === "Details" && <View className="w-full h-1 bg-blue-100 rounded-full" />}
+            <Text 
+              className={"text-lg font-balooBold pb-3"}
+              style={{ color: activeTab === "Details" ? theme.colors.onSurface : theme.colors.primary }}
+            >
+              Details
+            </Text>
+            <View 
+              className="w-full h-1 rounded-full" 
+              style={{ backgroundColor: activeTab === "Details" ? theme.colors.onSurface : theme.colors.disabled }}
+            />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setActiveTab("Subtasks")}
             className="flex-1 items-center"
           >
-            <Text className={"text-lg font-balooBold pb-3"}>Subtasks</Text>
-            {activeTab === "Subtasks" && <View className="w-full h-1 bg-blue-100 rounded-full" />}
+            <Text 
+              className={"text-lg font-balooBold pb-3"}
+              style={{ color: activeTab === "Subtasks" ? theme.colors.onSurface : theme.colors.primary }}
+            >
+              Subtasks
+            </Text>
+            <View 
+              className="w-full h-1 rounded-full" 
+              style={{ backgroundColor: activeTab === "Subtasks" ? theme.colors.onSurface : theme.colors.disabled }}
+            />
           </TouchableOpacity>
         </View>
 

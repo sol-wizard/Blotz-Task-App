@@ -26,7 +26,7 @@ export default function SubtaskItem({
           onPress={() => onDelete?.(s.id)}
           className="w-6 h-6 mr-4 items-center justify-center"
         >
-          <MaterialIcons name="close" size={24} color={theme.colors.heading} />
+          <MaterialIcons name="close" size={24} color={theme.colors.toBeDeleted} />
         </TouchableOpacity>
       ) : (
         <CustomRadioCheckbox checked={!!s?.isDone} onPress={() => onToggle(s.id)} color={color} />
@@ -44,7 +44,7 @@ export default function SubtaskItem({
 
       <Text
         className={`flex-1 text-[15px] font-baloo ml-3 ${s?.isDone ? "line-through" : ""}`}
-        style={{ color: s?.isDone ? theme.colors.disabled : theme.colors.tertiary }}
+        style={{ color: s?.isDone ? theme.colors.disabled : theme.colors.onSurface }}
       >
         {s?.title}
       </Text>
