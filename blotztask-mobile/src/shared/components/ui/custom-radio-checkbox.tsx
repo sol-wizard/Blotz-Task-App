@@ -12,7 +12,7 @@ export const CustomRadioCheckbox = ({ checked, onPress, color }: CustomRadioChec
 
   return (
     <Pressable
-      className="w-8 h-8 rounded-full border-[3px] mr-3 items-center justify-center"
+      className="w-6 h-6 rounded-full border-2 mr-4 items-center justify-center"
       style={{
         borderColor: checked ? activeColor : theme.colors.disabled,
       }}
@@ -20,7 +20,7 @@ export const CustomRadioCheckbox = ({ checked, onPress, color }: CustomRadioChec
     >
       {checked && (
         <View
-          className="w-4 h-4 rounded-full"
+          className="w-3 h-3 rounded-full"
           style={{ backgroundColor: activeColor }}
         />
       )}

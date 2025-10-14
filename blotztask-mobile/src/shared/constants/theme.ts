@@ -48,6 +48,7 @@ export const theme = {
     heading: "#000000", // pure black (headings / titles)
     warning: "#F56767", // soft red (warning state)
     fallback: "#f5f9fa", // grey fallback for tasks without labels
+    tertiary: "#444964", // dark gray (default text on background)
   },
   fonts: configureFonts({ config: fonts }),
 };
