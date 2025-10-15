@@ -6,6 +6,9 @@ import Animated, {
   withSpring,
   runOnJS,
   useAnimatedGestureHandler,
+  withDelay,
+  withTiming,
+  useDerivedValue,
 } from "react-native-reanimated";
 import { 
   PanGestureHandler, 
@@ -35,6 +38,8 @@ type DraggableItemProps = {
   onDragEnd: () => void;
   draggingIndex: number;
   itemHeight: number;
+  draggingIndexShared: Animated.SharedValue<number>;
+  targetIndexShared: Animated.SharedValue<number>;
 };
 
 const ITEM_HEIGHT = 65; // Approximate height of each subtask item
@@ -52,14 +57,44 @@ function DraggableItem({
   onDragEnd,
   draggingIndex,
   itemHeight,
+  draggingIndexShared,
+  targetIndexShared,
 }: DraggableItemProps) {
   const translateY = useSharedValue(0);
-  const offsetY = useSharedValue(0);
   const scale = useSharedValue(1);
   const isDragging = useSharedValue(false);
   
   const longPressRef = useRef(null);
   const panRef = useRef(null);
+
+  // Calculate offset based on drag state - items make space immediately
+  const offsetY = useDerivedValue(() => {
+    const currentDraggingIndex = draggingIndexShared.value;
+    const currentTargetIndex = targetIndexShared.value;
+    
+    // If not dragging or this is the dragged item, no offset
+    if (currentDraggingIndex === -1 || index === currentDraggingIndex) {
+      return 0;
+    }
+    
+    // Dragging DOWN (e.g., from 1 to 3): items 2,3 move UP to make space at position 3
+    if (currentDraggingIndex < currentTargetIndex) {
+      if (index > currentDraggingIndex && index <= currentTargetIndex) {
+        console.log(`Item ${index}: Moving UP (dragging ${currentDraggingIndex} -> ${currentTargetIndex})`);
+        return -itemHeight;
+      }
+    }
+    // Dragging UP (e.g., from 3 to 1): items 1,2 move DOWN to make space at position 1
+    else if (currentDraggingIndex > currentTargetIndex) {
+      if (index >= currentTargetIndex && index < currentDraggingIndex) {
+        console.log(`Item ${index}: Moving DOWN (dragging ${currentDraggingIndex} -> ${currentTargetIndex})`);
+        return itemHeight;
+      }
+    }
+    
+    // No offset needed for this item
+    return 0;
+  });
 
   const handleLongPress = (event: any) => {
     'worklet';
@@ -78,7 +113,8 @@ function DraggableItem({
       // Only process pan gestures if drag mode is activated (after long press)
       if (isEditMode && isDragging.value) {
         translateY.value = ctx.startY + event.translationY;
-        runOnJS(onDragMove)(index, event.absoluteY);
+        // Pass translationY instead of absoluteY
+        runOnJS(onDragMove)(index, event.translationY);
       }
     },
     onEnd: () => {
@@ -92,10 +128,16 @@ function DraggableItem({
   });
 
   const animatedStyle = useAnimatedStyle(() => {
-    const zIndex = isDragging.value ? 999 : index === draggingIndex ? 999 : 1;
+    const zIndex = isDragging.value ? 999 : index === draggingIndexShared.value ? 999 : 1;
+    
+    // Apply smooth animation to the offset
+    const animatedOffset = isDragging.value 
+      ? translateY.value 
+      : withTiming(offsetY.value, { duration: 300 });
+    
     return {
       transform: [
-        { translateY: translateY.value },
+        { translateY: animatedOffset },
         { scale: scale.value },
       ],
       zIndex,
@@ -159,31 +201,43 @@ export default function DraggableSubtaskList({
   onReorder,
 }: DraggableSubtaskListProps) {
   const [draggingIndex, setDraggingIndex] = useState(-1);
-  const dragStartY = useSharedValue(0);
-  const dragCurrentY = useSharedValue(0);
+  const draggingIndexShared = useSharedValue(-1);
+  const targetIndexShared = useSharedValue(-1);
+  const finalTranslationY = useSharedValue(0);
 
   const handleDragStart = (index: number) => {
     setDraggingIndex(index);
-    dragStartY.value = index * ITEM_HEIGHT;
+    draggingIndexShared.value = index;
+    targetIndexShared.value = index;
+    // Don't set dragStartY here, it will be set in the gesture handler
   };
 
-  const handleDragMove = (fromIndex: number, absoluteY: number) => {
-    dragCurrentY.value = absoluteY;
+  const handleDragMove = (fromIndex: number, translationY: number) => {
+    // translationY is the distance moved from the starting point
+    finalTranslationY.value = translationY;
+    const indexDiff = Math.round(translationY / ITEM_HEIGHT);
+    const newTargetIndex = Math.max(0, Math.min(subtasks.length - 1, fromIndex + indexDiff));
+    
+    // Update target index immediately so other items can react
+    targetIndexShared.value = newTargetIndex;
+    console.log(`Dragging from ${fromIndex}, translation: ${translationY.toFixed(0)}, indexDiff: ${indexDiff}, target: ${newTargetIndex}`);
   };
 
   const handleDragEnd = () => {
     if (draggingIndex !== -1) {
-      const movedDistance = dragCurrentY.value - dragStartY.value;
-      const indexDiff = Math.round(movedDistance / ITEM_HEIGHT);
+      const indexDiff = Math.round(finalTranslationY.value / ITEM_HEIGHT);
       const newIndex = Math.max(0, Math.min(subtasks.length - 1, draggingIndex + indexDiff));
+      
+      console.log(`Drag end: from ${draggingIndex} to ${newIndex}`);
       
       if (newIndex !== draggingIndex) {
         onReorder(draggingIndex, newIndex);
       }
     }
     setDraggingIndex(-1);
-    dragStartY.value = 0;
-    dragCurrentY.value = 0;
+    draggingIndexShared.value = -1;
+    targetIndexShared.value = -1;
+    finalTranslationY.value = 0;
   };
 
   return (
@@ -202,6 +256,8 @@ export default function DraggableSubtaskList({
           onDragEnd={handleDragEnd}
           draggingIndex={draggingIndex}
           itemHeight={ITEM_HEIGHT}
+          draggingIndexShared={draggingIndexShared}
+          targetIndexShared={targetIndexShared}
         />
       ))}
     </View>
