@@ -20,7 +20,13 @@ export default function SubtaskItem({
   onDelete,
 }: SubtaskItemProps) {
   return (
-    <View className="relative flex-row items-center py-2.5">
+    <View 
+      className="relative flex-row items-center py-2.5 px-3 mb-2"
+      style={{ 
+        backgroundColor: theme.colors.background,
+        borderRadius: 10,
+      }}
+    >
       {isEditMode ? (
         <TouchableOpacity
           onPress={() => onDelete?.(s.id)}
@@ -29,18 +35,29 @@ export default function SubtaskItem({
           <MaterialIcons name="close" size={24} color={theme.colors.toBeDeleted} />
         </TouchableOpacity>
       ) : (
-        <CustomRadioCheckbox checked={!!s?.isDone} onPress={() => onToggle(s.id)} color={color} />
+        <CustomRadioCheckbox 
+          checked={!!s?.isDone} 
+          onPress={() => onToggle(s.id)} 
+          color={color} 
+        />
       )}
 
-      <Text
-        className="text-sm min-w-[50px]"
+      <View
+        className="text-sm min-w-[50px] px-2 py-1 rounded"
         style={{
-          color: theme.colors.heading,
-          fontWeight: "600",
+          backgroundColor: theme.colors.subBackground,
         }}
       >
-        {convertSubtaskTimeForm(s?.duration)}
-      </Text>
+        <Text
+          className="text-sm"
+          style={{
+            color: theme.colors.heading,
+            fontWeight: "600",
+          }}
+        >
+          {convertSubtaskTimeForm(s?.duration)}
+        </Text>
+      </View>
 
       <Text
         className={`flex-1 text-[15px] font-baloo ml-3 ${s?.isDone ? "line-through" : ""}`}

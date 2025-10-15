@@ -1,6 +1,7 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TouchableOpacity, Alert } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import React, { useState } from "react";
-import SubtaskItem from "./subtask-item";
+import DraggableSubtaskList from "./draggable-subtask-list";
 import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
 import { theme } from "@/shared/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -110,6 +111,16 @@ const SubtasksTab = () => {
     ]);
   };
 
+  const handleReorder = (fromIndex: number, toIndex: number) => {
+    setSubtasks((prev) => {
+      const newSubtasks = [...prev];
+      const [movedItem] = newSubtasks.splice(fromIndex, 1);
+      newSubtasks.splice(toIndex, 0, movedItem);
+      return newSubtasks;
+    });
+    console.log(`Reordered: moved item from ${fromIndex} to ${toIndex}`);
+  };
+
   if (subtasks.length === 0) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -156,16 +167,14 @@ const SubtasksTab = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 8 }}
         >
-          {subtasks.map((subtask) => (
-            <SubtaskItem
-              key={subtask.id}
-              item={subtask}
-              onToggle={handleToggle}
-              color={taskColor}
-              isEditMode={isEditMode}
-              onDelete={handleDelete}
-            />
-          ))}
+          <DraggableSubtaskList
+            subtasks={subtasks}
+            onToggle={handleToggle}
+            color={taskColor}
+            isEditMode={isEditMode}
+            onDelete={handleDelete}
+            onReorder={handleReorder}
+          />
         </ScrollView>
       </View>
 
