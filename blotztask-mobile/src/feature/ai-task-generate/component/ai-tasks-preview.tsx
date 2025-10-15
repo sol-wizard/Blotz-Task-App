@@ -1,6 +1,7 @@
+/* eslint-disable camelcase */
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
-import { View, Pressable } from "react-native";
+import { View, Pressable, ActivityIndicator } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
@@ -14,11 +15,13 @@ import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-d
 
 export function AiTasksPreview({
   aiMessage,
+  setUserInput,
   setModalType,
   isVoiceInput,
   userInput,
 }: {
   aiMessage?: AiResultMessageDTO;
+  setUserInput: React.Dispatch<React.SetStateAction<string>>;
   setModalType: (v: BottomSheetType) => void;
   isVoiceInput: boolean;
   userInput: string;
@@ -27,12 +30,11 @@ export function AiTasksPreview({
   const aiGeneratedTasks = aiMessage?.extractedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiGeneratedTasks ?? []);
   const posthog = usePostHog();
-  const isVoiceInputRef = useRef(isVoiceInput);
-  const finishedRef = useRef<boolean>(false);
 
-  useEffect(() => {
-    isVoiceInputRef.current = isVoiceInput;
-  }, [isVoiceInput]);
+  const finishedAllStepsRef = useRef<boolean>(false);
+
+  const [isAdding, setIsAdding] = useState(false);
+  const createDisabled = isAdding || localTasks.length === 0;
 
   const onDeleteTask = (taskId: string) => {
     setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
@@ -43,12 +45,13 @@ export function AiTasksPreview({
   };
 
   const handleAddTasks = async () => {
-    if (!localTasks.length) return;
+    if (isAdding || !localTasks.length) return;
+    setIsAdding(true);
 
     try {
       const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
       await Promise.all(payloads.map(addTask));
-      finishedRef.current = true;
+      finishedAllStepsRef.current = true;
 
       posthog.capture("ai_task_interaction_completed", {
         ai_output: JSON.stringify(aiMessage),
@@ -63,6 +66,7 @@ export function AiTasksPreview({
       setLocalTasks([]);
     } catch (error) {
       console.log("Add tasks failed", error);
+      setIsAdding(false);
     }
   };
 
@@ -80,7 +84,7 @@ export function AiTasksPreview({
 
   useEffect(() => {
     return () => {
-      if (!finishedRef.current) {
+      if (!finishedAllStepsRef.current) {
         posthog.capture("ai_task_interaction_completed", {
           ai_output: JSON.stringify(aiMessage),
           user_input: userInput,
@@ -115,9 +119,12 @@ export function AiTasksPreview({
         >
           <MaterialCommunityIcons name="arrow-u-left-top" size={20} color="white" />
         </Pressable>
-        {!isVoiceInputRef.current && (
+        {!isVoiceInput && (
           <Pressable
-            onPress={handleGoBack}
+            onPress={() => {
+              handleGoBack();
+              setUserInput("");
+            }}
             style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
             accessibilityRole="button"
             accessibilityLabel="Edit"
@@ -130,13 +137,19 @@ export function AiTasksPreview({
         )}
         <Pressable
           onPress={handleAddTasks}
-          disabled={localTasks.length === 0}
-          className={`w-12 h-12 rounded-full items-center justify-center mx-8 ${localTasks.length ? "bg-black" : "bg-gray-300"}`}
+          disabled={createDisabled}
+          className={`w-12 h-12 rounded-full items-center justify-center mx-8 ${
+            createDisabled ? "bg-gray-300" : "bg-black"
+          }`}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityRole="button"
           accessibilityLabel="Add all remaining AI tasks"
         >
-          <Ionicons name="arrow-up" size={20} color="white" />
+          {isAdding ? (
+            <ActivityIndicator size="small" />
+          ) : (
+            <Ionicons name="arrow-up" size={20} color="white" />
+          )}
         </Pressable>
       </View>
     </View>
