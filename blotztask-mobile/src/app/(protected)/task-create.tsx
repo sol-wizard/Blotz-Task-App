@@ -20,7 +20,7 @@ function TaskCreateScreen() {
       const dto = mapFormToAddTaskItemDTO(formValues);
       await addTask(dto);
       posthog.capture("manual_task_creation");
-      router.push("/(protected)");
+      router.back();
       console.log("Task created successfully");
     } catch (error) {
       console.error("Failed to create task:", error);
