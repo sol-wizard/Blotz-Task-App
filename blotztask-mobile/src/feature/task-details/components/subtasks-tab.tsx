@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import DraggableSubtaskList from "./draggable-subtask-list";
 import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
 import { theme } from "@/shared/constants/theme";
@@ -64,13 +64,36 @@ const MOCK_SUBTASKS = [
     duration: "01:30:00",
     isDone: false,
   },
+  {
+    id: 9,
+    title: "Write unit tests 6",
+    description: "Test all new components",
+    duration: "01:30:00",
+    isDone: false,
+  },
+  {
+    id: 10,
+    title: "Write unit tests 7",
+    description: "Test all new components",
+    duration: "01:30:00",
+    isDone: false,
+  },
+  {
+    id: 11,
+    title: "Write unit tests 8",
+    description: "Test all new components",
+    duration: "01:30:00",
+    isDone: false,
+  },
 ];
 
 const SubtasksTab = () => {
   const [subtasks, setSubtasks] = useState(MOCK_SUBTASKS);
   const [isEditMode, setIsEditMode] = useState(false);
+  const scrollOffsetRef = useRef(0);
   const { selectedTask } = useSelectedTaskStore();
   const taskColor = selectedTask?.label?.color ?? theme.colors.disabled;
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handleToggle = (id: number) => {
     setSubtasks((prev) =>
@@ -118,7 +141,6 @@ const SubtasksTab = () => {
       newSubtasks.splice(toIndex, 0, movedItem);
       return newSubtasks;
     });
-    console.log(`Reordered: moved item from ${fromIndex} to ${toIndex}`);
   };
 
   if (subtasks.length === 0) {
@@ -164,8 +186,14 @@ const SubtasksTab = () => {
       {/* Subtasks List */}
       <View className="flex-1">
         <ScrollView
+          ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 8 }}
+          scrollEventThrottle={1}
+          onScroll={(event) => {
+            const newOffset = event.nativeEvent.contentOffset.y;
+            scrollOffsetRef.current = newOffset;
+          }}
         >
           <DraggableSubtaskList
             subtasks={subtasks}
@@ -174,6 +202,8 @@ const SubtasksTab = () => {
             isEditMode={isEditMode}
             onDelete={handleDelete}
             onReorder={handleReorder}
+            scrollViewRef={scrollViewRef}
+            scrollOffsetRef={scrollOffsetRef}
           />
         </ScrollView>
       </View>
