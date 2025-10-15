@@ -4,10 +4,12 @@ import { useAuth0 } from "react-native-auth0";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
+import { usePostHog } from "posthog-react-native";
 
 export default function GetStartedButton() {
-  const { authorize } = useAuth0();
+  const { authorize, user } = useAuth0();
   const router = useRouter();
+  const posthog = usePostHog();
 
   const onPress = async () => {
     try {
@@ -21,7 +23,10 @@ export default function GetStartedButton() {
         await SecureStore.setItemAsync(AUTH_TOKEN_KEY, result.accessToken);
         console.log("Access token saved to storage");
 
-        // Redirect to protected page
+        if (user) {
+          posthog.identify(user.sub);
+        }
+
         router.replace("/(protected)");
       } else {
         console.error("No access token received from Auth0");
