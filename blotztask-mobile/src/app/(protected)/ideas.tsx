@@ -44,7 +44,7 @@ export default function IdeasScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <Text className="text-4xl font-bold text-gray-800 font-balooExtraBold pt-4 px-10">Ideas</Text>
-
+      <Text>Preview feature — still in development and may be unstable.</Text>
       <View className="bg-[#CDF79A] w-68 h-36 rounded-3xl mx-8 my-6">
         <Text className="font-baloo text-xl text-secondary my-4 ml-4">
           Ready to turn a spark into action?
