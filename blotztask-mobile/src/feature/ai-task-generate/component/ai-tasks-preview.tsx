@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
 import { View, Pressable, ActivityIndicator } from "react-native";
