@@ -21,6 +21,7 @@ export const AiTaskGenerateModal = ({
       return (
         <AiTasksPreview
           aiMessage={aiGeneratedMessage}
+          setUserInput={setText}
           userInput={text}
           setModalType={setModalType}
           isVoiceInput={isVoiceInput}
