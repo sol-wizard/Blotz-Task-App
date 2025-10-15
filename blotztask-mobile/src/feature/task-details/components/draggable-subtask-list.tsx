@@ -1,22 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import { View, Dimensions } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   runOnJS,
   useAnimatedGestureHandler,
-  withDelay,
   withTiming,
   useDerivedValue,
-  useAnimatedReaction,
   runOnUI,
 } from "react-native-reanimated";
 import { 
   PanGestureHandler, 
   LongPressGestureHandler,
   State,
+  ScrollView,
 } from "react-native-gesture-handler";
 import SubtaskItem from "./subtask-item";
 
@@ -51,8 +49,6 @@ type DraggableItemProps = {
 
 const ITEM_HEIGHT = 65; // Approximate height of each subtask item
 const LONG_PRESS_DURATION = 500; // milliseconds
-const AUTO_SCROLL_THRESHOLD = 100; // Distance from edge to trigger auto-scroll
-const AUTO_SCROLL_THRESHOLD_EXIT = 120; // Distance to exit auto-scroll (hysteresis)
 const AUTO_SCROLL_DELAY = 300; // ms delay before auto-scroll starts
 const AUTO_SCROLL_SPEED = 5; // Pixels to scroll per interval (reduced for smoother experience)
 const AUTO_SCROLL_INTERVAL = 16; // ms between scroll updates (~60fps)
@@ -250,7 +246,7 @@ export default function DraggableSubtaskList({
     }, 100); // Sync every 100ms when idle
     
     return () => clearInterval(syncInterval);
-  }, [draggingIndex]);
+  }, [draggingIndex, scrollOffsetRef, scrollOffsetShared]);
   
   // Cleanup auto-scroll timers on unmount or when dragging ends
   useEffect(() => {
