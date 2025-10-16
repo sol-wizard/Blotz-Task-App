@@ -12,10 +12,10 @@ namespace BlotzTask.Modules.Labels;
 public class LabelController(
     GetAllLabelsQueryHandler getAllLabelsQueryHandler,
     GetLabelTaskCountQueryHandler getLabelTaskCountQueryHandler,
-    AddCustomLabelCommandHandler addCustomLabelCommandHandler),
-    DeleteCustomLabelCommandHandler deleteCustomLabelCommandHandler) : ControllerBase
+    AddCustomLabelCommandHandler addCustomLabelCommandHandler,
+    DeleteCustomLabelCommandHandler deleteCustomLabelCommandHandler
+) : ControllerBase
 {
-
 
     [HttpGet]
     public async Task<List<LabelDTO>> GetAllLabels(CancellationToken ct)
@@ -67,4 +67,4 @@ public class LabelController(
         return await deleteCustomLabelCommandHandler.Handle(command, ct);
 
     }
-}
+
