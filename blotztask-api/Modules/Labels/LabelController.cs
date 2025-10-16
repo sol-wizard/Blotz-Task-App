@@ -11,7 +11,7 @@ namespace BlotzTask.Modules.Labels;
 [Route("api/[controller]")]
 public class LabelController(
     GetAllLabelsQueryHandler getAllLabelsQueryHandler,
-    GetLabelTaskCountQueryHandler getLabelTaskCountQueryHandler, CreateCustomLabelCommandHandler createCustomLabelCommandHandler) : ControllerBase
+    GetLabelTaskCountQueryHandler getLabelTaskCountQueryHandler, AddCustomLabelCommandHandler addCustomLabelCommandHandler) : ControllerBase
 {
 
     [HttpGet]
@@ -31,14 +31,14 @@ public class LabelController(
         return await getLabelTaskCountQueryHandler.Handle(query, ct);
     }
 
-    [HttpPost("custom")]
-    public async Task<IActionResult> CreateCustomLabel([FromBody] CreateCustomLabelCommand request,
+    [HttpPost]
+    public async Task<IActionResult> AddCustomLabel([FromBody] AddCustomLabelCommand request,
         CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
-        var command = new CreateCustomLabelCommand
+        var command = new AddCustomLabelCommand
         {
             UserId = userId,
             Name = request.Name,
@@ -46,7 +46,7 @@ public class LabelController(
             Description = request.Description
         };
 
-        var result = await createCustomLabelCommandHandler.Handle(command, ct);
+        var result = await addCustomLabelCommandHandler.Handle(command, ct);
 
         return Ok(result);
     }

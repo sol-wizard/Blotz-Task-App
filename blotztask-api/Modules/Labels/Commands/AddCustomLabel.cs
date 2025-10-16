@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Labels.Commands;
 
-public class CreateCustomLabelCommand
+public class AddCustomLabelCommand
 {
     [Required]
     public Guid UserId { get; set; }
@@ -18,18 +18,18 @@ public class CreateCustomLabelCommand
     public string? Description { get; set; } 
 }
 
-public class CreateCustomLabelCommandHandler(BlotzTaskDbContext db, ILogger<CreateCustomLabelCommandHandler> logger)
+public class AddCustomLabelCommandHandler(BlotzTaskDbContext db, ILogger<AddCustomLabelCommandHandler> logger)
 {
-    public async Task<string> Handle(CreateCustomLabelCommand command, CancellationToken ct = default)
+    public async Task<string> Handle(AddCustomLabelCommand command, CancellationToken ct = default)
     {
         logger.LogInformation($"Prepare to creating label {command.Name}");
 
-        bool isCreated = await db.Labels.AnyAsync(l =>
+        bool exist = await db.Labels.AnyAsync(l =>
                 l.UserId == command.UserId &&
                 l.Name.ToLower() == command.Name.ToLower(),
             ct);
 
-        if (isCreated)
+        if (exist)
         {
             throw new Exception($"Label {command.Name} already exists for  {command.UserId}.");
         }
