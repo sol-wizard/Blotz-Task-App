@@ -3,7 +3,7 @@
     "name": "BlotzTask",
     "icon": "./assets/images/blotz-icon.png",
     "slug": "BlotzTask",
-    "owner": "blotztask",
+    "owner": "blotz",
     "version": "1.0.0",
     "runtimeVersion": "1.0.0",
     "orientation": "portrait",
