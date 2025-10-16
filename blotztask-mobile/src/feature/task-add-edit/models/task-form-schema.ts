@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { isSingleDay } from "../util/date-time-helpers";
+import { combineDateTime } from "../util/combine-date-time";
+import { isBefore, isEqual } from "date-fns";
 
 export const taskFormSchema = z
   .object({
@@ -13,37 +14,14 @@ export const taskFormSchema = z
   })
   .refine(
     (data) => {
-      if (data.startDate && data.startTime && data.endDate && data.endTime) {
-        const start = new Date(
-          new Date(data.startDate).setHours(
-            data.startTime.getHours(),
-            data.startTime.getMinutes(),
-            0,
-            0,
-          ),
-        );
-        const end = new Date(
-          new Date(data.endDate).setHours(data.endTime.getHours(), data.endTime.getMinutes(), 0, 0),
-        );
-        return end.getTime() >= start.getTime();
-      }
-      return true;
+      const start = combineDateTime(data.startDate, data.startTime);
+      const end = combineDateTime(data.endDate, data.endTime);
+      if (!start || !end) return true;
+
+      return isBefore(start, end) || isEqual(start, end);
     },
     {
-      message: "End time cannot be earlier than start time",
-      path: ["endTime"],
-    },
-  )
-  .refine(
-    (data) => {
-      if (isSingleDay(data.startDate, data.endDate)) {
-        return data.startTime !== null && data.endTime !== null;
-      }
-      return true;
-    },
-    {
-      message: "Time is required when start and end dates are the same",
-      path: ["startTime"],
+      message: "Start time cannot be later than end time",
     },
   );
 

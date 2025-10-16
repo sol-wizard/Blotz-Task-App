@@ -2,11 +2,11 @@ import TaskForm from "@/feature/task-add-edit/task-form";
 import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-task-dto-mapper";
 import { useRouter } from "expo-router";
-import { Text } from "react-native";
+import { SafeAreaView, Text } from "react-native";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 
-const TaskCreateScreen = () => {
+function TaskCreateScreen() {
   const router = useRouter();
   const { addTask, isAdding } = useTaskMutations();
   const posthog = usePostHog();
@@ -27,7 +27,11 @@ const TaskCreateScreen = () => {
     return <Text>Creating task...</Text>;
   }
 
-  return <TaskForm mode="create" onSubmit={handleTaskSubmit} />;
-};
+  return (
+    <SafeAreaView className="flex-1 bg-white">
+      <TaskForm mode="create" onSubmit={handleTaskSubmit} />
+    </SafeAreaView>
+  );
+}
 
 export default TaskCreateScreen;
