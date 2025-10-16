@@ -100,7 +100,13 @@ export const ReminderTab = ({ control }: Props) => {
                       <Text className="font-baloo text-secondary text-2xl mt-1">Time</Text>
 
                       <Pressable
-                        onPress={() => setShowTimePicker((prev) => !prev)}
+                        onPress={() => {
+                          if (!startTime) {
+                            onStartTimeChange(new Date());
+                            onEndTimeChange(new Date());
+                          }
+                          setShowTimePicker((prev) => !prev);
+                        }}
                         className="bg-background px-4 py-2 rounded-xl"
                       >
                         <Text className="text-xl font-baloo text-secondary ">

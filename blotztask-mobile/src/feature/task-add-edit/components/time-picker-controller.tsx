@@ -26,7 +26,12 @@ export const TimePickerController = ({ control, name }: { control: any; name: st
             <View className="justify-center">
               <View className="flex-row justify-between">
                 <Pressable
-                  onPress={() => setShowModal((prev) => !prev)}
+                  onPress={() => {
+                    if (!value) {
+                      onChange(new Date());
+                    }
+                    setShowModal(true);
+                  }}
                   className="bg-background px-4 py-2 rounded-xl"
                 >
                   <Text className="text-xl font-baloo text-secondary ">
