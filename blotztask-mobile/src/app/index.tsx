@@ -4,36 +4,55 @@ import { View, ActivityIndicator } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
 import { fetchUserProfile } from "@/shared/services/user-service";
-import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
+import { useQueryClient } from "@tanstack/react-query";
+import { isSameDay } from "date-fns";
+import { fetchOverdueTasks, fetchTasksForDate } from "@/shared/services/task-service";
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
+    const initialize = async () => {
+      try {
+        const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
 
-  const checkAuthStatus = async () => {
-    try {
-      const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+        if (!token) {
+          setIsAuthenticated(false);
+          return;
+        }
 
-      if (!token) {
+        // Prefetch data via React Query
+        const today = new Date();
+        const showFloatingTasks = isSameDay(today, new Date());
+
+        await Promise.all([
+          queryClient.prefetchQuery({
+            queryKey: ["user-profile"],
+            queryFn: fetchUserProfile,
+          }),
+          queryClient.prefetchQuery({
+            queryKey: ["tasks", today.toISOString()],
+            queryFn: () => fetchTasksForDate(today, showFloatingTasks),
+          }),
+          queryClient.prefetchQuery({
+            queryKey: ["overdue-tasks"],
+            queryFn: fetchOverdueTasks,
+          }),
+        ]);
+
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Error during initialization:", error);
         setIsAuthenticated(false);
-        return;
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      // Prefetch data for authenticated users
-      await Promise.all([fetchUserProfile(), useSelectedDayTaskStore.getState().loadTasks()]);
-
-      setIsAuthenticated(true);
-    } catch (error) {
-      console.error("Error during initialization:", error);
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    initialize();
+  }, [queryClient]);
 
   if (isLoading) {
     return (

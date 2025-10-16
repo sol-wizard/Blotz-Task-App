@@ -4,7 +4,6 @@ import { format } from "date-fns";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
-import { useSelectedDayTaskStore } from "../../../shared/stores/selectedday-task-store";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
 import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
 import { router } from "expo-router";
@@ -14,17 +13,13 @@ import { TaskStatusSelect, TaskStatusType } from "../components/task-status-sele
 import TaskCard from "../components/task-card";
 import CalendarHeader from "../components/calendar-header";
 import { TaskListPlaceholder } from "../components/tasklist-placeholder";
+import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
 
 export default function CalendarScreen() {
-  const {
-    selectedDay,
-    tasksForSelectedDay,
-    isLoading,
-    setSelectedDay,
-    toggleTask,
-    removeTask,
-    overdueTasks,
-  } = useSelectedDayTaskStore();
+  const { selectedDay, setSelectedDay, tasksForSelectedDay, overdueTasks, isLoading } =
+    useSelectedDayTasks();
+  const { toggleTask, removeTask, isToggling, isDeleting } = useTaskMutations();
   const { setSelectedTask } = useSelectedTaskStore();
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
@@ -59,6 +54,8 @@ export default function CalendarScreen() {
         onDelete={async () => {
           await handleDeleteTask(item.id);
         }}
+        isToggling={isToggling}
+        isDeleting={isDeleting}
       />
     </View>
   );

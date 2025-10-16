@@ -1,17 +1,17 @@
 import { fetchFloatingTasks } from "@/shared/services/task-service";
-import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
 import { theme } from "@/shared/constants/theme";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { useState, useEffect } from "react";
 import { View, Text, Pressable, ActivityIndicator, FlatList } from "react-native";
 import { Searchbar } from "react-native-paper";
 import TaskCard from "@/feature/calendar/components/task-card";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
 
 export default function IdeasScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [floatingTasks, setFloatingTasks] = useState<TaskDetailDTO[]>([]);
-  const { toggleTask } = useSelectedDayTaskStore();
+  const { toggleTask } = useTaskMutations();
 
   useEffect(() => {
     const loadFloatingTasks = async () => {
