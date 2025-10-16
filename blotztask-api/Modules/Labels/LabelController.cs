@@ -13,7 +13,7 @@ public class LabelController(
 
     GetLabelTaskCountQueryHandler getLabelTaskCountQueryHandler,
     AddCustomLabelCommandHandler addCustomLabelCommandHandler),
-    DeleteCustomLabelCommandHandler deleteCustomLabelCommandHandler) : ControllerBase
+    DeleteCustomLabelCommandHandler deleteCustomLabelCommandHandler) : ControllerBase)
 {
 
 
