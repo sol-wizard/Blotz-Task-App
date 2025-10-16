@@ -13,17 +13,18 @@ export const AiTaskGenerateModal = ({
 }) => {
   const [text, setText] = useState("");
   const [isVoiceInput, setIsVoiceInput] = useState(true);
-  const { aiGeneratedTasks, sendMessage, modalType, setModalType, inputError, setInputError } =
+  const { aiGeneratedMessage, sendMessage, modalType, setModalType, inputError, setInputError } =
     useAiTaskGenerator();
 
   switch (modalType) {
     case "task-preview":
       return (
         <AiTasksPreview
-          tasks={aiGeneratedTasks}
+          aiMessage={aiGeneratedMessage}
+          setUserInput={setText}
+          userInput={text}
           setModalType={setModalType}
           isVoiceInput={isVoiceInput}
-          setText={setText}
         />
       );
 
@@ -37,14 +38,15 @@ export const AiTaskGenerateModal = ({
     default:
       return (
         <AiInput
-          generateTaskError={inputError}
-          setInputError={setInputError}
           text={text}
           setText={setText}
+          generateTaskError={inputError}
+          setInputError={setInputError}
           sendMessage={sendMessage}
           isVoiceInput={isVoiceInput}
           setIsVoiceInput={setIsVoiceInput}
           sheetRef={sheetRef}
+          errorMessage={aiGeneratedMessage?.errorMessage}
         />
       );
   }

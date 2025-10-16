@@ -11,6 +11,7 @@ public static class DependencyInjection
         services.AddScoped<GetAllLabelsQueryHandler>();
         services.AddScoped<GetLabelTaskCountQueryHandler>();
         services.AddScoped<AddCustomLabelCommandHandler>();
+        services.AddScoped<DeleteCustomLabelCommandHandler>();
 
         return services;
     }

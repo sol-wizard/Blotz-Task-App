@@ -1,23 +1,23 @@
 using System.Text.Json;
-using BlotzTask.Modules.ChatTaskGenerator.Constants;
-using BlotzTask.Shared.DTOs;
+using BlotzTask.Modules.ChatTaskGenerator.Dtos;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<List<ExtractedTask>?> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct);
-    Task<ChatHistory> InitializeNewConversation();
+    Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct);
 }
 
 public class AiTaskGenerateService : IAiTaskGenerateService
 {
+    private readonly IChatCompletionService _chatCompletionService;
     private readonly IChatHistoryManagerService _chatHistoryManagerService;
-    private readonly IChatCompletionService _chatCompletionService; // TODO: use safeChatCompletionService
-    private readonly ILogger<AiTaskGenerateService> _logger;
     private readonly Kernel _kernel;
+    private readonly ILogger<AiTaskGenerateService> _logger;
 
     public AiTaskGenerateService(
         IChatHistoryManagerService chatHistoryManagerService,
@@ -32,135 +32,86 @@ public class AiTaskGenerateService : IAiTaskGenerateService
         _kernel = kernel;
     }
 
-    /// <summary>
-    ///    Generates a list of tasks based on the provided chat history.
-    /// </summary>
-    /// <param name="chatHistory"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    public async Task<List<ExtractedTask>?> GenerateAiResponse(
-        ChatHistory chatHistory,
-        CancellationToken ct
-    )
+    public async Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct)
     {
-        var tempHistory = new ChatHistory(chatHistory);
-        tempHistory.AddSystemMessage(
-            """
-            Reminder:  
-            - Only extract tasks from the **latest user message**.  
-            - If the user mentions multiple actions in one message, extract **all distinct tasks** separately.  
-            - Do not include tasks from earlier turns of the conversation.  
-            - Always return every valid task, not just one.
-            - The user message may contain Mandarin characters. Please ensure that the extracted tasks are relevant
-            to the Mandarin content and provide translations if necessary.
-            """
-        );
+        var chatHistory = _chatHistoryManagerService.GetChatHistory();
 
-        var extractTasksFunction = _kernel.Plugins["TaskExtractionPlugin"]["ExtractTasks"];
-        var executionSettings = new PromptExecutionSettings
+        var executionSettings = new OpenAIPromptExecutionSettings
         {
-            FunctionChoiceBehavior = FunctionChoiceBehavior.Required(
-                functions: new[] { extractTasksFunction },
-                autoInvoke: true
-            ),
+            Temperature = 0.2f
         };
 
         try
         {
             var chatResults = await _chatCompletionService.GetChatMessageContentsAsync(
-                chatHistory: tempHistory,
-                executionSettings: executionSettings,
-                kernel: _kernel,
-                cancellationToken: ct
+                chatHistory,
+                executionSettings,
+                _kernel,
+                ct
             );
 
             var functionResultMessage = chatResults.LastOrDefault();
 
-            if (
-                functionResultMessage != null
-                && !string.IsNullOrEmpty(functionResultMessage.Content)
-            )
+            if (functionResultMessage == null)
             {
-                try
-                {
-                    _logger.LogInformation(functionResultMessage.Content);
-                    var extractedTasks = JsonSerializer.Deserialize<List<ExtractedTask>>(
-                        functionResultMessage.Content,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                    );
-
-                    if (extractedTasks != null)
-                    {
-                        chatHistory.AddAssistantMessage(JsonSerializer.Serialize(extractedTasks));
-                        return extractedTasks;
-                    }
-
-                    return null;
-                }
-                catch (JsonException ex)
-                {
-                    _logger.LogError(
-                        ex,
-                        "Failed to deserialize function result content into ExtractedTaskResponse. Content: {Content}",
-                        functionResultMessage.Content
-                    );
-
-                    return null;
-                }
+                _logger.LogWarning(
+                    "Chat completion returned no messages. ChatHistory count: {Count}, Model: {ModelId}",
+                    chatHistory.Count,
+                    executionSettings.ModelId ?? "unknown"
+                );
+                throw new AiNoMessageReturnedException();
             }
+
+            if (string.IsNullOrWhiteSpace(functionResultMessage.Content))
+            {
+                _logger.LogWarning("AI response content is empty.");
+                throw new AiEmptyResponseException();
+            }
+
+            try
+            {
+                var aiGenerateMessage = JsonSerializer.Deserialize<AiGenerateMessage>(
+                    functionResultMessage.Content,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+
+                if (aiGenerateMessage == null)
+                {
+                    _logger.LogWarning("Deserialized object is null.");
+                    throw new AiInvalidJsonException(functionResultMessage.Content);
+                }
+
+                chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateMessage));
+                return aiGenerateMessage;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Failed to deserialize AI response: {Content}", functionResultMessage.Content);
+                throw new AiInvalidJsonException(functionResultMessage.Content, ex);
+            }
+        }
+        catch (OperationCanceledException oce)
+        {
+            _logger.LogInformation(oce, "AI task generation cancelled.");
+            throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
+        }
+        catch (TokenLimitExceededException ex)
+        {
+            _logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
+            throw new AiTokenLimitedException();
+        }
+        catch (HttpOperationException ex) when (
+            ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            _logger.LogWarning(ex, "Request blocked by Azure OpenAI content filter.");
+            throw new AiContentFilterException();
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                ex,
-                "Semantic Kernel FunctionChoiceBehavior.Required for TaskExtraction failed. " +
-                "Exception Type: {ExceptionType}, Message: {ExceptionMessage}, " +
-                "ChatHistory Count: {ChatHistoryCount}, Function Name: {FunctionName}",
-                ex.GetType().Name,
-                ex.Message,
-                tempHistory.Count,
-                extractTasksFunction.Name
-            );
-
-            // Log additional debug information
-            _logger.LogDebug(
-                "Function details - Plugin: {PluginName}, Function: {FunctionName}, " +
-                "Execution Settings: {ExecutionSettings}",
-                extractTasksFunction.PluginName,
-                extractTasksFunction.Name,
-                JsonSerializer.Serialize(executionSettings)
-            );
-
-            // Log the last user message for context
-            var lastUserMessage = tempHistory.LastOrDefault(m => m.Role == AuthorRole.User);
-            if (lastUserMessage != null)
-            {
-                _logger.LogDebug(
-                    "Last user message content: {UserMessageContent}",
-                    lastUserMessage.Content
-                );
-            }
-
-            return null;
+            _logger.LogWarning("FULL EXCEPTION DETAILS: {ExceptionMessage}", ex.ToString());
+            throw new AiTaskGenerationException(AiErrorCode.Unknown,
+                "An unhandled exception occurred during AI task generation.", ex);
         }
-        return null;
-    }
-
-    /// <summary>
-    ///  Initializes a new conversation by creating a new ChatHistory object
-    ///  and setting the system message.
-    ///  </summary>
-    /// <returns>A Task that represents the asynchronous operation, containing the initialized ChatHistory.</returns>
-    /// <exception cref="ArgumentException">Thrown when the conversationId is null or empty.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when the conversation state service fails to set
-    /// the chat history.</exception>
-    public Task<ChatHistory> InitializeNewConversation()
-    {
-        var chatHistory = new ChatHistory();
-        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(DateTime.Now));
-
-        _chatHistoryManagerService.SetChatHistory(chatHistory);
-
-        return Task.FromResult(chatHistory);
     }
 }

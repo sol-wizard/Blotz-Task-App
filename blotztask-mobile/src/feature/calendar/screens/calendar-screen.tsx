@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
 import { useSelectedDayTaskStore } from "../../../shared/stores/selectedday-task-store";
-
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
-
 import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
-
 import { router } from "expo-router";
 import { theme } from "@/shared/constants/theme";
 import { useSelectedTaskStore } from "../../../shared/stores/selected-task-store";
@@ -25,17 +21,15 @@ export default function CalendarScreen() {
     tasksForSelectedDay,
     isLoading,
     setSelectedDay,
-    loadTasks,
     toggleTask,
     removeTask,
     overdueTasks,
   } = useSelectedDayTaskStore();
-  const { selectedTask, setSelectedTask } = useSelectedTaskStore();
+  const { setSelectedTask } = useSelectedTaskStore();
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
     text: "",
   });
-
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus, overdueTasks);
@@ -43,10 +37,6 @@ export default function CalendarScreen() {
     tasks: tasksForSelectedDay,
     overdueTaskCount: overdueTasks.length,
   });
-
-  useEffect(() => {
-    loadTasks();
-  }, [selectedDay, selectedTask, loadTasks]);
 
   const navigateToTaskDetails = (task: TaskDetailDTO) => {
     setSelectedTask(task);
@@ -63,6 +53,7 @@ export default function CalendarScreen() {
         startTime={item.startTime}
         endTime={item.endTime}
         isCompleted={item.isDone}
+        labelColor={item.label?.color}
         onToggleComplete={() => toggleTask(item.id)}
         onPress={() => navigateToTaskDetails(item)}
         onDelete={async () => {

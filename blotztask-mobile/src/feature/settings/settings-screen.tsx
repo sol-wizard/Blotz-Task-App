@@ -2,13 +2,16 @@ import { View } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { useRouter } from "expo-router";
 import { useLogout } from "@/shared/hooks/uselogout";
+import { usePostHog } from "posthog-react-native";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const logout = useLogout();
+  const posthog = usePostHog();
 
   const handleSignOut = async () => {
     await logout();
+    posthog.reset();
     router.replace("/(auth)/onboarding");
   };
 
@@ -21,6 +24,13 @@ export default function SettingsScreen() {
       <Text variant="headlineMedium" style={{ marginBottom: 16 }}>
         Settings
       </Text>
+      <Button
+        mode="outlined"
+        style={{ marginTop: 16 }}
+        onPress={() => router.push("/(protected)/all-tasks")}
+      >
+        Go to All Tasks page
+      </Button>
       <Button mode="outlined" style={{ marginTop: 16 }} onPress={goToIdeasPage}>
         Go to Ideas page
       </Button>

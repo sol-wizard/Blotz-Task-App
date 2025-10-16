@@ -1,22 +1,26 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, Image } from "react-native";
+import { View, Text, TextInput, Pressable, Image, Vibration } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { useVoiceInput } from "@/shared/util/useVoiceInput";
 import { ASSETS } from "@/shared/constants/assets";
+import * as Haptics from "expo-haptics";
+import { VoiceWaves } from "@/shared/components/common/voice-wave";
 
 export const VoiceInput = ({
-  hasError,
   text,
   setText,
+  hasError,
   sendMessage,
   setInputError,
+  errorMessage,
 }: {
-  hasError: boolean;
   text: string;
-  setText: (value: string) => void;
+  setText: (v: string) => void;
+  hasError: boolean;
   sendMessage: (v: string) => void;
   setInputError: (v: boolean) => void;
+  errorMessage?: string;
 }) => {
   const [language, setLanguage] = useState<"en" | "zh">("zh");
   const { startListening, partialText, stopAndGetText, isListening } = useVoiceInput({ language });
@@ -25,6 +29,7 @@ export const VoiceInput = ({
     : text;
 
   const [idleBlockH, setIdleBlockH] = useState(0);
+  const [showVoiceWave, setShowVoiceWave] = useState(false);
 
   const handleMicPressOut = async () => {
     const spoken = await stopAndGetText();
@@ -34,7 +39,8 @@ export const VoiceInput = ({
       setText(newText);
     }
     if (newText?.trim()) sendMessage(newText.trim());
-    setText("");
+
+    setShowVoiceWave(false);
   };
 
   return (
@@ -44,9 +50,7 @@ export const VoiceInput = ({
           className="bg-background rounded-2xl py-6 px-4 flex-row w-96"
           style={{ minHeight: idleBlockH }}
         >
-          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2 w-72">
-            Oops, that went over my head. Can you say it again
-          </Text>
+          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2 w-72">{errorMessage}</Text>
           <Image source={ASSETS.greenBun} className="w-20 h-20" />
         </View>
       )}
@@ -90,17 +94,34 @@ export const VoiceInput = ({
       <View className="mt-6 items-center">
         <Pressable
           onLongPress={async () => {
+            setText("");
             setInputError(false);
+            try {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            } catch {
+              Vibration.vibrate(10);
+            }
+            setShowVoiceWave(true);
+
             await startListening();
           }}
           onPressOut={handleMicPressOut}
           delayLongPress={250}
           style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
         >
-          <GradientCircle>
-            <Ionicons name="mic-outline" size={35} color="white" />
-          </GradientCircle>
+          <View className="items-center justify-center relative">
+            {showVoiceWave && (
+              <View style={{ position: "absolute" }}>
+                <VoiceWaves />
+              </View>
+            )}
+
+            <GradientCircle>
+              <Ionicons name="mic-outline" size={35} color="white" />
+            </GradientCircle>
+          </View>
         </Pressable>
+
         {isListening ? (
           <Text className="text-lg mt-4 mb-10 text-gray-500 font-baloo">Recognising...</Text>
         ) : (

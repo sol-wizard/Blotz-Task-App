@@ -4,23 +4,25 @@ import { VoiceInput } from "./voice-input";
 import { WriteInput } from "./write-input";
 
 export const AiInput = ({
-  sheetRef,
   text,
   setText,
+  sheetRef,
   sendMessage,
   isVoiceInput,
   setIsVoiceInput,
   generateTaskError,
   setInputError,
+  errorMessage,
 }: {
-  sheetRef: React.RefObject<BottomSheetModal | null>;
   text: string;
-  setText: (value: string) => void;
+  setText: (v: string) => void;
+  sheetRef: React.RefObject<BottomSheetModal | null>;
   sendMessage: (v: string) => void;
   isVoiceInput: boolean;
   setIsVoiceInput: (v: boolean) => void;
   generateTaskError: boolean;
   setInputError: (v: boolean) => void;
+  errorMessage?: string;
 }) => {
   return (
     <>
@@ -31,6 +33,7 @@ export const AiInput = ({
           sendMessage={sendMessage}
           hasError={generateTaskError}
           setInputError={setInputError}
+          errorMessage={errorMessage}
         />
       ) : (
         <WriteInput
@@ -39,6 +42,7 @@ export const AiInput = ({
           sendMessage={sendMessage}
           hasError={generateTaskError}
           sheetRef={sheetRef}
+          errorMessage={errorMessage}
         />
       )}
 

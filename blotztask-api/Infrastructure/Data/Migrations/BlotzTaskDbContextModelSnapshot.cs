@@ -62,7 +62,7 @@ namespace BlotzTask.Migrations
                         new
                         {
                             LabelId = 6,
-                            Color = "#7758FF",
+                            Color = "#c2e49f",
                             Description = "Work related tasks",
                             Name = "Work",
                             Scope = "Global"
@@ -70,25 +70,25 @@ namespace BlotzTask.Migrations
                         new
                         {
                             LabelId = 7,
-                            Color = "#FFDE23",
-                            Description = "Personal tasks",
-                            Name = "Personal",
+                            Color = "#cce7db",
+                            Description = "Life related tasks",
+                            Name = "Life",
                             Scope = "Global"
                         },
                         new
                         {
                             LabelId = 8,
-                            Color = "#FF4747",
-                            Description = "Academic tasks",
-                            Name = "Academic",
+                            Color = "#d6faf9",
+                            Description = "Learning related tasks",
+                            Name = "Learning",
                             Scope = "Global"
                         },
                         new
                         {
                             LabelId = 9,
-                            Color = "#09F1D6",
-                            Description = "Other tasks",
-                            Name = "Others",
+                            Color = "#bad5fa",
+                            Description = "Health related tasks",
+                            Name = "Health",
                             Scope = "Global"
                         });
                 });
@@ -138,7 +138,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DeletedTaskItems", t =>
+                    b.ToTable("DeletedTaskItems", null, t =>
                         {
                             t.HasCheckConstraint("CK_DeletedTaskItem_SingleTime_Equals", "([TimeType] IS NULL) OR ([TimeType] <> 0) OR ([StartTime] = [EndTime])");
 
@@ -239,7 +239,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TaskItems", t =>
+                    b.ToTable("TaskItems", null, t =>
                         {
                             t.HasCheckConstraint("CK_TaskItem_SingleTime_Equals", "([TimeType] IS NULL) OR ([TimeType] <> 0) OR ([StartTime] = [EndTime])");
 
@@ -280,7 +280,7 @@ namespace BlotzTask.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AppUsers");
+                    b.ToTable("AppUsers", (string)null);
 
                     b.HasData(
                         new
