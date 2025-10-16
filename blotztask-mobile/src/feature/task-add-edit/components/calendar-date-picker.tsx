@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import Modal from "react-native-modal";
 import { Calendar } from "react-native-calendars";
+import { eachDayOfInterval, format, isAfter, parseISO } from "date-fns";
 
 type MarkedDate = {
   color?: string;
@@ -33,17 +34,19 @@ const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
-  // Generate marked dates for a range
   const getDatesInRange = (start: string, end: string): MarkedDates => {
-    const startObj = new Date(start);
-    const endObj = new Date(end);
-    const dates: MarkedDates = {};
-    const current = new Date(startObj);
+    const startObj = parseISO(start);
+    const endObj = parseISO(end);
 
-    while (current <= endObj) {
-      const dateString = current.toISOString().split("T")[0];
-      dates[dateString] = { color: DATE_COLORS.background, textColor: DATE_COLORS.text };
-      current.setDate(current.getDate() + 1);
+    const days = eachDayOfInterval({ start: startObj, end: endObj });
+    const dates: MarkedDates = {};
+
+    for (const d of days) {
+      const key = format(d, "yyyy-MM-dd");
+      dates[key] = {
+        color: DATE_COLORS.background,
+        textColor: DATE_COLORS.text,
+      };
     }
 
     const keys = Object.keys(dates);
@@ -57,41 +60,36 @@ const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
 
   const onDayPress = (day: { dateString: string }) => {
     if (!allowRangeSelection) {
-      // Single date selection allowed
       setStartDate(day.dateString);
       setEndDate(null);
       return;
     }
 
-    // Range selection
     if (!startDate) {
-      // First click → set start date
       setStartDate(day.dateString);
       setEndDate(null);
-    } else if (!endDate) {
-      // Second click → must be after start date and not same day
+      return;
+    }
+
+    if (!endDate) {
       if (day.dateString === startDate) {
-        // Do nothing if same as start date
-        return;
-      }
-      if (new Date(day.dateString) > new Date(startDate)) {
+        setEndDate(startDate);
+      } else if (isAfter(parseISO(day.dateString), parseISO(startDate))) {
         setEndDate(day.dateString);
       } else {
-        // If user selects a date before startDate, reset startDate
         setStartDate(day.dateString);
         setEndDate(null);
       }
-    } else {
-      // Both dates already selected → start a new range
-      setStartDate(day.dateString);
-      setEndDate(null);
+      return;
     }
+
+    setStartDate(day.dateString);
+    setEndDate(null);
   };
 
   const markedDates: MarkedDates = (() => {
     if (!startDate) return {};
 
-    // Single date selected → show as circle
     if (!endDate) {
       return {
         [startDate]: {

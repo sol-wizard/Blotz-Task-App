@@ -1,24 +1,11 @@
 diff --git a/android/gradle.properties b/android/gradle.properties
-index 2170001..76d0f0a 100644
+index 2170001..4087efd 100644
 --- a/android/gradle.properties
 +++ b/android/gradle.properties
-@@ -10,7 +10,13 @@
- # Specifies the JVM arguments used for the daemon process.
- # The setting is particularly useful for tweaking memory settings.
- # Default value: -Xmx512m -XX:MaxMetaspaceSize=256m
--org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m
-+org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=512m
-+
-+org.gradle.daemon=true
-+
-+org.gradle.parallel=true
-+
-+org.gradle.configureondemand=true
- 
- # When configured, Gradle will run in incubating parallel mode.
- # This option should only be used with decoupled projects. More details, visit
-@@ -57,3 +63,4 @@ expo.useLegacyPackaging=false
+@@ -57,3 +57,5 @@ expo.useLegacyPackaging=false
  
  # Whether the app is configured to use edge-to-edge via the app config or `react-native-edge-to-edge` plugin
  expo.edgeToEdgeEnabled=true
++
 +android.enableJetifier=true
+\ No newline at end of file
