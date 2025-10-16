@@ -2,10 +2,8 @@ import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import SettingsScreen from "@/feature/settings/settings-screen";
-import { Pressable, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import IdeasScreen from "./ideas";
 
 const routes = [
   {
@@ -13,6 +11,12 @@ const routes = [
     title: "Calendar",
     focusedIcon: "calendar-text",
     unfocusedIcon: "calendar-blank",
+  },
+  {
+    key: "ideas",
+    title: "Ideas",
+    focusedIcon: "lightning-bolt",
+    unfocusedIcon: "lightning-bolt-outline",
   },
   {
     key: "settings",
@@ -24,14 +28,14 @@ const routes = [
 
 const CalendarRoute: any = () => <CalendarScreen />;
 const SettingsRoute = () => <SettingsScreen />;
+const IdeasRoute = () => <IdeasScreen />;
 
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
-  const insets = useSafeAreaInsets();
-  const router = useRouter();
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
+    ideas: IdeasRoute,
     settings: SettingsRoute,
   });
 
@@ -51,16 +55,6 @@ export default function ProtectedIndex() {
           />
         )}
       />
-
-      <View className="absolute left-0 right-0 items-center" style={{ bottom: insets.bottom }}>
-        <Pressable
-          onPress={() => router.push("/(protected)/task-create")}
-          className="w-14 h-14 rounded-full bg-gray-200 items-center justify-center"
-          android_ripple={{ color: "#e5e7eb", borderless: true }}
-        >
-          <MaterialCommunityIcons name="plus" size={28} color="#6B7280" />
-        </Pressable>
-      </View>
     </>
   );
 }

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { View, Text, Pressable, ActivityIndicator, FlatList } from "react-native";
 import { Searchbar } from "react-native-paper";
 import TaskCard from "@/feature/calendar/components/task-card";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function IdeasScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,9 +42,9 @@ export default function IdeasScreen() {
   );
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background">
       <Text className="text-4xl font-bold text-gray-800 font-balooExtraBold pt-4 px-10">Ideas</Text>
-
+      <Text>Preview feature — still in development and may be unstable.</Text>
       <View className="bg-[#CDF79A] w-68 h-36 rounded-3xl mx-8 my-6">
         <Text className="font-baloo text-xl text-secondary my-4 ml-4">
           Ready to turn a spark into action?
@@ -75,9 +76,9 @@ export default function IdeasScreen() {
         />
       )}
 
-      <Pressable className="bg-[#9AD513] rounded-xl items-center py-4 w-68 mx-8 my-6">
+      <Pressable className="bg-[#9AD513] rounded-xl items-center py-4 w-68 mx-8 mt-6">
         <Text className="text-white font-semibold text-lg">Add to today</Text>
       </Pressable>
-    </View>
+    </SafeAreaView>
   );
 }

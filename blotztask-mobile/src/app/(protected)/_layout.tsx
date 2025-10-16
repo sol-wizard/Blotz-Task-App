@@ -55,7 +55,7 @@ export default function ProtectedLayout() {
           headerShadowVisible: false,
           headerTitle: "",
           headerBackVisible: true,
-          headerTintColor: "#8E8E93",
+          headerTintColor: "#000000",
           headerBackButtonDisplayMode: "minimal",
         }}
       />

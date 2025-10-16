@@ -1,138 +1,95 @@
-diff --git a/ios/.gitignore b/ios/.gitignore
-index 8beb344..d69898f 100644
---- a/ios/.gitignore
-+++ b/ios/.gitignore
-@@ -1,7 +1,10 @@
- # OSX
--#
- .DS_Store
+diff --git a/ios/BlotzTask.xcodeproj/project.pbxproj b/ios/BlotzTask.xcodeproj/project.pbxproj
+index 78e8700..1e0da6f 100644
+--- a/ios/BlotzTask.xcodeproj/project.pbxproj
++++ b/ios/BlotzTask.xcodeproj/project.pbxproj
+@@ -67,6 +67,7 @@
+ 				832341AE1AAA6A7D00B99B32 /* Libraries */,
+ 				83CBBA001A601CBA00E9B192 /* Products */,
+ 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
++				9159FF8FBA0AB5D8FDB6161C /* Pods */,
+ 			);
+ 			indentWidth = 2;
+ 			sourceTree = "<group>";
+@@ -81,6 +82,13 @@
+ 			name = Products;
+ 			sourceTree = "<group>";
+ 		};
++		9159FF8FBA0AB5D8FDB6161C /* Pods */ = {
++			isa = PBXGroup;
++			children = (
++			);
++			path = Pods;
++			sourceTree = "<group>";
++		};
+ /* End PBXGroup section */
  
-+
-+# Root dir shouldn't have Xcode project
-+/*.xcodeproj
-+
- # Xcode
- #
- build/
-@@ -28,3 +31,12 @@ project.xcworkspace
- 
- # CocoaPods
- /Pods/
-+
-+# Android
-+.idea
-+.gradle
-+local.properties
-+*.iml
-+/packages/react-native/android/*
-+!/packages/react-native/android/README.md
-+.kotlin/
-diff --git a/ios/BlotzTask.xcodeproj/xcshareddata/xcschemes/BlotzTask.xcscheme b/ios/BlotzTask.xcodeproj/xcshareddata/xcschemes/BlotzTask.xcscheme
-deleted file mode 100644
-index f35765d..0000000
---- a/ios/BlotzTask.xcodeproj/xcshareddata/xcschemes/BlotzTask.xcscheme
-+++ /dev/null
-@@ -1,88 +0,0 @@
--<?xml version="1.0" encoding="UTF-8"?>
--<Scheme
--   LastUpgradeVersion = "1130"
--   version = "1.3">
--   <BuildAction
--      parallelizeBuildables = "YES"
--      buildImplicitDependencies = "YES">
--      <BuildActionEntries>
--         <BuildActionEntry
--            buildForTesting = "YES"
--            buildForRunning = "YES"
--            buildForProfiling = "YES"
--            buildForArchiving = "YES"
--            buildForAnalyzing = "YES">
--            <BuildableReference
--               BuildableIdentifier = "primary"
--               BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
--               BuildableName = "BlotzTask.app"
--               BlueprintName = "BlotzTask"
--               ReferencedContainer = "container:BlotzTask.xcodeproj">
--            </BuildableReference>
--         </BuildActionEntry>
--      </BuildActionEntries>
--   </BuildAction>
--   <TestAction
--      buildConfiguration = "Debug"
--      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
--      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
--      shouldUseLaunchSchemeArgsEnv = "YES">
--      <Testables>
--         <TestableReference
--            skipped = "NO">
--            <BuildableReference
--               BuildableIdentifier = "primary"
--               BlueprintIdentifier = "00E356ED1AD99517003FC87E"
--               BuildableName = "BlotzTaskTests.xctest"
--               BlueprintName = "BlotzTaskTests"
--               ReferencedContainer = "container:BlotzTask.xcodeproj">
--            </BuildableReference>
--         </TestableReference>
--      </Testables>
--   </TestAction>
--   <LaunchAction
--      buildConfiguration = "Debug"
--      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
--      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
--      launchStyle = "0"
--      useCustomWorkingDirectory = "NO"
--      ignoresPersistentStateOnLaunch = "NO"
--      debugDocumentVersioning = "YES"
--      debugServiceExtension = "internal"
--      allowLocationSimulation = "YES">
--      <BuildableProductRunnable
--         runnableDebuggingMode = "0">
--         <BuildableReference
--            BuildableIdentifier = "primary"
--            BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
--            BuildableName = "BlotzTask.app"
--            BlueprintName = "BlotzTask"
--            ReferencedContainer = "container:BlotzTask.xcodeproj">
--         </BuildableReference>
--      </BuildableProductRunnable>
--   </LaunchAction>
--   <ProfileAction
--      buildConfiguration = "Release"
--      shouldUseLaunchSchemeArgsEnv = "YES"
--      savedToolIdentifier = ""
--      useCustomWorkingDirectory = "NO"
--      debugDocumentVersioning = "YES">
--      <BuildableProductRunnable
--         runnableDebuggingMode = "0">
--         <BuildableReference
--            BuildableIdentifier = "primary"
--            BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
--            BuildableName = "BlotzTask.app"
--            BlueprintName = "BlotzTask"
--            ReferencedContainer = "container:BlotzTask.xcodeproj">
--         </BuildableReference>
--      </BuildableProductRunnable>
--   </ProfileAction>
--   <AnalyzeAction
--      buildConfiguration = "Debug">
--   </AnalyzeAction>
--   <ArchiveAction
--      buildConfiguration = "Release"
--      revealArchiveInOrganizer = "YES">
--   </ArchiveAction>
--</Scheme>
-diff --git a/ios/BlotzTask/BlotzTask.entitlements b/ios/BlotzTask/BlotzTask.entitlements
-index f683276..018a6e2 100644
---- a/ios/BlotzTask/BlotzTask.entitlements
-+++ b/ios/BlotzTask/BlotzTask.entitlements
-@@ -1,5 +1,8 @@
- <?xml version="1.0" encoding="UTF-8"?>
- <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
- <plist version="1.0">
--  <dict/>
-+  <dict>
-+    <key>aps-environment</key>
-+    <string>development</string>
-+  </dict>
- </plist>
-\ No newline at end of file
+ /* Begin PBXNativeTarget section */
+@@ -186,8 +194,10 @@
+ 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+ 				CLANG_ENABLE_MODULES = YES;
+ 				CODE_SIGN_ENTITLEMENTS = BlotzTask/BlotzTask.entitlements;
++				CODE_SIGN_STYLE = Manual;
+ 				CURRENT_PROJECT_VERSION = 1;
+-				DEVELOPMENT_TEAM = LXC29JARY5;
++				DEVELOPMENT_TEAM = "";
++				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = Z6GFDAYSP9;
+ 				ENABLE_BITCODE = NO;
+ 				GCC_PREPROCESSOR_DEFINITIONS = (
+ 					"$(inherited)",
+@@ -208,6 +218,8 @@
+ 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
+ 				PRODUCT_BUNDLE_IDENTIFIER = com.Blotz.BlotzTask;
+ 				PRODUCT_NAME = BlotzTask;
++				PROVISIONING_PROFILE_SPECIFIER = "";
++				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "blotz-task-dev-2";
+ 				SWIFT_OBJC_BRIDGING_HEADER = "BlotzTask/BlotzTask-Bridging-Header.h";
+ 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+ 				SWIFT_VERSION = 5.0;
+@@ -222,8 +234,10 @@
+ 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+ 				CLANG_ENABLE_MODULES = YES;
+ 				CODE_SIGN_ENTITLEMENTS = BlotzTask/BlotzTask.entitlements;
++				CODE_SIGN_STYLE = Manual;
+ 				CURRENT_PROJECT_VERSION = 1;
+-				DEVELOPMENT_TEAM = LXC29JARY5;
++				DEVELOPMENT_TEAM = "";
++				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = Z6GFDAYSP9;
+ 				INFOPLIST_FILE = BlotzTask/Info.plist;
+ 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+ 				LD_RUNPATH_SEARCH_PATHS = (
+@@ -239,6 +253,8 @@
+ 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
+ 				PRODUCT_BUNDLE_IDENTIFIER = com.Blotz.BlotzTask;
+ 				PRODUCT_NAME = BlotzTask;
++				PROVISIONING_PROFILE_SPECIFIER = "";
++				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "blotz-task-dev-2";
+ 				SWIFT_OBJC_BRIDGING_HEADER = "BlotzTask/BlotzTask-Bridging-Header.h";
+ 				SWIFT_VERSION = 5.0;
+ 				TARGETED_DEVICE_FAMILY = "1,2";
+@@ -301,10 +317,7 @@
+ 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
+ 				MTL_ENABLE_DEBUG_INFO = YES;
+ 				ONLY_ACTIVE_ARCH = YES;
+-				OTHER_LDFLAGS = (
+-					"$(inherited)",
+-					" ",
+-				);
++				OTHER_LDFLAGS = "$(inherited)  ";
+ 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
+ 				SDKROOT = iphoneos;
+ 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+@@ -359,10 +372,7 @@
+ 				);
+ 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
+ 				MTL_ENABLE_DEBUG_INFO = NO;
+-				OTHER_LDFLAGS = (
+-					"$(inherited)",
+-					" ",
+-				);
++				OTHER_LDFLAGS = "$(inherited)  ";
+ 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
+ 				SDKROOT = iphoneos;
+ 				USE_HERMES = true;
+diff --git a/ios/BlotzTask/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png b/ios/BlotzTask/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png
+index 976148e..e650b67 100644
+Binary files a/ios/BlotzTask/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png and b/ios/BlotzTask/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png differ
