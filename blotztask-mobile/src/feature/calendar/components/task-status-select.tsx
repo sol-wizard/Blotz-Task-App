@@ -18,7 +18,7 @@ export type TaskStatusType = "all" | "todo" | "inprogress" | "done" | "overdue";
 
 export function TaskStatusSelect({
   statuses: taskStatuses,
-  selectedStatusId: selectedStatusId,
+  selectedStatusId,
   onChange,
 }: TaskStatusSelectProps) {
   return (
@@ -27,6 +27,8 @@ export function TaskStatusSelect({
         <View className="flex-row gap-2 px-4 items-center py-4">
           {taskStatuses.map((statusItem) => {
             const isSelected = selectedStatusId === statusItem.id;
+
+            // Urgent: change to seperate button, no for loop
 
             return (
               <Hanging active={isSelected} key={statusItem.id}>

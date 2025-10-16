@@ -4,19 +4,21 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, SafeAreaView, View, Text } from "react-native";
 import { createStatusSelectItems, filterTasksByStatus } from "@/feature/calendar/util/task-counts";
 import { router } from "expo-router";
-import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
 import { TaskStatusSelect, TaskStatusType } from "@/feature/calendar/components/task-status-select";
 import TaskCard from "@/feature/calendar/components/task-card";
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
 import { getAllTasks, toggleTaskCompletion, deleteTask } from "@/shared/services/task-service";
 import UserProfile from "@/feature/calendar/components/user-profile";
+import { useSelectedTaskActions, useSelectedTaskState } from "@/shared/stores/selected-task-store";
 
 export default function AllTasksScreen() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
-  const { selectedTask, setSelectedTask } = useSelectedTaskStore();
+  const selectedTask = useSelectedTaskState();
+  const { setSelectedTask } = useSelectedTaskActions();
+
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
     text: "",

@@ -1,6 +1,6 @@
 import { theme } from "@/shared/constants/theme";
+import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
 import { Stack } from "expo-router";
-import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
 
 export default function ProtectedLayout() {
   return (
@@ -21,7 +21,7 @@ export default function ProtectedLayout() {
       <Stack.Screen
         name="task-details"
         options={() => {
-          const { selectedTask } = useSelectedTaskStore.getState();
+          const selectedTask = useSelectedTaskState();
           const headerBackgroundColor = selectedTask?.label?.color ?? theme.colors.fallback;
 
           return {

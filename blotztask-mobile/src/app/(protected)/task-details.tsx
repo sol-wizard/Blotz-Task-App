@@ -5,15 +5,16 @@ import { useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsTab from "../../feature/task-details/components/details-tab";
 import SubtasksTab from "../../feature/task-details/components/subtasks-tab";
-import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
+
 import { TaskStatusType } from "@/feature/calendar/components/task-status-select";
 import { theme } from "@/shared/constants/theme";
+import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
 
 type tabTypes = "Details" | "Subtasks";
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
-  const { selectedTask } = useSelectedTaskStore();
+  const selectedTask = useSelectedTaskState();
   const { isDone, title, description, label, startTime, endTime } = selectedTask || {};
 
   const taskStatus: TaskStatusType = isDone ? "done" : "todo";
