@@ -20,11 +20,12 @@ public class GetOverdueTasksQueryHandler(
     {
         var nowUtc = DateTimeOffset.UtcNow;
         var todayStartUtc = new DateTimeOffset(nowUtc.UtcDateTime.Date, TimeSpan.Zero);
-        var sevenDaysAgoStartUtc = todayStartUtc.AddDays(-6);
+        var todayEndUtc = todayStartUtc.AddDays(1).AddTicks(-1);
+        var sevenDaysAgoStartUtc = todayEndUtc.AddDays(-6);
 
         logger.LogInformation(
             "Fetching overdue tasks (last 7 days incl. today) for user {UserId}. Window: [{From} .. {To})",
-            query.UserId, sevenDaysAgoStartUtc, todayStartUtc);
+            query.UserId, sevenDaysAgoStartUtc, todayEndUtc);
 
         var tasks = await db.TaskItems
             .Where(t => t.UserId == query.UserId
@@ -32,7 +33,7 @@ public class GetOverdueTasksQueryHandler(
                         && t.StartTime != null
                         && t.EndTime != null
                         && t.EndTime >= sevenDaysAgoStartUtc
-                        && t.EndTime < todayStartUtc)
+                        && t.EndTime < nowUtc)
             .Select(task => new OverdueTaskItemDto
             {
                 Id = task.Id,
