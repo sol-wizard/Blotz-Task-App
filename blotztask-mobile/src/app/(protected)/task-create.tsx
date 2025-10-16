@@ -3,11 +3,11 @@ import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-task-dto-mapper";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Text } from "react-native";
+import { SafeAreaView, Text } from "react-native";
 import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
 import { usePostHog } from "posthog-react-native";
 
-const TaskCreateScreen = () => {
+function TaskCreateScreen() {
   const router = useRouter();
   const { addTask } = useSelectedDayTaskStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,10 +30,18 @@ const TaskCreateScreen = () => {
   };
 
   if (isSubmitting) {
-    return <Text>Creating task...</Text>;
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <Text>Creating task...</Text>
+      </SafeAreaView>
+    );
   }
 
-  return <TaskForm mode="create" onSubmit={handleTaskSubmit} />;
-};
+  return (
+    <SafeAreaView className="flex-1 bg-white">
+      <TaskForm mode="create" onSubmit={handleTaskSubmit} />
+    </SafeAreaView>
+  );
+}
 
 export default TaskCreateScreen;

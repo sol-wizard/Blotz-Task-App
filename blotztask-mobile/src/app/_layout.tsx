@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 /* eslint-disable camelcase */
@@ -31,7 +32,6 @@ export default function RootLayout() {
     InterThin: Inter_300Light,
     InterBold: Inter_700Bold,
   });
-  /* eslint-enable camelcase */
 
   return (
     <Auth0Provider domain={domain} clientId={clientId}>
