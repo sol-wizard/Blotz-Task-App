@@ -8,19 +8,13 @@ export const createBreakDownSubtasks = async (taskId: number) => {
 
   try {
     const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/TaskBreakdown/${taskId}`;
-    const response = await fetch(url, {
+    const data: BreakdownSubtaskDTO[] = await fetchWithAuth(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
     });
 
-    if (!response.ok) {
-      console.error("Failed to fetch subtasks", response.statusText);
-      return;
-    }
-
-    const data: BreakdownSubtaskDTO[] = await response.json();
     return data;
   } catch (error) {
     console.error("Error fetching subtasks:", error);
