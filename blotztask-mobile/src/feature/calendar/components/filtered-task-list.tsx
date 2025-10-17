@@ -10,11 +10,20 @@ import { useState } from "react";
 import { TaskStatusType } from "../modals/task-status-type";
 import { useSelectedTaskActions } from "@/shared/stores/selected-task-store";
 import { filterSelectedTask } from "../util/task-counts";
+import { Snackbar } from "react-native-paper";
 
 export const FilteredTaskList = () => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
 
-  const { toggleTask, removeTask, isToggling, isDeleting } = useTaskMutations();
+  const {
+    toggleTask,
+    removeTask,
+    isToggling,
+    isDeleting,
+    deleteTaskSuccess,
+    resetDeleteTask,
+    deleteTaskError,
+  } = useTaskMutations();
   const { setSelectedTask } = useSelectedTaskActions();
   const { selectedDayTasks, isLoading } = useSelectedDayTasks();
 
@@ -78,6 +87,14 @@ export const FilteredTaskList = () => {
       ) : (
         <TaskListPlaceholder selectedStatus={selectedStatus} />
       )}
+
+      <Snackbar
+        visible={deleteTaskSuccess || !!deleteTaskError}
+        onDismiss={resetDeleteTask}
+        duration={1500}
+      >
+        {deleteTaskError ? "Failed to delete task." : "Deleted task successfully!"}
+      </Snackbar>
     </>
   );
 };

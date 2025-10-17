@@ -8,27 +8,18 @@ import CalendarHeader from "../components/calendar-header";
 import useSelectedDayTasks from "@/feature/calendar/hooks/useSelectedDayTasks";
 
 import { FilteredTaskList } from "../components/filtered-task-list";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { Snackbar } from "react-native-paper";
 
 export default function CalendarScreen() {
   const { selectedDay, setSelectedDay } = useSelectedDayTasks();
-  // const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
-  //   visible: false,
-  //   text: "",
-  // });
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
 
-  // const handleDeleteTask = async (taskId: number) => {
-  //   try {
-  //     await removeTask(taskId);
-  //     setSnackbar({ visible: true, text: "Delete Successful" });
-  //   } catch (e) {
-  //     console.error(e);
-  //     setSnackbar({
-  //       visible: true,
-  //       text: "Delete Failed, please try again later",
-  //     });
-  //   }
-  // };
+  const { deleteTaskSuccess } = useTaskMutations();
+  const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
+    visible: false,
+    text: "",
+  });
 
   return (
     <SafeAreaView className="flex-1">
@@ -69,14 +60,10 @@ export default function CalendarScreen() {
       </CalendarProvider>
 
       <ToggleAiTaskGenerate />
-      {/* TODO: fix, should appear in all kinds of error*/}
-      {/* <Snackbar
-        visible={!deleteTaskError}
-        onDismiss={() => setSnackbar({ visible: false, text: "" })}
-        duration={2200}
-      >
-        {snackbar.text}
-      </Snackbar> */}
+
+      <Snackbar visible={deleteTaskSuccess} onDismiss={() => {}} duration={2200}>
+        Deleted task successfully!
+      </Snackbar>
     </SafeAreaView>
   );
 }

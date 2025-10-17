@@ -52,6 +52,8 @@ const useTaskMutations = () => {
     isDeleting: deleteTaskMutation.isPending,
     isUpdating: updateTaskMutation.isPending,
     deleteTaskError: deleteTaskMutation.error,
+    deleteTaskSuccess: deleteTaskMutation.isSuccess,
+    resetDeleteTask: deleteTaskMutation.reset,
   };
 };
 
