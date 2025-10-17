@@ -1,31 +1,23 @@
 import { Hanging } from "@/shared/components/common/hanging";
 import React from "react";
 import { View, Text, Pressable, ScrollView, SafeAreaView } from "react-native";
+import { TaskStatusSelectItem } from "../modals/task-status-select-item";
+import { TaskStatusType } from "../modals/task-status-type";
 
-export interface TaskStatusSelectItem {
-  id: TaskStatusType;
-  status: string;
-  count: number;
-}
-
-export interface TaskStatusSelectProps {
+export function TaskStatusSelect({
+  statuses,
+  selectedStatusId,
+  onChange,
+}: {
   statuses: TaskStatusSelectItem[];
   selectedStatusId: TaskStatusType;
   onChange: (value: TaskStatusType) => void;
-}
-
-export type TaskStatusType = "all" | "todo" | "inprogress" | "done" | "overdue";
-
-export function TaskStatusSelect({
-  statuses: taskStatuses,
-  selectedStatusId,
-  onChange,
-}: TaskStatusSelectProps) {
+}) {
   return (
     <SafeAreaView>
       <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} className="mb-4">
         <View className="flex-row gap-2 px-4 items-center py-4">
-          {taskStatuses.map((statusItem) => {
+          {statuses.map((statusItem) => {
             const isSelected = selectedStatusId === statusItem.id;
 
             // Urgent: change to seperate button, no for loop

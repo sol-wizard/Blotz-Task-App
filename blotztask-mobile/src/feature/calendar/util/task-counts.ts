@@ -1,5 +1,6 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { TaskStatusSelectItem, TaskStatusType } from "../components/task-status-select";
+import { TaskStatusSelectItem } from "../modals/task-status-select-item";
+import { TaskStatusType } from "../modals/task-status-type";
 
 export interface TaskCounts {
   todo: number;

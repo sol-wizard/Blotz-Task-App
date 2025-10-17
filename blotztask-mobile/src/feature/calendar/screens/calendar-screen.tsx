@@ -9,13 +9,15 @@ import { createStatusSelectItems, filterTasksByStatus } from "../util/task-count
 import { router } from "expo-router";
 import { theme } from "@/shared/constants/theme";
 
-import { TaskStatusSelect, TaskStatusType } from "../components/task-status-select";
+import { TaskStatusSelect } from "../components/task-status-select";
 import TaskCard from "../components/task-card";
 import CalendarHeader from "../components/calendar-header";
 import { TaskListPlaceholder } from "../components/tasklist-placeholder";
 import useSelectedDayTasks from "@/feature/calendar/hooks/useSelectedDayTasks";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useSelectedTaskActions } from "@/shared/stores/selected-task-store";
+import { TaskStatusType } from "../modals/task-status-type";
+import { FilteredTaskList } from "../components/filtered-task-list";
 
 export default function CalendarScreen() {
   const { selectedDay, setSelectedDay, tasksForSelectedDay, overdueTasks, isLoading } =
@@ -111,27 +113,7 @@ export default function CalendarScreen() {
           />
         )}
 
-        {/* TODO tomorrow name to row */}
-        <TaskStatusSelect
-          statuses={taskStatuses}
-          selectedStatusId={selectedStatus}
-          onChange={setSelectedStatus}
-        />
-
-        {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="small" />
-          </View>
-        ) : filteredTasks && filteredTasks.length > 0 ? (
-          <FlatList
-            className="flex-1"
-            data={filteredTasks}
-            renderItem={renderTask}
-            keyExtractor={(task) => task.id.toString()}
-          />
-        ) : (
-          <TaskListPlaceholder selectedStatus={selectedStatus} />
-        )}
+        <FilteredTaskList />
       </CalendarProvider>
 
       <ToggleAiTaskGenerate />
