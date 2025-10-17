@@ -3,7 +3,7 @@ import { View, ScrollView, SafeAreaView } from "react-native";
 import { TaskStatusType } from "../modals/task-status-type";
 import { TaskStatusButton } from "@/shared/components/ui/task-status-button";
 
-export function TaskStatusSelect({
+export function TaskStatusRow({
   allTaskCount,
   todoTaskCount,
   inProgressTaskCount,

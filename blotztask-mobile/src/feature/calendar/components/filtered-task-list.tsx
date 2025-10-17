@@ -1,5 +1,5 @@
 import { ActivityIndicator, FlatList, View } from "react-native";
-import { TaskStatusSelect } from "./task-status-select";
+import { TaskStatusRow } from "./task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import useSelectedDayTasks from "../hooks/useSelectedDayTasks";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -52,7 +52,7 @@ export const FilteredTaskList = () => {
 
   return (
     <>
-      <TaskStatusSelect
+      <TaskStatusRow
         allTaskCount={filteredTaskList.find((item) => item.status === "All")?.count ?? 0}
         todoTaskCount={filteredTaskList.find((item) => item.status === "To Do")?.count ?? 0}
         inProgressTaskCount={
