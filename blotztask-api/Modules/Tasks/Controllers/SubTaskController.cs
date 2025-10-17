@@ -1,4 +1,5 @@
 using BlotzTask.Modules.Tasks.Commands.SubTasks;
+using BlotzTask.Modules.Tasks.Queries.SubTasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,8 +8,15 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class SubTaskController(UpdateSubtaskCommandHandler updateSubtaskCommandHandler, ReplaceSubtasksCommandHandler replaceSubtasksCommandHandler) : ControllerBase
+public class SubTaskController(GetSubtasksByIdQueryHandler getSubtaskByIdQueryHandler,UpdateSubtaskCommandHandler updateSubtaskCommandHandler, ReplaceSubtasksCommandHandler replaceSubtasksCommandHandler) : ControllerBase
 {
+    [HttpGet("tasks/{id}")]
+    public async Task<List<SubtaskReadDto>> GetSubtasksById(int id, CancellationToken ct)
+    {
+        var query = new GetSubtasksByIdQuery { TaskId = id };
+        return await getSubtaskByIdQueryHandler.Handle(query, ct);
+    }
+    
     [HttpPut("{taskId}/subtasks/{subtaskId}")]
     public async Task<IActionResult> UpdateSubtask(
         int taskId,

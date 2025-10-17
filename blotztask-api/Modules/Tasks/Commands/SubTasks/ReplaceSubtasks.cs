@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Tasks.Shared;
 using Microsoft.EntityFrameworkCore;
 
 public class ReplaceSubtasksCommand
@@ -28,26 +29,20 @@ public class ReplaceSubtasksCommandHandler
         if (parentTask == null)
             throw new Exception($"Parent task {command.TaskId} not found.");
 
-        var existingSubtasks = _db.Subtasks.Where(s => s.ParentTaskId == parentTask.Id);
+        var existingSubtasks = await _db.Subtasks
+            .Where(s => s.ParentTaskId == parentTask.Id)
+            .ToListAsync(ct);
 
-        // Remove all existed subtasks
         _db.Subtasks.RemoveRange(existingSubtasks);
 
         var now = DateTime.UtcNow;
 
         foreach (var dto in command.Subtasks)
         {
-            TimeSpan? duration = null;
-            if (!string.IsNullOrWhiteSpace(dto.Duration))
+            var duration = TimeSpanHelper.ParseDuration(dto.Duration);
+            if (!duration.HasValue)
             {
-                if (TimeSpan.TryParse(dto.Duration, out var parsedDuration))
-                {
-                    duration = parsedDuration;
-                }
-                else
-                {
-                    throw new Exception($"Invalid duration format: {dto.Duration}. Expected format: HH:mm:ss or d.HH:mm:ss");
-                }
+                throw new Exception($"Duration {dto.Duration} is invalid.");
             }
 
             var subtask = new Subtask
@@ -61,8 +56,9 @@ public class ReplaceSubtasksCommandHandler
                 CreatedAt = now,
                 UpdatedAt = now
             };
-
+        
             _db.Subtasks.Add(subtask);
+
         }
 
         await _db.SaveChangesAsync(ct);

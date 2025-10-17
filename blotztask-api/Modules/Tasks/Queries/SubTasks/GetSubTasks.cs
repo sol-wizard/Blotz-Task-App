@@ -1,6 +1,46 @@
+using System.ComponentModel.DataAnnotations;
+using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Tasks.Shared;
+using Microsoft.EntityFrameworkCore;
+
 namespace BlotzTask.Modules.Tasks.Queries.SubTasks;
 
-public class GetSubTasks
+public class GetSubtasksByIdQuery
 {
-    
+    [Required]
+    public required int TaskId { get; init; }
+}
+
+public class GetSubtasksByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetSubtasksByIdQueryHandler> logger)
+{
+    private readonly ILogger<GetSubtasksByIdQueryHandler> _logger = logger;
+
+    public async Task<List<SubtaskReadDto>> Handle(GetSubtasksByIdQuery query, CancellationToken ct = default)
+    {
+        var subTasks = await db.TaskItems
+            .Where(t => t.Id == query.TaskId)
+            .SelectMany(t => t.Subtasks, (t, s) => new SubtaskReadDto
+            {
+                TaskId = s.Id,
+                ParentTaskId = t.Id,
+                Title = s.Title,
+                Description = s.Description,
+                Duration = s.Duration,
+                Order = s.Order,
+                IsDone = s.IsDone
+            })
+            .ToListAsync(ct);
+
+        return subTasks;
+    }
+}
+public class SubtaskReadDto
+{
+    public int TaskId { get; set; }
+    public int ParentTaskId { get; set; }
+    public required string Title { get; set; }
+    public string? Description { get; set; } = string.Empty;
+    public TimeSpan? Duration { get; set; }
+    public int Order { get; set; }
+    public bool IsDone { get; set; }
 }
