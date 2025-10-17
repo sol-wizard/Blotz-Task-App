@@ -1,7 +1,6 @@
 import { ActivityIndicator, FlatList, View } from "react-native";
 import { TaskStatusSelect } from "./task-status-select";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
-import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
 import useSelectedDayTasks from "../hooks/useSelectedDayTasks";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import TaskCard from "./task-card";
@@ -10,19 +9,19 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { TaskStatusType } from "../modals/task-status-type";
 import { useSelectedTaskActions } from "@/shared/stores/selected-task-store";
+import { filterSelectedTask } from "../util/task-counts";
 
 export const FilteredTaskList = () => {
-  const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
 
   const { toggleTask, removeTask, isToggling, isDeleting } = useTaskMutations();
   const { setSelectedTask } = useSelectedTaskActions();
-  const { tasksForSelectedDay, overdueTasks, isLoading } = useSelectedDayTasks();
+  const { selectedDayTasks, isLoading } = useSelectedDayTasks();
 
-  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, overdueTasks, selectedStatus);
-  const taskStatuses = createStatusSelectItems({
-    tasks: tasksForSelectedDay,
-    overdueTaskCount: overdueTasks.length,
-  });
+  const filteredTaskList = filterSelectedTask(selectedDayTasks);
+  const tasksOfSelectedStatus = filteredTaskList.find(
+    (item) => item.status === selectedStatus,
+  )?.tasks;
 
   const navigateToTaskDetails = (task: TaskDetailDTO) => {
     setSelectedTask(task);
@@ -54,8 +53,14 @@ export const FilteredTaskList = () => {
   return (
     <>
       <TaskStatusSelect
-        statuses={taskStatuses}
-        selectedStatusId={selectedStatus}
+        allTaskCount={filteredTaskList.find((item) => item.status === "All")?.count ?? 0}
+        todoTaskCount={filteredTaskList.find((item) => item.status === "To Do")?.count ?? 0}
+        inProgressTaskCount={
+          filteredTaskList.find((item) => item.status === "In Progress")?.count ?? 0
+        }
+        overdueTaskCount={filteredTaskList.find((item) => item.status === "Overdue")?.count ?? 0}
+        doneTaskCount={filteredTaskList.find((item) => item.status === "Done")?.count ?? 0}
+        selectedStatus={selectedStatus}
         onChange={setSelectedStatus}
       />
 
@@ -63,10 +68,10 @@ export const FilteredTaskList = () => {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="small" />
         </View>
-      ) : filteredTasks && filteredTasks.length > 0 ? (
+      ) : tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
         <FlatList
           className="flex-1"
-          data={filteredTasks}
+          data={tasksOfSelectedStatus}
           renderItem={renderTask}
           keyExtractor={(task) => task.id.toString()}
         />

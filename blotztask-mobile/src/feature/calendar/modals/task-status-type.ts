@@ -1,1 +1,1 @@
-export type TaskStatusType = "all" | "todo" | "inprogress" | "done" | "overdue";
+export type TaskStatusType = "All" | "To Do" | "In Progress" | "Done" | "Overdue";
