@@ -33,7 +33,7 @@ public class GetOverdueTasksQueryHandler(
                         && t.StartTime != null
                         && t.EndTime != null
                         && t.EndTime >= sevenDaysAgoStartUtc
-                        && t.EndTime <todayStartUtc)
+                        && t.EndTime < todayStartUtc)
             .Select(task => new OverdueTaskItemDto
             {
                 Id = task.Id,

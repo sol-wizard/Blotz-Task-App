@@ -16,7 +16,9 @@ const useSelectedDayTasks = ({ selectedDay }: { selectedDay: Date }) => {
     queryFn: fetchOverdueTasks,
   });
 
-  const selectedDayTasks = [...overdueTasks, ...tasksForSelectedDay];
+  const selectedDayTasks = [
+    ...new Map([...overdueTasks, ...tasksForSelectedDay].map((task) => [task.id, task])).values(),
+  ];
 
   const isLoading = isLoadingTasks || isLoadingOverdue;
 
