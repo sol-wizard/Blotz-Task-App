@@ -29,36 +29,48 @@ public class AddSubtasksCommandHandler
             throw new Exception($"Parent task {command.TaskId} not found.");
 
         var now = DateTime.UtcNow;
-        
+
         foreach (var dto in command.Subtasks)
         {
+            TimeSpan? duration = null;
+            if (!string.IsNullOrWhiteSpace(dto.Duration))
+            {
+                if (TimeSpan.TryParse(dto.Duration, out var parsedDuration))
+                {
+                    duration = parsedDuration;
+                }
+                else
+                {
+                    throw new Exception($"Invalid duration format: {dto.Duration}. Expected format: HH:mm:ss or d.HH:mm:ss");
+                }
+            }
+
             var subtask = new Subtask
             {
                 Title = dto.Title,
-                Description = dto.Description,
-                Duration = dto.Duration,
+                Description = string.Empty,
+                Duration = duration,
                 Order = dto.Order,
                 IsDone = dto.IsDone,
                 ParentTaskId = parentTask.Id,
                 CreatedAt = now,
                 UpdatedAt = now
             };
-            
+
             _db.Subtasks.Add(subtask);
         }
-        
+
         await _db.SaveChangesAsync(ct);
-        
+
 
         return $"{command.Subtasks.Count} subtasks added to task {parentTask.Id}.";
     }
 }
 
 public class SubtaskDto
-{ 
+{
     public string Title { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public TimeSpan? Duration { get; set; }
+    public string Duration { get; set; } = string.Empty;
     public int Order { get; set; }
     public bool IsDone { get; set; } = false; // default for new subtasks
 }
