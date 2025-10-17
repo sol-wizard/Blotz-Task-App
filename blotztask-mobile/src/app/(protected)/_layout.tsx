@@ -1,5 +1,4 @@
 import { theme } from "@/shared/constants/theme";
-import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
 import { Stack } from "expo-router";
 
 export default function ProtectedLayout() {

@@ -1,17 +1,16 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
 import { EditTaskItemDTO } from "@/feature/task-add-edit/models/edit-task-item-dto";
-import { fetchTaskById } from "@/shared/services/task-service";
-import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
 import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-task-dto-mapper";
 import { useRouter } from "expo-router";
 import { Text } from "react-native";
 import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
 
 // TODO: Fix flickering stale selected task in task detail page while navigating back
 const TaskEditScreen = () => {
   const { updateTask, isUpdating } = useTaskMutations();
-  const { selectedTask, setSelectedTask } = useSelectedTaskStore();
+  const selectedTask = useSelectedTaskState();
   const router = useRouter();
 
   // TODO: Add loading icon
@@ -25,10 +24,13 @@ const TaskEditScreen = () => {
   }
 
   const taskEditData: EditTaskItemDTO = {
-    ...selectedTask,
+    id: selectedTask.id,
+    title: selectedTask.title,
+    description: selectedTask.description,
     startTime: selectedTask.startTime ? new Date(selectedTask.startTime) : undefined,
     endTime: selectedTask.endTime ? new Date(selectedTask.endTime) : undefined,
     labelId: selectedTask.label ? selectedTask.label.labelId : undefined,
+    timeType: selectedTask.timeType,
   };
 
   const handleTaskSubmit = async (formValues: TaskFormField) => {
@@ -40,12 +42,6 @@ const TaskEditScreen = () => {
         ...dto,
         id: selectedTask.id,
       });
-
-      // Fetch fresh data and update store before navigation
-      const updatedTask = await fetchTaskById(selectedTask.id);
-      if (updatedTask) {
-        setSelectedTask(updatedTask);
-      }
 
       router.back();
       console.log("Task submitted successfully");

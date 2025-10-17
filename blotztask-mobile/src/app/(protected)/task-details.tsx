@@ -10,8 +10,6 @@ import { theme } from "@/shared/constants/theme";
 import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type tabTypes = "Details" | "Subtasks";
-
 export default function TaskDetailsScreen() {
   const router = useRouter();
   const selectedTask = useSelectedTaskState();
@@ -19,7 +17,7 @@ export default function TaskDetailsScreen() {
 
   const taskStatus = isDone ? "Done" : "To Do";
   const labelName: string | undefined = label?.name;
-  const [activeTab, setActiveTab] = useState<tabTypes>("Details");
+  const [activeTab, setActiveTab] = useState<"Details" | "Subtasks">("Details");
 
   return (
     <SafeAreaView
