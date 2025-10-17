@@ -8,16 +8,10 @@ export const queryClient = new QueryClient({
   }),
   mutationCache: new MutationCache({
     onError: (error, variables) => {
-      console.error(
-        "[Mutation Error]",
-        "\nError Message:",
-        (error as Error).message,
-        "\nVariables:",
-        variables,
-      );
+      console.error("[Mutation Error]", String(error), variables);
     },
     onSuccess: (data, variables) => {
-      console.log("[Mutation Success]", "\nReturned Data:", data, "\nVariables:", variables);
+      console.log("[Mutation Success]", data, variables);
     },
   }),
   defaultOptions: {
