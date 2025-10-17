@@ -4,6 +4,7 @@ import { ASSETS, LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import LottieView from "lottie-react-native";
+import { BreakdownSubtaskDTO } from "@/feature/breakdown/models/breakdown-subtask-dto";
 
 type SubtaskTabProps = {
   taskId: number;
@@ -19,42 +20,35 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
     addSubtasksError,
   } = useSubtaskMutations();
 
-  const [generatedSubtasks, setGeneratedSubtasks] = useState<
-    { order: number; title: string; duration: string }[]
-  >([]);
+  const [generatedSubtasks, setGeneratedSubtasks] = useState<BreakdownSubtaskDTO[]>([]);
 
   const handleBreakDown = async () => {
-    if (isBreakingDown) return;
+    if (isBreakingDown || isAddingSubtasks) return;
     try {
       const subtasks = await breakDownTask(taskId);
       if (subtasks && Array.isArray(subtasks)) {
         setGeneratedSubtasks(subtasks);
+        await addSubtasks({
+          taskId,
+          subtasks: subtasks.map((subtask) => ({
+            ...subtask,
+          })),
+        });
       }
     } catch {
-      // error handled by breakDownError
+      console.error(breakDownError || addSubtasksError);
     }
-  };
-
-  const handleAddSubtasks = () => {
-    if (generatedSubtasks.length === 0) return;
-    addSubtasks({
-      taskId,
-      subtasks: generatedSubtasks.map((subtask) => ({
-        ...subtask,
-        isDone: false,
-      })),
-    });
   };
 
   return (
     <View>
       <View className="mt-4 p-4 bg-[#F5F9FA] rounded-3xl">
         <Text className="font-balooBold text-xl text-blue-500">
-          {isBreakingDown
+          {isBreakingDown || isAddingSubtasks
             ? "Breaking your tasks into tiny bite-sized pieces~"
             : "Big tasks can feel heavy. Try breaking them into bite-sized actions."}
         </Text>
-        {isBreakingDown && (
+        {(isBreakingDown || isAddingSubtasks) && (
           <LottieView
             source={LOTTIE_ANIMATIONS.dotsLoader}
             autoPlay
@@ -75,36 +69,18 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
                 <Text className="text-gray-600">{subtask.duration}</Text>
               </View>
             ))}
-            <Pressable
-              onPress={handleAddSubtasks}
-              disabled={isAddingSubtasks}
-              className={`mt-4 rounded-3xl h-[45px] w-[140px] self-center flex-row items-center justify-center ${
-                isAddingSubtasks ? "bg-gray-300" : "bg-[#EBF0FE] active:bg-gray-100"
-              }`}
-            >
-              {isAddingSubtasks ? (
-                <ActivityIndicator size="small" color="#3b82f6" />
-              ) : (
-                <Text className="text-blue-500 text-lg font-balooBold">Add to task</Text>
-              )}
-            </Pressable>
-            {addSubtasksError && (
-              <Text className="text-red-500 text-center mt-3">
-                Failed to add subtasks. Please try again.
-              </Text>
-            )}
           </View>
         )}
       </View>
 
       <Pressable
         onPress={handleBreakDown}
-        disabled={isBreakingDown}
+        disabled={isBreakingDown || isAddingSubtasks}
         className={`flex-row items-center justify-center self-center mt-8 rounded-3xl h-[55px] w-[180px] ${
-          isBreakingDown ? "bg-gray-300" : "bg-[#EBF0FE] active:bg-gray-100"
+          isBreakingDown || isAddingSubtasks ? "bg-gray-300" : "bg-[#EBF0FE] active:bg-gray-100"
         }`}
       >
-        {isBreakingDown ? (
+        {isBreakingDown || isAddingSubtasks ? (
           <ActivityIndicator size="small" color="#3b82f6" />
         ) : (
           <>
@@ -114,9 +90,9 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
         )}
       </Pressable>
 
-      {breakDownError && (
+      {(breakDownError || addSubtasksError) && (
         <Text className="text-red-500 text-center mt-3">
-          Failed to generate subtasks. Please try again.
+          Failed to generate or add subtasks. Please try again.
         </Text>
       )}
     </View>

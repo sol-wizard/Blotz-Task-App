@@ -17,7 +17,7 @@ export const useSubtaskMutations = () => {
   const addSubtasksMutation = useMutation({
     mutationFn: replaceSubtasks,
     onSuccess: (_, variables) => {
-      console.log(`Added subtasks ${variables.subtasks} to ${variables.taskId}`);
+      console.log("Added subtasks", variables.subtasks, "to", variables.taskId);
       queryClient.invalidateQueries({ queryKey: ["subtasks", variables.taskId] });
     },
     onError: (error) => {
