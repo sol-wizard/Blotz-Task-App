@@ -34,14 +34,14 @@ export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   }
 }
 
-export async function addSubtasks({
+export async function replaceSubtasks({
   taskId,
   subtasks,
 }: {
   taskId: number;
   subtasks: AddSubtaskDTO[];
 }): Promise<void> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/tasks/${taskId}/subtasks`;
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/tasks/${taskId}/replaceSubtasks`;
 
   try {
     await fetchWithAuth<void>(url, {

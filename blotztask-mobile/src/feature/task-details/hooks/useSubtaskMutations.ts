@@ -1,4 +1,4 @@
-import { addSubtasks, createBreakDownSubtasks } from "@/shared/services/subtask-service";
+import { replaceSubtasks, createBreakDownSubtasks } from "@/shared/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useSubtaskMutations = () => {
@@ -15,7 +15,7 @@ export const useSubtaskMutations = () => {
   });
 
   const addSubtasksMutation = useMutation({
-    mutationFn: addSubtasks,
+    mutationFn: replaceSubtasks,
     onSuccess: (_, variables) => {
       console.log(`Added subtasks ${variables.subtasks} to ${variables.taskId}`);
       queryClient.invalidateQueries({ queryKey: ["subtasks", variables.taskId] });
