@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, Pressable, TextInput, Keyboard } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import { View, Text, Pressable, TextInput } from "react-native";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import { theme } from "@/shared/constants/theme";
@@ -14,9 +14,15 @@ type Props = {
 export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(task.title);
+  const textInputRef = useRef<TextInput>(null);
 
-  // Use fallback color for divider
   const dividerColor = theme.colors.disabled;
+
+  useEffect(() => {
+    if (isEditing) {
+      setTimeout(() => textInputRef.current?.focus(), 50);
+    }
+  }, [isEditing]);
 
   const handleEdit = () => {
     const trimmed = draftTitle.trim();
@@ -26,7 +32,10 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
       setDraftTitle(task.title);
     }
     setIsEditing(false);
-    Keyboard.dismiss();
+  };
+
+  const handleStartEditing = () => {
+    setIsEditing(true);
   };
 
   return (
@@ -34,39 +43,30 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
       <View className="w-2 h-full rounded-full" style={{ backgroundColor: dividerColor }} />
 
       <View className="flex-1 flex-row items-center justify-between ml-4">
-        {isEditing ? (
-          <TextInput
-            value={draftTitle}
-            onChangeText={setDraftTitle}
-            onBlur={handleEdit}
-            onSubmitEditing={handleEdit}
-            autoFocus
-            returnKeyType="done"
-            className="flex-1 mr-3 text-lg font-semibold"
-            style={{ color: theme.colors.onSurface }}
-            placeholder="Task title"
-            placeholderTextColor={theme.colors.disabled}
-            accessibilityLabel="Edit task title"
-            accessibilityHint="Double tap to edit task title"
-          />
-        ) : (
-          <Pressable
-            className="flex-1 mr-3"
-            onPress={() => setIsEditing(true)}
-            accessibilityRole="button"
-            accessibilityLabel={`Task: ${task.title}`}
-            accessibilityHint="Double tap to edit task title"
-          >
-            <Text
-              numberOfLines={1}
-              className="text-lg font-semibold"
-              style={{ color: theme.colors.onSurface }}
-              lineBreakStrategyIOS="hangul-word"
-            >
-              {task.title}
-            </Text>
-          </Pressable>
-        )}
+        <TextInput
+          ref={textInputRef}
+          value={draftTitle}
+          onChangeText={setDraftTitle}
+          onBlur={handleEdit}
+          onSubmitEditing={handleEdit}
+          editable={isEditing}
+          returnKeyType="done"
+          className="font-semibold"
+          onPressIn={() => {
+            if (!isEditing) {
+              handleStartEditing();
+            }
+          }}
+          style={{
+            flex: 1,
+            color: theme.colors.onSurface,
+            paddingVertical: 0,
+            textAlignVertical: "center",
+          }}
+          placeholder="Task title"
+          placeholderTextColor={theme.colors.disabled}
+          accessibilityLabel="Task title"
+        />
 
         {task.startTime || task.endTime ? (
           <View className="flex-row items-center ml-2">
