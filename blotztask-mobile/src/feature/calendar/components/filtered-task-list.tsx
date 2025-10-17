@@ -16,9 +16,9 @@ export const FilteredTaskList = () => {
 
   const { toggleTask, removeTask, isToggling, isDeleting } = useTaskMutations();
   const { setSelectedTask } = useSelectedTaskActions();
-
   const { tasksForSelectedDay, overdueTasks, isLoading } = useSelectedDayTasks();
-  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, selectedStatus, overdueTasks);
+
+  const filteredTasks = filterTasksByStatus(tasksForSelectedDay, overdueTasks, selectedStatus);
   const taskStatuses = createStatusSelectItems({
     tasks: tasksForSelectedDay,
     overdueTaskCount: overdueTasks.length,

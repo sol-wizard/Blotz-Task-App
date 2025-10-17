@@ -64,8 +64,8 @@ export function createStatusSelectItems({
 
 export function filterTasksByStatus(
   tasks: TaskDetailDTO[],
-  selectedStatus: TaskStatusType,
   overdueTasks: TaskDetailDTO[],
+  selectedStatus: TaskStatusType,
 ): TaskDetailDTO[] {
   const today = new Date();
   const todoTasks = tasks.filter((task) => isTodo(task));
