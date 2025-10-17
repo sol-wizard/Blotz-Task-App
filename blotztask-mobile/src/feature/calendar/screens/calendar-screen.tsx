@@ -3,7 +3,8 @@ import { Snackbar } from "react-native-paper";
 import { format } from "date-fns";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
-import { ActivityIndicator, FlatList, SafeAreaView, View } from "react-native";
+import { ActivityIndicator, FlatList, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useSelectedDayTaskStore } from "../../../shared/stores/selectedday-task-store";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
 import { createStatusSelectItems, filterTasksByStatus } from "../util/task-counts";
@@ -77,7 +78,7 @@ export default function CalendarScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
       <CalendarHeader
         date={format(selectedDay, "yyyy-MM-dd")}
         isCalendarVisible={isCalendarVisible}
