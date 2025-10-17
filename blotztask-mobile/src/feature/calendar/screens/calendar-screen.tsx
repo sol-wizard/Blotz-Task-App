@@ -16,10 +16,6 @@ export default function CalendarScreen() {
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
 
   const { deleteTaskSuccess } = useTaskMutations();
-  const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
-    visible: false,
-    text: "",
-  });
 
   return (
     <SafeAreaView className="flex-1">
