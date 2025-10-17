@@ -1,0 +1,261 @@
+import { View, Text, TouchableOpacity, Alert } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
+import React, { useState, useRef } from "react";
+import DraggableSubtaskList from "./draggable-subtask-list";
+import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
+import { theme } from "@/shared/constants/theme";
+import { MaterialIcons } from "@expo/vector-icons";
+
+// Mock data for subtasks
+const MOCK_SUBTASKS = [
+  {
+    id: 1,
+    title: "Research user requirements",
+    description: "Gather and analyze user feedback",
+    duration: "02:00:00",
+    isDone: true,
+  },
+  {
+    id: 2,
+    title: "Design mockups",
+    description: "Create wireframes and high-fidelity designs",
+    duration: "03:30:00",
+    isDone: false,
+  },
+  {
+    id: 3,
+    title: "Implement frontend components",
+    description: "Build React components for the UI",
+    duration: "05:00:00",
+    isDone: false,
+  },
+  {
+    id: 4,
+    title: "Write unit tests 1",
+    description: "Test all new components",
+    duration: "01:30:00",
+    isDone: false,
+  },
+  {
+    id: 5,
+    title: "Write unit tests 2",
+    description: "Test all new components",
+    duration: "01:30:00",
+    isDone: false,
+  },
+  {
+    id: 6,
+    title: "Write unit tests 3  ",
+    description: "Test all new components",
+    duration: "01:30:00",
+    isDone: false,
+  },
+  {
+    id: 7,
+    title: "Write unit tests 4",
+    description: "Test all new components",
+    duration: "01:30:00",
+    isDone: false,
+  },
+  {
+    id: 8,
+    title: "Write unit tests 5",
+    description: "Test all new components",
+    duration: "01:30:00",
+    isDone: false,
+  },
+  {
+    id: 9,
+    title: "Write unit tests 6",
+    description: "Test all new components",
+    duration: "01:30:00",
+    isDone: false,
+  },
+  {
+    id: 10,
+    title: "Write unit tests 7",
+    description: "Test all new components",
+    duration: "01:30:00",
+    isDone: false,
+  },
+  {
+    id: 11,
+    title: "Write unit tests 8",
+    description: "Test all new components",
+    duration: "01:30:00",
+    isDone: false,
+  },
+];
+
+const SubtasksTab = () => {
+  const [subtasks, setSubtasks] = useState(MOCK_SUBTASKS);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const scrollOffsetRef = useRef(0);
+  const { selectedTask } = useSelectedTaskStore();
+  const taskColor = selectedTask?.label?.color ?? theme.colors.disabled;
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const handleToggle = (id: number) => {
+    setSubtasks((prev) =>
+      prev.map((subtask) =>
+        subtask.id === id ? { ...subtask, isDone: !subtask.isDone } : subtask,
+      ),
+    );
+  };
+
+  const handleRefresh = () => {
+    // TODO: Implement refresh functionality
+    console.log("Refresh subtasks");
+  };
+
+  const handleEdit = () => {
+    setIsEditMode(!isEditMode);
+    console.log("Edit mode:", !isEditMode);
+  };
+
+  const handleAddSubtask = () => {
+    // TODO: Implement add subtask functionality
+    console.log("Add more subtasks");
+  };
+
+  const handleDelete = (id: number) => {
+    Alert.alert("Delete Subtask", "Are you sure you want to delete this subtask?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          setSubtasks((prev) => prev.filter((subtask) => subtask.id !== id));
+        },
+      },
+    ]);
+  };
+
+  const handleReorder = (fromIndex: number, toIndex: number) => {
+    setSubtasks((prev) => {
+      const newSubtasks = [...prev];
+      const [movedItem] = newSubtasks.splice(fromIndex, 1);
+      newSubtasks.splice(toIndex, 0, movedItem);
+      return newSubtasks;
+    });
+  };
+
+  if (subtasks.length === 0) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-base font-baloo text-tertiary">No subtasks yet</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View className="flex-1">
+      {/* Top Action Bar */}
+      <View className="flex-row justify-between items-center mb-4">
+        {isEditMode ? (
+          <View className="p-2 w-11 h-11" />
+        ) : (
+          <TouchableOpacity onPress={handleRefresh} className="p-2">
+            <MaterialIcons name="sync" size={28} color={theme.colors.heading} />
+          </TouchableOpacity>
+        )}
+        {isEditMode ? (
+          <TouchableOpacity
+            onPress={handleEdit}
+            className="px-6 py-2 rounded-lg items-center justify-center"
+            style={{ backgroundColor: "#ebf0fe" }}
+          >
+            <Text className="font-balooSemiBold text-base" style={{ color: "#3d8de0" }}>
+              Complete
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={handleEdit}
+            className="w-10 h-10 rounded-full items-center justify-center"
+            style={{ backgroundColor: theme.colors.heading }}
+          >
+            <MaterialIcons name="edit" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Subtasks List */}
+      <View className="flex-1">
+        <ScrollView
+          ref={scrollViewRef}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 8 }}
+          scrollEventThrottle={1}
+          onScroll={(event) => {
+            const newOffset = event.nativeEvent.contentOffset.y;
+            scrollOffsetRef.current = newOffset;
+          }}
+        >
+          <DraggableSubtaskList
+            subtasks={subtasks}
+            onToggle={handleToggle}
+            color={taskColor}
+            isEditMode={isEditMode}
+            onDelete={handleDelete}
+            onReorder={handleReorder}
+            scrollViewRef={scrollViewRef}
+            scrollOffsetRef={scrollOffsetRef}
+          />
+        </ScrollView>
+      </View>
+
+      {/* Add More Subtasks Button / Drag to Reorder - Fixed at bottom */}
+      {isEditMode ? (
+        <View
+          className="mx-0 mb-20 mt-4 rounded-2xl"
+          style={{
+            paddingVertical: 10,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            className="py font-baloo"
+            style={{
+              color: "#8BC34A",
+              fontSize: 18,
+              textAlign: "center",
+            }}
+          >
+            Drag to reorder~
+          </Text>
+        </View>
+      ) : (
+        <TouchableOpacity
+          onPress={handleAddSubtask}
+          className="mx-0 mb-20 mt-4 rounded-2xl"
+          style={{
+            borderWidth: 2,
+            borderStyle: "dashed",
+            borderColor: theme.colors.dashline,
+            paddingVertical: 10,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            className="py font-baloo"
+            style={{
+              color: theme.colors.dashline,
+              fontSize: 18,
+              textAlign: "center",
+            }}
+          >
+            Add more subtasks
+          </Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
+
+export default SubtasksTab;
