@@ -6,7 +6,7 @@ import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
 import { fetchUserProfile } from "@/shared/services/user-service";
 import { useQueryClient } from "@tanstack/react-query";
 import { isSameDay } from "date-fns";
-import { fetchOverdueTasks, fetchTasksForDate } from "@/shared/services/task-service";
+import { fetchTasksForDate } from "@/shared/services/task-service";
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
@@ -35,10 +35,6 @@ export default function Index() {
           queryClient.prefetchQuery({
             queryKey: ["tasks", today.toISOString()],
             queryFn: () => fetchTasksForDate(today, showFloatingTasks),
-          }),
-          queryClient.prefetchQuery({
-            queryKey: ["overdue-tasks"],
-            queryFn: fetchOverdueTasks,
           }),
         ]);
 
