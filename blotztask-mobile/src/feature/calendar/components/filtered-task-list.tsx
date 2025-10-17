@@ -12,7 +12,7 @@ import { useSelectedTaskActions } from "@/shared/stores/selected-task-store";
 import { filterSelectedTask } from "../util/task-counts";
 import { Snackbar } from "react-native-paper";
 
-export const FilteredTaskList = () => {
+export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
 
   const {
@@ -25,10 +25,10 @@ export const FilteredTaskList = () => {
     deleteTaskError,
   } = useTaskMutations();
   const { setSelectedTask } = useSelectedTaskActions();
-  const { selectedDayTasks, isLoading } = useSelectedDayTasks();
+  const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
 
-  const filteredTaskList = filterSelectedTask(selectedDayTasks);
-  const tasksOfSelectedStatus = filteredTaskList.find(
+  const filteredSelectedDayTasks = filterSelectedTask(selectedDayTasks);
+  const tasksOfSelectedStatus = filteredSelectedDayTasks.find(
     (item) => item.status === selectedStatus,
   )?.tasks;
 
@@ -62,13 +62,15 @@ export const FilteredTaskList = () => {
   return (
     <>
       <TaskStatusRow
-        allTaskCount={filteredTaskList.find((item) => item.status === "All")?.count ?? 0}
-        todoTaskCount={filteredTaskList.find((item) => item.status === "To Do")?.count ?? 0}
+        allTaskCount={filteredSelectedDayTasks.find((item) => item.status === "All")?.count ?? 0}
+        todoTaskCount={filteredSelectedDayTasks.find((item) => item.status === "To Do")?.count ?? 0}
         inProgressTaskCount={
-          filteredTaskList.find((item) => item.status === "In Progress")?.count ?? 0
+          filteredSelectedDayTasks.find((item) => item.status === "In Progress")?.count ?? 0
         }
-        overdueTaskCount={filteredTaskList.find((item) => item.status === "Overdue")?.count ?? 0}
-        doneTaskCount={filteredTaskList.find((item) => item.status === "Done")?.count ?? 0}
+        overdueTaskCount={
+          filteredSelectedDayTasks.find((item) => item.status === "Overdue")?.count ?? 0
+        }
+        doneTaskCount={filteredSelectedDayTasks.find((item) => item.status === "Done")?.count ?? 0}
         selectedStatus={selectedStatus}
         onChange={setSelectedStatus}
       />

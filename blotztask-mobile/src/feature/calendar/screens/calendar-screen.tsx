@@ -5,11 +5,10 @@ import { SafeAreaView } from "react-native";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
 import { theme } from "@/shared/constants/theme";
 import CalendarHeader from "../components/calendar-header";
-import useSelectedDayTasks from "@/feature/calendar/hooks/useSelectedDayTasks";
 import { FilteredTaskList } from "../components/filtered-task-list";
 
 export default function CalendarScreen() {
-  const { selectedDay, setSelectedDay } = useSelectedDayTasks();
+  const [selectedDay, setSelectedDay] = useState(new Date());
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
 
   return (
@@ -47,7 +46,7 @@ export default function CalendarScreen() {
           />
         )}
 
-        <FilteredTaskList />
+        <FilteredTaskList selectedDay={selectedDay} />
       </CalendarProvider>
 
       <ToggleAiTaskGenerate />
