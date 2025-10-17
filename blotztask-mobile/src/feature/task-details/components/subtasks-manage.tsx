@@ -10,10 +10,9 @@ import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 
 type SubtasksManageProps = {
   taskId: number;
-  onBack: () => void;
 };
 
-const SubtasksManage = ({ taskId, onBack }: SubtasksManageProps) => {
+const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
   const { selectedTask } = useSelectedTaskStore();
 
   const { useSubtasksByParentId } = useSubtaskQueries();
@@ -25,6 +24,10 @@ const SubtasksManage = ({ taskId, onBack }: SubtasksManageProps) => {
   const scrollOffsetRef = useRef(0);
   const taskColor = selectedTask?.label?.color ?? theme.colors.disabled;
   const scrollViewRef = useRef<ScrollView>(null);
+
+  const onBack = () => {
+    setIsEditMode(false);
+  };
 
   const handleToggle = (id: number) => {
     // Optimistically update the UI using React Query's cache
@@ -58,7 +61,6 @@ const SubtasksManage = ({ taskId, onBack }: SubtasksManageProps) => {
   };
 
   const handleAddSubtask = () => {
-    // Go back to breakdown view to add more
     onBack();
   };
 

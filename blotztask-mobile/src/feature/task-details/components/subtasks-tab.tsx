@@ -1,5 +1,5 @@
 import { View, Text, Image, Pressable, ActivityIndicator } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ASSETS, LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
@@ -33,11 +33,9 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
   const displaySubtasks = fetchedSubtasks || [];
   const hasSubtasks = displaySubtasks.length > 0;
 
-  // Don't initialize state until we know if subtasks exist
   const [showManage, setShowManage] = useState<boolean | null>(null);
 
-  // Set initial view once data is loaded
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isLoadingSubtasks && showManage === null) {
       setShowManage(hasSubtasks);
     }
@@ -50,11 +48,9 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
       if (subtasks.length > 0) {
         await addSubtasks({
           taskId,
-          subtasks: subtasks.map((subtask: AddSubtaskDTO) => ({
-            ...subtask,
-          })),
+          subtasks: subtasks.map((subtask: AddSubtaskDTO) => ({ ...subtask })),
         });
-        // Show manage view after successful fetch and add
+        // Directly show manage view after adding subtasks
         setShowManage(true);
       }
     } catch {
@@ -62,15 +58,9 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
     }
   };
 
-  const handleViewManage = () => {
-    setShowManage(true);
-  };
-
   const isLoading = isBreakingDown || isAddingSubtasks || isLoadingSubtasks;
 
-  console.log(displaySubtasks);
-
-  // Show loading state while initially fetching or determining view
+  // Show loading state while fetching or determining view
   if (isLoadingSubtasks || showManage === null) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -82,18 +72,17 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
 
   // Show manage view if requested or if subtasks exist
   if (showManage && hasSubtasks) {
-    return <SubtasksManage taskId={taskId} onBack={() => setShowManage(false)} />;
+    return <SubtasksManage taskId={taskId} />;
   }
 
+  // Show initial breakdown view if no subtasks exist yet
   return (
     <View>
       <View className="mt-4 p-4 bg-[#F5F9FA] rounded-3xl">
         <Text className="font-balooBold text-xl text-blue-500">
           {isLoading
             ? "Breaking your tasks into tiny bite-sized pieces~"
-            : hasSubtasks
-              ? "Your bite-sized actions:"
-              : "Big tasks can feel heavy. Try breaking them into bite-sized actions."}
+            : "Big tasks can feel heavy. Try breaking them into bite-sized actions."}
         </Text>
         {isLoading && (
           <LottieView
@@ -104,24 +93,6 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
           />
         )}
         <Image source={ASSETS.greenBun} className="w-15 h-15 self-end" />
-
-        {hasSubtasks && !isLoadingSubtasks && (
-          <View className="mt-4">
-            {displaySubtasks.map((subtask, index) => (
-              <Pressable
-                key={subtask.taskId}
-                onPress={handleViewManage}
-                className="flex-row justify-between p-2 border-b border-gray-300 active:bg-gray-100"
-              >
-                <Text className="font-semibold">{subtask.order}.</Text>
-                <Text className="flex-1 mx-2">{subtask.title}</Text>
-                <Text className="text-gray-600">
-                  {subtask.duration ? String(subtask.duration) : ""}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
       </View>
 
       <Pressable
@@ -136,9 +107,7 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
         ) : (
           <>
             <MaterialCommunityIcons name="format-list-checkbox" size={24} color="#3b82f6" />
-            <Text className="ml-2 text-blue-500 text-xl font-balooBold">
-              {hasSubtasks ? "Re-breakdown" : "Breakdown"}
-            </Text>
+            <Text className="ml-2 text-blue-500 text-xl font-balooBold">Breakdown</Text>
           </>
         )}
       </Pressable>
