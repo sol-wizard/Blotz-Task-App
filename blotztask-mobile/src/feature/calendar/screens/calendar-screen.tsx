@@ -6,16 +6,11 @@ import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-
 import { theme } from "@/shared/constants/theme";
 import CalendarHeader from "../components/calendar-header";
 import useSelectedDayTasks from "@/feature/calendar/hooks/useSelectedDayTasks";
-
 import { FilteredTaskList } from "../components/filtered-task-list";
-import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { Snackbar } from "react-native-paper";
 
 export default function CalendarScreen() {
   const { selectedDay, setSelectedDay } = useSelectedDayTasks();
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
-
-  const { deleteTaskSuccess } = useTaskMutations();
 
   return (
     <SafeAreaView className="flex-1">
@@ -56,10 +51,6 @@ export default function CalendarScreen() {
       </CalendarProvider>
 
       <ToggleAiTaskGenerate />
-
-      <Snackbar visible={deleteTaskSuccess} onDismiss={() => {}} duration={2200}>
-        Deleted task successfully!
-      </Snackbar>
     </SafeAreaView>
   );
 }
