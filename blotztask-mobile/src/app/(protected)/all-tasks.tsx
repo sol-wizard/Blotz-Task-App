@@ -3,7 +3,7 @@ import { Snackbar, IconButton } from "react-native-paper";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, SafeAreaView, View, Text } from "react-native";
 import { router } from "expo-router";
-import { TaskStatusRow } from "@/feature/calendar/components/task-status-row";
+import { TaskStatusRow } from "@/shared/components/ui/task-status-row";
 import TaskCard from "@/feature/calendar/components/task-card";
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";

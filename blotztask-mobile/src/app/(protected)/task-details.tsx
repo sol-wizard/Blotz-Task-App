@@ -6,7 +6,7 @@ import TaskDateRange from "../../feature/task-details/components/task-date-range
 import DetailsTab from "../../feature/task-details/components/details-tab";
 import SubtasksTab from "../../feature/task-details/components/subtasks-tab";
 
-import { TaskStatusType } from "@/feature/calendar/components/task-status-row";
+import { TaskStatusType } from "@/shared/components/ui/task-status-row";
 import { theme } from "@/shared/constants/theme";
 import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
 

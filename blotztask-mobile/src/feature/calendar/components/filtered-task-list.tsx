@@ -1,5 +1,5 @@
 import { ActivityIndicator, FlatList, View } from "react-native";
-import { TaskStatusRow } from "./task-status-row";
+import { TaskStatusRow } from "../../../shared/components/ui/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import useSelectedDayTasks from "../hooks/useSelectedDayTasks";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
