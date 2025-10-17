@@ -3,8 +3,12 @@ import React, { useState } from "react";
 import { ASSETS, LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
+import { useSubtaskQueries } from "../hooks/useSubtaskQueries";
 import LottieView from "lottie-react-native";
 import { BreakdownSubtaskDTO } from "@/feature/breakdown/models/breakdown-subtask-dto";
+import { AddSubtaskDTO } from "@/feature/breakdown/models/add-subtask-dto";
+import { SubtaskDTO } from "@/feature/breakdown/models/subtask-dto";
+import SubtasksManage from "./subtasks-manage";
 
 type SubtaskTabProps = {
   taskId: number;
@@ -20,35 +24,79 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
     addSubtasksError,
   } = useSubtaskMutations();
 
-  const [generatedSubtasks, setGeneratedSubtasks] = useState<BreakdownSubtaskDTO[]>([]);
+  const { useSubtasksByParentId } = useSubtaskQueries();
+  const {
+    data: fetchedSubtasks,
+    isLoading: isLoadingSubtasks,
+    isError: isFetchingSubtasksError,
+  } = useSubtasksByParentId(taskId);
+
+  const displaySubtasks = fetchedSubtasks || [];
+  const hasSubtasks = displaySubtasks.length > 0;
+
+  // Don't initialize state until we know if subtasks exist
+  const [showManage, setShowManage] = useState<boolean | null>(null);
+
+  // Set initial view once data is loaded
+  React.useEffect(() => {
+    if (!isLoadingSubtasks && showManage === null) {
+      setShowManage(hasSubtasks);
+    }
+  }, [hasSubtasks, isLoadingSubtasks, showManage]);
 
   const handleBreakDown = async () => {
     if (isBreakingDown || isAddingSubtasks) return;
     try {
-      const subtasks = await breakDownTask(taskId);
-      if (subtasks && Array.isArray(subtasks)) {
-        setGeneratedSubtasks(subtasks);
+      const subtasks: BreakdownSubtaskDTO[] = (await breakDownTask(taskId)) ?? [];
+      if (subtasks.length > 0) {
         await addSubtasks({
           taskId,
-          subtasks: subtasks.map((subtask) => ({
+          subtasks: subtasks.map((subtask: AddSubtaskDTO) => ({
             ...subtask,
           })),
         });
+        // Show manage view after successful fetch and add
+        setShowManage(true);
       }
     } catch {
       console.error(breakDownError || addSubtasksError);
     }
   };
 
+  const handleViewManage = () => {
+    setShowManage(true);
+  };
+
+  const isLoading = isBreakingDown || isAddingSubtasks || isLoadingSubtasks;
+
+  console.log(displaySubtasks);
+
+  // Show loading state while initially fetching or determining view
+  if (isLoadingSubtasks || showManage === null) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text className="mt-4 text-gray-500 font-baloo">Loading subtasks...</Text>
+      </View>
+    );
+  }
+
+  // Show manage view if requested or if subtasks exist
+  if (showManage && hasSubtasks) {
+    return <SubtasksManage taskId={taskId} onBack={() => setShowManage(false)} />;
+  }
+
   return (
     <View>
       <View className="mt-4 p-4 bg-[#F5F9FA] rounded-3xl">
         <Text className="font-balooBold text-xl text-blue-500">
-          {isBreakingDown || isAddingSubtasks
+          {isLoading
             ? "Breaking your tasks into tiny bite-sized pieces~"
-            : "Big tasks can feel heavy. Try breaking them into bite-sized actions."}
+            : hasSubtasks
+              ? "Your bite-sized actions:"
+              : "Big tasks can feel heavy. Try breaking them into bite-sized actions."}
         </Text>
-        {(isBreakingDown || isAddingSubtasks) && (
+        {isLoading && (
           <LottieView
             source={LOTTIE_ANIMATIONS.dotsLoader}
             autoPlay
@@ -57,17 +105,21 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
           />
         )}
         <Image source={ASSETS.greenBun} className="w-15 h-15 self-end" />
-        {generatedSubtasks.length > 0 && (
+
+        {hasSubtasks && !isLoadingSubtasks && (
           <View className="mt-4">
-            {generatedSubtasks.map((subtask) => (
-              <View
-                key={subtask.order}
-                className="flex-row justify-between p-2 border-b border-gray-300"
+            {displaySubtasks.map((subtask, index) => (
+              <Pressable
+                key={subtask.taskId}
+                onPress={handleViewManage}
+                className="flex-row justify-between p-2 border-b border-gray-300 active:bg-gray-100"
               >
                 <Text className="font-semibold">{subtask.order}.</Text>
                 <Text className="flex-1 mx-2">{subtask.title}</Text>
-                <Text className="text-gray-600">{subtask.duration}</Text>
-              </View>
+                <Text className="text-gray-600">
+                  {subtask.duration ? String(subtask.duration) : ""}
+                </Text>
+              </Pressable>
             ))}
           </View>
         )}
@@ -75,24 +127,28 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
 
       <Pressable
         onPress={handleBreakDown}
-        disabled={isBreakingDown || isAddingSubtasks}
+        disabled={isLoading}
         className={`flex-row items-center justify-center self-center mt-8 rounded-3xl h-[55px] w-[180px] ${
-          isBreakingDown || isAddingSubtasks ? "bg-gray-300" : "bg-[#EBF0FE] active:bg-gray-100"
+          isLoading ? "bg-gray-300" : "bg-[#EBF0FE] active:bg-gray-100"
         }`}
       >
-        {isBreakingDown || isAddingSubtasks ? (
+        {isLoading ? (
           <ActivityIndicator size="small" color="#3b82f6" />
         ) : (
           <>
             <MaterialCommunityIcons name="format-list-checkbox" size={24} color="#3b82f6" />
-            <Text className="ml-2 text-blue-500 text-xl font-balooBold">Breakdown</Text>
+            <Text className="ml-2 text-blue-500 text-xl font-balooBold">
+              {hasSubtasks ? "Re-breakdown" : "Breakdown"}
+            </Text>
           </>
         )}
       </Pressable>
 
-      {(breakDownError || addSubtasksError) && (
+      {(breakDownError || addSubtasksError || isFetchingSubtasksError) && (
         <Text className="text-red-500 text-center mt-3">
-          Failed to generate or add subtasks. Please try again.
+          {isFetchingSubtasksError
+            ? "Failed to load subtasks."
+            : "Failed to generate or add subtasks. Please try again."}
         </Text>
       )}
     </View>

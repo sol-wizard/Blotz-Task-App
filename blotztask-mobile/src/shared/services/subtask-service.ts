@@ -23,7 +23,7 @@ export const createBreakDownSubtasks = async (taskId: number) => {
 
 export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   const taskId = newSubtask.taskId;
-  const subtaskId = newSubtask.subtaskId;
+  const subtaskId = newSubtask.parentTaskId;
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/${taskId}/subtasks/${subtaskId}`;
 
   try {
@@ -51,5 +51,18 @@ export async function replaceSubtasks({
   } catch (err: any) {
     console.error("Add subtasks failed:", err);
     throw new Error("Add subtasks failed");
+  }
+}
+
+export async function getSubtasksByParentId(parentId: number): Promise<SubtaskDTO[]> {
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/tasks/${parentId}`;
+  try {
+    const data: SubtaskDTO[] = await fetchWithAuth(url, {
+      method: "GET",
+    });
+    return data;
+  } catch (error) {
+    console.error("Error fetching subtasks by parent ID:", error);
+    return [];
   }
 }

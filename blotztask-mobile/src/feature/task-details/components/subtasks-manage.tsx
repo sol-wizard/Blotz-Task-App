@@ -5,107 +5,51 @@ import DraggableSubtaskList from "./draggable-subtask-list";
 import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
 import { theme } from "@/shared/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useSubtaskQueries } from "../hooks/useSubtaskQueries";
+import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 
-// Mock data for subtasks
-const MOCK_SUBTASKS = [
-  {
-    id: 1,
-    title: "Research user requirements",
-    description: "Gather and analyze user feedback",
-    duration: "02:00:00",
-    isDone: true,
-  },
-  {
-    id: 2,
-    title: "Design mockups",
-    description: "Create wireframes and high-fidelity designs",
-    duration: "03:30:00",
-    isDone: false,
-  },
-  {
-    id: 3,
-    title: "Implement frontend components",
-    description: "Build React components for the UI",
-    duration: "05:00:00",
-    isDone: false,
-  },
-  {
-    id: 4,
-    title: "Write unit tests 1",
-    description: "Test all new components",
-    duration: "01:30:00",
-    isDone: false,
-  },
-  {
-    id: 5,
-    title: "Write unit tests 2",
-    description: "Test all new components",
-    duration: "01:30:00",
-    isDone: false,
-  },
-  {
-    id: 6,
-    title: "Write unit tests 3  ",
-    description: "Test all new components",
-    duration: "01:30:00",
-    isDone: false,
-  },
-  {
-    id: 7,
-    title: "Write unit tests 4",
-    description: "Test all new components",
-    duration: "01:30:00",
-    isDone: false,
-  },
-  {
-    id: 8,
-    title: "Write unit tests 5",
-    description: "Test all new components",
-    duration: "01:30:00",
-    isDone: false,
-  },
-  {
-    id: 9,
-    title: "Write unit tests 6",
-    description: "Test all new components",
-    duration: "01:30:00",
-    isDone: false,
-  },
-  {
-    id: 10,
-    title: "Write unit tests 7",
-    description: "Test all new components",
-    duration: "01:30:00",
-    isDone: false,
-  },
-  {
-    id: 11,
-    title: "Write unit tests 8",
-    description: "Test all new components",
-    duration: "01:30:00",
-    isDone: false,
-  },
-];
+type SubtasksManageProps = {
+  taskId: number;
+  onBack: () => void;
+};
 
-const SubtasksTab = () => {
-  const [subtasks, setSubtasks] = useState(MOCK_SUBTASKS);
+const SubtasksManage = ({ taskId, onBack }: SubtasksManageProps) => {
+  const { selectedTask } = useSelectedTaskStore();
+
+  const { useSubtasksByParentId } = useSubtaskQueries();
+  const { data: fetchedSubtasks, isLoading, isError, refetch } = useSubtasksByParentId(taskId);
+
+  const { breakDownTask, isBreakingDown, addSubtasks, isAddingSubtasks } = useSubtaskMutations();
+
   const [isEditMode, setIsEditMode] = useState(false);
   const scrollOffsetRef = useRef(0);
-  const { selectedTask } = useSelectedTaskStore();
   const taskColor = selectedTask?.label?.color ?? theme.colors.disabled;
   const scrollViewRef = useRef<ScrollView>(null);
 
   const handleToggle = (id: number) => {
-    setSubtasks((prev) =>
-      prev.map((subtask) =>
-        subtask.id === id ? { ...subtask, isDone: !subtask.isDone } : subtask,
-      ),
-    );
+    // Optimistically update the UI using React Query's cache
+    // TODO: Create a mutation hook to update backend
+    // queryClient.setQueryData(['subtasks', taskId], (old) =>
+    //   old?.map(subtask => subtask.taskId === id ? {...subtask, isDone: !subtask.isDone} : subtask)
+    // );
+    console.log("TODO: Implement toggle mutation");
   };
 
-  const handleRefresh = () => {
-    // TODO: Implement refresh functionality
-    console.log("Refresh subtasks");
+  const handleRefresh = async () => {
+    try {
+      const newSubtasks = await breakDownTask(taskId);
+      if (newSubtasks && newSubtasks.length > 0) {
+        await addSubtasks({
+          taskId,
+          subtasks: newSubtasks,
+        });
+        // Refetch to get updated data
+        refetch();
+      }
+    } catch (error) {
+      console.error("Failed to refresh subtasks:", error);
+      Alert.alert("Error", "Failed to refresh subtasks. Please try again.");
+    }
   };
 
   const handleEdit = () => {
@@ -114,8 +58,8 @@ const SubtasksTab = () => {
   };
 
   const handleAddSubtask = () => {
-    // TODO: Implement add subtask functionality
-    console.log("Add more subtasks");
+    // Go back to breakdown view to add more
+    onBack();
   };
 
   const handleDelete = (id: number) => {
@@ -128,35 +72,85 @@ const SubtasksTab = () => {
         text: "Delete",
         style: "destructive",
         onPress: () => {
-          setSubtasks((prev) => prev.filter((subtask) => subtask.id !== id));
+          // TODO: Create a delete mutation hook
+          // deleteSubtask(id) - React Query will handle cache invalidation
+          console.log("TODO: Implement delete mutation");
         },
       },
     ]);
   };
 
   const handleReorder = (fromIndex: number, toIndex: number) => {
-    setSubtasks((prev) => {
-      const newSubtasks = [...prev];
-      const [movedItem] = newSubtasks.splice(fromIndex, 1);
-      newSubtasks.splice(toIndex, 0, movedItem);
-      return newSubtasks;
-    });
+    if (!fetchedSubtasks) return;
+
+    const newSubtasks = [...fetchedSubtasks];
+    const [movedItem] = newSubtasks.splice(fromIndex, 1);
+    newSubtasks.splice(toIndex, 0, movedItem);
+
+    // Update with new order
+    const reorderedSubtasks = newSubtasks.map((subtask, index) => ({
+      ...subtask,
+      order: index + 1,
+    }));
+
+    // TODO: Create a reorder mutation hook
+    // updateSubtasksOrder(reorderedSubtasks) - React Query will handle cache update
+    console.log("TODO: Implement reorder mutation", reorderedSubtasks);
   };
+
+  if (isLoading || isBreakingDown || isAddingSubtasks) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-base font-baloo text-tertiary">Loading subtasks...</Text>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-base font-baloo text-red-500">Failed to load subtasks</Text>
+        <TouchableOpacity onPress={() => refetch()} className="mt-4">
+          <Text className="text-blue-500 font-balooSemiBold">Retry</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onBack} className="mt-2">
+          <Text className="text-gray-500 font-baloo">Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Use fetched data directly from React Query
+  const subtasks = fetchedSubtasks || [];
 
   if (subtasks.length === 0) {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-base font-baloo text-tertiary">No subtasks yet</Text>
+        <TouchableOpacity onPress={onBack} className="mt-4">
+          <Text className="text-blue-500 font-balooSemiBold">Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
+
+  // Use fetched data directly - no local state needed
+  const displaySubtasks = subtasks.map((subtask) => ({
+    id: subtask.taskId,
+    title: subtask.title,
+    description: subtask.description || "",
+    duration: subtask.duration || "",
+    isDone: subtask.isDone || false,
+  }));
 
   return (
     <View className="flex-1">
       {/* Top Action Bar */}
       <View className="flex-row justify-between items-center mb-4">
         {isEditMode ? (
-          <View className="p-2 w-11 h-11" />
+          <TouchableOpacity onPress={onBack} className="p-2">
+            <MaterialIcons name="arrow-back" size={28} color={theme.colors.heading} />
+          </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={handleRefresh} className="p-2">
             <MaterialIcons name="sync" size={28} color={theme.colors.heading} />
@@ -196,7 +190,7 @@ const SubtasksTab = () => {
           }}
         >
           <DraggableSubtaskList
-            subtasks={subtasks}
+            subtasks={displaySubtasks}
             onToggle={handleToggle}
             color={taskColor}
             isEditMode={isEditMode}
@@ -258,4 +252,4 @@ const SubtasksTab = () => {
   );
 };
 
-export default SubtasksTab;
+export default SubtasksManage;
