@@ -1,10 +1,9 @@
 import { View, Text, Image, Pressable, ActivityIndicator } from "react-native";
 import React, { useState, useEffect } from "react";
-import { ASSETS, LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
+import { ASSETS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtaskQueries } from "../hooks/useSubtaskQueries";
-import LottieView from "lottie-react-native";
 import { BreakdownSubtaskDTO } from "@/feature/breakdown/models/breakdown-subtask-dto";
 import { AddSubtaskDTO } from "@/feature/breakdown/models/add-subtask-dto";
 import SubtasksManage from "./subtasks-manage";
@@ -84,14 +83,6 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
             ? "Breaking your tasks into tiny bite-sized pieces~"
             : "Big tasks can feel heavy. Try breaking them into bite-sized actions."}
         </Text>
-        {isLoading && (
-          <LottieView
-            source={LOTTIE_ANIMATIONS.dotsLoader}
-            autoPlay
-            loop
-            style={{ width: 50, height: 50 }}
-          />
-        )}
         <Image source={ASSETS.greenBun} className="w-15 h-15 self-end" />
       </View>
 
