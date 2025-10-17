@@ -20,21 +20,17 @@ export default function ProtectedLayout() {
       />
       <Stack.Screen
         name="task-details"
-        options={() => {
-          const selectedTask = useSelectedTaskState();
-          const headerBackgroundColor = selectedTask?.label?.color ?? theme.colors.fallback;
-
-          return {
-            headerShown: true,
-            headerShadowVisible: false,
-            headerTitle: "",
-            headerBackVisible: true,
-            headerTintColor: "#000000",
-            headerBackButtonDisplayMode: "minimal",
-            headerStyle: {
-              backgroundColor: headerBackgroundColor,
-            },
-          };
+        options={{
+          headerShown: true,
+          headerShadowVisible: false,
+          headerTransparent: true,
+          headerTitle: "",
+          headerBackVisible: true,
+          headerTintColor: "#000000",
+          headerBackButtonDisplayMode: "minimal",
+          headerStyle: {
+            backgroundColor: "transparent",
+          },
         }}
       />
       <Stack.Screen
