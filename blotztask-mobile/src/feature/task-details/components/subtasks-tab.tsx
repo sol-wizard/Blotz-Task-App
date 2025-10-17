@@ -7,7 +7,6 @@ import { useSubtaskQueries } from "../hooks/useSubtaskQueries";
 import LottieView from "lottie-react-native";
 import { BreakdownSubtaskDTO } from "@/feature/breakdown/models/breakdown-subtask-dto";
 import { AddSubtaskDTO } from "@/feature/breakdown/models/add-subtask-dto";
-import { SubtaskDTO } from "@/feature/breakdown/models/subtask-dto";
 import SubtasksManage from "./subtasks-manage";
 
 type SubtaskTabProps = {
