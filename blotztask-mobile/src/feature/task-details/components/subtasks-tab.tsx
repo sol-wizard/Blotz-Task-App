@@ -2,8 +2,14 @@ import { View, Text, Image, Pressable } from "react-native";
 import React from "react";
 import { ASSETS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 
-const SubtaskTab = () => {
+type SubtaskTabProps = {
+  taskId: number;
+};
+
+const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
+  const { breakDownTask, isBreakingDown, breakDownError } = useSubtaskMutations();
   return (
     <View>
       <View className="mt-4 p-4 bg-[#F5F9FA] rounded-3xl">
@@ -14,7 +20,9 @@ const SubtaskTab = () => {
       </View>
 
       <Pressable
-        onPress={() => {}}
+        onPress={() => {
+          breakDownTask(taskId);
+        }}
         className="flex-row items-center justify-center self-center mt-8 bg-[#EBF0FE] active:bg-gray-100 rounded-3xl h-[55px] w-[180px]"
       >
         <MaterialCommunityIcons name="format-list-checkbox" size={24} color="#3b82f6" />
@@ -24,4 +32,4 @@ const SubtaskTab = () => {
   );
 };
 
-export default SubtaskTab;
+export default SubtasksTab;
