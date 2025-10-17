@@ -1,7 +1,8 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { isBefore } from "date-fns";
+import { TaskFilterGroup } from "../modals/task-filter-group";
 
-export function filterSelectedTask(selectedDayTasks: TaskDetailDTO[]) {
+export function filterSelectedTask(selectedDayTasks: TaskDetailDTO[]): TaskFilterGroup[] {
   const today = new Date();
   const todoTasks = selectedDayTasks.filter((task) => isTodo(task));
   const doneTasks = selectedDayTasks.filter((task) => task.isDone);

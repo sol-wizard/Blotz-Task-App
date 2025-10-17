@@ -59,18 +59,18 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
     </View>
   );
 
+  const findStatusCount = (status: TaskStatusType) => {
+    return filteredSelectedDayTasks.find((g) => g.status === status)?.count ?? 0;
+  };
+
   return (
     <>
       <TaskStatusRow
-        allTaskCount={filteredSelectedDayTasks.find((item) => item.status === "All")?.count ?? 0}
-        todoTaskCount={filteredSelectedDayTasks.find((item) => item.status === "To Do")?.count ?? 0}
-        inProgressTaskCount={
-          filteredSelectedDayTasks.find((item) => item.status === "In Progress")?.count ?? 0
-        }
-        overdueTaskCount={
-          filteredSelectedDayTasks.find((item) => item.status === "Overdue")?.count ?? 0
-        }
-        doneTaskCount={filteredSelectedDayTasks.find((item) => item.status === "Done")?.count ?? 0}
+        allTaskCount={findStatusCount("All")}
+        todoTaskCount={findStatusCount("To Do")}
+        inProgressTaskCount={findStatusCount("In Progress")}
+        overdueTaskCount={findStatusCount("Overdue")}
+        doneTaskCount={findStatusCount("Done")}
         selectedStatus={selectedStatus}
         onChange={setSelectedStatus}
       />
