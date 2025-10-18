@@ -26,7 +26,7 @@ const routes = [
   },
 ];
 
-const CalendarRoute: any = () => <CalendarScreen />;
+const CalendarRoute = () => <CalendarScreen />;
 const SettingsRoute = () => <SettingsScreen />;
 const IdeasRoute = () => <IdeasScreen />;
 
