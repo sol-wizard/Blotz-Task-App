@@ -3,6 +3,7 @@ import { BottomNavigation } from "react-native-paper";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import SettingsScreen from "@/feature/settings/settings-screen";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 import IdeasScreen from "./ideas";
 
 const routes = [
@@ -40,7 +41,7 @@ export default function ProtectedIndex() {
   });
 
   return (
-    <>
+    <SafeAreaView style={{ flex: 1 }} edges={["bottom"]}>
       <BottomNavigation
         navigationState={{ index, routes }}
         onIndexChange={setIndex}
@@ -55,6 +56,6 @@ export default function ProtectedIndex() {
           />
         )}
       />
-    </>
+    </SafeAreaView>
   );
 }
