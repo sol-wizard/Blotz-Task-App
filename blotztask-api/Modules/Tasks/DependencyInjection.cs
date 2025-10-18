@@ -21,7 +21,6 @@ public static class DependencyInjection
         services.AddScoped<GetTasksByDateQueryHandler>();
         services.AddScoped<GetTaskByIdQueryHandler>();
         services.AddScoped<GetFloatingTasksQueryHandler>();
-        services.AddScoped<GetOverdueTasksQueryHandler>();
         services.AddScoped<GetAllTasksQueryHandler>();
         services.AddScoped<GetSubtasksByIdQueryHandler>();
 

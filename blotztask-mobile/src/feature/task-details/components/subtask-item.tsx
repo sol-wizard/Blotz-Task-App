@@ -20,9 +20,9 @@ export default function SubtaskItem({
   onDelete,
 }: SubtaskItemProps) {
   return (
-    <View 
+    <View
       className="relative flex-row items-center py-2.5 px-3 mb-2"
-      style={{ 
+      style={{
         backgroundColor: theme.colors.background,
         borderRadius: 10,
       }}
@@ -35,11 +35,7 @@ export default function SubtaskItem({
           <MaterialIcons name="close" size={24} color={theme.colors.toBeDeleted} />
         </TouchableOpacity>
       ) : (
-        <CustomRadioCheckbox 
-          checked={!!s?.isDone} 
-          onPress={() => onToggle(s.id)} 
-          color={color} 
-        />
+        <CustomRadioCheckbox checked={!!s?.isDone} onPress={() => onToggle(s.id)} color={color} />
       )}
 
       <View
