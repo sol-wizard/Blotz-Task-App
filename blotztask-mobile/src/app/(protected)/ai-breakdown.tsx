@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AddSubtaskBottomSheet } from "@/feature/breakdown/components/add-subtask-bottom-sheet";
 import { AddSubtaskDTO } from "@/feature/breakdown/models/add-subtask-dto";
-import { addSubtasks, createBreakDownSubtasks } from "@/shared/services/subtask-service";
+import { replaceSubtasks, createBreakDownSubtasks } from "@/shared/services/subtask-service";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { BreakdownSubtaskDTO } from "@/feature/breakdown/models/breakdown-subtask-dto";
 
@@ -67,9 +67,9 @@ export default function AiBreakdownScreen() {
   //   });
   // };
 
-  const handleAddSubtasks = async () => {
+  const handleReplaceSubtasks = async () => {
     try {
-      await addSubtasks({ taskId: Number(taskId), subtasks: selectedSubtasks });
+      await replaceSubtasks({ taskId: Number(taskId), subtasks: selectedSubtasks });
       router.back();
     } catch (error) {
       console.log("Failed to add subtasks:", error);
@@ -110,7 +110,7 @@ export default function AiBreakdownScreen() {
           shadowOffset: { width: 0, height: -2 },
         }}
       >
-        <AddSubtaskBottomSheet handleAddSubtasks={handleAddSubtasks} />
+        <AddSubtaskBottomSheet handleAddSubtasks={handleReplaceSubtasks} />
       </BottomSheetModal>
     </SafeAreaView>
   );

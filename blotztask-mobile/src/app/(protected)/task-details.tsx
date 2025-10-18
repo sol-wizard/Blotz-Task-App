@@ -10,14 +10,26 @@ import { theme } from "@/shared/constants/theme";
 import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type tabTypes = "Details" | "Subtasks";
 export default function TaskDetailsScreen() {
   const router = useRouter();
   const selectedTask = useSelectedTaskState();
-  const { isDone, title, description, label, startTime, endTime } = selectedTask || {};
+  const [activeTab, setActiveTab] = useState<tabTypes>("Details");
+  if (!selectedTask) {
+    console.warn("No selected task found");
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-lg text-gray-600">Selected Task not found.</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text className="text-blue-500 mt-2">Go back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+  const { id, isDone, title, description, label, startTime, endTime } = selectedTask;
 
   const taskStatus = isDone ? "Done" : "To Do";
   const labelName: string | undefined = label?.name;
-  const [activeTab, setActiveTab] = useState<"Details" | "Subtasks">("Details");
 
   return (
     <SafeAreaView
@@ -78,7 +90,7 @@ export default function TaskDetailsScreen() {
           {activeTab === "Details" ? (
             <DetailsTab taskDescription={description as string} />
           ) : (
-            <SubtasksTab />
+            <SubtasksTab taskId={id} />
           )}
         </View>
       </View>
