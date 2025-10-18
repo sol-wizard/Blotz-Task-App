@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { View, Pressable, Text } from "react-native";
-import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
+import { View, Pressable, Text, ActivityIndicator } from "react-native";
+import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -32,6 +32,20 @@ const ACTION_WIDTH = 64;
 const OPEN_X = -ACTION_WIDTH;
 const OPEN_THRESHOLD = ACTION_WIDTH * 0.55;
 
+interface TaskCardProps {
+  id: number;
+  title: string;
+  startTime?: string;
+  endTime?: string;
+  isCompleted?: boolean;
+  labelColor?: string;
+  onToggleComplete?: (id: number, completed: boolean) => void;
+  onPress?: () => void;
+  onDelete?: (id: number) => Promise<void> | void;
+  isToggling?: boolean;
+  isDeleting?: boolean;
+}
+
 export default function TaskCard({
   id,
   title,
@@ -42,16 +56,18 @@ export default function TaskCard({
   onToggleComplete,
   onPress,
   onDelete,
+  isToggling = false,
+  isDeleting = false,
 }: TaskCardProps) {
   const [checked, setChecked] = useState(isCompleted);
-
-  // only allow right action when sliding open
   const [actionsEnabled, setActionsEnabled] = useState(false);
 
   // negative value indicates left swipe
   const translateX = useSharedValue(0);
 
-  // Use label color or fallback to grey
+  // Disable interactions when loading
+  const isLoading = isToggling || isDeleting;
+
   const dividerColor = labelColor ?? theme.colors.disabled;
 
   useEffect(() => {
@@ -60,6 +76,7 @@ export default function TaskCard({
 
   // Gesture: only allow left swipe, snap to 0 or OPEN_X on release
   const pan = Gesture.Pan()
+    .enabled(!isLoading)
     .onUpdate((e) => {
       if (e.translationX < 0) {
         translateX.value = Math.max(OPEN_X, e.translationX);
@@ -99,6 +116,7 @@ export default function TaskCard({
   }));
 
   const handleToggleComplete = () => {
+    if (isLoading) return; // Prevent action when loading
     const newChecked = !checked;
     setChecked(newChecked);
     onToggleComplete?.(id, newChecked);
@@ -108,6 +126,7 @@ export default function TaskCard({
 
   return (
     <View className="relative mx-4 my-2 rounded-2xl bg-white overflow-hidden">
+      {/* Right action area with delete button */}
       <Animated.View
         style={rightActionStyle}
         pointerEvents={actionsEnabled ? "auto" : "none"}
@@ -121,24 +140,35 @@ export default function TaskCard({
 
         <Pressable
           onPress={async () => {
-            if (!onDelete) return;
+            if (!onDelete || isLoading) return;
             await onDelete(id);
             translateX.value = withTiming(0);
             runOnJS(setActionsEnabled)(false);
           }}
+          disabled={isLoading}
           android_ripple={{ color: "#e5e7eb", borderless: true }}
-          className="w-[30px] h-[30px] rounded-full border-2 border-neutral-300 items-center justify-center"
+          className={`w-[30px] h-[30px] rounded-full border-2 border-neutral-300 items-center justify-center ${
+            isDeleting ? "opacity-50" : ""
+          }`}
         >
-          <MaterialCommunityIcons name="trash-can-outline" size={22} color="#6B7280" />
+          {isDeleting ? (
+            <ActivityIndicator size="small" color="#6B7280" />
+          ) : (
+            <MaterialCommunityIcons name="trash-can-outline" size={22} color="#6B7280" />
+          )}
         </Pressable>
       </Animated.View>
 
       <GestureDetector gesture={pan}>
         <Animated.View style={cardStyle} className="bg-white rounded-2xl">
-          <Pressable onPress={onPress}>
-            <View className="flex-row items-center p-5">
+          <Pressable onPress={onPress} disabled={isLoading}>
+            <View className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}>
               <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
-                <CustomCheckbox checked={checked} onPress={handleToggleComplete} />
+                <TaskCheckbox
+                  checked={checked}
+                  onPress={handleToggleComplete}
+                  disabled={isLoading}
+                />
 
                 <View
                   className="w-[6px] h-[30px] rounded-[3px] mr-3"

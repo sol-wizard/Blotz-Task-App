@@ -29,13 +29,6 @@ export async function fetchFloatingTasks(): Promise<TaskDetailDTO[]> {
   return data;
 }
 
-export async function fetchOverdueTasks(): Promise<TaskDetailDTO[]> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/overdue`;
-
-  const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: "GET" });
-  return data;
-}
-
 export async function toggleTaskCompletion(taskId: number): Promise<void> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/task-completion-status/${taskId}`;
 
