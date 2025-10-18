@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { View, Pressable, ActivityIndicator } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useSelectedDayTaskStore } from "@/shared/stores/selectedday-task-store";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { ScrollView } from "react-native-gesture-handler";
@@ -12,6 +11,7 @@ import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { usePostHog } from "posthog-react-native";
 import { AiResultMessageDTO } from "../models/ai-result-message";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
 
 export function AiTasksPreview({
   aiMessage,
@@ -26,14 +26,13 @@ export function AiTasksPreview({
   isVoiceInput: boolean;
   userInput: string;
 }) {
-  const { addTask } = useSelectedDayTaskStore();
+  const { addTask, isAdding } = useTaskMutations();
   const aiGeneratedTasks = aiMessage?.extractedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiGeneratedTasks ?? []);
   const posthog = usePostHog();
 
   const finishedAllStepsRef = useRef<boolean>(false);
 
-  const [isAdding, setIsAdding] = useState(false);
   const createDisabled = isAdding || localTasks.length === 0;
 
   const onDeleteTask = (taskId: string) => {
@@ -46,11 +45,10 @@ export function AiTasksPreview({
 
   const handleAddTasks = async () => {
     if (isAdding || !localTasks.length) return;
-    setIsAdding(true);
 
     try {
       const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
-      await Promise.all(payloads.map(addTask));
+      await Promise.all(payloads.map((payload) => addTask(payload)));
       finishedAllStepsRef.current = true;
 
       posthog.capture("ai_task_interaction_completed", {
@@ -66,7 +64,6 @@ export function AiTasksPreview({
       setLocalTasks([]);
     } catch (error) {
       console.log("Add tasks failed", error);
-      setIsAdding(false);
     }
   };
 

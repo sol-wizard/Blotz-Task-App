@@ -25,6 +25,7 @@
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
+    "@tanstack/react-query": "^5.90.3",
     "date-fns": "^4.1.0",
     "expo": "53.0.22",
     "expo-application": "~6.1.5",

@@ -1,3 +1,16 @@
+diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+index 04d6f31..8414e89 100644
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -35,7 +35,7 @@
+         <action android:name="android.intent.action.VIEW"/>
+         <category android:name="android.intent.category.DEFAULT"/>
+         <category android:name="android.intent.category.BROWSABLE"/>
+-        <data android:scheme="com.Blotz.BlotzTask.auth0" android:host="dev-k72xachs0fr6nebp.us.auth0.com"/>
++        <data android:scheme="com.blotz.blotztask.auth0" android:host="dev-k72xachs0fr6nebp.us.auth0.com"/>
+       </intent-filter>
+     </activity>
+   </application>
 diff --git a/android/gradle.properties b/android/gradle.properties
 index 2170001..4087efd 100644
 --- a/android/gradle.properties

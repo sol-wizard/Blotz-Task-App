@@ -5,38 +5,31 @@ import { useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsTab from "../../feature/task-details/components/details-tab";
 import SubtasksTab from "../../feature/task-details/components/subtasks-tab";
-import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
-import { TaskStatusType } from "@/feature/calendar/components/task-status-select";
-import { theme } from "@/shared/constants/theme";
 
-type tabTypes = "Details" | "Subtasks";
+import { theme } from "@/shared/constants/theme";
+import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
-  const { selectedTask } = useSelectedTaskStore();
+  const selectedTask = useSelectedTaskState();
   const { isDone, title, description, label, startTime, endTime } = selectedTask || {};
 
-  const taskStatus: TaskStatusType = isDone ? "done" : "todo";
+  const taskStatus = isDone ? "Done" : "To Do";
   const labelName: string | undefined = label?.name;
-  const [activeTab, setActiveTab] = useState<tabTypes>("Details");
-
-  // Use label color or fallback to grey
-  const headerBackgroundColor = label?.color ?? theme.colors.fallback;
-
-  const handleEdit = () => {
-    router.push({
-      pathname: "/(protected)/task-edit",
-    });
-  };
+  const [activeTab, setActiveTab] = useState<"Details" | "Subtasks">("Details");
 
   return (
-    <View className="flex-1" style={{ backgroundColor: headerBackgroundColor }}>
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: label?.color ?? theme.colors.fallback }}
+    >
       <View className="py-6 px-8">
         {/* Task Status + Label */}
-        <View className="flex-row items-center mb-4">
+        <View className="flex-row items-center mb-4 mt-6">
           <View className="px-3 py-1 rounded-xl border border-black">
             <Text className={`text-sm font-medium text-black`}>
-              {taskStatus === "done" ? "Done" : "To Do"}
+              {taskStatus === "Done" ? "Done" : "To Do"}
             </Text>
           </View>
           {label && (
@@ -49,7 +42,15 @@ export default function TaskDetailsScreen() {
         {/* Task Title + Edit */}
         <View className="flex-row items-start justify-center mb-4">
           <Text className="flex-1 font-balooBold text-5xl leading-normal">{title}</Text>
-          <IconButton icon={"pencil"} onPress={handleEdit} iconColor="black" />
+          <IconButton
+            icon={"pencil"}
+            onPress={() =>
+              router.push({
+                pathname: "/(protected)/task-edit",
+              })
+            }
+            iconColor="black"
+          />
         </View>
 
         {/* Task Date Range */}
@@ -81,6 +82,6 @@ export default function TaskDetailsScreen() {
           )}
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }

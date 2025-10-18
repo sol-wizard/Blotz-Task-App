@@ -2,37 +2,33 @@ import React, { useState, useEffect } from "react";
 import { Snackbar, IconButton } from "react-native-paper";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, SafeAreaView, View, Text } from "react-native";
-import { createStatusSelectItems, filterTasksByStatus } from "@/feature/calendar/util/task-counts";
 import { router } from "expo-router";
-import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
-import { TaskStatusSelect, TaskStatusType } from "@/feature/calendar/components/task-status-select";
+import { TaskStatusRow } from "@/shared/components/ui/task-status-row";
 import TaskCard from "@/feature/calendar/components/task-card";
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
 import { getAllTasks, toggleTaskCompletion, deleteTask } from "@/shared/services/task-service";
 import UserProfile from "@/feature/calendar/components/user-profile";
+import { useSelectedTaskActions, useSelectedTaskState } from "@/shared/stores/selected-task-store";
+import { TaskStatusType } from "@/feature/calendar/modals/task-status-type";
+import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 
 export default function AllTasksScreen() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("all");
-  const { selectedTask, setSelectedTask } = useSelectedTaskStore();
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
+  const selectedTask = useSelectedTaskState();
+  const { setSelectedTask } = useSelectedTaskActions();
+
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
     text: "",
   });
 
-  // Calculate overdue tasks from the all tasks list
-  const overdueTasks = tasks.filter(
-    (task) =>
-      !task.isDone && task.endTime && new Date(task.endTime).getTime() <= new Date().getTime(),
-  );
-
-  const filteredTasks = filterTasksByStatus(tasks, selectedStatus, overdueTasks);
-  const taskStatuses = createStatusSelectItems({
-    tasks: tasks,
-    overdueTaskCount: overdueTasks.length,
-  });
+  const filteredTaskList = filterSelectedTask(tasks);
+  const tasksOfSelectedStatus = filteredTaskList.find(
+    (item) => item.status === selectedStatus,
+  )?.tasks;
 
   const fetchTasks = async () => {
     try {
@@ -121,9 +117,15 @@ export default function AllTasksScreen() {
         </View>
       </View>
 
-      <TaskStatusSelect
-        statuses={taskStatuses}
-        selectedStatusId={selectedStatus}
+      <TaskStatusRow
+        allTaskCount={filteredTaskList.find((item) => item.status === "All")?.count ?? 0}
+        todoTaskCount={filteredTaskList.find((item) => item.status === "To Do")?.count ?? 0}
+        inProgressTaskCount={
+          filteredTaskList.find((item) => item.status === "In Progress")?.count ?? 0
+        }
+        overdueTaskCount={filteredTaskList.find((item) => item.status === "Overdue")?.count ?? 0}
+        doneTaskCount={filteredTaskList.find((item) => item.status === "Done")?.count ?? 0}
+        selectedStatus={selectedStatus}
         onChange={setSelectedStatus}
       />
 
@@ -131,10 +133,10 @@ export default function AllTasksScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="small" />
         </View>
-      ) : filteredTasks && filteredTasks.length > 0 ? (
+      ) : tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
         <FlatList
           className="flex-1"
-          data={filteredTasks}
+          data={tasksOfSelectedStatus}
           renderItem={renderTask}
           keyExtractor={(task) => task.id.toString()}
         />

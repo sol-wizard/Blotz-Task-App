@@ -19,6 +19,8 @@ import React from "react";
 import { Auth0Provider } from "react-native-auth0";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { theme } from "@/shared/constants/theme";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/shared/util/queryClient";
 
 export default function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
@@ -44,19 +46,21 @@ export default function RootLayout() {
         autocapture
       >
         <GestureHandlerRootView>
-          <PaperProvider theme={theme}>
-            <BottomSheetModalProvider>
-              <Portal.Host>
-                <SafeAreaProvider>
-                  <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="index" options={{ headerShown: false }} />
-                    <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                    <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-                  </Stack>
-                </SafeAreaProvider>
-              </Portal.Host>
-            </BottomSheetModalProvider>
-          </PaperProvider>
+          <QueryClientProvider client={queryClient}>
+            <PaperProvider theme={theme}>
+              <BottomSheetModalProvider>
+                <Portal.Host>
+                  <SafeAreaProvider>
+                    <Stack screenOptions={{ headerShown: false }}>
+                      <Stack.Screen name="index" options={{ headerShown: false }} />
+                      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                      <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+                    </Stack>
+                  </SafeAreaProvider>
+                </Portal.Host>
+              </BottomSheetModalProvider>
+            </PaperProvider>
+          </QueryClientProvider>
         </GestureHandlerRootView>
       </PostHogProvider>
     </Auth0Provider>

@@ -1,5 +1,5 @@
-import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { create } from "zustand";
+import { TaskDetailDTO } from "../models/task-detail-dto";
 
 interface SelectedTaskStore {
   selectedTask: TaskDetailDTO | null;
@@ -7,8 +7,19 @@ interface SelectedTaskStore {
   clearSelectedTask: () => void;
 }
 
-export const useSelectedTaskStore = create<SelectedTaskStore>((set) => ({
+const useSelectedTaskStoreInternal = create<SelectedTaskStore>((set) => ({
   selectedTask: null,
   setSelectedTask: (task) => set({ selectedTask: task }),
   clearSelectedTask: () => set({ selectedTask: null }),
 }));
+
+// Expose state only
+export const useSelectedTaskState = () =>
+  useSelectedTaskStoreInternal((state) => state.selectedTask);
+
+// Expose actions only
+export const useSelectedTaskActions = () => {
+  const setSelectedTask = useSelectedTaskStoreInternal((state) => state.setSelectedTask);
+  const clearSelectedTask = useSelectedTaskStoreInternal((state) => state.clearSelectedTask);
+  return { setSelectedTask, clearSelectedTask };
+};

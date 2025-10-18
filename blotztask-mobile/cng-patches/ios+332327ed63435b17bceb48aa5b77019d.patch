@@ -1,12 +1,12 @@
 diff --git a/ios/BlotzTask.xcodeproj/project.pbxproj b/ios/BlotzTask.xcodeproj/project.pbxproj
-index 78e8700..1e0da6f 100644
+index 78e8700..0d61fff 100644
 --- a/ios/BlotzTask.xcodeproj/project.pbxproj
 +++ b/ios/BlotzTask.xcodeproj/project.pbxproj
 @@ -67,6 +67,7 @@
  				832341AE1AAA6A7D00B99B32 /* Libraries */,
  				83CBBA001A601CBA00E9B192 /* Products */,
  				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-+				9159FF8FBA0AB5D8FDB6161C /* Pods */,
++				FEEABA76085CE562099AD03E /* Pods */,
  			);
  			indentWidth = 2;
  			sourceTree = "<group>";
@@ -14,7 +14,7 @@ index 78e8700..1e0da6f 100644
  			name = Products;
  			sourceTree = "<group>";
  		};
-+		9159FF8FBA0AB5D8FDB6161C /* Pods */ = {
++		FEEABA76085CE562099AD03E /* Pods */ = {
 +			isa = PBXGroup;
 +			children = (
 +			);
@@ -90,6 +90,3 @@ index 78e8700..1e0da6f 100644
  				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
  				SDKROOT = iphoneos;
  				USE_HERMES = true;
-diff --git a/ios/BlotzTask/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png b/ios/BlotzTask/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png
-index 976148e..e650b67 100644
-Binary files a/ios/BlotzTask/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png and b/ios/BlotzTask/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png differ
