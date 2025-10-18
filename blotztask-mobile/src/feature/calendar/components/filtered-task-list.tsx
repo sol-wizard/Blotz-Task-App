@@ -17,7 +17,7 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
 
   const {
     toggleTask,
-    removeTask,
+    deleteTask: removeTask,
     isToggling,
     isDeleting,
     deleteTaskSuccess,

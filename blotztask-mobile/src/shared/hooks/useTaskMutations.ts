@@ -45,7 +45,7 @@ const useTaskMutations = () => {
   return {
     addTask: addTaskMutation.mutateAsync,
     toggleTask: toggleTaskMutation.mutateAsync,
-    removeTask: deleteTaskMutation.mutateAsync,
+    deleteTask: deleteTaskMutation.mutateAsync,
     updateTask: updateTaskMutation.mutateAsync,
     isAdding: addTaskMutation.isPending,
     isToggling: toggleTaskMutation.isPending,

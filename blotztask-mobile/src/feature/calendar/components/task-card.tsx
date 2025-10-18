@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Pressable, Text, ActivityIndicator } from "react-native";
-import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
+import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -164,7 +164,7 @@ export default function TaskCard({
           <Pressable onPress={onPress} disabled={isLoading}>
             <View className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}>
               <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
-                <CustomCheckbox
+                <TaskCheckbox
                   checked={checked}
                   onPress={handleToggleComplete}
                   disabled={isLoading}

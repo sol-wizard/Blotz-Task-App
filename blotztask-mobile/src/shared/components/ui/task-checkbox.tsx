@@ -1,13 +1,13 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Pressable } from "react-native";
 
-interface CustomCheckboxProps {
+interface TaskCheckboxProps {
   checked: boolean;
   onPress: () => void;
   disabled?: boolean;
 }
 
-export const CustomCheckbox = ({ checked, onPress, disabled = false }: CustomCheckboxProps) => {
+export const TaskCheckbox = ({ checked, onPress, disabled = false }: TaskCheckboxProps) => {
   return (
     <Pressable
       className={`w-8 h-8 rounded-[10px] border-[3px] mr-3 items-center justify-center ${
