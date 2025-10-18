@@ -1,6 +1,5 @@
 import { theme } from "@/shared/constants/theme";
 import { Stack } from "expo-router";
-import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
 
 export default function ProtectedLayout() {
   return (
@@ -20,21 +19,17 @@ export default function ProtectedLayout() {
       />
       <Stack.Screen
         name="task-details"
-        options={() => {
-          const { selectedTask } = useSelectedTaskStore.getState();
-          const headerBackgroundColor = selectedTask?.label?.color ?? theme.colors.fallback;
-
-          return {
-            headerShown: true,
-            headerShadowVisible: false,
-            headerTitle: "",
-            headerBackVisible: true,
-            headerTintColor: "#000000",
-            headerBackButtonDisplayMode: "minimal",
-            headerStyle: {
-              backgroundColor: headerBackgroundColor,
-            },
-          };
+        options={{
+          headerShown: true,
+          headerShadowVisible: false,
+          headerTransparent: true,
+          headerTitle: "",
+          headerBackVisible: true,
+          headerTintColor: "#000000",
+          headerBackButtonDisplayMode: "minimal",
+          headerStyle: {
+            backgroundColor: "transparent",
+          },
         }}
       />
       <Stack.Screen
