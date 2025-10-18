@@ -3,7 +3,7 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { convertSubtaskTimeForm } from "../utils/convert-subtask-time-form";
-import { CustomCheckbox } from "@/shared/components/ui/custom-checkbox";
+import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
 import EditTaskFormField, { taskEditFormSchema } from "../schemas/breakdown-task-edit-form-schema";
 import { AddSubtaskDTO } from "../models/add-subtask-dto";
 import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
@@ -42,7 +42,7 @@ export const BreakdownTaskCard = ({
     <FormProvider {...form}>
       <View className="flex-row w-full items-center justify-between">
         <View className="flex-row items-center rounded-2xl bg-white mb-3 px-4 py-4 flex-1 border border-gray-300">
-          <CustomCheckbox checked={isChecked} onPress={handleCheckboxPress} />
+          <TaskCheckbox checked={isChecked} onPress={handleCheckboxPress} />
 
           <View className="flex-row justify-between flex-1 items-center">
             <Controller

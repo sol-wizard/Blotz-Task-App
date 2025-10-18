@@ -31,7 +31,14 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
             "Fetching tasks by end time for user {UserId} up to {StartDateUtc}. Whether including floating tasks for today is {IncludeFloatingForToday}",
             query.UserId, query.StartDateUtc, query.IncludeFloatingForToday);
 
+        var todayStartUtc = DateTime.UtcNow.Date;
+        var todayEndUtc = todayStartUtc.AddDays(1);
+        var sevenDayWindowStartUtc = todayEndUtc.AddDays(-6);
         var endDateUtc = query.StartDateUtc.AddDays(1);
+
+        var isWithin7DayWindow =
+            query.StartDateUtc <= todayStartUtc &&
+            query.StartDateUtc > sevenDayWindowStartUtc;
 
         var tasks = await db.TaskItems
             .Where(t => t.UserId == query.UserId &&
@@ -45,6 +52,19 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                             ||
                             // Floating tasks
                             (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null)
+                            ||
+                            // Overdue tasks within 7 days but not in selected day
+                            (
+                                isWithin7DayWindow
+                                && t.EndTime != null
+                                && !t.IsDone
+                                && (
+                                    // Condition 1: End time is within the 7-day window and earlier than the query date
+                                    (t.EndTime < query.StartDateUtc && t.EndTime >= sevenDayWindowStartUtc)
+                                    // Condition 2: End time is after the query date but earlier than the current time
+                                    || (t.EndTime > endDateUtc && t.EndTime < DateTime.UtcNow)
+                                )
+                            )
                         ))
             .Select(task => new TaskByDateItemDto
             {
@@ -55,12 +75,14 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
                 TimeType = task.TimeType,
-                Label = task.Label != null ? new LabelDto
-                {
-                    LabelId = task.Label.LabelId,
-                    Name = task.Label.Name,
-                    Color = task.Label.Color
-                } : null
+                Label = task.Label != null
+                    ? new LabelDto
+                    {
+                        LabelId = task.Label.LabelId,
+                        Name = task.Label.Name,
+                        Color = task.Label.Color
+                    }
+                    : null
             })
             .ToListAsync(ct);
 
