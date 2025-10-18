@@ -2,18 +2,18 @@ import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import React, { useState, useRef } from "react";
 import DraggableSubtaskList from "./draggable-subtask-list";
-import { useSelectedTaskStore } from "@/shared/stores/selected-task-store";
 import { theme } from "@/shared/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSubtaskQueries } from "../hooks/useSubtaskQueries";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
+import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
 
 type SubtasksManageProps = {
   taskId: number;
 };
 
 const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
-  const { selectedTask } = useSelectedTaskStore();
+  const selectedTask = useSelectedTaskState();
 
   const { useSubtasksByParentId } = useSubtaskQueries();
   const { data: fetchedSubtasks, isLoading, isError, refetch } = useSubtasksByParentId(taskId);

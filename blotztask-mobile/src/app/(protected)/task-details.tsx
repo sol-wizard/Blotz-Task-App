@@ -10,11 +10,10 @@ import { theme } from "@/shared/constants/theme";
 import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type tabTypes = "Details" | "Subtasks";
 export default function TaskDetailsScreen() {
   const router = useRouter();
   const selectedTask = useSelectedTaskState();
-  const { isDone, title, description, label, startTime, endTime } = selectedTask || {};
-  const { selectedTask } = useSelectedTaskStore();
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
   if (!selectedTask) {
     console.warn("No selected task found");
@@ -31,16 +30,6 @@ export default function TaskDetailsScreen() {
 
   const taskStatus = isDone ? "Done" : "To Do";
   const labelName: string | undefined = label?.name;
-  const [activeTab, setActiveTab] = useState<"Details" | "Subtasks">("Details");
-
-  // Use label color or fallback to grey
-  const headerBackgroundColor = label?.color ?? theme.colors.fallback;
-
-  const handleEdit = () => {
-    router.push({
-      pathname: "/(protected)/task-edit",
-    });
-  };
 
   return (
     <SafeAreaView
@@ -84,41 +73,15 @@ export default function TaskDetailsScreen() {
       <View className="flex-1 pt-6 px-6 bg-white rounded-t-[3rem]">
         <View className="flex-row justify-around mb-6">
           <TouchableOpacity onPress={() => setActiveTab("Details")} className="flex-1 items-center">
-            <Text
-              className={"text-lg font-balooBold pb-3"}
-              style={{
-                color: activeTab === "Details" ? theme.colors.onSurface : theme.colors.primary,
-              }}
-            >
-              Details
-            </Text>
-            <View
-              className="w-full h-1 rounded-full"
-              style={{
-                backgroundColor:
-                  activeTab === "Details" ? theme.colors.onSurface : theme.colors.disabled,
-              }}
-            />
+            <Text className={"text-lg font-balooBold pb-3"}>Details</Text>
+            {activeTab === "Details" && <View className="w-full h-1 bg-blue-100 rounded-full" />}
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setActiveTab("Subtasks")}
             className="flex-1 items-center"
           >
-            <Text
-              className={"text-lg font-balooBold pb-3"}
-              style={{
-                color: activeTab === "Subtasks" ? theme.colors.onSurface : theme.colors.primary,
-              }}
-            >
-              Subtasks
-            </Text>
-            <View
-              className="w-full h-1 rounded-full"
-              style={{
-                backgroundColor:
-                  activeTab === "Subtasks" ? theme.colors.onSurface : theme.colors.disabled,
-              }}
-            />
+            <Text className={"text-lg font-balooBold pb-3"}>Subtasks</Text>
+            {activeTab === "Subtasks" && <View className="w-full h-1 bg-blue-100 rounded-full" />}
           </TouchableOpacity>
         </View>
 
