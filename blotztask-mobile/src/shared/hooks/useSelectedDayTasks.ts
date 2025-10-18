@@ -1,6 +1,6 @@
 import { isSameDay } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import { fetchTasksForDate } from "../../../shared/services/task-service";
+import { fetchTasksForDate } from "../services/task-service";
 
 const useSelectedDayTasks = ({ selectedDay }: { selectedDay: Date }) => {
   // Only show floating tasks if the selectedDay is today

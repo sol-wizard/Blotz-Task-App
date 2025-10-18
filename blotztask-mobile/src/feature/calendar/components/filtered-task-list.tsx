@@ -1,7 +1,6 @@
 import { ActivityIndicator, FlatList, View } from "react-native";
 import { TaskStatusRow } from "../../../shared/components/ui/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
-import useSelectedDayTasks from "../hooks/useSelectedDayTasks";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import TaskCard from "./task-card";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -11,6 +10,7 @@ import { TaskStatusType } from "../modals/task-status-type";
 import { useSelectedTaskActions } from "@/shared/stores/selected-task-store";
 import { filterSelectedTask } from "../util/task-counts";
 import { Snackbar } from "react-native-paper";
+import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 
 export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");

@@ -3,10 +3,7 @@ import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
-import { fetchUserProfile } from "@/shared/services/user-service";
 import { useQueryClient } from "@tanstack/react-query";
-import { isSameDay } from "date-fns";
-import { fetchTasksForDate } from "@/shared/services/task-service";
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
@@ -22,21 +19,6 @@ export default function Index() {
           setIsAuthenticated(false);
           return;
         }
-
-        // Prefetch data via React Query
-        const today = new Date();
-        const showFloatingTasks = isSameDay(today, new Date());
-
-        await Promise.all([
-          queryClient.prefetchQuery({
-            queryKey: ["user-profile"],
-            queryFn: fetchUserProfile,
-          }),
-          queryClient.prefetchQuery({
-            queryKey: ["tasks", today.toISOString()],
-            queryFn: () => fetchTasksForDate(today, showFloatingTasks),
-          }),
-        ]);
 
         setIsAuthenticated(true);
       } catch (error) {
