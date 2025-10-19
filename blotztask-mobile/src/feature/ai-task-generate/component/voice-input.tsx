@@ -83,7 +83,7 @@ export const VoiceInput = ({
                   </Text>
                 </Pressable>
               </View>
-              <Text className="text-gray-500 font-baloo text-xl text-center mt-2">
+              <Text className="text-gray-500 font-baloo text-xl text-center mt-2 mx-8">
                 Just say your task, and I&apos;ll create it automatically
               </Text>
             </View>

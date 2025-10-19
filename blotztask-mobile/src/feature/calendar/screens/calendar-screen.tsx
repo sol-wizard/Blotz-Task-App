@@ -39,7 +39,7 @@ export default function CalendarScreen() {
               textDayFontSize: 16,
             }}
             markedDates={{
-              [format(new Date(), "yyyy-MM-dd")]: { marked: true, dotColor: "#CDF79A" },
+              [format(new Date(), "yyyy-MM-dd")]: { marked: true, dotColor: "#98C802" },
             }}
             allowShadow={false}
             firstDay={1}
