@@ -1,4 +1,4 @@
-import { endOfDay, format, isEqual, isSameDay, parseISO, startOfDay } from "date-fns";
+import { format, isSameDay, parseISO } from "date-fns";
 
 export const formatAiTaskCardDate = ({
   startTime,

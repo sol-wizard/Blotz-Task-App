@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Snackbar, IconButton } from "react-native-paper";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, SafeAreaView, View, Text } from "react-native";
@@ -41,6 +41,9 @@ export default function AllTasksScreen() {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
   const navigateToTaskDetails = (task: TaskDetailDTO) => {
     router.push({
