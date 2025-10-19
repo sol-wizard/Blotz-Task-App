@@ -16,8 +16,6 @@ export default function TaskDetailsScreen() {
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading } = useTaskById({ taskId });
 
-  const { isDone, title, description, label, startTime, endTime } = selectedTask || {};
-  const selectedTask = useSelectedTaskState();
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
   if (!selectedTask) {
     console.warn("No selected task found");
@@ -30,11 +28,9 @@ export default function TaskDetailsScreen() {
       </View>
     );
   }
-  const { id, isDone, title, description, label, startTime, endTime } = selectedTask;
-
+  const { isDone, title, description, label, startTime, endTime, id } = selectedTask;
   const taskStatus = isDone ? "Done" : "To Do";
   const labelName: string | undefined = label?.name;
-  const [activeTab, setActiveTab] = useState<"Details" | "Subtasks">("Details");
 
   if (isLoading || !selectedTask) {
     return (
