@@ -12,7 +12,7 @@ export default function CalendarScreen() {
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
 
   return (
-    <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
+    <SafeAreaView className="flex-1">
       <CalendarHeader
         date={format(selectedDay, "yyyy-MM-dd")}
         isCalendarVisible={isCalendarVisible}

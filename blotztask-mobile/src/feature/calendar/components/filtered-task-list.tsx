@@ -11,6 +11,7 @@ import { useSelectedTaskActions } from "@/shared/stores/selected-task-store";
 import { filterSelectedTask } from "../util/task-counts";
 import { Snackbar } from "react-native-paper";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
@@ -24,8 +25,9 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
     resetDeleteTask,
     deleteTaskError,
   } = useTaskMutations();
-  const { setSelectedTask } = useSelectedTaskActions();
+
   const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
+  const queryClient = useQueryClient();
 
   const filteredSelectedDayTasks = filterSelectedTask(selectedDayTasks);
   const tasksOfSelectedStatus = filteredSelectedDayTasks.find(
@@ -33,9 +35,10 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   )?.tasks;
 
   const navigateToTaskDetails = (task: TaskDetailDTO) => {
-    setSelectedTask(task);
+    queryClient.setQueryData(["taskId", task.id], task);
     router.push({
       pathname: "/(protected)/task-details",
+      params: { taskId: task.id },
     });
   };
 

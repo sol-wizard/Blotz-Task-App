@@ -1,20 +1,23 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
 import { EditTaskItemDTO } from "@/feature/task-add-edit/models/edit-task-item-dto";
 import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-task-dto-mapper";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Text } from "react-native";
 import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
+import { useTaskById } from "@/shared/hooks/useTaskbyId";
 
 // TODO: Fix flickering stale selected task in task detail page while navigating back
 const TaskEditScreen = () => {
   const { updateTask, isUpdating } = useTaskMutations();
-  const selectedTask = useSelectedTaskState();
+  const params = useLocalSearchParams<{ taskId: string }>();
+  const taskId = Number(params.taskId ?? "");
+  const { selectedTask, isLoading } = useTaskById({ taskId });
+
   const router = useRouter();
 
   // TODO: Add loading icon
-  if (!selectedTask) {
+  if (isLoading || !selectedTask) {
     return <Text>Loading...</Text>;
   }
 
