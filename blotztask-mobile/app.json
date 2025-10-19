@@ -25,11 +25,9 @@
       "icon": "./assets/images/blotz-icon.png"
     },
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#ffffff"
-      },
+      "appName": "BlotzTask",
       "edgeToEdgeEnabled": true,
-      "package": "com.Blotz.BlotzTask"
+      "package": "com.blotz.blotztask"
     },
     "web": {
       "bundler": "metro",
@@ -37,15 +35,6 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/blotz-logo.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
-        }
-      ],
       "expo-secure-store",
       [
         "expo-dev-client",
@@ -59,7 +48,6 @@
           "domain": "dev-k72xachs0fr6nebp.us.auth0.com"
         }
       ],
-      "patch-project",
       "expo-font",
       "expo-localization"
     ],
