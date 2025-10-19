@@ -7,7 +7,6 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { router } from "expo-router";
 import { useState } from "react";
 import { TaskStatusType } from "../modals/task-status-type";
-import { useSelectedTaskActions } from "@/shared/stores/selected-task-store";
 import { filterSelectedTask } from "../util/task-counts";
 import { Snackbar } from "react-native-paper";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
