@@ -15,7 +15,6 @@ const useTaskMutations = () => {
     mutationFn: (task: AddTaskItemDTO) => addTaskItem(task),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["overdueTasks"] });
     },
   });
 
@@ -23,7 +22,6 @@ const useTaskMutations = () => {
     mutationFn: (taskId: number) => toggleTaskCompletion(taskId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["overdueTasks"] });
     },
   });
 
@@ -31,7 +29,6 @@ const useTaskMutations = () => {
     mutationFn: (taskId: number) => deleteTask(taskId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["overdueTasks"] });
     },
   });
 
@@ -39,7 +36,7 @@ const useTaskMutations = () => {
     mutationFn: (dto: EditTaskItemDTO) => updateTaskItem(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["overdueTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["taskId"] });
     },
   });
   return {
