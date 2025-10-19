@@ -188,6 +188,7 @@ export default function TaskCard({
                     </Text>
                   )}
                 </View>
+
                 {endTime && new Date(endTime).getTime() <= new Date().getTime() && !checked && (
                   <Text className="text-warning font-baloo text-lg">Late</Text>
                 )}
