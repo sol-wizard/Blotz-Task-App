@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, TextInput, Keyboard } from "react-native";
-import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import { theme } from "@/shared/constants/theme";
-import { format, parseISO } from "date-fns";
+import { formatAiTaskCardDate, formatAiTaskCardTime } from "../utils/format-ai-task-card-time";
 
 type Props = {
   task: AiTaskDTO;
@@ -15,9 +15,6 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(task.title);
 
-  // Use fallback color for divider
-  const dividerColor = theme.colors.disabled;
-
   const handleEdit = () => {
     const trimmed = draftTitle.trim();
     if (trimmed && trimmed !== task.title) {
@@ -28,10 +25,15 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
     setIsEditing(false);
     Keyboard.dismiss();
   };
+  const formatTime = formatAiTaskCardTime({ startTime: task.startTime, endTime: task.endTime });
+  const formatDate = formatAiTaskCardDate({ startTime: task.startTime, endTime: task.endTime });
 
   return (
     <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
-      <View className="w-2 h-full rounded-full" style={{ backgroundColor: dividerColor }} />
+      <View
+        className="w-2 h-full rounded-full"
+        style={{ backgroundColor: theme.colors.disabled }}
+      />
 
       <View className="flex-1 flex-row items-center justify-between ml-4">
         {isEditing ? (
@@ -69,15 +71,13 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
         )}
 
         {task.startTime || task.endTime ? (
-          <View className="flex-row items-center ml-2">
-            <MaterialIcons name="schedule" size={16} color={theme.colors.primary} />
-            <Text className="text-sm font-medium ml-1" style={{ color: theme.colors.primary }}>
-              {task.startTime && task.endTime
-                ? `${format(parseISO(task.startTime), "HH:mm")} - ${format(parseISO(task.endTime), "HH:mm")}`
-                : task.startTime
-                  ? format(parseISO(task.startTime), "HH:mm")
-                  : format(parseISO(task.endTime), "HH:mm")}
-            </Text>
+          <View className="items-center ml-2">
+            {formatTime && (
+              <Text className="text-sm font-medium ml-1 text-tertiary">{formatTime}</Text>
+            )}
+            {formatDate && (
+              <Text className="text-sm font-medium ml-1 text-tertiary">{formatDate}</Text>
+            )}
           </View>
         ) : null}
       </View>
