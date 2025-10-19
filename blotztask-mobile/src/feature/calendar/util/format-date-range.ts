@@ -8,16 +8,12 @@ export const formatDateRange = ({
   endTime?: string;
 }) => {
   const formatToken = "dd/MM/yyyy";
-  const hasStartTime = startTime && startTime !== null;
-  const hasEndTime = endTime && endTime !== null;
 
-  if (hasStartTime && hasEndTime) {
+  if (startTime && endTime && startTime === endTime) {
+    return `${format(new Date(startTime), formatToken)}`;
+  } else if (startTime && endTime && startTime !== endTime) {
     return `${format(new Date(startTime), formatToken)} - ${format(new Date(endTime), formatToken)}`;
-  } else if (hasStartTime && !hasEndTime) {
-    return `${format(new Date(startTime), formatToken)} - ?`;
-  } else if (!hasStartTime && hasEndTime) {
-    return `? - ${format(new Date(endTime), formatToken)}`;
-  } else {
+  } else if (!startTime || !endTime) {
     return "";
   }
 };

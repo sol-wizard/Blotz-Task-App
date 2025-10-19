@@ -1,23 +1,33 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { IconButton } from "react-native-paper";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsTab from "../../feature/task-details/components/details-tab";
 import SubtasksTab from "../../feature/task-details/components/subtasks-tab";
-
 import { theme } from "@/shared/constants/theme";
-import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTaskById } from "@/shared/hooks/useTaskbyId";
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
-  const selectedTask = useSelectedTaskState();
+  const params = useLocalSearchParams<{ taskId: string }>();
+  const taskId = Number(params.taskId ?? "");
+  const { selectedTask, isLoading } = useTaskById({ taskId });
+
   const { isDone, title, description, label, startTime, endTime } = selectedTask || {};
 
   const taskStatus = isDone ? "Done" : "To Do";
   const labelName: string | undefined = label?.name;
   const [activeTab, setActiveTab] = useState<"Details" | "Subtasks">("Details");
+
+  if (isLoading || !selectedTask) {
+    return (
+      <View style={{ padding: 16 }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -47,6 +57,7 @@ export default function TaskDetailsScreen() {
             onPress={() =>
               router.push({
                 pathname: "/(protected)/task-edit",
+                params: { taskId: selectedTask.id },
               })
             }
             iconColor="black"

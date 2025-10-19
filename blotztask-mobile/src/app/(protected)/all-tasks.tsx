@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Snackbar, IconButton } from "react-native-paper";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, SafeAreaView, View, Text } from "react-native";
@@ -9,7 +9,6 @@ import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-plac
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
 import { getAllTasks, toggleTaskCompletion, deleteTask } from "@/shared/services/task-service";
 import UserProfile from "@/feature/calendar/components/user-profile";
-import { useSelectedTaskActions, useSelectedTaskState } from "@/shared/stores/selected-task-store";
 import { TaskStatusType } from "@/feature/calendar/modals/task-status-type";
 import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 
@@ -17,8 +16,6 @@ export default function AllTasksScreen() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
-  const selectedTask = useSelectedTaskState();
-  const { setSelectedTask } = useSelectedTaskActions();
 
   const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
     visible: false,
@@ -44,15 +41,14 @@ export default function AllTasksScreen() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchTasks();
-  }, [selectedTask]);
+  }, []);
 
   const navigateToTaskDetails = (task: TaskDetailDTO) => {
-    setSelectedTask(task);
     router.push({
       pathname: "/(protected)/task-details",
+      params: { taskId: task.id },
     });
   };
 

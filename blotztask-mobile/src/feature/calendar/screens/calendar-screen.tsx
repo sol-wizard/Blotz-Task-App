@@ -12,7 +12,7 @@ export default function CalendarScreen() {
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
 
   return (
-    <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
+    <SafeAreaView className="flex-1">
       <CalendarHeader
         date={format(selectedDay, "yyyy-MM-dd")}
         isCalendarVisible={isCalendarVisible}
@@ -39,7 +39,7 @@ export default function CalendarScreen() {
               textDayFontSize: 16,
             }}
             markedDates={{
-              [format(new Date(), "yyyy-MM-dd")]: { marked: true, dotColor: "#CDF79A" },
+              [format(new Date(), "yyyy-MM-dd")]: { marked: true, dotColor: "#98C802" },
             }}
             allowShadow={false}
             firstDay={1}
