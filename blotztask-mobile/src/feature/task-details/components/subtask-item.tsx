@@ -1,8 +1,8 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { CustomRadioCheckbox } from "@/shared/components/ui/custom-radio-checkbox";
-import { convertSubtaskTimeForm } from "@/feature/breakdown/utils/convert-subtask-time-form";
 import { theme } from "@/shared/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
+import { convertSubtaskTimeForm } from "../utils/convert-subtask-time-form";
 
 type SubtaskItemProps = {
   item: any;
