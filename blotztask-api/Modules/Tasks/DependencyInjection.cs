@@ -22,7 +22,7 @@ public static class DependencyInjection
         services.AddScoped<GetTaskByIdQueryHandler>();
         services.AddScoped<GetFloatingTasksQueryHandler>();
         services.AddScoped<GetAllTasksQueryHandler>();
-        services.AddScoped<GetSubtasksByIdQueryHandler>();
+        services.AddScoped<GetSubtasksByTaskIdQueryHandler>();
 
         return services;
     }

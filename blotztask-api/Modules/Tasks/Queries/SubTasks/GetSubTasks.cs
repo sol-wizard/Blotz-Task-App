@@ -5,17 +5,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.SubTasks;
 
-public class GetSubtasksByIdQuery
+public class GetSubtasksByTaskIdQuery
 {
     [Required]
     public required int TaskId { get; init; }
 }
 
-public class GetSubtasksByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetSubtasksByIdQueryHandler> logger)
+public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db, ILogger<GetSubtasksByTaskIdQueryHandler> logger)
 {
-    private readonly ILogger<GetSubtasksByIdQueryHandler> _logger = logger;
+    private readonly ILogger<GetSubtasksByTaskIdQueryHandler> _logger = logger;
 
-    public async Task<List<SubtaskReadDto>> Handle(GetSubtasksByIdQuery query, CancellationToken ct = default)
+    public async Task<List<SubtaskReadDto>> Handle(GetSubtasksByTaskIdQuery query, CancellationToken ct = default)
     {
         var subTasks = await db.TaskItems
             .Where(t => t.Id == query.TaskId)
