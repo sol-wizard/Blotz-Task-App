@@ -138,7 +138,7 @@ const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
 
   // Use fetched data directly - no local state needed
   const displaySubtasks = subtasks.map((subtask) => ({
-    id: subtask.taskId,
+    id: subtask.subTaskId,
     title: subtask.title,
     description: subtask.description || "",
     duration: subtask.duration || "",

@@ -22,7 +22,7 @@ export const createBreakDownSubtasks = async (taskId: number) => {
 };
 
 export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
-  const taskId = newSubtask.taskId;
+  const taskId = newSubtask.subTaskId;
   const subtaskId = newSubtask.parentTaskId;
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/${taskId}/subtasks/${subtaskId}`;
 

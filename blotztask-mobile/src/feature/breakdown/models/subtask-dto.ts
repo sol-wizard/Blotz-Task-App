@@ -1,7 +1,7 @@
 import { Timespan } from "react-native/Libraries/Utilities/IPerformanceLogger";
 
 export interface SubtaskDTO {
-  taskId: number;
+  subTaskId: number;
   parentTaskId: number;
   title: string;
   description?: string;
