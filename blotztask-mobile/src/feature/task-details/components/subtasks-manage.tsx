@@ -6,14 +6,14 @@ import { theme } from "@/shared/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSubtaskQueries } from "../hooks/useSubtaskQueries";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
-import { useSelectedTaskState } from "@/shared/stores/selected-task-store";
+import { useTaskById } from "@/shared/hooks/useTaskbyId";
 
 type SubtasksManageProps = {
   taskId: number;
 };
 
 const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
-  const selectedTask = useSelectedTaskState();
+  const { selectedTask } = useTaskById({ taskId });
 
   const { useSubtasksByParentId } = useSubtaskQueries();
   const { data: fetchedSubtasks, isLoading, isError, refetch } = useSubtasksByParentId(taskId);
