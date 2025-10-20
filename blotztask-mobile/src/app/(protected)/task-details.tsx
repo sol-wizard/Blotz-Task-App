@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { IconButton } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
-import DetailsTab from "../../feature/task-details/components/details-tab";
-import SubtasksGenerate from "../../feature/task-details/components/subtasks-generate";
+import DetailsView from "../../feature/task-details/components/details-view";
+import SubtasksView from "../../feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
@@ -98,9 +98,9 @@ export default function TaskDetailsScreen() {
         {/* Render the active tab */}
         <View className="flex-1 px-4">
           {activeTab === "Details" ? (
-            <DetailsTab taskDescription={description as string} />
+            <DetailsView taskDescription={description as string} />
           ) : (
-            <SubtasksGenerate taskId={id} />
+            <SubtasksView taskId={id} />
           )}
         </View>
       </View>

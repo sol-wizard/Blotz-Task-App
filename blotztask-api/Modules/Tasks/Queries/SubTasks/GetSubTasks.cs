@@ -11,15 +11,13 @@ public class GetSubtasksByTaskIdQuery
     public required int SubTaskId { get; init; }
 }
 
-public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db, ILogger<GetSubtasksByTaskIdQueryHandler> logger)
+public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db)
 {
-    private readonly ILogger<GetSubtasksByTaskIdQueryHandler> _logger = logger;
-
-    public async Task<List<SubtaskReadDto>> Handle(GetSubtasksByTaskIdQuery query, CancellationToken ct = default)
+    public async Task<List<SubtaskDetailDto>> Handle(GetSubtasksByTaskIdQuery query, CancellationToken ct = default)
     {
         var subTasks = await db.TaskItems
             .Where(t => t.Id == query.SubTaskId)
-            .SelectMany(t => t.Subtasks, (t, s) => new SubtaskReadDto
+            .SelectMany(t => t.Subtasks, (t, s) => new SubtaskDetailDto
             {
                 SubTaskId = s.Id,
                 ParentTaskId = t.Id,
@@ -34,7 +32,7 @@ public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db, ILogger<GetS
         return subTasks;
     }
 }
-public class SubtaskReadDto
+public class SubtaskDetailDto
 {
     public int SubTaskId { get; set; }
     public int ParentTaskId { get; set; }

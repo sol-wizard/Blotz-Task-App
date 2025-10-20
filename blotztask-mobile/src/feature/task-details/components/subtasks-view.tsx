@@ -6,20 +6,20 @@ import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
 import { BreakdownSubtaskDTO } from "@/feature/task-details/models/breakdown-subtask-dto";
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
-import SubtasksManage from "./subtasks-manage";
+import SubtasksList from "./subtasks-list";
 
-type SubtaskGenerateProps = {
+type SubtaskViewProps = {
   taskId: number;
 };
 
-const SubtasksGenerate = ({ taskId }: SubtaskGenerateProps) => {
+const SubtasksView = ({ taskId }: SubtaskViewProps) => {
   const {
     breakDownTask,
     isBreakingDown,
     breakDownError,
-    replaceSubtasks: addSubtasks,
-    isReplacingSubtasks: isAddingSubtasks,
-    replaceSubtasksError: addSubtasksError,
+    replaceSubtasks: replaceSubtasks,
+    isReplacingSubtasks: isReplacingingSubtasks,
+    replaceSubtasksError: replaceSubtasksError,
   } = useSubtaskMutations();
 
   const {
@@ -37,14 +37,14 @@ const SubtasksGenerate = ({ taskId }: SubtaskGenerateProps) => {
     if (!isLoadingSubtasks && showManage === null) {
       setShowManage(hasSubtasks);
     }
-  }, [hasSubtasks, isLoadingSubtasks, showManage]);
+  }, [hasSubtasks, isLoadingSubtasks]);
 
   const handleBreakDown = async () => {
-    if (isBreakingDown || isAddingSubtasks) return;
+    if (isBreakingDown || isReplacingingSubtasks) return;
     try {
       const subtasks: BreakdownSubtaskDTO[] = (await breakDownTask(taskId)) ?? [];
       if (subtasks.length > 0) {
-        await addSubtasks({
+        await replaceSubtasks({
           taskId,
           subtasks: subtasks.map((subtask: AddSubtaskDTO) => ({ ...subtask })),
         });
@@ -52,11 +52,11 @@ const SubtasksGenerate = ({ taskId }: SubtaskGenerateProps) => {
         setShowManage(true);
       }
     } catch {
-      console.error(breakDownError || addSubtasksError);
+      console.error(breakDownError || replaceSubtasksError);
     }
   };
 
-  const isLoading = isBreakingDown || isAddingSubtasks || isLoadingSubtasks;
+  const isLoading = isBreakingDown || isReplacingingSubtasks || isLoadingSubtasks;
 
   // Show loading state while fetching or determining view
   if (isLoadingSubtasks || showManage === null) {
@@ -70,7 +70,7 @@ const SubtasksGenerate = ({ taskId }: SubtaskGenerateProps) => {
 
   // Show manage view if requested or if subtasks exist
   if (showManage && hasSubtasks) {
-    return <SubtasksManage taskId={taskId} />;
+    return <SubtasksList taskId={taskId} />;
   }
 
   // Show initial breakdown view if no subtasks exist yet
@@ -102,15 +102,15 @@ const SubtasksGenerate = ({ taskId }: SubtaskGenerateProps) => {
         )}
       </Pressable>
 
-      {(breakDownError || addSubtasksError || isFetchingSubtasksError) && (
+      {(breakDownError || replaceSubtasksError || isFetchingSubtasksError) && (
         <Text className="text-red-500 text-center mt-3">
           {isFetchingSubtasksError
             ? "Failed to load subtasks."
-            : "Failed to generate or add subtasks. Please try again."}
+            : "Failed to generate or replace subtasks. Please try again."}
         </Text>
       )}
     </View>
   );
 };
 
-export default SubtasksGenerate;
+export default SubtasksView;

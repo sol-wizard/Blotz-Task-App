@@ -8,15 +8,15 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class SubTaskController(GetSubtasksByTaskIdQueryHandler getSubtaskByTaskIdQueryHandler,UpdateSubtaskCommandHandler updateSubtaskCommandHandler, ReplaceSubtasksCommandHandler replaceSubtasksCommandHandler) : ControllerBase
+public class SubTaskController(GetSubtasksByTaskIdQueryHandler getSubtaskByTaskIdQueryHandler, UpdateSubtaskCommandHandler updateSubtaskCommandHandler, ReplaceSubtasksCommandHandler replaceSubtasksCommandHandler) : ControllerBase
 {
     [HttpGet("tasks/{id}")]
-    public async Task<List<SubtaskReadDto>> GetSubtasksById(int id, CancellationToken ct)
+    public async Task<List<SubtaskDetailDto>> GetSubtasksById(int id, CancellationToken ct)
     {
         var query = new GetSubtasksByTaskIdQuery { SubTaskId = id };
         return await getSubtaskByTaskIdQueryHandler.Handle(query, ct);
     }
-    
+
     [HttpPut("{taskId}/subtasks/{subtaskId}")]
     public async Task<IActionResult> UpdateSubtask(
         int taskId,
@@ -46,5 +46,5 @@ public class SubTaskController(GetSubtasksByTaskIdQueryHandler getSubtaskByTaskI
         var message = await replaceSubtasksCommandHandler.Handle(command, ct);
         return Ok(message);
     }
-        
+
 }

@@ -44,8 +44,8 @@ public class TaskBreakDownPrompt
     return $@"
             Task Title: {task.Title}
             Description: {task.Description}
-            Start Time: {(task.StartTime?.ToString("yyyy-MM-dd HH:mm") ?? "null")}
-            End Time: {(task.EndTime?.ToString("yyyy-MM-dd HH:mm") ?? "null")}
+            Start Time: {task.StartTime?.ToString("yyyy-MM-dd HH:mm") ?? "null"}
+            End Time: {task.EndTime?.ToString("yyyy-MM-dd HH:mm") ?? "null"}
             ";
   }
 }

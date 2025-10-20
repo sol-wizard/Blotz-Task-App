@@ -8,19 +8,19 @@ import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
 
-type SubtasksManageProps = {
+type SubtasksListProps = {
   taskId: number;
 };
 
-const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
+const SubtasksList = ({ taskId }: SubtasksListProps) => {
   const { selectedTask } = useTaskById({ taskId });
   const { data: fetchedSubtasks, isLoading, isError, refetch } = useSubtasksByParentId(taskId);
 
   const {
     breakDownTask,
     isBreakingDown,
-    replaceSubtasks: addSubtasks,
-    isReplacingSubtasks: isAddingSubtasks,
+    replaceSubtasks: replaceSubtasks,
+    isReplacingSubtasks: isReplacingSubtasks,
   } = useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -45,7 +45,7 @@ const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
     try {
       const newSubtasks = await breakDownTask(taskId);
       if (newSubtasks && newSubtasks.length > 0) {
-        await addSubtasks({
+        await replaceSubtasks({
           taskId,
           subtasks: newSubtasks,
         });
@@ -89,7 +89,7 @@ const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
     console.log("TODO: Implement reorder mutation", reorderedSubtasks);
   };
 
-  if (isLoading || isBreakingDown || isAddingSubtasks) {
+  if (isLoading || isBreakingDown || isReplacingSubtasks) {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-base font-baloo text-tertiary">Loading subtasks...</Text>
@@ -231,4 +231,4 @@ const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
   );
 };
 
-export default SubtasksManage;
+export default SubtasksList;
