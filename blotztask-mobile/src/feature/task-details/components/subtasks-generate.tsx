@@ -3,26 +3,25 @@ import React, { useState, useEffect } from "react";
 import { ASSETS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
-import { useSubtaskQueries } from "../hooks/useSubtaskQueries";
-import { BreakdownSubtaskDTO } from "@/feature/breakdown/models/breakdown-subtask-dto";
-import { AddSubtaskDTO } from "@/feature/breakdown/models/add-subtask-dto";
+import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
+import { BreakdownSubtaskDTO } from "@/feature/task-details/models/breakdown-subtask-dto";
+import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import SubtasksManage from "./subtasks-manage";
 
-type SubtaskTabProps = {
+type SubtaskGenerateProps = {
   taskId: number;
 };
 
-const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
+const SubtasksGenerate = ({ taskId }: SubtaskGenerateProps) => {
   const {
     breakDownTask,
     isBreakingDown,
     breakDownError,
-    addSubtasks,
-    isAddingSubtasks,
-    addSubtasksError,
+    replaceSubtasks: addSubtasks,
+    isReplacingSubtasks: isAddingSubtasks,
+    replaceSubtasksError: addSubtasksError,
   } = useSubtaskMutations();
 
-  const { useSubtasksByParentId } = useSubtaskQueries();
   const {
     data: fetchedSubtasks,
     isLoading: isLoadingSubtasks,
@@ -114,4 +113,4 @@ const SubtasksTab = ({ taskId }: SubtaskTabProps) => {
   );
 };
 
-export default SubtasksTab;
+export default SubtasksGenerate;

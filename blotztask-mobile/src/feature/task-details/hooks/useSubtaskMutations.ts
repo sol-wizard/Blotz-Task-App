@@ -1,4 +1,7 @@
-import { replaceSubtasks, createBreakDownSubtasks } from "@/shared/services/subtask-service";
+import {
+  replaceSubtasks,
+  createBreakDownSubtasks,
+} from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const useSubtaskMutations = () => {
@@ -14,10 +17,10 @@ export const useSubtaskMutations = () => {
     },
   });
 
-  const addSubtasksMutation = useMutation({
+  const replaceSubtasksMutation = useMutation({
     mutationFn: replaceSubtasks,
     onSuccess: (_, variables) => {
-      console.log("Added subtasks", variables.subtasks, "to", variables.taskId);
+      console.log("Added/Replaced subtasks", variables.subtasks, "to", variables.taskId);
       queryClient.invalidateQueries({ queryKey: ["subtasks", variables.taskId] });
     },
     onError: (error) => {
@@ -31,9 +34,9 @@ export const useSubtaskMutations = () => {
     isBreakingDown: breakdownMutation.isPending,
     breakDownError: breakdownMutation.error,
 
-    // Add subtasks
-    addSubtasks: addSubtasksMutation.mutateAsync,
-    isAddingSubtasks: addSubtasksMutation.isPending,
-    addSubtasksError: addSubtasksMutation.error,
+    // Add/Replace subtasks
+    replaceSubtasks: replaceSubtasksMutation.mutateAsync,
+    isReplacingSubtasks: replaceSubtasksMutation.isPending,
+    replaceSubtasksError: replaceSubtasksMutation.error,
   };
 };

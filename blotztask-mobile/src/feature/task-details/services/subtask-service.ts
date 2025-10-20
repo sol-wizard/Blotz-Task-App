@@ -1,7 +1,7 @@
-import { AddSubtaskDTO } from "@/feature/breakdown/models/add-subtask-dto";
-import { SubtaskDTO } from "../../feature/breakdown/models/subtask-dto";
-import { fetchWithAuth } from "./fetch-with-auth";
-import { BreakdownSubtaskDTO } from "@/feature/breakdown/models/breakdown-subtask-dto";
+import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
+import { SubtaskDTO } from "../models/subtask-dto";
+import { fetchWithAuth } from "../../../shared/services/fetch-with-auth";
+import { BreakdownSubtaskDTO } from "@/feature/task-details/models/breakdown-subtask-dto";
 
 export const createBreakDownSubtasks = async (taskId: number) => {
   if (!taskId) return;

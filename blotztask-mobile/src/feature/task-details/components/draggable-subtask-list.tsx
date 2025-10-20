@@ -10,16 +10,17 @@ import Animated, {
   useDerivedValue,
   runOnUI,
 } from "react-native-reanimated";
-import { 
-  PanGestureHandler, 
+import {
+  PanGestureHandler,
   LongPressGestureHandler,
   State,
   ScrollView,
 } from "react-native-gesture-handler";
 import SubtaskItem from "./subtask-item";
+import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
 
 type DraggableSubtaskListProps = {
-  subtasks: any[];
+  subtasks: SubtaskDTO[];
   onToggle: (id: number) => void;
   color?: string;
   isEditMode?: boolean;
@@ -30,7 +31,7 @@ type DraggableSubtaskListProps = {
 };
 
 type DraggableItemProps = {
-  item: any;
+  item: SubtaskDTO;
   index: number;
   onToggle: (id: number) => void;
   color?: string;
@@ -73,7 +74,7 @@ function DraggableItem({
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
   const isDragging = useSharedValue(false);
-  
+
   const longPressRef = useRef(null);
   const panRef = useRef(null);
 
@@ -81,12 +82,12 @@ function DraggableItem({
   const offsetY = useDerivedValue(() => {
     const currentDraggingIndex = draggingIndexShared.value;
     const currentTargetIndex = targetIndexShared.value;
-    
+
     // If not dragging or this is the dragged item, no offset
     if (currentDraggingIndex === -1 || index === currentDraggingIndex) {
       return 0;
     }
-    
+
     // Dragging DOWN (e.g., from 1 to 3): items 2,3 move UP to make space at position 3
     if (currentDraggingIndex < currentTargetIndex) {
       if (index > currentDraggingIndex && index <= currentTargetIndex) {
@@ -99,13 +100,13 @@ function DraggableItem({
         return itemHeight;
       }
     }
-    
+
     // No offset needed for this item
     return 0;
   });
 
   const handleLongPress = (event: any) => {
-    'worklet';
+    "worklet";
     if (event.nativeEvent.state === State.ACTIVE && isEditMode && !isDragging.value) {
       isDragging.value = true;
       scale.value = withSpring(1.02);
@@ -138,7 +139,7 @@ function DraggableItem({
 
   const animatedStyle = useAnimatedStyle(() => {
     const zIndex = isDragging.value ? 999 : index === draggingIndexShared.value ? 999 : 1;
-    
+
     // Calculate scroll compensation for dragged item
     let finalTranslateY;
     if (isDragging.value) {
@@ -146,17 +147,13 @@ function DraggableItem({
       // When scrolling DOWN (scrollOffset increases), content moves UP, so item needs to move DOWN
       const scrollDelta = scrollOffsetShared.value - dragStartScrollOffsetShared.value;
       finalTranslateY = translateY.value + scrollDelta;
-      
     } else {
       // Apply smooth animation to the offset for non-dragged items
       finalTranslateY = withTiming(offsetY.value, { duration: 300 });
     }
-    
+
     return {
-      transform: [
-        { translateY: finalTranslateY },
-        { scale: scale.value },
-      ],
+      transform: [{ translateY: finalTranslateY }, { scale: scale.value }],
       zIndex,
       opacity: isDragging.value ? 0.9 : 1,
     };
@@ -225,7 +222,7 @@ export default function DraggableSubtaskList({
   const finalTranslationY = useSharedValue(0);
   const scrollOffsetShared = useSharedValue(0); // Track scroll offset for drag compensation
   const dragStartScrollOffsetShared = useSharedValue(0); // Track where drag started
-  
+
   // Auto-scroll state
   const autoScrollTimerRef = useRef<number | null>(null);
   const autoScrollDelayTimerRef = useRef<number | null>(null);
@@ -233,7 +230,7 @@ export default function DraggableSubtaskList({
   const dragStartScrollOffset = useRef(0);
   const currentDragPositionRef = useRef({ absoluteY: 0, isNearEdge: false, scrollDirection: 0 });
   const scrollLogCountRef = useRef(0);
-  
+
   // Sync scroll offset from parent to shared value on mount and when not dragging
   useEffect(() => {
     const syncInterval = setInterval(() => {
@@ -244,10 +241,10 @@ export default function DraggableSubtaskList({
         }
       }
     }, 100); // Sync every 100ms when idle
-    
+
     return () => clearInterval(syncInterval);
   }, [draggingIndex, scrollOffsetRef, scrollOffsetShared]);
-  
+
   // Cleanup auto-scroll timers on unmount or when dragging ends
   useEffect(() => {
     return () => {
@@ -275,19 +272,19 @@ export default function DraggableSubtaskList({
   const handleDragStart = (index: number) => {
     // CRITICAL: Sync scroll offset FIRST before anything else
     const initialScrollOffset = scrollOffsetRef?.current || 0;
-    
+
     // Update all scroll tracking values synchronously
     runOnUI(() => {
-      'worklet';
+      "worklet";
       scrollOffsetShared.value = initialScrollOffset;
       dragStartScrollOffsetShared.value = initialScrollOffset;
     })();
-    
+
     dragStartScrollOffset.current = initialScrollOffset;
     currentScrollOffsetRef.current = initialScrollOffset;
-    
+
     console.log(`🎬 handleDragStart: item=${index}, scrollOffset=${initialScrollOffset}`);
-    
+
     setDraggingIndex(index);
     draggingIndexShared.value = index;
     targetIndexShared.value = index;
@@ -300,48 +297,55 @@ export default function DraggableSubtaskList({
     finalTranslationY.value = translationY;
     const indexDiff = Math.round(translationY / ITEM_HEIGHT);
     const newTargetIndex = Math.max(0, Math.min(subtasks.length - 1, fromIndex + indexDiff));
-    
+
     // Update target index immediately so other items can react
     targetIndexShared.value = newTargetIndex;
-    
+
     // Auto-scroll logic - use screen-based detection
-    const screenHeight = Dimensions.get('window').height;
+    const screenHeight = Dimensions.get("window").height;
     const SCREEN_TOP_THRESHOLD = 200; // Top 200px of screen
     const SCREEN_BOTTOM_THRESHOLD = screenHeight - 200; // Bottom 200px of screen
-    
+
     // Use hysteresis to prevent jitter
     const wasNearEdge = currentDragPositionRef.current.isNearEdge;
     const topThreshold = wasNearEdge ? SCREEN_TOP_THRESHOLD + 20 : SCREEN_TOP_THRESHOLD;
     const bottomThreshold = wasNearEdge ? SCREEN_BOTTOM_THRESHOLD - 20 : SCREEN_BOTTOM_THRESHOLD;
-    
+
     // Check if near top or bottom of SCREEN (not container)
     const nearTop = absoluteY < topThreshold;
     const nearBottom = absoluteY > bottomThreshold;
     const isNearEdge = nearTop || nearBottom;
-    const scrollDirection = nearTop ? -1 : (nearBottom ? 1 : 0);
-    
+    const scrollDirection = nearTop ? -1 : nearBottom ? 1 : 0;
+
     // Debug logging - track edge state changes
     if (isNearEdge && !wasNearEdge) {
-      console.log(`Edge ENTER: absoluteY=${absoluteY.toFixed(0)}, screenHeight=${screenHeight.toFixed(0)}, topThreshold=${topThreshold.toFixed(0)}, bottomThreshold=${bottomThreshold.toFixed(0)}, nearTop=${nearTop}, nearBottom=${nearBottom}, direction=${scrollDirection}`);
+      console.log(
+        `Edge ENTER: absoluteY=${absoluteY.toFixed(0)}, screenHeight=${screenHeight.toFixed(0)}, topThreshold=${topThreshold.toFixed(0)}, bottomThreshold=${bottomThreshold.toFixed(0)}, nearTop=${nearTop}, nearBottom=${nearBottom}, direction=${scrollDirection}`,
+      );
     } else if (!isNearEdge && wasNearEdge) {
-      console.log(`Edge EXIT: absoluteY=${absoluteY.toFixed(0)}, topThreshold=${topThreshold.toFixed(0)}, bottomThreshold=${bottomThreshold.toFixed(0)}`);
+      console.log(
+        `Edge EXIT: absoluteY=${absoluteY.toFixed(0)}, topThreshold=${topThreshold.toFixed(0)}, bottomThreshold=${bottomThreshold.toFixed(0)}`,
+      );
     }
-    
+
     // Update current drag position for timer to read (used by setInterval callback)
     currentDragPositionRef.current = {
       absoluteY,
       isNearEdge,
       scrollDirection,
     };
-    
+
     if (isNearEdge) {
       // Start auto-scroll after delay if not already started
       if (!autoScrollDelayTimerRef.current && !autoScrollTimerRef.current) {
-        console.log(`Starting auto-scroll delay timer (${AUTO_SCROLL_DELAY}ms)... scrollViewRef exists:`, !!scrollViewRef?.current);
-        
+        console.log(
+          `Starting auto-scroll delay timer (${AUTO_SCROLL_DELAY}ms)... scrollViewRef exists:`,
+          !!scrollViewRef?.current,
+        );
+
         autoScrollDelayTimerRef.current = window.setTimeout(() => {
           console.log(`Delay complete, checking if still near edge...`);
-          
+
           // Check if still near edge after delay
           const currentDragState = currentDragPositionRef.current;
           if (!currentDragState.isNearEdge || currentDragState.scrollDirection === 0) {
@@ -349,33 +353,35 @@ export default function DraggableSubtaskList({
             autoScrollDelayTimerRef.current = null;
             return;
           }
-          
+
           autoScrollDelayTimerRef.current = null;
           console.log(`Starting continuous scroll interval`);
-          
+
           // Start continuous scrolling - reads current state from ref
           autoScrollTimerRef.current = window.setInterval(() => {
             const dragState = currentDragPositionRef.current;
-            
+
             // Stop if no longer near edge
             if (!dragState.isNearEdge || dragState.scrollDirection === 0) {
               console.log(`Auto-scroll stopped: not near edge`);
               clearAutoScroll();
               return;
             }
-            
+
             if (scrollViewRef?.current) {
               // Get current scroll position from parent ref (source of truth)
               const currentOffset = scrollOffsetRef?.current || 0;
-              const newOffset = currentOffset + (dragState.scrollDirection * AUTO_SCROLL_SPEED);
+              const newOffset = currentOffset + dragState.scrollDirection * AUTO_SCROLL_SPEED;
               const clampedOffset = Math.max(0, newOffset);
-              
+
               // Debug: log every 10th scroll to reduce spam
               scrollLogCountRef.current++;
               if (scrollLogCountRef.current % 10 === 0) {
-                console.log(`Auto-scroll: ${dragState.scrollDirection > 0 ? '↓ DOWN' : '↑ UP'} | offset: ${clampedOffset.toFixed(0)}px`);
+                console.log(
+                  `Auto-scroll: ${dragState.scrollDirection > 0 ? "↓ DOWN" : "↑ UP"} | offset: ${clampedOffset.toFixed(0)}px`,
+                );
               }
-              
+
               scrollViewRef.current.scrollTo({ y: clampedOffset, animated: false });
               // Update both local and parent refs after scrolling
               currentScrollOffsetRef.current = clampedOffset;
@@ -401,11 +407,11 @@ export default function DraggableSubtaskList({
   const handleDragEnd = () => {
     // Clear auto-scroll timers
     clearAutoScroll();
-    
+
     // Reset drag position state
     currentDragPositionRef.current = { absoluteY: 0, isNearEdge: false, scrollDirection: 0 };
     scrollLogCountRef.current = 0;
-    
+
     if (draggingIndex !== -1) {
       // Calculate scroll delta during drag
       const scrollDelta = scrollOffsetShared.value - dragStartScrollOffset.current;
@@ -413,9 +419,11 @@ export default function DraggableSubtaskList({
       const adjustedTranslationY = finalTranslationY.value + scrollDelta;
       const indexDiff = Math.round(adjustedTranslationY / ITEM_HEIGHT);
       const newIndex = Math.max(0, Math.min(subtasks.length - 1, draggingIndex + indexDiff));
-      
-      console.log(`Drop: translationY=${finalTranslationY.value.toFixed(0)}, scrollDelta=${scrollDelta.toFixed(0)}, adjusted=${adjustedTranslationY.toFixed(0)}, from=${draggingIndex} to=${newIndex}`);
-      
+
+      console.log(
+        `Drop: translationY=${finalTranslationY.value.toFixed(0)}, scrollDelta=${scrollDelta.toFixed(0)}, adjusted=${adjustedTranslationY.toFixed(0)}, from=${draggingIndex} to=${newIndex}`,
+      );
+
       if (newIndex !== draggingIndex) {
         onReorder(draggingIndex, newIndex);
       }
@@ -431,7 +439,7 @@ export default function DraggableSubtaskList({
     <View>
       {subtasks.map((subtask, index) => (
         <DraggableItem
-          key={subtask.id}
+          key={subtask.subTaskId}
           item={subtask}
           index={index}
           onToggle={onToggle}

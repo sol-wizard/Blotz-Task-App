@@ -4,9 +4,9 @@ import React, { useState, useRef } from "react";
 import DraggableSubtaskList from "./draggable-subtask-list";
 import { theme } from "@/shared/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useSubtaskQueries } from "../hooks/useSubtaskQueries";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
+import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
 
 type SubtasksManageProps = {
   taskId: number;
@@ -14,11 +14,14 @@ type SubtasksManageProps = {
 
 const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
   const { selectedTask } = useTaskById({ taskId });
-
-  const { useSubtasksByParentId } = useSubtaskQueries();
   const { data: fetchedSubtasks, isLoading, isError, refetch } = useSubtasksByParentId(taskId);
 
-  const { breakDownTask, isBreakingDown, addSubtasks, isAddingSubtasks } = useSubtaskMutations();
+  const {
+    breakDownTask,
+    isBreakingDown,
+    replaceSubtasks: addSubtasks,
+    isReplacingSubtasks: isAddingSubtasks,
+  } = useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
   const scrollOffsetRef = useRef(0);
@@ -46,8 +49,6 @@ const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
           taskId,
           subtasks: newSubtasks,
         });
-        // Refetch to get updated data
-        refetch();
       }
     } catch (error) {
       console.error("Failed to refresh subtasks:", error);
@@ -61,25 +62,13 @@ const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
   };
 
   const handleAddSubtask = () => {
-    onBack();
+    // TODO: add delete screen
+    console.log("Implement add subtask");
   };
 
   const handleDelete = (id: number) => {
-    Alert.alert("Delete Subtask", "Are you sure you want to delete this subtask?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          // TODO: Create a delete mutation hook
-          // deleteSubtask(id) - React Query will handle cache invalidation
-          console.log("TODO: Implement delete mutation");
-        },
-      },
-    ]);
+    // TODO: add delete screen
+    console.log("Implement delete subtask");
   };
 
   const handleReorder = (fromIndex: number, toIndex: number) => {
@@ -122,10 +111,7 @@ const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
     );
   }
 
-  // Use fetched data directly from React Query
-  const subtasks = fetchedSubtasks || [];
-
-  if (subtasks.length === 0) {
+  if (!fetchedSubtasks || fetchedSubtasks.length === 0) {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-base font-baloo text-tertiary">No subtasks yet</Text>
@@ -135,15 +121,6 @@ const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
       </View>
     );
   }
-
-  // Use fetched data directly - no local state needed
-  const displaySubtasks = subtasks.map((subtask) => ({
-    id: subtask.subTaskId,
-    title: subtask.title,
-    description: subtask.description || "",
-    duration: subtask.duration || "",
-    isDone: subtask.isDone || false,
-  }));
 
   return (
     <View className="flex-1">
@@ -192,7 +169,7 @@ const SubtasksManage = ({ taskId }: SubtasksManageProps) => {
           }}
         >
           <DraggableSubtaskList
-            subtasks={displaySubtasks}
+            subtasks={fetchedSubtasks}
             onToggle={handleToggle}
             color={taskColor}
             isEditMode={isEditMode}

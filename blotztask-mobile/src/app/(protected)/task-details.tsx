@@ -4,7 +4,7 @@ import { IconButton } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsTab from "../../feature/task-details/components/details-tab";
-import SubtasksTab from "../../feature/task-details/components/subtasks-tab";
+import SubtasksGenerate from "../../feature/task-details/components/subtasks-generate";
 import { theme } from "@/shared/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
@@ -100,7 +100,7 @@ export default function TaskDetailsScreen() {
           {activeTab === "Details" ? (
             <DetailsTab taskDescription={description as string} />
           ) : (
-            <SubtasksTab taskId={id} />
+            <SubtasksGenerate taskId={id} />
           )}
         </View>
       </View>
