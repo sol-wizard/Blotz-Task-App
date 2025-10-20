@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Infrastructure.Data;
-using BlotzTask.Modules.Tasks.Shared;
 using Microsoft.EntityFrameworkCore;
 
 public class ReplaceSubtasksCommand
@@ -20,51 +19,48 @@ public class ReplaceSubtasksCommandHandler
     {
         _db = db;
     }
-
+    
     public async Task<string> Handle(ReplaceSubtasksCommand command, CancellationToken ct = default)
     {
-        var parentTask = await _db.TaskItems
-            .FirstOrDefaultAsync(t => t.Id == command.TaskId, ct);
-
-        if (parentTask == null)
-            throw new Exception($"Parent task {command.TaskId} not found.");
-
-        var existingSubtasks = await _db.Subtasks
-            .Where(s => s.ParentTaskId == parentTask.Id)
-            .ToListAsync(ct);
-
-        _db.Subtasks.RemoveRange(existingSubtasks);
-
-        var now = DateTime.UtcNow;
-
-        foreach (var dto in command.Subtasks)
+        await using var transaction = await _db.Database.BeginTransactionAsync(ct);
+        try
         {
-            var duration = TimeSpanHelper.ParseDuration(dto.Duration);
-            if (!duration.HasValue)
-            {
-                throw new Exception($"Duration {dto.Duration} is invalid.");
-            }
+            var parentTask = await _db.TaskItems
+                .FirstOrDefaultAsync(t => t.Id == command.TaskId, ct);
 
-            var subtask = new Subtask
+            if (parentTask == null)
+                throw new Exception($"Parent task {command.TaskId} not found.");
+            
+            // TODO: Update this using the delete handler
+            await _db.Subtasks
+                .Where(s => s.ParentTaskId == parentTask.Id)
+                .ExecuteDeleteAsync(ct);
+            
+            // TODO: Update this using the add handler
+            var now = DateTime.UtcNow;
+            var newSubtasks = command.Subtasks.Select(dto => new Subtask
             {
                 Title = dto.Title,
                 Description = dto.Description,
-                Duration = duration,
+                Duration = dto.Duration,
                 Order = dto.Order,
                 IsDone = false,
                 ParentTaskId = parentTask.Id,
                 CreatedAt = now,
                 UpdatedAt = now
-            };
-        
-            _db.Subtasks.Add(subtask);
+            }).ToList();
 
+            _db.Subtasks.AddRange(newSubtasks);
+            await _db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
+            return $"{command.Subtasks.Count} subtasks added to task {parentTask.Id}.";
         }
 
-        await _db.SaveChangesAsync(ct);
-
-
-        return $"{command.Subtasks.Count} subtasks added to task {parentTask.Id}.";
+        catch (Exception)
+        {
+            await transaction.RollbackAsync(ct);
+            throw;
+        }
     }
 }
 
@@ -72,6 +68,6 @@ public class SubtaskDto
 {
     public required string Title { get; set; }
     public string Description { get; set; } = string.Empty;
-    public string Duration { get; set; } = string.Empty;
+    public TimeSpan Duration { get; set; }
     public int Order { get; set; }
 }
