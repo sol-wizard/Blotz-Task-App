@@ -22,45 +22,35 @@ public class ReplaceSubtasksCommandHandler
     
     public async Task<string> Handle(ReplaceSubtasksCommand command, CancellationToken ct = default)
     {
-        await using var transaction = await _db.Database.BeginTransactionAsync(ct);
-        try
+        var parentTask = await _db.TaskItems
+            .FirstOrDefaultAsync(t => t.Id == command.TaskId, ct);
+
+        if (parentTask == null)
+            throw new Exception($"Parent task {command.TaskId} not found.");
+
+        var existingSubtasks = await _db.Subtasks
+            .Where(s => s.ParentTaskId == parentTask.Id)
+            .ToListAsync(ct);
+
+        _db.Subtasks.RemoveRange(existingSubtasks);
+
+        var now = DateTime.UtcNow;
+        var newSubtasks = command.Subtasks.Select(dto => new Subtask
         {
-            var parentTask = await _db.TaskItems
-                .FirstOrDefaultAsync(t => t.Id == command.TaskId, ct);
+            Title = dto.Title,
+            Description = dto.Description,
+            Duration = dto.Duration,
+            Order = dto.Order,
+            IsDone = false,
+            ParentTaskId = parentTask.Id,
+            CreatedAt = now,
+            UpdatedAt = now
+        }).ToList();
 
-            if (parentTask == null)
-                throw new Exception($"Parent task {command.TaskId} not found.");
-            
-            // TODO: Update this using the delete handler
-            await _db.Subtasks
-                .Where(s => s.ParentTaskId == parentTask.Id)
-                .ExecuteDeleteAsync(ct);
-            
-            // TODO: Update this using the add handler
-            var now = DateTime.UtcNow;
-            var newSubtasks = command.Subtasks.Select(dto => new Subtask
-            {
-                Title = dto.Title,
-                Description = dto.Description,
-                Duration = dto.Duration,
-                Order = dto.Order,
-                IsDone = false,
-                ParentTaskId = parentTask.Id,
-                CreatedAt = now,
-                UpdatedAt = now
-            }).ToList();
+        _db.Subtasks.AddRange(newSubtasks);
+        await _db.SaveChangesAsync(ct);
 
-            _db.Subtasks.AddRange(newSubtasks);
-            await _db.SaveChangesAsync(ct);
-            await transaction.CommitAsync(ct);
-            return $"{command.Subtasks.Count} subtasks added to task {parentTask.Id}.";
-        }
-
-        catch (Exception)
-        {
-            await transaction.RollbackAsync(ct);
-            throw;
-        }
+        return $"{command.Subtasks.Count} subtasks added to task {parentTask.Id}.";
     }
 }
 
