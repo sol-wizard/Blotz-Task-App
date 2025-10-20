@@ -13,7 +13,7 @@ public class SubTaskController(GetSubtasksByTaskIdQueryHandler getSubtaskByTaskI
     [HttpGet("tasks/{id}")]
     public async Task<List<SubtaskReadDto>> GetSubtasksById(int id, CancellationToken ct)
     {
-        var query = new GetSubtasksByTaskIdQuery { TaskId = id };
+        var query = new GetSubtasksByTaskIdQuery { SubTaskId = id };
         return await getSubtaskByTaskIdQueryHandler.Handle(query, ct);
     }
     

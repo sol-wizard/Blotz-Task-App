@@ -8,7 +8,7 @@ namespace BlotzTask.Modules.Tasks.Queries.SubTasks;
 public class GetSubtasksByTaskIdQuery
 {
     [Required]
-    public required int TaskId { get; init; }
+    public required int SubTaskId { get; init; }
 }
 
 public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db, ILogger<GetSubtasksByTaskIdQueryHandler> logger)
@@ -18,10 +18,10 @@ public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db, ILogger<GetS
     public async Task<List<SubtaskReadDto>> Handle(GetSubtasksByTaskIdQuery query, CancellationToken ct = default)
     {
         var subTasks = await db.TaskItems
-            .Where(t => t.Id == query.TaskId)
+            .Where(t => t.Id == query.SubTaskId)
             .SelectMany(t => t.Subtasks, (t, s) => new SubtaskReadDto
             {
-                TaskId = s.Id,
+                SubTaskId = s.Id,
                 ParentTaskId = t.Id,
                 Title = s.Title,
                 Description = s.Description,
@@ -36,7 +36,7 @@ public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db, ILogger<GetS
 }
 public class SubtaskReadDto
 {
-    public int TaskId { get; set; }
+    public int SubTaskId { get; set; }
     public int ParentTaskId { get; set; }
     public required string Title { get; set; }
     public string? Description { get; set; } = string.Empty;
