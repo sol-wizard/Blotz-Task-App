@@ -1,7 +1,6 @@
 import { ASSETS } from "@/shared/constants/assets";
 import { theme } from "@/shared/constants/theme";
 import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
-import { useEffect } from "react";
 import { View, Text, Image, Keyboard } from "react-native";
 
 export const WriteInput = ({
@@ -11,7 +10,6 @@ export const WriteInput = ({
   hasError,
   sendMessage,
   errorMessage,
-  // isPreview = false,
 }: {
   text: string;
   setText: (v: string) => void;
@@ -19,30 +17,13 @@ export const WriteInput = ({
   hasError: boolean;
   sendMessage: (v: string) => void;
   errorMessage?: string;
-  isPreview?: boolean;
 }) => {
-  // useEffect(() => {
-  //   if (isPreview) return; // 预览模式下不要监听键盘事件
-
-  //   const onHide = () => {
-  //     // 键盘收起时只在输入模式恢复高度
-  //     sheetRef.current?.expand();
-  //   };
-
-  //   const sub1 = Keyboard.addListener("keyboardWillHide", onHide);
-  //   const sub2 = Keyboard.addListener("keyboardDidHide", onHide);
-
-  //   return () => {
-  //     sub1.remove();
-  //     sub2.remove();
-  //   };
-  // }, [sheetRef, isPreview]);
   const sendAndDismiss = (msg: string) => {
     const val = msg.trim();
     if (!val) return;
     sendMessage(val);
     Keyboard.dismiss();
-    // sheetRef.current?.collapse();
+    sheetRef.current?.collapse();
   };
 
   const handleChange = (value: string) => {
@@ -59,8 +40,6 @@ export const WriteInput = ({
         value={text}
         onChangeText={handleChange}
         onSubmitEditing={() => sendAndDismiss(text)}
-        // onFocus={() => sheetRef.current?.expand()}
-        // onBlur={() => sheetRef.current?.collapse()}
         returnKeyType="done"
         enablesReturnKeyAutomatically
         placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
