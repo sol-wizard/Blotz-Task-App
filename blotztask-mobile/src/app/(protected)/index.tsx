@@ -4,7 +4,6 @@ import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import SettingsScreen from "@/feature/settings/settings-screen";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import IdeasScreen from "./ideas";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
 import { View } from "react-native";
 
