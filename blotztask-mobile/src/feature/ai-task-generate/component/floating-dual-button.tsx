@@ -20,6 +20,7 @@ export const FloatingDualButton: React.FC<Props> = ({ onOpenSheet }) => {
   const router = useRouter();
   const translateY = useSharedValue(0);
   const expanded = useSharedValue(0);
+  const isExpanded = useSharedValue(false);
 
   const THRESHOLD = -60;
   const BASE = 58;
@@ -31,8 +32,10 @@ export const FloatingDualButton: React.FC<Props> = ({ onOpenSheet }) => {
     })
     .onEnd((e) => {
       if (e.translationY < THRESHOLD) {
+        isExpanded.value = true;
         expanded.value = withSpring(1, { damping: 12, stiffness: 140 });
       } else {
+        isExpanded.value = false;
         expanded.value = withSpring(0, { damping: 12, stiffness: 140 });
       }
       translateY.value = withSpring(0);
@@ -43,10 +46,13 @@ export const FloatingDualButton: React.FC<Props> = ({ onOpenSheet }) => {
     return { height };
   });
 
-  const plusStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: withTiming(expanded.value ? 1.3 : 1, { duration: 120 }) }],
+  const bunOpacity = useAnimatedStyle(() => ({
+    opacity: withTiming(isExpanded.value ? 0 : 1, { duration: 120 }),
   }));
 
+  const plusOpacity = useAnimatedStyle(() => ({
+    opacity: withTiming(isExpanded.value ? 1 : 0, { duration: 120 }),
+  }));
   const dotStyle = useAnimatedStyle(() => {
     const translateY = interpolate(expanded.value, [0, 1], [0, 26]);
     const opacity = withTiming(expanded.value, { duration: 140 });
@@ -58,7 +64,7 @@ export const FloatingDualButton: React.FC<Props> = ({ onOpenSheet }) => {
   });
 
   const handlePress = () => {
-    if (expanded.value === 1) {
+    if (isExpanded.value) {
       router.push("/(protected)/task-create");
     } else {
       onOpenSheet();
@@ -66,10 +72,7 @@ export const FloatingDualButton: React.FC<Props> = ({ onOpenSheet }) => {
   };
 
   return (
-    <View
-      pointerEvents="box-none"
-      style={{ position: "absolute", right: 28, bottom: 28, zIndex: 50 }}
-    >
+    <View pointerEvents="box-none">
       <GestureDetector gesture={gesture}>
         <Animated.View>
           <Pressable onPress={handlePress} hitSlop={10}>
@@ -95,7 +98,14 @@ export const FloatingDualButton: React.FC<Props> = ({ onOpenSheet }) => {
                   <Animated.Image
                     source={ASSETS.whiteBun}
                     resizeMode="contain"
-                    style={[{ width: 26, height: 26 }, plusStyle]}
+                    style={[{ width: 26, height: 26, position: "absolute" }, bunOpacity]}
+                  />
+
+                  {/* 新的加号图标 */}
+                  <Animated.Image
+                    source={ASSETS.plusIcon}
+                    resizeMode="contain"
+                    style={[{ width: 26, height: 26, position: "absolute" }, plusOpacity]}
                   />
                 </GradientCircle>
               </View>
