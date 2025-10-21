@@ -43,8 +43,11 @@ export const FloatingDualButton: React.FC<Props> = ({ onOpenSheet }) => {
     return { height };
   });
 
-  const plusStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: withTiming(expanded.value ? 1.3 : 1, { duration: 120 }) }],
+  const bunOpacity = useAnimatedStyle(() => ({
+    opacity: withTiming(expanded.value === 1 ? 0 : 1, { duration: 120 }),
+  }));
+  const plusOpacity = useAnimatedStyle(() => ({
+    opacity: withTiming(expanded.value === 1 ? 1 : 0, { duration: 120 }),
   }));
 
   const dotStyle = useAnimatedStyle(() => {
@@ -66,10 +69,7 @@ export const FloatingDualButton: React.FC<Props> = ({ onOpenSheet }) => {
   };
 
   return (
-    <View
-      pointerEvents="box-none"
-      style={{ position: "absolute", right: 28, bottom: 28, zIndex: 50 }}
-    >
+    <View pointerEvents="box-none">
       <GestureDetector gesture={gesture}>
         <Animated.View>
           <Pressable onPress={handlePress} hitSlop={10}>
@@ -95,7 +95,14 @@ export const FloatingDualButton: React.FC<Props> = ({ onOpenSheet }) => {
                   <Animated.Image
                     source={ASSETS.whiteBun}
                     resizeMode="contain"
-                    style={[{ width: 26, height: 26 }, plusStyle]}
+                    style={[{ width: 26, height: 26, position: "absolute" }, bunOpacity]}
+                  />
+
+                  {/* 新的加号图标 */}
+                  <Animated.Image
+                    source={ASSETS.plusIcon}
+                    resizeMode="contain"
+                    style={[{ width: 26, height: 26, position: "absolute" }, plusOpacity]}
                   />
                 </GradientCircle>
               </View>
