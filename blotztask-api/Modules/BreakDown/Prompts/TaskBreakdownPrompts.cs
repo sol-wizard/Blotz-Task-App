@@ -1,5 +1,6 @@
 namespace BlotzTask.Modules.BreakDown.Prompts;
 
+// TODO: Add multi-language support
 public static class TaskBreakdownPrompts
 {
     public const string BreakdownPrompt = @"
