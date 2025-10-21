@@ -3,8 +3,9 @@ import { BottomNavigation } from "react-native-paper";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import SettingsScreen from "@/feature/settings/settings-screen";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
-import IdeasScreen from "./ideas";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
+import { View } from "react-native";
 
 const routes = [
   {
@@ -13,12 +14,7 @@ const routes = [
     focusedIcon: "calendar-text",
     unfocusedIcon: "calendar-blank",
   },
-  {
-    key: "ideas",
-    title: "Ideas",
-    focusedIcon: "lightning-bolt",
-    unfocusedIcon: "lightning-bolt-outline",
-  },
+
   {
     key: "settings",
     title: "Setting",
@@ -29,14 +25,13 @@ const routes = [
 
 const CalendarRoute = () => <CalendarScreen />;
 const SettingsRoute = () => <SettingsScreen />;
-const IdeasRoute = () => <IdeasScreen />;
 
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
+  const insets = useSafeAreaInsets();
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
-    ideas: IdeasRoute,
     settings: SettingsRoute,
   });
 
@@ -46,7 +41,7 @@ export default function ProtectedIndex() {
         navigationState={{ index, routes }}
         onIndexChange={setIndex}
         renderScene={renderScene}
-        barStyle={{ backgroundColor: "#F2F2F2", height: 90 }}
+        barStyle={{ backgroundColor: "#F2F2F2", height: 68 }}
         activeIndicatorStyle={{ backgroundColor: "transparent" }}
         renderIcon={({ route, focused, color }) => (
           <MaterialCommunityIcons
@@ -56,6 +51,9 @@ export default function ProtectedIndex() {
           />
         )}
       />
+      <View className="absolute left-0 right-0 items-center" style={{ bottom: insets.bottom }}>
+        <ToggleAiTaskGenerate />
+      </View>
     </SafeAreaView>
   );
 }

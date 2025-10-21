@@ -17,6 +17,7 @@ export const IMAGES = {
   blotzLogo: require("../../../assets/images/blotz-logo.png"),
   whiteBun: require("../../../assets/images/bun-white.png"),
   greenBun: require("../../../assets/images/bun-green.png"),
+  plusIcon: require("../../../assets/images/plus-icon.png"),
 } as const;
 
 // Export all assets for convenience
