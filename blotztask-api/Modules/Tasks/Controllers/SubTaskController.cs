@@ -11,10 +11,13 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 public class SubTaskController(GetSubtasksByTaskIdQueryHandler getSubtaskByTaskIdQueryHandler, UpdateSubtaskCommandHandler updateSubtaskCommandHandler, ReplaceSubtasksCommandHandler replaceSubtasksCommandHandler) : ControllerBase
 {
     [HttpGet("tasks/{id}")]
-    public async Task<List<SubtaskDetailDto>> GetSubtasksById(int id, CancellationToken ct)
+    public async Task<IActionResult> GetSubtasksById(int id, CancellationToken ct)
     {
-        var query = new GetSubtasksByTaskIdQuery { SubTaskId = id };
-        return await getSubtaskByTaskIdQueryHandler.Handle(query, ct);
+        var query = new GetSubtasksByTaskIdQuery { TaskId = id };
+        var (taskExists, subtasks) = await getSubtaskByTaskIdQueryHandler.Handle(query, ct);
+        if (!taskExists)
+            return NotFound("Task not found");
+        return Ok(subtasks);
     }
 
     [HttpPut("{taskId}/subtasks/{subtaskId}")]

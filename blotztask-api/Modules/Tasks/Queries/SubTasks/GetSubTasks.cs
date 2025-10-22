@@ -8,28 +8,36 @@ namespace BlotzTask.Modules.Tasks.Queries.SubTasks;
 public class GetSubtasksByTaskIdQuery
 {
     [Required]
-    public required int SubTaskId { get; init; }
+    public required int TaskId { get; init; }
 }
 
 public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db)
 {
-    public async Task<List<SubtaskDetailDto>> Handle(GetSubtasksByTaskIdQuery query, CancellationToken ct = default)
+    public async Task<(bool taskExists, List<SubtaskDetailDto>subtasks)> Handle(GetSubtasksByTaskIdQuery query, CancellationToken ct = default)
     {
-        var subTasks = await db.TaskItems
-            .Where(t => t.Id == query.SubTaskId)
-            .SelectMany(t => t.Subtasks, (t, s) => new SubtaskDetailDto
+        var taskExists = await db.TaskItems
+            .AsNoTracking()
+            .AnyAsync(x => x.Id == query.TaskId, ct);
+        
+        if (!taskExists)
+            return (false, new List<SubtaskDetailDto>());
+        
+        var subtasks = await db.Subtasks
+            .AsNoTracking()
+            .Where(t => t.ParentTaskId == query.TaskId)
+            .Select(t => new SubtaskDetailDto
             {
-                SubTaskId = s.Id,
+                SubTaskId = t.Id,
                 ParentTaskId = t.Id,
-                Title = s.Title,
-                Description = s.Description,
-                Duration = s.Duration,
-                Order = s.Order,
-                IsDone = s.IsDone
+                Title = t.Title,
+                Description = t.Description,
+                Duration = t.Duration,
+                Order = t.Order,
+                IsDone = t.IsDone
             })
             .ToListAsync(ct);
 
-        return subTasks;
+        return (true, subtasks);
     }
 }
 public class SubtaskDetailDto
