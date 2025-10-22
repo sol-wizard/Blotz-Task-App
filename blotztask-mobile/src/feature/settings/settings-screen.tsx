@@ -34,7 +34,7 @@ export default function SettingsScreen() {
 
       <View className="bg-[#CCE3B7] rounded-2xl mt-10 pb-6">
         <Text className="text-3xl font-bold text-gray-800 font-balooBold py-2 mt-4 ml-4">
-          Temporary Functions
+          Under Development (Beta)
         </Text>
         <View className="items-center gap-3">
           <Pressable
