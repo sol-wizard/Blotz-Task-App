@@ -29,6 +29,25 @@ export const AiTaskGenerateModal = ({
     }
   }, [modalType, sheetRef]);
 
+  useEffect(() => {
+    console.log(`[AI Modal State] ==> ${modalType}`);
+  }, [modalType]);
+  /** 根据 modalType 控制底板高度 **/
+  useEffect(() => {
+    if (!sheetRef.current) return;
+
+    // 防止键盘事件和 snap 竞争，延迟少许执行
+    const timeout = setTimeout(() => {
+      if (modalType === "input") {
+        sheetRef.current?.snapToIndex(1);
+      } else {
+        sheetRef.current?.snapToIndex(0);
+      }
+    }, 80);
+
+    return () => clearTimeout(timeout);
+  }, [modalType, sheetRef]);
+
   switch (modalType) {
     case "task-preview":
       return (

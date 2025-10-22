@@ -2,7 +2,7 @@ import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottoms
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { AiTaskGenerateModal } from "./component/ai-task-generate-modal";
 import { useRef } from "react";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 import { FloatingDualButton } from "./component/floating-dual-button";
 
 export const ToggleAiTaskGenerate = () => {
@@ -23,14 +23,17 @@ export const ToggleAiTaskGenerate = () => {
           borderTopRightRadius: 24,
         }}
         snapPoints={["50%", "70%"]}
-        keyboardBehavior={Platform.OS === "ios" ? "extend" : "interactive"}
+        keyboardBehavior={Platform.OS === "ios" ? "interactive" : "extend"}
         keyboardBlurBehavior="restore"
         enableContentPanningGesture={false}
         enableHandlePanningGesture={true}
         enablePanDownToClose={false}
+        onChange={(index) => console.log("BottomSheet index changed:", index)}
       >
-        <BottomSheetView className="justify-between items-center" style={{ minHeight: 300 }}>
-          <AiTaskGenerateModal sheetRef={aiVoiceInputModalRef} />
+        <BottomSheetView style={{ flex: 1 }}>
+          <View className="justify-between items-center" style={{ minHeight: 300 }}>
+            <AiTaskGenerateModal sheetRef={aiVoiceInputModalRef} />
+          </View>
         </BottomSheetView>
       </BottomSheetModal>
     </>
