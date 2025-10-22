@@ -3,6 +3,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 /* eslint-disable camelcase */
 import {
+  Baloo2_400Regular,
   Baloo2_600SemiBold,
   Baloo2_700Bold,
   Baloo2_800ExtraBold,
@@ -28,6 +29,7 @@ export default function RootLayout() {
 
   /* eslint-disable camelcase */
   useFonts({
+    BalooThin: Baloo2_400Regular,
     BalooRegular: Baloo2_600SemiBold,
     BalooBold: Baloo2_700Bold,
     BalooExtraBold: Baloo2_800ExtraBold,

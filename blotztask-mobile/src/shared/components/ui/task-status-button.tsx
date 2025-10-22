@@ -21,7 +21,9 @@ export const TaskStatusButton = ({
           isSelected ? "bg-black" : "bg-white border-gray-300"
         }`}
       >
-        <Text className={`text-sm ${isSelected ? "text-white font-extrabold" : "text-gray-700"}`}>
+        <Text
+          className={`${isSelected ? "text-white font-balooBold" : "text-gray-700 font-balooThin"}`}
+        >
           {statusName}
         </Text>
         <View className={`px-2 py-0.5 rounded-full ${isSelected ? "bg-white" : "bg-gray-400"}`}>
