@@ -22,7 +22,7 @@ export const TaskStatusButton = ({
         }`}
       >
         <Text
-          className={`text-base  ${isSelected ? "text-white font-baloo" : "text-gray-700 font-balooThin"}`}
+          className={`${isSelected ? "text-white font-balooBold" : "text-gray-700 font-balooThin"}`}
         >
           {statusName}
         </Text>
