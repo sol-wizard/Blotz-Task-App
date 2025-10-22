@@ -6,7 +6,6 @@ import { router } from "expo-router";
 import { TaskStatusRow } from "@/shared/components/ui/task-status-row";
 import TaskCard from "@/feature/calendar/components/task-card";
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
-import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
 import { getAllTasks, toggleTaskCompletion, deleteTask } from "@/shared/services/task-service";
 import UserProfile from "@/feature/calendar/components/user-profile";
 import { TaskStatusType } from "@/feature/calendar/modals/task-status-type";
@@ -41,6 +40,7 @@ export default function AllTasksScreen() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -139,8 +139,6 @@ export default function AllTasksScreen() {
       ) : (
         <TaskListPlaceholder selectedStatus={selectedStatus} />
       )}
-
-      <ToggleAiTaskGenerate />
 
       <Snackbar
         visible={snackbar.visible}
