@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { format } from "date-fns";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { SafeAreaView } from "react-native";
-import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
+
 import { theme } from "@/shared/constants/theme";
 import CalendarHeader from "../components/calendar-header";
 import { FilteredTaskList } from "../components/filtered-task-list";
@@ -48,8 +48,6 @@ export default function CalendarScreen() {
 
         <FilteredTaskList selectedDay={selectedDay} />
       </CalendarProvider>
-
-      <ToggleAiTaskGenerate />
     </SafeAreaView>
   );
 }
