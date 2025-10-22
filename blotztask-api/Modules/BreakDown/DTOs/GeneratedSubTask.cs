@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace BlotzTask.Modules.BreakDown.DTOs;
@@ -10,7 +10,7 @@ public class GeneratedSubTask
     public string Title { get; set; } = string.Empty;
     
     [JsonPropertyName("duration")]
-    [Description("Duration in HH:mm:ss format (e.g., '00:30:00' for 30 minutes, '01:30:00' for 1.5 hours)")]
+    [Description("Duration in ISO 8601 format (e.g., 'PT30M' for 30 minutes, 'PT1H30M' for 1.5 hours)")]
     public string Duration { get; set; } = string.Empty;
     
     [JsonPropertyName("order")]
