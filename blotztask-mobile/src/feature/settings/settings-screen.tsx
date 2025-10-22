@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import { useLogout } from "@/shared/hooks/uselogout";
 import { usePostHog } from "posthog-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import UserProfile from "../calendar/components/user-profile";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
