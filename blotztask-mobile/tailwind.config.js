@@ -14,6 +14,7 @@ module.exports = {
         tertiary: "#8C8C8C",
       },
       fontFamily: {
+        balooThin: ["BalooThin"],
         baloo: ["BalooRegular"],
         balooBold: ["BalooBold"],
         balooExtraBold: ["BalooExtraBold"],

@@ -2,6 +2,7 @@ import UserProfile from "./user-profile";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
+import { useUserProfile } from "@/shared/hooks/useUserProfile";
 
 interface CalendarHeaderProps {
   date: string;
@@ -15,6 +16,7 @@ export default function CalendarHeader({
   onToggleCalendar,
 }: CalendarHeaderProps) {
   const { dayOfWeek } = formatCalendarDate(date);
+  const { userProfile } = useUserProfile();
 
   return (
     <View className="flex-row items-center justify-between px-5">
@@ -38,7 +40,7 @@ export default function CalendarHeader({
         </TouchableOpacity>
       </View>
 
-      <UserProfile />
+      <UserProfile profile={userProfile} />
     </View>
   );
 }
