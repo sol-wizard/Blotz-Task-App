@@ -17,7 +17,6 @@ export default function GetStartedButton() {
         audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
         scope: "openid profile email offline_access",
       });
-      console.log("result:", result);
 
       // Check if we have a valid result with access token
       if (result && result.accessToken && result.refreshToken) {
