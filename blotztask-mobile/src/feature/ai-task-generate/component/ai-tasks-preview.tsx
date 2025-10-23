@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
-import { View, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Pressable, ActivityIndicator } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";

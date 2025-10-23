@@ -5,17 +5,17 @@ import Auth0 from "react-native-auth0";
 
 export const fetchWithAuth = async <T>(url: string, options: RequestInit = {}): Promise<T> => {
   try {
-    let accessToken = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+    const accessToken = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
     const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
 
     if (!accessToken) {
       throw new Error("No access token found.");
     }
 
-    let { data, response } = await makeRequest(accessToken, options, url);
+    const { data, response } = await makeRequest(accessToken, options, url);
 
     if (response.status === 401 && refreshToken) {
-      let { data } = await reFetchWithRefreshToken(url, options, refreshToken);
+      const { data } = await reFetchWithRefreshToken(url, options, refreshToken);
       return data as T;
     }
 
