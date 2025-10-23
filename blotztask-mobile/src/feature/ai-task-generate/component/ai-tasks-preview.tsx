@@ -99,22 +99,18 @@ export function AiTasksPreview({
 
   return (
     <View className="mb-10 items-center justify-between">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
-        <ScrollView className="pb-5 w-full min-h-20 max-h-80">
-          {localTasks.map((task) => (
-            <AiTaskCard
-              key={task.id}
-              task={task}
-              handleTaskDelete={onDeleteTask}
-              onTitleChange={onTitleChange}
-              sheetRef={sheetRef}
-            />
-          ))}
-        </ScrollView>
-      </KeyboardAvoidingView>
+      <ScrollView className="pb-5 w-full min-h-20 max-h-80">
+        {localTasks.map((task) => (
+          <AiTaskCard
+            key={task.id}
+            task={task}
+            handleTaskDelete={onDeleteTask}
+            onTitleChange={onTitleChange}
+            sheetRef={sheetRef}
+          />
+        ))}
+      </ScrollView>
+
       <View className="flex-row justify-center items-center mb-4">
         <Pressable
           onPress={handleGoBack}
