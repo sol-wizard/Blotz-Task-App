@@ -1,4 +1,3 @@
-// src/app/task-add-edit/modals/add-task-label.tsx
 import React, { useState } from "react";
 import { Modal, View, Text, TextInput, Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -13,11 +12,11 @@ interface AddTaskLabelProps {
 const presetColors = ["#BAD5FA", "#CCE7DB", "#D6FAF9", "#EEFBE1", "#C2E49F"];
 
 export default function AddTaskLabel({ visible, onClose, onCreate }: AddTaskLabelProps) {
-  // If not visible, do not render anything
-  if (!visible) return null;
-
   const [name, setName] = useState("");
   const [color, setColor] = useState<string>(presetColors[0]);
+
+  // If not visible, do not render anything
+  if (!visible) return null;
 
   const handleSave = async () => {
     if (!name.trim()) return;
