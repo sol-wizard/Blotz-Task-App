@@ -23,6 +23,7 @@ export const WriteInput = ({
     if (!val) return;
     sendMessage(val);
     Keyboard.dismiss();
+    sheetRef.current?.collapse();
   };
 
   const handleChange = (value: string) => {
