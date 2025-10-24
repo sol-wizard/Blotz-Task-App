@@ -6,14 +6,14 @@ import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import { useSubtasksByParentId } from "@/feature/task-details/hooks/useSubtasksByParentId";
 import { DraggableSubtaskList } from "@/feature/task-details/components/draggable-subtask-list";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 type SubtasksManagerProps = {
-  taskId: number;
+  parentTask: TaskDetailDTO;
 };
 
-const SubtasksManager = ({ taskId }: SubtasksManagerProps) => {
-  const { selectedTask } = useTaskById({ taskId });
-  const { data: fetchedSubtasks, isLoading, isError, refetch } = useSubtasksByParentId(taskId);
+const SubtasksManager = ({ parentTask }: SubtasksManagerProps) => {
+  const { data: fetchedSubtasks, isLoading, isError, refetch } = useSubtasksByParentId(parentTask.id);
 
   const {
     breakDownTask,
@@ -24,7 +24,7 @@ const SubtasksManager = ({ taskId }: SubtasksManagerProps) => {
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [deletedIds, setDeletedIds] = useState<number[]>([]);
-  const taskColor = selectedTask?.label?.color ?? theme.colors.disabled;
+  const taskColor = parentTask?.label?.color ?? theme.colors.disabled;
 
   const onBack = () => {
     setIsEditMode(false);
@@ -41,10 +41,10 @@ const SubtasksManager = ({ taskId }: SubtasksManagerProps) => {
 
   const handleRefresh = async () => {
     try {
-      const newSubtasks = await breakDownTask(taskId);
+      const newSubtasks = await breakDownTask(parentTask.id);
       if (newSubtasks && newSubtasks.length > 0) {
         await replaceSubtasks({
-          taskId,
+          taskId: parentTask.id,
           subtasks: newSubtasks,
         });
       }

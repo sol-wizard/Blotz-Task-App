@@ -101,7 +101,7 @@ export default function TaskDetailsScreen() {
           {activeTab === "Details" ? (
             <DetailsView taskDescription={description as string} />
           ) : (
-            <SubtasksView taskId={id} />
+            <SubtasksView parentTask={selectedTask} />
           )}
         </View>
       </View>

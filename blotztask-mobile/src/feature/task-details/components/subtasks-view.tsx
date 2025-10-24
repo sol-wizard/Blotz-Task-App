@@ -1,5 +1,5 @@
 import { View, Text, Image, Pressable, ActivityIndicator } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { ASSETS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
@@ -7,59 +7,50 @@ import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
 import { BreakdownSubtaskDTO } from "@/feature/task-details/models/breakdown-subtask-dto";
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import SubtasksManager from "./subtasks-manager";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 type SubtaskViewProps = {
-  taskId: number;
+  parentTask: TaskDetailDTO;
 };
 
-const SubtasksView = ({ taskId }: SubtaskViewProps) => {
+const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const {
     breakDownTask,
     isBreakingDown,
     breakDownError,
-    replaceSubtasks: replaceSubtasks,
-    isReplacingSubtasks: isReplacingingSubtasks,
-    replaceSubtasksError: replaceSubtasksError,
+    replaceSubtasks,
+    isReplacingSubtasks,
+    replaceSubtasksError,
   } = useSubtaskMutations();
 
   const {
     data: fetchedSubtasks,
     isLoading: isLoadingSubtasks,
     isError: isFetchingSubtasksError,
-  } = useSubtasksByParentId(taskId);
+  } = useSubtasksByParentId(parentTask.id);
 
   const displaySubtasks = fetchedSubtasks || [];
   const hasSubtasks = displaySubtasks.length > 0;
 
-  const [showManage, setShowManage] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (!isLoadingSubtasks && showManage === null) {
-      setShowManage(hasSubtasks);
-    }
-  }, [hasSubtasks, isLoadingSubtasks]);
-
   const handleBreakDown = async () => {
-    if (isBreakingDown || isReplacingingSubtasks) return;
+    if (isBreakingDown || isReplacingSubtasks) return;
     try {
-      const subtasks: BreakdownSubtaskDTO[] = (await breakDownTask(taskId)) ?? [];
+      const subtasks: BreakdownSubtaskDTO[] = (await breakDownTask(parentTask.id)) ?? [];
       if (subtasks.length > 0) {
         await replaceSubtasks({
-          taskId,
+          taskId: parentTask.id,
           subtasks: subtasks.map((subtask: AddSubtaskDTO) => ({ ...subtask })),
         });
-        // Directly show manage view after adding subtasks
-        setShowManage(true);
       }
     } catch {
       console.error(breakDownError || replaceSubtasksError);
     }
   };
 
-  const isLoading = isBreakingDown || isReplacingingSubtasks || isLoadingSubtasks;
+  const isLoading = isBreakingDown || isReplacingSubtasks || isLoadingSubtasks;
 
-  // Show loading state while fetching or determining view
-  if (isLoadingSubtasks || showManage === null) {
+  // Show loading state while fetching
+  if (isLoadingSubtasks) {
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color="#3b82f6" />
@@ -68,9 +59,9 @@ const SubtasksView = ({ taskId }: SubtaskViewProps) => {
     );
   }
 
-  // Show manage view if requested or if subtasks exist
-  if (showManage && hasSubtasks) {
-    return <SubtasksManager taskId={taskId} />;
+  // Show manage view if subtasks exist
+  if (hasSubtasks) {
+    return <SubtasksManager parentTask={parentTask} />;
   }
 
   // Show initial breakdown view if no subtasks exist yet
