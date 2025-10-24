@@ -23,6 +23,7 @@ const SubtasksList = ({ taskId }: SubtasksListProps) => {
   } = useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
+  const [deletedIds, setDeletedIds] = useState<number[]>([]);
   const taskColor = selectedTask?.label?.color ?? theme.colors.disabled;
 
   const onBack = () => {
@@ -59,31 +60,15 @@ const SubtasksList = ({ taskId }: SubtasksListProps) => {
   };
 
   const handleAddSubtask = () => {
-    // TODO: add delete screen
+    // TODO: implement add subtask logic
     console.log("Implement add subtask");
   };
 
   const handleDelete = (id: number) => {
-    // TODO: add delete screen
-    console.log("Implement delete subtask");
-  };
-
-  const handleReorder = (fromIndex: number, toIndex: number) => {
-    if (!fetchedSubtasks) return;
-
-    const newSubtasks = [...fetchedSubtasks];
-    const [movedItem] = newSubtasks.splice(fromIndex, 1);
-    newSubtasks.splice(toIndex, 0, movedItem);
-
-    // Update with new order
-    const reorderedSubtasks = newSubtasks.map((subtask, index) => ({
-      ...subtask,
-      order: index + 1,
-    }));
-
-    // TODO: Create a reorder mutation hook
-    // updateSubtasksOrder(reorderedSubtasks) - React Query will handle cache update
-    console.log("TODO: Implement reorder mutation", reorderedSubtasks);
+    // Optimistically remove from UI
+    setDeletedIds(prev => [...prev, id]);
+    // TODO: implement delete subtask logic with backend
+    console.log("Implement delete subtask", id);
   };
 
   if (isLoading || isBreakingDown || isReplacingSubtasks) {
@@ -129,7 +114,7 @@ const SubtasksList = ({ taskId }: SubtasksListProps) => {
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={handleRefresh} className="p-2">
-            <MaterialIcons name="sync" size={28}/>
+            <MaterialIcons name="sync" size={24}/>
           </TouchableOpacity>
         )}
         {isEditMode ? (
@@ -144,16 +129,21 @@ const SubtasksList = ({ taskId }: SubtasksListProps) => {
         ) : (
           <TouchableOpacity
             onPress={handleEdit}
-            className="w-10 h-10 rounded-full items-center justify-center"
           >
-            <MaterialIcons name="edit" size={20} />
+            <MaterialIcons name="reorder" size={24} />
           </TouchableOpacity>
         )}
       </View>
 
       {/* Subtasks List */}
       <View className="flex-1">
-        <DraggableSubtaskList subtasks={fetchedSubtasks}/>
+        <DraggableSubtaskList 
+          subtasks={fetchedSubtasks.filter(s => !deletedIds.includes(s.subTaskId))}
+          isEditMode={isEditMode}
+          onDelete={handleDelete}
+          onToggle={handleToggle}
+          color={taskColor}
+        />
       </View>
 
       {/* Add More Subtasks Button / Drag to Reorder - Fixed at bottom */}

@@ -1,14 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DraggableFlatList, { RenderItemParams } from "react-native-draggable-flatlist";
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
-import { Text, TouchableOpacity, View } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import SubtaskItem from "@/feature/task-details/components/subtask-item";
 
 type DraggableSubtaskListProps = {
   subtasks: SubtaskDTO[];
+  isEditMode?: boolean;
+  onDelete?: (id: number) => void;
+  onToggle?: (id: number) => void;
+  color?: string;
 }
-export const DraggableSubtaskList = ({subtasks}: DraggableSubtaskListProps) => {
+export const DraggableSubtaskList = ({
+  subtasks,
+  isEditMode = false,
+  onDelete,
+  onToggle,
+  color,
+}: DraggableSubtaskListProps) => {
   const [data, setData] = useState(subtasks);
+
+  useEffect(() => {
+    setData(subtasks);
+  }, [subtasks]);
 
   const renderItem = ({item, drag, isActive}: RenderItemParams<SubtaskDTO>) => {
     return (
@@ -16,20 +31,32 @@ export const DraggableSubtaskList = ({subtasks}: DraggableSubtaskListProps) => {
         style={[
           { opacity: isActive ? 0.8 : 1.0 },
         ]}
-        onLongPress={drag} // <--- Key for starting the drag gesture
-        disabled={isActive}
+        onLongPress={isEditMode ? drag : undefined}
+        disabled={isActive || !isEditMode}
+        activeOpacity={1}
       >
-        <Text>{item.title}</Text>
+        <SubtaskItem
+          item={{
+            id: item.subTaskId,
+            title: item.title,
+            duration: item.duration,
+            isDone: item.isDone,
+          }}
+          onToggle={(id) => onToggle?.(id)}
+          color={color}
+          isEditMode={isEditMode}
+          onDelete={onDelete}
+        />
       </TouchableOpacity>
     )
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView>
       <View>
         <DraggableFlatList
           data={data}
-          onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setData(newData)}// <--- Key for updating data
+          onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setData(newData)}
           keyExtractor={(item: SubtaskDTO) => item.subTaskId.toString()}
           renderItem={renderItem}
           autoscrollThreshold={40}
