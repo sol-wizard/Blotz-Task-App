@@ -38,8 +38,8 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
         task.LabelId = command.TaskDetails.LabelId;
         
         // Remove all subtasks related to this task
-        var subtasks = db.SubTasks.Where(st => st.TaskItemId == task.Id);
-        db.SubTasks.RemoveRange(subtasks);
+        var subtasks = db.Subtasks.Where(st => st.ParentTaskId == task.Id);
+        db.Subtasks.RemoveRange(subtasks);
 
 
         db.TaskItems.Update(task);
