@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, Alert } from "react-native";
-import React, { useState} from "react";
+import React, { useState } from "react";
 import { theme } from "@/shared/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
@@ -7,12 +7,17 @@ import { useSubtasksByParentId } from "@/feature/task-details/hooks/useSubtasksB
 import { DraggableSubtaskList } from "@/feature/task-details/components/draggable-subtask-list";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
-type SubtasksManagerProps = {
+type SubtasksEditorProps = {
   parentTask: TaskDetailDTO;
 };
 
-const SubtasksManager = ({ parentTask }: SubtasksManagerProps) => {
-  const { data: fetchedSubtasks, isLoading, isError, refetch } = useSubtasksByParentId(parentTask.id);
+const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
+  const {
+    data: fetchedSubtasks,
+    isLoading,
+    isError,
+    refetch,
+  } = useSubtasksByParentId(parentTask.id);
 
   const {
     breakDownTask,
@@ -65,7 +70,7 @@ const SubtasksManager = ({ parentTask }: SubtasksManagerProps) => {
 
   const handleDelete = (id: number) => {
     // Optimistically remove from UI
-    setDeletedIds(prev => [...prev, id]);
+    setDeletedIds((prev) => [...prev, id]);
     // TODO: implement delete subtask logic with backend
     console.log("Implement delete subtask", id);
   };
@@ -113,7 +118,7 @@ const SubtasksManager = ({ parentTask }: SubtasksManagerProps) => {
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={handleRefresh} className="p-2">
-            <MaterialIcons name="sync" size={24}/>
+            <MaterialIcons name="sync" size={24} />
           </TouchableOpacity>
         )}
         {isEditMode ? (
@@ -121,14 +126,10 @@ const SubtasksManager = ({ parentTask }: SubtasksManagerProps) => {
             onPress={handleEdit}
             className="px-6 py-2 rounded-lg items-center justify-center"
           >
-            <Text className="font-balooSemiBold text-base text-[#3d8de0]">
-              Complete
-            </Text>
+            <Text className="font-balooSemiBold text-base text-[#3d8de0]">Complete</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity
-            onPress={handleEdit}
-          >
+          <TouchableOpacity onPress={handleEdit}>
             <MaterialIcons name="reorder" size={24} />
           </TouchableOpacity>
         )}
@@ -136,8 +137,8 @@ const SubtasksManager = ({ parentTask }: SubtasksManagerProps) => {
 
       {/* Subtasks List */}
       <View className="flex-1">
-        <DraggableSubtaskList 
-          subtasks={fetchedSubtasks.filter(s => !deletedIds.includes(s.subTaskId))}
+        <DraggableSubtaskList
+          subtasks={fetchedSubtasks.filter((s) => !deletedIds.includes(s.subTaskId))}
           isEditMode={isEditMode}
           onDelete={handleDelete}
           onToggle={handleToggle}
@@ -147,29 +148,19 @@ const SubtasksManager = ({ parentTask }: SubtasksManagerProps) => {
 
       {/* Add More Subtasks Button / Drag to Reorder - Fixed at bottom */}
       {isEditMode ? (
-        <View
-          className="mx-0 mb-10 mt-4 rounded-2xl py-2.5 items-center justify-center"
-        >
-          <Text
-            className="font-baloo text-[#8BC34A] text-lg text-center"
-          >
-            Drag to reorder~
-          </Text>
+        <View className="mx-0 mb-10 mt-4 rounded-2xl py-2.5 items-center justify-center">
+          <Text className="font-baloo text-[#8BC34A] text-lg text-center">Drag to reorder~</Text>
         </View>
       ) : (
         <TouchableOpacity
           onPress={handleAddSubtask}
           className="mx-0 mb-10 mt-4 rounded-2xl border-2 border-dashed py-2.5 items-center justify-center border-[#8c8c8c]"
         >
-          <Text
-            className="font-baloo text-lg text-center"
-          >
-            Add more subtasks
-          </Text>
+          <Text className="font-baloo text-lg text-center">Add more subtasks</Text>
         </TouchableOpacity>
       )}
     </View>
   );
 };
 
-export default SubtasksManager;
+export default SubtasksEditor;
