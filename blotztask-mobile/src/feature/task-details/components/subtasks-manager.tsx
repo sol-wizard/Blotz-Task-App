@@ -149,7 +149,7 @@ const SubtasksManager = ({ taskId }: SubtasksManagerProps) => {
       {/* Add More Subtasks Button / Drag to Reorder - Fixed at bottom */}
       {isEditMode ? (
         <View
-          className="mx-0 mb-20 mt-4 rounded-2xl py-2.5 items-center justify-center"
+          className="mx-0 mb-10 mt-4 rounded-2xl py-2.5 items-center justify-center"
         >
           <Text
             className="font-baloo text-[#8BC34A] text-lg text-center"
@@ -160,7 +160,7 @@ const SubtasksManager = ({ taskId }: SubtasksManagerProps) => {
       ) : (
         <TouchableOpacity
           onPress={handleAddSubtask}
-          className="mx-0 mb-20 mt-4 rounded-2xl border-2 border-dashed py-2.5 items-center justify-center border-[#8c8c8c]"
+          className="mx-0 mb-10 mt-4 rounded-2xl border-2 border-dashed py-2.5 items-center justify-center border-[#8c8c8c]"
         >
           <Text
             className="font-baloo text-lg text-center"

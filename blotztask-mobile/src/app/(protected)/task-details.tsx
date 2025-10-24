@@ -42,6 +42,7 @@ export default function TaskDetailsScreen() {
 
   return (
     <SafeAreaView
+      edges={['top']} 
       className="flex-1"
       style={{ backgroundColor: label?.color ?? theme.colors.fallback }}
     >

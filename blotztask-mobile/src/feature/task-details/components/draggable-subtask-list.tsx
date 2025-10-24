@@ -53,7 +53,7 @@ export const DraggableSubtaskList = ({
 
   return (
     <GestureHandlerRootView>
-      <View>
+      <View className="flex-1">
         <DraggableFlatList
           data={data}
           onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setData(newData)}
