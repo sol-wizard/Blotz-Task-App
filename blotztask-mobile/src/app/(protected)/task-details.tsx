@@ -28,7 +28,7 @@ export default function TaskDetailsScreen() {
       </View>
     );
   }
-  const { isDone, title, description, label, startTime, endTime, id } = selectedTask;
+  const { isDone, title, description, label, startTime, endTime } = selectedTask;
   const taskStatus = isDone ? "Done" : "To Do";
   const labelName: string | undefined = label?.name;
 
@@ -42,7 +42,7 @@ export default function TaskDetailsScreen() {
 
   return (
     <SafeAreaView
-      edges={['top']} 
+      edges={["top"]}
       className="flex-1"
       style={{ backgroundColor: label?.color ?? theme.colors.fallback }}
     >
