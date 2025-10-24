@@ -1,5 +1,5 @@
 import { View, Text, Image, Pressable, ActivityIndicator } from "react-native";
-import React, { useState } from "react";
+import React from "react";
 import { ASSETS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";

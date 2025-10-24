@@ -3,7 +3,6 @@ import React, { useState} from "react";
 import { theme } from "@/shared/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
-import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import { useSubtasksByParentId } from "@/feature/task-details/hooks/useSubtasksByParentId";
 import { DraggableSubtaskList } from "@/feature/task-details/components/draggable-subtask-list";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
