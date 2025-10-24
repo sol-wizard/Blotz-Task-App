@@ -6,7 +6,7 @@ import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
 import { BreakdownSubtaskDTO } from "@/feature/task-details/models/breakdown-subtask-dto";
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
-import SubtasksList from "./subtasks-list";
+import SubtasksManager from "./subtasks-manager";
 
 type SubtaskViewProps = {
   taskId: number;
@@ -70,7 +70,7 @@ const SubtasksView = ({ taskId }: SubtaskViewProps) => {
 
   // Show manage view if requested or if subtasks exist
   if (showManage && hasSubtasks) {
-    return <SubtasksList taskId={taskId} />;
+    return <SubtasksManager taskId={taskId} />;
   }
 
   // Show initial breakdown view if no subtasks exist yet

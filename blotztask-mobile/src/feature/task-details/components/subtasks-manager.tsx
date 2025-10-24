@@ -7,11 +7,11 @@ import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import { useSubtasksByParentId } from "@/feature/task-details/hooks/useSubtasksByParentId";
 import { DraggableSubtaskList } from "@/feature/task-details/components/draggable-subtask-list";
 
-type SubtasksListProps = {
+type SubtasksManagerProps = {
   taskId: number;
 };
 
-const SubtasksList = ({ taskId }: SubtasksListProps) => {
+const SubtasksManager = ({ taskId }: SubtasksManagerProps) => {
   const { selectedTask } = useTaskById({ taskId });
   const { data: fetchedSubtasks, isLoading, isError, refetch } = useSubtasksByParentId(taskId);
 
@@ -173,4 +173,4 @@ const SubtasksList = ({ taskId }: SubtasksListProps) => {
   );
 };
 
-export default SubtasksList;
+export default SubtasksManager;
