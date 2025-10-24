@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
-import { CustomRadioCheckbox } from "@/shared/components/ui/custom-radio-checkbox";
+import { SubtaskCheckbox } from "@/feature/task-details/ui/custom-radio-checkbox";
 import { theme } from "@/shared/constants/theme";
 import { convertSubtaskTimeForm } from "../utils/convert-subtask-time-form";
 
@@ -49,7 +49,7 @@ export default function SubtaskItem({
           <MaterialIcons name="delete-outline" size={20} color={"#3D8DE0"} />
         </TouchableOpacity>
       ) : (
-        <CustomRadioCheckbox checked={isChecked} onPress={handleToggle} color={color} />
+        <SubtaskCheckbox checked={isChecked} onPress={handleToggle} color={color} />
       )}
 
       <View
