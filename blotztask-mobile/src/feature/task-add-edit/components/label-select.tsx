@@ -1,69 +1,169 @@
-import React, { useEffect, useState } from "react";
-import { View } from "react-native";
-import { Menu, Button } from "react-native-paper";
+import React, { useState } from "react";
+import { View, Pressable, Text } from "react-native";
 import { Controller } from "react-hook-form";
 import { LabelDTO } from "@/shared/models/label-dto";
-import { fetchAllLabel } from "@/shared/services/label-service";
+import { createLabel } from "@/shared/services/label-service";
+import AddTaskLabel from "./add-task-label";
+import MaterialIcons from "@expo/vector-icons/build/MaterialIcons";
+import Toast from "react-native-toast-message";
 
-export function LabelSelect({ control }: { control: any }) {
-  const [visible, setVisible] = useState(false);
-  const [labels, setLabels] = useState<LabelDTO[]>([]);
+interface LabelSelectProps {
+  control: any;
+  enabled?: boolean;
+  labels: LabelDTO[];
+  onLabelCreated: (newLabel: LabelDTO) => void;
+  selectedValue: number | null;
+}
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const labelData = await fetchAllLabel();
-        setLabels(labelData);
-      } catch (error) {
-        console.error("Error loading labels:", error);
-      }
-    })();
-  }, []);
+export function LabelSelect({
+  control,
+  enabled = true,
+  labels,
+  onLabelCreated,
+  selectedValue,
+}: LabelSelectProps) {
+  const [addOpen, setAddOpen] = useState(false);
+
+  const handleCreate = async (name: string, color: string) => {
+    try {
+      const saved = await createLabel({ name, color });
+      // create new label object
+      const newLabel: LabelDTO = {
+        labelId: saved.labelId,
+        name: name,
+        color: color,
+      };
+
+      // notify parent component
+      onLabelCreated(newLabel);
+
+      // close modal
+      setAddOpen(false);
+    } catch (e) {
+      // show error toast
+      Toast.show({
+        type: "error",
+        text1: "Create label failed",
+        text2: "Please try again later",
+      });
+      console.error("Error creating label:", e);
+    }
+  };
+
+  // label chip component
+  const Chip = ({
+    item,
+    selected,
+    onPress,
+    onClear,
+    disabled,
+  }: {
+    item: LabelDTO;
+    selected: boolean;
+    onPress: () => void;
+    onClear?: () => void;
+    disabled?: boolean;
+  }) => (
+    <Pressable
+      disabled={disabled}
+      onPress={onPress}
+      accessibilityRole="button"
+      style={{
+        opacity: disabled ? 0.5 : 1,
+        minHeight: 44,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderRadius: 12,
+        backgroundColor: item.color,
+        borderWidth: selected ? 2 : 0, // selected state border
+        borderColor: selected ? "#000" : "transparent",
+        marginRight: 8,
+        marginBottom: 8,
+      }}
+    >
+      <Text className="font-baloo">{item.name}</Text>
+
+      {selected && !disabled && (
+        <Pressable
+          onPress={onClear}
+          accessibilityLabel="Clear label"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={{
+            position: "absolute",
+            top: -8,
+            right: -8,
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            backgroundColor: item.color,
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2,
+            borderWidth: 2,
+            borderColor: "#2F3747",
+          }}
+        >
+          <MaterialIcons name="close" size={14} />
+        </Pressable>
+      )}
+    </Pressable>
+  );
 
   return (
     <Controller
       control={control}
       name="labelId"
-      render={({ field: { value, onChange, onBlur }, fieldState: { error } }) => {
-        const selected = labels.find((opt) => opt.labelId === value);
-        const borderColor = error ? "#EF4444" /* red-500 */ : "#E5E7EB"; /* gray-200 */
-
+      render={({ field: { onChange } }) => {
         return (
           <View>
-            <Menu
-              visible={visible}
-              onDismiss={() => setVisible(false)}
-              anchorPosition="bottom"
-              anchor={
-                <Button
-                  mode="outlined"
-                  icon="label-outline"
-                  onPress={() => setVisible(true)}
-                  style={{ borderRadius: 12, borderColor, borderWidth: 1 }}
-                  labelStyle={{ fontSize: 12, color: "#444964" }}
-                >
-                  {selected?.name || "No Label"}
-                </Button>
-              }
-            >
-              <Menu.Item
-                onPress={() => {
-                  onChange(null);
-                  setVisible(false);
-                }}
-                title="No Label"
-              />
-              {labels.map((opt) => (
-                <Menu.Item
-                  key={opt.labelId}
+            <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 12 }}>
+              {labels.map((l) => (
+                <Chip
+                  key={l.labelId}
+                  item={l}
+                  selected={enabled && selectedValue === l.labelId}
                   onPress={() => {
-                    onChange(Number(opt.labelId)); // ensure number if schema expects number
-                    setVisible(false);
+                    if (!enabled) return;
+                    onChange(l.labelId);
                   }}
-                  title={opt.name}
+                  onClear={() => onChange(null)}
+                  disabled={!enabled}
                 />
               ))}
-            </Menu>
+
+              {enabled && (
+                <Pressable
+                  onPress={() => setAddOpen(true)}
+                  style={{
+                    minHeight: 44,
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: "#1F2937",
+                    marginRight: 8,
+                    marginBottom: 8,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add label"
+                >
+                  <Text className="font-baloo" style={{ fontSize: 18 }}>
+                    ＋
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+
+            {/* Add Task Label Modal */}
+            {addOpen && (
+              <AddTaskLabel
+                visible={addOpen}
+                onClose={() => setAddOpen(false)}
+                onCreate={handleCreate}
+              />
+            )}
           </View>
         );
       }}
