@@ -60,7 +60,6 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
 
   const handleEdit = () => {
     setIsEditMode(!isEditMode);
-    console.log("Edit mode:", !isEditMode);
   };
 
   const handleAddSubtask = () => {
