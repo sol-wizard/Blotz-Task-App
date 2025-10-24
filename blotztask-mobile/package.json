@@ -64,6 +64,7 @@
     "react-native": "0.79.5",
     "react-native-auth0": "^5.0.0-beta.3",
     "react-native-calendars": "https://codeload.github.com/craftworkco/react-native-calendars/tar.gz/ae19e2af74ecdb29d6117ca41fbf41977a10cc23",
+    "react-native-draggable-flatlist": "^4.0.3",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-modal": "^14.0.0-rc.1",
     "react-native-paper": "^5.14.5",

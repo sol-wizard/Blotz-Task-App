@@ -1,5 +1,6 @@
 using BlotzTask.Modules.Tasks.Commands.SubTasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
+using BlotzTask.Modules.Tasks.Queries.SubTasks;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 
 namespace BlotzTask.Modules.Tasks;
@@ -14,13 +15,14 @@ public static class DependencyInjection
         services.AddScoped<AddTaskCommandHandler>();
         services.AddScoped<EditTaskCommandHandler>();
         services.AddScoped<DeleteTaskCommandHandler>();
-        services.AddScoped<AddSubtasksCommandHandler>();
+        services.AddScoped<ReplaceSubtasksCommandHandler>();
 
         // Manual registration of query handlers 
         services.AddScoped<GetTasksByDateQueryHandler>();
         services.AddScoped<GetTaskByIdQueryHandler>();
         services.AddScoped<GetFloatingTasksQueryHandler>();
         services.AddScoped<GetAllTasksQueryHandler>();
+        services.AddScoped<GetSubtasksByTaskIdQueryHandler>();
 
         return services;
     }
