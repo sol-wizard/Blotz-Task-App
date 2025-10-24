@@ -7,7 +7,7 @@ import { convertSubtaskTimeForm } from "../utils/convert-subtask-time-form";
 type SubtaskItemData = {
   id: number;
   title: string;
-  duration: string;
+  duration?: string;
   isDone: boolean;
 };
 
@@ -65,7 +65,7 @@ export default function SubtaskItem({
             color: theme.colors.heading,
           }}
         >
-          {convertSubtaskTimeForm(subtask.duration)}
+          {subtask.duration ? convertSubtaskTimeForm(subtask.duration) : ""}
         </Text>
       </View>
 
