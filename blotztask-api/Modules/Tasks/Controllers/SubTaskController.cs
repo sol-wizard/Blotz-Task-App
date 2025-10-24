@@ -14,8 +14,8 @@ public class SubTaskController(GetSubtasksByTaskIdQueryHandler getSubtaskByTaskI
     public async Task<IActionResult> GetSubtasksById(int id, CancellationToken ct)
     {
         var query = new GetSubtasksByTaskIdQuery { TaskId = id };
-        var (taskExists, subtasks) = await getSubtaskByTaskIdQueryHandler.Handle(query, ct);
-        if (!taskExists)
+        var subtasks = await getSubtaskByTaskIdQueryHandler.Handle(query, ct);
+        if (subtasks == null)
             return NotFound("Task not found");
         return Ok(subtasks);
     }

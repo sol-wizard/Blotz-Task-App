@@ -13,14 +13,14 @@ public class GetSubtasksByTaskIdQuery
 
 public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db)
 {
-    public async Task<(bool taskExists, List<SubtaskDetailDto>subtasks)> Handle(GetSubtasksByTaskIdQuery query, CancellationToken ct = default)
+    public async Task<List<SubtaskDetailDto>?> Handle(GetSubtasksByTaskIdQuery query, CancellationToken ct = default)
     {
         var taskExists = await db.TaskItems
             .AsNoTracking()
             .AnyAsync(x => x.Id == query.TaskId, ct);
         
         if (!taskExists)
-            return (false, new List<SubtaskDetailDto>());
+            return null;
         
         var subtasks = await db.Subtasks
             .AsNoTracking()
@@ -28,7 +28,7 @@ public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db)
             .Select(t => new SubtaskDetailDto
             {
                 SubTaskId = t.Id,
-                ParentTaskId = t.Id,
+                ParentTaskId = t.ParentTaskId,
                 Title = t.Title,
                 Description = t.Description,
                 Duration = t.Duration,
@@ -37,7 +37,7 @@ public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db)
             })
             .ToListAsync(ct);
 
-        return (true, subtasks);
+        return subtasks;
     }
 }
 public class SubtaskDetailDto
