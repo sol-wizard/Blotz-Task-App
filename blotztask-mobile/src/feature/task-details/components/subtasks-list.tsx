@@ -1,12 +1,11 @@
 import { View, Text, TouchableOpacity, Alert } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
-import React, { useState, useRef } from "react";
-import DraggableSubtaskList from "./draggable-subtask-list";
+import React, { useState} from "react";
 import { theme } from "@/shared/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
-import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
+import { useSubtasksByParentId } from "@/feature/task-details/hooks/useSubtasksByParentId";
+import { DraggableSubtaskList } from "@/feature/task-details/components/draggable-subtask-list";
 
 type SubtasksListProps = {
   taskId: number;
@@ -24,9 +23,7 @@ const SubtasksList = ({ taskId }: SubtasksListProps) => {
   } = useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const scrollOffsetRef = useRef(0);
   const taskColor = selectedTask?.label?.color ?? theme.colors.disabled;
-  const scrollViewRef = useRef<ScrollView>(null);
 
   const onBack = () => {
     setIsEditMode(false);
@@ -128,20 +125,19 @@ const SubtasksList = ({ taskId }: SubtasksListProps) => {
       <View className="flex-row justify-between items-center mb-4">
         {isEditMode ? (
           <TouchableOpacity onPress={onBack} className="p-2">
-            <MaterialIcons name="arrow-back" size={28} color={theme.colors.heading} />
+            <MaterialIcons name="arrow-back" size={28} />
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={handleRefresh} className="p-2">
-            <MaterialIcons name="sync" size={28} color={theme.colors.heading} />
+            <MaterialIcons name="sync" size={28}/>
           </TouchableOpacity>
         )}
         {isEditMode ? (
           <TouchableOpacity
             onPress={handleEdit}
             className="px-6 py-2 rounded-lg items-center justify-center"
-            style={{ backgroundColor: "#ebf0fe" }}
           >
-            <Text className="font-balooSemiBold text-base" style={{ color: "#3d8de0" }}>
+            <Text className="font-balooSemiBold text-base text-[#3d8de0]">
               Complete
             </Text>
           </TouchableOpacity>
@@ -149,55 +145,24 @@ const SubtasksList = ({ taskId }: SubtasksListProps) => {
           <TouchableOpacity
             onPress={handleEdit}
             className="w-10 h-10 rounded-full items-center justify-center"
-            style={{ backgroundColor: theme.colors.heading }}
           >
-            <MaterialIcons name="edit" size={20} color="#FFFFFF" />
+            <MaterialIcons name="edit" size={20} />
           </TouchableOpacity>
         )}
       </View>
 
       {/* Subtasks List */}
       <View className="flex-1">
-        <ScrollView
-          ref={scrollViewRef}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 8 }}
-          scrollEventThrottle={1}
-          onScroll={(event) => {
-            const newOffset = event.nativeEvent.contentOffset.y;
-            scrollOffsetRef.current = newOffset;
-          }}
-        >
-          <DraggableSubtaskList
-            subtasks={fetchedSubtasks}
-            onToggle={handleToggle}
-            color={taskColor}
-            isEditMode={isEditMode}
-            onDelete={handleDelete}
-            onReorder={handleReorder}
-            scrollViewRef={scrollViewRef}
-            scrollOffsetRef={scrollOffsetRef}
-          />
-        </ScrollView>
+        <DraggableSubtaskList subtasks={fetchedSubtasks}/>
       </View>
 
       {/* Add More Subtasks Button / Drag to Reorder - Fixed at bottom */}
       {isEditMode ? (
         <View
-          className="mx-0 mb-20 mt-4 rounded-2xl"
-          style={{
-            paddingVertical: 10,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="mx-0 mb-20 mt-4 rounded-2xl py-2.5 items-center justify-center"
         >
           <Text
-            className="py font-baloo"
-            style={{
-              color: "#8BC34A",
-              fontSize: 18,
-              textAlign: "center",
-            }}
+            className="font-baloo text-[#8BC34A] text-lg text-center"
           >
             Drag to reorder~
           </Text>
@@ -205,23 +170,10 @@ const SubtasksList = ({ taskId }: SubtasksListProps) => {
       ) : (
         <TouchableOpacity
           onPress={handleAddSubtask}
-          className="mx-0 mb-20 mt-4 rounded-2xl"
-          style={{
-            borderWidth: 2,
-            borderStyle: "dashed",
-            borderColor: theme.colors.dashline,
-            paddingVertical: 10,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="mx-0 mb-20 mt-4 rounded-2xl border-2 border-dashed py-2.5 items-center justify-center border-[#8c8c8c]"
         >
           <Text
-            className="py font-baloo"
-            style={{
-              color: theme.colors.dashline,
-              fontSize: 18,
-              textAlign: "center",
-            }}
+            className="font-baloo text-lg text-center"
           >
             Add more subtasks
           </Text>

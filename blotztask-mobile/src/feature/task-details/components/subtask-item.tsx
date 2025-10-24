@@ -32,7 +32,7 @@ export default function SubtaskItem({
           onPress={() => onDelete?.(s.id)}
           className="w-6 h-6 mr-4 items-center justify-center"
         >
-          <MaterialIcons name="close" size={24} color={theme.colors.toBeDeleted} />
+          <MaterialIcons name="close" size={24} />
         </TouchableOpacity>
       ) : (
         <CustomRadioCheckbox checked={!!s?.isDone} onPress={() => onToggle(s.id)} color={color} />
@@ -40,9 +40,6 @@ export default function SubtaskItem({
 
       <View
         className="text-sm min-w-[50px] px-2 py-1 rounded"
-        style={{
-          backgroundColor: theme.colors.subBackground,
-        }}
       >
         <Text
           className="text-sm"

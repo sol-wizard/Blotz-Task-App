@@ -36,7 +36,6 @@ export const theme = {
   colors: {
     ...MD3LightTheme.colors,
     background: "#F5F9FA", // very light gray (app background)
-    subBackground: "#ebf0fe", // very light gray (subtask background)
     surface: "#F5F9FA", // very light gray (card / surface background)
     surfaceVariant: "#F5F9FA", // very light gray (alternative surface background)
     primary: "#8C8C8C", // medium gray (primary button background)
@@ -49,8 +48,6 @@ export const theme = {
     heading: "#000000", // pure black (headings / titles)
     warning: "#F56767", // soft red (warning state)
     fallback: "#f5f9fa", // grey fallback for tasks without labels
-    dashline: "#8c8c8c", // medium gray (default text on background)
-    toBeDeleted: "#4b5563",
   },
   fonts: configureFonts({ config: fonts }),
 };
