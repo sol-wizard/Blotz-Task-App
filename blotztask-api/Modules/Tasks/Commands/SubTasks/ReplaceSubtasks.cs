@@ -19,7 +19,7 @@ public class ReplaceSubtasksCommandHandler
     {
         _db = db;
     }
-    
+
     public async Task<string> Handle(ReplaceSubtasksCommand command, CancellationToken ct = default)
     {
         var parentTask = await _db.TaskItems
@@ -34,7 +34,6 @@ public class ReplaceSubtasksCommandHandler
 
         _db.Subtasks.RemoveRange(existingSubtasks);
 
-        var now = DateTime.UtcNow;
         var newSubtasks = command.Subtasks.Select(dto => new Subtask
         {
             Title = dto.Title,
@@ -43,8 +42,8 @@ public class ReplaceSubtasksCommandHandler
             Order = dto.Order,
             IsDone = false,
             ParentTaskId = parentTask.Id,
-            CreatedAt = now,
-            UpdatedAt = now
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
         }).ToList();
 
         _db.Subtasks.AddRange(newSubtasks);
