@@ -6,6 +6,7 @@ import { Text } from "react-native";
 import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 // TODO: Fix flickering stale selected task in task detail page while navigating back
 const TaskEditScreen = () => {
@@ -17,13 +18,8 @@ const TaskEditScreen = () => {
   const router = useRouter();
 
   // TODO: Add loading icon
-  if (isLoading || !selectedTask) {
-    return <Text>Loading...</Text>;
-  }
-
-  // Show loading state while updating
-  if (isUpdating) {
-    return <Text>Updating task...</Text>;
+  if (isLoading || !selectedTask || isUpdating) {
+    return <LoadingScreen />;
   }
 
   const taskEditData: EditTaskItemDTO = {
