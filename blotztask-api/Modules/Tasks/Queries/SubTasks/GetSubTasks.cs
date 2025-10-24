@@ -25,6 +25,7 @@ public class GetSubtasksByTaskIdQueryHandler(BlotzTaskDbContext db)
         var subtasks = await db.Subtasks
             .AsNoTracking()
             .Where(t => t.ParentTaskId == query.TaskId)
+            .OrderBy(t => t.Order)
             .Select(t => new SubtaskDetailDto
             {
                 SubTaskId = t.Id,
