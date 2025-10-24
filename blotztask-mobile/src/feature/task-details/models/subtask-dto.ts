@@ -5,7 +5,7 @@ export interface SubtaskDTO {
   parentTaskId: number;
   title: string;
   description?: string;
-  duration?: Timespan;
+  duration?: string;
   order: number;
   isDone: boolean;
 }
