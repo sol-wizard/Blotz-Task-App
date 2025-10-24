@@ -1,7 +1,8 @@
 import { ASSETS } from "@/shared/constants/assets";
 import { theme } from "@/shared/constants/theme";
 import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
-import { View, Text, Image, Keyboard } from "react-native";
+import { useEffect } from "react";
+import { View, Text, Image, Keyboard, Platform } from "react-native";
 
 export const WriteInput = ({
   text,
@@ -10,6 +11,7 @@ export const WriteInput = ({
   hasError,
   sendMessage,
   errorMessage,
+  // isPreview = false,
 }: {
   text: string;
   setText: (v: string) => void;
@@ -17,15 +19,52 @@ export const WriteInput = ({
   hasError: boolean;
   sendMessage: (v: string) => void;
   errorMessage?: string;
+  isPreview?: boolean;
 }) => {
+  // useEffect(() => {
+  //   if (isPreview) return; // 预览模式下不要监听键盘事件
+
+  //   const onHide = () => {
+  //     // 键盘收起时只在输入模式恢复高度
+  //     sheetRef.current?.expand();
+  //   };
+
+  //   const sub1 = Keyboard.addListener("keyboardWillHide", onHide);
+  //   const sub2 = Keyboard.addListener("keyboardDidHide", onHide);
+
+  //   return () => {
+  //     sub1.remove();
+  //     sub2.remove();
+  //   };
+  // }, [sheetRef, isPreview]);
+  useEffect(() => {
+    const onHide = () => {
+      sheetRef.current?.snapToIndex(0);
+    };
+    const onShow = () => {
+      sheetRef.current?.snapToIndex(1);
+    };
+    const subShow =
+      Platform.OS === "ios"
+        ? Keyboard.addListener("keyboardWillShow", onShow)
+        : Keyboard.addListener("keyboardDidShow", onShow);
+    const subHide =
+      Platform.OS === "ios"
+        ? Keyboard.addListener("keyboardWillHide", onHide)
+        : Keyboard.addListener("keyboardDidHide", onHide);
+
+    return () => {
+      subShow.remove();
+      subHide.remove();
+    };
+  }, [sheetRef]);
+
   const sendAndDismiss = (msg: string) => {
     const val = msg.trim();
     if (!val) return;
     sendMessage(val);
-    Keyboard.dismiss();
-    sheetRef.current?.collapse();
+    // Keyboard.dismiss();
   };
-
   const handleChange = (value: string) => {
     setText(value);
     if (value.endsWith("\n")) {
@@ -40,6 +79,8 @@ export const WriteInput = ({
         value={text}
         onChangeText={handleChange}
         onSubmitEditing={() => sendAndDismiss(text)}
+        onFocus={() => sheetRef.current?.snapToIndex(1)} // 展开
+        onBlur={() => sheetRef.current?.snapToIndex(0)} // 收回
         returnKeyType="done"
         enablesReturnKeyAutomatically
         placeholder="I have a team meeting scheduled for 9am today...And 10am workout."

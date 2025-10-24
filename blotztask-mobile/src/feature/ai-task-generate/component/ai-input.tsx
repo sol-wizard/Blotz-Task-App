@@ -43,6 +43,7 @@ export const AiInput = ({
           hasError={generateTaskError}
           sheetRef={sheetRef}
           errorMessage={errorMessage}
+          isPreview={false}
         />
       )}
 
