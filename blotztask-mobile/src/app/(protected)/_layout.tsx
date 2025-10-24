@@ -52,6 +52,9 @@ export default function ProtectedLayout() {
           headerBackVisible: true,
           headerTintColor: "#000000",
           headerBackButtonDisplayMode: "minimal",
+          headerStyle: {
+            backgroundColor: "white",
+          },
         }}
       />
       <Stack.Screen
