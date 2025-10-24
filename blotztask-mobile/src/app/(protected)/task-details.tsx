@@ -3,23 +3,34 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { IconButton } from "react-native-paper";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
-import DetailsTab from "../../feature/task-details/components/details-tab";
-import SubtasksTab from "../../feature/task-details/components/subtasks-tab";
+import DetailsView from "../../feature/task-details/components/details-view";
+import SubtasksView from "../../feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 
+type tabTypes = "Details" | "Subtasks";
 export default function TaskDetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ taskId: string }>();
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading } = useTaskById({ taskId });
 
-  const { isDone, title, description, label, startTime, endTime } = selectedTask || {};
-
+  const [activeTab, setActiveTab] = useState<tabTypes>("Details");
+  if (!selectedTask) {
+    console.warn("No selected task found");
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-lg text-gray-600">Selected Task not found.</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text className="text-blue-500 mt-2">Go back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+  const { isDone, title, description, label, startTime, endTime } = selectedTask;
   const taskStatus = isDone ? "Done" : "To Do";
   const labelName: string | undefined = label?.name;
-  const [activeTab, setActiveTab] = useState<"Details" | "Subtasks">("Details");
 
   if (isLoading || !selectedTask) {
     return (
@@ -31,6 +42,7 @@ export default function TaskDetailsScreen() {
 
   return (
     <SafeAreaView
+      edges={["top"]}
       className="flex-1"
       style={{ backgroundColor: label?.color ?? theme.colors.fallback }}
     >
@@ -87,9 +99,9 @@ export default function TaskDetailsScreen() {
         {/* Render the active tab */}
         <View className="flex-1 px-4">
           {activeTab === "Details" ? (
-            <DetailsTab taskDescription={description as string} />
+            <DetailsView taskDescription={description as string} />
           ) : (
-            <SubtasksTab />
+            <SubtasksView parentTask={selectedTask} />
           )}
         </View>
       </View>
