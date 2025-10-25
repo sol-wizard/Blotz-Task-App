@@ -1,4 +1,4 @@
-import { ActivityIndicator, FlatList, View } from "react-native";
+import { FlatList, View } from "react-native";
 import { TaskStatusRow } from "../../../shared/components/ui/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -11,6 +11,7 @@ import { filterSelectedTask } from "../util/task-counts";
 import { Snackbar } from "react-native-paper";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import { useQueryClient } from "@tanstack/react-query";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
@@ -78,9 +79,7 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
       />
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="small" />
-        </View>
+        <LoadingScreen />
       ) : tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
         <FlatList
           className="flex-1"

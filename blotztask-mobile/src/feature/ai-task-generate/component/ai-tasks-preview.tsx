@@ -12,6 +12,7 @@ import { usePostHog } from "posthog-react-native";
 import { AiResultMessageDTO } from "../models/ai-result-message";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 export function AiTasksPreview({
   aiMessage,
@@ -19,12 +20,14 @@ export function AiTasksPreview({
   setModalType,
   isVoiceInput,
   userInput,
+  sheetRef,
 }: {
   aiMessage?: AiResultMessageDTO;
   setUserInput: React.Dispatch<React.SetStateAction<string>>;
   setModalType: (v: BottomSheetType) => void;
   isVoiceInput: boolean;
   userInput: string;
+  sheetRef: React.RefObject<BottomSheetModal | null>;
 }) {
   const { addTask, isAdding } = useTaskMutations();
   const aiGeneratedTasks = aiMessage?.extractedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
@@ -108,9 +111,11 @@ export function AiTasksPreview({
             task={task}
             handleTaskDelete={onDeleteTask}
             onTitleChange={onTitleChange}
+            sheetRef={sheetRef}
           />
         ))}
       </ScrollView>
+
       <View className="flex-row justify-center items-center mb-4">
         <Pressable
           onPress={handleGoBack}
