@@ -2,9 +2,10 @@ import TaskForm from "@/feature/task-add-edit/task-form";
 import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-task-dto-mapper";
 import { useRouter } from "expo-router";
-import { SafeAreaView, Text } from "react-native";
+import { SafeAreaView } from "react-native";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 function TaskCreateScreen() {
   const router = useRouter();
@@ -24,7 +25,7 @@ function TaskCreateScreen() {
   };
 
   if (isAdding) {
-    return <Text>Creating task...</Text>;
+    return <LoadingScreen />;
   }
 
   return (
