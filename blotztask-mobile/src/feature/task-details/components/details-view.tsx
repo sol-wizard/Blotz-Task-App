@@ -1,11 +1,11 @@
 import { View, TextInput } from "react-native";
 import React, { useEffect, useState } from "react";
 
-type DetailsTabProps = {
+type DetailsViewProps = {
   taskDescription?: string;
 };
 
-const DetailsTab = ({ taskDescription }: DetailsTabProps) => {
+const DetailsView = ({ taskDescription }: DetailsViewProps) => {
   const [descriptionText, setDescriptionText] = useState(taskDescription || "");
 
   useEffect(() => {
@@ -25,4 +25,4 @@ const DetailsTab = ({ taskDescription }: DetailsTabProps) => {
     </View>
   );
 };
-export default DetailsTab;
+export default DetailsView;

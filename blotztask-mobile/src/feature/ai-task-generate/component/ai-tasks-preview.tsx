@@ -54,6 +54,7 @@ export function AiTasksPreview({
       await Promise.all(payloads.map((payload) => addTask(payload)));
       finishedAllStepsRef.current = true;
 
+      /* eslint-disable camelcase */
       posthog.capture("ai_task_interaction_completed", {
         ai_output: JSON.stringify(aiMessage),
         user_input: userInput,
@@ -62,6 +63,7 @@ export function AiTasksPreview({
         outcome: "accepted",
         is_voice_input: isVoiceInput,
       });
+      /* eslint-enable camelcase */
 
       setModalType("add-task-success");
       setLocalTasks([]);
@@ -72,6 +74,7 @@ export function AiTasksPreview({
 
   const handleGoBack = () => {
     setModalType("input");
+    /* eslint-disable camelcase */
     posthog.capture("ai_task_interaction_completed", {
       ai_output: JSON.stringify(aiMessage),
       user_input: userInput,
@@ -80,6 +83,7 @@ export function AiTasksPreview({
       user_add_task_count: 0,
       is_voice_input: isVoiceInput,
     });
+    /* eslint-enable camelcase */
   };
 
   useEffect(() => {
@@ -93,9 +97,10 @@ export function AiTasksPreview({
           ai_generated_task_count: aiGeneratedTasks?.length ?? 0,
           user_add_task_count: 0,
         });
+        /* eslint-enable camelcase */
       }
     };
-  }, []);
+  }, [aiGeneratedTasks?.length, aiMessage, isVoiceInput, posthog, userInput]);
 
   return (
     <View className="mb-10 items-center justify-between">
