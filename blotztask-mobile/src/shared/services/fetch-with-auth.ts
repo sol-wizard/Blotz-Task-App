@@ -66,22 +66,26 @@ export const reFetchWithRefreshToken = async (
 
   const auth0 = new Auth0({ domain, clientId });
 
-  const newTokens = await auth0.auth.refreshToken({ refreshToken });
-  if (!newTokens.accessToken) {
-    throw new Error("No access token found when refreshing.");
-  }
+  try {
+    const newTokens = await auth0.auth.refreshToken({ refreshToken });
+    if (!newTokens.accessToken) {
+      throw new Error("No access token found when refreshing.");
+    }
 
-  await SecureStore.setItemAsync(AUTH_TOKEN_KEY, newTokens.accessToken);
-  if (newTokens.refreshToken) {
-    await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, newTokens.refreshToken);
-  }
+    await SecureStore.setItemAsync(AUTH_TOKEN_KEY, newTokens.accessToken);
+    if (newTokens.refreshToken) {
+      await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, newTokens.refreshToken);
+    }
 
-  const { data, response } = await makeRequest(newTokens.accessToken, options, url);
+    const { data, response } = await makeRequest(newTokens.accessToken, options, url);
 
-  if (response.status === 401) {
+    if (response.status === 401) {
+      await clearSessionAndRedirect();
+      throw new Error(`Unauthorized: ${url}`);
+    }
+    return { data, response };
+  } catch (error) {
     await clearSessionAndRedirect();
     throw new Error(`Unauthorized: ${url}`);
   }
-
-  return { data, response };
 };
