@@ -84,6 +84,7 @@ export const reFetchWithRefreshToken = async (
     }
     return { data, response };
   } catch (error) {
+    console.error("Error refreshing token:", error);
     await clearSessionAndRedirect();
     throw new Error(`Unauthorized: ${url}`);
   }
