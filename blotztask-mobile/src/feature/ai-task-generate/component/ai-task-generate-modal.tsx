@@ -25,6 +25,7 @@ export const AiTaskGenerateModal = ({
           userInput={text}
           setModalType={setModalType}
           isVoiceInput={isVoiceInput}
+          sheetRef={sheetRef}
         />
       );
 
