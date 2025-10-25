@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, Image, Vibration } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
-import { useVoiceInput } from "@/shared/util/useVoiceInput";
+import { useVoiceInput } from "@/feature/ai-task-generate/hooks/useVoiceInput";
 import { ASSETS } from "@/shared/constants/assets";
 import * as Haptics from "expo-haptics";
 import { VoiceWaves } from "@/shared/components/common/voice-wave";

@@ -1,18 +1,19 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, TextInput, Keyboard } from "react-native";
+import { View, Text, Pressable, Keyboard } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import { theme } from "@/shared/constants/theme";
 import { formatAiTaskCardDate, formatAiTaskCardTime } from "../utils/format-ai-task-card-time";
+import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 
 type Props = {
   task: AiTaskDTO;
   handleTaskDelete: (taskId: string) => void;
   onTitleChange?: (taskId: string, newTitle: string) => void;
+  sheetRef: React.RefObject<BottomSheetModal | null>;
 };
 
-export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
-  const [isEditing, setIsEditing] = useState(false);
+export function AiTaskCard({ task, handleTaskDelete, onTitleChange, sheetRef }: Props) {
   const [draftTitle, setDraftTitle] = useState(task.title);
 
   const handleEdit = () => {
@@ -22,8 +23,9 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
     } else if (!trimmed) {
       setDraftTitle(task.title);
     }
-    setIsEditing(false);
+
     Keyboard.dismiss();
+    sheetRef.current?.collapse();
   };
   const formatTime = formatAiTaskCardTime({ startTime: task.startTime, endTime: task.endTime });
   const formatDate = formatAiTaskCardDate({ startTime: task.startTime, endTime: task.endTime });
@@ -36,39 +38,20 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
       />
 
       <View className="flex-1 flex-row items-center justify-between ml-4">
-        {isEditing ? (
-          <TextInput
-            value={draftTitle}
-            onChangeText={setDraftTitle}
-            onBlur={handleEdit}
-            onSubmitEditing={handleEdit}
-            autoFocus
-            returnKeyType="done"
-            className="flex-1 mr-3 text-lg font-semibold"
-            style={{ color: theme.colors.onSurface }}
-            placeholder="Task title"
-            placeholderTextColor={theme.colors.disabled}
-            accessibilityLabel="Edit task title"
-            accessibilityHint="Double tap to edit task title"
-          />
-        ) : (
-          <Pressable
-            className="flex-1 mr-3"
-            onPress={() => setIsEditing(true)}
-            accessibilityRole="button"
-            accessibilityLabel={`Task: ${task.title}`}
-            accessibilityHint="Double tap to edit task title"
-          >
-            <Text
-              numberOfLines={1}
-              className="text-lg font-semibold"
-              style={{ color: theme.colors.onSurface }}
-              lineBreakStrategyIOS="hangul-word"
-            >
-              {task.title}
-            </Text>
-          </Pressable>
-        )}
+        <BottomSheetTextInput
+          value={draftTitle}
+          onChangeText={setDraftTitle}
+          onBlur={handleEdit}
+          onSubmitEditing={handleEdit}
+          returnKeyType="done"
+          className="mr-3 text-lg font-semibold leading-5"
+          style={{ color: theme.colors.onSurface }}
+          placeholder="Task title"
+          placeholderTextColor={theme.colors.disabled}
+          accessibilityLabel="Edit task title"
+          accessibilityHint="Double tap to edit task title"
+          autoFocus={false}
+        />
 
         {task.startTime || task.endTime ? (
           <View className="items-center ml-2">
