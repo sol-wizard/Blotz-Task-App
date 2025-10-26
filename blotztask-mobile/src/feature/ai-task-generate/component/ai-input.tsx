@@ -28,7 +28,6 @@ export const AiInput = ({
     <>
       {isVoiceInput ? (
         <VoiceInput
-          text={text}
           setText={setText}
           sendMessage={sendMessage}
           hasError={generateTaskError}
