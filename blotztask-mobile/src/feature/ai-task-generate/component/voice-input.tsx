@@ -1,44 +1,41 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, Image, Vibration } from "react-native";
+import { View, Text, Pressable, Image, Vibration } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
-import { useVoiceInput } from "@/feature/ai-task-generate/hooks/useVoiceInput";
 import { ASSETS } from "@/shared/constants/assets";
 import * as Haptics from "expo-haptics";
 import { VoiceWaves } from "@/shared/components/common/voice-wave";
+import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 
 export const VoiceInput = ({
-  text,
   setText,
   hasError,
   sendMessage,
   setInputError,
   errorMessage,
 }: {
-  text: string;
   setText: (v: string) => void;
   hasError: boolean;
   sendMessage: (v: string) => void;
   setInputError: (v: boolean) => void;
   errorMessage?: string;
 }) => {
-  const [language, setLanguage] = useState<"en" | "zh">("zh");
-  const { startListening, partialText, stopAndGetText, isListening } = useVoiceInput({ language });
-  const displayText = isListening
-    ? [text, partialText].filter(Boolean).join(text ? " " : "")
-    : text;
+  const [language, setLanguage] = useState<"en-US" | "zh-CN">("zh-CN");
+
+  const { handleStartListening, recognizing, transcript, stopListening } = useSpeechRecognition({
+    language,
+  });
 
   const [idleBlockH, setIdleBlockH] = useState(0);
   const [showVoiceWave, setShowVoiceWave] = useState(false);
 
   const handleMicPressOut = async () => {
-    const spoken = await stopAndGetText();
-    let newText = text;
-    if (spoken) {
-      newText = text?.length ? `${text.trim()} ${spoken}` : spoken;
-      setText(newText);
+    await stopListening();
+
+    if (transcript?.trim()) {
+      setText(transcript.trim());
+      sendMessage(transcript.trim());
     }
-    if (newText?.trim()) sendMessage(newText.trim());
 
     setShowVoiceWave(false);
   };
@@ -56,15 +53,8 @@ export const VoiceInput = ({
       )}
       {!hasError && (
         <View style={{ minHeight: idleBlockH, width: "100%" }} className="items-center">
-          {isListening ? (
-            <TextInput
-              value={displayText}
-              editable={false}
-              placeholderTextColor="#D1D5DB"
-              multiline
-              className="text-xl font-bold text-gray-400 text-center"
-              style={{ fontFamily: "Baloo2-Regular" }}
-            />
+          {recognizing ? (
+            <Text className="text-xl font-bold text-gray-400 text-center">{transcript}</Text>
           ) : (
             <View onLayout={(e) => setIdleBlockH(e.nativeEvent.layout.height)}>
               <View className="flex-row items-start justify-between w-full px-2">
@@ -75,11 +65,11 @@ export const VoiceInput = ({
                 </Text>
 
                 <Pressable
-                  onPress={() => setLanguage((prev) => (prev === "en" ? "zh" : "en"))}
+                  onPress={() => setLanguage((prev) => (prev === "en-US" ? "zh-CN" : "en-US"))}
                   className="w-10 h-10 bg-black rounded-full items-center justify-center"
                 >
                   <Text className="text-white font-bold text-base">
-                    {language === "en" ? "EN" : "中"}
+                    {language === "en-US" ? "EN" : "中"}
                   </Text>
                 </Pressable>
               </View>
@@ -103,7 +93,7 @@ export const VoiceInput = ({
             }
             setShowVoiceWave(true);
 
-            await startListening();
+            await handleStartListening();
           }}
           onPressOut={handleMicPressOut}
           delayLongPress={250}
@@ -122,7 +112,7 @@ export const VoiceInput = ({
           </View>
         </Pressable>
 
-        {isListening ? (
+        {recognizing ? (
           <Text className="text-lg mt-4 mb-10 text-gray-500 font-baloo">Recognising...</Text>
         ) : (
           <Text className="text-lg mt-4 mb-10 text-gray-500 font-baloo">Hold and speak</Text>

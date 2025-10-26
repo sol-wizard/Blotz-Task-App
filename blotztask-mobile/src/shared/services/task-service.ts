@@ -2,8 +2,6 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
 import { EditTaskItemDTO } from "../../feature/task-add-edit/models/edit-task-item-dto";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
-import * as SecureStore from "expo-secure-store";
-import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from "../constants/token-key";
 
 export async function fetchTasksForDate(
   date: Date,
@@ -73,8 +71,6 @@ export async function deleteTask(taskId: number): Promise<void> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`;
   try {
     await fetchWithAuth<void>(url, { method: "DELETE" });
-    await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, "1");
-    await SecureStore.setItemAsync(AUTH_TOKEN_KEY, "1");
   } catch (err: any) {
     console.error("deleteTask failed:", err);
     throw new Error("Delete task failed");
