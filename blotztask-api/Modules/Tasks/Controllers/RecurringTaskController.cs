@@ -1,17 +1,21 @@
-using BlotzTask.Modules.Tasks.Services;
+using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlotzTask.Modules.Tasks.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class RecurringTaskController(IRecurringTaskService recurringTaskService) : ControllerBase
+public class RecurringTaskController(AddRecurringTaskCommandHandler addRecurringTaskCommandHandler) : ControllerBase
 {
-    [HttpPost("generate")]
-    public async Task<IActionResult> GenerateTasks()
+    [HttpPost]
+    public async Task<IActionResult> AddRecurringTask(CancellationToken ct)
     {
-        await recurringTaskService.GenerateRecurringTasksAsync(DateTime.UtcNow);
+        var command = new AddRecurringTaskCommand
+        {
+            Timestamp = DateTime.UtcNow
+        };
+        var result = await addRecurringTaskCommandHandler.Handle(command, ct);
 
-        return Ok("Recurring tasks generation triggered.");
+        return Ok(result);
     }
 }

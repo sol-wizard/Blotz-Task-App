@@ -8,7 +8,7 @@ using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Tasks;
-using BlotzTask.Modules.Tasks.Services;
+
 using BlotzTask.Modules.Users;
 using BlotzTask.Shared.Store;
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +29,7 @@ builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
 
 //TODO : Move all services to module based registration
-builder.Services.AddScoped<IRecurringTaskService, RecurringTaskService>();
+
 
 builder.Services.AddSingleton<IChatHistoryManagerService, ChatHistoryManagerService>();
 builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
