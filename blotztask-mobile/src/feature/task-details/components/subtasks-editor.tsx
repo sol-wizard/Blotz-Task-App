@@ -26,6 +26,8 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     isReplacingSubtasks,
     deleteSubtask,
     isDeletingSubtask,
+    updateSubtask,
+    isUpdatingSubtask,
   } = useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -35,13 +37,20 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     setIsEditMode(false);
   };
 
-  const handleToggle = (id: number) => {
-    // Optimistically update the UI using React Query's cache
-    // TODO: Create a mutation hook to update backend
-    // queryClient.setQueryData(['subtasks', taskId], (old) =>
-    //   old?.map(subtask => subtask.taskId === id ? {...subtask, isDone: !subtask.isDone} : subtask)
-    // );
-    console.log("TODO: Implement toggle mutation");
+  const handleToggle = async (id: number) => {
+    const subtask = fetchedSubtasks?.find((s) => s.subTaskId === id);
+    if (subtask) {
+      try {
+        await updateSubtask({
+          ...subtask,
+          isDone: !subtask.isDone,
+        });
+      } catch (error) {
+        console.error("Failed to toggle subtask:", error);
+        // TODO: Implement error screen
+        Alert.alert("Error", "Failed to update subtask. Please try again.");
+      }
+    }
   };
 
   const handleRefresh = async () => {
@@ -55,6 +64,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
       }
     } catch (error) {
       console.error("Failed to refresh subtasks:", error);
+      // TODO: Implement error screen
       Alert.alert("Error", "Failed to refresh subtasks. Please try again.");
     }
   };
@@ -69,10 +79,21 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
   };
 
   const handleDelete = async (id: number) => {
-    await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id });
+    try {
+      await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id });
+    } catch (error) {
+      console.error("Failed to delete subtask:", error);
+      Alert.alert("Error", "Failed to delete subtask.");
+    }
   };
 
-  if (isLoading || isBreakingDown || isReplacingSubtasks || isDeletingSubtask) {
+  if (
+    isLoading ||
+    isBreakingDown ||
+    isReplacingSubtasks ||
+    isDeletingSubtask ||
+    isUpdatingSubtask
+  ) {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-base font-baloo text-tertiary">Loading subtasks...</Text>

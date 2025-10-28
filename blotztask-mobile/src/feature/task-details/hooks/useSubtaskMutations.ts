@@ -44,8 +44,7 @@ export const useSubtaskMutations = () => {
 
   const updateSubtaskMutation = useMutation({
     mutationFn: updateSubtask,
-    onSuccess: (data, variables) => {
-      console.log("Updated subtask:", data);
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["subtasks", variables.parentTaskId] });
     },
     onError: (error) => {
