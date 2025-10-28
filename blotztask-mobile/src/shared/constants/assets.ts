@@ -19,6 +19,7 @@ export const IMAGES = {
   greenBun: require("../../../assets/images/bun-green.png"),
   plusIcon: require("../../../assets/images/plus-icon.png"),
   loadingBun: require("../../../assets/images/loading-bun.png"),
+  capsuleToy: require("../../../assets/images/capsule-toy.png"),
 } as const;
 
 // Export all assets for convenience

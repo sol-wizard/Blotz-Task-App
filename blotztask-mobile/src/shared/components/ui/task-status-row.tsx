@@ -1,6 +1,6 @@
 import React from "react";
 import { View, ScrollView, SafeAreaView } from "react-native";
-import { TaskStatusType } from "../../../feature/calendar/modals/task-status-type";
+import { TaskStatusType } from "../../../feature/calendar/models/task-status-type";
 import { TaskStatusButton } from "@/shared/components/ui/task-status-button";
 
 export function TaskStatusRow({
