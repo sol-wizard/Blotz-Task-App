@@ -1,14 +1,14 @@
 import React, { useRef, useEffect, useState } from "react";
-import { View, Image, Text } from "react-native";
+import { View, Text } from "react-native";
 import Matter from "matter-js";
 import { GameEngine } from "react-native-game-engine";
 import { ASSETS } from "@/shared/constants/assets";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { GameEntity } from "@/feature/gashapon-machine/models/game-entity";
 import { PhysicsEntity } from "@/feature/gashapon-machine/models/physics-entity";
 import { EntityMap } from "@/feature/gashapon-machine/models/entity-map";
 import { CapsuleToyRenderer } from "@/feature/gashapon-machine/components/capsule-toy-renderer";
 import { WallRenderer } from "@/feature/gashapon-machine/components/wall-renderer";
+import { FloorRenderer } from "@/feature/gashapon-machine/components/floor-render";
 
 type GameLoopArgs = {
   time: {
@@ -30,16 +30,28 @@ export default function GashaponMachine() {
   const [entities, setEntities] = useState<EntityMap>({});
 
   useEffect(() => {
-    const engine = Matter.Engine.create({ enableSleeping: false });
+    const engine = Matter.Engine.create({ enableSleeping: true });
     const world = engine.world;
-    world.gravity.y = 1;
+    engine.gravity.y = 1;
 
-    const floor = Matter.Bodies.rectangle(WORLD_WIDTH / 2, WORLD_HEIGHT, WORLD_WIDTH, 10, {
-      isStatic: true,
-    });
+    const x1 = 0;
+    const y1 = 500;
+    const x2 = 340;
+    const y2 = 450;
 
-    const ceiling = Matter.Bodies.rectangle(WORLD_WIDTH / 2, 0, WORLD_WIDTH, 20, {
+    const centerX = (x1 + x2) / 2; // 170
+    const centerY = (y1 + y2) / 2; // 475
+
+    const angle = Math.atan2(y2 - y1, x2 - x1); // 计算倾斜角度（弧度）
+
+    const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+
+    const floor = Matter.Bodies.rectangle(centerX, centerY, length, 10, {
       isStatic: true,
+      friction: 1,
+      frictionStatic: 1,
+      restitution: 0,
+      angle: angle, // 设置倾斜角度
     });
 
     const leftWall = Matter.Bodies.rectangle(0, WORLD_HEIGHT / 2, 20, WORLD_HEIGHT, {
@@ -47,6 +59,9 @@ export default function GashaponMachine() {
     });
 
     const rightWall = Matter.Bodies.rectangle(WORLD_WIDTH, WORLD_HEIGHT / 2, 20, WORLD_HEIGHT, {
+      isStatic: true,
+    });
+    const ceiling = Matter.Bodies.rectangle(WORLD_WIDTH / 2, 0, WORLD_WIDTH, 20, {
       isStatic: true,
     });
 
@@ -57,8 +72,8 @@ export default function GashaponMachine() {
     let colCount = 5; // 5列 * 2行 = 10个
     let startX = 100; // 起始位置(可以调)
     let startY = 50;
-    let gapX = BALL_RADIUS * 2;
-    let gapY = BALL_RADIUS * 2;
+    let gapX = BALL_RADIUS * 2 + 5;
+    let gapY = BALL_RADIUS * 2 + 5;
 
     for (let i = 0; i < TOTAL_BALLS; i++) {
       const col = i % colCount;
@@ -68,8 +83,11 @@ export default function GashaponMachine() {
       const y = startY + row * gapY;
 
       const ball = Matter.Bodies.circle(x, y, BALL_RADIUS, {
-        restitution: 0.6,
+        restitution: 0.4,
         friction: 0.05,
+        frictionStatic: 0.5,
+        frictionAir: 0.01,
+        sleepThreshold: 30,
       });
 
       balls.push(ball);
@@ -82,14 +100,14 @@ export default function GashaponMachine() {
         engine: engine,
         world: world,
       },
-      floor: {
-        body: floor,
-        renderer: WallRenderer,
-        color: "#333",
-      },
       ceiling: {
         body: ceiling,
         renderer: WallRenderer,
+        color: "#333",
+      },
+      floor: {
+        body: floor,
+        renderer: FloorRenderer,
         color: "#333",
       },
       leftWall: {
@@ -144,10 +162,8 @@ export default function GashaponMachine() {
           style={{
             width: WORLD_WIDTH,
             height: WORLD_HEIGHT,
-            backgroundColor: "#fff",
+
             overflow: "hidden",
-            borderWidth: 1,
-            borderColor: "#ccc",
           }}
         />
       ) : (
