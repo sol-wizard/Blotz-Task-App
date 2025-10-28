@@ -11,6 +11,7 @@ import { WallRenderer } from "@/feature/gashapon-machine/components/wall-rendere
 import { FloorRenderer } from "@/feature/gashapon-machine/components/floor-render";
 import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
 import { useSharedValue } from "react-native-reanimated";
+import { createRectangleBetweenPoints } from "@/feature/gashapon-machine/utils/create-rectangle-between-points";
 
 type GameLoopArgs = {
   time: {
@@ -36,12 +37,12 @@ export default function GashaponMachine() {
   const handleRelease = useCallback((deltaThisTurn: number, newTotal: number) => {
     console.log("这次拧了多少度:", deltaThisTurn);
     console.log("现在的累积角度是多少:", newTotal);
-    if (newTotal > 60) {
+    if (deltaThisTurn > 60) {
       dropOneCapsule();
     }
   }, []);
   const dropOneCapsule = () => {
-    console.log("🎉 capsule dropped!");
+    console.log("放出一个扭蛋！");
   };
 
   useEffect(() => {
@@ -49,38 +50,39 @@ export default function GashaponMachine() {
     const world = engine.world;
     engine.gravity.y = 1;
 
-    const x1 = 0;
-    const y1 = 500;
-    const x2 = 340;
-    const y2 = 450;
+    const floor = createRectangleBetweenPoints({
+      x1: 80,
+      y1: 500,
+      x2: 340,
+      y2: 450,
+    });
 
-    const centerX = (x1 + x2) / 2; // 170
-    const centerY = (y1 + y2) / 2; // 475
-
-    const angle = Math.atan2(y2 - y1, x2 - x1); // 计算倾斜角度（弧度）
-
-    const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-
-    const floor = Matter.Bodies.rectangle(centerX, centerY, length, 10, {
-      isStatic: true,
-      friction: 1,
-      frictionStatic: 1,
-      restitution: 0,
-      angle: angle, // 设置倾斜角度
+    // gate: 从 (0,500) 到 (80,500)
+    const gate = createRectangleBetweenPoints({
+      x1: 0,
+      y1: 500,
+      x2: 80,
+      y2: 500,
     });
 
     const leftWall = Matter.Bodies.rectangle(0, WORLD_HEIGHT / 2, 20, WORLD_HEIGHT, {
       isStatic: true,
     });
 
-    const rightWall = Matter.Bodies.rectangle(WORLD_WIDTH, WORLD_HEIGHT / 2, 20, WORLD_HEIGHT, {
-      isStatic: true,
-    });
+    const rightWall = Matter.Bodies.rectangle(
+      WORLD_WIDTH,
+      WORLD_HEIGHT / 2,
+      20,
+      WORLD_HEIGHT - 50,
+      {
+        isStatic: true,
+      },
+    );
     const ceiling = Matter.Bodies.rectangle(WORLD_WIDTH / 2, 0, WORLD_WIDTH, 20, {
       isStatic: true,
     });
 
-    Matter.World.add(world, [floor, ceiling, leftWall, rightWall]);
+    Matter.World.add(world, [floor, ceiling, leftWall, rightWall, gate]);
 
     // 生成一堆圆形扭蛋
     const balls = [];
@@ -114,6 +116,11 @@ export default function GashaponMachine() {
       physics: {
         engine: engine,
         world: world,
+      },
+      gate: {
+        body: gate,
+        renderer: WallRenderer,
+        color: "#333",
       },
       ceiling: {
         body: ceiling,
