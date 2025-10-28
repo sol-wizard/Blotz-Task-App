@@ -30,6 +30,7 @@ const eggImages = Array(TOTAL_BALLS).fill(ASSETS.capsuleToy);
 
 export default function GashaponMachine() {
   const engineRef = useRef<Matter.Engine | null>(null);
+  const gateRef = useRef<Matter.Body | null>(null);
   const [entities, setEntities] = useState<EntityMap>({});
 
   const totalRotation = useSharedValue(0);
@@ -37,16 +38,30 @@ export default function GashaponMachine() {
   const handleRelease = useCallback((deltaThisTurn: number, newTotal: number) => {
     console.log("这次拧了多少度:", deltaThisTurn);
     console.log("现在的累积角度是多少:", newTotal);
-    if (deltaThisTurn > 60) {
+
+    if (Math.abs(deltaThisTurn) > 60) {
       dropOneCapsule();
     }
   }, []);
+
   const dropOneCapsule = () => {
     console.log("放出一个扭蛋！");
+
+    if (gateRef.current) {
+      // 向右平移 80 个单位
+      Matter.Body.translate(gateRef.current, { x: 80, y: 0 });
+
+      // 可选：延迟后复位
+      setTimeout(() => {
+        if (gateRef.current) {
+          Matter.Body.translate(gateRef.current, { x: -80, y: 0 });
+        }
+      }, 2000); // 2秒后复位
+    }
   };
 
   useEffect(() => {
-    const engine = Matter.Engine.create({ enableSleeping: true });
+    const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
     engine.gravity.y = 1;
 
@@ -64,6 +79,9 @@ export default function GashaponMachine() {
       x2: 80,
       y2: 500,
     });
+
+    // 保存 gate 引用
+    gateRef.current = gate;
 
     const leftWall = Matter.Bodies.rectangle(0, WORLD_HEIGHT / 2, 20, WORLD_HEIGHT, {
       isStatic: true,
@@ -104,7 +122,7 @@ export default function GashaponMachine() {
         friction: 0.05,
         frictionStatic: 0.5,
         frictionAir: 0.01,
-        sleepThreshold: 30,
+        // sleepThreshold: 30,
       });
 
       balls.push(ball);
