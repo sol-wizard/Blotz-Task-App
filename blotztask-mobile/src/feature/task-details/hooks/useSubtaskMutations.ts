@@ -1,6 +1,8 @@
 import {
   replaceSubtasks,
   createBreakDownSubtasks,
+  deleteSubtask,
+  updateSubtask,
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -28,6 +30,29 @@ export const useSubtaskMutations = () => {
     },
   });
 
+  const deleteSubtaskMutation = useMutation({
+    mutationFn: ({ subtaskId, parentTaskId }: { subtaskId: number; parentTaskId: number }) =>
+      deleteSubtask(subtaskId),
+    onSuccess: (_, variables) => {
+      console.log("Deleted subtask", variables.subtaskId);
+      queryClient.invalidateQueries({ queryKey: ["subtasks", variables.parentTaskId] });
+    },
+    onError: (error) => {
+      console.error("Failed to delete subtask:", error);
+    },
+  });
+
+  const updateSubtaskMutation = useMutation({
+    mutationFn: updateSubtask,
+    onSuccess: (data, variables) => {
+      console.log("Updated subtask:", data);
+      queryClient.invalidateQueries({ queryKey: ["subtasks", variables.parentTaskId] });
+    },
+    onError: (error) => {
+      console.error("Failed to update subtask:", error);
+    },
+  });
+
   return {
     // Breakdown
     breakDownTask: breakdownMutation.mutateAsync,
@@ -38,5 +63,15 @@ export const useSubtaskMutations = () => {
     replaceSubtasks: replaceSubtasksMutation.mutateAsync,
     isReplacingSubtasks: replaceSubtasksMutation.isPending,
     replaceSubtasksError: replaceSubtasksMutation.error,
+
+    // Delete subtask
+    deleteSubtask: deleteSubtaskMutation.mutateAsync,
+    isDeletingSubtask: deleteSubtaskMutation.isPending,
+    deleteSubtaskError: deleteSubtaskMutation.error,
+
+    //Update subtask
+    updateSubtask: updateSubtaskMutation.mutateAsync,
+    isUpdatingSubtask: updateSubtaskMutation.isPending,
+    isUpdateSubtaskError: updateSubtaskMutation.error,
   };
 };

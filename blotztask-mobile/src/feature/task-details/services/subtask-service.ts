@@ -24,7 +24,7 @@ export const createBreakDownSubtasks = async (taskId: number) => {
 export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   const taskId = newSubtask.subTaskId;
   const subtaskId = newSubtask.parentTaskId;
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/${taskId}/subtasks/${subtaskId}`;
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/tasks/${taskId}/subtasks/${subtaskId}`;
 
   try {
     await fetchWithAuth<void>(url, { method: "PUT", body: JSON.stringify({ ...newSubtask }) });
@@ -64,5 +64,17 @@ export async function getSubtasksByParentId(parentId: number): Promise<SubtaskDT
   } catch (error) {
     console.error("Error fetching subtasks by parent ID:", error);
     return [];
+  }
+}
+
+export async function deleteSubtask(subtaskId: number): Promise<void> {
+  const url = `${process.env.Expo_PUBLIC_URL_WITH_API}/SubTask/subtasks/${subtaskId}`;
+  try {
+    await fetchWithAuth<void>(url, {
+      method: "DELETE",
+    });
+  } catch (err: any) {
+    console.error("Error deleting subtask:", err);
+    throw new Error("Delete subtask failed:", err);
   }
 }
