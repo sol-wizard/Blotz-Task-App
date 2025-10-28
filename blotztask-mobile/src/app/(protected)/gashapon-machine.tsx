@@ -39,10 +39,7 @@ export default function GashaponMachine() {
 
   const totalRotation = useSharedValue(0);
 
-  const handleRelease = useCallback((deltaThisTurn: number, newTotal: number) => {
-    console.log("这次拧了多少度:", deltaThisTurn);
-    console.log("现在的累积角度是多少:", newTotal);
-
+  const handleRelease = useCallback((deltaThisTurn: number) => {
     if (Math.abs(deltaThisTurn) > 60) {
       dropOneCapsule();
     }
@@ -50,7 +47,7 @@ export default function GashaponMachine() {
 
   const closeGate = useCallback(() => {
     if (gateRef.current && isGateOpenRef.current) {
-      console.log("关闭 gate");
+      console.log("close gate");
       Matter.Body.translate(gateRef.current, { x: -80, y: 0 });
       isGateOpenRef.current = false;
       ballPassedRef.current = false;
@@ -58,7 +55,7 @@ export default function GashaponMachine() {
   }, []);
 
   const dropOneCapsule = useCallback(() => {
-    console.log("放出一个扭蛋！");
+    console.log("Release a Gachapon!");
 
     if (gateRef.current && !isGateOpenRef.current) {
       // 向右平移 80 个单位
@@ -90,21 +87,12 @@ export default function GashaponMachine() {
       y2: 500,
     });
 
-    // 创建传感器：在 gate 下方的检测区域
+    const sensor = Matter.Bodies.rectangle(40, 540, 80, 20, {
+      isStatic: true,
+      isSensor: true,
+      label: "dropSensor",
+    });
 
-    const sensor = Matter.Bodies.rectangle(
-      40, // gate 中心位置
-      540, // ✅ 从 510 改为 540（下移 30 像素，大约一个球的直径）
-      80, // 宽度与 gate 相同
-      20, // 高度
-      {
-        isStatic: true,
-        isSensor: true,
-        label: "dropSensor",
-      },
-    );
-
-    // 保存引用
     gateRef.current = gate;
     sensorRef.current = sensor;
 
@@ -128,7 +116,6 @@ export default function GashaponMachine() {
 
     Matter.World.add(world, [floor, ceiling, leftWall, rightWall, gate, sensor]);
 
-    // 生成一堆圆形扭蛋
     const balls = [];
     let colCount = 5;
     let startX = 100;
