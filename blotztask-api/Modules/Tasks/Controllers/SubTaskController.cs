@@ -8,7 +8,11 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public class SubTaskController(GetSubtasksByTaskIdQueryHandler getSubtaskByTaskIdQueryHandler, UpdateSubtaskCommandHandler updateSubtaskCommandHandler, ReplaceSubtasksCommandHandler replaceSubtasksCommandHandler) : ControllerBase
+public class SubTaskController(
+    GetSubtasksByTaskIdQueryHandler getSubtaskByTaskIdQueryHandler,
+    UpdateSubtaskCommandHandler updateSubtaskCommandHandler,
+    ReplaceSubtasksCommandHandler replaceSubtasksCommandHandler,
+    DeleteSubtaskCommandHandler deleteSubtaskCommandHandler) : ControllerBase
 {
     [HttpGet("tasks/{id}")]
     public async Task<IActionResult> GetSubtasksById(int id, CancellationToken ct)
@@ -20,7 +24,7 @@ public class SubTaskController(GetSubtasksByTaskIdQueryHandler getSubtaskByTaskI
         return Ok(subtasks);
     }
 
-    [HttpPut("{taskId}/subtasks/{subtaskId}")]
+    [HttpPut("tasks/{taskId}/subtasks/{subtaskId}")]
     public async Task<IActionResult> UpdateSubtask(
         int taskId,
         int subtaskId,
@@ -48,6 +52,18 @@ public class SubTaskController(GetSubtasksByTaskIdQueryHandler getSubtaskByTaskI
         }
         var message = await replaceSubtasksCommandHandler.Handle(command, ct);
         return Ok(message);
+    }
+
+    [HttpDelete("subtasks/{subtaskId}")]
+    public async Task<IActionResult> DeleteSubtask(int subtaskId, CancellationToken ct)
+    {
+        var command = new DeleteSubtaskCommand { SubtaskId = subtaskId };
+        var deleted = await deleteSubtaskCommandHandler.Handle(command, ct);
+        if (deleted == null)
+        {
+            return NotFound("Subtask not found");
+        }
+        return Ok(deleted);
     }
 
 }
