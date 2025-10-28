@@ -68,7 +68,7 @@ export async function getSubtasksByParentId(parentId: number): Promise<SubtaskDT
 }
 
 export async function deleteSubtask(subtaskId: number): Promise<void> {
-  const url = `${process.env.Expo_PUBLIC_URL_WITH_API}/SubTask/subtasks/${subtaskId}`;
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/subtasks/${subtaskId}`;
   try {
     await fetchWithAuth<void>(url, {
       method: "DELETE",

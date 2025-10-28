@@ -22,12 +22,13 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
   const {
     breakDownTask,
     isBreakingDown,
-    replaceSubtasks: replaceSubtasks,
-    isReplacingSubtasks: isReplacingSubtasks,
+    replaceSubtasks,
+    isReplacingSubtasks,
+    deleteSubtask,
+    isDeletingSubtask,
   } = useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const [deletedIds, setDeletedIds] = useState<number[]>([]);
   const taskColor = parentTask?.label?.color ?? theme.colors.disabled;
 
   const onBack = () => {
@@ -67,14 +68,11 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     console.log("Implement add subtask");
   };
 
-  const handleDelete = (id: number) => {
-    // Optimistically remove from UI
-    setDeletedIds((prev) => [...prev, id]);
-    // TODO: implement delete subtask logic with backend
-    console.log("Implement delete subtask", id);
+  const handleDelete = async (id: number) => {
+    await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id });
   };
 
-  if (isLoading || isBreakingDown || isReplacingSubtasks) {
+  if (isLoading || isBreakingDown || isReplacingSubtasks || isDeletingSubtask) {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-base font-baloo text-tertiary">Loading subtasks...</Text>
@@ -137,7 +135,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
       {/* Subtasks List */}
       <View className="flex-1">
         <DraggableSubtaskList
-          subtasks={fetchedSubtasks.filter((s) => !deletedIds.includes(s.subTaskId))}
+          subtasks={fetchedSubtasks}
           isEditMode={isEditMode}
           onDelete={handleDelete}
           onToggle={handleToggle}
