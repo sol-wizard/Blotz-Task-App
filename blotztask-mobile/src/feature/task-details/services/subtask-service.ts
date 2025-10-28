@@ -73,8 +73,8 @@ export async function deleteSubtask(subtaskId: number): Promise<void> {
     await fetchWithAuth<void>(url, {
       method: "DELETE",
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Error deleting subtask:", err);
-    throw new Error("Delete subtask failed:", err);
+    throw new Error("Delete subtask failed");
   }
 }
