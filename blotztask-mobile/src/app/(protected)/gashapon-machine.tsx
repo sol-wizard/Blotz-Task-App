@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { View, Text } from "react-native";
 import Matter from "matter-js";
 import { GameEngine } from "react-native-game-engine";
@@ -9,6 +9,8 @@ import { EntityMap } from "@/feature/gashapon-machine/models/entity-map";
 import { CapsuleToyRenderer } from "@/feature/gashapon-machine/components/capsule-toy-renderer";
 import { WallRenderer } from "@/feature/gashapon-machine/components/wall-renderer";
 import { FloorRenderer } from "@/feature/gashapon-machine/components/floor-render";
+import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
+import { useSharedValue } from "react-native-reanimated";
 
 type GameLoopArgs = {
   time: {
@@ -28,6 +30,19 @@ const eggImages = Array(TOTAL_BALLS).fill(ASSETS.capsuleToy);
 export default function GashaponMachine() {
   const engineRef = useRef<Matter.Engine | null>(null);
   const [entities, setEntities] = useState<EntityMap>({});
+
+  const totalRotation = useSharedValue(0);
+
+  const handleRelease = useCallback((deltaThisTurn: number, newTotal: number) => {
+    console.log("这次拧了多少度:", deltaThisTurn);
+    console.log("现在的累积角度是多少:", newTotal);
+    if (newTotal > 60) {
+      dropOneCapsule();
+    }
+  }, []);
+  const dropOneCapsule = () => {
+    console.log("🎉 capsule dropped!");
+  };
 
   useEffect(() => {
     const engine = Matter.Engine.create({ enableSleeping: true });
@@ -122,7 +137,6 @@ export default function GashaponMachine() {
       },
     };
 
-    // 把球也塞进 entities
     balls.forEach((ball, idx) => {
       newEntities["egg-" + idx] = {
         body: ball,
@@ -156,16 +170,19 @@ export default function GashaponMachine() {
       }}
     >
       {entities.physics ? (
-        <GameEngine
-          systems={[physicsSystem]}
-          entities={entities}
-          style={{
-            width: WORLD_WIDTH,
-            height: WORLD_HEIGHT,
+        <>
+          <GameEngine
+            systems={[physicsSystem]}
+            entities={entities}
+            style={{
+              width: WORLD_WIDTH,
+              height: WORLD_HEIGHT,
 
-            overflow: "hidden",
-          }}
-        />
+              overflow: "hidden",
+            }}
+          />
+          <MachineButton totalRotation={totalRotation} onRelease={handleRelease} />
+        </>
       ) : (
         <View>
           <Text>Loading Gashapon Machine...</Text>

@@ -20,6 +20,7 @@ export const IMAGES = {
   plusIcon: require("../../../assets/images/plus-icon.png"),
   loadingBun: require("../../../assets/images/loading-bun.png"),
   capsuleToy: require("../../../assets/images/capsule-toy.png"),
+  turnKnobButton: require("../../../assets/images/turn-knob-button.png"),
 } as const;
 
 // Export all assets for convenience
