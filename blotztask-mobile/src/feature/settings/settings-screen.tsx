@@ -22,6 +22,9 @@ export default function SettingsScreen() {
   const goToIdeasPage = async () => {
     router.push("/(protected)/ideas");
   };
+  const goTogashaponPage = async () => {
+    router.push("/(protected)/gashapon-machine");
+  };
 
   return (
     <SafeAreaView className="flex-1 p-6">
@@ -49,6 +52,15 @@ export default function SettingsScreen() {
             className="bg-white rounded-xl w-96 py-4 items-start flex-row justify-between pr-4"
           >
             <Text className="text-gray-800 font-baloo text-xl ml-4">Go to Ideas page</Text>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
+          </Pressable>
+          <Pressable
+            onPress={goTogashaponPage}
+            className="bg-white rounded-xl w-96 py-4 items-start flex-row justify-between pr-4"
+          >
+            <Text className="text-gray-800 font-baloo text-xl ml-4">
+              Go to gashapon machine page
+            </Text>
             <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
           </Pressable>
         </View>

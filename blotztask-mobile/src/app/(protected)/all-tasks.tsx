@@ -8,7 +8,7 @@ import TaskCard from "@/feature/calendar/components/task-card";
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
 import { getAllTasks, toggleTaskCompletion, deleteTask } from "@/shared/services/task-service";
 import UserProfile from "@/feature/calendar/components/user-profile";
-import { TaskStatusType } from "@/feature/calendar/modals/task-status-type";
+import { TaskStatusType } from "@/feature/calendar/models/task-status-type";
 import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 
 export default function AllTasksScreen() {

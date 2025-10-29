@@ -60,6 +60,21 @@ export default function ProtectedLayout() {
           headerBackButtonDisplayMode: "minimal",
         }}
       />
+      <Stack.Screen
+        name="gashapon-machine"
+        options={{
+          headerShown: true,
+          headerShadowVisible: false,
+          headerTransparent: true,
+          headerTitle: "",
+          headerBackVisible: true,
+          headerTintColor: "#000000",
+          headerBackButtonDisplayMode: "minimal",
+          headerStyle: {
+            backgroundColor: "transparent",
+          },
+        }}
+      />
     </Stack>
   );
 }
