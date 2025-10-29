@@ -10,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type tabTypes = "Details" | "Subtasks";
 export default function TaskDetailsScreen() {
@@ -77,16 +78,16 @@ export default function TaskDetailsScreen() {
 
         {/* Task Title + Edit */}
         <View className="flex-row items-start justify-center mb-4">
-          <Text className="flex-1 font-balooBold text-5xl leading-normal">{title}</Text>
-          <IconButton
-            icon={"pencil"}
+          <Text className="flex-1 font-balooBold text-4xl leading-normal">{title}</Text>
+          <MaterialCommunityIcons
+            name="pencil-minus-outline"
             onPress={() =>
               router.push({
                 pathname: "/(protected)/task-edit",
                 params: { taskId: selectedTask.id },
               })
             }
-            iconColor="black"
+            size={28}
           />
         </View>
 
