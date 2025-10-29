@@ -1,11 +1,12 @@
-import { View, TextInput } from "react-native";
+import { View, TextInput, Keyboard } from "react-native";
 import React, { useEffect, useState } from "react";
 
 type DetailsViewProps = {
   taskDescription?: string;
+  onChangeDescription: (v: string) => void;
 };
 
-const DetailsView = ({ taskDescription }: DetailsViewProps) => {
+const DetailsView = ({ taskDescription, onChangeDescription }: DetailsViewProps) => {
   const [descriptionText, setDescriptionText] = useState(taskDescription || "");
 
   useEffect(() => {
@@ -21,6 +22,10 @@ const DetailsView = ({ taskDescription }: DetailsViewProps) => {
         multiline
         textAlignVertical="top"
         className="font-baloo text-gray-800 text-lg"
+        onBlur={() => {
+          Keyboard.dismiss();
+          onChangeDescription(descriptionText);
+        }}
       />
     </View>
   );

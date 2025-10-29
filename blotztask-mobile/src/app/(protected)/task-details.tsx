@@ -9,6 +9,7 @@ import { theme } from "@/shared/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
 
 type tabTypes = "Details" | "Subtasks";
 export default function TaskDetailsScreen() {
@@ -16,6 +17,7 @@ export default function TaskDetailsScreen() {
   const params = useLocalSearchParams<{ taskId: string }>();
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading } = useTaskById({ taskId });
+  const { updateTask, isUpdating } = useTaskMutations();
 
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
   if (!selectedTask) {
@@ -29,11 +31,26 @@ export default function TaskDetailsScreen() {
       </View>
     );
   }
+
+  const handleUpdateDescription = (newDesc: string) => {
+    if (newDesc === (description ?? "")) return;
+
+    updateTask({
+      id: selectedTask.id,
+      title: selectedTask.title,
+      description: newDesc,
+      startTime: selectedTask.startTime ? new Date(selectedTask.startTime) : undefined,
+      endTime: selectedTask.endTime ? new Date(selectedTask.endTime) : undefined,
+      labelId: selectedTask.label?.labelId,
+      timeType: selectedTask.timeType ?? null,
+    });
+  };
+
   const { isDone, title, description, label, startTime, endTime } = selectedTask;
   const taskStatus = isDone ? "Done" : "To Do";
   const labelName: string | undefined = label?.name;
 
-  if (isLoading || !selectedTask) {
+  if (isLoading || !selectedTask || isUpdating) {
     return <LoadingScreen />;
   }
 
@@ -96,7 +113,10 @@ export default function TaskDetailsScreen() {
         {/* Render the active tab */}
         <View className="flex-1 px-4">
           {activeTab === "Details" ? (
-            <DetailsView taskDescription={description as string} />
+            <DetailsView
+              taskDescription={description as string}
+              onChangeDescription={handleUpdateDescription}
+            />
           ) : (
             <SubtasksView parentTask={selectedTask} />
           )}
