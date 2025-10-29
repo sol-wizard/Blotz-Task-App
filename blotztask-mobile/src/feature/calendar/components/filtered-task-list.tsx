@@ -76,6 +76,7 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
         doneTaskCount={findStatusCount("Done")}
         selectedStatus={selectedStatus}
         onChange={setSelectedStatus}
+        selectedDay={selectedDay}
       />
 
       {isLoading ? (
