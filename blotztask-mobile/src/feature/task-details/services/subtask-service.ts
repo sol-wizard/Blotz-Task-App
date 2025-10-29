@@ -1,6 +1,6 @@
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import { SubtaskDTO } from "../models/subtask-dto";
-import { fetchWithAuth } from "../../../shared/services/fetch-with-auth";
+import { apiClient } from "@/shared/services/api-client";
 import { BreakdownSubtaskDTO } from "@/feature/task-details/models/breakdown-subtask-dto";
 
 export const createBreakDownSubtasks = async (taskId: number) => {
@@ -8,13 +8,7 @@ export const createBreakDownSubtasks = async (taskId: number) => {
 
   try {
     const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/TaskBreakdown/${taskId}`;
-    const data: BreakdownSubtaskDTO[] = await fetchWithAuth(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
+    const data: BreakdownSubtaskDTO = await apiClient.post(url);
     return data;
   } catch (error) {
     console.error("Error fetching subtasks:", error);
@@ -27,7 +21,7 @@ export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/${taskId}/subtasks/${subtaskId}`;
 
   try {
-    await fetchWithAuth<void>(url, { method: "PUT", body: JSON.stringify({ ...newSubtask }) });
+    await apiClient.put(url, JSON.stringify({ ...newSubtask }));
   } catch (err: any) {
     console.error("Update subtask failed:", err);
     throw new Error("Update subtask failed");
@@ -44,10 +38,7 @@ export async function replaceSubtasks({
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/tasks/${taskId}/replaceSubtasks`;
 
   try {
-    await fetchWithAuth<void>(url, {
-      method: "POST",
-      body: JSON.stringify({ taskId, subtasks }),
-    });
+    await apiClient.post(url, JSON.stringify({ taskId, subtasks }));
   } catch (err: any) {
     console.error("Add subtasks failed:", err);
     throw new Error("Add subtasks failed");
@@ -57,9 +48,7 @@ export async function replaceSubtasks({
 export async function getSubtasksByParentId(parentId: number): Promise<SubtaskDTO[]> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/tasks/${parentId}`;
   try {
-    const data: SubtaskDTO[] = await fetchWithAuth(url, {
-      method: "GET",
-    });
+    const data: SubtaskDTO[] = await apiClient.get(url);
     return data;
   } catch (error) {
     console.error("Error fetching subtasks by parent ID:", error);
