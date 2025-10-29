@@ -20,13 +20,24 @@ export const useGashaponMachineConfig = ({
 } = {}) => {
   const eggImages = Array(totalBalls).fill(ASSETS.capsuleToy);
 
-  const engineRef = useRef<Matter.Engine | null>(null);
   const gateRef = useRef<Matter.Body | null>(null);
-  const sensorRef = useRef<Matter.Body | null>(null);
+
   const isGateOpenRef = useRef(false);
   const ballPassedRef = useRef(false);
 
   const [entities, setEntities] = useState<EntityMap>({});
+
+  const handleRelease = (deltaThisTurn: number) => {
+    if (Math.abs(deltaThisTurn) > 60) {
+      console.log("Release a Gachapon!");
+
+      if (gateRef.current && !isGateOpenRef.current) {
+        Matter.Body.translate(gateRef.current, { x: 80, y: 0 });
+        isGateOpenRef.current = true;
+        console.log("gate is opened");
+      }
+    }
+  };
 
   const closeGate = () => {
     if (gateRef.current && isGateOpenRef.current) {
@@ -63,7 +74,6 @@ export const useGashaponMachineConfig = ({
     });
 
     gateRef.current = gate;
-    sensorRef.current = sensor;
 
     const leftWall = Matter.Bodies.rectangle(0, worldHeight / 2, 20, worldHeight, {
       isStatic: true,
@@ -164,12 +174,11 @@ export const useGashaponMachineConfig = ({
     });
 
     setEntities(newEntities);
-    engineRef.current = engine;
 
     return () => {
       Matter.Events.off(engine, "collisionStart");
     };
   }, []);
 
-  return { entities, gateRef, isGateOpenRef, ballPassedRef };
+  return { entities, gateRef, isGateOpenRef, handleRelease };
 };
