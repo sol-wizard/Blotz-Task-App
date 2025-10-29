@@ -90,11 +90,11 @@ export const useGashaponMachineConfig = ({
     Matter.World.add(world, [floor, ceiling, leftWall, rightWall, gate, sensor]);
 
     const balls = [];
-    let colCount = 5;
-    let startX = 100;
-    let startY = 50;
-    let gapX = ballRadius * 2 + 5;
-    let gapY = ballRadius * 2 + 5;
+    const colCount = 5;
+    const startX = 100;
+    const startY = 50;
+    const gapX = ballRadius * 2 + 5;
+    const gapY = ballRadius * 2 + 5;
 
     for (let i = 0; i < totalBalls; i++) {
       const col = i % colCount;
