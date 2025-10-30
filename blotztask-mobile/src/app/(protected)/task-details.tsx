@@ -18,7 +18,6 @@ export default function TaskDetailsScreen() {
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading } = useTaskById({ taskId });
   const { updateTask, isUpdating } = useTaskMutations();
-  const [descriptionText, setDescriptionText] = useState<string>(selectedTask?.description || "");
 
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
   if (!selectedTask) {
@@ -46,15 +45,6 @@ export default function TaskDetailsScreen() {
       timeType: selectedTask.timeType ?? null,
     });
   };
-
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        console.log("TaskDetailsScreen unfocused, updating descriptionText:", descriptionText);
-        handleUpdateDescription(descriptionText || "");
-      };
-    }, []),
-  );
 
   const { isDone, title, description, label, startTime, endTime } = selectedTask;
   const taskStatus = isDone ? "Done" : "To Do";
@@ -130,8 +120,8 @@ export default function TaskDetailsScreen() {
         <View className="flex-1 px-4">
           {activeTab === "Details" ? (
             <DetailsView
-              descriptionText={descriptionText}
-              setDescriptionText={setDescriptionText}
+              taskDescription={selectedTask.description || ""}
+              handleUpdateDescription={handleUpdateDescription}
             />
           ) : (
             <SubtasksView parentTask={selectedTask} />

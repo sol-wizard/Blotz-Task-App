@@ -1,16 +1,31 @@
-import { useEffect } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { View, TextInput } from "react-native";
+import { useFocusEffect } from "expo-router";
 
-type DetailsViewProps = {
-  descriptionText?: string;
-  setDescriptionText: (v: string) => void;
-};
+const DetailsView = ({
+  taskDescription,
+  handleUpdateDescription,
+}: {
+  taskDescription: string;
+  handleUpdateDescription: (v: string) => void;
+}) => {
+  const [descriptionText, setDescriptionText] = useState<string>(taskDescription);
 
-const DetailsView = ({ descriptionText, setDescriptionText }: DetailsViewProps) => {
+  const descriptionRef = useRef(descriptionText);
+
   useEffect(() => {
-    setDescriptionText(descriptionText || "");
-    console.log("DetailsView mounted, descriptionText:", descriptionText);
+    descriptionRef.current = descriptionText;
   }, [descriptionText]);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        const latest = descriptionRef.current;
+        console.log("TaskDetailsScreen unfocused, updating descriptionText:", latest);
+        handleUpdateDescription(latest || "");
+      };
+    }, []),
+  );
 
   return (
     <View className="bg-gray-100 rounded-xl p-4 min-h-80">
@@ -25,4 +40,5 @@ const DetailsView = ({ descriptionText, setDescriptionText }: DetailsViewProps) 
     </View>
   );
 };
+
 export default DetailsView;
