@@ -8,10 +8,6 @@ const DetailsView = ({
   taskDescription: string;
   handleUpdateDescription: (v: string) => void;
 }) => {
-  useEffect(() => {
-    handleUpdateDescription(taskDescription);
-  }, [taskDescription]);
-
   return (
     <View className="bg-gray-100 rounded-xl p-4 min-h-80">
       <TextInput
