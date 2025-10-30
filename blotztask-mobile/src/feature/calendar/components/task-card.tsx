@@ -141,6 +141,7 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
                   checked={task.isDone}
                   onPress={() => toggleTask(task.id)}
                   disabled={isLoading}
+                  haptic={!task.isDone}
                 />
 
                 <View
