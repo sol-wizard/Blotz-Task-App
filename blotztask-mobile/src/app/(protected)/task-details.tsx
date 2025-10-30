@@ -18,6 +18,21 @@ export default function TaskDetailsScreen() {
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading } = useTaskById({ taskId });
   const { updateTask, isUpdating } = useTaskMutations();
+  const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
+
+  const descriptionRef = useRef(descriptionText);
+
+  useEffect(() => {
+    descriptionRef.current = descriptionText;
+  }, [descriptionText]);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        handleUpdateDescription(descriptionRef.current || "");
+      };
+    }, []),
+  );
 
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
   if (!selectedTask) {
@@ -45,21 +60,6 @@ export default function TaskDetailsScreen() {
       timeType: selectedTask.timeType ?? null,
     });
   };
-  const [descriptionText, setDescriptionText] = useState(selectedTask.description || "");
-
-  const descriptionRef = useRef(descriptionText);
-
-  useEffect(() => {
-    descriptionRef.current = descriptionText;
-  }, [descriptionText]);
-
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        handleUpdateDescription(descriptionRef.current || "");
-      };
-    }, []),
-  );
 
   const { isDone, title, description, label, startTime, endTime } = selectedTask;
   const taskStatus = isDone ? "Done" : "To Do";
