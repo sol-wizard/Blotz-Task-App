@@ -1,3 +1,4 @@
+using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 using BlotzTask.Modules.Tasks.Commands.SubTasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Queries.SubTasks;
@@ -17,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<DeleteTaskCommandHandler>();
         services.AddScoped<ReplaceSubtasksCommandHandler>();
         services.AddScoped<DeleteSubtaskCommandHandler>();
+        services.AddScoped<AddRecurringTaskCommandHandler>();
 
         // Manual registration of query handlers 
         services.AddScoped<GetTasksByDateQueryHandler>();

@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { Hanging } from "../common/hanging";
-import { TaskStatusType } from "@/feature/calendar/modals/task-status-type";
+import { TaskStatusType } from "@/feature/calendar/models/task-status-type";
 
 export const TaskStatusButton = ({
   isSelected,
