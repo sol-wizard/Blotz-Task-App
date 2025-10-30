@@ -1,12 +1,18 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import { useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SubtaskCheckbox } from "@/feature/task-details/ui/custom-radio-checkbox";
 import { theme } from "@/shared/constants/theme";
 import { convertSubtaskTimeForm } from "../utils/convert-subtask-time-form";
 
+type SubtaskItemData = {
+  id: number;
+  title: string;
+  duration?: string;
+  isDone: boolean;
+};
+
 type SubtaskItemProps = {
-  item: any;
+  item: SubtaskItemData;
   onToggle: (id: number) => void;
   color?: string;
   isEditMode?: boolean;
@@ -14,21 +20,19 @@ type SubtaskItemProps = {
 };
 
 export default function SubtaskItem({
-  item: s,
+  item: subtask,
   onToggle,
   color,
   isEditMode = false,
   onDelete,
 }: SubtaskItemProps) {
-  const [isChecked, setIsChecked] = useState(s?.isDone);
-
+  const isChecked = subtask?.isDone;
   const handleToggle = () => {
-    setIsChecked(!isChecked);
-    onToggle(s.id);
+    onToggle(subtask.id);
   };
 
   const handleDelete = () => {
-    onDelete?.(s.id);
+    onDelete?.(subtask.id);
   };
 
   const textColor = isChecked ? theme.colors.disabled : theme.colors.onSurface;
@@ -52,16 +56,14 @@ export default function SubtaskItem({
         <SubtaskCheckbox checked={isChecked} onPress={handleToggle} color={color} />
       )}
 
-      <View
-        className="text-sm min-w-[50px] px-2 py-1 rounded bg-blue-100 items-center justify-center"
-      >
+      <View className="text-sm min-w-[50px] px-2 py-1 rounded bg-blue-100 items-center justify-center">
         <Text
-          className="text-sm font-baloo font-bold" 
+          className="text-sm font-baloo font-bold"
           style={{
-            color: theme.colors.heading, 
+            color: theme.colors.heading,
           }}
         >
-          {convertSubtaskTimeForm(s?.duration)}
+          {subtask.duration ? convertSubtaskTimeForm(subtask.duration) : ""}
         </Text>
       </View>
 
@@ -69,7 +71,7 @@ export default function SubtaskItem({
         className={`flex-1 text-[15px] font-baloo ml-3 ${isChecked ? "line-through" : ""}`}
         style={{ color: textColor }}
       >
-        {s?.title}
+        {subtask?.title}
       </Text>
     </View>
   );
