@@ -34,9 +34,9 @@ const useTaskMutations = () => {
 
   const updateTaskMutation = useMutation({
     mutationFn: (dto: EditTaskItemDTO) => updateTaskItem(dto),
-    onSuccess: () => {
+    onSuccess: (data, dto) => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["taskId"] });
+      queryClient.invalidateQueries({ queryKey: ["task", dto.id] });
     },
   });
   return {
