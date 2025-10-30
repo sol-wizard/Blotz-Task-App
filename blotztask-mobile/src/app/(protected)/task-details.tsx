@@ -62,7 +62,7 @@ export default function TaskDetailsScreen() {
     );
   }
 
-  if (isLoading || !selectedTask || isUpdating) {
+  if (isLoading || isUpdating) {
     return <LoadingScreen />;
   }
 
