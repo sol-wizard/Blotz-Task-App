@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
@@ -45,6 +45,23 @@ export default function TaskDetailsScreen() {
       timeType: selectedTask.timeType ?? null,
     });
   };
+  const [descriptionText, setDescriptionText] = useState(selectedTask.description || "");
+
+  const descriptionRef = useRef(descriptionText);
+
+  useEffect(() => {
+    descriptionRef.current = descriptionText;
+  }, [descriptionText]);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        const latest = descriptionRef.current;
+        console.log("TaskDetailsScreen unfocused, updating descriptionText:", latest);
+        handleUpdateDescription(latest || "");
+      };
+    }, []),
+  );
 
   const { isDone, title, description, label, startTime, endTime } = selectedTask;
   const taskStatus = isDone ? "Done" : "To Do";
@@ -120,8 +137,8 @@ export default function TaskDetailsScreen() {
         <View className="flex-1 px-4">
           {activeTab === "Details" ? (
             <DetailsView
-              taskDescription={selectedTask.description || ""}
-              handleUpdateDescription={handleUpdateDescription}
+              taskDescription={descriptionText}
+              handleUpdateDescription={setDescriptionText}
             />
           ) : (
             <SubtasksView parentTask={selectedTask} />

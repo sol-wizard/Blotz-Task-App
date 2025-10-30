@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect } from "react";
 import { View, TextInput } from "react-native";
-import { useFocusEffect } from "expo-router";
 
 const DetailsView = ({
   taskDescription,
@@ -9,29 +8,15 @@ const DetailsView = ({
   taskDescription: string;
   handleUpdateDescription: (v: string) => void;
 }) => {
-  const [descriptionText, setDescriptionText] = useState<string>(taskDescription);
-
-  const descriptionRef = useRef(descriptionText);
-
   useEffect(() => {
-    descriptionRef.current = descriptionText;
-  }, [descriptionText]);
-
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        const latest = descriptionRef.current;
-        console.log("TaskDetailsScreen unfocused, updating descriptionText:", latest);
-        handleUpdateDescription(latest || "");
-      };
-    }, []),
-  );
+    handleUpdateDescription(taskDescription);
+  }, [taskDescription]);
 
   return (
     <View className="bg-gray-100 rounded-xl p-4 min-h-80">
       <TextInput
-        value={descriptionText}
-        onChangeText={setDescriptionText}
+        value={taskDescription}
+        onChangeText={handleUpdateDescription}
         placeholder="Add any task details — people, places, links, notes…"
         multiline
         textAlignVertical="top"
