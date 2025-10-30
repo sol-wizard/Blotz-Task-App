@@ -61,9 +61,6 @@ export default function TaskDetailsScreen() {
       </View>
     );
   }
-  const { isDone, title, description, label, startTime, endTime } = selectedTask;
-  const taskStatus = isDone ? "Done" : "To Do";
-  const labelName: string | undefined = label?.name;
 
   if (isLoading || !selectedTask || isUpdating) {
     return <LoadingScreen />;
@@ -73,7 +70,7 @@ export default function TaskDetailsScreen() {
     <SafeAreaView
       edges={["top"]}
       className="flex-1"
-      style={{ backgroundColor: label?.color ?? theme.colors.fallback }}
+      style={{ backgroundColor: selectedTask.label?.color ?? theme.colors.fallback }}
     >
       <TouchableWithoutFeedback
         onPress={() => {
@@ -85,19 +82,21 @@ export default function TaskDetailsScreen() {
           <View className="flex-row items-center mb-4 mt-6">
             <View className="px-3 py-1 rounded-xl border border-black">
               <Text className={`text-sm font-medium text-black`}>
-                {taskStatus === "Done" ? "Done" : "To Do"}
+                {selectedTask.isDone ? "Done" : "To Do"}
               </Text>
             </View>
-            {label && (
+            {selectedTask.label && (
               <View className="ml-2 px-3 py-1 rounded-xl border border-black">
-                <Text className="text-sm font-medium text-black">{labelName}</Text>
+                <Text className="text-sm font-medium text-black">{selectedTask.label?.name}</Text>
               </View>
             )}
           </View>
 
           {/* Task Title + Edit */}
           <View className="flex-row items-start justify-center mb-4">
-            <Text className="flex-1 font-balooBold text-4xl leading-normal">{title}</Text>
+            <Text className="flex-1 font-balooBold text-4xl leading-normal">
+              {selectedTask.title}
+            </Text>
             <MaterialCommunityIcons
               name="pencil-minus-outline"
               onPress={() =>
@@ -111,7 +110,10 @@ export default function TaskDetailsScreen() {
           </View>
 
           {/* Task Date Range */}
-          <TaskDateRange startTime={startTime as string} endTime={endTime as string} />
+          <TaskDateRange
+            startTime={selectedTask.startTime as string}
+            endTime={selectedTask.endTime as string}
+          />
         </View>
       </TouchableWithoutFeedback>
 
