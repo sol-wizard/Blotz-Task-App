@@ -19,12 +19,28 @@ export default function TaskDetailsScreen() {
   const { selectedTask, isLoading } = useTaskById({ taskId });
   const { updateTask, isUpdating } = useTaskMutations();
   const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
+  const [activeTab, setActiveTab] = useState<tabTypes>("Details");
 
   const descriptionRef = useRef(descriptionText);
 
   useEffect(() => {
     descriptionRef.current = descriptionText;
   }, [descriptionText]);
+
+  const handleUpdateDescription = async (newDescription: string) => {
+    if (newDescription === (description ?? "")) return;
+    if (!selectedTask) return;
+
+    await updateTask({
+      id: selectedTask.id,
+      title: selectedTask.title,
+      description: newDescription,
+      startTime: selectedTask.startTime ? new Date(selectedTask.startTime) : undefined,
+      endTime: selectedTask.endTime ? new Date(selectedTask.endTime) : undefined,
+      labelId: selectedTask.label?.labelId,
+      timeType: selectedTask.timeType ?? null,
+    });
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -34,7 +50,6 @@ export default function TaskDetailsScreen() {
     }, []),
   );
 
-  const [activeTab, setActiveTab] = useState<tabTypes>("Details");
   if (!selectedTask) {
     console.warn("No selected task found");
     return (
@@ -46,20 +61,6 @@ export default function TaskDetailsScreen() {
       </View>
     );
   }
-
-  const handleUpdateDescription = (newDescription: string) => {
-    if (newDescription === (description ?? "")) return;
-
-    updateTask({
-      id: selectedTask.id,
-      title: selectedTask.title,
-      description: newDescription,
-      startTime: selectedTask.startTime ? new Date(selectedTask.startTime) : undefined,
-      endTime: selectedTask.endTime ? new Date(selectedTask.endTime) : undefined,
-      labelId: selectedTask.label?.labelId,
-      timeType: selectedTask.timeType ?? null,
-    });
-  };
 
   const { isDone, title, description, label, startTime, endTime } = selectedTask;
   const taskStatus = isDone ? "Done" : "To Do";
