@@ -1,17 +1,16 @@
-import { View, TextInput, Keyboard } from "react-native";
-import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { View, TextInput } from "react-native";
 
 type DetailsViewProps = {
-  taskDescription?: string;
-  onChangeDescription: (v: string) => void;
+  descriptionText?: string;
+  setDescriptionText: (v: string) => void;
 };
 
-const DetailsView = ({ taskDescription, onChangeDescription }: DetailsViewProps) => {
-  const [descriptionText, setDescriptionText] = useState(taskDescription || "");
-
+const DetailsView = ({ descriptionText, setDescriptionText }: DetailsViewProps) => {
   useEffect(() => {
-    setDescriptionText(taskDescription || "");
-  }, [taskDescription]);
+    setDescriptionText(descriptionText || "");
+    console.log("DetailsView mounted, descriptionText:", descriptionText);
+  }, [descriptionText]);
 
   return (
     <View className="bg-gray-100 rounded-xl p-4 min-h-80">
@@ -22,10 +21,6 @@ const DetailsView = ({ taskDescription, onChangeDescription }: DetailsViewProps)
         multiline
         textAlignVertical="top"
         className="font-baloo text-gray-800 text-lg"
-        onBlur={() => {
-          Keyboard.dismiss();
-          onChangeDescription(descriptionText);
-        }}
       />
     </View>
   );

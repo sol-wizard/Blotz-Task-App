@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsView from "../../feature/task-details/components/details-view";
 import SubtasksView from "../../feature/task-details/components/subtasks-view";
@@ -18,6 +18,7 @@ export default function TaskDetailsScreen() {
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading } = useTaskById({ taskId });
   const { updateTask, isUpdating } = useTaskMutations();
+  const [descriptionText, setDescriptionText] = useState<string>(selectedTask?.description || "");
 
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
   if (!selectedTask) {
@@ -32,19 +33,28 @@ export default function TaskDetailsScreen() {
     );
   }
 
-  const handleUpdateDescription = (newDesc: string) => {
-    if (newDesc === (description ?? "")) return;
+  const handleUpdateDescription = (newDescription: string) => {
+    if (newDescription === (description ?? "")) return;
 
     updateTask({
       id: selectedTask.id,
       title: selectedTask.title,
-      description: newDesc,
+      description: newDescription,
       startTime: selectedTask.startTime ? new Date(selectedTask.startTime) : undefined,
       endTime: selectedTask.endTime ? new Date(selectedTask.endTime) : undefined,
       labelId: selectedTask.label?.labelId,
       timeType: selectedTask.timeType ?? null,
     });
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        console.log("TaskDetailsScreen unfocused, updating descriptionText:", descriptionText);
+        handleUpdateDescription(descriptionText || "");
+      };
+    }, []),
+  );
 
   const { isDone, title, description, label, startTime, endTime } = selectedTask;
   const taskStatus = isDone ? "Done" : "To Do";
@@ -60,39 +70,45 @@ export default function TaskDetailsScreen() {
       className="flex-1"
       style={{ backgroundColor: label?.color ?? theme.colors.fallback }}
     >
-      <View className="py-6 px-8">
-        {/* Task Status + Label */}
-        <View className="flex-row items-center mb-4 mt-6">
-          <View className="px-3 py-1 rounded-xl border border-black">
-            <Text className={`text-sm font-medium text-black`}>
-              {taskStatus === "Done" ? "Done" : "To Do"}
-            </Text>
-          </View>
-          {label && (
-            <View className="ml-2 px-3 py-1 rounded-xl border border-black">
-              <Text className="text-sm font-medium text-black">{labelName}</Text>
+      <TouchableWithoutFeedback
+        onPress={() => {
+          Keyboard.dismiss();
+        }}
+      >
+        <View className="py-6 px-8">
+          {/* Task Status + Label */}
+          <View className="flex-row items-center mb-4 mt-6">
+            <View className="px-3 py-1 rounded-xl border border-black">
+              <Text className={`text-sm font-medium text-black`}>
+                {taskStatus === "Done" ? "Done" : "To Do"}
+              </Text>
             </View>
-          )}
-        </View>
+            {label && (
+              <View className="ml-2 px-3 py-1 rounded-xl border border-black">
+                <Text className="text-sm font-medium text-black">{labelName}</Text>
+              </View>
+            )}
+          </View>
 
-        {/* Task Title + Edit */}
-        <View className="flex-row items-start justify-center mb-4">
-          <Text className="flex-1 font-balooBold text-4xl leading-normal">{title}</Text>
-          <MaterialCommunityIcons
-            name="pencil-minus-outline"
-            onPress={() =>
-              router.push({
-                pathname: "/(protected)/task-edit",
-                params: { taskId: selectedTask.id },
-              })
-            }
-            size={28}
-          />
-        </View>
+          {/* Task Title + Edit */}
+          <View className="flex-row items-start justify-center mb-4">
+            <Text className="flex-1 font-balooBold text-4xl leading-normal">{title}</Text>
+            <MaterialCommunityIcons
+              name="pencil-minus-outline"
+              onPress={() =>
+                router.push({
+                  pathname: "/(protected)/task-edit",
+                  params: { taskId: selectedTask.id },
+                })
+              }
+              size={28}
+            />
+          </View>
 
-        {/* Task Date Range */}
-        <TaskDateRange startTime={startTime as string} endTime={endTime as string} />
-      </View>
+          {/* Task Date Range */}
+          <TaskDateRange startTime={startTime as string} endTime={endTime as string} />
+        </View>
+      </TouchableWithoutFeedback>
 
       {/* Tabs Switch*/}
       <View className="flex-1 pt-6 px-6 bg-white rounded-t-[3rem]">
@@ -114,8 +130,8 @@ export default function TaskDetailsScreen() {
         <View className="flex-1 px-4">
           {activeTab === "Details" ? (
             <DetailsView
-              taskDescription={description as string}
-              onChangeDescription={handleUpdateDescription}
+              descriptionText={descriptionText}
+              setDescriptionText={setDescriptionText}
             />
           ) : (
             <SubtasksView parentTask={selectedTask} />
