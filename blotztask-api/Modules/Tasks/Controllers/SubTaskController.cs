@@ -53,12 +53,8 @@ public class SubTaskController(
     public async Task<IActionResult> DeleteSubtask(int subtaskId, CancellationToken ct)
     {
         var command = new DeleteSubtaskCommand { SubtaskId = subtaskId };
-        var deleted = await deleteSubtaskCommandHandler.Handle(command, ct);
-        if (deleted == null)
-        {
-            return NotFound("Subtask not found");
-        }
-        return Ok(deleted);
+        var result = await deleteSubtaskCommandHandler.Handle(command, ct);
+        return Ok(result);
     }
 
 }

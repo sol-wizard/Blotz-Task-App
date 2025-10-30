@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Shared.Exceptions;
 
 namespace BlotzTask.Modules.Tasks.Commands.SubTasks;
 
@@ -16,7 +17,7 @@ public class DeleteSubtaskCommandHandler(BlotzTaskDbContext db, ILogger<DeleteSu
         var subtaskToDelete = await db.Subtasks.FindAsync(command.SubtaskId, ct);
         if (subtaskToDelete == null)
         {
-            return null;
+            throw new NotFoundException($"Subtask with ID {command.SubtaskId} not found");
         }
         db.Subtasks.Remove(subtaskToDelete);
         await db.SaveChangesAsync(ct);
