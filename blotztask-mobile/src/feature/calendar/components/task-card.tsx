@@ -12,21 +12,9 @@ import Animated, {
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "@/shared/constants/theme";
-
 import { format, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
-
-interface TaskCardProps {
-  id: number;
-  title: string;
-  startTime?: string;
-  endTime?: string;
-  isCompleted?: boolean;
-  labelColor?: string;
-  onToggleComplete?: (id: number, completed: boolean) => void;
-  onPress?: () => void;
-  onDelete?: (id: number) => Promise<void> | void;
-}
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
 
 const ACTION_WIDTH = 64;
 const OPEN_X = -ACTION_WIDTH;
@@ -37,13 +25,9 @@ interface TaskCardProps {
   title: string;
   startTime?: string;
   endTime?: string;
-  isCompleted?: boolean;
+  isCompleted: boolean;
   labelColor?: string;
-  onToggleComplete?: (id: number, completed: boolean) => void;
   onPress?: () => void;
-  onDelete?: (id: number) => Promise<void> | void;
-  isToggling?: boolean;
-  isDeleting?: boolean;
 }
 
 export default function TaskCard({
@@ -51,15 +35,12 @@ export default function TaskCard({
   title,
   startTime,
   endTime,
-  isCompleted = false,
+  isCompleted,
   labelColor,
-  onToggleComplete,
   onPress,
-  onDelete,
-  isToggling = false,
-  isDeleting = false,
 }: TaskCardProps) {
-  const [checked, setChecked] = useState(isCompleted);
+  const { toggleTask, deleteTask, isToggling, isDeleting } = useTaskMutations();
+
   const [actionsEnabled, setActionsEnabled] = useState(false);
 
   // negative value indicates left swipe
@@ -69,10 +50,6 @@ export default function TaskCard({
   const isLoading = isToggling || isDeleting;
 
   const dividerColor = labelColor ?? theme.colors.disabled;
-
-  useEffect(() => {
-    setChecked(isCompleted);
-  }, [isCompleted]);
 
   // Gesture: only allow left swipe, snap to 0 or OPEN_X on release
   const pan = Gesture.Pan()
@@ -115,13 +92,6 @@ export default function TaskCard({
     transform: [{ translateX: translateX.value * 1.25 }],
   }));
 
-  const handleToggleComplete = () => {
-    if (isLoading) return; // Prevent action when loading
-    const newChecked = !checked;
-    setChecked(newChecked);
-    onToggleComplete?.(id, newChecked);
-  };
-
   const timePeriod = formatDateRange({ startTime, endTime });
 
   return (
@@ -140,8 +110,10 @@ export default function TaskCard({
 
         <Pressable
           onPress={async () => {
-            if (!onDelete || isLoading) return;
-            await onDelete(id);
+            if (isDeleting || isLoading) return;
+            console.log("Deleting task", id);
+            await deleteTask(id);
+            console.log("Deleted task", id);
             translateX.value = withTiming(0);
             runOnJS(setActionsEnabled)(false);
           }}
@@ -165,8 +137,8 @@ export default function TaskCard({
             <View className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}>
               <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
                 <TaskCheckbox
-                  checked={checked}
-                  onPress={handleToggleComplete}
+                  checked={isCompleted}
+                  onPress={() => toggleTask(id)}
                   disabled={isLoading}
                 />
 
@@ -178,7 +150,7 @@ export default function TaskCard({
               <View className="flex-1 flex-row justify-between items-center">
                 <View className="justify-start pt-0">
                   <Text
-                    className={`text-xl font-baloo ${checked ? "text-neutral-400 line-through" : "text-black"}`}
+                    className={`text-xl font-baloo ${isCompleted ? "text-neutral-400 line-through" : "text-black"}`}
                   >
                     {title}
                   </Text>
@@ -189,7 +161,7 @@ export default function TaskCard({
                   )}
                 </View>
 
-                {endTime && new Date(endTime).getTime() <= new Date().getTime() && !checked && (
+                {endTime && new Date(endTime).getTime() <= new Date().getTime() && !isCompleted && (
                   <Text className="text-warning font-baloo text-lg">Late</Text>
                 )}
                 {endTime && new Date(endTime).getTime() > new Date().getTime() && (

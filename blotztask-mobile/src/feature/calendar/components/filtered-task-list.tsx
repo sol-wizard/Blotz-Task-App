@@ -18,7 +18,7 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
 
   const {
     toggleTask,
-    deleteTask: removeTask,
+    deleteTask,
     isToggling,
     isDeleting,
     deleteTaskSuccess,
@@ -51,13 +51,7 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
         endTime={item.endTime}
         isCompleted={item.isDone}
         labelColor={item.label?.color}
-        onToggleComplete={() => toggleTask(item.id)}
         onPress={() => navigateToTaskDetails(item)}
-        onDelete={async () => {
-          await removeTask(item.id);
-        }}
-        isToggling={isToggling}
-        isDeleting={isDeleting}
       />
     </View>
   );
