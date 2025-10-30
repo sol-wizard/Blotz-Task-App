@@ -29,7 +29,7 @@ export default function TaskDetailsScreen() {
 
   const handleUpdateDescription = async (newDescription: string) => {
     if (!selectedTask) return;
-    if (newDescription === (description ?? "")) return;
+    if (newDescription === (selectedTask.description ?? "")) return;
 
     await updateTask({
       id: selectedTask.id,
