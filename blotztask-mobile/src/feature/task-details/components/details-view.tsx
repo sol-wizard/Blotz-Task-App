@@ -1,4 +1,3 @@
-import React, { useEffect } from "react";
 import { View, TextInput } from "react-native";
 
 const DetailsView = ({
