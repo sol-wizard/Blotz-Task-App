@@ -7,9 +7,9 @@ public class Subtask
     public required string Title { get; set; }
     public string? Description { get; set; }
     public TimeSpan? Duration { get; set; }
-    public int Order { get; init; }
+    public int Order { get; set; }
     public bool IsDone { get; set; }
-    public DateTime CreatedAt { get; init; }     
+    public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; set; }
     public TaskItem ParentTask { get; init; } = default!;
 }

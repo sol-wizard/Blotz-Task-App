@@ -22,25 +22,35 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
   const {
     breakDownTask,
     isBreakingDown,
-    replaceSubtasks: replaceSubtasks,
-    isReplacingSubtasks: isReplacingSubtasks,
+    replaceSubtasks,
+    isReplacingSubtasks,
+    deleteSubtask,
+    isDeletingSubtask,
+    updateSubtask,
+    isUpdatingSubtask,
   } = useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
-  const [deletedIds, setDeletedIds] = useState<number[]>([]);
   const taskColor = parentTask?.label?.color ?? theme.colors.disabled;
 
   const onBack = () => {
     setIsEditMode(false);
   };
 
-  const handleToggle = (id: number) => {
-    // Optimistically update the UI using React Query's cache
-    // TODO: Create a mutation hook to update backend
-    // queryClient.setQueryData(['subtasks', taskId], (old) =>
-    //   old?.map(subtask => subtask.taskId === id ? {...subtask, isDone: !subtask.isDone} : subtask)
-    // );
-    console.log("TODO: Implement toggle mutation");
+  const handleToggle = async (id: number) => {
+    const subtask = fetchedSubtasks?.find((s) => s.subTaskId === id);
+    if (subtask) {
+      try {
+        await updateSubtask({
+          ...subtask,
+          isDone: !subtask.isDone,
+        });
+      } catch (error) {
+        console.error("Failed to toggle subtask:", error);
+        // TODO: Implement error screen
+        Alert.alert("Error", "Failed to update subtask. Please try again.");
+      }
+    }
   };
 
   const handleRefresh = async () => {
@@ -54,6 +64,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
       }
     } catch (error) {
       console.error("Failed to refresh subtasks:", error);
+      // TODO: Implement error screen
       Alert.alert("Error", "Failed to refresh subtasks. Please try again.");
     }
   };
@@ -67,14 +78,22 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     console.log("Implement add subtask");
   };
 
-  const handleDelete = (id: number) => {
-    // Optimistically remove from UI
-    setDeletedIds((prev) => [...prev, id]);
-    // TODO: implement delete subtask logic with backend
-    console.log("Implement delete subtask", id);
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id });
+    } catch (error) {
+      console.error("Failed to delete subtask:", error);
+      Alert.alert("Error", "Failed to delete subtask.");
+    }
   };
 
-  if (isLoading || isBreakingDown || isReplacingSubtasks) {
+  if (
+    isLoading ||
+    isBreakingDown ||
+    isReplacingSubtasks ||
+    isDeletingSubtask ||
+    isUpdatingSubtask
+  ) {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-base font-baloo text-tertiary">Loading subtasks...</Text>
@@ -137,7 +156,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
       {/* Subtasks List */}
       <View className="flex-1">
         <DraggableSubtaskList
-          subtasks={fetchedSubtasks.filter((s) => !deletedIds.includes(s.subTaskId))}
+          subtasks={fetchedSubtasks}
           isEditMode={isEditMode}
           onDelete={handleDelete}
           onToggle={handleToggle}
