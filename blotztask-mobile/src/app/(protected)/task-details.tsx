@@ -28,8 +28,8 @@ export default function TaskDetailsScreen() {
   }, [descriptionText]);
 
   const handleUpdateDescription = async (newDescription: string) => {
-    if (newDescription === (description ?? "")) return;
     if (!selectedTask) return;
+    if (newDescription === (description ?? "")) return;
 
     await updateTask({
       id: selectedTask.id,
@@ -61,7 +61,6 @@ export default function TaskDetailsScreen() {
       </View>
     );
   }
-
   const { isDone, title, description, label, startTime, endTime } = selectedTask;
   const taskStatus = isDone ? "Done" : "To Do";
   const labelName: string | undefined = label?.name;
