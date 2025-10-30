@@ -56,9 +56,7 @@ export default function TaskDetailsScreen() {
   useFocusEffect(
     useCallback(() => {
       return () => {
-        const latest = descriptionRef.current;
-        console.log("TaskDetailsScreen unfocused, updating descriptionText:", latest);
-        handleUpdateDescription(latest || "");
+        handleUpdateDescription(descriptionRef.current || "");
       };
     }, []),
   );
