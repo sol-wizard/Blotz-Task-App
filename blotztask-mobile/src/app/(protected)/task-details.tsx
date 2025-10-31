@@ -20,8 +20,6 @@ export default function TaskDetailsScreen() {
   const { updateTask, isUpdating } = useTaskMutations();
   const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
-  console.log("TaskDetailsScreen selectedTask description:", selectedTask?.description);
-  console.log("TaskDetailsScreen descriptionText:", descriptionText);
 
   const descriptionRef = useRef(descriptionText);
 
@@ -47,7 +45,6 @@ export default function TaskDetailsScreen() {
   useFocusEffect(
     useCallback(() => {
       if (selectedTask?.description != null) {
-        console.log("Setting description text in useFocusEffect:", selectedTask.description);
         setDescriptionText(selectedTask.description);
       }
       return () => {

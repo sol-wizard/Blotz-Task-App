@@ -36,7 +36,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     endDate: dto?.endTime ?? null,
     endTime: dto?.endTime ?? null,
   };
-  console.log("TaskForm defaultValues:", defaultValues);
 
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
