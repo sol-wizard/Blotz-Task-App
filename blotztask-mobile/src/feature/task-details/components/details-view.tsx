@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { View, TextInput } from "react-native";
 
 const DetailsView = ({
