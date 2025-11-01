@@ -40,7 +40,7 @@ export default function LoadingScreen() {
   });
 
   return (
-    <SafeAreaView className="items-center justify-center flex-1 bg-white">
+    <SafeAreaView className="items-center justify-center flex-1 bg-transparent">
       <View pointerEvents="none">
         <Animated.Image
           source={ASSETS.loadingBun}
