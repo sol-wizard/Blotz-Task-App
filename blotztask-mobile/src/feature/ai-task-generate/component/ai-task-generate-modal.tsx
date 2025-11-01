@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
 import { AiThinkingModal } from "./ai-thinking-modal";
 import { TaskAddedSuccess } from "./task-added-success";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { usePostHog } from "posthog-react-native";
 
 export const AiTaskGenerateModal = ({
   sheetRef,
@@ -15,6 +16,20 @@ export const AiTaskGenerateModal = ({
   const [isVoiceInput, setIsVoiceInput] = useState(true);
   const { aiGeneratedMessage, sendMessage, modalType, setModalType, inputError, setInputError } =
     useAiTaskGenerator();
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    if (!inputError) {
+      posthog.capture("ai_task_interaction_completed", {
+        ai_output: JSON.stringify(aiGeneratedMessage),
+        user_input: text,
+        ai_generate_task_count: 0,
+        user_add_task_count: 0,
+        outcome: "error",
+        is_voice_input: isVoiceInput,
+      });
+    }
+  }, [inputError]);
 
   switch (modalType) {
     case "task-preview":

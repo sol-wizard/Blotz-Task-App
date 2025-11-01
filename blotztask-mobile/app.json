@@ -19,7 +19,8 @@
         "NSPhotoLibraryAddUsageDescription": "Allow BlotzTask to save exported images to your photo library.",
         "NSCameraUsageDescription": "Allow BlotzTask to use the camera for calls and taking photos.",
         "NSSpeechRecognitionUsageDescription": "We use speech recognition so you can add tasks by voice.",
-        "NSMicrophoneUsageDescription": "Allow BlotzTask to use the microphone for voice and video calls."
+        "NSMicrophoneUsageDescription": "Allow BlotzTask to use the microphone for voice and video calls.",
+        "App Uses Non-Exempt Encryption": false
       },
       "appleTeamId": "LXC29JARY5",
       "icon": "./assets/images/blotz-icon.png"

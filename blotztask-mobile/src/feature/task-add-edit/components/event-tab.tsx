@@ -31,7 +31,7 @@ export const EventTab = ({ control }: Props) => {
                       onPress={() => setShowCalendar((prev) => !prev)}
                       className="bg-background px-4 py-2 rounded-xl mr-2"
                     >
-                      <Text className="text-xl font-baloo text-secondary">
+                      <Text className="text-xl font-balooThin text-secondary">
                         {startValue ? format(startValue, "MMM dd, yyyy") : "Select Date"}
                       </Text>
                     </Pressable>
@@ -48,7 +48,7 @@ export const EventTab = ({ control }: Props) => {
                       onPress={() => setShowCalendar((prev) => !prev)}
                       className="bg-background px-4 py-2 rounded-xl mr-2"
                     >
-                      <Text className="text-xl font-baloo text-secondary">
+                      <Text className="text-xl font-balooThin text-secondary">
                         {endValue ? format(endValue, "MMM dd, yyyy") : "Select Date"}
                       </Text>
                     </Pressable>
