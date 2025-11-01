@@ -13,7 +13,6 @@ const TaskEditScreen = () => {
   const params = useLocalSearchParams<{ taskId: string }>();
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading } = useTaskById({ taskId });
-  console.log("Editing taskId:", selectedTask?.description);
 
   const router = useRouter();
 
