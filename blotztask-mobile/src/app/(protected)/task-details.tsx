@@ -41,7 +41,7 @@ export default function TaskDetailsScreen() {
       timeType: selectedTask.timeType ?? null,
     });
   };
-
+  // to ensure description is updated when navigating back
   useFocusEffect(
     useCallback(() => {
       if (selectedTask?.description != null) {
