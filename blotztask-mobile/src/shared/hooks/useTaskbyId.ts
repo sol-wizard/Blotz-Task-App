@@ -3,7 +3,11 @@ import { fetchTaskById } from "../services/task-service";
 
 export const useTaskById = ({ taskId }: { taskId: number }) => {
   const qc = useQueryClient();
-  const { data: selectedTask, isLoading } = useQuery({
+  const {
+    data: selectedTask,
+    isLoading,
+    isFetching,
+  } = useQuery({
     queryKey: ["taskId", taskId],
     queryFn: () => fetchTaskById(taskId),
     initialData: () => qc.getQueryData(["taskId", taskId]),
@@ -12,5 +16,6 @@ export const useTaskById = ({ taskId }: { taskId: number }) => {
   return {
     selectedTask,
     isLoading,
+    isFetching,
   };
 };
