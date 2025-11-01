@@ -7,13 +7,12 @@ import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "../../shared/components/ui/form-divider";
-
 import { ReminderTab } from "./components/reminder-tab";
 import { EventTab } from "./components/event-tab";
-import { SegmentButton } from "./components/segment-button";
 import { isEqual } from "date-fns";
 import { combineDateTime } from "./util/combine-date-time";
 import { SegmentButtonValue } from "./models/segment-button-value";
+import { SegmentToggle } from "./components/segment-toggle";
 
 type TaskFormProps =
   | {
@@ -37,6 +36,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     endDate: dto?.endTime ?? null,
     endTime: dto?.endTime ?? null,
   };
+
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
@@ -76,10 +76,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
               name="title"
               placeholder="New Task"
               control={control}
-              className="font-balooBold text-5xl leading-normal"
-              inputProps={{
-                multiline: false,
-              }}
+              className="font-balooBold text-4xl leading-normal"
             />
           </View>
 
@@ -93,7 +90,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           </View>
 
           <FormDivider />
-          <SegmentButton value={isActiveTab} setValue={handleTabChange} />
+          <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
 
           {isActiveTab === "reminder" && <ReminderTab control={control} />}
           {isActiveTab === "event" && <EventTab control={control} />}

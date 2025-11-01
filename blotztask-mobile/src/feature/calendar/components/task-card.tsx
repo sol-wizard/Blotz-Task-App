@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Pressable, Text, ActivityIndicator } from "react-native";
 import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
 import Animated, {
@@ -12,54 +12,35 @@ import Animated, {
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "@/shared/constants/theme";
-
 import { format, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
-
-interface TaskCardProps {
-  id: number;
-  title: string;
-  startTime?: string;
-  endTime?: string;
-  isCompleted?: boolean;
-  labelColor?: string;
-  onToggleComplete?: (id: number, completed: boolean) => void;
-  onPress?: () => void;
-  onDelete?: (id: number) => Promise<void> | void;
-}
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { useQueryClient } from "@tanstack/react-query";
+import { router } from "expo-router";
 
 const ACTION_WIDTH = 64;
 const OPEN_X = -ACTION_WIDTH;
 const OPEN_THRESHOLD = ACTION_WIDTH * 0.55;
 
 interface TaskCardProps {
-  id: number;
-  title: string;
-  startTime?: string;
-  endTime?: string;
-  isCompleted?: boolean;
-  labelColor?: string;
-  onToggleComplete?: (id: number, completed: boolean) => void;
-  onPress?: () => void;
-  onDelete?: (id: number) => Promise<void> | void;
-  isToggling?: boolean;
-  isDeleting?: boolean;
+  task: TaskDetailDTO;
+  deleteTask: (id: number) => Promise<void>;
+  isDeleting: boolean;
 }
 
-export default function TaskCard({
-  id,
-  title,
-  startTime,
-  endTime,
-  isCompleted = false,
-  labelColor,
-  onToggleComplete,
-  onPress,
-  onDelete,
-  isToggling = false,
-  isDeleting = false,
-}: TaskCardProps) {
-  const [checked, setChecked] = useState(isCompleted);
+export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps) {
+  const { toggleTask, isToggling } = useTaskMutations();
+  const queryClient = useQueryClient();
+
+  const navigateToTaskDetails = (task: TaskDetailDTO) => {
+    queryClient.setQueryData(["taskId", task.id], task);
+    router.push({
+      pathname: "/(protected)/task-details",
+      params: { taskId: task.id },
+    });
+  };
+
   const [actionsEnabled, setActionsEnabled] = useState(false);
 
   // negative value indicates left swipe
@@ -68,11 +49,7 @@ export default function TaskCard({
   // Disable interactions when loading
   const isLoading = isToggling || isDeleting;
 
-  const dividerColor = labelColor ?? theme.colors.disabled;
-
-  useEffect(() => {
-    setChecked(isCompleted);
-  }, [isCompleted]);
+  const dividerColor = task.label?.color ?? theme.colors.disabled;
 
   // Gesture: only allow left swipe, snap to 0 or OPEN_X on release
   const pan = Gesture.Pan()
@@ -115,14 +92,10 @@ export default function TaskCard({
     transform: [{ translateX: translateX.value * 1.25 }],
   }));
 
-  const handleToggleComplete = () => {
-    if (isLoading) return; // Prevent action when loading
-    const newChecked = !checked;
-    setChecked(newChecked);
-    onToggleComplete?.(id, newChecked);
-  };
-
-  const timePeriod = formatDateRange({ startTime, endTime });
+  const timePeriod = formatDateRange({
+    startTime: task.startTime,
+    endTime: task.endTime,
+  });
 
   return (
     <View className="relative mx-4 my-2 rounded-2xl bg-white overflow-hidden">
@@ -140,8 +113,8 @@ export default function TaskCard({
 
         <Pressable
           onPress={async () => {
-            if (!onDelete || isLoading) return;
-            await onDelete(id);
+            if (isLoading) return;
+            await deleteTask(task.id);
             translateX.value = withTiming(0);
             runOnJS(setActionsEnabled)(false);
           }}
@@ -161,13 +134,14 @@ export default function TaskCard({
 
       <GestureDetector gesture={pan}>
         <Animated.View style={cardStyle} className="bg-white rounded-2xl">
-          <Pressable onPress={onPress} disabled={isLoading}>
+          <Pressable onPress={() => navigateToTaskDetails(task)} disabled={isLoading}>
             <View className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}>
               <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
                 <TaskCheckbox
-                  checked={checked}
-                  onPress={handleToggleComplete}
+                  checked={task.isDone}
+                  onPress={() => toggleTask(task.id)}
                   disabled={isLoading}
+                  haptic={!task.isDone}
                 />
 
                 <View
@@ -178,9 +152,9 @@ export default function TaskCard({
               <View className="flex-1 flex-row justify-between items-center">
                 <View className="justify-start pt-0">
                   <Text
-                    className={`text-xl font-baloo ${checked ? "text-neutral-400 line-through" : "text-black"}`}
+                    className={`text-xl font-baloo w-60 ${task.isDone ? "text-neutral-400 line-through" : "text-black"}`}
                   >
-                    {title}
+                    {task.title}
                   </Text>
                   {timePeriod && (
                     <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
@@ -189,12 +163,12 @@ export default function TaskCard({
                   )}
                 </View>
 
-                {endTime && new Date(endTime).getTime() <= new Date().getTime() && !checked && (
-                  <Text className="text-warning font-baloo text-lg">Late</Text>
-                )}
-                {endTime && new Date(endTime).getTime() > new Date().getTime() && (
+                {task.endTime &&
+                  new Date(task.endTime).getTime() <= new Date().getTime() &&
+                  !task.isDone && <Text className="text-warning font-baloo text-lg">Late</Text>}
+                {task.endTime && new Date(task.endTime).getTime() > new Date().getTime() && (
                   <Text className="text-tertiary font-baloo text-lg">
-                    {format(parseISO(endTime), "H:mm")}
+                    {format(parseISO(task.endTime), "H:mm")}
                   </Text>
                 )}
               </View>
