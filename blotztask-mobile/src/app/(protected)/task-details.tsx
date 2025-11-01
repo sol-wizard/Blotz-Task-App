@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsView from "../../feature/task-details/components/details-view";
 import SubtasksView from "../../feature/task-details/components/subtasks-view";
