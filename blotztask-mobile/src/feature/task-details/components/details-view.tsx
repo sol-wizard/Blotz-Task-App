@@ -2,16 +2,16 @@ import { View, TextInput } from "react-native";
 
 const DetailsView = ({
   taskDescription,
-  handleUpdateDescription,
+  setDescription,
 }: {
   taskDescription: string;
-  handleUpdateDescription: (v: string) => void;
+  setDescription: (v: string) => void;
 }) => {
   return (
     <View className="bg-gray-100 rounded-xl p-4 min-h-80">
       <TextInput
         value={taskDescription}
-        onChangeText={handleUpdateDescription}
+        onChangeText={setDescription}
         placeholder="Add any task details — people, places, links, notes…"
         multiline
         textAlignVertical="top"

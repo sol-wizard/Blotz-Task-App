@@ -45,7 +45,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { handleSubmit, formState, control, setValue, reset } = form;
   const { isValid, isSubmitting } = formState;
-
+  // pass dto to reset form description when in edit mode
   useEffect(() => {
     if (mode === "edit") {
       reset({

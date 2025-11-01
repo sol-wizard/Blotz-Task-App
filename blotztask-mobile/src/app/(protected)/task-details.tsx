@@ -139,10 +139,7 @@ export default function TaskDetailsScreen() {
         {/* Render the active tab */}
         <View className="flex-1 px-4">
           {activeTab === "Details" ? (
-            <DetailsView
-              taskDescription={descriptionText}
-              handleUpdateDescription={setDescriptionText}
-            />
+            <DetailsView taskDescription={descriptionText} setDescription={setDescriptionText} />
           ) : (
             <SubtasksView parentTask={selectedTask} />
           )}
