@@ -21,11 +21,11 @@ export default function TaskDetailsScreen() {
   const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
 
-  const descriptionRef = useRef(descriptionText);
-
   useEffect(() => {
-    descriptionRef.current = descriptionText;
-  }, [descriptionText]);
+    if (selectedTask) {
+      setDescriptionText(selectedTask.description || "");
+    }
+  }, [selectedTask?.description]);
 
   const handleUpdateDescription = async (newDescription: string) => {
     if (!selectedTask) return;
@@ -41,24 +41,18 @@ export default function TaskDetailsScreen() {
       timeType: selectedTask.timeType ?? null,
     });
   };
-  // to ensure description is updated when navigating back
-  useFocusEffect(
-    useCallback(() => {
-      if (selectedTask?.description != null) {
-        setDescriptionText(selectedTask.description);
-      }
-      return () => {
-        handleUpdateDescription(descriptionRef.current || "");
-      };
-    }, [selectedTask?.description]),
-  );
 
   if (!selectedTask) {
     console.warn("No selected task found");
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-lg text-gray-600">Selected Task not found.</Text>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity
+          onPress={async () => {
+            await handleUpdateDescription(descriptionText);
+            router.back();
+          }}
+        >
           <Text className="text-blue-500 mt-2">Go back</Text>
         </TouchableOpacity>
       </View>
@@ -102,12 +96,13 @@ export default function TaskDetailsScreen() {
             </Text>
             <MaterialCommunityIcons
               name="pencil-minus-outline"
-              onPress={() =>
+              onPress={async () => {
+                await handleUpdateDescription(descriptionText);
                 router.push({
                   pathname: "/(protected)/task-edit",
                   params: { taskId: selectedTask.id },
-                })
-              }
+                });
+              }}
               size={28}
             />
           </View>

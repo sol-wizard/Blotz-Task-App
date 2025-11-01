@@ -6,20 +6,19 @@ import { router } from "expo-router";
 import { TaskStatusRow } from "@/shared/components/ui/task-status-row";
 import TaskCard from "@/feature/calendar/components/task-card";
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
-import { getAllTasks, toggleTaskCompletion, deleteTask } from "@/shared/services/task-service";
+import { getAllTasks } from "@/shared/services/task-service";
 import UserProfile from "@/feature/calendar/components/user-profile";
 import { TaskStatusType } from "@/feature/calendar/models/task-status-type";
 import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
 
 export default function AllTasksScreen() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
 
-  const [snackbar, setSnackbar] = useState<{ visible: boolean; text: string }>({
-    visible: false,
-    text: "",
-  });
+  const { isDeleting, deleteTask, deleteTaskError, deleteTaskSuccess, resetDeleteTask } =
+    useTaskMutations();
 
   const filteredTaskList = filterSelectedTask(tasks);
   const tasksOfSelectedStatus = filteredTaskList.find(
@@ -32,10 +31,6 @@ export default function AllTasksScreen() {
       setTasks(data);
     } catch (err: any) {
       console.error(err);
-      setSnackbar({
-        visible: true,
-        text: "Failed to load tasks",
-      });
     } finally {
       setLoading(false);
     }
@@ -45,58 +40,9 @@ export default function AllTasksScreen() {
     fetchTasks();
   }, []);
 
-  const navigateToTaskDetails = (task: TaskDetailDTO) => {
-    router.push({
-      pathname: "/(protected)/task-details",
-      params: { taskId: task.id },
-    });
-  };
-
-  const handleToggleTask = async (taskId: number) => {
-    try {
-      await toggleTaskCompletion(taskId);
-      // Optimistically update the UI
-      setTasks((prevTasks) =>
-        prevTasks.map((task) => (task.id === taskId ? { ...task, isDone: !task.isDone } : task)),
-      );
-    } catch (e) {
-      console.error(e);
-      setSnackbar({
-        visible: true,
-        text: "Failed to update task status",
-      });
-    }
-  };
-
-  const handleDeleteTask = async (taskId: number) => {
-    try {
-      await deleteTask(taskId);
-      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
-      setSnackbar({ visible: true, text: "Delete Successful" });
-    } catch (e) {
-      console.error(e);
-      setSnackbar({
-        visible: true,
-        text: "Delete Failed, please try again later",
-      });
-    }
-  };
-
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
     <View className="shadow shadow-gray-300">
-      <TaskCard
-        id={item.id}
-        title={item.title}
-        startTime={item.startTime}
-        endTime={item.endTime}
-        isCompleted={item.isDone}
-        labelColor={item.label?.color}
-        onToggleComplete={() => handleToggleTask(item.id)}
-        onPress={() => navigateToTaskDetails(item)}
-        onDelete={async () => {
-          await handleDeleteTask(item.id);
-        }}
-      />
+      <TaskCard task={item} deleteTask={deleteTask} isDeleting={isDeleting} />
     </View>
   );
 
@@ -141,11 +87,11 @@ export default function AllTasksScreen() {
       )}
 
       <Snackbar
-        visible={snackbar.visible}
-        onDismiss={() => setSnackbar({ visible: false, text: "" })}
+        visible={deleteTaskSuccess || !!deleteTaskError}
+        onDismiss={resetDeleteTask}
         duration={2200}
       >
-        {snackbar.text}
+        {deleteTaskError ? "Failed to delete task." : "Deleted task successfully!"}
       </Snackbar>
     </SafeAreaView>
   );
