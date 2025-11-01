@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,16 +43,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     defaultValues: defaultValues,
   });
 
-  const { handleSubmit, formState, control, setValue, reset } = form;
+  const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
-  // pass dto to reset form description when in edit mode
-  useEffect(() => {
-    if (mode === "edit") {
-      reset({
-        description: dto.description ?? "",
-      });
-    }
-  }, [dto]);
 
   const startCombined = combineDateTime(defaultValues.startDate, defaultValues.startTime);
   const endCombined = combineDateTime(defaultValues.endDate, defaultValues.endTime);
