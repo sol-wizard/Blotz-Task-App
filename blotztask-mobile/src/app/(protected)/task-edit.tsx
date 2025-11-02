@@ -12,12 +12,12 @@ const TaskEditScreen = () => {
   const { updateTask, isUpdating } = useTaskMutations();
   const params = useLocalSearchParams<{ taskId: string }>();
   const taskId = Number(params.taskId ?? "");
-  const { selectedTask, isLoading } = useTaskById({ taskId });
+  const { selectedTask, isLoading, isFetching } = useTaskById({ taskId });
 
   const router = useRouter();
 
   // TODO: Add loading icon
-  if (isLoading || !selectedTask || isUpdating) {
+  if (isLoading || !selectedTask || isUpdating || isFetching) {
     return <LoadingScreen />;
   }
 

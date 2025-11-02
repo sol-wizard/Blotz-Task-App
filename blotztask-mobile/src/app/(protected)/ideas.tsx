@@ -12,7 +12,7 @@ export default function IdeasScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [floatingTasks, setFloatingTasks] = useState<TaskDetailDTO[]>([]);
-  const { toggleTask } = useTaskMutations();
+  const { deleteTask, isDeleting } = useTaskMutations();
 
   useEffect(() => {
     const loadFloatingTasks = async () => {
@@ -31,14 +31,7 @@ export default function IdeasScreen() {
   }, []);
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
-    <TaskCard
-      id={item.id}
-      title={item.title}
-      startTime={item.startTime}
-      endTime={item.endTime}
-      isCompleted={item.isDone}
-      onToggleComplete={() => toggleTask(item.id)}
-    />
+    <TaskCard task={item} deleteTask={deleteTask} isDeleting={isDeleting} />
   );
 
   return (
