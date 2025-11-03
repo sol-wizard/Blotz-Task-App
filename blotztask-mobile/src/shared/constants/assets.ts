@@ -21,6 +21,7 @@ export const IMAGES = {
   loadingBun: require("../../../assets/images/loading-bun.png"),
   capsuleToy: require("../../../assets/images/capsule-toy.png"),
   turnKnobButton: require("../../../assets/images/turn-knob-button.png"),
+  gashaponMachine: require("../../../assets/images/gashapon-machine.png"),
 } as const;
 
 // Export all assets for convenience

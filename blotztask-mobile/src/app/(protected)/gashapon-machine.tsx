@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Image } from "react-native";
 import Matter from "matter-js";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,6 +8,7 @@ import { EntityMap } from "@/feature/gashapon-machine/models/entity-map";
 import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
 import { GameLoopArgs } from "@/feature/gashapon-machine/models/game-loop-args";
+import { ASSETS } from "@/shared/constants/assets";
 
 export default function GashaponMachine() {
   const { entities, handleRelease } = useGashaponMachineConfig();
@@ -36,6 +37,13 @@ export default function GashaponMachine() {
               overflow: "hidden",
             }}
           />
+
+          <Image
+            source={ASSETS.gashaponMachine} // 替换成你的机器图
+            resizeMode="contain"
+            className="absolute z-10 mb-11 scale-110 ml-9"
+          />
+
           <MachineButton onRelease={handleRelease} />
         </>
       ) : (

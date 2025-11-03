@@ -9,7 +9,7 @@ import { gashaponInnerWallPoints } from "../utils/gashapon-inner-wall-points";
 import { InnerWallPolyline } from "../components/PolygonRenderer";
 
 export const useGashaponMachineConfig = ({
-  ballRadius = 10,
+  ballRadius = 22,
   totalBalls = 10,
 }: {
   ballRadius?: number;
@@ -60,21 +60,32 @@ export const useGashaponMachineConfig = ({
 
     const { cx, cy } = calculateCenter(gashaponInnerWallPoints);
 
-    // 转换为相对坐标
-    const relativePoints = gashaponInnerWallPoints.map((p) => ({
-      x: p.x - cx,
-      y: p.y - cy,
+    const scale = 1.2;
+    const offsetX = 200; // 整个容器的屏幕位置
+    const offsetY = 300;
+
+    // 把原始点转成「缩放 + 平移」后的世界坐标
+    const transformedPoints = gashaponInnerWallPoints.map((p) => ({
+      x: (p.x - cx) * scale + offsetX,
+      y: (p.y - cy) * scale + offsetY,
     }));
 
-    // 创建物体在目标位置 (200, 200)
-    const wall = Matter.Bodies.fromVertices(
-      230, // 目标 x
-      300, // 目标 y
-      [relativePoints], // 使用相对坐标！
-      { isStatic: true },
-      true,
-    );
-    Matter.Body.scale(wall, 1.5, 1.5);
+    const wallBodies: Matter.Body[] = [];
+
+    for (let i = 0; i < transformedPoints.length - 1; i++) {
+      const p1 = transformedPoints[i];
+      const p2 = transformedPoints[i + 1];
+
+      const segment = createRectangleBetweenPoints({
+        x1: p1.x,
+        y1: p1.y,
+        x2: p2.x,
+        y2: p2.y,
+        thickness: 8,
+      });
+
+      wallBodies.push(segment);
+    }
 
     const gate = createRectangleBetweenPoints({
       x1: 0,
@@ -91,21 +102,24 @@ export const useGashaponMachineConfig = ({
 
     gateRef.current = gate;
 
-    Matter.World.add(world, [wall, gate]);
+    Matter.World.add(world, [...wallBodies, gate]);
 
-    const balls = [];
-    const colCount = 5;
-    const startX = 100;
-    const startY = 340;
-    const gapX = ballRadius * 2 + 5;
-    const gapY = ballRadius * 2 + 5;
+    const minGap = ballRadius * 2;
+    const gapX = minGap * 1.2;
+    const gapY = minGap * 1.2;
+
+    let colCount = Math.floor(216 / gapX);
+    if (colCount < 1) colCount = 1;
+    if (colCount > totalBalls) colCount = totalBalls;
+
+    const balls: Matter.Body[] = [];
 
     for (let i = 0; i < totalBalls; i++) {
       const col = i % colCount;
       const row = Math.floor(i / colCount);
 
-      const x = startX + col * gapX;
-      const y = startY + row * gapY;
+      let x = 91 + col * gapX;
+      let y = 262 + row * gapY;
 
       const ball = Matter.Bodies.circle(x, y, ballRadius, {
         restitution: 0.4,
@@ -117,7 +131,6 @@ export const useGashaponMachineConfig = ({
 
       balls.push(ball);
     }
-
     Matter.World.add(world, balls);
 
     Matter.Events.on(engine, "collisionStart", (event) => {
@@ -141,16 +154,6 @@ export const useGashaponMachineConfig = ({
       physics: {
         engine: engine,
         world: world,
-      },
-      gate: {
-        body: gate,
-        renderer: WallRenderer,
-        color: "#333",
-      },
-      wall: {
-        body: wall,
-        renderer: InnerWallPolyline,
-        color: "#333",
       },
     };
 
