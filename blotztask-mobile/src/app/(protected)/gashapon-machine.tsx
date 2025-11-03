@@ -39,7 +39,7 @@ export default function GashaponMachine() {
           />
 
           <Image
-            source={ASSETS.gashaponMachine} // 替换成你的机器图
+            source={ASSETS.gashaponMachine}
             resizeMode="contain"
             className="absolute z-10 mb-11 scale-110 ml-9"
           />
