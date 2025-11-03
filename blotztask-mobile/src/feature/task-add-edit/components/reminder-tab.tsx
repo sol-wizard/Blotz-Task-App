@@ -35,7 +35,7 @@ export const ReminderTab = ({ control }: Props) => {
                         onPress={() => setShowCalendar((prev) => !prev)}
                         className="bg-background px-4 py-2 rounded-xl"
                       >
-                        <Text className="text-xl font-baloo text-secondary">{displayText}</Text>
+                        <Text className="text-xl font-balooThin text-secondary">{displayText}</Text>
                       </Pressable>
                     </View>
 
@@ -109,7 +109,7 @@ export const ReminderTab = ({ control }: Props) => {
                         }}
                         className="bg-background px-4 py-2 rounded-xl"
                       >
-                        <Text className="text-xl font-baloo text-secondary ">
+                        <Text className="text-xl font-balooThin text-secondary ">
                           {startTime ? format(startTime, "hh:mm a") : "Select Time"}
                         </Text>
                       </Pressable>

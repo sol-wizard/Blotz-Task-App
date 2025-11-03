@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<EditTaskCommandHandler>();
         services.AddScoped<DeleteTaskCommandHandler>();
         services.AddScoped<ReplaceSubtasksCommandHandler>();
+        services.AddScoped<DeleteSubtaskCommandHandler>();
         services.AddScoped<AddRecurringTaskCommandHandler>();
 
         // Manual registration of query handlers 
