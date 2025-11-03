@@ -2,11 +2,9 @@ import Matter from "matter-js";
 import { useEffect, useRef, useState } from "react";
 import { createRectangleBetweenPoints } from "../utils/create-rectangle-between-points";
 import { EntityMap } from "../models/entity-map";
-import { WallRenderer } from "../components/wall-renderer";
 import { ASSETS } from "@/shared/constants/assets";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { gashaponInnerWallPoints } from "../utils/gashapon-inner-wall-points";
-import { InnerWallPolyline } from "../components/PolygonRenderer";
 
 export const useGashaponMachineConfig = ({
   ballRadius = 22,
