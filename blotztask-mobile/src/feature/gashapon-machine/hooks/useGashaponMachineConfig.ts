@@ -3,18 +3,18 @@ import { useEffect, useRef, useState } from "react";
 import { createRectangleBetweenPoints } from "../utils/create-rectangle-between-points";
 import { EntityMap } from "../models/entity-map";
 import { WallRenderer } from "../components/wall-renderer";
-import { FloorRenderer } from "../components/floor-render";
 import { ASSETS } from "@/shared/constants/assets";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
+import {
+  gashaponInnerWallPoints,
+  gashaponInnerWallPointsTransformed,
+} from "../utils/gashapon-inner-wall-points";
+import { InnerWallPolyline } from "../components/PolygonRenderer";
 
 export const useGashaponMachineConfig = ({
-  worldWidth = 340,
-  worldHeight = 500,
-  ballRadius = 30,
+  ballRadius = 10,
   totalBalls = 10,
 }: {
-  worldWidth?: number;
-  worldHeight?: number;
   ballRadius?: number;
   totalBalls?: number;
 } = {}) => {
@@ -53,13 +53,6 @@ export const useGashaponMachineConfig = ({
     const world = engine.world;
     engine.gravity.y = 1;
 
-    const floor = createRectangleBetweenPoints({
-      x1: 80,
-      y1: 500,
-      x2: 340,
-      y2: 450,
-    });
-
     const gate = createRectangleBetweenPoints({
       x1: 0,
       y1: 500,
@@ -75,24 +68,20 @@ export const useGashaponMachineConfig = ({
 
     gateRef.current = gate;
 
-    const leftWall = Matter.Bodies.rectangle(0, worldHeight / 2, 20, worldHeight, {
-      isStatic: true,
-    });
+    const wall = Matter.Bodies.fromVertices(
+      200,
+      200,
+      [gashaponInnerWallPoints],
+      { isStatic: true },
+      true,
+    );
 
-    const rightWall = Matter.Bodies.rectangle(worldWidth, worldHeight / 2, 20, worldHeight - 50, {
-      isStatic: true,
-    });
-
-    const ceiling = Matter.Bodies.rectangle(worldWidth / 2, 0, worldWidth, 20, {
-      isStatic: true,
-    });
-
-    Matter.World.add(world, [floor, ceiling, leftWall, rightWall, gate, sensor]);
+    Matter.World.add(world, [wall, gate]);
 
     const balls = [];
     const colCount = 5;
     const startX = 100;
-    const startY = 50;
+    const startY = 230;
     const gapX = ballRadius * 2 + 5;
     const gapY = ballRadius * 2 + 5;
 
@@ -143,24 +132,9 @@ export const useGashaponMachineConfig = ({
         renderer: WallRenderer,
         color: "#333",
       },
-      ceiling: {
-        body: ceiling,
-        renderer: WallRenderer,
-        color: "#333",
-      },
-      floor: {
-        body: floor,
-        renderer: FloorRenderer,
-        color: "#333",
-      },
-      leftWall: {
-        body: leftWall,
-        renderer: WallRenderer,
-        color: "#333",
-      },
-      rightWall: {
-        body: rightWall,
-        renderer: WallRenderer,
+      wall: {
+        body: wall,
+        renderer: InnerWallPolyline,
         color: "#333",
       },
     };

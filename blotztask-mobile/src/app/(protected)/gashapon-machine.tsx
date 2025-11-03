@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import Matter from "matter-js";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,13 +10,7 @@ import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGa
 import { GameLoopArgs } from "@/feature/gashapon-machine/models/game-loop-args";
 
 export default function GashaponMachine() {
-  const worldWidth = 340;
-  const worldHeight = 500;
-
-  const { entities, handleRelease } = useGashaponMachineConfig({
-    worldWidth,
-    worldHeight,
-  });
+  const { entities, handleRelease } = useGashaponMachineConfig();
 
   const physicsSystem = (entities: EntityMap, { time }: GameLoopArgs) => {
     const physics = entities.physics as PhysicsEntity | undefined;
@@ -30,15 +24,15 @@ export default function GashaponMachine() {
   };
 
   return (
-    <SafeAreaView className="flex-1 items-center justify-center m-12">
+    <SafeAreaView className="flex-1 items-center justify-center my-12">
       {entities.physics ? (
         <>
           <GameEngine
             systems={[physicsSystem]}
             entities={entities}
             style={{
-              width: worldWidth,
-              height: worldHeight,
+              width: 400,
+              height: 500,
               overflow: "hidden",
             }}
           />
