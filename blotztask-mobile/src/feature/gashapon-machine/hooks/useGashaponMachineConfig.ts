@@ -5,10 +5,7 @@ import { EntityMap } from "../models/entity-map";
 import { WallRenderer } from "../components/wall-renderer";
 import { ASSETS } from "@/shared/constants/assets";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
-import {
-  gashaponInnerWallPoints,
-  gashaponInnerWallPointsTransformed,
-} from "../utils/gashapon-inner-wall-points";
+import { gashaponInnerWallPoints } from "../utils/gashapon-inner-wall-points";
 import { InnerWallPolyline } from "../components/PolygonRenderer";
 
 export const useGashaponMachineConfig = ({
@@ -52,6 +49,32 @@ export const useGashaponMachineConfig = ({
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
     engine.gravity.y = 1;
+    const calculateCenter = (points: Array<{ x: number; y: number }>) => {
+      const xs = points.map((p) => p.x);
+      const ys = points.map((p) => p.y);
+      return {
+        cx: (Math.min(...xs) + Math.max(...xs)) / 2,
+        cy: (Math.min(...ys) + Math.max(...ys)) / 2,
+      };
+    };
+
+    const { cx, cy } = calculateCenter(gashaponInnerWallPoints);
+
+    // 转换为相对坐标
+    const relativePoints = gashaponInnerWallPoints.map((p) => ({
+      x: p.x - cx,
+      y: p.y - cy,
+    }));
+
+    // 创建物体在目标位置 (200, 200)
+    const wall = Matter.Bodies.fromVertices(
+      230, // 目标 x
+      300, // 目标 y
+      [relativePoints], // 使用相对坐标！
+      { isStatic: true },
+      true,
+    );
+    Matter.Body.scale(wall, 1.5, 1.5);
 
     const gate = createRectangleBetweenPoints({
       x1: 0,
@@ -68,20 +91,12 @@ export const useGashaponMachineConfig = ({
 
     gateRef.current = gate;
 
-    const wall = Matter.Bodies.fromVertices(
-      200,
-      200,
-      [gashaponInnerWallPoints],
-      { isStatic: true },
-      true,
-    );
-
     Matter.World.add(world, [wall, gate]);
 
     const balls = [];
     const colCount = 5;
     const startX = 100;
-    const startY = 230;
+    const startY = 340;
     const gapX = ballRadius * 2 + 5;
     const gapY = ballRadius * 2 + 5;
 
