@@ -16,6 +16,7 @@ export const fetchWithAuth = async <T>(url: string, options: RequestInit = {}): 
 
     if (response.status === 401 && refreshToken) {
       const { data } = await reFetchWithRefreshToken(url, options, refreshToken);
+
       return data as T;
     }
 
@@ -49,6 +50,10 @@ const makeRequest = async (
     data = await response.json();
   } else {
     data = await response.text();
+  }
+  if (data === null || data === undefined) {
+    console.warn(`fetchWithAuth: Received null/undefined data from ${url}`);
+    throw new Error("Received null/undefined data from API");
   }
 
   return { data, response };
