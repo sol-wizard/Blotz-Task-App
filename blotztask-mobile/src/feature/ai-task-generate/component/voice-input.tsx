@@ -6,6 +6,7 @@ import { ASSETS } from "@/shared/constants/assets";
 import * as Haptics from "expo-haptics";
 import { VoiceWaves } from "@/shared/components/common/voice-wave";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const VoiceInput = ({
   setText,
@@ -20,7 +21,14 @@ export const VoiceInput = ({
   setInputError: (v: boolean) => void;
   errorMessage?: string;
 }) => {
-  const [language, setLanguage] = useState<"en-US" | "zh-CN">("zh-CN");
+  const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
+    AsyncStorage.getItem("ai_language_preference").then((saved) => {
+      if (saved === "en-US" || saved === "zh-CN") {
+        setLanguage(saved);
+      }
+    });
+    return "zh-CN";
+  });
 
   const { handleStartListening, recognizing, transcript, stopListening } = useSpeechRecognition({
     language,
@@ -65,7 +73,11 @@ export const VoiceInput = ({
                 </Text>
 
                 <Pressable
-                  onPress={() => setLanguage((prev) => (prev === "en-US" ? "zh-CN" : "en-US"))}
+                  onPress={() => {
+                    const newLang = language === "en-US" ? "zh-CN" : "en-US";
+                    setLanguage(newLang);
+                    AsyncStorage.setItem("ai_language_preference", newLang);
+                  }}
                   className="w-10 h-10 bg-black rounded-full items-center justify-center"
                 >
                   <Text className="text-white font-bold text-base">
