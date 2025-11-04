@@ -19,6 +19,9 @@ Guidelines:
 - The total duration of subtasks should not exceed (EndTime - StartTime).
 - If end time is null, estimate reasonable durations
 
+Output language rule:
+- If the user's input is in Chinese, you MUST output the subtask ""title"" in Chinese.
+
 Return the result as a JSON object with a 'Subtasks' array.
 ";
 }
