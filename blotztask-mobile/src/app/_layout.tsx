@@ -40,8 +40,10 @@ export default function RootLayout() {
     dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
     sendDefaultPii: true,
     enableLogs: true,
+    enableNative: true,
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1,
+    enableAutoSessionTracking: true,
     integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
   });
 
