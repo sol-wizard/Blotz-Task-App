@@ -39,6 +39,8 @@ public class AiTaskGenerateService(
             );
 
             var functionResultMessage = chatResults.LastOrDefault();
+            
+            logger.LogInformation(functionResultMessage?.Content);
 
             if (functionResultMessage == null)
             {
