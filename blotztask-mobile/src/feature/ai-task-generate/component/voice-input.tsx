@@ -23,7 +23,6 @@ export const VoiceInput = ({
 }) => {
   const [language, setLanguage] = useState<"en-US" | "zh-CN">("zh-CN");
 
-  // Load saved language preference on mount
   useEffect(() => {
     AsyncStorage.getItem("ai_language_preference").then((saved) => {
       if (saved === "en-US" || saved === "zh-CN") {
