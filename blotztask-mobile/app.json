@@ -19,7 +19,8 @@
         "NSPhotoLibraryAddUsageDescription": "Allow BlotzTask to save exported images to your photo library.",
         "NSCameraUsageDescription": "Allow BlotzTask to use the camera for calls and taking photos.",
         "NSSpeechRecognitionUsageDescription": "We use speech recognition so you can add tasks by voice.",
-        "NSMicrophoneUsageDescription": "Allow BlotzTask to use the microphone for voice and video calls."
+        "NSMicrophoneUsageDescription": "Allow BlotzTask to use the microphone for voice and video calls.",
+        "NSMotionUsageDescription": "This app uses motion data to simulate gravity and allow capsule toys to move when you shake your phone."
       },
       "appleTeamId": "LXC29JARY5",
       "icon": "./assets/images/blotz-icon.png"
@@ -28,7 +29,9 @@
       "appName": "BlotzTask",
       "edgeToEdgeEnabled": true,
       "package": "com.blotz.blotztask",
-      "permissions": ["android.permission.RECORD_AUDIO"]
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -52,7 +55,15 @@
         }
       ],
       "expo-font",
-      "expo-localization"
+      "expo-localization",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "nicoles-project"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -5,6 +5,7 @@ import { EntityMap } from "../models/entity-map";
 import { ASSETS } from "@/shared/constants/assets";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { gashaponInnerWallPoints } from "../utils/gashapon-inner-wall-points";
+import { Accelerometer } from "expo-sensors";
 
 export const useGashaponMachineConfig = ({
   ballRadius = 22,
@@ -47,6 +48,7 @@ export const useGashaponMachineConfig = ({
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
     engine.gravity.y = 1;
+
     const calculateCenter = (points: Array<{ x: number; y: number }>) => {
       const xs = points.map((p) => p.x);
       const ys = points.map((p) => p.y);
