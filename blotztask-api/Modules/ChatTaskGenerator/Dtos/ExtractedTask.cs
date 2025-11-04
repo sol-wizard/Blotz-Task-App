@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace BlotzTask.Shared.DTOs;
+namespace BlotzTask.Modules.ChatTaskGenerator.DTOs;
 
 public class ExtractedTask
 {

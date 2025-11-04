@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-using BlotzTask.Shared.DTOs;
+using BlotzTask.Modules.ChatTaskGenerator.DTOs;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
