@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, Pressable, Image, Vibration } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
@@ -21,15 +21,14 @@ export const VoiceInput = ({
   setInputError: (v: boolean) => void;
   errorMessage?: string;
 }) => {
-  const [language, setLanguage] = useState<"en-US" | "zh-CN">("zh-CN");
-
-  useEffect(() => {
+  const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
     AsyncStorage.getItem("ai_language_preference").then((saved) => {
       if (saved === "en-US" || saved === "zh-CN") {
         setLanguage(saved);
       }
     });
-  }, []);
+    return "zh-CN";
+  });
 
   const { handleStartListening, recognizing, transcript, stopListening } = useSpeechRecognition({
     language,
