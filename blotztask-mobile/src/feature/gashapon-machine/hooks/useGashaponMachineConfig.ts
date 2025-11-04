@@ -5,7 +5,6 @@ import { EntityMap } from "../models/entity-map";
 import { ASSETS } from "@/shared/constants/assets";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { gashaponInnerWallPoints } from "../utils/gashapon-inner-wall-points";
-import { Accelerometer } from "expo-sensors";
 
 export const useGashaponMachineConfig = ({
   ballRadius = 22,
@@ -16,38 +15,12 @@ export const useGashaponMachineConfig = ({
 } = {}) => {
   const eggImages = Array(totalBalls).fill(ASSETS.capsuleToy);
 
-  const gateRef = useRef<Matter.Body | null>(null);
-
-  const isGateOpenRef = useRef(false);
-  const ballPassedRef = useRef(false);
-
   const [entities, setEntities] = useState<EntityMap>({});
-
-  const handleRelease = (deltaThisTurn: number) => {
-    if (Math.abs(deltaThisTurn) > 60) {
-      console.log("Release a Gachapon!");
-
-      if (gateRef.current && !isGateOpenRef.current) {
-        Matter.Body.translate(gateRef.current, { x: 80, y: 0 });
-        isGateOpenRef.current = true;
-        console.log("gate is opened");
-      }
-    }
-  };
-
-  const closeGate = () => {
-    if (gateRef.current && isGateOpenRef.current) {
-      console.log("close gate");
-      Matter.Body.translate(gateRef.current, { x: -80, y: 0 });
-      isGateOpenRef.current = false;
-      ballPassedRef.current = false;
-    }
-  };
 
   useEffect(() => {
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
-    engine.gravity.y = 1;
+    engine.gravity.y = 0.6;
 
     const calculateCenter = (points: Array<{ x: number; y: number }>) => {
       const xs = points.map((p) => p.x);
@@ -64,7 +37,6 @@ export const useGashaponMachineConfig = ({
     const offsetX = 200; // 整个容器的屏幕位置
     const offsetY = 300;
 
-    // 把原始点转成「缩放 + 平移」后的世界坐标
     const transformedPoints = gashaponInnerWallPoints.map((p) => ({
       x: (p.x - cx) * scale + offsetX,
       y: (p.y - cy) * scale + offsetY,
@@ -87,39 +59,18 @@ export const useGashaponMachineConfig = ({
       wallBodies.push(segment);
     }
 
-    const gate = createRectangleBetweenPoints({
-      x1: 0,
-      y1: 500,
-      x2: 80,
-      y2: 500,
-    });
-
-    const sensor = Matter.Bodies.rectangle(40, 540, 80, 20, {
-      isStatic: true,
-      isSensor: true,
-      label: "dropSensor",
-    });
-
-    gateRef.current = gate;
-
-    Matter.World.add(world, [...wallBodies, gate]);
-
-    const minGap = ballRadius * 2;
-    const gapX = minGap * 1.2;
-    const gapY = minGap * 1.2;
-
-    let colCount = Math.floor(216 / gapX);
-    if (colCount < 1) colCount = 1;
-    if (colCount > totalBalls) colCount = totalBalls;
+    Matter.World.add(world, [...wallBodies]);
 
     const balls: Matter.Body[] = [];
 
     for (let i = 0; i < totalBalls; i++) {
-      const col = i % colCount;
-      const row = Math.floor(i / colCount);
+      const col = i % 4;
+      const row = Math.floor(i / 4);
 
-      let x = 91 + col * gapX;
-      let y = 262 + row * gapY;
+      let x = 91 + col * 50;
+      let y = 200 + row * 6;
+
+      console.log("Ball position:", { x, y });
 
       const ball = Matter.Bodies.circle(x, y, ballRadius, {
         restitution: 0.4,
@@ -132,23 +83,6 @@ export const useGashaponMachineConfig = ({
       balls.push(ball);
     }
     Matter.World.add(world, balls);
-
-    Matter.Events.on(engine, "collisionStart", (event) => {
-      event.pairs.forEach((pair) => {
-        const { bodyA, bodyB } = pair;
-
-        const isSensorCollision =
-          (bodyA.label === "dropSensor" && bodyB.label?.startsWith("ball")) ||
-          (bodyB.label === "dropSensor" && bodyA.label?.startsWith("ball"));
-
-        if (isSensorCollision && isGateOpenRef.current && !ballPassedRef.current) {
-          console.log("Detected the ball passing!");
-          ballPassedRef.current = true;
-
-          closeGate();
-        }
-      });
-    });
 
     const newEntities: EntityMap = {
       physics: {
@@ -167,10 +101,8 @@ export const useGashaponMachineConfig = ({
 
     setEntities(newEntities);
 
-    return () => {
-      Matter.Events.off(engine, "collisionStart");
-    };
+    return () => {};
   }, []);
 
-  return { entities, gateRef, isGateOpenRef, handleRelease };
+  return { entities };
 };

@@ -5,13 +5,12 @@ import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { PhysicsEntity } from "@/feature/gashapon-machine/models/physics-entity";
 import { EntityMap } from "@/feature/gashapon-machine/models/entity-map";
-import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
 import { GameLoopArgs } from "@/feature/gashapon-machine/models/game-loop-args";
 import { ASSETS } from "@/shared/constants/assets";
 
 export default function GashaponMachine() {
-  const { entities, handleRelease } = useGashaponMachineConfig();
+  const { entities } = useGashaponMachineConfig();
 
   const physicsSystem = (entities: EntityMap, { time }: GameLoopArgs) => {
     const physics = entities.physics as PhysicsEntity | undefined;
@@ -20,7 +19,10 @@ export default function GashaponMachine() {
       console.log("Physics engine not initialized yet.");
       return entities;
     }
-    Matter.Engine.update(physics.engine, time.delta);
+    const MAX_DELTA = 1000 / 60;
+    const dt = Math.min(time.delta, MAX_DELTA);
+
+    Matter.Engine.update(physics.engine, dt);
     return entities;
   };
 
@@ -28,23 +30,22 @@ export default function GashaponMachine() {
     <SafeAreaView className="flex-1 items-center justify-center my-12">
       {entities.physics ? (
         <>
+          <Image
+            source={ASSETS.gashaponMachine}
+            resizeMode="contain"
+            className="absolute scale-110 ml-4 z-0"
+          />
           <GameEngine
             systems={[physicsSystem]}
             entities={entities}
             style={{
               width: 400,
               height: 500,
-              overflow: "hidden",
+              zIndex: 1,
             }}
           />
 
-          <Image
-            source={ASSETS.gashaponMachine}
-            resizeMode="contain"
-            className="absolute z-10 mb-11 scale-110 ml-9"
-          />
-
-          <MachineButton onRelease={handleRelease} />
+          {/* <MachineButton onRelease={handleRelease} /> */}
         </>
       ) : (
         <View>
