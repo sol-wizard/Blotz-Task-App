@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, Image, Vibration } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
@@ -6,6 +6,7 @@ import { ASSETS } from "@/shared/constants/assets";
 import * as Haptics from "expo-haptics";
 import { VoiceWaves } from "@/shared/components/common/voice-wave";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const VoiceInput = ({
   setText,
@@ -21,6 +22,15 @@ export const VoiceInput = ({
   errorMessage?: string;
 }) => {
   const [language, setLanguage] = useState<"en-US" | "zh-CN">("zh-CN");
+
+  // Load saved language preference on mount
+  useEffect(() => {
+    AsyncStorage.getItem("ai_language_preference").then((saved) => {
+      if (saved === "en-US" || saved === "zh-CN") {
+        setLanguage(saved);
+      }
+    });
+  }, []);
 
   const { handleStartListening, recognizing, transcript, stopListening } = useSpeechRecognition({
     language,
@@ -65,7 +75,11 @@ export const VoiceInput = ({
                 </Text>
 
                 <Pressable
-                  onPress={() => setLanguage((prev) => (prev === "en-US" ? "zh-CN" : "en-US"))}
+                  onPress={() => {
+                    const newLang = language === "en-US" ? "zh-CN" : "en-US";
+                    setLanguage(newLang);
+                    AsyncStorage.setItem("ai_language_preference", newLang);
+                  }}
                   className="w-10 h-10 bg-black rounded-full items-center justify-center"
                 >
                   <Text className="text-white font-bold text-base">
