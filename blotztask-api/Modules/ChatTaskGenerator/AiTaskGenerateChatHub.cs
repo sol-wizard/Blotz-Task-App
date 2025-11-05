@@ -1,10 +1,12 @@
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Shared.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
 
+[Authorize]
 public class AiTaskGenerateChatHub : Hub
 {
     private readonly IAiTaskGenerateService _aiTaskGenerateService;
@@ -25,7 +27,14 @@ public class AiTaskGenerateChatHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        await _chatHistoryManagerService.InitializeNewConversation();
+        var httpContext = Context.GetHttpContext();
+        if (httpContext?.Items.TryGetValue("UserId", out var userIdObj) != true || userIdObj is not Guid userId)
+        {
+            _logger.LogWarning("UserId not found in HttpContext.Items. ConnectionId: {ConnectionId}", Context.ConnectionId);
+            return; // stop the connection initialization gracefully
+        }
+        
+        await _chatHistoryManagerService.InitializeNewConversation(userId, useLabels:true);
         await base.OnConnectedAsync();
     }
 
@@ -49,7 +58,7 @@ public class AiTaskGenerateChatHub : Hub
             chatHistory.AddUserMessage(message);
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
 
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage);
+            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, cancellationToken: ct);
         }
         catch (AiTaskGenerationException ex)
         {

@@ -1,9 +1,12 @@
+using BlotzTask.Modules.Labels.Queries;
+
 namespace BlotzTask.Modules.ChatTaskGenerator.Constants;
 
 public static class AiTaskGeneratorPrompts
 {
-    public static string GetSystemMessage(DateTime currentTime)
+    public static string GetSystemMessage(DateTime currentTime, List<LabelDTO> availableLabels)
     {
+        var labelsDescription = BuildLabelsDescription(availableLabels);
         return $"""
                       You are a task extraction assistant. Extract actionable tasks from user input.
 
@@ -25,6 +28,8 @@ public static class AiTaskGeneratorPrompts
                       - If a start time or time frame is implied, set a reasonable end_time. 
                       - If only start time or end time is provided and the other one cannot be reasonably inferred, set them to be equal.
                       
+                      {labelsDescription}
+                      
                       OUTPUT LANGUAGE RULE:
                       - If the user's input is in Chinese (Mandarin), you MUST output in Chinese.
                       - Otherwise, keep the output in the user's input language. 
@@ -34,4 +39,28 @@ public static class AiTaskGeneratorPrompts
                       - isSuccess = false: No actionable tasks found (set errorMessage with brief reason)
                """;
    }
+
+    private static string BuildLabelsDescription(List<LabelDTO> availableLabels)
+    {
+        if (availableLabels.Count == 0)
+        {
+            return "LABEL ASSIGNMENT:\nNo labels available. Leave task_label as null.";
+        }
+
+        var labelsList = string.Join("\n", availableLabels.Select(l => 
+            $"  - '{l.Name}': {l.Description}"));
+
+        return $"""
+                LABEL ASSIGNMENT:
+                Assign an appropriate label to tasks based on context. Available labels:
+                {labelsList}
+
+                Label assignment rules:
+                - Use the exact label name as shown above (case-sensitive)
+                - Only one assign label from the available list
+                - If no label clearly fits, leave task_label as null
+                - Consider the task content, context, and user's phrasing
+                - Prefer more specific custom label over generic global label when both fit
+                """;
+    }
 }

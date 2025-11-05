@@ -1,25 +1,23 @@
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
+using BlotzTask.Modules.Labels.Queries;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IChatHistoryManagerService
-{
-    void SetChatHistory(ChatHistory chatHistory);
+{ 
     void RemoveConversation();
-    Task<ChatHistory> InitializeNewConversation();
+    Task<ChatHistory> InitializeNewConversation(Guid userId, bool useLabels = true);
     ChatHistory GetChatHistory();
 }
 
-public class ChatHistoryManagerService : IChatHistoryManagerService
+public class ChatHistoryManagerService(
+    ILogger<ChatHistoryManagerService> logger,
+    GetAllLabelsQueryHandler getAllLabelsQueryHandler
+    )
+    : IChatHistoryManagerService
 {
     private static ChatHistory? _chatHistory;
-    private readonly ILogger<ChatHistoryManagerService> _logger;
-
-    public ChatHistoryManagerService(ILogger<ChatHistoryManagerService> logger)
-    {
-        _logger = logger;
-    }
 
     public ChatHistory GetChatHistory()
     {
@@ -39,16 +37,19 @@ public class ChatHistoryManagerService : IChatHistoryManagerService
         _chatHistory = null;
     }
 
-    public Task<ChatHistory> InitializeNewConversation()
+    public async Task<ChatHistory> InitializeNewConversation(Guid userId,  bool useLabels = true)
     {
-        if (_chatHistory != null) return Task.FromResult(_chatHistory);
+        var query = new GetAllLabelsQuery{UserId = userId };
+        var labels = await getAllLabelsQueryHandler.Handle(query);
+
+        if (_chatHistory != null) return await Task.FromResult(_chatHistory);
 
 
         var chatHistory = new ChatHistory();
-        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(DateTime.Now));
+        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(DateTime.Now, labels));
 
         SetChatHistory(chatHistory);
 
-        return Task.FromResult(chatHistory);
+        return await Task.FromResult(chatHistory);
     }
 }
