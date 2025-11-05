@@ -31,7 +31,7 @@ public class AiTaskGenerateChatHub : Hub
         if (httpContext?.Items.TryGetValue("UserId", out var userIdObj) != true || userIdObj is not Guid userId)
         {
             _logger.LogWarning("UserId not found in HttpContext.Items. ConnectionId: {ConnectionId}", Context.ConnectionId);
-            return; // stop the connection initialization gracefully
+            throw new HubException("UserId not found in HttpContext. Connection rejected.");
         }
         
         await _chatHistoryManagerService.InitializeNewConversation(userId, useLabels:true);
