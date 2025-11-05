@@ -34,7 +34,7 @@ public class AiTaskGenerateChatHub : Hub
             throw new HubException("UserId not found in HttpContext. Connection rejected.");
         }
         
-        await _chatHistoryManagerService.InitializeNewConversation(userId, useLabels:true);
+        await _chatHistoryManagerService.InitializeNewConversation(userId);
         await base.OnConnectedAsync();
     }
 

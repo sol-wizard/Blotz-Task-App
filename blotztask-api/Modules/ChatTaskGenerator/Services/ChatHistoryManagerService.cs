@@ -7,7 +7,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 public interface IChatHistoryManagerService
 { 
     void RemoveConversation();
-    Task<ChatHistory> InitializeNewConversation(Guid userId, bool useLabels = true);
+    Task<ChatHistory> InitializeNewConversation(Guid userId);
     ChatHistory GetChatHistory();
 }
 
@@ -37,7 +37,7 @@ public class ChatHistoryManagerService(
         _chatHistory = null;
     }
 
-    public async Task<ChatHistory> InitializeNewConversation(Guid userId,  bool useLabels = true)
+    public async Task<ChatHistory> InitializeNewConversation(Guid userId)
     {
         var query = new GetAllLabelsQuery{UserId = userId };
         var labels = await getAllLabelsQueryHandler.Handle(query);
