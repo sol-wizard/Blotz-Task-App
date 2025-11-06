@@ -6,6 +6,8 @@ import { ASSETS } from "@/shared/constants/assets";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { gashaponInnerWallPoints } from "../utils/gashapon-inner-wall-points";
 
+import { isGameEntity } from "../utils/entity-map";
+
 export const useGashaponMachineConfig = ({
   ballRadius = 22,
   totalBalls = 10,
@@ -16,10 +18,26 @@ export const useGashaponMachineConfig = ({
   const eggImages = Array(totalBalls).fill(ASSETS.capsuleToy);
 
   const [entities, setEntities] = useState<EntityMap>({});
+  const [worldRef, setWorldRef] = useState<Matter.World | null>(null);
 
   const handleRelease = (deltaThisTurn: number) => {
     if (Math.abs(deltaThisTurn) > 60) {
-      console.log("Release a Gachapon!");
+      const ballKeys = Object.keys(entities).filter((key) => key.startsWith("egg-"));
+      if (ballKeys.length === 0) return;
+      const randomKey = ballKeys[Math.floor(Math.random() * ballKeys.length)];
+      const randomEntity = entities[randomKey];
+
+      if (isGameEntity(randomEntity) && worldRef) {
+        console.log(`🎯 Removing ball: ${randomKey}`);
+
+        Matter.World.remove(worldRef, randomEntity.body);
+
+        setEntities((prev) => {
+          const newEntities = { ...prev };
+          delete newEntities[randomKey];
+          return newEntities;
+        });
+      }
     }
   };
 
@@ -27,6 +45,7 @@ export const useGashaponMachineConfig = ({
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
     engine.gravity.y = 0.6;
+    setWorldRef(world);
 
     const calculateCenter = (points: Array<{ x: number; y: number }>) => {
       const xs = points.map((p) => p.x);
@@ -40,7 +59,7 @@ export const useGashaponMachineConfig = ({
     const { cx, cy } = calculateCenter(gashaponInnerWallPoints);
 
     const scale = 1.2;
-    const offsetX = 200; // 整个容器的屏幕位置
+    const offsetX = 200;
     const offsetY = 300;
 
     const transformedPoints = gashaponInnerWallPoints.map((p) => ({
@@ -66,6 +85,13 @@ export const useGashaponMachineConfig = ({
     }
 
     Matter.World.add(world, [...wallBodies]);
+
+    const gate = createRectangleBetweenPoints({
+      x1: 0,
+      y1: 500,
+      x2: 80,
+      y2: 500,
+    });
 
     const balls: Matter.Body[] = [];
 

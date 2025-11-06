@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { View, Text, Image } from "react-native";
 import Matter from "matter-js";
 import { GameEngine } from "react-native-game-engine";
@@ -48,7 +48,7 @@ export default function GashaponMachine() {
           />
           <View
             style={{
-              marginTop: 10, // 控制整个扭蛋区域离顶部多远
+              marginTop: 10,
             }}
           >
             {isAllPicLoaded && (
