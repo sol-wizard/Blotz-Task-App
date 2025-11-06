@@ -17,6 +17,12 @@ export const useGashaponMachineConfig = ({
 
   const [entities, setEntities] = useState<EntityMap>({});
 
+  const handleRelease = (deltaThisTurn: number) => {
+    if (Math.abs(deltaThisTurn) > 60) {
+      console.log("Release a Gachapon!");
+    }
+  };
+
   useEffect(() => {
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
@@ -110,5 +116,5 @@ export const useGashaponMachineConfig = ({
     };
   }, []);
 
-  return { entities };
+  return { entities, handleRelease };
 };
