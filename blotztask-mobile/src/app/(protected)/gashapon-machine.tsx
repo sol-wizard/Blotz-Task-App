@@ -12,7 +12,7 @@ import { ASSETS } from "@/shared/constants/assets";
 export default function GashaponMachine() {
   const { entities } = useGashaponMachineConfig();
   const [basePicLoaded, setBasePicLoaded] = useState(false);
-  const [buttonPicLoaded, setButtonPicLoaded] = useState(true);
+  const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const isAllPicLoaded = basePicLoaded && buttonPicLoaded;
 
   const physicsSystem = (entities: EntityMap, { time }: GameLoopArgs) => {
@@ -39,6 +39,17 @@ export default function GashaponMachine() {
             className="absolute ml-3 z-0 mt-10"
             style={{ transform: [{ scale: 0.55 }] }}
             onLoad={() => setBasePicLoaded(true)}
+          />
+          <Image
+            source={ASSETS.gashaponMachineButton}
+            resizeMode="contain"
+            className="absolute z-0"
+            style={{
+              transform: [{ scale: 0.08 }],
+              marginTop: 384,
+              marginLeft: 175,
+            }}
+            onLoad={() => setButtonPicLoaded(true)}
           />
           {isAllPicLoaded && (
             <GameEngine
