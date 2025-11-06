@@ -1,12 +1,13 @@
 import Matter from "matter-js";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createRectangleBetweenPoints } from "../utils/create-rectangle-between-points";
 import { EntityMap } from "../models/entity-map";
 import { ASSETS } from "@/shared/constants/assets";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
-import { gashaponInnerWallPoints } from "../utils/gashapon-inner-wall-points";
-
+import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { isGameEntity } from "../utils/entity-map";
+import { WallRenderer } from "../components/wall-renderer";
+import { GateRenderer } from "../components/gate-renderer";
 
 export const useGashaponMachineConfig = ({
   ballRadius = 22,
@@ -18,26 +19,28 @@ export const useGashaponMachineConfig = ({
   const eggImages = Array(totalBalls).fill(ASSETS.capsuleToy);
 
   const [entities, setEntities] = useState<EntityMap>({});
-  const [worldRef, setWorldRef] = useState<Matter.World | null>(null);
+
+  const gateRef = useRef<Matter.Body | null>(null);
+
+  const isGateOpenRef = useRef(false);
+  const ballPassedRef = useRef(false);
 
   const handleRelease = (deltaThisTurn: number) => {
     if (Math.abs(deltaThisTurn) > 60) {
-      const ballKeys = Object.keys(entities).filter((key) => key.startsWith("egg-"));
-      if (ballKeys.length === 0) return;
-      const randomKey = ballKeys[Math.floor(Math.random() * ballKeys.length)];
-      const randomEntity = entities[randomKey];
-
-      if (isGameEntity(randomEntity) && worldRef) {
-        console.log(`🎯 Removing ball: ${randomKey}`);
-
-        Matter.World.remove(worldRef, randomEntity.body);
-
-        setEntities((prev) => {
-          const newEntities = { ...prev };
-          delete newEntities[randomKey];
-          return newEntities;
-        });
+      console.log("Release a Gachapon!");
+      if (gateRef.current && !isGateOpenRef.current) {
+        Matter.Body.translate(gateRef.current, { x: -80, y: 0 });
+        isGateOpenRef.current = true;
+        console.log("gate is opened");
       }
+    }
+  };
+  const closeGate = () => {
+    if (gateRef.current && isGateOpenRef.current) {
+      console.log("close gate");
+      Matter.Body.translate(gateRef.current, { x: 80, y: 0 });
+      isGateOpenRef.current = false;
+      ballPassedRef.current = false;
     }
   };
 
@@ -45,41 +48,24 @@ export const useGashaponMachineConfig = ({
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
     engine.gravity.y = 0.6;
-    setWorldRef(world);
-
-    const calculateCenter = (points: Array<{ x: number; y: number }>) => {
-      const xs = points.map((p) => p.x);
-      const ys = points.map((p) => p.y);
-      return {
-        cx: (Math.min(...xs) + Math.max(...xs)) / 2,
-        cy: (Math.min(...ys) + Math.max(...ys)) / 2,
-      };
-    };
-
-    const { cx, cy } = calculateCenter(gashaponInnerWallPoints);
-
-    const scale = 1.2;
-    const offsetX = 200;
-    const offsetY = 300;
-
-    const transformedPoints = gashaponInnerWallPoints.map((p) => ({
-      x: (p.x - cx) * scale + offsetX,
-      y: (p.y - cy) * scale + offsetY,
-    }));
 
     const wallBodies: Matter.Body[] = [];
 
-    for (let i = 0; i < transformedPoints.length - 1; i++) {
-      const p1 = transformedPoints[i];
-      const p2 = transformedPoints[i + 1];
+    for (let i = 0; i < wallPoints.length - 1; i++) {
+      const p1 = wallPoints[i];
+      const p2 = wallPoints[i + 1];
+      if (i >= 13 && i <= 16) {
+        continue;
+      }
 
       const segment = createRectangleBetweenPoints({
         x1: p1.x,
         y1: p1.y,
         x2: p2.x,
         y2: p2.y,
-        thickness: 8,
+        thickness: 13,
       });
+      segment.label = `wall-${i}`;
 
       wallBodies.push(segment);
     }
@@ -87,11 +73,28 @@ export const useGashaponMachineConfig = ({
     Matter.World.add(world, [...wallBodies]);
 
     const gate = createRectangleBetweenPoints({
-      x1: 0,
-      y1: 500,
-      x2: 80,
-      y2: 500,
+      x1: 166.172,
+      y1: 449,
+      x2: 100,
+      y2: 438.02,
     });
+    gateRef.current = gate;
+    Matter.World.add(world, gate);
+
+    const sensor = createRectangleBetweenPoints({
+      x1: 166.172,
+      y1: 490,
+      x2: 124.11,
+      y2: 480,
+      thickness: 20,
+      options: {
+        label: "dropSensor",
+        isStatic: true,
+        isSensor: true,
+      },
+    });
+
+    Matter.World.add(world, sensor);
 
     const balls: Matter.Body[] = [];
 
@@ -122,7 +125,21 @@ export const useGashaponMachineConfig = ({
         engine: engine,
         world: world,
       },
+      gate: {
+        body: gate,
+        renderer: GateRenderer,
+      },
+      sensor: {
+        body: sensor,
+        renderer: GateRenderer,
+      },
     };
+    wallBodies.forEach((wall, idx) => {
+      newEntities[`wall-${idx}`] = {
+        body: wall,
+        renderer: WallRenderer, // 使用相同的渲染器
+      };
+    });
 
     balls.forEach((ball, idx) => {
       newEntities["egg-" + idx] = {
@@ -133,8 +150,25 @@ export const useGashaponMachineConfig = ({
     });
 
     setEntities(newEntities);
+    Matter.Events.on(engine, "collisionStart", (event) => {
+      event.pairs.forEach((pair) => {
+        const { bodyA, bodyB } = pair;
+
+        const isSensorCollision =
+          (bodyA.label === "dropSensor" && bodyB.label?.startsWith("ball")) ||
+          (bodyB.label === "dropSensor" && bodyA.label?.startsWith("ball"));
+
+        if (isSensorCollision && isGateOpenRef.current && !ballPassedRef.current) {
+          console.log("Detected the ball passing!");
+          ballPassedRef.current = true;
+
+          closeGate();
+        }
+      });
+    });
 
     return () => {
+      Matter.Events.off(engine, "collisionStart");
       Matter.World.clear(world, false);
       Matter.Engine.clear(engine);
     };
