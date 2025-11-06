@@ -1,5 +1,5 @@
 import Matter from "matter-js";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createRectangleBetweenPoints } from "../utils/create-rectangle-between-points";
 import { EntityMap } from "../models/entity-map";
 import { ASSETS } from "@/shared/constants/assets";
@@ -63,14 +63,17 @@ export const useGashaponMachineConfig = ({
 
     const balls: Matter.Body[] = [];
 
+    const gapX = ballRadius * 2 + 5;
+    const gapY = ballRadius * 2 + 5;
+
     for (let i = 0; i < totalBalls; i++) {
-      const col = i % 4;
-      const row = Math.floor(i / 4);
+      const col = i % 5;
+      const row = Math.floor(i / 5);
 
-      let x = 91 + col * 50;
-      let y = 200 + row * 6;
+      let x = 90 + col * gapX;
+      let y = 200 + row * gapY;
 
-      console.log("Ball position:", { x, y });
+      console.log(`Ball position: ${i}`, { x, y });
 
       const ball = Matter.Bodies.circle(x, y, ballRadius, {
         restitution: 0.4,
@@ -101,7 +104,10 @@ export const useGashaponMachineConfig = ({
 
     setEntities(newEntities);
 
-    return () => {};
+    return () => {
+      Matter.World.clear(world, false);
+      Matter.Engine.clear(engine);
+    };
   }, []);
 
   return { entities };

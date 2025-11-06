@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, Image } from "react-native";
 import Matter from "matter-js";
 import { GameEngine } from "react-native-game-engine";
@@ -11,6 +11,9 @@ import { ASSETS } from "@/shared/constants/assets";
 
 export default function GashaponMachine() {
   const { entities } = useGashaponMachineConfig();
+  const [basePicLoaded, setBasePicLoaded] = useState(false);
+  const [buttonPicLoaded, setButtonPicLoaded] = useState(true);
+  const isAllPicLoaded = basePicLoaded && buttonPicLoaded;
 
   const physicsSystem = (entities: EntityMap, { time }: GameLoopArgs) => {
     const physics = entities.physics as PhysicsEntity | undefined;
@@ -31,19 +34,24 @@ export default function GashaponMachine() {
       {entities.physics ? (
         <>
           <Image
-            source={ASSETS.gashaponMachine}
+            source={ASSETS.gashaponMachineBase}
             resizeMode="contain"
-            className="absolute scale-110 ml-4 z-0"
+            className="absolute ml-3 z-0 mt-10"
+            style={{ transform: [{ scale: 0.55 }] }}
+            onLoad={() => setBasePicLoaded(true)}
           />
-          <GameEngine
-            systems={[physicsSystem]}
-            entities={entities}
-            style={{
-              width: 400,
-              height: 500,
-              zIndex: 1,
-            }}
-          />
+          {isAllPicLoaded && (
+            <GameEngine
+              systems={[physicsSystem]}
+              running={isAllPicLoaded}
+              entities={entities}
+              style={{
+                width: 400,
+                height: 500,
+                zIndex: 1,
+              }}
+            />
+          )}
 
           {/* <MachineButton onRelease={handleRelease} /> */}
         </>
