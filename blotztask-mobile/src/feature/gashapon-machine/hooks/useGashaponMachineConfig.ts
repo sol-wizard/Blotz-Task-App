@@ -79,8 +79,6 @@ export const useGashaponMachineConfig = ({
       let x = 90 + col * gapX;
       let y = 200 + row * gapY;
 
-      console.log(`Ball position: ${i}`, { x, y });
-
       const ball = Matter.Bodies.circle(x, y, ballRadius, {
         restitution: 0.4,
         friction: 0.05,

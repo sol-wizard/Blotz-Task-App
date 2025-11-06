@@ -99,22 +99,27 @@ export const MachineButton = ({
 
   return (
     <GestureDetector gesture={panGesture}>
-      <Animated.View>
-        <Animated.View
-          style={[
-            { position: "absolute", width: size, height: size, bottom: 190, marginLeft: 30 },
-            animatedStyle,
-          ]}
-        >
-          <Image
-            source={ASSETS.gashaponMachineButton}
-            style={{
-              width: size,
-              height: size,
-            }}
-            onLoad={() => setButtonPicLoaded(true)}
-          />
-        </Animated.View>
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            width: size,
+            height: size,
+            bottom: 225,
+            zIndex: 2,
+            marginLeft: 148,
+          },
+          animatedStyle,
+        ]}
+      >
+        <Image
+          source={ASSETS.gashaponMachineButton}
+          style={{
+            width: size,
+            height: size,
+          }}
+          onLoad={() => setButtonPicLoaded(true)}
+        />
       </Animated.View>
     </GestureDetector>
   );
