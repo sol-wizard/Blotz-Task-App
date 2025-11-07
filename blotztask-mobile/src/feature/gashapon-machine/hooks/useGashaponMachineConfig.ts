@@ -87,9 +87,9 @@ export const useGashaponMachineConfig = ({
 
     const sensor = createRectangleBetweenPoints({
       x1: 166.172,
-      y1: 510,
+      y1: 490,
       x2: 124.11,
-      y2: 500,
+      y2: 480,
       thickness: 20,
       options: {
         label: "dropSensor",
