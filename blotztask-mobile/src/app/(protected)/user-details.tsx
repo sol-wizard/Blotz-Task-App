@@ -9,7 +9,7 @@ export default function UserDetailsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 justify-center items-center">
-        <View className="flex-row absolute  left-2 top-5">
+        <View className="flex-row absolute left-2 top-5">
           <TouchableOpacity
             onPress={() => router.back()}
             className="pt-5 pl-5"
