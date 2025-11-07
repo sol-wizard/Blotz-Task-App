@@ -1,47 +1,38 @@
 import { AxiosInstance, InternalAxiosRequestConfig, AxiosError } from "axios";
-import { router } from "expo-router";
-import { clearTokens, getValidToken, refreshToken } from "./token-manager";
+import { handleAuthError, handleOtherErrors } from "./error-handlers";
+import { getValidToken } from "./token-manager";
 
 export function setupRequestInterceptor(api: AxiosInstance): void {
   api.interceptors.request.use(
-    async (config: InternalAxiosRequestConfig) => {
+    async config => {
       try {
         const token = await getValidToken();
-
-        if (token) {
+        if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
-
         return config;
       } catch (error) {
         return Promise.reject(error);
       }
     },
-    (error: any) => Promise.reject(error),
+    error => Promise.reject(error),
   );
 }
 
 export function setupResponseInterceptor(api: AxiosInstance): void {
   api.interceptors.response.use(
-    (response) => response,
+    response => response,
     async (error: AxiosError) => {
       const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-      if (error.response?.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true;
-
-        try {
-          const newToken = await refreshToken();
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return api(originalRequest);
-        } catch (refreshError) {
-          await clearTokens();
-          router.replace("../(auth)/onboarding");
-          return Promise.reject(refreshError);
-        }
+      // Try auth refresh logic first
+      const retryResult = await handleAuthError(error, api, originalRequest);
+      if (retryResult) {
+        return retryResult;
       }
 
-      return Promise.reject(error);
+      // Handle other status / network errors
+      return handleOtherErrors(error);
     },
   );
 }
