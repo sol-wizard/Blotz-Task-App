@@ -7,12 +7,19 @@ import { ASSETS } from "@/shared/constants/assets";
 import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
 import { cleanupSystem, physicsSystem } from "@/feature/gashapon-machine/utils/game-systems";
 import { LinearGradient } from "expo-linear-gradient";
+import { TaskRevealModal } from "@/feature/gashapon-machine/components/task-reveal-modal";
 
 export default function GashaponMachine() {
-  const { entities, handleRelease } = useGashaponMachineConfig();
   const [basePicLoaded, setBasePicLoaded] = useState(false);
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const isAllPicLoaded = basePicLoaded && buttonPicLoaded;
+
+  const [isModalVisible, setModalVisible] = useState(false);
+  const { entities, handleRelease } = useGashaponMachineConfig({ setModalVisible });
+
+  const handleDoNow = () => {
+    console.log("Do it now pressed!");
+  };
 
   return (
     <LinearGradient
@@ -22,6 +29,12 @@ export default function GashaponMachine() {
       style={{ flex: 1 }}
     >
       <SafeAreaView className="flex-1 items-center">
+        <TaskRevealModal
+          visible={isModalVisible}
+          taskTitle="Clean Up House"
+          onClose={() => setModalVisible(false)}
+          onDoNow={handleDoNow}
+        />
         {entities.physics ? (
           <>
             <Image
