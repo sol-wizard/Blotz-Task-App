@@ -13,8 +13,6 @@ export default function UserProfile({ profile }: { profile?: UserProfileDTO }) {
 
   const showPlaceholder = !profile.pictureUrl;
 
-  
-
   return (
     <View className="items-center justify-center mr-2">
       {showPlaceholder ? (
