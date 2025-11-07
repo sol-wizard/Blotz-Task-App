@@ -1,30 +1,38 @@
 import Matter from "matter-js";
 
-type RectPoints = {
+type CreateRectangleBetweenPointsArgs = {
   x1: number;
   y1: number;
   x2: number;
   y2: number;
+  thickness?: number;
+  options?: Matter.IChamferableBodyDefinition;
 };
 
-export function createRectangleBetweenPoints(
-  { x1, y1, x2, y2 }: RectPoints,
-  height: number = 10,
-  options: Matter.IChamferableBodyDefinition = {},
-) {
+export const createRectangleBetweenPoints = ({
+  x1,
+  y1,
+  x2,
+  y2,
+  thickness = 10,
+  options,
+}: CreateRectangleBetweenPointsArgs) => {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+
+  const length = Math.hypot(dx, dy);
+
   const centerX = (x1 + x2) / 2;
   const centerY = (y1 + y2) / 2;
-  const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-  const angle = Math.atan2(y2 - y1, x2 - x1);
 
-  const body = Matter.Bodies.rectangle(centerX, centerY, length, height, {
+  const angle = Math.atan2(dy, dx);
+
+  const body = Matter.Bodies.rectangle(centerX, centerY, length, thickness, {
     isStatic: true,
-    friction: 1,
-    frictionStatic: 1,
-    restitution: 0,
-    angle,
     ...options,
   });
 
+  Matter.Body.setAngle(body, angle);
+
   return body;
-}
+};

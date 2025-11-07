@@ -31,3 +31,4 @@ android/
 keys/
 credentials.json
 ios-builds/
+.env.local

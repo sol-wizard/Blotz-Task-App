@@ -5,11 +5,13 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { ASSETS } from "@/shared/constants/assets";
 
 export const MachineButton = ({
-  size = 120,
+  size = 85,
   onRelease,
+  setButtonPicLoaded,
 }: {
   size?: number;
-  onRelease: (deltaThisTurn: number, newTotal: number) => void;
+  onRelease?: (deltaThisTurn: number, newTotal: number) => void;
+  setButtonPicLoaded: (loaded: boolean) => void;
 }) => {
   const totalRotation = useSharedValue(0);
 
@@ -97,17 +99,27 @@ export const MachineButton = ({
 
   return (
     <GestureDetector gesture={panGesture}>
-      <Animated.View className="justify-center items-center" style={{ width: size, height: size }}>
-        <Animated.View
-          className="justify-center items-center"
-          style={[{ width: size, height: size }, animatedStyle]}
-        >
-          <Image
-            source={ASSETS.turnKnobButton}
-            style={{ width: size, height: size }}
-            resizeMode="contain"
-          />
-        </Animated.View>
+      <Animated.View
+        style={[
+          {
+            position: "absolute",
+            width: size,
+            height: size,
+            bottom: 55,
+            zIndex: 2,
+            marginLeft: 150,
+          },
+          animatedStyle,
+        ]}
+      >
+        <Image
+          source={ASSETS.gashaponMachineButton}
+          style={{
+            width: size,
+            height: size,
+          }}
+          onLoad={() => setButtonPicLoaded(true)}
+        />
       </Animated.View>
     </GestureDetector>
   );

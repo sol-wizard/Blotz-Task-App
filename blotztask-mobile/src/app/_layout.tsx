@@ -21,6 +21,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { theme } from "@/shared/constants/theme";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/shared/util/queryClient";
+import * as Sentry from "@sentry/react-native";
 
 export default function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
@@ -34,6 +35,16 @@ export default function RootLayout() {
     BalooExtraBold: Baloo2_800ExtraBold,
     InterThin: Inter_300Light,
     InterBold: Inter_700Bold,
+  });
+  Sentry.init({
+    dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
+    sendDefaultPii: true,
+    enableLogs: true,
+    enableNative: true,
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1,
+    enableAutoSessionTracking: true,
+    integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
   });
 
   return (
