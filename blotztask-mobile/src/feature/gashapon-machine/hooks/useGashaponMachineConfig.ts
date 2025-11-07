@@ -158,7 +158,7 @@ export const useGashaponMachineConfig = ({
 
     Accelerometer.setUpdateInterval(16);
 
-    const subscription = Accelerometer.addListener((accelerometerData) => {
+    const shakingSubscription = Accelerometer.addListener((accelerometerData) => {
       const { x, y } = accelerometerData;
 
       ballsRef.current.forEach((ball) => {
@@ -177,7 +177,7 @@ export const useGashaponMachineConfig = ({
     });
 
     return () => {
-      subscription.remove();
+      shakingSubscription.remove();
       Matter.Events.off(engine, "collisionStart");
       Matter.World.clear(world, false);
       Matter.Engine.clear(engine);
