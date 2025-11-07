@@ -39,11 +39,12 @@ export function useAiTaskGenerator() {
   };
 
   useEffect(() => {
-    const newConnection = signalRService.createConnection();
-    setConnection(newConnection);
+    let newConnection: signalR.HubConnection | null = null;
 
     const startConnection = async () => {
       try {
+        newConnection = await signalRService.createConnection();
+        setConnection(newConnection);
         await newConnection.start();
         newConnection.on("ReceiveMessage", receiveMessageHandler);
         console.log("Connected to SignalR hub!");
@@ -55,13 +56,15 @@ export function useAiTaskGenerator() {
     startConnection();
 
     return () => {
-      newConnection
-        .stop()
-        .then(() => {
-          console.log("SignalR Connection Stopped.");
-          newConnection.off("ReceiveTasks", receiveMessageHandler);
-        })
-        .catch((error) => console.error("Error stopping SignalR connection:", error));
+      if (newConnection) {
+        newConnection
+          .stop()
+          .then(() => {
+            console.log("SignalR Connection Stopped.");
+            newConnection!.off("ReceiveMessage", receiveMessageHandler);
+          })
+          .catch((error) => console.error("Error stopping SignalR connection:", error));
+      }
     };
   }, []);
 
