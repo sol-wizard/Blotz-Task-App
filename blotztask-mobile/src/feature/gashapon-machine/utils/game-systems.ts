@@ -18,7 +18,7 @@ export const physicsSystem = (entities: EntityMap, { time }: GameLoopArgs) => {
   return entities;
 };
 
-export const cleanupSystem = (entities: EntityMap, {}: any) => {
+export const cleanupSystem = (entities: EntityMap) => {
   const physics = entities.physics as PhysicsEntity | undefined;
   if (!physics) return entities;
 

@@ -108,8 +108,8 @@ export const useGashaponMachineConfig = ({
       const col = i % 5;
       const row = Math.floor(i / 5);
 
-      let x = 90 + col * gapX;
-      let y = 200 + row * gapY;
+      const x = 90 + col * gapX;
+      const y = 200 + row * gapY;
 
       const ball = Matter.Bodies.circle(x, y, ballRadius, {
         restitution: 0.4,
