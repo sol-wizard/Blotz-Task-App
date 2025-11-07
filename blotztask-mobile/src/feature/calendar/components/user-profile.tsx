@@ -6,13 +6,14 @@ import { useRouter } from "expo-router";
 const DEFAULT_IMAGE_URL = IMAGES.blotzIcon;
 
 export default function UserProfile({ profile }: { profile?: UserProfileDTO }) {
+  const router = useRouter();
   if (!profile) {
     return <View className="w-14 h-14 rounded-full bg-gray-200" />;
   }
 
   const showPlaceholder = !profile.pictureUrl;
 
-  const router = useRouter();
+  
 
   return (
     <View className="items-center justify-center mr-2">
