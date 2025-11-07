@@ -1,12 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, Image } from "react-native";
-import Matter from "matter-js";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { PhysicsEntity } from "@/feature/gashapon-machine/models/physics-entity";
-import { EntityMap } from "@/feature/gashapon-machine/models/entity-map";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
-import { GameLoopArgs } from "@/feature/gashapon-machine/models/game-loop-args";
 import { ASSETS } from "@/shared/constants/assets";
 import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
 import { cleanupSystem, physicsSystem } from "@/feature/gashapon-machine/utils/game-systems";

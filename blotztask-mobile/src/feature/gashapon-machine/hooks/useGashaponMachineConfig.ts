@@ -168,7 +168,7 @@ export const useGashaponMachineConfig = ({
         if (ball && worldRef.current) {
           const ballExists = worldRef.current.bodies.includes(ball);
           if (ballExists) {
-            const gravityStrength = 1.0;
+            const gravityStrength = 1.5;
             engine.gravity.x = x * gravityStrength;
             engine.gravity.y = -y * gravityStrength;
           }
