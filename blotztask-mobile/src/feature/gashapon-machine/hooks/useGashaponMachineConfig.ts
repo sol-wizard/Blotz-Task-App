@@ -8,13 +8,13 @@ import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
 
 export const useGashaponMachineConfig = ({
-  ballRadius = 22,
+  ballRadius = 18,
   totalBalls = 10,
 }: {
   ballRadius?: number;
   totalBalls?: number;
 } = {}) => {
-  const eggImages = Array(totalBalls).fill(ASSETS.capsuleToy);
+  const starImages = Array(totalBalls).fill(ASSETS.yellowStar);
 
   const [entities, setEntities] = useState<EntityMap>({});
 
@@ -111,10 +111,9 @@ export const useGashaponMachineConfig = ({
       const ball = Matter.Bodies.circle(x, y, ballRadius, {
         restitution: 0.4,
         friction: 0.05,
-        frictionStatic: 0.5,
+        frictionStatic: 0.2,
         frictionAir: 0.01,
         label: `ball-${i}`,
-        sleepThreshold: Infinity,
       });
 
       balls.push(ball);
@@ -132,7 +131,7 @@ export const useGashaponMachineConfig = ({
     balls.forEach((ball, idx) => {
       newEntities["ball-" + idx] = {
         body: ball,
-        texture: eggImages[idx % eggImages.length],
+        texture: starImages[idx % starImages.length],
         renderer: CapsuleToyRenderer,
       };
     });
