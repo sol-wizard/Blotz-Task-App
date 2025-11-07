@@ -5,9 +5,6 @@ import { EntityMap } from "../models/entity-map";
 import { ASSETS } from "@/shared/constants/assets";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
-import { isGameEntity } from "../utils/entity-map";
-import { WallRenderer } from "../components/wall-renderer";
-import { GateRenderer } from "../components/gate-renderer";
 import { Accelerometer } from "expo-sensors";
 
 export const useGashaponMachineConfig = ({
@@ -29,7 +26,6 @@ export const useGashaponMachineConfig = ({
 
   const handleRelease = (deltaThisTurn: number) => {
     if (Math.abs(deltaThisTurn) > 60) {
-      console.log("Release a Gachapon!");
       if (gateRef.current && !isGateOpenRef.current) {
         Matter.Body.translate(gateRef.current, { x: -80, y: 0 });
         isGateOpenRef.current = true;
@@ -118,6 +114,7 @@ export const useGashaponMachineConfig = ({
         frictionStatic: 0.5,
         frictionAir: 0.01,
         label: `ball-${i}`,
+        sleepThreshold: Infinity,
       });
 
       balls.push(ball);
@@ -167,6 +164,9 @@ export const useGashaponMachineConfig = ({
       ballsRef.current.forEach((ball) => {
         if (ball && worldRef.current) {
           const ballExists = worldRef.current.bodies.includes(ball);
+          if (ball.isSleeping) {
+            Matter.Sleeping.set(ball, false);
+          }
           if (ballExists) {
             const gravityStrength = 1.5;
             engine.gravity.x = x * gravityStrength;

@@ -22,7 +22,6 @@ export const cleanupSystem = (entities: EntityMap, {}: any) => {
   const physics = entities.physics as PhysicsEntity | undefined;
   if (!physics) return entities;
 
-  const world = physics.world;
   const thresholdY = 449;
 
   Object.entries(entities).forEach(([key, entity]) => {

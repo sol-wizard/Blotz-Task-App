@@ -14,7 +14,6 @@ export const wallPoints = [
   // gate start
   { x: 208.604, y: 449 },
   { x: 166.172, y: 449 },
-
   { x: 145.04, y: 446.778 },
   // gate end
   { x: 124.11, y: 443.37 },
