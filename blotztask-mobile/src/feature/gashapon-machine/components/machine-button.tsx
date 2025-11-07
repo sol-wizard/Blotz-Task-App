@@ -105,9 +105,9 @@ export const MachineButton = ({
             position: "absolute",
             width: size,
             height: size,
-            bottom: 225,
+            bottom: 55,
             zIndex: 2,
-            marginLeft: 148,
+            marginLeft: 150,
           },
           animatedStyle,
         ]}

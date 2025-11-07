@@ -28,7 +28,7 @@ export default function GashaponMachine() {
       end={{ x: 0, y: 1 }}
       style={{ flex: 1 }}
     >
-      <SafeAreaView className="flex-1 items-center">
+      <SafeAreaView className="flex-1 items-center justify-center">
         <TaskRevealModal
           visible={isModalVisible}
           taskTitle="Clean Up House"
@@ -36,13 +36,18 @@ export default function GashaponMachine() {
           onDoNow={handleDoNow}
         />
         {entities.physics ? (
-          <>
+          <View
+            style={{
+              width: 360,
+              height: 520,
+            }}
+            className="items-center justify-center"
+          >
             <Image
               source={ASSETS.gashaponMachineBase}
               resizeMode="contain"
               className="absolute z-0"
               style={{
-                top: 20,
                 alignSelf: "center",
                 width: 600,
                 height: 800,
@@ -63,13 +68,14 @@ export default function GashaponMachine() {
                     width: 400,
                     height: 500,
                     zIndex: 1,
+                    bottom: 100,
                   }}
                 />
               )}
             </View>
 
             <MachineButton setButtonPicLoaded={setButtonPicLoaded} onRelease={handleRelease} />
-          </>
+          </View>
         ) : (
           <View>
             <Text>Loading Gashapon Machine...</Text>
