@@ -13,6 +13,8 @@ End Time: {{$endTime}}
 Guidelines:
 - If the task title or description does not convey a specific, actionable goal, return an empty array.
 - Break the task into logical, actionable subtasks
+- Don't make assumptions about the task. Only generate subtasks that's closely related to the task.
+- You don't need to cover the whole time span of the task. Avoid generating too many subtasks. Make the subtask lists doable in reality.
 - Each subtask should have a title, duration in ISO 8601 format, and sequential order starting from 1
 - Duration format: Use ONLY hours, minutes, and seconds (e.g., PT30M, PT1H30M, PT24H for 1 day, PT72H for 3 days)
 - NEVER use day notation (PT1D is invalid - use PT24H instead)
