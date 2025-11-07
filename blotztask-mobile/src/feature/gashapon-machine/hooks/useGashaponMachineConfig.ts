@@ -8,6 +8,7 @@ import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { isGameEntity } from "../utils/entity-map";
 import { WallRenderer } from "../components/wall-renderer";
 import { GateRenderer } from "../components/gate-renderer";
+import { Accelerometer } from "expo-sensors";
 
 export const useGashaponMachineConfig = ({
   ballRadius = 22,
@@ -21,7 +22,8 @@ export const useGashaponMachineConfig = ({
   const [entities, setEntities] = useState<EntityMap>({});
 
   const gateRef = useRef<Matter.Body | null>(null);
-
+  const worldRef = useRef<Matter.World | null>(null);
+  const ballsRef = useRef<Matter.Body[]>([]);
   const isGateOpenRef = useRef(false);
   const ballPassedRef = useRef(false);
 
@@ -47,6 +49,8 @@ export const useGashaponMachineConfig = ({
   useEffect(() => {
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
+    worldRef.current = world;
+
     engine.gravity.y = 0.6;
 
     const wallBodies: Matter.Body[] = [];
@@ -119,27 +123,14 @@ export const useGashaponMachineConfig = ({
       balls.push(ball);
     }
     Matter.World.add(world, balls);
+    ballsRef.current = balls;
 
     const newEntities: EntityMap = {
       physics: {
         engine: engine,
         world: world,
       },
-      gate: {
-        body: gate,
-        renderer: GateRenderer,
-      },
-      sensor: {
-        body: sensor,
-        renderer: GateRenderer,
-      },
     };
-    wallBodies.forEach((wall, idx) => {
-      newEntities[`wall-${idx}`] = {
-        body: wall,
-        renderer: WallRenderer, // 使用相同的渲染器
-      };
-    });
 
     balls.forEach((ball, idx) => {
       newEntities["ball-" + idx] = {
@@ -168,7 +159,25 @@ export const useGashaponMachineConfig = ({
       });
     });
 
+    Accelerometer.setUpdateInterval(16);
+
+    const subscription = Accelerometer.addListener((accelerometerData) => {
+      const { x, y } = accelerometerData;
+
+      ballsRef.current.forEach((ball) => {
+        if (ball && worldRef.current) {
+          const ballExists = worldRef.current.bodies.includes(ball);
+          if (ballExists) {
+            const gravityStrength = 1.0;
+            engine.gravity.x = x * gravityStrength;
+            engine.gravity.y = -y * gravityStrength;
+          }
+        }
+      });
+    });
+
     return () => {
+      subscription.remove();
       Matter.Events.off(engine, "collisionStart");
       Matter.World.clear(world, false);
       Matter.Engine.clear(engine);
