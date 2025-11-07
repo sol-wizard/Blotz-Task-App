@@ -83,9 +83,9 @@ export const useGashaponMachineConfig = ({
 
     const sensor = createRectangleBetweenPoints({
       x1: 166.172,
-      y1: 490,
+      y1: 510,
       x2: 124.11,
-      y2: 480,
+      y2: 500,
       thickness: 20,
       options: {
         label: "dropSensor",
@@ -142,7 +142,7 @@ export const useGashaponMachineConfig = ({
     });
 
     balls.forEach((ball, idx) => {
-      newEntities["egg-" + idx] = {
+      newEntities["ball-" + idx] = {
         body: ball,
         texture: eggImages[idx % eggImages.length],
         renderer: CapsuleToyRenderer,
@@ -153,15 +153,16 @@ export const useGashaponMachineConfig = ({
     Matter.Events.on(engine, "collisionStart", (event) => {
       event.pairs.forEach((pair) => {
         const { bodyA, bodyB } = pair;
+        const ball = bodyA.label.startsWith("ball")
+          ? bodyA
+          : bodyB.label.startsWith("ball")
+            ? bodyB
+            : null;
+        const sensor = bodyA.label === "dropSensor" || bodyB.label === "dropSensor";
 
-        const isSensorCollision =
-          (bodyA.label === "dropSensor" && bodyB.label?.startsWith("ball")) ||
-          (bodyB.label === "dropSensor" && bodyA.label?.startsWith("ball"));
-
-        if (isSensorCollision && isGateOpenRef.current && !ballPassedRef.current) {
-          console.log("Detected the ball passing!");
+        if (ball && sensor) {
+          console.log(`⚡ Ball ${ball.label} passed sensor, removing`);
           ballPassedRef.current = true;
-
           closeGate();
         }
       });

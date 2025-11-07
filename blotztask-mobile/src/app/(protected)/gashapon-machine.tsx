@@ -9,26 +9,13 @@ import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGa
 import { GameLoopArgs } from "@/feature/gashapon-machine/models/game-loop-args";
 import { ASSETS } from "@/shared/constants/assets";
 import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
+import { cleanupSystem, physicsSystem } from "@/feature/gashapon-machine/utils/game-systems";
 
 export default function GashaponMachine() {
   const { entities, handleRelease } = useGashaponMachineConfig();
   const [basePicLoaded, setBasePicLoaded] = useState(false);
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const isAllPicLoaded = basePicLoaded && buttonPicLoaded;
-
-  const physicsSystem = (entities: EntityMap, { time }: GameLoopArgs) => {
-    const physics = entities.physics as PhysicsEntity | undefined;
-
-    if (!physics) {
-      console.log("Physics engine not initialized yet.");
-      return entities;
-    }
-    const MAX_DELTA = 1000 / 60;
-    const dt = Math.min(time.delta, MAX_DELTA);
-
-    Matter.Engine.update(physics.engine, dt);
-    return entities;
-  };
 
   return (
     <SafeAreaView className="flex-1 items-center">
@@ -53,7 +40,7 @@ export default function GashaponMachine() {
           >
             {isAllPicLoaded && (
               <GameEngine
-                systems={[physicsSystem]}
+                systems={[physicsSystem, cleanupSystem]}
                 running={isAllPicLoaded}
                 entities={entities}
                 style={{
