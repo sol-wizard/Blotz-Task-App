@@ -1,13 +1,16 @@
+using BlotzTask.Modules.Labels.Queries;
+
 namespace BlotzTask.Modules.ChatTaskGenerator.Constants;
 
 public static class AiTaskGeneratorPrompts
 {
-    public static string GetSystemMessage(DateTime currentTime)
+    public static string GetSystemMessage(DateTime currentTime, List<LabelDTO> availableLabels)
     {
-        return $$$""""
-                      You are a task extraction assistant. Extract actionable tasks from user input and return a STRICT JSON object.
+        var labelsDescription = BuildLabelsDescription(availableLabels);
+        return $"""
+                      You are a task extraction assistant. Extract actionable tasks from user input.
 
-                      Current time: {{{currentTime:yyyy-MM-ddTHH:mm:ss}}}
+                      Current time: {currentTime:yyyy-MM-ddTHH:mm:ss}
 
                       Task Generation Guidelines:
                       - Generate one task per distinct action mentioned by the user.
@@ -25,38 +28,39 @@ public static class AiTaskGeneratorPrompts
                       - If a start time or time frame is implied, set a reasonable end_time. 
                       - If only start time or end time is provided and the other one cannot be reasonably inferred, set them to be equal.
                       
-                      Output language rule:
-                      - If the user's input is in Chinese (Mandarin), you MUST write the "title" and "description" in Chinese.
-                      - Otherwise, keep the "title" and "description" in the user's input language. 
+                      {labelsDescription}
+                      
+                      OUTPUT LANGUAGE RULE:
+                      - If the user's input is in Chinese (Mandarin), you MUST output in Chinese.
+                      - Otherwise, keep the output in the user's input language. 
 
-                      Error handling rule:
-                      - If the input does NOT contain any actionable task, set "isSuccess" to false, "errorMessage" to a short reason, and return "extractedTasks" as an empty array [].
-                      - If extraction succeeds, set "isSuccess" to true, "errorMessage" to an empty string "", and "extractedTasks" MUST contain at least one item.
+                      SUCCESS CRITERIA:
+                      - isSuccess = true: At least one actionable task extracted
+                      - isSuccess = false: No actionable tasks found (set errorMessage with brief reason)
+               """;
+   }
 
+    private static string BuildLabelsDescription(List<LabelDTO> availableLabels)
+    {
+        if (availableLabels.Count == 0)
+        {
+            return "LABEL ASSIGNMENT:\nNo labels available. Leave task_label as null.";
+        }
 
-                      RESPONSE RULES (STRICT):
-                  - ALWAYS respond with a SINGLE JSON object, with EXACTLY these fields:
-                    {
-                      "extractedTasks": [
-                        {
-                          "title": "string",
-                          "description": "string",
-                          "start_time": "string",
-                          "end_time": "string"
-                        }
-                      ],
-                      "isSuccess": true,
-                      "errorMessage": ""
-                    }
+        var labelsList = string.Join("\n", availableLabels.Select(l => 
+            $"  - '{l.Name}': {l.Description}"));
 
-                  - When there is an error:
-                    {
-                      "extractedTasks": [],
-                      "isSuccess": false,
-                      "errorMessage": "short reason here"
-                    }
+        return $"""
+                LABEL ASSIGNMENT:
+                Assign an appropriate label to tasks based on context. Available labels:
+                {labelsList}
 
-                  - No Markdown. No commentary. No code fences. No text outside the JSON object.
-                  """";
+                Label assignment rules:
+                - Use the exact label name as shown above (case-sensitive)
+                - Only one assign label from the available list
+                - If no label clearly fits, leave task_label as null
+                - Consider the task content, context, and user's phrasing
+                - Prefer more specific custom label over generic global label when both fit
+                """;
     }
 }
