@@ -1,12 +1,12 @@
 import { AxiosInstance, InternalAxiosRequestConfig, AxiosError } from "axios";
 import { router } from "expo-router";
-import * as tokenManager from "./token-manager";
+import { clearTokens, getValidToken, refreshToken } from "./token-manager";
 
 export function setupRequestInterceptor(api: AxiosInstance): void {
   api.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
       try {
-        const token = await tokenManager.getValidToken();
+        const token = await getValidToken();
 
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
@@ -31,11 +31,11 @@ export function setupResponseInterceptor(api: AxiosInstance): void {
         originalRequest._retry = true;
 
         try {
-          const newToken = await tokenManager.refreshToken();
+          const newToken = await refreshToken();
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return api(originalRequest);
         } catch (refreshError) {
-          await tokenManager.clearTokens();
+          await clearTokens();
           router.replace("../(auth)/onboarding");
           return Promise.reject(refreshError);
         }
