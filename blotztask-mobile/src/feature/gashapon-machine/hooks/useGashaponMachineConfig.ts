@@ -29,7 +29,7 @@ export const useGashaponMachineConfig = ({
   const handleRelease = (deltaThisTurn: number) => {
     if (Math.abs(deltaThisTurn) > 60) {
       if (gateRef.current && !isGateOpenRef.current) {
-        Matter.Body.translate(gateRef.current, { x: -80, y: 0 });
+        Matter.Body.translate(gateRef.current, { x: -60, y: 0 });
         isGateOpenRef.current = true;
         console.log("gate is opened");
       }
@@ -38,7 +38,7 @@ export const useGashaponMachineConfig = ({
   const closeGate = () => {
     if (gateRef.current && isGateOpenRef.current) {
       console.log("close gate");
-      Matter.Body.translate(gateRef.current, { x: 80, y: 0 });
+      Matter.Body.translate(gateRef.current, { x: 60, y: 0 });
       isGateOpenRef.current = false;
       ballPassedRef.current = false;
       setModalVisible(true);
