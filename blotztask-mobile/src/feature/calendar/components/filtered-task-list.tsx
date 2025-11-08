@@ -19,20 +19,20 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
 
   const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
 
-  const filteredSelectedDayTasks = filterSelectedTask(selectedDayTasks);
-  const tasksOfSelectedStatus = filteredSelectedDayTasks.find(
+  const filteredSelectedDayTasks = filterSelectedTask(selectedDayTasks ?? []);
+  const safeFilteredTasks = Array.isArray(filteredSelectedDayTasks) ? filteredSelectedDayTasks : [];
+  const tasksOfSelectedStatus = safeFilteredTasks.find(
     (item) => item.status === selectedStatus,
   )?.tasks;
+  const findStatusCount = (status: TaskStatusType) => {
+    return filteredSelectedDayTasks.find((g) => g.status === status)?.count ?? 0;
+  };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
     <View className="shadow shadow-gray-300">
       <TaskCard task={item} deleteTask={deleteTask} isDeleting={isDeleting} />
     </View>
   );
-
-  const findStatusCount = (status: TaskStatusType) => {
-    return filteredSelectedDayTasks.find((g) => g.status === status)?.count ?? 0;
-  };
 
   return (
     <>
