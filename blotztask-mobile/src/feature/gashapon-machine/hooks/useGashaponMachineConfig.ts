@@ -8,7 +8,7 @@ import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
 
 export const useGashaponMachineConfig = ({
-  ballRadius = 18,
+  ballRadius = 15,
   totalBalls = 10,
   setModalVisible,
 }: {
