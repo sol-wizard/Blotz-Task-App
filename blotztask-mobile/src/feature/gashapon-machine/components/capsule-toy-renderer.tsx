@@ -15,6 +15,7 @@ export const CapsuleToyRenderer = (props: any) => {
         top: y,
         width: BALL_RADIUS * 2,
         height: BALL_RADIUS * 2,
+        zIndex: Math.round(body.position.y),
       }}
       resizeMode="contain"
     />
