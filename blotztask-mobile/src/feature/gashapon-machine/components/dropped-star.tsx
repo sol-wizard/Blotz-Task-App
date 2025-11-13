@@ -7,15 +7,12 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const DROPOUT_X = SCREEN_WIDTH / 2 - 40;
 const DROPOUT_Y = SCREEN_HEIGHT / 2 + 200;
 
-interface DropStarOverlayProps {
+interface DroppedStarProps {
   trigger: number;
   setTaskRevealModalVisible?: () => void;
 }
 
-export const DropStarOverlay: React.FC<DropStarOverlayProps> = ({
-  trigger,
-  setTaskRevealModalVisible,
-}) => {
+export const DroppedStar: React.FC<DroppedStarProps> = ({ trigger, setTaskRevealModalVisible }) => {
   const [visible, setVisible] = useState(false);
 
   const dimOpacity = useRef(new Animated.Value(0)).current;

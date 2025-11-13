@@ -9,12 +9,11 @@ import { cleanupSystem, physicsSystem } from "@/feature/gashapon-machine/utils/g
 import { LinearGradient } from "expo-linear-gradient";
 import { TaskRevealModal } from "@/feature/gashapon-machine/components/task-reveal-modal";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
-import { DropStarOverlay } from "@/feature/gashapon-machine/components/dropped-star";
+import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 
 export default function GashaponMachine() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
-
   const [isModalVisible, setModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
 
@@ -91,7 +90,7 @@ export default function GashaponMachine() {
           <MachineButton setButtonPicLoaded={setButtonPicLoaded} onRelease={handleRelease} />
         </View>
 
-        <DropStarOverlay
+        <DroppedStar
           trigger={dropStarTrigger}
           setTaskRevealModalVisible={() => {
             setModalVisible(true);
