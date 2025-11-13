@@ -1,7 +1,7 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskItemDTO } from "../../feature/task-add-edit/models/edit-task-item-dto";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
-import { apiClient } from "./api-client";
+import { apiClient } from "./api/client";
 
 export async function fetchTasksForDate(
   date: Date,

@@ -1,7 +1,7 @@
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import { SubtaskDTO } from "../models/subtask-dto";
-import { apiClient } from "@/shared/services/api-client";
 import { BreakdownSubtaskDTO } from "@/feature/task-details/models/breakdown-subtask-dto";
+import { apiClient } from "@/shared/services/api/client";
 
 export const createBreakDownSubtasks = async (taskId: number) => {
   if (!taskId) return;
@@ -59,9 +59,7 @@ export async function getSubtasksByParentId(parentId: number): Promise<SubtaskDT
 export async function deleteSubtask(subtaskId: number): Promise<void> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/subtasks/${subtaskId}`;
   try {
-    await fetchWithAuth<void>(url, {
-      method: "DELETE",
-    });
+    await apiClient.delete(url);
   } catch (err) {
     console.error("Error deleting subtask:", err);
     throw new Error("Delete subtask failed");
