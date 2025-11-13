@@ -20,12 +20,12 @@ export default function GashaponMachine() {
   const handleDoNow = () => {
     console.log("Do it now pressed!");
   };
-  const handleBallDropped = () => {
+  const handleStarDropped = () => {
     setDropStarTrigger((prev) => prev + 1);
   };
 
   const { entities, handleRelease } = useGashaponMachineConfig({
-    onBallDropped: handleBallDropped,
+    onStarDropped: handleStarDropped,
   });
   const gameEngineReady = !!entities.physics;
   const isAllLoaded = basePicLoaded && buttonPicLoaded && gameEngineReady;

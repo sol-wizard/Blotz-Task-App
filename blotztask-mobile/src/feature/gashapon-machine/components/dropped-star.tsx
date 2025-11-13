@@ -9,7 +9,7 @@ const DROPOUT_Y = SCREEN_HEIGHT / 2 + 200;
 
 interface DroppedStarProps {
   trigger: number;
-  setTaskRevealModalVisible?: () => void;
+  setTaskRevealModalVisible: (v: boolean) => void;
 }
 
 export const DroppedStar: React.FC<DroppedStarProps> = ({ trigger, setTaskRevealModalVisible }) => {
@@ -81,7 +81,7 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({ trigger, setTaskReveal
           useNativeDriver: true,
         }),
       ]).start(() => {
-        setTaskRevealModalVisible && setTaskRevealModalVisible();
+        setTaskRevealModalVisible(true);
         setVisible(false);
         dimOpacity.setValue(0);
       });
@@ -104,7 +104,6 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({ trigger, setTaskReveal
         ]}
       />
 
-      {/* 星星本体 */}
       <Animated.View
         style={{
           position: "absolute",
