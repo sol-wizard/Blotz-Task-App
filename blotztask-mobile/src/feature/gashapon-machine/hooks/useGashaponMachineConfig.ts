@@ -10,11 +10,11 @@ import { Accelerometer } from "expo-sensors";
 export const useGashaponMachineConfig = ({
   ballRadius = 15,
   totalBalls = 10,
-  setModalVisible,
+  onBallDropped,
 }: {
   ballRadius?: number;
   totalBalls?: number;
-  setModalVisible: (visible: boolean) => void;
+  onBallDropped: () => void;
 }) => {
   const starImages = Array(totalBalls).fill(ASSETS.yellowStar);
 
@@ -41,7 +41,7 @@ export const useGashaponMachineConfig = ({
       Matter.Body.translate(gateRef.current, { x: 60, y: 0 });
       isGateOpenRef.current = false;
       ballPassedRef.current = false;
-      setModalVisible(true);
+      onBallDropped();
     }
   };
 
