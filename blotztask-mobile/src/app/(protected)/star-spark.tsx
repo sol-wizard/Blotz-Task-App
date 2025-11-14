@@ -2,13 +2,15 @@ import { fetchFloatingTasks } from "@/shared/services/task-service";
 import { theme } from "@/shared/constants/theme";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { useState, useEffect } from "react";
-import { View, Text, Pressable, ActivityIndicator, FlatList } from "react-native";
+import { View, Text, Image, ActivityIndicator, FlatList, Pressable } from "react-native";
 import { Searchbar } from "react-native-paper";
 import TaskCard from "@/feature/calendar/components/task-card";
 import { SafeAreaView } from "react-native-safe-area-context";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { ASSETS } from "@/shared/constants/assets";
+import { router } from "expo-router";
 
-export default function IdeasScreen() {
+export default function StarSparkScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [floatingTasks, setFloatingTasks] = useState<TaskDetailDTO[]>([]);
@@ -35,9 +37,16 @@ export default function IdeasScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <Text className="text-4xl font-bold text-gray-800 font-balooExtraBold pt-4 px-10">Ideas</Text>
-      <Text>Preview feature — still in development and may be unstable.</Text>
+    <SafeAreaView className="flex-1 bg-background mt-10">
+      <View className="flex-row justify-between items-center">
+        <Text className="text-4xl font-bold text-gray-800 font-balooExtraBold pt-4 px-10">
+          Star Spark
+        </Text>
+        <Pressable onPress={() => router.push("/(protected)/gashapon-machine")}>
+          <Image source={ASSETS.starIcon} className="w-12 h-12 mr-8"></Image>
+        </Pressable>
+      </View>
+
       <View className="bg-[#CDF79A] w-68 h-36 rounded-3xl mx-8 my-6">
         <Text className="font-baloo text-xl text-secondary my-4 ml-4">
           Ready to turn a spark into action?
@@ -68,10 +77,6 @@ export default function IdeasScreen() {
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
         />
       )}
-
-      <Pressable className="bg-[#9AD513] rounded-xl items-center py-4 w-68 mx-8 mt-6">
-        <Text className="text-white font-semibold text-lg">Add to today</Text>
-      </Pressable>
     </SafeAreaView>
   );
 }

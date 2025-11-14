@@ -7,8 +7,7 @@ import SettingsScreen from "@/feature/settings/settings-screen";
 import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
-import IdeasScreen from "./ideas";
-import TaskCreateScreen from "./task-create";
+import StarSparkScreen from "./star-spark";
 import { router } from "expo-router";
 
 const routes = [
@@ -32,8 +31,7 @@ const routes = [
 
 const CalendarRoute = () => <CalendarScreen />;
 const SettingsRoute = () => <SettingsScreen />;
-const StarSparkRoute = () => <IdeasScreen />;
-const CreateTaskRoute = () => <TaskCreateScreen />;
+const StarSparkRoute = () => <StarSparkScreen />;
 
 function getTabIcon(routeKey: string, focused: boolean) {
   switch (routeKey) {
