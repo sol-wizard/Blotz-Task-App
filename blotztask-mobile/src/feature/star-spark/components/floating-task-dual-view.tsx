@@ -8,10 +8,13 @@ export const FloatingTaskDualView = ({ tasks }: { tasks: FloatingTaskDTO[] }) =>
   const [toggledMap, setToggledMap] = useState<Record<number, boolean>>({});
 
   const handleToggle = (id: number) => {
-    setToggledMap((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+    setToggledMap((prev) => {
+      const isCurrentlyOn = !!prev[id];
+      if (isCurrentlyOn) {
+        return {};
+      }
+      return { [id]: true };
+    });
   };
 
   return (
@@ -30,8 +33,8 @@ export const FloatingTaskDualView = ({ tasks }: { tasks: FloatingTaskDTO[] }) =>
           const isToggled = !!toggledMap[item.id];
 
           return (
-            <View>
-              <Pressable onPress={() => handleToggle(item.id)} className="flex-1">
+            <View className="flex-1">
+              <Pressable onPress={() => handleToggle(item.id)}>
                 <View
                   className={`bg-white rounded-3xl p-4 w-52 ${
                     isToggled ? "border-2 border-[#3D8DE0]" : ""
@@ -52,6 +55,7 @@ export const FloatingTaskDualView = ({ tasks }: { tasks: FloatingTaskDTO[] }) =>
                   </View>
                 </View>
               </Pressable>
+
               {isToggled && (
                 <View className="flex-row justify-end mt-3">
                   <Pressable>
@@ -59,6 +63,7 @@ export const FloatingTaskDualView = ({ tasks }: { tasks: FloatingTaskDTO[] }) =>
                       <MaterialCommunityIcons name="trash-can-outline" color="#fff" size={18} />
                     </View>
                   </Pressable>
+
                   <Pressable>
                     <View className="w-8 h-8 bg-[#E3EFFE] rounded-xl items-center justify-center ml-2">
                       <MaterialCommunityIcons name="plus" color="#3D8DE0" size={18} />
