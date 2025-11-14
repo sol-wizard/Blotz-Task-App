@@ -1,10 +1,12 @@
-import { View, Image } from "react-native";
+import { View, Image, TouchableOpacity } from "react-native";
 import { UserProfileDTO } from "@/shared/models/user-profile-dto";
 import { IMAGES } from "@/shared/constants/assets";
+import { useRouter } from "expo-router";
 
 const DEFAULT_IMAGE_URL = IMAGES.blotzIcon;
 
 export default function UserProfile({ profile }: { profile?: UserProfileDTO }) {
+  const router = useRouter();
   if (!profile) {
     return <View className="w-14 h-14 rounded-full bg-gray-200" />;
   }
@@ -13,6 +15,13 @@ export default function UserProfile({ profile }: { profile?: UserProfileDTO }) {
 
   return (
     <View className="items-center justify-center mr-2">
+      <TouchableOpacity
+          onPress={() =>
+            router.push({
+              pathname: "/(protected)/user-details",
+            })
+          }
+        >
       {showPlaceholder ? (
         <Image source={DEFAULT_IMAGE_URL} className="w-14 h-14 rounded-full" resizeMode="cover" />
       ) : (
@@ -22,6 +31,7 @@ export default function UserProfile({ profile }: { profile?: UserProfileDTO }) {
           resizeMode="cover"
         />
       )}
+      </TouchableOpacity>
     </View>
   );
 }
