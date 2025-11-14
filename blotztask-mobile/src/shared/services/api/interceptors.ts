@@ -1,11 +1,12 @@
 import { AxiosInstance, InternalAxiosRequestConfig, AxiosError } from "axios";
 import { handleAuthError, handleOtherErrors } from "./error-handlers";
-import { getValidToken } from "./token-manager";
+import { getAuthToken } from "./token-manager";
 
 export function setupRequestInterceptor(api: AxiosInstance): void {
   api.interceptors.request.use(
     async (config) => {
-      const token = await getValidToken();
+      const token = await getAuthToken();
+
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }

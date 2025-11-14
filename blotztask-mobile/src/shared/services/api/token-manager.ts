@@ -5,12 +5,6 @@ import { AUTH_CONFIG } from "./config";
 
 const auth0 = new Auth0(AUTH_CONFIG);
 
-let isRefreshing = false;
-let failedQueue: {
-  resolve: (token: string) => void;
-  reject: (error: any) => void;
-}[] = [];
-
 export async function getAuthToken(): Promise<string | null> {
   return await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
 }
@@ -28,18 +22,8 @@ export async function clearTokens(): Promise<void> {
   await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
 }
 
-export function isTokenExpired(token: string): boolean {
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const exp = payload.exp * 1000;
-    const buffer = 5 * 60 * 1000; // 5 minutes
-    return Date.now() >= exp - buffer;
-  } catch {
-    return true;
-  }
-}
-
 export async function refreshToken(): Promise<string> {
+  console.log("starts refresh token!");
   const refreshTokenValue = await getRefreshToken();
 
   if (!refreshTokenValue) {
@@ -59,48 +43,4 @@ export async function refreshToken(): Promise<string> {
   }
 
   return credentials.accessToken;
-}
-
-export async function getValidToken(): Promise<string | null> {
-  let authToken = await getAuthToken();
-
-  if (!authToken) {
-    return null;
-  }
-
-  if (isTokenExpired(authToken)) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      try {
-        authToken = await refreshToken();
-        processQueue(null, authToken);
-      } catch (error) {
-        processQueue(error, null);
-        throw error;
-      } finally {
-        isRefreshing = false;
-      }
-    } else {
-      // Wait for ongoing refresh
-      return new Promise((resolve, reject) => {
-        failedQueue.push({
-          resolve: (newToken: string) => resolve(newToken),
-          reject: (err: any) => reject(err),
-        });
-      });
-    }
-  }
-
-  return authToken;
-}
-
-function processQueue(error: any = null, token: string | null = null): void {
-  failedQueue.forEach((promise) => {
-    if (error) {
-      promise.reject(error);
-    } else {
-      promise.resolve(token!);
-    }
-  });
-  failedQueue = [];
 }

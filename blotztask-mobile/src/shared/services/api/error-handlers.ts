@@ -15,6 +15,7 @@ export function handleAuthError(
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
         }
+        console.log("get new tokens");
         return api(originalRequest);
       })
       .catch((refreshError) => {
