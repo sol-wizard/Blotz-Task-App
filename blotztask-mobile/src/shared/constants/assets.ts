@@ -19,10 +19,15 @@ export const IMAGES = {
   greenBun: require("../../../assets/images/bun-green.png"),
   plusIcon: require("../../../assets/images/plus-icon.png"),
   loadingBun: require("../../../assets/images/loading-bun.png"),
-  capsuleToy: require("../../../assets/images/capsule-toy.png"),
   gashaponMachineBase: require("../../../assets/images/gashapon-machine-without-button.png"),
   gashaponMachineButton: require("../../../assets/images/gashapon-machine-button.png"),
   yellowStar: require("../../../assets/images/yellow-star.png"),
+  greenHouse: require("../../../assets/images/green-house.png"),
+  dashedHouse: require("../../../assets/images/house-dashed.png"),
+  starIcon: require("../../../assets/images/star-icon.png"),
+  dashedStar: require("../../../assets/images/star-dashed.png"),
+  dashedPlus: require("../../../assets/images/plus-dashed.png"),
+  dashedSettings: require("../../../assets/images/setting-icon.png"),
 } as const;
 
 // Export all assets for convenience
