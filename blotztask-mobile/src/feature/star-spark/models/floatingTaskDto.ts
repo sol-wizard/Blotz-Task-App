@@ -9,6 +9,5 @@ export interface FloatingTaskDTO {
   label?: LabelDTO;
   startTime?: string;
   endTime?: string;
-  timeType: TaskTimeType | null;
   createdAt?: string;
 }
