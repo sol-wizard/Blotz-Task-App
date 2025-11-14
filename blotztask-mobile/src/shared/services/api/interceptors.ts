@@ -4,24 +4,20 @@ import { getValidToken } from "./token-manager";
 
 export function setupRequestInterceptor(api: AxiosInstance): void {
   api.interceptors.request.use(
-    async config => {
-      try {
-        const token = await getValidToken();
-        if (token && config.headers) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      } catch (error) {
-        return Promise.reject(error);
+    async (config) => {
+      const token = await getValidToken();
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
+      return config;
     },
-    error => Promise.reject(error),
+    (error) => Promise.reject(error),
   );
 }
 
 export function setupResponseInterceptor(api: AxiosInstance): void {
   api.interceptors.response.use(
-    response => response,
+    (response) => response,
     async (error: AxiosError) => {
       const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 

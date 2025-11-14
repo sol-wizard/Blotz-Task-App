@@ -2,10 +2,10 @@ import Matter from "matter-js";
 import { useEffect, useRef, useState } from "react";
 import { createRectangleBetweenPoints } from "../utils/create-rectangle-between-points";
 import { EntityMap } from "../models/entity-map";
-import { WallRenderer } from "../components/wall-renderer";
-import { FloorRenderer } from "../components/floor-render";
 import { ASSETS } from "@/shared/constants/assets";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
+import { Accelerometer } from "expo-sensors";
+import { wallPoints } from "../utils/gashapon-inner-wall-points";
 
 export const useGashaponMachineConfig = ({
   starRadius = 15,
@@ -28,20 +28,17 @@ export const useGashaponMachineConfig = ({
 
   const handleRelease = (deltaThisTurn: number) => {
     if (Math.abs(deltaThisTurn) > 60) {
-      console.log("Release a Gachapon!");
-
       if (gateRef.current && !isGateOpenRef.current) {
-        Matter.Body.translate(gateRef.current, { x: 80, y: 0 });
+        Matter.Body.translate(gateRef.current, { x: -60, y: 0 });
         isGateOpenRef.current = true;
         console.log("gate is opened");
       }
     }
   };
-
   const closeGate = () => {
     if (gateRef.current && isGateOpenRef.current) {
       console.log("close gate");
-      Matter.Body.translate(gateRef.current, { x: -80, y: 0 });
+      Matter.Body.translate(gateRef.current, { x: 60, y: 0 });
       isGateOpenRef.current = false;
       starPassedRef.current = false;
       onStarDropped();
@@ -51,41 +48,56 @@ export const useGashaponMachineConfig = ({
   useEffect(() => {
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
-    engine.gravity.y = 1;
+    worldRef.current = world;
 
-    const floor = createRectangleBetweenPoints({
-      x1: 80,
-      y1: 500,
-      x2: 340,
-      y2: 450,
-    });
+    engine.gravity.y = 0.6;
+
+    const wallBodies: Matter.Body[] = [];
+
+    for (let i = 0; i < wallPoints.length - 1; i++) {
+      const p1 = wallPoints[i];
+      const p2 = wallPoints[i + 1];
+      if (i >= 13 && i <= 16) {
+        continue;
+      }
+
+      const segment = createRectangleBetweenPoints({
+        x1: p1.x,
+        y1: p1.y,
+        x2: p2.x,
+        y2: p2.y,
+        thickness: 13,
+      });
+      segment.label = `wall-${i}`;
+
+      wallBodies.push(segment);
+    }
+
+    Matter.World.add(world, [...wallBodies]);
 
     const gate = createRectangleBetweenPoints({
-      x1: 0,
-      y1: 500,
-      x2: 80,
-      y2: 500,
+      x1: 166.172,
+      y1: 449,
+      x2: 100,
+      y2: 438.02,
     });
-
-    const sensor = Matter.Bodies.rectangle(40, 540, 80, 20, {
-      isStatic: true,
-      isSensor: true,
-      label: "dropSensor",
-    });
-
     gateRef.current = gate;
+    Matter.World.add(world, gate);
 
-    const leftWall = Matter.Bodies.rectangle(0, worldHeight / 2, 20, worldHeight, {
-      isStatic: true,
+    const sensor = createRectangleBetweenPoints({
+      x1: 166.172,
+      y1: 490,
+      x2: 124.11,
+      y2: 480,
+      thickness: 20,
+      options: {
+        label: "dropSensor",
+        isStatic: true,
+        isSensor: true,
+      },
     });
 
-    const rightWall = Matter.Bodies.rectangle(worldWidth, worldHeight / 2, 20, worldHeight - 50, {
-      isStatic: true,
-    });
-
-    const ceiling = Matter.Bodies.rectangle(worldWidth / 2, 0, worldWidth, 20, {
-      isStatic: true,
-    });
+    Matter.World.add(world, sensor);
 
     const stars: Matter.Body[] = [];
 
@@ -96,13 +108,13 @@ export const useGashaponMachineConfig = ({
       const col = i % 5;
       const row = Math.floor(i / 5);
 
-      const x = startX + col * gapX;
-      const y = startY + row * gapY;
+      const x = 90 + col * gapX;
+      const y = 200 + row * gapY;
 
       const star = Matter.Bodies.circle(x, y, starRadius, {
         restitution: 0.4,
         friction: 0.05,
-        frictionStatic: 0.5,
+        frictionStatic: 0.2,
         frictionAir: 0.01,
         label: `star-${i}`,
       });
@@ -116,31 +128,6 @@ export const useGashaponMachineConfig = ({
       physics: {
         engine: engine,
         world: world,
-      },
-      gate: {
-        body: gate,
-        renderer: WallRenderer,
-        color: "#333",
-      },
-      ceiling: {
-        body: ceiling,
-        renderer: WallRenderer,
-        color: "#333",
-      },
-      floor: {
-        body: floor,
-        renderer: FloorRenderer,
-        color: "#333",
-      },
-      leftWall: {
-        body: leftWall,
-        renderer: WallRenderer,
-        color: "#333",
-      },
-      rightWall: {
-        body: rightWall,
-        renderer: WallRenderer,
-        color: "#333",
       },
     };
 
@@ -192,9 +179,12 @@ export const useGashaponMachineConfig = ({
     });
 
     return () => {
+      shakingSubscription.remove();
       Matter.Events.off(engine, "collisionStart");
+      Matter.World.clear(world, false);
+      Matter.Engine.clear(engine);
     };
   }, []);
 
-  return { entities, gateRef, isGateOpenRef, handleRelease };
+  return { entities, handleRelease };
 };
