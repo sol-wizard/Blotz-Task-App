@@ -20,7 +20,7 @@ export default function StarSparkScreen() {
           Star Spark
         </Text>
         <Pressable onPress={() => router.push("/(protected)/gashapon-machine")}>
-          <Image source={ASSETS.starIcon} className="w-12 h-12 mr-8"></Image>
+          <Image source={ASSETS.starSpark} className="w-12 h-12 mr-8"></Image>
         </Pressable>
       </View>
 

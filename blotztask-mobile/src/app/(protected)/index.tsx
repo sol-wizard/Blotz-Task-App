@@ -47,7 +47,7 @@ function getTabIcon(routeKey: string, focused: boolean) {
       );
     case "starSpark":
       return focused ? (
-        <BottomNavImage source={ASSETS.starIcon} containerClassName="mr-10" />
+        <BottomNavImage source={ASSETS.starSpark} containerClassName="mr-10" />
       ) : (
         <BottomNavImage
           source={ASSETS.dashedStar}
