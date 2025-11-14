@@ -4,8 +4,8 @@ import { createRectangleBetweenPoints } from "../utils/create-rectangle-between-
 import { EntityMap } from "../models/entity-map";
 import { ASSETS } from "@/shared/constants/assets";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
-import { Accelerometer } from "expo-sensors";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
+import { Accelerometer } from "expo-sensors";
 
 export const useGashaponMachineConfig = ({
   starRadius = 15,
