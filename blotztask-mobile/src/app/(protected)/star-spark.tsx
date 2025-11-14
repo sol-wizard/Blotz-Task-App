@@ -2,21 +2,20 @@ import { fetchFloatingTasks } from "@/shared/services/task-service";
 import { theme } from "@/shared/constants/theme";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { useState, useEffect } from "react";
-import { View, Text, Image, ActivityIndicator, FlatList, Pressable } from "react-native";
+import { View, Text, Image, Pressable } from "react-native";
 import { Searchbar } from "react-native-paper";
-import TaskCard from "@/feature/calendar/components/task-card";
 import { SafeAreaView } from "react-native-safe-area-context";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { ASSETS } from "@/shared/constants/assets";
 import { router } from "expo-router";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { FloatingTaskDualView } from "@/feature/star-spark/components/floating-task-dual-view";
+import { FloatingTaskDTO } from "@/feature/star-spark/models/floatingTaskDto";
 
 export default function StarSparkScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [floatingTasks, setFloatingTasks] = useState<TaskDetailDTO[]>([]);
-  const { deleteTask, isDeleting } = useTaskMutations();
+  const [floatingTasks, setFloatingTasks] = useState<FloatingTaskDTO[]>([]);
 
   useEffect(() => {
     const loadFloatingTasks = async () => {
@@ -33,10 +32,6 @@ export default function StarSparkScreen() {
 
     loadFloatingTasks();
   }, []);
-
-  const renderTask = ({ item }: { item: TaskDetailDTO }) => (
-    <TaskCard task={item} deleteTask={deleteTask} isDeleting={isDeleting} />
-  );
 
   return (
     <SafeAreaView className="flex-1 bg-background mt-10">

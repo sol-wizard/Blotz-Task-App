@@ -1,8 +1,8 @@
 import { ASSETS } from "@/shared/constants/assets";
-import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { FlatList, View, Text, Image } from "react-native";
+import { FloatingTaskDTO } from "../models/floatingTaskDto";
 
-export const FloatingTaskDualView = ({ tasks }: { tasks: TaskDetailDTO[] }) => {
+export const FloatingTaskDualView = ({ tasks }: { tasks: FloatingTaskDTO[] }) => {
   return (
     <View className="flex-1">
       <FlatList
@@ -15,7 +15,7 @@ export const FloatingTaskDualView = ({ tasks }: { tasks: TaskDetailDTO[] }) => {
         }}
         className="mx-4"
         renderItem={({ item }) => (
-          <View className="bg-white rounded-3xl p-4 w-48">
+          <View className="bg-white rounded-3xl p-4 w-52">
             <Text className="text-xl font-semibold text-black font-baloo">{item.title}</Text>
 
             <Text className="mt-2 text-[13px] text-[#9CA3AF] leading-snug font-balooThin">

@@ -2,6 +2,7 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { fetchWithAuth } from "@/shared/services/fetch-with-auth";
 import { EditTaskItemDTO } from "../../feature/task-add-edit/models/edit-task-item-dto";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { FloatingTaskDTO } from "@/feature/star-spark/models/floatingTaskDto";
 
 export async function fetchTasksForDate(
   date: Date,
@@ -22,10 +23,10 @@ export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
   return taskData;
 }
 
-export async function fetchFloatingTasks(): Promise<TaskDetailDTO[]> {
+export async function fetchFloatingTasks(): Promise<FloatingTaskDTO[]> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/floating`;
 
-  const data = await fetchWithAuth<TaskDetailDTO[]>(url, { method: "GET" });
+  const data = await fetchWithAuth<FloatingTaskDTO[]>(url, { method: "GET" });
   return data;
 }
 
