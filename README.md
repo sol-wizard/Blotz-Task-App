@@ -1,4 +1,5 @@
 # 📝 **BlotzTaskApp**
+
 https://blotztaskapp.webflow.io/
 
 ⭐ Star us on GitHub — it motivates us a lot!
@@ -40,6 +41,8 @@ BlotzTaskApp utilizes a variety of modern technologies to ensure a robust, scala
 - **State Management:** Zustand
 - **Data Fetching:** React Query
 - **Authentication:** Auth0
+- **Analytics:** PostHog
+- **Error Tracking:** Sentry
 
 ### 🔧 Backend
 
