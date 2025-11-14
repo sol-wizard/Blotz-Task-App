@@ -37,12 +37,12 @@ function getTabIcon(routeKey: string, focused: boolean) {
   switch (routeKey) {
     case "calendar":
       return focused ? (
-        <BottomNavImage source={ASSETS.greenHouse} containerClassName="ml-12" />
+        <BottomNavImage source={ASSETS.greenHouse} containerClassName="ml-14" />
       ) : (
         <BottomNavImage
           source={ASSETS.dashedHouse}
           imageClassName="w-5 h-5"
-          containerClassName="ml-12"
+          containerClassName="ml-14"
         />
       );
     case "starSpark":
@@ -69,13 +69,13 @@ function getTabIcon(routeKey: string, focused: boolean) {
         <BottomNavImage
           source={ASSETS.settingIcon}
           imageClassName="w-6 h-6"
-          containerClassName="mr-12"
+          containerClassName="mr-14"
         />
       ) : (
         <BottomNavImage
           source={ASSETS.dashedSettings}
           imageClassName="w-5 h-5"
-          containerClassName="mr-12"
+          containerClassName="mr-14"
         />
       );
 
