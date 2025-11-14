@@ -9,6 +9,7 @@ import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
 import IdeasScreen from "./ideas";
 import TaskCreateScreen from "./task-create";
+import { router } from "expo-router";
 
 const routes = [
   {
@@ -57,13 +58,7 @@ function getTabIcon(routeKey: string, focused: boolean) {
         />
       );
     case "createTask":
-      return focused ? (
-        <BottomNavImage
-          source={ASSETS.dashedPlus}
-          imageClassName="w-5 h-5"
-          containerClassName="ml-10"
-        />
-      ) : (
+      return (
         <BottomNavImage
           source={ASSETS.dashedPlus}
           imageClassName="w-5 h-5"
@@ -74,8 +69,8 @@ function getTabIcon(routeKey: string, focused: boolean) {
     case "settings":
       return focused ? (
         <BottomNavImage
-          source={ASSETS.dashedSettings}
-          imageClassName="w-5 h-5"
+          source={ASSETS.settingIcon}
+          imageClassName="w-6 h-6"
           containerClassName="mr-12"
         />
       ) : (
@@ -99,14 +94,25 @@ export default function ProtectedIndex() {
     calendar: CalendarRoute,
     settings: SettingsRoute,
     starSpark: StarSparkRoute,
-    createTask: CreateTaskRoute,
+    createTask: () => null,
   });
+
+  const handleIndexChange = (newIndex: number) => {
+    const selectedRoute = routes[newIndex];
+
+    if (selectedRoute.key === "createTask") {
+      router.push("/task-create");
+      return;
+    }
+
+    setIndex(newIndex);
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F9FA" }} edges={["bottom"]}>
       <BottomNavigation
         navigationState={{ index, routes }}
-        onIndexChange={setIndex}
+        onIndexChange={handleIndexChange}
         renderScene={renderScene}
         barStyle={{
           backgroundColor: "#F5F9FA",

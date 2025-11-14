@@ -27,7 +27,8 @@ export const IMAGES = {
   starIcon: require("../../../assets/images/star-icon.png"),
   dashedStar: require("../../../assets/images/star-dashed.png"),
   dashedPlus: require("../../../assets/images/plus-dashed.png"),
-  dashedSettings: require("../../../assets/images/setting-icon.png"),
+  dashedSettings: require("../../../assets/images/setting-dashed.png"),
+  settingIcon: require("../../../assets/images/setting-icon.png"),
 } as const;
 
 // Export all assets for convenience
