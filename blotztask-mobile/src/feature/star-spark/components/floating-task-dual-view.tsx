@@ -20,10 +20,7 @@ export const FloatingTaskDualView = ({ tasks }: { tasks: FloatingTaskDTO[] }) =>
   const rightColumn = tasks.filter((_, index) => index % 2 === 1);
 
   return (
-    <ScrollView
-      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
-      className="flex-1"
-    >
+    <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}>
       <View className="flex-row">
         <View className="flex-1 mr-1.5">
           {leftColumn.map((item) => {
