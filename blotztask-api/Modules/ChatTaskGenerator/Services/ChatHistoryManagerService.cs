@@ -1,23 +1,25 @@
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
-using BlotzTask.Modules.Labels.Queries;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IChatHistoryManagerService
-{ 
+{
+    void SetChatHistory(ChatHistory chatHistory);
     void RemoveConversation();
-    Task<ChatHistory> InitializeNewConversation(Guid userId);
+    Task<ChatHistory> InitializeNewConversation();
     ChatHistory GetChatHistory();
 }
 
-public class ChatHistoryManagerService(
-    ILogger<ChatHistoryManagerService> logger,
-    GetAllLabelsQueryHandler getAllLabelsQueryHandler
-    )
-    : IChatHistoryManagerService
+public class ChatHistoryManagerService : IChatHistoryManagerService
 {
     private static ChatHistory? _chatHistory;
+    private readonly ILogger<ChatHistoryManagerService> _logger;
+
+    public ChatHistoryManagerService(ILogger<ChatHistoryManagerService> logger)
+    {
+        _logger = logger;
+    }
 
     public ChatHistory GetChatHistory()
     {
@@ -37,19 +39,16 @@ public class ChatHistoryManagerService(
         _chatHistory = null;
     }
 
-    public async Task<ChatHistory> InitializeNewConversation(Guid userId)
+    public Task<ChatHistory> InitializeNewConversation()
     {
-        var query = new GetAllLabelsQuery{UserId = userId };
-        var labels = await getAllLabelsQueryHandler.Handle(query);
-
-        if (_chatHistory != null) return await Task.FromResult(_chatHistory);
+        if (_chatHistory != null) return Task.FromResult(_chatHistory);
 
 
         var chatHistory = new ChatHistory();
-        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(DateTime.Now, labels));
+        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(DateTime.Now));
 
         SetChatHistory(chatHistory);
 
-        return await Task.FromResult(chatHistory);
+        return Task.FromResult(chatHistory);
     }
 }

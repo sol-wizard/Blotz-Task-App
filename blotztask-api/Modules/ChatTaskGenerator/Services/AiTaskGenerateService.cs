@@ -1,4 +1,4 @@
-using System.Text.Json; using BlotzTask.Modules.ChatTaskGenerator.Constants;
+using System.Text.Json;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
@@ -12,39 +12,49 @@ public interface IAiTaskGenerateService
     Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct);
 }
 
-public class AiTaskGenerateService(
-    IChatHistoryManagerService chatHistoryManagerService,
-    IChatCompletionService chatCompletionService,
-    ILogger<AiTaskGenerateService> logger,
-    Kernel kernel)
-    : IAiTaskGenerateService
+public class AiTaskGenerateService : IAiTaskGenerateService
 {
+    private readonly IChatCompletionService _chatCompletionService;
+    private readonly IChatHistoryManagerService _chatHistoryManagerService;
+    private readonly Kernel _kernel;
+    private readonly ILogger<AiTaskGenerateService> _logger;
+
+    public AiTaskGenerateService(
+        IChatHistoryManagerService chatHistoryManagerService,
+        IChatCompletionService chatCompletionService,
+        ILogger<AiTaskGenerateService> logger,
+        Kernel kernel
+    )
+    {
+        _chatHistoryManagerService = chatHistoryManagerService;
+        _chatCompletionService = chatCompletionService;
+        _logger = logger;
+        _kernel = kernel;
+    }
+
     public async Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct)
     {
-        var chatHistory = chatHistoryManagerService.GetChatHistory();
+        var chatHistory = _chatHistoryManagerService.GetChatHistory();
+
+        var executionSettings = new OpenAIPromptExecutionSettings
+        {
+            Temperature = 0.2f
+        };
 
         try
         {
-            var executionSettings = new OpenAIPromptExecutionSettings
-            {
-                Temperature = 0.2, // Low temperature for more deterministic, consistent breakdowns
-                ResponseFormat = typeof(AiGenerateMessage) // Enforces structured output via JSON Schema
-            };
-            
-            var chatResults = await chatCompletionService.GetChatMessageContentsAsync(
+            var chatResults = await _chatCompletionService.GetChatMessageContentsAsync(
                 chatHistory,
                 executionSettings,
-                kernel,
+                _kernel,
                 ct
             );
 
             var functionResultMessage = chatResults.LastOrDefault();
-            
-            logger.LogInformation(functionResultMessage?.Content);
 
             if (functionResultMessage == null)
             {
-                logger.LogWarning(
+                _logger.LogWarning(
                     "Chat completion returned no messages. ChatHistory count: {Count}, Model: {ModelId}",
                     chatHistory.Count,
                     executionSettings.ModelId ?? "unknown"
@@ -54,7 +64,7 @@ public class AiTaskGenerateService(
 
             if (string.IsNullOrWhiteSpace(functionResultMessage.Content))
             {
-                logger.LogWarning("AI response content is empty.");
+                _logger.LogWarning("AI response content is empty.");
                 throw new AiEmptyResponseException();
             }
 
@@ -67,7 +77,7 @@ public class AiTaskGenerateService(
 
                 if (aiGenerateMessage == null)
                 {
-                    logger.LogWarning("Deserialized object is null.");
+                    _logger.LogWarning("Deserialized object is null.");
                     throw new AiInvalidJsonException(functionResultMessage.Content);
                 }
 
@@ -76,30 +86,30 @@ public class AiTaskGenerateService(
             }
             catch (JsonException ex)
             {
-                logger.LogError(ex, "Failed to deserialize AI response: {Content}", functionResultMessage.Content);
+                _logger.LogError(ex, "Failed to deserialize AI response: {Content}", functionResultMessage.Content);
                 throw new AiInvalidJsonException(functionResultMessage.Content, ex);
             }
         }
         catch (OperationCanceledException oce)
         {
-            logger.LogInformation(oce, "AI task generation cancelled.");
+            _logger.LogInformation(oce, "AI task generation cancelled.");
             throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
         }
         catch (TokenLimitExceededException ex)
         {
-            logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
+            _logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
             throw new AiTokenLimitedException();
         }
         catch (HttpOperationException ex) when (
             ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase)
         )
         {
-            logger.LogWarning(ex, "Request blocked by Azure OpenAI content filter.");
+            _logger.LogWarning(ex, "Request blocked by Azure OpenAI content filter.");
             throw new AiContentFilterException();
         }
         catch (Exception ex)
         {
-            logger.LogWarning("FULL EXCEPTION DETAILS: {ExceptionMessage}", ex.ToString());
+            _logger.LogWarning("FULL EXCEPTION DETAILS: {ExceptionMessage}", ex.ToString());
             throw new AiTaskGenerationException(AiErrorCode.Unknown,
                 "An unhandled exception occurred during AI task generation.", ex);
         }
