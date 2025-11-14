@@ -11,7 +11,6 @@ import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
 
 export default function StarSparkScreen() {
   const [searchQuery, setSearchQuery] = useState("");
-
   const { floatingTasks, isLoading } = useFloatingTasks();
 
   return (
