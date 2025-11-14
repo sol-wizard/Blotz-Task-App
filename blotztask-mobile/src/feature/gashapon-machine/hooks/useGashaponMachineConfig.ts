@@ -8,24 +8,23 @@ import { ASSETS } from "@/shared/constants/assets";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 
 export const useGashaponMachineConfig = ({
-  worldWidth = 340,
-  worldHeight = 500,
-  ballRadius = 30,
-  totalBalls = 10,
+  starRadius = 15,
+  totalStars = 10,
+  onStarDropped,
 }: {
-  worldWidth?: number;
-  worldHeight?: number;
-  ballRadius?: number;
-  totalBalls?: number;
-} = {}) => {
-  const eggImages = Array(totalBalls).fill(ASSETS.capsuleToy);
-
-  const gateRef = useRef<Matter.Body | null>(null);
-
-  const isGateOpenRef = useRef(false);
-  const ballPassedRef = useRef(false);
+  starRadius?: number;
+  totalStars?: number;
+  onStarDropped: () => void;
+}) => {
+  const starImages = Array(totalStars).fill(ASSETS.yellowStar);
 
   const [entities, setEntities] = useState<EntityMap>({});
+
+  const gateRef = useRef<Matter.Body | null>(null);
+  const worldRef = useRef<Matter.World | null>(null);
+  const starsRef = useRef<Matter.Body[]>([]);
+  const isGateOpenRef = useRef(false);
+  const starPassedRef = useRef(false);
 
   const handleRelease = (deltaThisTurn: number) => {
     if (Math.abs(deltaThisTurn) > 60) {
@@ -44,7 +43,8 @@ export const useGashaponMachineConfig = ({
       console.log("close gate");
       Matter.Body.translate(gateRef.current, { x: -80, y: 0 });
       isGateOpenRef.current = false;
-      ballPassedRef.current = false;
+      starPassedRef.current = false;
+      onStarDropped();
     }
   };
 
@@ -87,51 +87,30 @@ export const useGashaponMachineConfig = ({
       isStatic: true,
     });
 
-    Matter.World.add(world, [floor, ceiling, leftWall, rightWall, gate, sensor]);
+    const stars: Matter.Body[] = [];
 
-    const balls = [];
-    const colCount = 5;
-    const startX = 100;
-    const startY = 50;
-    const gapX = ballRadius * 2 + 5;
-    const gapY = ballRadius * 2 + 5;
+    const gapX = starRadius * 2 + 5;
+    const gapY = starRadius * 2 + 5;
 
-    for (let i = 0; i < totalBalls; i++) {
-      const col = i % colCount;
-      const row = Math.floor(i / colCount);
+    for (let i = 0; i < totalStars; i++) {
+      const col = i % 5;
+      const row = Math.floor(i / 5);
 
       const x = startX + col * gapX;
       const y = startY + row * gapY;
 
-      const ball = Matter.Bodies.circle(x, y, ballRadius, {
+      const star = Matter.Bodies.circle(x, y, starRadius, {
         restitution: 0.4,
         friction: 0.05,
         frictionStatic: 0.5,
         frictionAir: 0.01,
-        label: `ball-${i}`,
+        label: `star-${i}`,
       });
 
-      balls.push(ball);
+      stars.push(star);
     }
-
-    Matter.World.add(world, balls);
-
-    Matter.Events.on(engine, "collisionStart", (event) => {
-      event.pairs.forEach((pair) => {
-        const { bodyA, bodyB } = pair;
-
-        const isSensorCollision =
-          (bodyA.label === "dropSensor" && bodyB.label?.startsWith("ball")) ||
-          (bodyB.label === "dropSensor" && bodyA.label?.startsWith("ball"));
-
-        if (isSensorCollision && isGateOpenRef.current && !ballPassedRef.current) {
-          console.log("Detected the ball passing!");
-          ballPassedRef.current = true;
-
-          closeGate();
-        }
-      });
-    });
+    Matter.World.add(world, stars);
+    starsRef.current = stars;
 
     const newEntities: EntityMap = {
       physics: {
@@ -165,15 +144,52 @@ export const useGashaponMachineConfig = ({
       },
     };
 
-    balls.forEach((ball, idx) => {
-      newEntities["egg-" + idx] = {
-        body: ball,
-        texture: eggImages[idx % eggImages.length],
+    stars.forEach((star, idx) => {
+      newEntities["star-" + idx] = {
+        body: star,
+        texture: starImages[idx % starImages.length],
         renderer: CapsuleToyRenderer,
       };
     });
 
     setEntities(newEntities);
+    Matter.Events.on(engine, "collisionStart", (event) => {
+      event.pairs.forEach((pair) => {
+        const { bodyA, bodyB } = pair;
+        const star = bodyA.label.startsWith("star")
+          ? bodyA
+          : bodyB.label.startsWith("star")
+            ? bodyB
+            : null;
+        const sensor = bodyA.label === "dropSensor" || bodyB.label === "dropSensor";
+
+        if (star && sensor) {
+          console.log(`⚡ Star ${star.label} passed sensor, removing`);
+          starPassedRef.current = true;
+          closeGate();
+        }
+      });
+    });
+
+    Accelerometer.setUpdateInterval(16);
+
+    const shakingSubscription = Accelerometer.addListener((accelerometerData) => {
+      const { x, y } = accelerometerData;
+
+      starsRef.current.forEach((star) => {
+        if (star && worldRef.current) {
+          const starExists = worldRef.current.bodies.includes(star);
+          if (star.isSleeping) {
+            Matter.Sleeping.set(star, false);
+          }
+          if (starExists) {
+            const gravityStrength = 1.5;
+            engine.gravity.x = x * gravityStrength;
+            engine.gravity.y = -y * gravityStrength;
+          }
+        }
+      });
+    });
 
     return () => {
       Matter.Events.off(engine, "collisionStart");
