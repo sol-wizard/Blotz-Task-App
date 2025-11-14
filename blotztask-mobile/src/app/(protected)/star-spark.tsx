@@ -9,6 +9,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { ASSETS } from "@/shared/constants/assets";
 import { router } from "expo-router";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
+import { FloatingTaskDualView } from "@/feature/star-spark/components/floating-task-dual-view";
 
 export default function StarSparkScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,19 +66,8 @@ export default function StarSparkScreen() {
           }}
         />
       </View>
-      {isLoading && (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="small" />
-        </View>
-      )}
-      {!isLoading && floatingTasks.length > 0 && (
-        <FlatList
-          data={floatingTasks}
-          renderItem={renderTask}
-          keyExtractor={(task) => task.id.toString()}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
-        />
-      )}
+      {isLoading && <LoadingScreen />}
+      {!isLoading && floatingTasks.length > 0 && <FloatingTaskDualView tasks={floatingTasks} />}
     </SafeAreaView>
   );
 }
