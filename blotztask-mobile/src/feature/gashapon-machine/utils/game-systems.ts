@@ -25,11 +25,11 @@ export const cleanupSystem = (entities: EntityMap) => {
   const thresholdY = 449;
 
   Object.entries(entities).forEach(([key, entity]) => {
-    if (isGameEntity(entity) && entity.body.label.startsWith("ball")) {
+    if (isGameEntity(entity) && entity.body.label.startsWith("star")) {
       const y = entity.body.position.y;
 
       if (y > thresholdY) {
-        console.log(`🧹 Removing dropped ball: ${key}`);
+        console.log(`🧹 Removing dropped star: ${key}`);
 
         delete entities[key];
       }
