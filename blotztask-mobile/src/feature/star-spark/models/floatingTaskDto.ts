@@ -1,5 +1,4 @@
 import { LabelDTO } from "@/shared/models/label-dto";
-import { TaskTimeType } from "@/shared/models/task-detail-dto";
 
 export interface FloatingTaskDTO {
   id: number;
