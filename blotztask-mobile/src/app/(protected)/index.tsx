@@ -114,9 +114,9 @@ export default function ProtectedIndex() {
         renderScene={renderScene}
         barStyle={{
           backgroundColor: "#F5F9FA",
-          height: 70,
+          height: 40,
           elevation: 0,
-          marginBottom: 14,
+          marginBottom: 40,
         }}
         activeIndicatorStyle={{ backgroundColor: "transparent" }}
         labeled={false}

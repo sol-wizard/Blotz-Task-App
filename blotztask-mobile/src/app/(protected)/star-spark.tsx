@@ -14,8 +14,8 @@ export default function StarSparkScreen() {
   const { floatingTasks, isLoading } = useFloatingTasks();
 
   return (
-    <SafeAreaView className="flex-1 bg-background mt-10">
-      <View className="flex-row justify-between items-center">
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="flex-row justify-between items-center mt-10">
         <Text className="text-4xl font-bold text-gray-800 font-balooExtraBold pt-4 px-10">
           Star Spark
         </Text>
