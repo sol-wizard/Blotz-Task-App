@@ -11,11 +11,11 @@ let failedQueue: {
   reject: (error: any) => void;
 }[] = [];
 
-export async function getToken(): Promise<string | null> {
+export async function getAuthToken(): Promise<string | null> {
   return await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
 }
 
-export async function setToken(token: string): Promise<void> {
+export async function setAuthToken(token: string): Promise<void> {
   await SecureStore.setItemAsync(AUTH_TOKEN_KEY, token);
 }
 
@@ -52,7 +52,7 @@ export async function refreshToken(): Promise<string> {
     throw new Error("Failed to refresh token");
   }
 
-  await setToken(credentials.accessToken);
+  await setAuthToken(credentials.accessToken);
 
   if (credentials.refreshToken) {
     await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, credentials.refreshToken);
@@ -62,18 +62,18 @@ export async function refreshToken(): Promise<string> {
 }
 
 export async function getValidToken(): Promise<string | null> {
-  let token = await getToken();
+  let authToken = await getAuthToken();
 
-  if (!token) {
+  if (!authToken) {
     return null;
   }
 
-  if (isTokenExpired(token)) {
+  if (isTokenExpired(authToken)) {
     if (!isRefreshing) {
       isRefreshing = true;
       try {
-        token = await refreshToken();
-        processQueue(null, token);
+        authToken = await refreshToken();
+        processQueue(null, authToken);
       } catch (error) {
         processQueue(error, null);
         throw error;
@@ -91,7 +91,7 @@ export async function getValidToken(): Promise<string | null> {
     }
   }
 
-  return token;
+  return authToken;
 }
 
 function processQueue(error: any = null, token: string | null = null): void {
