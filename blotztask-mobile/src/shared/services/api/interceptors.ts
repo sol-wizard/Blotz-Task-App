@@ -6,7 +6,7 @@ export function setupRequestInterceptor(api: AxiosInstance): void {
   api.interceptors.request.use(
     async (config) => {
       const token = await getValidToken();
-      if (token && config.headers) {
+      if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
