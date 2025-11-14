@@ -33,3 +33,4 @@ credentials.json
 ios-builds/
 .env.local
 .env.local
+.vscode/
