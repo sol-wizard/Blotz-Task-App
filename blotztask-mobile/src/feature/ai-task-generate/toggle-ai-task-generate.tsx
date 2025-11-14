@@ -14,11 +14,11 @@ export const ToggleAiTaskGenerate = () => {
   return (
     <>
       <Pressable onPress={openSheet}>
-        <GradientCircle size={62}>
+        <GradientCircle size={58}>
           <Image
             source={ASSETS.whiteBun}
             resizeMode="contain"
-            style={[{ width: 26, height: 26, position: "absolute" }]}
+            style={[{ width: 28, height: 28, position: "absolute" }]}
           />
         </GradientCircle>
       </Pressable>

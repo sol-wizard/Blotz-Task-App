@@ -116,14 +116,14 @@ export default function ProtectedIndex() {
           backgroundColor: "#F5F9FA",
           height: 70,
           elevation: 0,
-          marginBottom: 10,
+          marginBottom: 14,
         }}
         activeIndicatorStyle={{ backgroundColor: "transparent" }}
         labeled={false}
         renderIcon={({ route, focused }) => getTabIcon(route.key, focused)}
       />
 
-      <View className="absolute left-4 right-4 items-center" style={{ bottom: insets.bottom }}>
+      <View className="absolute left-4 right-4 items-center" style={{ bottom: insets.bottom + 6 }}>
         <ToggleAiTaskGenerate />
       </View>
     </SafeAreaView>
