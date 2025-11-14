@@ -2,33 +2,62 @@
 
 ⭐ Star us on GitHub — it motivates us a lot!
 
-Blotz is an intelligent, efficient, and scalable To-Do List application designed to enhance productivity, streamline task management, and support both individual and team workflows. Whether for personal planning, team collaboration, or software development task management, Blotz provides a seamless experience that helps users stay organized and focused.
+Blotz is an AI-native productivity app built specifically for people struggling with productivity and task management, especially the ADHD people. It transforms overwhelming tasks into clear micro-steps through intelligent breakdown, context-aware reminders, and a distraction-free interface—helping users conquer task paralysis and time blindness across web and mobile.
 
 ## 🎯 Project Goal
 
-The primary goal of BlotzTaskApp is to provide users with a powerful yet easy-to-use platform for managing their tasks and to-dos. The app aims to streamline task organization and improve productivity by offering features like task categorization, deadlines, and notifications, and AI-assisted task creation.
+We aim to realign productivity tools with how ADHDs struggle with — eliminating anxiety and self-judgment through a system that adapts to your energy, celebrates small wins, and turns organization into confidence. Our goal is to make productivity a support system, not a daily battle.
+
+## 📁 Project Structure
+
+```
+Blotz-Task-App/
+├── blotztask-api/           # .NET 8 REST API backend
+├── blotztask-function/      # Azure Functions for scheduled tasks
+├── blotztask-ui/            # (Legacy) Next.js web application
+├── blotztask-mobile/        # React Native mobile app (Expo)
+└── infra/                   # Azure infrastructure (Bicep)
+```
 
 ## 🛠️ Tech Stack
 
 BlotzTaskApp utilizes a variety of modern technologies to ensure a robust, scalable, and maintainable codebase:
 
-### 💻 Frontend
-- Framework: Next.js
-- CSS Framework: Tailwind CSS
-- Design - Shadcn
+### 💻 Web Frontend (Legacy)
+
+- **Framework:** Next.js 14
+- **UI Components:** Radix UI, Shadcn
+- **Styling:** Tailwind CSS
+- **State Management:** Zustand
+- **Authentication:** NextAuth.js
+
+### 📱 Mobile
+
+- **Framework:** React Native (Expo)
+- **Navigation:** Expo Router
+- **Styling:** NativeWind (Tailwind CSS)
+- **State Management:** Zustand
+- **Data Fetching:** React Query
+- **Authentication:** Auth0
 
 ### 🔧 Backend
-- Framework: .NET 8
-- API: REST API
-- AI Integration: Azure OpenAI
+
+- **Framework:** .NET 8
+- **API:** REST API with SignalR
+- **AI Integration:** Azure OpenAI, Semantic Kernel
+- **Logging:** Serilog, Application Insights
 
 ### 💾 Data Layer
-- ORM: Entity Framework Core
-- Database: SQL Server
+
+- **ORM:** Entity Framework Core
+- **Database:** SQL Server
 
 ### ☁️ Cloud Service & Hosting
-- Repository: GitHub
-- CI/CD: GitHub Actions
-- Backend Hosting: Azure
-- Frontend Hosting: Vercel
-- Web Service: Azure SQL Database, Azure Web App, Azure Key Vault, Azure OpenAI
+
+- **Repository:** GitHub
+- **CI/CD:** GitHub Actions
+- **Backend Hosting:** Azure Web App
+- **Frontend Hosting:** Vercel
+- **Mobile:** Expo
+- **Infrastructure:** Azure SQL Database, Azure Key Vault, Azure OpenAI, Application Insights
+- **IaC:** Bicep
