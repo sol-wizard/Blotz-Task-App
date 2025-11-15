@@ -72,7 +72,7 @@ export default function GashaponMachine() {
               marginTop: 10,
             }}
           >
-            {isAllLoaded && (
+            {gameEngineReady && (
               <GameEngine
                 systems={[physicsSystem, cleanupSystem]}
                 running={isAllLoaded}

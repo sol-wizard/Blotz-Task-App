@@ -21,7 +21,8 @@ public class GetFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetFloa
         var tasks = await db.TaskItems
             .Where(t => t.UserId == query.UserId
                         && t.StartTime == null
-                        && t.EndTime == null)
+                        && t.EndTime == null
+                        && t.IsDone == false)
             .Select(task => new FloatingTaskItemDto
             {
                 Id = task.Id,
@@ -30,6 +31,7 @@ public class GetFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetFloa
                 StartTime = task.StartTime,
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
+                CreatedAt = task.CreatedAt,
                 Label = task.Label != null ? new LabelDto
                 {
                     LabelId = task.Label.LabelId,
@@ -52,6 +54,7 @@ public class FloatingTaskItemDto
     public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
+    public DateTime CreatedAt { get; set; }
     public LabelDto? Label { get; set; }
 }
 

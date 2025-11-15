@@ -47,7 +47,7 @@ export default function ProtectedLayout() {
         }}
       />
       <Stack.Screen
-        name="ideas"
+        name="star-spark"
         options={{
           headerShown: true,
           headerShadowVisible: false,

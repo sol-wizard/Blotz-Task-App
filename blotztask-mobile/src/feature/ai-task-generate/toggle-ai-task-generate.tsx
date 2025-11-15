@@ -2,8 +2,9 @@ import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottoms
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { AiTaskGenerateModal } from "./component/ai-task-generate-modal";
 import { useRef } from "react";
-import { Platform } from "react-native";
-import { FloatingDualButton } from "./component/floating-dual-button";
+import { Platform, Pressable, Image } from "react-native";
+import { GradientCircle } from "@/shared/components/common/gradient-circle";
+import { ASSETS } from "@/shared/constants/assets";
 
 export const ToggleAiTaskGenerate = () => {
   const aiVoiceInputModalRef = useRef<BottomSheetModal>(null);
@@ -12,7 +13,15 @@ export const ToggleAiTaskGenerate = () => {
 
   return (
     <>
-      <FloatingDualButton onOpenSheet={openSheet} />
+      <Pressable onPress={openSheet}>
+        <GradientCircle size={58}>
+          <Image
+            source={ASSETS.whiteBun}
+            resizeMode="contain"
+            style={[{ width: 28, height: 28, position: "absolute" }]}
+          />
+        </GradientCircle>
+      </Pressable>
 
       <BottomSheetModal
         ref={aiVoiceInputModalRef}
