@@ -125,7 +125,13 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({ trigger, setTaskReveal
           elevation: 10,
         }}
       >
-        <Image source={ASSETS.yellowStar} resizeMode="contain" />
+        <Image
+          source={ASSETS.yellowStar}
+          style={{
+            width: 60,
+            height: 60,
+          }}
+        />
       </Animated.View>
     </>
   );
