@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "BlotzTask",
-    "icon": "./assets/images/blotz-icon.png",
+    "icon": "./assets/images-png/blotz-icon.png",
     "slug": "BlotzTask",
     "owner": "blotz",
     "version": "1.0.0",
@@ -29,9 +29,7 @@
       "appName": "BlotzTask",
       "edgeToEdgeEnabled": true,
       "package": "com.blotz.blotztask",
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "web": {
       "bundler": "metro",
