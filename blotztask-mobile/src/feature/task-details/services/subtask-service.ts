@@ -21,7 +21,7 @@ export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/tasks/${taskId}/subtasks/${subtaskId}`;
 
   try {
-    await apiClient.put(url, JSON.stringify({ ...newSubtask }));
+    await apiClient.put(url, { ...newSubtask });
   } catch (err: any) {
     console.error("Update subtask failed:", err);
     throw new Error("Update subtask failed");
@@ -38,7 +38,7 @@ export async function replaceSubtasks({
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/tasks/${taskId}/replaceSubtasks`;
 
   try {
-    await apiClient.post(url, JSON.stringify({ taskId, subtasks }));
+    await apiClient.post(url, { taskId, subtasks });
   } catch (err: any) {
     console.error("Add subtasks failed:", err);
     throw new Error("Add subtasks failed");

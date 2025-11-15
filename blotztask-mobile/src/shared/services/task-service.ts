@@ -36,7 +36,7 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
 export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<number> => {
   try {
     const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`;
-    const newTaskId: number = await apiClient.post(url, JSON.stringify(addTaskForm));
+    const newTaskId: number = await apiClient.post(url, addTaskForm);
     return newTaskId;
   } catch (error) {
     console.error("Error adding task:", error);
@@ -47,7 +47,7 @@ export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<number> 
 export async function updateTaskItem(updatedTask: EditTaskItemDTO): Promise<void> {
   try {
     const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${updatedTask.id}`;
-    await apiClient.put(url, JSON.stringify(updatedTask));
+    await apiClient.put(url, updatedTask);
   } catch (error) {
     console.error("Error updating task:", error);
     throw error;
