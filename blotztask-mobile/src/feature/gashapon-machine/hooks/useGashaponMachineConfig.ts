@@ -57,7 +57,7 @@ export const useGashaponMachineConfig = ({
     for (let i = 0; i < wallPoints.length - 1; i++) {
       const p1 = wallPoints[i];
       const p2 = wallPoints[i + 1];
-      if (i >= 13 && i <= 16) {
+      if (i >= 14 && i <= 16) {
         continue;
       }
 
@@ -88,7 +88,7 @@ export const useGashaponMachineConfig = ({
       x1: 166.172,
       y1: 490,
       x2: 124.11,
-      y2: 480,
+      y2: 485,
       thickness: 20,
       options: {
         label: "dropSensor",
@@ -109,7 +109,7 @@ export const useGashaponMachineConfig = ({
       const row = Math.floor(i / 5);
 
       const x = 90 + col * gapX;
-      const y = 200 + row * gapY;
+      const y = 210 + row * gapY;
 
       const star = Matter.Bodies.circle(x, y, starRadius, {
         restitution: 0.4,
