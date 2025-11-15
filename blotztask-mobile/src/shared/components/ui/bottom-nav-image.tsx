@@ -17,7 +17,7 @@ export const BottomNavImage = ({
         containerClassName ?? ""
       }`}
     >
-      <Image source={source} className={`w-8 h-8 ${imageClassName ?? ""}`} />
+      <Image source={source} className={`w-10 h-10 ${imageClassName ?? ""}`} />
     </View>
   );
 };

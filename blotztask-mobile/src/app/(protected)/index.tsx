@@ -45,7 +45,7 @@ function getTabIcon(routeKey: string, focused: boolean) {
         <BottomNavImage source={ASSETS.greenHouse} containerClassName="ml-14" />
       ) : (
         <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center ml-14">
-          <DashedHouse />
+          <DashedHouse width={20} height={20} />
         </View>
       );
     case "starSpark":
@@ -53,13 +53,13 @@ function getTabIcon(routeKey: string, focused: boolean) {
         <BottomNavImage source={ASSETS.starSpark} containerClassName="mr-10" />
       ) : (
         <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center mr-10">
-          <DashedStar />
+          <DashedStar width={24} height={24} />
         </View>
       );
     case "createTask":
       return (
         <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center ml-10">
-          <DashedPlus />
+          <DashedPlus width={24} height={24} />
         </View>
       );
 
@@ -67,12 +67,12 @@ function getTabIcon(routeKey: string, focused: boolean) {
       return focused ? (
         <BottomNavImage
           source={ASSETS.settingIcon}
-          imageClassName="w-6 h-6"
+          imageClassName="w-8 h-8"
           containerClassName="mr-14"
         />
       ) : (
         <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center mr-14">
-          <DashedSettings />
+          <DashedSettings width={27} height={27} />
         </View>
       );
 
