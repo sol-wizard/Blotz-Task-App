@@ -57,7 +57,7 @@ export const useGashaponMachineConfig = ({
     for (let i = 0; i < wallPoints.length - 1; i++) {
       const p1 = wallPoints[i];
       const p2 = wallPoints[i + 1];
-      if (i >= 13 && i <= 16) {
+      if (i >= 14 && i <= 16) {
         continue;
       }
 
