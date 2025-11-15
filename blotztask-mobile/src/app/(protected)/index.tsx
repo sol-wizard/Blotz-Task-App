@@ -34,34 +34,33 @@ const SettingsRoute = () => <SettingsScreen />;
 const StarSparkRoute = () => <StarSparkScreen />;
 
 function getTabIcon(routeKey: string, focused: boolean) {
+  const DashedStar = ASSETS.dashedStar;
+  const DashedHouse = ASSETS.dashedHouse;
+  const DashedPlus = ASSETS.dashedPlus;
+  const DashedSettings = ASSETS.dashedSettings;
+
   switch (routeKey) {
     case "calendar":
       return focused ? (
         <BottomNavImage source={ASSETS.greenHouse} containerClassName="ml-14" />
       ) : (
-        <BottomNavImage
-          source={ASSETS.dashedHouse}
-          imageClassName="w-5 h-5"
-          containerClassName="ml-14"
-        />
+        <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center ml-14">
+          <DashedHouse />
+        </View>
       );
     case "starSpark":
       return focused ? (
         <BottomNavImage source={ASSETS.starSpark} containerClassName="mr-10" />
       ) : (
-        <BottomNavImage
-          source={ASSETS.dashedStar}
-          imageClassName="w-5 h-5"
-          containerClassName="mr-10"
-        />
+        <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center mr-10">
+          <DashedStar />
+        </View>
       );
     case "createTask":
       return (
-        <BottomNavImage
-          source={ASSETS.dashedPlus}
-          imageClassName="w-5 h-5"
-          containerClassName="ml-10"
-        />
+        <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center ml-10">
+          <DashedPlus />
+        </View>
       );
 
     case "settings":
@@ -72,11 +71,9 @@ function getTabIcon(routeKey: string, focused: boolean) {
           containerClassName="mr-14"
         />
       ) : (
-        <BottomNavImage
-          source={ASSETS.dashedSettings}
-          imageClassName="w-5 h-5"
-          containerClassName="mr-14"
-        />
+        <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center mr-14">
+          <DashedSettings />
+        </View>
       );
 
     default:
