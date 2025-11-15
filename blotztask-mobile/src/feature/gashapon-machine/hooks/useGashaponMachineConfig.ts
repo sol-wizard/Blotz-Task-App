@@ -88,7 +88,7 @@ export const useGashaponMachineConfig = ({
       x1: 166.172,
       y1: 490,
       x2: 124.11,
-      y2: 480,
+      y2: 485,
       thickness: 20,
       options: {
         label: "dropSensor",
@@ -109,7 +109,7 @@ export const useGashaponMachineConfig = ({
       const row = Math.floor(i / 5);
 
       const x = 90 + col * gapX;
-      const y = 200 + row * gapY;
+      const y = 210 + row * gapY;
 
       const star = Matter.Bodies.circle(x, y, starRadius, {
         restitution: 0.4,
