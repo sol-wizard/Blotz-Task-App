@@ -59,8 +59,6 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddAuth0(builder.Configuration);
 builder.Services.AddAzureOpenAi();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 // Register the Kernel as a singleton service
 builder.Services.AddSingleton<Kernel>(sp =>
@@ -99,21 +97,7 @@ builder.Services.AddScoped<IChatCompletionService>(sp =>
     return kernel.GetRequiredService<IChatCompletionService>();
 });
 
-builder.Services.AddCors(options =>
-{
-    // CORS Best Practice https://q240iu43yr.feishu.cn/docx/JTkcdbwtloFHJWxvi0ocmTuOnjd?from=from_copylink
-    options.AddPolicy("AllowSpecificOrigin",
-        builder =>
-        {
-            builder.WithOrigins("http://localhost:3000" // DEV frontend origin
-                    , "http://localhost:8081" // DEV mobile app origin
-                    , "https://blotz-task-app.vercel.app") // Prod frontend origin    
-                .WithMethods("GET", "POST", "OPTIONS", "PUT", "DELETE") // Specify allowed methods
-                .WithHeaders("Content-Type", "Authorization", "x-signalr-user-agent",
-                    "x-requested-with") // Added SignalR headers
-                .AllowCredentials(); // TODO: anti-csrf need to be built.
-        });
-});
+builder.Services.AddCustomCors();
 
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
