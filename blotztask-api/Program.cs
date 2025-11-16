@@ -10,8 +10,6 @@ using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,44 +47,7 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddAuth0(builder.Configuration);
 builder.Services.AddAzureOpenAi();
-
-// Register the Kernel as a singleton service
-builder.Services.AddSingleton<Kernel>(sp =>
-{
-    var logger = sp.GetRequiredService<ILogger<Program>>();
-    var config = builder.Configuration;
-    var secretClient = sp.GetService<SecretClient>();
-    var endpoint = config["AzureOpenAI:Endpoint"];
-    var deploymentId = config["AzureOpenAI:DeploymentId"];
-    var apiKey = config["AzureOpenAI:ApiKey"];
-
-    if (secretClient != null && builder.Environment.IsProduction())
-        try
-        {
-            apiKey = secretClient.GetSecret("azureopenai-apikey").Value.Value;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to retrieve API key from Azure Key Vault");
-        }
-
-    var kernelBuilder = Kernel.CreateBuilder();
-
-    kernelBuilder.AddAzureOpenAIChatCompletion(
-        deploymentId,
-        endpoint,
-        apiKey
-    );
-
-    return kernelBuilder.Build();
-});
-
-builder.Services.AddScoped<IChatCompletionService>(sp =>
-{
-    var kernel = sp.GetRequiredService<Kernel>();
-    return kernel.GetRequiredService<IChatCompletionService>();
-});
-
+builder.Services.AddSemanticKernelServices(builder.Configuration);
 builder.Services.AddCustomCors();
 
 var app = builder.Build();
