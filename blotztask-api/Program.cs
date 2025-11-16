@@ -5,12 +5,9 @@ using BlotzTask.Infrastructure.Data;
 using BlotzTask.Middleware;
 using BlotzTask.Modules.BreakDown;
 using BlotzTask.Modules.ChatTaskGenerator;
-using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Tasks;
-
 using BlotzTask.Modules.Users;
-using BlotzTask.Shared.Store;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration.AzureKeyVault;
 using Microsoft.SemanticKernel;
@@ -25,14 +22,7 @@ builder
 
 // Add services to the container.
 builder.Services.AddCoreServices();
-
-builder.Services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
-builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
-
-builder.Services.AddSingleton(new ChatHistoryStore(
-    TimeSpan.FromMinutes(30), // Sessions expire after 30 minutes of inactivity
-    TimeSpan.FromMinutes(5) // Scanning every 5 minutes
-));
+builder.Services.AddChatTaskGeneratorModule();
 
 builder.Services.AddTaskModule();
 builder.Services.AddUserModule();
