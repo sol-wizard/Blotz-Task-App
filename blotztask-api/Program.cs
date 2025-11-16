@@ -24,17 +24,10 @@ builder
     .AddApplicationInsights();
 
 // Add services to the container.
-builder.Services.AddSignalR();
-builder.Services.AddControllers();
-builder.Services.AddHealthChecks();
-
-//TODO : Move all services to module based registration
-
+builder.Services.AddCoreServices();
 
 builder.Services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
 builder.Services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
-
-
 
 builder.Services.AddSingleton(new ChatHistoryStore(
     TimeSpan.FromMinutes(30), // Sessions expire after 30 minutes of inactivity
