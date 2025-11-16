@@ -1,15 +1,10 @@
-using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
 using BlotzTask.Extension;
-using BlotzTask.Infrastructure.Data;
 using BlotzTask.Middleware;
 using BlotzTask.Modules.BreakDown;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Users;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration.AzureKeyVault;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,23 +22,7 @@ builder.Services.AddUserModule();
 builder.Services.AddLabelModule();
 builder.Services.AddTaskBreakdownModule();
 
-if (builder.Environment.IsDevelopment())
-{
-    var databaseConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    builder.Services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(databaseConnectionString));
-}
-
-if (builder.Environment.IsProduction())
-{
-    var keyVaultEndpoint = builder.Configuration["KeyVault:VaultURI"];
-    builder.Configuration.AddAzureKeyVault(keyVaultEndpoint, new DefaultKeyVaultSecretManager());
-    var secretClient = new SecretClient(new Uri(keyVaultEndpoint), new DefaultAzureCredential());
-    builder.Services.AddSingleton(secretClient);
-
-    var sqlConnectionSecret = secretClient.GetSecret("sql-connection-string").Value.Value;
-    builder.Services.AddDbContext<BlotzTaskDbContext>(options =>
-        options.UseSqlServer(sqlConnectionSecret));
-}
+builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 
 builder.Services.AddAuth0(builder.Configuration);
 builder.Services.AddAzureOpenAi();
