@@ -26,7 +26,7 @@ builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 
 builder.Services.AddAuth0(builder.Configuration);
 builder.Services.AddAzureOpenAi();
-builder.Services.AddSemanticKernelServices(builder.Configuration);
+builder.Services.AddSemanticKernelServices(builder.Configuration, builder.Environment);
 builder.Services.AddCustomCors();
 
 var app = builder.Build();
