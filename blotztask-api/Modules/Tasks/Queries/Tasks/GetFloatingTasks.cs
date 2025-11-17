@@ -21,6 +21,7 @@ public class GetFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetFloa
                         && t.StartTime == null
                         && t.EndTime == null
                         && t.IsDone == false
+                        && t.CreatedAt < DateTime.UtcNow.Date
             )
             .Select(task => new FloatingTaskItemDto
             {
