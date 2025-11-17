@@ -2,6 +2,7 @@ import { View, Text, Pressable, Image } from "react-native";
 import { FloatingTaskDTO } from "../models/floatingTaskDto";
 import { ASSETS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { format } from "date-fns";
 
 export const FloatingTaskCard = ({
   floatingTask,
@@ -25,7 +26,9 @@ export const FloatingTaskCard = ({
           </Text>
 
           <View className="mt-4 flex-row items-center justify-between">
-            <Text className="text-xs text-[#6B7280] font-balooThin">01 Nov 17:49</Text>
+            <Text className="text-xs text-[#6B7280] font-balooThin">
+              {floatingTask.createdAt && format(floatingTask.createdAt, "dd MMM HH:mm")}
+            </Text>
 
             <View className="w-6 h-6 items-center justify-center">
               <Image source={ASSETS.yellowStar} className="w-8 h-8" />
