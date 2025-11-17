@@ -10,25 +10,41 @@ import { LinearGradient } from "expo-linear-gradient";
 import { TaskRevealModal } from "@/feature/gashapon-machine/components/task-reveal-modal";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
+import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
+import { pickRandomTask } from "@/feature/star-spark/utils/pick-random-task";
+import { FloatingTaskDTO } from "@/feature/star-spark/models/floatingTaskDto";
 
 export default function GashaponMachine() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
+  const [starLabelName, setStarLabelName] = useState("");
+  const [randomTask, setRandomTask] = useState<FloatingTaskDTO | null>(null);
+
+  const { floatingTasks, isLoading } = useFloatingTasks();
+
+  const MAX_STARS = 30;
+
+  const limitedFloatingTasks = floatingTasks ?? [].slice(0, MAX_STARS);
 
   const handleDoNow = () => {
     console.log("Do it now pressed!");
   };
-  const handleStarDropped = () => {
+  const handleStarDropped = (starLabelName: string) => {
+    setStarLabelName(starLabelName);
+    const randomTask = pickRandomTask(floatingTasks ?? [], starLabelName);
+    setRandomTask(randomTask);
     setDropStarTrigger((prev) => prev + 1);
   };
 
   const { entities, handleRelease } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
+    floatingTasks: limitedFloatingTasks,
   });
+
   const gameEngineReady = !!entities.physics;
-  const isAllLoaded = basePicLoaded && buttonPicLoaded && gameEngineReady;
+  const isAllLoaded = basePicLoaded && buttonPicLoaded && gameEngineReady && !isLoading;
 
   return (
     <LinearGradient
@@ -40,7 +56,7 @@ export default function GashaponMachine() {
       <SafeAreaView className="flex-1 items-center justify-center">
         <TaskRevealModal
           visible={isModalVisible}
-          taskTitle="Clean Up House"
+          task={randomTask}
           onClose={() => setModalVisible(false)}
           onDoNow={handleDoNow}
         />
@@ -91,6 +107,7 @@ export default function GashaponMachine() {
         </View>
 
         <DroppedStar
+          starLabelName={starLabelName}
           trigger={dropStarTrigger}
           setTaskRevealModalVisible={() => {
             setModalVisible(true);
