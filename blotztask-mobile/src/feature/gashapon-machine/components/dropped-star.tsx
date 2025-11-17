@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, StyleSheet, Image, Easing } from "react-native";
-import { ASSETS } from "@/shared/constants/assets";
+import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -8,11 +8,17 @@ const DROPOUT_X = SCREEN_WIDTH / 2 - 40;
 const DROPOUT_Y = SCREEN_HEIGHT / 2 + 200;
 
 interface DroppedStarProps {
+  starLabelName: string;
   trigger: number;
   setTaskRevealModalVisible: (v: boolean) => void;
 }
 
-export const DroppedStar: React.FC<DroppedStarProps> = ({ trigger, setTaskRevealModalVisible }) => {
+export const DroppedStar: React.FC<DroppedStarProps> = ({
+  starLabelName,
+  trigger,
+  setTaskRevealModalVisible,
+}) => {
+  const imageSource = getLabelIcon(starLabelName);
   const [visible, setVisible] = useState(false);
 
   const dimOpacity = useRef(new Animated.Value(0)).current;
@@ -126,7 +132,7 @@ export const DroppedStar: React.FC<DroppedStarProps> = ({ trigger, setTaskReveal
         }}
       >
         <Image
-          source={ASSETS.yellowStar}
+          source={imageSource}
           style={{
             width: 60,
             height: 60,

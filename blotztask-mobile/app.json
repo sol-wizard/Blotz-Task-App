@@ -23,7 +23,7 @@
         "NSMotionUsageDescription": "This app uses motion data to simulate gravity and allow capsule toys to move when you shake your phone."
       },
       "appleTeamId": "LXC29JARY5",
-      "icon": "./assets/images/blotz-icon.png"
+      "icon": "./assets/images-png/blotz-icon.png"
     },
     "android": {
       "appName": "BlotzTask",

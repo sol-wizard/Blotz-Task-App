@@ -1,10 +1,9 @@
-import React, { memo } from "react";
 import { View, Image, Text } from "react-native";
 import { PNGIMAGES } from "@/shared/constants/assets";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { MaterialIcons } from "@expo/vector-icons";
 
-const CardIdentityView = () => {
+export const CardIdentityView = () => {
   const { userProfile } = useUserProfile();
 
   const avatar = userProfile?.pictureUrl ? { uri: userProfile.pictureUrl } : PNGIMAGES.blotzIcon;
@@ -27,5 +26,3 @@ const CardIdentityView = () => {
     </View>
   );
 };
-
-export default memo(CardIdentityView);
