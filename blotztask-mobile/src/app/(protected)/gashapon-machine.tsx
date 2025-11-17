@@ -32,7 +32,6 @@ export default function GashaponMachine() {
     console.log("Do it now pressed!");
   };
   const handleStarDropped = (starLabelName: string) => {
-    console.log("dropped starLabelName", starLabelName);
     setStarLabelName(starLabelName);
     const randomTask = pickRandomTask(safeFloatingTasks, starLabelName);
     setRandomTask(randomTask);
