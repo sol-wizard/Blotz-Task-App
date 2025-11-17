@@ -10,12 +10,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import { TaskRevealModal } from "@/feature/gashapon-machine/components/task-reveal-modal";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
+import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
+import { createStarImagesFromTasks } from "@/feature/star-spark/utils/get-label-icon";
 
 export default function GashaponMachine() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
+  const { floatingTasks, isLoading } = useFloatingTasks();
 
   const handleDoNow = () => {
     console.log("Do it now pressed!");
@@ -24,11 +27,14 @@ export default function GashaponMachine() {
     setDropStarTrigger((prev) => prev + 1);
   };
 
+  const starImages = createStarImagesFromTasks(floatingTasks ?? []);
+
   const { entities, handleRelease } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
+    starImages,
   });
   const gameEngineReady = !!entities.physics;
-  const isAllLoaded = basePicLoaded && buttonPicLoaded && gameEngineReady;
+  const isAllLoaded = basePicLoaded && buttonPicLoaded && gameEngineReady && !isLoading;
 
   return (
     <LinearGradient

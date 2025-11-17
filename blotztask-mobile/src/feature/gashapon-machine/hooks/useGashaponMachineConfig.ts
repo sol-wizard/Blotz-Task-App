@@ -9,15 +9,13 @@ import { Accelerometer } from "expo-sensors";
 
 export const useGashaponMachineConfig = ({
   starRadius = 15,
-  totalStars = 10,
   onStarDropped,
+  starImages,
 }: {
   starRadius?: number;
-  totalStars?: number;
   onStarDropped: () => void;
+  starImages: any;
 }) => {
-  const starImages = Array(totalStars).fill(ASSETS.yellowStar);
-
   const [entities, setEntities] = useState<EntityMap>({});
 
   const gateRef = useRef<Matter.Body | null>(null);
@@ -103,6 +101,8 @@ export const useGashaponMachineConfig = ({
 
     const gapX = starRadius * 2 + 5;
     const gapY = starRadius * 2 + 5;
+
+    const totalStars = starImages.length;
 
     for (let i = 0; i < totalStars; i++) {
       const col = i % 5;

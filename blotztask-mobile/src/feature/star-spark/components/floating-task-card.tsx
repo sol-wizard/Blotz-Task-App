@@ -3,6 +3,7 @@ import { FloatingTaskDTO } from "../models/floatingTaskDto";
 import { ASSETS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
+import { getLabelIcon } from "../utils/get-label-icon";
 
 export const FloatingTaskCard = ({
   floatingTask,
@@ -13,9 +14,10 @@ export const FloatingTaskCard = ({
   isToggled: boolean;
   onToggle: () => void;
 }) => {
+  const iconSource = getLabelIcon(floatingTask.label?.name);
   return (
     <View className="mb-4">
-      <Pressable onPress={onToggle}>
+      <Pressable onLongPress={onToggle}>
         <View
           className={`bg-white rounded-3xl p-4 ${isToggled ? "border-2 border-[#3D8DE0]" : ""}`}
         >
@@ -31,7 +33,7 @@ export const FloatingTaskCard = ({
             </Text>
 
             <View className="w-6 h-6 items-center justify-center">
-              <Image source={ASSETS.yellowStar} className="w-8 h-8" />
+              <Image source={iconSource} className="w-8 h-8" />
             </View>
           </View>
         </View>
