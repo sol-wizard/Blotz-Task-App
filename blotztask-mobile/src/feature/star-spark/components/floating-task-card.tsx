@@ -1,6 +1,5 @@
 import { View, Text, Pressable, Image } from "react-native";
 import { FloatingTaskDTO } from "../models/floatingTaskDto";
-import { ASSETS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { getLabelIcon } from "../utils/get-label-icon";

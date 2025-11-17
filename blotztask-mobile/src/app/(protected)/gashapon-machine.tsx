@@ -17,6 +17,8 @@ export default function GashaponMachine() {
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
+  const [starLabelName, setStarLabelName] = useState("");
+
   const { floatingTasks, isLoading } = useFloatingTasks();
 
   const handleDoNow = () => {
@@ -24,11 +26,13 @@ export default function GashaponMachine() {
   };
   const handleStarDropped = (starLabelName: string) => {
     console.log("dropped starLabelName", starLabelName);
+    setStarLabelName(starLabelName);
     setDropStarTrigger((prev) => prev + 1);
   };
 
   const MAX_STARS = 30;
-  const limitedFloatingTasks = (floatingTasks ?? []).slice(0, MAX_STARS);
+  const safeFloatingTasks = floatingTasks ?? [];
+  const limitedFloatingTasks = safeFloatingTasks.slice(0, MAX_STARS);
 
   const { entities, handleRelease } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
@@ -48,7 +52,7 @@ export default function GashaponMachine() {
       <SafeAreaView className="flex-1 items-center justify-center">
         <TaskRevealModal
           visible={isModalVisible}
-          taskTitle="Clean Up House"
+          task={safeFloatingTasks[0]}
           onClose={() => setModalVisible(false)}
           onDoNow={handleDoNow}
         />
@@ -99,6 +103,7 @@ export default function GashaponMachine() {
         </View>
 
         <DroppedStar
+          starLabelName={starLabelName}
           trigger={dropStarTrigger}
           setTaskRevealModalVisible={() => {
             setModalVisible(true);
