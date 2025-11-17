@@ -11,7 +11,6 @@ import { TaskRevealModal } from "@/feature/gashapon-machine/components/task-reve
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
-import { createStarImagesFromTasks } from "@/feature/star-spark/utils/get-label-icon";
 
 export default function GashaponMachine() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
@@ -23,16 +22,19 @@ export default function GashaponMachine() {
   const handleDoNow = () => {
     console.log("Do it now pressed!");
   };
-  const handleStarDropped = () => {
+  const handleStarDropped = (starLabelName: string) => {
+    console.log("dropped starLabelName", starLabelName);
     setDropStarTrigger((prev) => prev + 1);
   };
 
-  const starImages = createStarImagesFromTasks(floatingTasks ?? []);
+  const MAX_STARS = 30;
+  const limitedFloatingTasks = (floatingTasks ?? []).slice(0, MAX_STARS);
 
   const { entities, handleRelease } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
-    starImages,
+    floatingTasks: limitedFloatingTasks,
   });
+
   const gameEngineReady = !!entities.physics;
   const isAllLoaded = basePicLoaded && buttonPicLoaded && gameEngineReady && !isLoading;
 

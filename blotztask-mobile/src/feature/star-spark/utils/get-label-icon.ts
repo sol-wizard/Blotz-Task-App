@@ -1,6 +1,4 @@
 import { ASSETS } from "@/shared/constants/assets";
-import { FloatingTaskDTO } from "../models/floatingTaskDto";
-import { ImageSourcePropType } from "react-native";
 
 export const getLabelIcon = (labelName?: string) => {
   switch (labelName) {
@@ -17,6 +15,7 @@ export const getLabelIcon = (labelName?: string) => {
   }
 };
 
-export const createStarImagesFromTasks = (tasks: FloatingTaskDTO[]): ImageSourcePropType[] => {
-  return tasks.slice(0, 30).map((task) => getLabelIcon(task.label?.name));
+export const getLabelNameFromStarLabel = (starLabel: string): string => {
+  const match = /^star-\d+-label-(.+)$/.exec(starLabel);
+  return match ? match[1] : "";
 };

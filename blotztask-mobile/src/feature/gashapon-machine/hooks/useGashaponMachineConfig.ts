@@ -2,19 +2,20 @@ import Matter from "matter-js";
 import { useEffect, useRef, useState } from "react";
 import { createRectangleBetweenPoints } from "../utils/create-rectangle-between-points";
 import { EntityMap } from "../models/entity-map";
-import { ASSETS } from "@/shared/constants/assets";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
+import { FloatingTaskDTO } from "@/feature/star-spark/models/floatingTaskDto";
+import { getLabelNameFromStarLabel, getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
 
 export const useGashaponMachineConfig = ({
   starRadius = 15,
   onStarDropped,
-  starImages,
+  floatingTasks,
 }: {
   starRadius?: number;
-  onStarDropped: () => void;
-  starImages: any;
+  onStarDropped: (v: string) => void;
+  floatingTasks: FloatingTaskDTO[];
 }) => {
   const [entities, setEntities] = useState<EntityMap>({});
 
@@ -39,7 +40,6 @@ export const useGashaponMachineConfig = ({
       Matter.Body.translate(gateRef.current, { x: 60, y: 0 });
       isGateOpenRef.current = false;
       starPassedRef.current = false;
-      onStarDropped();
     }
   };
 
@@ -102,21 +102,19 @@ export const useGashaponMachineConfig = ({
     const gapX = starRadius * 2 + 5;
     const gapY = starRadius * 2 + 5;
 
-    const totalStars = starImages.length;
-
-    for (let i = 0; i < totalStars; i++) {
+    for (let i = 0; i < floatingTasks.length; i++) {
       const col = i % 5;
       const row = Math.floor(i / 5);
 
       const x = 90 + col * gapX;
       const y = 210 + row * gapY;
-
+      const labelName = floatingTasks[i].label?.name ?? "no-label";
       const star = Matter.Bodies.circle(x, y, starRadius, {
         restitution: 0.4,
         friction: 0.05,
         frictionStatic: 0.2,
         frictionAir: 0.01,
-        label: `star-${i}`,
+        label: `star-${i}-label-${labelName}`,
       });
 
       stars.push(star);
@@ -132,9 +130,11 @@ export const useGashaponMachineConfig = ({
     };
 
     stars.forEach((star, idx) => {
-      newEntities["star-" + idx] = {
+      const labelName = floatingTasks[idx].label?.name ?? "no-label";
+
+      newEntities[`star-${idx}-label-${labelName}`] = {
         body: star,
-        texture: starImages[idx % starImages.length],
+        texture: getLabelIcon(labelName),
         renderer: CapsuleToyRenderer,
       };
     });
@@ -152,8 +152,11 @@ export const useGashaponMachineConfig = ({
 
         if (star && sensor) {
           console.log(`⚡ Star ${star.label} passed sensor, removing`);
+          const labelName = getLabelNameFromStarLabel(star.label);
+
           starPassedRef.current = true;
           closeGate();
+          onStarDropped(labelName);
         }
       });
     });
