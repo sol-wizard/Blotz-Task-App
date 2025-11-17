@@ -22,6 +22,7 @@ const useTaskMutations = () => {
     mutationFn: (taskId: number) => toggleTaskCompletion(taskId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["floatingTasks"] });
     },
   });
 
@@ -29,6 +30,7 @@ const useTaskMutations = () => {
     mutationFn: (taskId: number) => deleteTask(taskId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["floatingTasks"] });
     },
   });
 
@@ -37,6 +39,7 @@ const useTaskMutations = () => {
     onSuccess: (_, dto) => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["taskId", dto.id] });
+      queryClient.invalidateQueries({ queryKey: ["floatingTasks"] });
     },
   });
   return {

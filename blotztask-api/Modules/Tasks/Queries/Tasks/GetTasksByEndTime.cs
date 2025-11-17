@@ -51,7 +51,9 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                              t.StartTime < endDateUtc)
                             ||
                             // Floating tasks
-                            (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null)
+                            (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null &&
+                             t.CreatedAt >= query.StartDateUtc &&
+                             t.CreatedAt < endDateUtc)
                             ||
                             // Overdue tasks within 7 days but not in selected day
                             (
