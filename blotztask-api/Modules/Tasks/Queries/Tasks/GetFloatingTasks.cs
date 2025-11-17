@@ -5,11 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
-
 public class GetFloatingTasksQuery
 {
-    [Required]
-    public required Guid UserId { get; init; }
+    [Required] public required Guid UserId { get; init; }
 }
 
 public class GetFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetFloatingTasksQueryHandler> logger)
@@ -22,7 +20,8 @@ public class GetFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetFloa
             .Where(t => t.UserId == query.UserId
                         && t.StartTime == null
                         && t.EndTime == null
-                        && t.IsDone == false)
+                        && t.IsDone == false
+                        && t.CreatedAt < DateTime.UtcNow.Date)
             .Select(task => new FloatingTaskItemDto
             {
                 Id = task.Id,
@@ -32,16 +31,19 @@ public class GetFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetFloa
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
                 CreatedAt = task.CreatedAt,
-                Label = task.Label != null ? new LabelDto
-                {
-                    LabelId = task.Label.LabelId,
-                    Name = task.Label.Name,
-                    Color = task.Label.Color
-                } : null,
+                Label = task.Label != null
+                    ? new LabelDto
+                    {
+                        LabelId = task.Label.LabelId,
+                        Name = task.Label.Name,
+                        Color = task.Label.Color
+                    }
+                    : null
             })
             .ToListAsync(ct);
 
-        logger.LogInformation("Successfully fetched {TaskCount} floating tasks for user {UserId}", tasks.Count, query.UserId);
+        logger.LogInformation("Successfully fetched {TaskCount} floating tasks for user {UserId}", tasks.Count,
+            query.UserId);
         return tasks;
     }
 }
@@ -57,4 +59,3 @@ public class FloatingTaskItemDto
     public DateTime CreatedAt { get; set; }
     public LabelDto? Label { get; set; }
 }
-
