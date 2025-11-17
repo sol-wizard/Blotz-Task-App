@@ -1,18 +1,17 @@
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floatingTaskDto";
 import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
-import { ASSETS } from "@/shared/constants/assets";
 import React from "react";
 import { Modal, View, Text, Pressable, Image } from "react-native";
 
 type TaskRevealModalProps = {
   visible: boolean;
-  task: FloatingTaskDTO;
+  task: FloatingTaskDTO | null;
   onClose: () => void;
   onDoNow: () => void;
 };
 
 export const TaskRevealModal = ({ visible, task, onClose, onDoNow }: TaskRevealModalProps) => {
-  const imageSource = getLabelIcon(task.label?.name);
+  const imageSource = getLabelIcon(task?.label?.name);
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
       <View className="flex-1 bg-black/40 items-center justify-center">
@@ -31,7 +30,7 @@ export const TaskRevealModal = ({ visible, task, onClose, onDoNow }: TaskRevealM
 
             <Text className="text-gray-500 text-sm font-balooThin">Reveal New Task</Text>
             <Text className="text-slate-800 text-2xl font-bold mt-1 text-center font-baloo">
-              {task.title}
+              {task?.title}
             </Text>
           </View>
 
