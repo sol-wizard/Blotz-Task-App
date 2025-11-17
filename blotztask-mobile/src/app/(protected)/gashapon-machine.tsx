@@ -25,15 +25,15 @@ export default function GashaponMachine() {
   const { floatingTasks, isLoading } = useFloatingTasks();
 
   const MAX_STARS = 30;
-  const safeFloatingTasks = floatingTasks ?? [];
-  const limitedFloatingTasks = safeFloatingTasks.slice(0, MAX_STARS);
+
+  const limitedFloatingTasks = floatingTasks ?? [].slice(0, MAX_STARS);
 
   const handleDoNow = () => {
     console.log("Do it now pressed!");
   };
   const handleStarDropped = (starLabelName: string) => {
     setStarLabelName(starLabelName);
-    const randomTask = pickRandomTask(safeFloatingTasks, starLabelName);
+    const randomTask = pickRandomTask(floatingTasks ?? [], starLabelName);
     setRandomTask(randomTask);
     setDropStarTrigger((prev) => prev + 1);
   };
