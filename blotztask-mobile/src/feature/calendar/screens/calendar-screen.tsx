@@ -6,10 +6,13 @@ import { SafeAreaView } from "react-native";
 import { theme } from "@/shared/constants/theme";
 import CalendarHeader from "../components/calendar-header";
 import { FilteredTaskList } from "../components/filtered-task-list";
+import { useTaskDays } from "../hooks/useTaskDays";
 
 export default function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
+  const { weeklyTaskAvability, isLoading } = useTaskDays({ selectedDay });
+  console.log("weeklyTaskAvability: ", weeklyTaskAvability);
 
   return (
     <SafeAreaView className="flex-1">
