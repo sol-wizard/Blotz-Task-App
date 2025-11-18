@@ -1,5 +1,5 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { isBefore } from "date-fns";
+import { isAfter, isBefore, isSameDay } from "date-fns";
 import { TaskFilterGroup } from "../models/task-filter-group";
 
 export function filterSelectedTask({
@@ -26,12 +26,12 @@ export function filterSelectedTask({
   });
 
   var allTasks;
-  if (selectedDay > today) {
-    allTasks = [...todoTasks, ...inProgressTasks];
-  } else if (selectedDay < today) {
-    allTasks = [...doneTasks, ...overdueTasks];
-  } else {
+  if (isSameDay(selectedDay, today)) {
     allTasks = [...todoTasks, ...doneTasks, ...inProgressTasks, ...overdueTasks];
+  } else if (isAfter(selectedDay, today)) {
+    allTasks = [...todoTasks, ...inProgressTasks];
+  } else {
+    allTasks = [...doneTasks, ...overdueTasks];
   }
 
   const todoTaskCount = todoTasks.length;
