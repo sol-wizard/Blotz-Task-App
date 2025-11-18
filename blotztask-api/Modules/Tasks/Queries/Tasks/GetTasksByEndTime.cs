@@ -36,19 +36,13 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
         var sevenDayWindowStartUtc = todayEndUtc.AddDays(-6);
         var endDateUtc = query.StartDateUtc.AddDays(1);
 
-        var isWithin7DayWindow =
-            query.StartDateUtc <= todayStartUtc &&
-            query.StartDateUtc > sevenDayWindowStartUtc;
 
         var tasks = await db.TaskItems
             .Where(t => t.UserId == query.UserId &&
                         (
                             // Tasks in date range
-                            (t.EndTime != null && t.StartTime != null && t.StartTime <= query.StartDateUtc &&
-                             t.EndTime >= query.StartDateUtc)
-                            ||
-                            (t.EndTime != null && t.StartTime != null && t.StartTime >= query.StartDateUtc &&
-                             t.StartTime < endDateUtc)
+                            (t.StartTime != null && t.EndTime != null &&
+                             t.StartTime < endDateUtc && t.EndTime > query.StartDateUtc)
                             ||
                             // Floating tasks
                             (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null &&
@@ -56,16 +50,10 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                              t.CreatedAt < endDateUtc)
                             ||
                             // Overdue tasks within 7 days but not in selected day
-                            (
-                                isWithin7DayWindow
-                                && t.EndTime != null
-                                && !t.IsDone
-                                && (
-                                    // Condition 1: End time is within the 7-day window and earlier than the query date
-                                    (t.EndTime < query.StartDateUtc && t.EndTime >= sevenDayWindowStartUtc)
-                                    // Condition 2: End time is after the query date but earlier than the current time
-                                    || (t.EndTime > endDateUtc && t.EndTime < DateTime.UtcNow)
-                                )
+                            (t.EndTime != null
+                             && !t.IsDone
+                             && t.EndTime < DateTime.UtcNow && t.EndTime >= sevenDayWindowStartUtc &&
+                             t.StartTime <= endDateUtc
                             )
                         ))
             .Select(task => new TaskByDateItemDto
