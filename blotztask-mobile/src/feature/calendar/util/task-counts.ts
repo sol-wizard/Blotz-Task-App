@@ -2,7 +2,13 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { isBefore } from "date-fns";
 import { TaskFilterGroup } from "../models/task-filter-group";
 
-export function filterSelectedTask(selectedDayTasks: TaskDetailDTO[]): TaskFilterGroup[] {
+export function filterSelectedTask({
+  selectedDayTasks,
+  selectedDay,
+}: {
+  selectedDayTasks: TaskDetailDTO[];
+  selectedDay: Date;
+}): TaskFilterGroup[] {
   const today = new Date();
   const todoTasks = selectedDayTasks.filter((task) => isTodo(task));
   const doneTasks = selectedDayTasks.filter((task) => task.isDone);
@@ -18,7 +24,15 @@ export function filterSelectedTask(selectedDayTasks: TaskDetailDTO[]): TaskFilte
     if (!task.endTime) return false;
     return !task.isDone && isBefore(new Date(task.endTime), new Date());
   });
-  const allTasks = [...todoTasks, ...doneTasks, ...inProgressTasks, ...overdueTasks];
+
+  var allTasks;
+  if (selectedDay > today) {
+    allTasks = [...todoTasks, ...inProgressTasks];
+  } else if (selectedDay < today) {
+    allTasks = [...doneTasks, ...overdueTasks];
+  } else {
+    allTasks = [...todoTasks, ...doneTasks, ...inProgressTasks, ...overdueTasks];
+  }
 
   const todoTaskCount = todoTasks.length;
   const inProgressTaskCount = inProgressTasks.length;

@@ -6,7 +6,7 @@ export const useTaskDays = ({ selectedDay }: { selectedDay: Date }) => {
   const monday = startOfWeek(selectedDay, { weekStartsOn: 1 });
 
   const { data: weeklyTaskAvability = [], isLoading } = useQuery({
-    queryKey: ["taskDays", formatISO(monday)],
+    queryKey: ["taskDays", monday.toISOString()],
     queryFn: () => fetchWeeklyTaskAvailability(monday),
   });
 

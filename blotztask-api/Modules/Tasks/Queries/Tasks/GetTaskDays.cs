@@ -7,22 +7,21 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
 public class GetTaskDaysRequest
 {
-    [BindRequired] public DateTime MondayUtc { get; set; }
+    [BindRequired] public DateTimeOffset MondayUtc { get; set; }
 }
 
 public class GetTaskDaysQuery
 {
     [Required] public required Guid UserId { get; init; }
 
-    [BindRequired] public DateTime MondayUtc { get; set; }
+    [BindRequired] public DateTimeOffset MondayUtc { get; set; }
 }
 
 public class GetTaskDaysQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskDaysQueryHandler> logger)
 {
     public async Task<List<TaskDayDto>> Handle(GetTaskDaysQuery query, CancellationToken ct = default)
     {
-        var startDateUtc = query.MondayUtc.Date;
-
+        var startDateUtc = query.MondayUtc;
         var endDateUtcExclusive = query.MondayUtc.Date.AddDays(7);
 
         logger.LogInformation("Getting task days from {startDateUtc} to {endDateUtcExclusive}", startDateUtc,
@@ -34,7 +33,7 @@ public class GetTaskDaysQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskDaysQ
                         (
                             // Tasks in date range
                             (t.StartTime != null && t.EndTime != null && t.StartTime >= startDateUtc &&
-                             t.StartTime <= endDateUtcExclusive)
+                             t.StartTime < endDateUtcExclusive)
                             ||
                             (t.StartTime != null && t.EndTime != null && t.StartTime <= startDateUtc &&
                              t.EndTime > endDateUtcExclusive)
@@ -45,28 +44,24 @@ public class GetTaskDaysQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskDaysQ
                              t.CreatedAt < endDateUtcExclusive)))
             .ToListAsync(ct);
 
-        var tasksByDate = tasks
-            .GroupBy(t =>
-            {
-                var baseTime = t.StartTime.HasValue && t.EndTime.HasValue
-                    ? t.StartTime.Value
-                    : t.CreatedAt;
-                return new DateTimeOffset(baseTime.Date, baseTime.Offset);
-            })
-            .ToDictionary(
-                g => g.Key,
-                g => g.Count()
-            );
+        logger.LogInformation("the length of tasks: {length}", tasks.Count);
 
         var result = new List<TaskDayDto>();
 
-        for (var date = startDateUtc; date < endDateUtcExclusive; date = date.AddDays(1))
+        for (var dayStart = startDateUtc; dayStart < endDateUtcExclusive; dayStart = dayStart.AddDays(1))
         {
-            var hasTask = tasksByDate.ContainsKey(date);
+            var dayEnd = dayStart.AddDays(1);
+
+            var hasTask = tasks.Any(t =>
+            {
+                if (t.StartTime.HasValue && t.EndTime.HasValue) return t.StartTime < dayEnd && t.EndTime > dayStart;
+
+                return t.CreatedAt >= dayStart && t.CreatedAt < dayEnd;
+            });
 
             result.Add(new TaskDayDto
             {
-                Date = date,
+                Date = dayStart,
                 HasTask = hasTask
             });
         }
