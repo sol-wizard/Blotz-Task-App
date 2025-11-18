@@ -19,7 +19,10 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
 
   const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
 
-  const filteredSelectedDayTasks = filterSelectedTask(selectedDayTasks ?? []);
+  const filteredSelectedDayTasks = filterSelectedTask({
+    selectedDayTasks: selectedDayTasks ?? [],
+    selectedDay,
+  });
   const safeFilteredTasks = Array.isArray(filteredSelectedDayTasks) ? filteredSelectedDayTasks : [];
   const tasksOfSelectedStatus = safeFilteredTasks.find(
     (item) => item.status === selectedStatus,

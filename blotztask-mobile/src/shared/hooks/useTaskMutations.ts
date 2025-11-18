@@ -15,6 +15,7 @@ const useTaskMutations = () => {
     mutationFn: (task: AddTaskItemDTO) => addTaskItem(task),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["taskDays"] });
     },
   });
 
@@ -31,6 +32,7 @@ const useTaskMutations = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["floatingTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["taskDays"] });
     },
   });
 
@@ -40,6 +42,7 @@ const useTaskMutations = () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["taskId", dto.id] });
       queryClient.invalidateQueries({ queryKey: ["floatingTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["taskDays"] });
     },
   });
   return {
