@@ -41,11 +41,8 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
             .Where(t => t.UserId == query.UserId &&
                         (
                             // Tasks in date range
-                            (t.EndTime != null && t.StartTime != null && t.StartTime <= query.StartDateUtc &&
-                             t.EndTime >= query.StartDateUtc)
-                            ||
-                            (t.EndTime != null && t.StartTime != null && t.StartTime >= query.StartDateUtc &&
-                             t.StartTime < endDateUtc)
+                            (t.StartTime != null && t.EndTime != null &&
+                             t.StartTime < endDateUtc && t.EndTime > query.StartDateUtc)
                             ||
                             // Floating tasks
                             (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null &&

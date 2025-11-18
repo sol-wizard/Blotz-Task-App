@@ -17,9 +17,12 @@ public class GetWeeklyTaskAvabilityQuery
     [BindRequired] public DateTimeOffset MondayUtc { get; set; }
 }
 
-public class GetWeeklyTaskAvabilityQueryHandler(BlotzTaskDbContext db, ILogger<GetWeeklyTaskAvabilityQueryHandler> logger)
+public class GetWeeklyTaskAvabilityQueryHandler(
+    BlotzTaskDbContext db,
+    ILogger<GetWeeklyTaskAvabilityQueryHandler> logger)
 {
-    public async Task<List<DailyTaskIndicatorDto>> Handle(GetWeeklyTaskAvabilityQuery query, CancellationToken ct = default)
+    public async Task<List<DailyTaskIndicatorDto>> Handle(GetWeeklyTaskAvabilityQuery query,
+        CancellationToken ct = default)
     {
         var startDateUtc = query.MondayUtc;
         var endDateUtcExclusive = query.MondayUtc.Date.AddDays(8);
@@ -32,11 +35,8 @@ public class GetWeeklyTaskAvabilityQueryHandler(BlotzTaskDbContext db, ILogger<G
             .Where(t => t.UserId == query.UserId &&
                         (
                             // Tasks in date range
-                            (t.StartTime != null && t.EndTime != null && t.StartTime >= startDateUtc &&
-                             t.StartTime < endDateUtcExclusive)
-                            ||
-                            (t.StartTime != null && t.EndTime != null && t.StartTime <= startDateUtc &&
-                             t.EndTime > endDateUtcExclusive)
+                            (t.StartTime != null && t.EndTime != null &&
+                             t.StartTime < endDateUtcExclusive && t.EndTime > startDateUtc)
                             ||
                             // Floating tasks
                             (t.StartTime == null && t.EndTime == null &&
