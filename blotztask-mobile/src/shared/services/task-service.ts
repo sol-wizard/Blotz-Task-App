@@ -21,10 +21,11 @@ export async function fetchTasksForDate(
 
 export async function fetchWeeklyTaskAvailability(date: Date): Promise<TaskDayDTO[]> {
   const mondayUtc = startOfDay(date).toISOString();
-
+  console.log("🍎 fecth new week avability data");
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/task-days?mondayUtc=${mondayUtc}`;
 
   const data: TaskDayDTO[] = await apiClient.get(url);
+  console.log("🎑 new avability data: ", data);
   return data;
 }
 

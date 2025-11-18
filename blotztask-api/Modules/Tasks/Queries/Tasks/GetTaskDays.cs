@@ -22,7 +22,7 @@ public class GetTaskDaysQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskDaysQ
     public async Task<List<TaskDayDto>> Handle(GetTaskDaysQuery query, CancellationToken ct = default)
     {
         var startDateUtc = query.MondayUtc;
-        var endDateUtcExclusive = query.MondayUtc.Date.AddDays(7);
+        var endDateUtcExclusive = query.MondayUtc.Date.AddDays(8);
 
         logger.LogInformation("Getting task days from {startDateUtc} to {endDateUtcExclusive}", startDateUtc,
             endDateUtcExclusive);
@@ -44,8 +44,6 @@ public class GetTaskDaysQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskDaysQ
                              t.CreatedAt < endDateUtcExclusive)))
             .ToListAsync(ct);
 
-        logger.LogInformation("the length of tasks: {length}", tasks.Count);
-
         var result = new List<TaskDayDto>();
 
         for (var dayStart = startDateUtc; dayStart < endDateUtcExclusive; dayStart = dayStart.AddDays(1))
@@ -54,7 +52,7 @@ public class GetTaskDaysQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskDaysQ
 
             var hasTask = tasks.Any(t =>
             {
-                if (t.StartTime.HasValue && t.EndTime.HasValue) return t.StartTime < dayEnd && t.EndTime > dayStart;
+                if (t.StartTime.HasValue && t.EndTime.HasValue) return t.StartTime < dayEnd && t.EndTime >= dayStart;
 
                 return t.CreatedAt >= dayStart && t.CreatedAt < dayEnd;
             });

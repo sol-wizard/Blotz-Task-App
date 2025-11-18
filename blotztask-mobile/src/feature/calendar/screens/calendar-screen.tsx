@@ -13,6 +13,7 @@ export default function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const { weeklyTaskAvability, isLoading } = useTaskDays({ selectedDay });
+
   let markedDates;
   if (!isLoading) {
     markedDates = getMarkedDates({ selectedDay, weeklyTaskAvability });
