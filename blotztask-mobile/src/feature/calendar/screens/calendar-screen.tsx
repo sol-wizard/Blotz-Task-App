@@ -7,14 +7,18 @@ import { theme } from "@/shared/constants/theme";
 import CalendarHeader from "../components/calendar-header";
 import { FilteredTaskList } from "../components/filtered-task-list";
 import { useTaskDays } from "../hooks/useTaskDays";
-import { getMarkedDates } from "../util/get-marked-dates";
+import { getMarkedDates, getSelectedDates } from "../util/get-marked-dates";
 
 export default function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const { weeklyTaskAvability, isLoading } = useTaskDays({ selectedDay });
-
-  const markedDates = getMarkedDates({ selectedDay, weeklyTaskAvability });
+  var markedDates;
+  if (!isLoading) {
+    markedDates = getMarkedDates({ selectedDay, weeklyTaskAvability });
+  } else {
+    markedDates = getSelectedDates({ selectedDay });
+  }
 
   return (
     <SafeAreaView className="flex-1">
