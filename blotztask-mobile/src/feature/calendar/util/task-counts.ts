@@ -25,7 +25,7 @@ export function filterSelectedTask({
     return !task.isDone && isBefore(new Date(task.endTime), new Date());
   });
 
-  var allTasks;
+  let allTasks;
   if (isSameDay(selectedDay, today)) {
     allTasks = [...todoTasks, ...doneTasks, ...inProgressTasks, ...overdueTasks];
   } else if (isAfter(selectedDay, today)) {

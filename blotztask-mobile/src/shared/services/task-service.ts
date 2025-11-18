@@ -4,7 +4,7 @@ import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { apiClient } from "./api/client";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floatingTaskDto";
 import { TaskDayDTO } from "@/feature/calendar/models/task-day-dto";
-import { formatISO, startOfDay } from "date-fns";
+import { startOfDay } from "date-fns";
 
 export async function fetchTasksForDate(
   date: Date,
