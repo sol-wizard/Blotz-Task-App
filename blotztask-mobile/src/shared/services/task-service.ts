@@ -3,7 +3,7 @@ import { EditTaskItemDTO } from "../../feature/task-add-edit/models/edit-task-it
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { apiClient } from "./api/client";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floatingTaskDto";
-import { TaskDayDTO } from "@/feature/calendar/models/task-day-dto";
+import { DailyTaskIndicatorDTO } from "@/feature/calendar/models/daily-task-indicator-dto";
 import { startOfDay } from "date-fns";
 
 export async function fetchTasksForDate(
@@ -19,13 +19,13 @@ export async function fetchTasksForDate(
   return data;
 }
 
-export async function fetchWeeklyTaskAvailability(date: Date): Promise<TaskDayDTO[]> {
+export async function fetchWeeklyTaskAvailability(date: Date): Promise<DailyTaskIndicatorDTO[]> {
   const mondayUtc = startOfDay(date).toISOString();
-  console.log("🍎 fecth new week avability data");
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/task-days?mondayUtc=${mondayUtc}`;
 
-  const data: TaskDayDTO[] = await apiClient.get(url);
-  console.log("🎑 new avability data: ", data);
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/weekly-task-availability?mondayUtc=${mondayUtc}`;
+
+  const data: DailyTaskIndicatorDTO[] = await apiClient.get(url);
+
   return data;
 }
 

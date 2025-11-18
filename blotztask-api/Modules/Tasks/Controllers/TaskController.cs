@@ -17,7 +17,7 @@ public class TaskController(
     DeleteTaskCommandHandler deleteTaskCommandHandler,
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
-    GetTaskDaysQueryHandler getTaskDaysQueryHandler
+    GetWeeklyTaskAvabilityQueryHandler getWeeklyTaskAvabilityQueryHandler
 ) : ControllerBase
 {
     [HttpGet("{id}")]
@@ -61,20 +61,20 @@ public class TaskController(
         return result;
     }
 
-    [HttpGet("task-days")]
-    public async Task<IEnumerable<TaskDayDto>> GetTaskDays([FromQuery] GetTaskDaysRequest getTaskDaysRequest,
+    [HttpGet("weekly-task-availability")]
+    public async Task<IEnumerable<DailyTaskIndicatorDto>> GetWeeklyTaskAvailability([FromQuery] GetWeeklyTaskAvabilityRequest getWeeklyTaskAvabilityRequest,
         CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
-        var query = new GetTaskDaysQuery
+        var query = new GetWeeklyTaskAvabilityQuery
         {
             UserId = userId,
-            MondayUtc = getTaskDaysRequest.MondayUtc
+            MondayUtc = getWeeklyTaskAvabilityRequest.MondayUtc
         };
 
-        var result = await getTaskDaysQueryHandler.Handle(query, ct);
+        var result = await getWeeklyTaskAvabilityQueryHandler.Handle(query, ct);
         return result;
     }
 

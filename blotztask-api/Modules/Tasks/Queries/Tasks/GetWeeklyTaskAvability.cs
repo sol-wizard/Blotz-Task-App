@@ -5,21 +5,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
-public class GetTaskDaysRequest
+public class GetWeeklyTaskAvabilityRequest
 {
     [BindRequired] public DateTimeOffset MondayUtc { get; set; }
 }
 
-public class GetTaskDaysQuery
+public class GetWeeklyTaskAvabilityQuery
 {
     [Required] public required Guid UserId { get; init; }
 
     [BindRequired] public DateTimeOffset MondayUtc { get; set; }
 }
 
-public class GetTaskDaysQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskDaysQueryHandler> logger)
+public class GetWeeklyTaskAvabilityQueryHandler(BlotzTaskDbContext db, ILogger<GetWeeklyTaskAvabilityQueryHandler> logger)
 {
-    public async Task<List<TaskDayDto>> Handle(GetTaskDaysQuery query, CancellationToken ct = default)
+    public async Task<List<DailyTaskIndicatorDto>> Handle(GetWeeklyTaskAvabilityQuery query, CancellationToken ct = default)
     {
         var startDateUtc = query.MondayUtc;
         var endDateUtcExclusive = query.MondayUtc.Date.AddDays(8);
@@ -44,7 +44,7 @@ public class GetTaskDaysQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskDaysQ
                              t.CreatedAt < endDateUtcExclusive)))
             .ToListAsync(ct);
 
-        var result = new List<TaskDayDto>();
+        var result = new List<DailyTaskIndicatorDto>();
 
         for (var dayStart = startDateUtc; dayStart < endDateUtcExclusive; dayStart = dayStart.AddDays(1))
         {
@@ -57,7 +57,7 @@ public class GetTaskDaysQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskDaysQ
                 return t.CreatedAt >= dayStart && t.CreatedAt < dayEnd;
             });
 
-            result.Add(new TaskDayDto
+            result.Add(new DailyTaskIndicatorDto
             {
                 Date = dayStart,
                 HasTask = hasTask
@@ -68,7 +68,7 @@ public class GetTaskDaysQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskDaysQ
     }
 }
 
-public class TaskDayDto
+public class DailyTaskIndicatorDto
 {
     public DateTimeOffset Date { get; set; }
     public bool HasTask { get; set; }
