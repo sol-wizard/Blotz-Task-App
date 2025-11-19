@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
-import { AiThinkingModal } from "./ai-thinking-modal";
 import { TaskAddedSuccess } from "./task-added-success";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -14,8 +13,9 @@ export const AiTaskGenerateModal = ({
 }) => {
   const [text, setText] = useState("");
   const [isVoiceInput, setIsVoiceInput] = useState(true);
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
   const { aiGeneratedMessage, sendMessage, modalType, setModalType, inputError, setInputError } =
-    useAiTaskGenerator();
+    useAiTaskGenerator({ setIsAiGenerating });
   const posthog = usePostHog();
 
   useEffect(() => {
@@ -44,9 +44,6 @@ export const AiTaskGenerateModal = ({
         />
       );
 
-    case "loading":
-      return <AiThinkingModal />;
-
     case "add-task-success":
       return <TaskAddedSuccess />;
 
@@ -63,6 +60,7 @@ export const AiTaskGenerateModal = ({
           setIsVoiceInput={setIsVoiceInput}
           sheetRef={sheetRef}
           errorMessage={aiGeneratedMessage?.errorMessage}
+          isAiGenerating={isAiGenerating}
         />
       );
   }

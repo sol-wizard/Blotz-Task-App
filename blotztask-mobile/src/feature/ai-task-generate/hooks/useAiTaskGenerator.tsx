@@ -4,7 +4,11 @@ import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
 import { AiResultMessageDTO } from "../models/ai-result-message";
 
-export function useAiTaskGenerator() {
+export function useAiTaskGenerator({
+  setIsAiGenerating,
+}: {
+  setIsAiGenerating: (v: boolean) => void;
+}) {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
   const [modalType, setModalType] = useState<BottomSheetType>("input");
@@ -12,7 +16,7 @@ export function useAiTaskGenerator() {
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
-    setModalType("loading");
+    setIsAiGenerating(true);
     if (connection) {
       try {
         await signalRService.invoke(connection, "SendMessage", "User", text);
@@ -35,6 +39,7 @@ export function useAiTaskGenerator() {
       setModalType("input");
     } else {
       setModalType("task-preview");
+      setIsAiGenerating(false);
     }
   };
 

@@ -16,6 +16,7 @@ export const AiInput = ({
   generateTaskError,
   setInputError,
   errorMessage,
+  isAiGenerating,
 }: {
   text: string;
   setText: (v: string) => void;
@@ -26,6 +27,7 @@ export const AiInput = ({
   generateTaskError: boolean;
   setInputError: (v: boolean) => void;
   errorMessage?: string;
+  isAiGenerating: boolean;
 }) => {
   const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
     AsyncStorage.getItem("ai_language_preference").then((saved) => {
@@ -61,6 +63,7 @@ export const AiInput = ({
           setInputError={setInputError}
           errorMessage={errorMessage}
           language={language}
+          isAiGenerating={isAiGenerating}
         />
       ) : (
         <WriteInput
@@ -70,6 +73,7 @@ export const AiInput = ({
           hasError={generateTaskError}
           sheetRef={sheetRef}
           errorMessage={errorMessage}
+          isAiGenerating={isAiGenerating}
         />
       )}
     </View>

@@ -1,7 +1,9 @@
+import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { ASSETS } from "@/shared/constants/assets";
 import { theme } from "@/shared/constants/theme";
 import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { View, Text, Image, Keyboard } from "react-native";
+import { ErrorMessageCard } from "./error-message-card";
 
 export const WriteInput = ({
   text,
@@ -10,6 +12,7 @@ export const WriteInput = ({
   hasError,
   sendMessage,
   errorMessage,
+  isAiGenerating,
 }: {
   text: string;
   setText: (v: string) => void;
@@ -17,6 +20,7 @@ export const WriteInput = ({
   hasError: boolean;
   sendMessage: (v: string) => void;
   errorMessage?: string;
+  isAiGenerating: boolean;
 }) => {
   const sendAndDismiss = (msg: string) => {
     const val = msg.trim();
@@ -35,7 +39,7 @@ export const WriteInput = ({
   };
 
   return (
-    <View className="w-full px-4 pt-3 pb-6 items-center">
+    <View className="items-center mx-8">
       <BottomSheetTextInput
         value={text}
         onChangeText={handleChange}
@@ -45,19 +49,10 @@ export const WriteInput = ({
         placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
         placeholderTextColor={theme.colors.secondary}
         multiline
-        className="w-full min-h-[100px] rounded-xl bg-white px-3 py-4 mt-4 text-xl text-gray-800 font-baloo text-left"
-        style={{ textAlignVertical: "top" }}
+        className="min-h-[100px] bg-white text-xl text-gray-800 font-baloo text-left"
       />
-      {hasError && (
-        <View className="bg-background rounded-2xl px-4 py-6 mb-4 w-96 flex-row">
-          <Text className="text-[#3D8DE0] text-2xl font-balooBold pt-2 w-72">
-            {errorMessage?.trim()
-              ? errorMessage
-              : "Oops something went over my head. Please try again."}
-          </Text>
-          <Image source={ASSETS.greenBun} className="w-20 h-20" />
-        </View>
-      )}
+      {hasError && <ErrorMessageCard errorMessage={errorMessage} />}
+      {isAiGenerating && <CustomSpinner size={60} />}
     </View>
   );
 };
