@@ -28,36 +28,36 @@ public class SyncUserCommandHandler(
 
         var user = command.User;
 
-        string? TryGetString(JsonElement source, string name)
+        string? Get(JsonElement source, string name)
         {
             return source.TryGetProperty(name, out var el) && el.ValueKind != JsonValueKind.Null
                 ? el.GetString()
                 : null;
         }
 
-        string? Get(string name)
+        string? GetFromUser(string name)
         {
-            return TryGetString(user, name);
+            return Get(user, name);
         }
 
         string? GetFromUserMetadata(string name)
         {
             if (user.TryGetProperty("user_metadata", out var meta) &&
                 meta.ValueKind == JsonValueKind.Object)
-                return TryGetString(meta, name);
+                return Get(meta, name);
 
             return null;
         }
 
-        var auth0UserId = Get("user_id");
+        var auth0UserId = GetFromUser("user_id");
         var email =
-            Get("email") ??
+            GetFromUser("email") ??
             GetFromUserMetadata("user_email");
         var displayName =
-            Get("name") ??
+            GetFromUser("name") ??
             email;
-        var pictureUrl = Get("picture");
-        var createdAtStr = Get("created_at")!;
+        var pictureUrl = GetFromUser("picture");
+        var createdAtStr = GetFromUser("created_at")!;
         if (!DateTime.TryParse(createdAtStr, null, DateTimeStyles.RoundtripKind, out var parsedDate))
             logger.LogWarning("Invalid created_at format, using fallback now: {createdAtStr}", createdAtStr);
 
