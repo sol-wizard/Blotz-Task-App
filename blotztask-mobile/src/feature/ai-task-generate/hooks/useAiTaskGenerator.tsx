@@ -15,6 +15,7 @@ export function useAiTaskGenerator({
   const [inputError, setInputError] = useState<boolean>(false);
 
   const sendMessage = async (text: string) => {
+    setInputError(false);
     if (!text.trim()) return;
     setIsAiGenerating(true);
     if (connection) {
