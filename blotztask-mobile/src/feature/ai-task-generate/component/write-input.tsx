@@ -1,8 +1,7 @@
 import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
-import { ASSETS } from "@/shared/constants/assets";
 import { theme } from "@/shared/constants/theme";
 import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
-import { View, Text, Image, Keyboard } from "react-native";
+import { View, Keyboard } from "react-native";
 import { ErrorMessageCard } from "./error-message-card";
 
 export const WriteInput = ({

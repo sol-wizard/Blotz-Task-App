@@ -12,7 +12,6 @@ import { AiResultMessageDTO } from "../models/ai-result-message";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { LinearGradient } from "expo-linear-gradient";
 
 export function AiTasksPreview({
   aiMessage,
@@ -52,7 +51,6 @@ export function AiTasksPreview({
       await Promise.all(payloads.map((payload) => addTask(payload)));
       finishedAllStepsRef.current = true;
 
-      /* eslint-disable camelcase */
       posthog.capture("ai_task_interaction_completed", {
         ai_output: JSON.stringify(aiMessage),
         user_input: userInput,
@@ -61,7 +59,6 @@ export function AiTasksPreview({
         outcome: "accepted",
         is_voice_input: isVoiceInput,
       });
-      /* eslint-enable camelcase */
 
       setModalType("add-task-success");
       setLocalTasks([]);
@@ -72,7 +69,7 @@ export function AiTasksPreview({
 
   const handleGoBack = () => {
     setModalType("input");
-    /* eslint-disable camelcase */
+
     posthog.capture("ai_task_interaction_completed", {
       ai_output: JSON.stringify(aiMessage),
       user_input: userInput,
@@ -81,7 +78,6 @@ export function AiTasksPreview({
       user_add_task_count: 0,
       is_voice_input: isVoiceInput,
     });
-    /* eslint-enable camelcase */
   };
 
   useEffect(() => {
@@ -95,7 +91,6 @@ export function AiTasksPreview({
           ai_generated_task_count: aiGeneratedTasks?.length ?? 0,
           user_add_task_count: 0,
         });
-        /* eslint-enable camelcase */
       }
     };
   }, [aiGeneratedTasks?.length, aiMessage, isVoiceInput, posthog, userInput]);

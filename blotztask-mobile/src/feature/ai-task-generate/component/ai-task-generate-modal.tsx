@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { useEffect, useState } from "react";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
