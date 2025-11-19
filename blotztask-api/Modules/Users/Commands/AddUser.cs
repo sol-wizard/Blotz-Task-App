@@ -28,18 +28,23 @@ public class SyncUserCommandHandler(
 
         var user = command.User;
 
+        string? TryGetString(JsonElement source, string name)
+        {
+            return source.TryGetProperty(name, out var el) && el.ValueKind != JsonValueKind.Null
+                ? el.GetString()
+                : null;
+        }
+
         string? Get(string name)
         {
-            return user.TryGetProperty(name, out var el) && el.ValueKind != JsonValueKind.Null ? el.GetString() : null;
+            return TryGetString(user, name);
         }
 
         string? GetFromUserMetadata(string name)
         {
             if (user.TryGetProperty("user_metadata", out var meta) &&
-                meta.ValueKind == JsonValueKind.Object &&
-                meta.TryGetProperty(name, out var el) &&
-                el.ValueKind != JsonValueKind.Null)
-                return el.GetString();
+                meta.ValueKind == JsonValueKind.Object)
+                return TryGetString(meta, name);
 
             return null;
         }
