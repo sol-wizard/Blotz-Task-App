@@ -32,6 +32,3 @@ keys/
 credentials.json
 ios-builds/
 .env.local
-
-# package
-package-lock.json
