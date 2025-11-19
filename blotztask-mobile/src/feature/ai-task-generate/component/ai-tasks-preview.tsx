@@ -12,6 +12,7 @@ import { AiResultMessageDTO } from "../models/ai-result-message";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { LinearGradient } from "expo-linear-gradient";
 
 export function AiTasksPreview({
   aiMessage,

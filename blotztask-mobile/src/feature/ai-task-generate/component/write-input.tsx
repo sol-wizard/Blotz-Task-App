@@ -26,6 +26,7 @@ export const WriteInput = ({
     const val = msg.trim();
     if (!val) return;
     sendMessage(val);
+    setText(val);
     Keyboard.dismiss();
     sheetRef.current?.collapse();
   };
