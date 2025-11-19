@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Image, Vibration } from "react-native";
+import { View, Text, Pressable, Vibration } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { ASSETS } from "@/shared/constants/assets";

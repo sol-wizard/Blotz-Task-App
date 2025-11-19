@@ -7,7 +7,6 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { ScrollView } from "react-native-gesture-handler";
-import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { usePostHog } from "posthog-react-native";
 import { AiResultMessageDTO } from "../models/ai-result-message";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
@@ -16,14 +15,12 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 export function AiTasksPreview({
   aiMessage,
-  setUserInput,
   setModalType,
   isVoiceInput,
   userInput,
   sheetRef,
 }: {
   aiMessage?: AiResultMessageDTO;
-  setUserInput: React.Dispatch<React.SetStateAction<string>>;
   setModalType: (v: BottomSheetType) => void;
   isVoiceInput: boolean;
   userInput: string;
