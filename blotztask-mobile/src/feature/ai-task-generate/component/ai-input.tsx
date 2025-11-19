@@ -38,7 +38,7 @@ export const AiInput = ({
     return "zh-CN";
   });
   return (
-    <View>
+    <View className="w-96">
       <View className="flex-row mb-8 -ml-8 items-center">
         <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} />
         <Pressable

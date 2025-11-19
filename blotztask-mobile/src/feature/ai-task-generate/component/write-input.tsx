@@ -39,7 +39,7 @@ export const WriteInput = ({
   };
 
   return (
-    <View className="items-center mx-8">
+    <View>
       <BottomSheetTextInput
         value={text}
         onChangeText={handleChange}
@@ -49,10 +49,15 @@ export const WriteInput = ({
         placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
         placeholderTextColor={theme.colors.secondary}
         multiline
-        className="min-h-[100px] bg-white text-xl text-gray-800 font-baloo text-left"
+        className="min-h-[100px] bg-white text-xl text-gray-800 font-baloo"
+        style={{ textAlignVertical: "top" }}
       />
       {hasError && <ErrorMessageCard errorMessage={errorMessage} />}
-      {isAiGenerating && <CustomSpinner size={60} />}
+      {isAiGenerating && (
+        <View className="items-center">
+          <CustomSpinner size={60} />
+        </View>
+      )}
     </View>
   );
 };
