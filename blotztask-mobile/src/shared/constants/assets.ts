@@ -23,7 +23,7 @@ export const PNGIMAGES = {
   whiteBun: require("../../../assets/images-png/bun-white.png"),
   greenBun: require("../../../assets/images-png/bun-green.png"),
   plusIcon: require("../../../assets/images-png/plus-icon.png"),
-  loadingBun: require("../../../assets/images-png/loading-bun.png"),
+  loadingBun: require("../../../assets/images-png/update-loading-bun.png"),
   gashaponMachineBase: require("../../../assets/images-png/gashapon-machine-without-button.png"),
   gashaponMachineButton: require("../../../assets/images-png/gashapon-machine-button.png"),
   yellowStar: require("../../../assets/images-png/yellow-star.png"),
