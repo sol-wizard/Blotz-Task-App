@@ -39,8 +39,8 @@ export const AiInput = ({
   });
   return (
     <View className="w-96">
-      <View className="flex-row mb-8 -ml-8 items-center">
-        <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} />
+      <View className="flex-row mb-8 -ml-6 items-center">
+        <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} setText={setText} />
         <Pressable
           onPress={() => {
             const newLang = language === "en-US" ? "zh-CN" : "en-US";

@@ -5,16 +5,21 @@ import { IconButton } from "react-native-paper";
 export function InputModeSwitch({
   value,
   onChange,
+  setText,
 }: {
   value: boolean;
   onChange: (v: boolean) => void;
+  setText: (v: string) => void;
 }) {
   return (
     <View className="bg-blue-50 rounded-full flex-row">
       <IconButton
         icon={value ? "microphone" : "microphone-outline"}
         size={20}
-        onPress={() => onChange(true)}
+        onPress={() => {
+          onChange(true);
+          setText("");
+        }}
         style={{ width: 32, height: 32, borderRadius: 9999 }}
         className={value ? "bg-black" : "bg-blue-100"}
         iconColor={value ? "white" : "#93C5FD"}
@@ -25,7 +30,10 @@ export function InputModeSwitch({
       <IconButton
         icon="pencil-outline"
         size={20}
-        onPress={() => onChange(false)}
+        onPress={() => {
+          onChange(false);
+          setText("");
+        }}
         style={{ width: 32, height: 32, borderRadius: 9999 }}
         className={value ? "bg-blue-100" : "bg-black"}
         iconColor={value ? "#93C5FD" : "white"}
