@@ -23,17 +23,7 @@ public class SyncUserCommandHandler(
     {
         logger.LogInformation("Starting user sync at {Time}", DateTime.UtcNow);
 
-        // Log the raw JSON 'user' for troubleshooting if needed:
-        logger.LogDebug("Raw user payload: {@User}", command.User);
-
         var user = command.User;
-
-        string? Get(JsonElement source, string name)
-        {
-            return source.TryGetProperty(name, out var el) && el.ValueKind != JsonValueKind.Null
-                ? el.GetString()
-                : null;
-        }
 
         string? GetFromUser(string name)
         {
@@ -108,5 +98,12 @@ public class SyncUserCommandHandler(
             existing.Id, existing.Auth0UserId);
 
         return new AddUserResult { Id = existing.Id, Auth0UserId = existing.Auth0UserId };
+    }
+
+    private string? Get(JsonElement source, string name)
+    {
+        return source.TryGetProperty(name, out var el) && el.ValueKind != JsonValueKind.Null
+            ? el.GetString()
+            : null;
     }
 }
