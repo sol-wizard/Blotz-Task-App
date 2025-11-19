@@ -25,29 +25,16 @@ public class SyncUserCommandHandler(
 
         var user = command.User;
 
-        string? GetFromUser(string name)
-        {
-            return Get(user, name);
-        }
 
-        string? GetFromUserMetadata(string name)
-        {
-            if (user.TryGetProperty("user_metadata", out var meta) &&
-                meta.ValueKind == JsonValueKind.Object)
-                return Get(meta, name);
-
-            return null;
-        }
-
-        var auth0UserId = GetFromUser("user_id");
+        var auth0UserId = GetFromUser(user, "user_id");
         var email =
-            GetFromUser("email") ??
-            GetFromUserMetadata("user_email");
+            GetFromUser(user, "email") ??
+            GetFromUserMetadata(user, "user_email");
         var displayName =
-            GetFromUser("name") ??
+            GetFromUser(user, "name") ??
             email;
-        var pictureUrl = GetFromUser("picture");
-        var createdAtStr = GetFromUser("created_at")!;
+        var pictureUrl = GetFromUser(user, "picture");
+        var createdAtStr = GetFromUser(user, "created_at")!;
         if (!DateTime.TryParse(createdAtStr, null, DateTimeStyles.RoundtripKind, out var parsedDate))
             logger.LogWarning("Invalid created_at format, using fallback now: {createdAtStr}", createdAtStr);
 
@@ -105,5 +92,19 @@ public class SyncUserCommandHandler(
         return source.TryGetProperty(name, out var el) && el.ValueKind != JsonValueKind.Null
             ? el.GetString()
             : null;
+    }
+
+    private string? GetFromUser(JsonElement user, string name)
+    {
+        return Get(user, name);
+    }
+
+    private string? GetFromUserMetadata(JsonElement user, string name)
+    {
+        if (user.TryGetProperty("user_metadata", out var meta) &&
+            meta.ValueKind == JsonValueKind.Object)
+            return Get(meta, name);
+
+        return null;
     }
 }
