@@ -22,11 +22,13 @@ export function useAiTaskGenerator({
         await signalRService.invoke(connection, "SendMessage", "User", text);
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
+        setIsAiGenerating(false);
         setInputError(true);
         setModalType("input");
       }
     } else {
       console.warn("Cannot send message: Not connected.");
+      setIsAiGenerating(false);
       setInputError(true);
       setModalType("input");
     }
@@ -35,6 +37,7 @@ export function useAiTaskGenerator({
   const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
     setAiGeneratedMessage(receivedAiMessage);
     if (!receivedAiMessage.isSuccess) {
+      setIsAiGenerating(false);
       setInputError(true);
       setModalType("input");
     } else {

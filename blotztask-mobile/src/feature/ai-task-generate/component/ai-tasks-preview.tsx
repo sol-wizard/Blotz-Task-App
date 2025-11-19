@@ -126,22 +126,7 @@ export function AiTasksPreview({
         >
           <MaterialCommunityIcons name="arrow-u-left-top" size={20} color="white" />
         </Pressable>
-        {!isVoiceInput && (
-          <Pressable
-            onPress={() => {
-              handleGoBack();
-              setUserInput("");
-            }}
-            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Edit"
-            className="mx-4"
-          >
-            <GradientCircle size={70}>
-              <MaterialCommunityIcons name="pencil-outline" size={35} color="white" />
-            </GradientCircle>
-          </Pressable>
-        )}
+
         <Pressable
           onPress={handleAddTasks}
           disabled={createDisabled}

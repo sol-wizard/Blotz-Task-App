@@ -43,7 +43,7 @@ export const VoiceInput = ({
       {hasError ? (
         <ErrorMessageCard errorMessage={errorMessage} />
       ) : (
-        <View className="w-96 mb-16">
+        <View className="w-96 mb-16" style={{ minHeight: 80 }}>
           <Text
             className={`text-xl font-bold ${transcript?.trim() ? "text-black" : "text-[#D1D1D6]"}`}
           >
@@ -88,7 +88,9 @@ export const VoiceInput = ({
           </Pressable>
         </View>
       ) : (
-        <CustomSpinner size={60} />
+        <View className="mt-6 items-center mb-16">
+          <CustomSpinner size={60} />
+        </View>
       )}
     </View>
   );
