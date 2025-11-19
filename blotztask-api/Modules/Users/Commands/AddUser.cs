@@ -1,15 +1,17 @@
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text.Json;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Users.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Users.Commands;
+
 public sealed record SyncUserCommand(JsonElement User);
 
 public sealed class AddUserResult
 {
-    public required Guid   Id { get; init; }
+    public required Guid Id { get; init; }
     public required string Auth0UserId { get; init; }
 }
 
@@ -21,26 +23,23 @@ public class SyncUserCommandHandler(
     {
         logger.LogInformation("Starting user sync at {Time}", DateTime.UtcNow);
 
-        // Log the raw JSON 'user' for troubleshooting if needed:
-        logger.LogDebug("Raw user payload: {@User}", command.User);
-        
         var user = command.User;
 
-        string? Get(string name) =>
-            user.TryGetProperty(name, out var el) && el.ValueKind != JsonValueKind.Null ? el.GetString() : null;
 
-        var auth0UserId = Get("user_id");
-        var email = Get("email");
-        var displayName = Get("name");
-        var pictureUrl = Get("picture");
-        var createdAtStr = Get("created_at")!;
-        if (!DateTime.TryParse(createdAtStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out var parsedDate))
-        {
+        var auth0UserId = GetFromUser(user, "user_id");
+        var email =
+            GetFromUser(user, "email") ??
+            GetFromUserMetadata(user, "user_email");
+        var displayName =
+            GetFromUser(user, "name") ??
+            email;
+        var pictureUrl = GetFromUser(user, "picture");
+        var createdAtStr = GetFromUser(user, "created_at")!;
+        if (!DateTime.TryParse(createdAtStr, null, DateTimeStyles.RoundtripKind, out var parsedDate))
             logger.LogWarning("Invalid created_at format, using fallback now: {createdAtStr}", createdAtStr);
-        }
 
-        DateTime signUpAt = parsedDate;
-        
+        var signUpAt = parsedDate;
+
         if (string.IsNullOrWhiteSpace(auth0UserId) || string.IsNullOrWhiteSpace(email))
         {
             logger.LogError(
@@ -56,21 +55,21 @@ public class SyncUserCommandHandler(
         {
             var row = new AppUser
             {
-                Auth0UserId = auth0UserId, 
+                Auth0UserId = auth0UserId,
                 Email = email,
-                DisplayName = displayName, 
+                DisplayName = displayName,
                 PictureUrl = pictureUrl,
-                SignUpAt = signUpAt, 
-                CreationAt = now, 
+                SignUpAt = signUpAt,
+                CreationAt = now,
                 UpdatedAt = now
             };
             db.AppUsers.Add(row);
             await db.SaveChangesAsync(ct);
-            
+
             logger.LogInformation(
                 "Created new AppUser (Id: {Id}, Auth0Id: {Auth0UserId})",
                 row.Id, row.Auth0UserId);
-            
+
             return new AddUserResult { Id = row.Id, Auth0UserId = row.Auth0UserId };
         }
 
@@ -80,11 +79,32 @@ public class SyncUserCommandHandler(
         existing.UpdatedAt = now;
 
         await db.SaveChangesAsync(ct);
-        
+
         logger.LogInformation(
             "♻ Updated AppUser (Id: {Id}, Auth0Id: {Auth0UserId})",
             existing.Id, existing.Auth0UserId);
-        
+
         return new AddUserResult { Id = existing.Id, Auth0UserId = existing.Auth0UserId };
+    }
+
+    private string? Get(JsonElement source, string name)
+    {
+        return source.TryGetProperty(name, out var el) && el.ValueKind != JsonValueKind.Null
+            ? el.GetString()
+            : null;
+    }
+
+    private string? GetFromUser(JsonElement user, string name)
+    {
+        return Get(user, name);
+    }
+
+    private string? GetFromUserMetadata(JsonElement user, string name)
+    {
+        if (user.TryGetProperty("user_metadata", out var meta) &&
+            meta.ValueKind == JsonValueKind.Object)
+            return Get(meta, name);
+
+        return null;
     }
 }
