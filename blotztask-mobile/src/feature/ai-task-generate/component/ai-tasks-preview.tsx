@@ -8,10 +8,11 @@ import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { ScrollView } from "react-native-gesture-handler";
 import { usePostHog } from "posthog-react-native";
-import { AiResultMessageDTO } from "../models/ai-result-message";
+import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { useAllLabels } from "@/shared/hooks/useAllLabels";
 
 export function AiTasksPreview({
   aiMessage,
@@ -26,8 +27,12 @@ export function AiTasksPreview({
   userInput: string;
   sheetRef: React.RefObject<BottomSheetModal | null>;
 }) {
+  const { labels } = useAllLabels();
   const { addTask, isAdding } = useTaskMutations();
-  const aiGeneratedTasks = aiMessage?.extractedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
+  const aiGeneratedTasks = aiMessage?.extractedTasks.map((task) =>
+    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
+  );
+
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiGeneratedTasks ?? []);
   const posthog = usePostHog();
 
