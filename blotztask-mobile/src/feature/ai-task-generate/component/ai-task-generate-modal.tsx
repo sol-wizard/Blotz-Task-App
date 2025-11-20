@@ -6,7 +6,6 @@ import { TaskAddedSuccess } from "./task-added-success";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { usePostHog } from "posthog-react-native";
-import { useAllLabels } from "@/shared/hooks/useAllLabels";
 
 export const AiTaskGenerateModal = ({
   sheetRef,
