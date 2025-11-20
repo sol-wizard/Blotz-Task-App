@@ -29,15 +29,13 @@ export function AiTasksPreview({
   sheetRef: React.RefObject<BottomSheetModal | null>;
 }) {
   const { addTask, isAdding } = useTaskMutations();
-
   const { labels, isLoading } = useAllLabels();
+  const posthog = usePostHog();
 
   const aiGeneratedTasks = aiMessage?.extractedTasks.map((task) =>
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
   );
-
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiGeneratedTasks ?? []);
-  const posthog = usePostHog();
 
   const finishedAllStepsRef = useRef<boolean>(false);
 
