@@ -12,7 +12,6 @@ public static class AiTaskGeneratorPrompts
                        Task Generation Guidelines:
                        - Generate one task per distinct action mentioned by the user.
                        - A task's *title* must summarize the user's action in a short, meaningful sentence. 
-                       - For general or vague intentions, generate a single simple task with an appropriate title.
                        - Do NOT create subtasks such as planning or preparation unless explicitly stated.
                        - If no clear description is provided or implied, leave the description field empty.
 
@@ -28,10 +27,9 @@ public static class AiTaskGeneratorPrompts
                        
                        TASK LABEL RULES (STRICT):
                         - Every generated task MUST include a `task_label` field.
-                        - The label must be a single string and MUST be chosen ONLY from the following four English categories:
-                  "Work", "Life", "Learning", "Health".
+                        - task_label MUST be one of: "Work", "Life", "Learning", "Health" (always in English, even for Chinese input).
                         - The task label categorizes the type of activity and must NOT replace the task title.
-                        - Even when the user's input is in Chinese, the label MUST remain in English and must be one of the four above.
+                        
                        
                        OUTPUT LANGUAGE RULE:
                        - If the user's input is in Chinese (Mandarin), you MUST output in Chinese.

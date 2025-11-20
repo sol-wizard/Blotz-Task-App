@@ -29,5 +29,14 @@ public class ExtractedTask
 
     [JsonPropertyName("task_label")]
     [Description("The label for the task.")]
-    public string TaskLabel { get; set; }
+    public LabelNameEnum LabelName { get; set; }
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum LabelNameEnum
+{
+    Work,
+    Life,
+    Learning,
+    Health
 }

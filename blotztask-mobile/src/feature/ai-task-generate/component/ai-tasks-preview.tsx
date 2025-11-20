@@ -13,6 +13,7 @@ import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-d
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
+import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 
 export function AiTasksPreview({
   aiMessage,
@@ -27,8 +28,10 @@ export function AiTasksPreview({
   userInput: string;
   sheetRef: React.RefObject<BottomSheetModal | null>;
 }) {
-  const { labels } = useAllLabels();
   const { addTask, isAdding } = useTaskMutations();
+
+  const { labels, isLoading } = useAllLabels();
+
   const aiGeneratedTasks = aiMessage?.extractedTasks.map((task) =>
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
   );
@@ -99,6 +102,14 @@ export function AiTasksPreview({
       }
     };
   }, [aiGeneratedTasks?.length, aiMessage, isVoiceInput, posthog, userInput]);
+
+  if (isLoading) {
+    return (
+      <View className="items-center justify-center">
+        <CustomSpinner size={60} />
+      </View>
+    );
+  }
 
   return (
     <View className="mb-10 items-center justify-between">
