@@ -7,7 +7,6 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { ScrollView } from "react-native-gesture-handler";
-import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { usePostHog } from "posthog-react-native";
 import { AiResultMessageDTO } from "../models/ai-result-message";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
@@ -16,14 +15,12 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 export function AiTasksPreview({
   aiMessage,
-  setUserInput,
   setModalType,
   isVoiceInput,
   userInput,
   sheetRef,
 }: {
   aiMessage?: AiResultMessageDTO;
-  setUserInput: React.Dispatch<React.SetStateAction<string>>;
   setModalType: (v: BottomSheetType) => void;
   isVoiceInput: boolean;
   userInput: string;
@@ -54,7 +51,6 @@ export function AiTasksPreview({
       await Promise.all(payloads.map((payload) => addTask(payload)));
       finishedAllStepsRef.current = true;
 
-      /* eslint-disable camelcase */
       posthog.capture("ai_task_interaction_completed", {
         ai_output: JSON.stringify(aiMessage),
         user_input: userInput,
@@ -63,7 +59,6 @@ export function AiTasksPreview({
         outcome: "accepted",
         is_voice_input: isVoiceInput,
       });
-      /* eslint-enable camelcase */
 
       setModalType("add-task-success");
       setLocalTasks([]);
@@ -74,7 +69,7 @@ export function AiTasksPreview({
 
   const handleGoBack = () => {
     setModalType("input");
-    /* eslint-disable camelcase */
+
     posthog.capture("ai_task_interaction_completed", {
       ai_output: JSON.stringify(aiMessage),
       user_input: userInput,
@@ -83,7 +78,6 @@ export function AiTasksPreview({
       user_add_task_count: 0,
       is_voice_input: isVoiceInput,
     });
-    /* eslint-enable camelcase */
   };
 
   useEffect(() => {
@@ -97,14 +91,13 @@ export function AiTasksPreview({
           ai_generated_task_count: aiGeneratedTasks?.length ?? 0,
           user_add_task_count: 0,
         });
-        /* eslint-enable camelcase */
       }
     };
   }, [aiGeneratedTasks?.length, aiMessage, isVoiceInput, posthog, userInput]);
 
   return (
     <View className="mb-10 items-center justify-between">
-      <ScrollView className="pb-5 w-full min-h-20 max-h-80">
+      <ScrollView className="pb-5 w-full min-h-20 max-h-200">
         {localTasks.map((task) => (
           <AiTaskCard
             key={task.id}
@@ -126,22 +119,7 @@ export function AiTasksPreview({
         >
           <MaterialCommunityIcons name="arrow-u-left-top" size={20} color="white" />
         </Pressable>
-        {!isVoiceInput && (
-          <Pressable
-            onPress={() => {
-              handleGoBack();
-              setUserInput("");
-            }}
-            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Edit"
-            className="mx-4"
-          >
-            <GradientCircle size={70}>
-              <MaterialCommunityIcons name="pencil-outline" size={35} color="white" />
-            </GradientCircle>
-          </Pressable>
-        )}
+
         <Pressable
           onPress={handleAddTasks}
           disabled={createDisabled}
