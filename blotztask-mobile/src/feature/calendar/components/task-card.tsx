@@ -142,6 +142,7 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
                   onPress={() => toggleTask(task.id)}
                   disabled={isLoading}
                   haptic={!task.isDone}
+                  variant="calendar"
                 />
 
                 <View
