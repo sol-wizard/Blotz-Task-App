@@ -34,7 +34,7 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange, sheetRef }: 
     <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
       <View
         className="w-2 h-full rounded-full"
-        style={{ backgroundColor: theme.colors.disabled }}
+        style={{ backgroundColor: task.label?.color ?? theme.colors.disabled }}
       />
 
       <View className="flex-1 flex-row items-center justify-between ml-4">
