@@ -44,7 +44,8 @@ export default function LoadingScreen() {
       <View pointerEvents="none" className="items-center">
         <Animated.Image
           source={ASSETS.loadingBun}
-          style={[{ width: 60, height: 60, transform: [{ translateY: bounceAnim }, { scale }] }]}
+          className="w-[60px] h-[60px]"
+          style={{ transform: [{ translateY: bounceAnim }, { scale }] }}
           resizeMode="contain"
         />
         <Image
