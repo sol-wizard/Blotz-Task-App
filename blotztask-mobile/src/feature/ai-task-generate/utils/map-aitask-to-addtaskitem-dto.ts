@@ -7,7 +7,7 @@ export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {
     return {
       title: task.title,
       description: task.description,
-      labelId: task.labelId,
+      labelId: task.label?.labelId,
       timeType: null,
     };
   let timeType = 1;
@@ -19,7 +19,7 @@ export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {
     description: task.description,
     startTime: new Date(task.startTime),
     endTime: new Date(task.endTime),
-    labelId: task.labelId,
+    labelId: task.label?.labelId,
     timeType: timeType,
   };
 }

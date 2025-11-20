@@ -1,66 +1,43 @@
-using BlotzTask.Modules.Labels.Queries;
-
 namespace BlotzTask.Modules.ChatTaskGenerator.Constants;
 
 public static class AiTaskGeneratorPrompts
 {
-    public static string GetSystemMessage(DateTime currentTime, List<LabelDTO> availableLabels)
+    public static string GetSystemMessage(DateTime currentTime)
     {
-        var labelsDescription = BuildLabelsDescription(availableLabels);
         return $"""
-                      You are a task extraction assistant. Extract actionable tasks from user input.
+                       You are a task extraction assistant. Extract actionable tasks from user input.
 
-                      Current time: {currentTime:yyyy-MM-ddTHH:mm:ss}
+                       Current time: {currentTime:yyyy-MM-ddTHH:mm:ss}
 
-                      Task Generation Guidelines:
-                      - Generate one task per distinct action mentioned by the user.
-                      - For general or vague intentions, generate a single simple task with an appropriate title.
-                      - Do NOT create subtasks such as planning or preparation unless explicitly stated.
-                      - If no clear description is provided or implied, leave the description field empty.
+                       Task Generation Guidelines:
+                       - Generate one task per distinct action mentioned by the user.
+                       - A task's *title* must summarize the user's action in a short, meaningful sentence. 
+                       - Do NOT create subtasks such as planning or preparation unless explicitly stated.
+                       - If no clear description is provided or implied, leave the description field empty.
 
-                      TASK TIME RULES (STRICT):
-                      - You may create time for the task if you can infer a specific time frame from the context, but do not assume a time if none is mentioned.
-                      - There can only be three type of task:
-                        1. Floating Task: start_time = end_time = null
-                        2. Single Time Task: start_time = end_time, start_time != null
-                        3. Range Time Task: start_time < end_time, start_time != null, end_time != null
-                      - If an end time or time frame is implied, set a reasonable start_time. 
-                      - If a start time or time frame is implied, set a reasonable end_time. 
-                      - If only start time or end time is provided and the other one cannot be reasonably inferred, set them to be equal.
-                      
-                      {labelsDescription}
-                      
-                      OUTPUT LANGUAGE RULE:
-                      - If the user's input is in Chinese (Mandarin), you MUST output in Chinese.
-                      - Otherwise, keep the output in the user's input language. 
+                       TASK TIME RULES (STRICT):
+                       - You may create time for the task if you can infer a specific time frame from the context, but do not assume a time if none is mentioned.
+                       - There can only be three type of task:
+                         1. Floating Task: start_time = end_time = null
+                         2. Single Time Task: start_time = end_time, start_time != null
+                         3. Range Time Task: start_time < end_time, start_time != null, end_time != null
+                       - If an end time or time frame is implied, set a reasonable start_time. 
+                       - If a start time or time frame is implied, set a reasonable end_time. 
+                       - If only start time or end time is provided and the other one cannot be reasonably inferred, set them to be equal.
+                       
+                       TASK LABEL RULES (STRICT):
+                        - Every generated task MUST include a `task_label` field.
+                        - task_label MUST be one of: "Work", "Life", "Learning", "Health" (always in English, even for Chinese input).
+                        - The task label categorizes the type of activity and must NOT replace the task title.
+                        
+                       
+                       OUTPUT LANGUAGE RULE:
+                       - If the user's input is in Chinese (Mandarin), you MUST output in Chinese.
+                       - Otherwise, keep the output in the user's input language. 
 
-                      SUCCESS CRITERIA:
-                      - isSuccess = true: At least one actionable task extracted
-                      - isSuccess = false: No actionable tasks found (set errorMessage with brief reason)
-               """;
-   }
-
-    private static string BuildLabelsDescription(List<LabelDTO> availableLabels)
-    {
-        if (availableLabels.Count == 0)
-        {
-            return "LABEL ASSIGNMENT:\nNo labels available. Leave task_label as null.";
-        }
-
-        var labelsList = string.Join("\n", availableLabels.Select(l => 
-            $"  - '{l.Name}': {l.Description}"));
-
-        return $"""
-                LABEL ASSIGNMENT:
-                Assign an appropriate label to tasks based on context. Available labels:
-                {labelsList}
-
-                Label assignment rules:
-                - Use the exact label name as shown above (case-sensitive)
-                - Only one assign label from the available list
-                - If no label clearly fits, leave task_label as null
-                - Consider the task content, context, and user's phrasing
-                - Prefer more specific custom label over generic global label when both fit
+                       SUCCESS CRITERIA:
+                       - isSuccess = true: At least one actionable task extracted
+                       - isSuccess = false: No actionable tasks found (set errorMessage with brief reason)
                 """;
     }
 }

@@ -8,10 +8,12 @@ import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { ScrollView } from "react-native-gesture-handler";
 import { usePostHog } from "posthog-react-native";
-import { AiResultMessageDTO } from "../models/ai-result-message";
+import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { useAllLabels } from "@/shared/hooks/useAllLabels";
+import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 
 export function AiTasksPreview({
   aiMessage,
@@ -27,9 +29,13 @@ export function AiTasksPreview({
   sheetRef: React.RefObject<BottomSheetModal | null>;
 }) {
   const { addTask, isAdding } = useTaskMutations();
-  const aiGeneratedTasks = aiMessage?.extractedTasks.map(mapExtractedTaskDTOToAiTaskDTO);
-  const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiGeneratedTasks ?? []);
+  const { labels, isLoading } = useAllLabels();
   const posthog = usePostHog();
+
+  const aiGeneratedTasks = aiMessage?.extractedTasks.map((task) =>
+    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
+  );
+  const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiGeneratedTasks ?? []);
 
   const finishedAllStepsRef = useRef<boolean>(false);
 
@@ -94,6 +100,14 @@ export function AiTasksPreview({
       }
     };
   }, [aiGeneratedTasks?.length, aiMessage, isVoiceInput, posthog, userInput]);
+
+  if (isLoading) {
+    return (
+      <View className="items-center justify-center">
+        <CustomSpinner size={60} />
+      </View>
+    );
+  }
 
   return (
     <View className="mb-10 items-center justify-between">

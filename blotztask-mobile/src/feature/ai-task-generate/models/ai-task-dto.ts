@@ -1,3 +1,5 @@
+import { LabelDTO } from "@/shared/models/label-dto";
+
 export interface AiTaskDTO {
   id: string;
   description: string;
@@ -5,5 +7,5 @@ export interface AiTaskDTO {
   isAdded: boolean;
   startTime: string;
   endTime: string;
-  labelId?: number;
+  label?: LabelDTO;
 }

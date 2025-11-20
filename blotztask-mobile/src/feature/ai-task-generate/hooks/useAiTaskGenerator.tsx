@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
-import { AiResultMessageDTO } from "../models/ai-result-message";
+import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 
 export function useAiTaskGenerator({
   setIsAiGenerating,
