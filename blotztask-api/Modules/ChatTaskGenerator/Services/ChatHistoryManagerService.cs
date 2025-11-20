@@ -5,7 +5,7 @@ using Microsoft.SemanticKernel.ChatCompletion;
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IChatHistoryManagerService
-{ 
+{
     void RemoveConversation();
     Task<ChatHistory> InitializeNewConversation(Guid userId);
     ChatHistory GetChatHistory();
@@ -14,7 +14,7 @@ public interface IChatHistoryManagerService
 public class ChatHistoryManagerService(
     ILogger<ChatHistoryManagerService> logger,
     GetAllLabelsQueryHandler getAllLabelsQueryHandler
-    )
+)
     : IChatHistoryManagerService
 {
     private static ChatHistory? _chatHistory;
@@ -26,12 +26,6 @@ public class ChatHistoryManagerService(
         return _chatHistory;
     }
 
-
-    public void SetChatHistory(ChatHistory chatHistory)
-    {
-        _chatHistory = chatHistory;
-    }
-
     public void RemoveConversation()
     {
         _chatHistory = null;
@@ -39,17 +33,19 @@ public class ChatHistoryManagerService(
 
     public async Task<ChatHistory> InitializeNewConversation(Guid userId)
     {
-        var query = new GetAllLabelsQuery{UserId = userId };
-        var labels = await getAllLabelsQueryHandler.Handle(query);
-
         if (_chatHistory != null) return await Task.FromResult(_chatHistory);
 
-
         var chatHistory = new ChatHistory();
-        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(DateTime.Now, labels));
+        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(DateTime.Now));
 
         SetChatHistory(chatHistory);
 
         return await Task.FromResult(chatHistory);
+    }
+
+
+    public void SetChatHistory(ChatHistory chatHistory)
+    {
+        _chatHistory = chatHistory;
     }
 }
