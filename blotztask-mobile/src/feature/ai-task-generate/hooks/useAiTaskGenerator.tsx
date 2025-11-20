@@ -36,7 +36,6 @@ export function useAiTaskGenerator({
   };
 
   const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
-    console.log("receivedAiMessage:", receivedAiMessage);
     setAiGeneratedMessage(receivedAiMessage);
     if (!receivedAiMessage.isSuccess) {
       setIsAiGenerating(false);

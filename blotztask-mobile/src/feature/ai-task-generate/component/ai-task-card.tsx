@@ -14,7 +14,6 @@ type Props = {
 };
 
 export function AiTaskCard({ task, handleTaskDelete, onTitleChange, sheetRef }: Props) {
-  console.log("task:", task);
   const [draftTitle, setDraftTitle] = useState(task.title);
 
   const handleEdit = () => {
@@ -33,7 +32,10 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange, sheetRef }: 
 
   return (
     <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
-      <View className="w-2 h-full rounded-full" style={{ backgroundColor: task.label?.color }} />
+      <View
+        className="w-2 h-full rounded-full"
+        style={{ backgroundColor: task.label?.color ?? theme.colors.disabled }}
+      />
 
       <View className="flex-1 flex-row items-center justify-between ml-4">
         <BottomSheetTextInput
