@@ -38,7 +38,7 @@ export function filterSelectedTask({
   }
 
   const todoTaskCount = todoTasks.length;
-  const inProgressTasksCount = selectedDayTasks.filter(isInProgress).length;
+  const inProgressTasksCount = inProgressTasks.length;
   const doneTaskCount = doneTasks.length;
   const overdueTaskCount = overdueTasks.length;
   const allTaskCount = allTasks.length;
