@@ -13,29 +13,32 @@ export function filterSelectedTask({
   const todoTasks = selectedDayTasks.filter((task) => isTodo(task));
   const doneTasks = selectedDayTasks.filter((task) => task.isDone);
 
-  const inProgressTasks = selectedDayTasks.filter((task) => {
+  const isInProgress = (task: TaskDetailDTO) => {
     if (!task.startTime || !task.endTime) return false;
     const start = new Date(task.startTime);
     const end = new Date(task.endTime);
     return !task.isDone && today >= start && today < end;
-  });
+  };
+  const inProgressTasks = selectedDayTasks.filter(isInProgress);
 
-  const overdueTasks = selectedDayTasks.filter((task) => {
+  const isOverdue = (task: TaskDetailDTO) => {
     if (!task.endTime) return false;
-    return !task.isDone && isBefore(new Date(task.endTime), new Date());
-  });
+    return !task.isDone && isBefore(new Date(task.endTime), today);
+  };
+  const overdueTasks = selectedDayTasks.filter(isOverdue);
 
-  let allTasks;
+  let allTasks: TaskDetailDTO[];
+
   if (isSameDay(selectedDay, today)) {
-    allTasks = [...todoTasks, ...doneTasks, ...inProgressTasks, ...overdueTasks];
+    allTasks = selectedDayTasks;
   } else if (isAfter(selectedDay, today)) {
-    allTasks = [...todoTasks, ...inProgressTasks];
+    allTasks = selectedDayTasks.filter((t) => isTodo(t) || isInProgress(t));
   } else {
-    allTasks = [...doneTasks, ...overdueTasks];
+    allTasks = selectedDayTasks.filter((t) => t.isDone || isOverdue(t));
   }
 
   const todoTaskCount = todoTasks.length;
-  const inProgressTaskCount = inProgressTasks.length;
+  const inProgressTasksCount = selectedDayTasks.filter(isInProgress).length;
   const doneTaskCount = doneTasks.length;
   const overdueTaskCount = overdueTasks.length;
   const allTaskCount = allTasks.length;
@@ -53,7 +56,7 @@ export function filterSelectedTask({
     },
     {
       status: "In Progress",
-      count: inProgressTaskCount,
+      count: inProgressTasksCount,
       tasks: inProgressTasks,
     },
     {
