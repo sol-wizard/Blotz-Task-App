@@ -13,6 +13,11 @@ on:
 jobs:
     build-and-test-backend:
         runs-on: ubuntu-latest
+        permissions:
+          checks: write      # Required for dorny/test-reporter
+          pull-requests: write # Optional: to post comments if configured
+          contents: read     # Required to checkout code
+
 
         steps:
         - name: Checkout code
