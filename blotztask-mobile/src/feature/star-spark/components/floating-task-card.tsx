@@ -3,7 +3,7 @@ import { FloatingTaskDTO } from "../models/floating-task-dto";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { getLabelIcon } from "../utils/get-label-icon";
-import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
+import { estimateTaskTime } from "../services/task-time-estimate-service";
 
 export const FloatingTaskCard = ({
   floatingTask,
@@ -16,13 +16,14 @@ export const FloatingTaskCard = ({
 }) => {
   const iconSource = getLabelIcon(floatingTask.label?.name);
 
-  const floatingTaskForEstimate = {
-    id: floatingTask.id,
-    title: floatingTask.title,
-    description: floatingTask.description,
+  const handleEstimateTime = async (floatingTask: FloatingTaskDTO) => {
+    const floatingTaskForEstimate = {
+      id: floatingTask.id,
+      title: floatingTask.title,
+      description: floatingTask.description,
+    };
+    const result = await estimateTaskTime(floatingTaskForEstimate);
   };
-
-  const { estimatedTime, isLoading } = useEstimateTaskTime(floatingTaskForEstimate);
 
   return (
     <View className="mb-4">
@@ -56,7 +57,7 @@ export const FloatingTaskCard = ({
             </View>
           </Pressable>
 
-          <Pressable onPress={() => console.log("FloatingTaskCard time estimate:", estimatedTime)}>
+          <Pressable onPress={() => handleEstimateTime(floatingTask)}>
             <View className="w-8 h-8 bg-[#E3EFFE] rounded-xl items-center justify-center ml-2">
               <MaterialCommunityIcons name="plus" color="#3D8DE0" size={18} />
             </View>

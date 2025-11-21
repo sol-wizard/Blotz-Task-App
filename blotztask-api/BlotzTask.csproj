@@ -32,11 +32,4 @@
         <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="4.0.0"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0"/>
     </ItemGroup>
-
-    <ItemGroup>
-        <Folder Include="Modules\TimeEstimation\Commands\"/>
-        <Folder Include="Modules\TimeEstimation\Controllers\"/>
-        <Folder Include="Modules\TimeEstimation\DTOs\"/>
-        <Folder Include="Modules\TimeEstimation\Prompts\"/>
-    </ItemGroup>
 </Project>

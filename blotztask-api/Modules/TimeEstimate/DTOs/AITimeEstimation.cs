@@ -5,7 +5,7 @@ namespace BlotzTask.Modules.TimeEstimate.DTOs;
 
 public class AITimeEstimation
 {
-    [JsonPropertyName("timeEstimation")]
+    [JsonPropertyName("duration")]
     [Description("The estimated time duration for the task.")]
     public TimeSpan Duration { get; set; }
 }

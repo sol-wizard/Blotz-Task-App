@@ -7,7 +7,7 @@ namespace BlotzTask.Modules.TimeEstimate.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class TaskEstimateController(TimeEstimateCommandHandler timeEstimateCommandHandler) : ControllerBase
+public class TimeEstimateController(TimeEstimateCommandHandler timeEstimateCommandHandler) : ControllerBase
 {
     [HttpPost]
     public async Task<TaskTimeEstimation> EstimateTaskTime([FromBody] FloatingTaskForEstimation floatingtask,
