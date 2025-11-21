@@ -23,18 +23,30 @@ jobs:
           with:
             dotnet-version: '8.0.x'
 
-        - name: Install dependencies
+        - name: Install API dependencies
           run: dotnet restore
           working-directory: ./blotztask-api
+
+        - name: Install test dependencies
+          run: dotnet restore
+          working-directory: ./blotztask-test
 
         - name: .Net - Tool restore
           working-directory: ./blotztask-api
           run: |
             dotnet tool restore
 
-        - name: Build the project
+        - name: Build the API project
           run: dotnet build --configuration Release --no-restore
           working-directory: ./blotztask-api
+
+        - name: Build the test project
+          run: dotnet build --configuration Release --no-restore
+          working-directory: ./blotztask-test
+
+        - name: Run tests
+          run: dotnet test --configuration Release --no-build --verbosity normal
+          working-directory: ./blotztask-test
 
         - name: Publish the project
           run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
