@@ -2,12 +2,14 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Constants;
 
 public static class AiTaskGeneratorPrompts
 {
-    public static string GetSystemMessage(DateTime currentTime)
+    public static string GetSystemMessage(DateTime currentTime, DayOfWeek dayOfWeek)
     {
         return $"""
                        You are a task extraction assistant. Extract actionable tasks from user input.
 
-                       Current time: {currentTime:yyyy-MM-ddTHH:mm:ss}
+                       For your information:
+                           currentTime: {currentTime:yyyy-MM-ddTHH:mm:ss}
+                           dayOfWeek: {dayOfWeek}
 
                        Task Generation Guidelines:
                        - Generate one task per distinct action mentioned by the user.
@@ -17,6 +19,7 @@ public static class AiTaskGeneratorPrompts
 
                        TASK TIME RULES (STRICT):
                        - You may create time for the task if you can infer a specific time frame from the context, but do not assume a time if none is mentioned.
+                       - Take currentTime and dayOfWeek into consideration when you create date
                        - There can only be three type of task:
                          1. Floating Task: start_time = end_time = null
                          2. Single Time Task: start_time = end_time, start_time != null
