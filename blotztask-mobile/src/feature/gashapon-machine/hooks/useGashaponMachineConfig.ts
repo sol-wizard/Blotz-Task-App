@@ -115,9 +115,6 @@ export const useGashaponMachineConfig = ({
         frictionStatic: 0.2,
         frictionAir: 0.01,
         label: `star-${i}-label-${labelName}`,
-        angle: 0,
-        angularVelocity: 0,
-        torque: 0,
       });
 
       stars.push(star);
