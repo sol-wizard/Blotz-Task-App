@@ -1,5 +1,5 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { isAfter, isBefore } from "date-fns";
+import { isAfter, isBefore, isSameDay } from "date-fns";
 import { TaskFilterGroup } from "../models/task-filter-group";
 
 export function filterSelectedTask({
@@ -47,7 +47,7 @@ export function filterSelectedTask({
     }
   }
 
-  const finalAllTasks = isBefore(selectedDay, today) ? selectedDayTasks : allTasks;
+  const finalAllTasks = isSameDay(selectedDay, today) ? selectedDayTasks : allTasks;
 
   return [
     {
