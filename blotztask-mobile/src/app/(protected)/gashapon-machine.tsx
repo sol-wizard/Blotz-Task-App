@@ -16,6 +16,7 @@ import { FloatingTaskDTO } from "@/feature/star-spark/models/floatingTaskDto";
 
 export default function GashaponMachine() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
+  const [eyesPicLoaded, setEyesPicLoaded] = useState(false);
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
@@ -44,7 +45,8 @@ export default function GashaponMachine() {
   });
 
   const gameEngineReady = !!entities.physics;
-  const isAllLoaded = basePicLoaded && buttonPicLoaded && gameEngineReady && !isLoading;
+  const isAllLoaded =
+    basePicLoaded && eyesPicLoaded && buttonPicLoaded && gameEngineReady && !isLoading;
 
   return (
     <LinearGradient
@@ -83,6 +85,7 @@ export default function GashaponMachine() {
             }}
             onLoad={() => setBasePicLoaded(true)}
           />
+
           <View
             style={{
               marginTop: 10,
@@ -102,6 +105,13 @@ export default function GashaponMachine() {
               />
             )}
           </View>
+          <Image
+            source={ASSETS.machineEyes}
+            resizeMode="contain"
+            className="absolute z-10"
+            style={{ left: 80, top: 150 }}
+            onLoad={() => setEyesPicLoaded(true)}
+          />
 
           <MachineButton setButtonPicLoaded={setButtonPicLoaded} onRelease={handleRelease} />
         </View>

@@ -13,7 +13,7 @@ export const LOTTIE_ANIMATIONS = {
   emptyBox: require("../../../assets/animations/empty-box.json"),
   aiLoadingEffect: require("../../../assets/animations/aiLoadingEffect.json"),
   spinner: require("../../../assets/animations/spinner.json"),
-  voiceWave: require("../../../assets/animations/voice-wave.json"),
+  jumpingDots: require("../../../assets/animations/jumping-dots.json"),
 } as const;
 
 // Images
@@ -34,6 +34,7 @@ export const PNGIMAGES = {
   greenHouse: require("../../../assets/images-png/green-house.png"),
   starSpark: require("../../../assets/images-png/star-spark.png"),
   settingIcon: require("../../../assets/images-png/setting-icon.png"),
+  machineEyes: require("../../../assets/images-png/machine-eyes.png"),
 } as const;
 
 export const SVGIMAGES = {
