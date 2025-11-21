@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
@@ -13,6 +13,9 @@ import { isEqual } from "date-fns";
 import { combineDateTime } from "./util/combine-date-time";
 import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
+import { LabelDTO } from "@/shared/models/label-dto";
+import { fetchAllLabel } from "@/shared/services/label-service";
+import { Snackbar } from "react-native-paper";
 
 type TaskFormProps =
   | {
@@ -52,6 +55,23 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     !startCombined || !endCombined || isEqual(startCombined, endCombined) ? "reminder" : "event";
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
+  const labelId = useWatch({ control, name: "labelId" });
+  const [labels, setLabels] = useState<LabelDTO[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const refreshLabels = useCallback(async () => {
+    try {
+      const data = await fetchAllLabel();
+      setLabels(data);
+    } catch (error) {
+      console.error("Failed to refresh labels:", error);
+      setError("Failed to load categories. Please try again.");
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshLabels();
+  }, [refreshLabels]);
 
   const handleFormSubmit = (data: TaskFormField) => {
     onSubmit(data);
@@ -67,59 +87,75 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   };
 
   return (
-    <View className="flex-1 bg-white">
-      <FormProvider {...form}>
-        <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
-          {/* Title */}
-          <View className="mb-4 bg-white">
-            <FormTextInput
-              name="title"
-              placeholder="New Task"
-              control={control}
-              className="font-balooBold text-4xl leading-normal"
-            />
+    <>
+      <View className="flex-1 bg-white">
+        <FormProvider {...form}>
+          <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
+            {/* Title */}
+            <View className="mb-4 bg-white">
+              <FormTextInput
+                name="title"
+                placeholder="New Task"
+                control={control}
+                className="font-balooBold text-4xl leading-normal"
+              />
+            </View>
+
+            <View className="mb-8 py-3 bg-background rounded-2xl px-4">
+              <FormTextInput
+                name="description"
+                placeholder="Add a note"
+                control={control}
+                className="font-baloo text-lg text-tertiary"
+              />
+            </View>
+
+            <FormDivider />
+            <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
+
+            {isActiveTab === "reminder" && <ReminderTab control={control} />}
+            {isActiveTab === "event" && <EventTab control={control} />}
+            <FormDivider />
+
+            {/* Label Select */}
+            <View className="mb-8">
+              {/* <Text className="font-balooBold text-3xl leading-normal">Category</Text> */}
+              <LabelSelect control={control} labels={labels} selectedValue={labelId} />
+            </View>
+
+            <FormDivider />
+          </ScrollView>
+
+          {/* Submit */}
+          <View className="px-8 py-6">
+            <Pressable
+              onPress={handleSubmit(handleFormSubmit)}
+              disabled={!isValid || isSubmitting}
+              className={`w-full py-4 rounded-lg items-center justify-center ${
+                !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
+              }`}
+            >
+              <Text className="font-balooBold text-xl text-black">
+                {mode === "create" ? "Create Task" : "Update Task"}
+              </Text>
+            </Pressable>
           </View>
-
-          <View className="mb-8 py-3 bg-background rounded-2xl px-4">
-            <FormTextInput
-              name="description"
-              placeholder="Add a note"
-              control={control}
-              className="font-baloo text-lg text-tertiary"
-            />
-          </View>
-
-          <FormDivider />
-          <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
-
-          {isActiveTab === "reminder" && <ReminderTab control={control} />}
-          {isActiveTab === "event" && <EventTab control={control} />}
-          <FormDivider />
-
-          <View className="mb-8">
-            <Text className="font-balooBold text-3xl leading-normal">Category</Text>
-            <LabelSelect control={control} />
-          </View>
-
-          <FormDivider />
-        </ScrollView>
-
-        {/* Submit */}
-        <View className="px-8 py-6">
-          <Pressable
-            onPress={handleSubmit(handleFormSubmit)}
-            disabled={!isValid || isSubmitting}
-            className={`w-full py-4 rounded-lg items-center justify-center ${
-              !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
-            }`}
-          >
-            <Text className="font-balooBold text-xl text-black">
-              {mode === "create" ? "Create Task" : "Update Task"}
-            </Text>
-          </Pressable>
-        </View>
-      </FormProvider>
-    </View>
+        </FormProvider>
+      </View>
+      <Snackbar
+        visible={error != null}
+        onDismiss={() => setError(null)}
+        duration={3000}
+        action={{
+          label: "Dismiss",
+          onPress: () => {
+            setError(null);
+          },
+        }}
+      >
+        {error}
+      </Snackbar>
+    </>
   );
 };
 
