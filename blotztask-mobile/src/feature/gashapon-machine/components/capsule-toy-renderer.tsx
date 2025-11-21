@@ -3,8 +3,9 @@ import { Image } from "react-native";
 export const CapsuleToyRenderer = (props: any) => {
   const BALL_RADIUS = 20;
   const { body, texture } = props;
-  const x = body.position.x - BALL_RADIUS;
-  const y = body.position.y - BALL_RADIUS * 2;
+  const { position, angle } = body;
+  const x = position.x - BALL_RADIUS;
+  const y = position.y - BALL_RADIUS * 2;
 
   return (
     <Image
@@ -16,6 +17,7 @@ export const CapsuleToyRenderer = (props: any) => {
         width: BALL_RADIUS * 3,
         height: BALL_RADIUS * 3,
         zIndex: Math.round(body.position.y),
+        transform: [{ rotate: `${angle}rad` }],
       }}
       resizeMode="cover"
     />
