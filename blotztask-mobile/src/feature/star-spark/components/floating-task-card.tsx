@@ -23,6 +23,7 @@ export const FloatingTaskCard = ({
       description: floatingTask.description,
     };
     const result = await estimateTaskTime(floatingTaskForEstimate);
+    console.log("FloatingTaskCard time estimate:", result);
   };
 
   return (
