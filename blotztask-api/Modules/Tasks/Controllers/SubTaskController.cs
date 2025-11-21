@@ -11,6 +11,7 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 public class SubTaskController(
     GetSubtasksByTaskIdQueryHandler getSubtaskByTaskIdQueryHandler,
     UpdateSubtaskCommandHandler updateSubtaskCommandHandler,
+    UpdateSubtaskStatusCommandHandler updateSubtaskStatusCommandHandler,
     ReplaceSubtasksCommandHandler replaceSubtasksCommandHandler,
     DeleteSubtaskCommandHandler deleteSubtaskCommandHandler) : ControllerBase
 {
@@ -33,6 +34,22 @@ public class SubTaskController(
     {
         var message = await updateSubtaskCommandHandler.Handle(command, taskId, subtaskId, ct);
         return Ok(new { message });
+    }
+    
+    [HttpPut("subtask-completion-status/{id}")]
+    public async Task<SubtaskStatusResultDto> UpdateSubtaskStatus(int id, CancellationToken ct)
+    {
+        var command = new UpdateSubtaskStatusCommand
+        {
+            subtaskId = id
+        };
+    
+        var result = await updateSubtaskStatusCommandHandler.Handle(command, ct);
+    
+        if (result == null)
+            throw new InvalidOperationException($"Subtask status update failed: no valid data returned for subtask ID {id}.");
+    
+        return result;
     }
 
     [HttpPost("tasks/{taskId}/replaceSubtasks")]
