@@ -5,14 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Commands.SubTasks;
 
-
-
-public class @int
-{
-    [Required]
-    public int subtaskId { get; set; }
-}
-
 public class UpdateSubtaskStatusCommandHandler(BlotzTaskDbContext db, ILogger<UpdateSubtaskStatusCommandHandler> logger)
 {
     public async Task<string> Handle(int subtaskId, CancellationToken ct = default)
