@@ -42,7 +42,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                         (
                             // Tasks in date range
                             (t.StartTime != null && t.EndTime != null &&
-                             t.StartTime < endDateUtc && t.EndTime > query.StartDateUtc)
+                             t.StartTime < endDateUtc && t.EndTime >= query.StartDateUtc)
                             ||
                             // Floating tasks
                             (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null &&
