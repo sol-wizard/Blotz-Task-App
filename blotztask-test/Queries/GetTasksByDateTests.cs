@@ -90,24 +90,20 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
-    public async Task Handle_MidnightBoundary_ShouldRespectOneHourDifference()
+    public async Task Handle_DifferentTimezones_ShouldShowTaskOnCorrectLocalDay()
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
 
-        // Task Time: Nov 20, 23:30 UTC (11:30 PM)
-        // This is:
-        // - London (UTC+0): Nov 20, 23:30 -> Should show on Nov 20 view
-        // - Paris  (UTC+1): Nov 21, 00:30 -> Should show on Nov 21 view (NOT Nov 20)
-
+        // Scenario: A Global Meeting at 11:30 PM UTC (Nov 20)
+        // This single moment in time falls on DIFFERENT calendar days for different users.
         var boundaryTaskTimeUtc = new DateTimeOffset(2024, 11, 20, 23, 30, 0, TimeSpan.Zero);
-        await _seeder.CreateTaskAsync(userId, "Midnight Boundary Task", boundaryTaskTimeUtc, boundaryTaskTimeUtc.AddMinutes(30));
+        await _seeder.CreateTaskAsync(userId, "Global Meeting (11:30 PM UTC)", boundaryTaskTimeUtc, boundaryTaskTimeUtc.AddMinutes(30));
 
-        // --- LONDON USER REQUEST (UTC+0) ---
-        // Requesting "Nov 20"
-        // London Midnight Nov 20 = Nov 20 00:00 UTC
+        // --- LONDON USER (UTC+0) ---
+        // Local Time: Nov 20, 11:30 PM.
+        // The meeting IS today for them.
         var londonRequestDateUtc = new DateTime(2024, 11, 20, 0, 0, 0, DateTimeKind.Utc);
-        
         var londonQuery = new GetTasksByDateQuery
         {
             UserId = userId,
@@ -115,13 +111,11 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
             IncludeFloatingForToday = false
         };
 
-        // --- PARIS USER REQUEST (UTC+1) ---
-        // Requesting "Nov 20"
-        // Paris Midnight Nov 20 = Nov 19 23:00 UTC
-        // Window: [Nov 19 23:00 UTC] to [Nov 20 23:00 UTC]
-        // Task is at [Nov 20 23:30 UTC] -> which is AFTER the window ends!
-        var parisRequestDateUtc = new DateTime(2024, 11, 19, 23, 0, 0, DateTimeKind.Utc);
-
+        // --- PARIS USER (UTC+1) ---
+        // Local Time: Nov 21, 00:30 AM.
+        // The meeting was YESTERDAY (or technically 'today' if querying Nov 21).
+        // When querying for "Nov 20", they should NOT see it because for them, Nov 20 ended at 23:00 UTC.
+        var parisRequestDateUtc = new DateTime(2024, 11, 19, 23, 0, 0, DateTimeKind.Utc); // Nov 20 Midnight in Paris is Nov 19 23:00 UTC
         var parisQuery = new GetTasksByDateQuery
         {
             UserId = userId,
@@ -134,12 +128,10 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         var parisResult = await _handler.Handle(parisQuery);
 
         // Assert
-        // London sees it (11:30 PM same day)
-        londonResult.Should().Contain(t => t.Title == "Midnight Boundary Task", 
-            "London user should see the task on Nov 20 (it's 11:30 PM local)");
+        londonResult.Should().Contain(t => t.Title == "Global Meeting (11:30 PM UTC)", 
+            because: "London user (UTC+0) is still in Nov 20 at 11:30 PM, so they should see the task.");
 
-        // Paris does NOT see it (it's 12:30 AM next day)
-        parisResult.Should().NotContain(t => t.Title == "Midnight Boundary Task", 
-            "Paris user should NOT see the task on Nov 20 (it's 12:30 AM Nov 21 local)");
+        parisResult.Should().NotContain(t => t.Title == "Global Meeting (11:30 PM UTC)", 
+            because: "Paris user (UTC+1) has already crossed into Nov 21 (it's 12:30 AM local), so they should NOT see this task on their 'Nov 20' view.");
     }
 }
