@@ -10,7 +10,7 @@ public class DatabaseFixture : IAsyncLifetime
 {
     private readonly MsSqlContainer _container;
 
-    public BlotzTaskDbContext Context { get; private set; } = null!;
+    public DbContextOptions<BlotzTaskDbContext> Options { get; private set; } = null!;
     public Guid TestUserId { get; } = Guid.NewGuid();
 
     public DatabaseFixture()
@@ -30,12 +30,12 @@ public class DatabaseFixture : IAsyncLifetime
     {
         await _container.StartAsync();
 
-        var options = new DbContextOptionsBuilder<BlotzTaskDbContext>()
+        Options = new DbContextOptionsBuilder<BlotzTaskDbContext>()
             .UseSqlServer(_container.GetConnectionString())
             .Options;
 
-        Context = new BlotzTaskDbContext(options);
-        await Context.Database.EnsureCreatedAsync();
+        using var context = new BlotzTaskDbContext(Options);
+        await context.Database.EnsureCreatedAsync();
 
         // Create a test user
         var testUser = new BlotzTask.Modules.Users.Domain.AppUser
@@ -50,16 +50,12 @@ public class DatabaseFixture : IAsyncLifetime
             UpdatedAt = DateTime.UtcNow
         };
 
-        Context.AppUsers.Add(testUser);
-        await Context.SaveChangesAsync();
+        context.AppUsers.Add(testUser);
+        await context.SaveChangesAsync();
     }
 
     public async Task DisposeAsync()
     {
-        if (Context != null)
-        {
-            await Context.DisposeAsync();
-        }
         await _container.DisposeAsync();
     }
 }
