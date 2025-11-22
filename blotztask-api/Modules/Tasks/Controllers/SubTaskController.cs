@@ -37,19 +37,10 @@ public class SubTaskController(
     }
     
     [HttpPut("subtask-completion-status/{id}")]
-    public async Task<SubtaskStatusResultDto> UpdateSubtaskStatus(int id, CancellationToken ct)
+    public async Task<IActionResult> UpdateSubtaskStatus(int id, CancellationToken ct)
     {
-        var command = new UpdateSubtaskStatusCommand
-        {
-            subtaskId = id
-        };
-    
-        var result = await updateSubtaskStatusCommandHandler.Handle(command, ct);
-    
-        if (result == null)
-            throw new InvalidOperationException($"Subtask status update failed: no valid data returned for subtask ID {id}.");
-    
-        return result;
+        var message = await updateSubtaskStatusCommandHandler.Handle(id, ct);
+        return Ok(message);
     }
 
     [HttpPost("tasks/{taskId}/replaceSubtasks")]

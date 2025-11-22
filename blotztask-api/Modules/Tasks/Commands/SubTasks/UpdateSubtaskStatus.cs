@@ -7,7 +7,7 @@ namespace BlotzTask.Modules.Tasks.Commands.SubTasks;
 
 
 
-public class UpdateSubtaskStatusCommand
+public class @int
 {
     [Required]
     public int subtaskId { get; set; }
@@ -15,14 +15,14 @@ public class UpdateSubtaskStatusCommand
 
 public class UpdateSubtaskStatusCommandHandler(BlotzTaskDbContext db, ILogger<UpdateSubtaskStatusCommandHandler> logger)
 {
-    public async Task<SubtaskStatusResultDto> Handle(UpdateSubtaskStatusCommand command, CancellationToken ct = default)
+    public async Task<string> Handle(int subtaskId, CancellationToken ct = default)
     {
         logger.LogInformation("Updating subtask status");
-        var subtask = await db.Subtasks.FindAsync(command.subtaskId, ct);
+        var subtask = await db.Subtasks.FindAsync(subtaskId, ct);
 
         if (subtask == null)
         {
-            throw new NotFoundException($"Subtask with id {command.subtaskId} was not found.");
+            throw new NotFoundException($"Subtask with id {subtaskId} was not found.");
         }
 
         subtask.IsDone = !subtask.IsDone;
@@ -31,19 +31,8 @@ public class UpdateSubtaskStatusCommandHandler(BlotzTaskDbContext db, ILogger<Up
         db.Subtasks.Update(subtask);
         await db.SaveChangesAsync(ct);
 
-        return new SubtaskStatusResultDto
-        {
-            Id = subtask.Id,
-            UpdatedAt = subtask.UpdatedAt,
-            Message = subtask.IsDone? "Subtask marked as completed" :  "Subtask marked as incompleted"
-        };
+        return "Subtask status updated successfully.";
 
     }
 }
 
-public class SubtaskStatusResultDto
-{
-    public int Id { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public string Message { get; set; } = string.Empty;
-}
