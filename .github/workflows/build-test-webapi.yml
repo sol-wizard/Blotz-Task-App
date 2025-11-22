@@ -14,7 +14,10 @@ jobs:
     build-and-test-backend:
         runs-on: ubuntu-latest
         permissions:
-          contents: read     # Required to checkout code
+          contents: read
+          issues: read
+          checks: write
+          pull-requests: write
 
 
         steps:
@@ -50,6 +53,13 @@ jobs:
         - name: Run .NET Tests
           run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test_results.trx" --results-directory ./TestResults
           working-directory: ./blotztask-test
+
+        - name: Publish Test Results
+          uses: EnricoMi/publish-unit-test-result-action@v2
+          if: always()  # Runs even if tests fail, so we get the comment
+          with:
+            files: "blotztask-test/TestResults/**/*.trx"
+            comment_mode: always
 
         - name: Publish the project
           run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
