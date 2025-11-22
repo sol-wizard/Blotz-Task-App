@@ -48,7 +48,7 @@ jobs:
           working-directory: ./blotztask-test
 
         - name: Run .NET Tests
-          run: dotnet test --configuration Release --no-build --verbosity normal --logger "junit;LogFilePath=./TestResults/test-results.xml" --results-directory ./TestResults
+          run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test_results.trx" --results-directory ./TestResults
           working-directory: ./blotztask-test
 
         - name: Publish the project
