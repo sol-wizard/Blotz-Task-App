@@ -1,0 +1,19 @@
+# .NET Build Artifacts
+bin/
+obj/
+
+# Test Results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+
+# Rider/Visual Studio
+.idea/
+.vs/
+
