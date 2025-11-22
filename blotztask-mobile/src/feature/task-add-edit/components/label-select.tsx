@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { View, Pressable, Text } from "react-native";
-import { Menu, Button } from "react-native-paper";
 import { Controller } from "react-hook-form";
 import { LabelDTO } from "@/shared/models/label-dto";
 
