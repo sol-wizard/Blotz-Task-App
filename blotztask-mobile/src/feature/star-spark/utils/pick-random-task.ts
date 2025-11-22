@@ -1,4 +1,4 @@
-import { FloatingTaskDTO } from "../models/floatingTaskDto";
+import { FloatingTaskDTO } from "../models/floating-task-dto";
 
 export const pickRandomTask = (tasks: FloatingTaskDTO[], labelName: string) => {
   let candidates;
