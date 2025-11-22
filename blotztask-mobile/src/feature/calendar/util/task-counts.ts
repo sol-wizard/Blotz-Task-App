@@ -7,7 +7,7 @@ export function filterSelectedTask({
   selectedDay,
 }: {
   selectedDayTasks: TaskDetailDTO[];
-  selectedDay: Date;
+  selectedDay?: Date;
 }): TaskFilterGroup[] {
   const today = new Date();
 
@@ -40,14 +40,21 @@ export function filterSelectedTask({
     if (isTaskDone) doneTasks.push(task);
     if (isTaskOverdue) overdueTasks.push(task);
 
-    if (isAfter(selectedDay, today)) {
-      if (isTaskTodo || isTaskInProgress) allTasks.push(task);
-    } else if (isBefore(selectedDay, today)) {
-      if (isTaskDone || isTaskOverdue) allTasks.push(task);
+    if (selectedDay) {
+      if (isAfter(selectedDay, today)) {
+        if (isTaskTodo || isTaskInProgress) allTasks.push(task);
+      } else if (isBefore(selectedDay, today)) {
+        if (isTaskDone || isTaskOverdue) allTasks.push(task);
+      }
     }
   }
 
-  const finalAllTasks = isSameDay(selectedDay, today) ? selectedDayTasks : allTasks;
+  let finalAllTasks;
+  if (selectedDay) {
+    finalAllTasks = isSameDay(selectedDay, today) ? selectedDayTasks : allTasks;
+  } else {
+    finalAllTasks = selectedDayTasks;
+  }
 
   return [
     {

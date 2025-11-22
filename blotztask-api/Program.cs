@@ -4,6 +4,7 @@ using BlotzTask.Modules.BreakDown;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Tasks;
+using BlotzTask.Modules.TimeEstimate;
 using BlotzTask.Modules.Users;
 using Serilog;
 
@@ -21,6 +22,7 @@ builder.Services.AddTaskModule();
 builder.Services.AddUserModule();
 builder.Services.AddLabelModule();
 builder.Services.AddTaskBreakdownModule();
+builder.Services.AddTimeEstimateModule();
 
 builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 

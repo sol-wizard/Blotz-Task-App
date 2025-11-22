@@ -20,7 +20,7 @@ export default function AllTasksScreen() {
   const { isDeleting, deleteTask, deleteTaskError, deleteTaskSuccess, resetDeleteTask } =
     useTaskMutations();
 
-  const filteredTaskList = filterSelectedTask(tasks);
+  const filteredTaskList = filterSelectedTask({ selectedDayTasks: tasks });
   const tasksOfSelectedStatus = filteredTaskList.find(
     (item) => item.status === selectedStatus,
   )?.tasks;

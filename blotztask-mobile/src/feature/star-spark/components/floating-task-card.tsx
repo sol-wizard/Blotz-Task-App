@@ -1,8 +1,9 @@
 import { View, Text, Pressable, Image } from "react-native";
-import { FloatingTaskDTO } from "../models/floatingTaskDto";
+import { FloatingTaskDTO } from "../models/floating-task-dto";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { getLabelIcon } from "../utils/get-label-icon";
+import { estimateTaskTime } from "../services/task-time-estimate-service";
 
 export const FloatingTaskCard = ({
   floatingTask,
@@ -14,6 +15,17 @@ export const FloatingTaskCard = ({
   onToggle: () => void;
 }) => {
   const iconSource = getLabelIcon(floatingTask.label?.name);
+
+  const handleEstimateTime = async (floatingTask: FloatingTaskDTO) => {
+    const floatingTaskForEstimate = {
+      id: floatingTask.id,
+      title: floatingTask.title,
+      description: floatingTask.description,
+    };
+    const result = await estimateTaskTime(floatingTaskForEstimate);
+    console.log("FloatingTaskCard time estimate:", result);
+  };
+
   return (
     <View className="mb-4">
       <Pressable onLongPress={onToggle}>
@@ -46,7 +58,7 @@ export const FloatingTaskCard = ({
             </View>
           </Pressable>
 
-          <Pressable>
+          <Pressable onPress={() => handleEstimateTime(floatingTask)}>
             <View className="w-8 h-8 bg-[#E3EFFE] rounded-xl items-center justify-center ml-2">
               <MaterialCommunityIcons name="plus" color="#3D8DE0" size={18} />
             </View>

@@ -1,4 +1,4 @@
-import { FloatingTaskDTO } from "../models/floatingTaskDto";
+import { FloatingTaskDTO } from "../models/floating-task-dto";
 import { View, ScrollView } from "react-native";
 import { useState } from "react";
 import { FloatingTaskCard } from "./floating-task-card";

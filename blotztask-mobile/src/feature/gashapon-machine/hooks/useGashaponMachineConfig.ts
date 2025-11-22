@@ -5,7 +5,7 @@ import { EntityMap } from "../models/entity-map";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
-import { FloatingTaskDTO } from "@/feature/star-spark/models/floatingTaskDto";
+import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 import { getLabelNameFromStarLabel, getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
 
 export const useGashaponMachineConfig = ({
