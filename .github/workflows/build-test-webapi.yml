@@ -54,19 +54,13 @@ jobs:
           run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test_results.trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
           working-directory: ./blotztask-test
 
-        - name: Generate Test Summary
-          uses: test-summary/action@v2
-          with:
-            paths: "blotztask-test/TestResults/**/*.trx"
-            output: "test-summary.md"
+        - name: Publish Test Results (PR Comment)
+          uses: EnricoMi/publish-unit-test-result-action@v2
           if: always()
-
-        - name: Post Test Summary
-          uses: marocchino/sticky-pull-request-comment@v2
           with:
-            path: "test-summary.md"
-            header: test-summary
-          if: always()
+            files: "blotztask-test/TestResults/**/*.trx"
+            comment_mode: always
+            check_name: "Test Results (API)"
 
         - name: Generate Code Coverage Report
           uses: irongut/CodeCoverageSummary@v1.3.0
@@ -85,6 +79,23 @@ jobs:
         - name: Post Code Coverage
           uses: marocchino/sticky-pull-request-comment@v2
           if: always()
+          with:
+            path: code-coverage-results.md
+            header: code-coverage
+          with:
+            filename: blotztask-test/TestResults/**/coverage.cobertura.xml
+            badge: true
+            fail_below_min: false
+            format: markdown
+            hide_branch_rate: false
+            hide_complexity: true
+            indicators: true
+            output: both
+            thresholds: '60 80'
+
+        - name: Post Code Coverage
+          uses: marocchino/sticky-pull-request-comment@v2
+          if: always() && steps.check_test_results.outputs.results_exist == 'true'
           with:
             path: code-coverage-results.md
             header: code-coverage
