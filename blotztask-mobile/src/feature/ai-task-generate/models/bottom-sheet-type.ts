@@ -1,1 +1,1 @@
-export type BottomSheetType = "input" | "loading" | "task-preview" | "add-task-success";
+export type BottomSheetType = "input" | "task-preview" | "add-task-success";

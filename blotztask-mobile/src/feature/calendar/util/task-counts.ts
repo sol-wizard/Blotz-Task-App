@@ -7,63 +7,79 @@ export function filterSelectedTask({
   selectedDay,
 }: {
   selectedDayTasks: TaskDetailDTO[];
-  selectedDay: Date;
+  selectedDay?: Date;
 }): TaskFilterGroup[] {
   const today = new Date();
-  const todoTasks = selectedDayTasks.filter((task) => isTodo(task));
-  const doneTasks = selectedDayTasks.filter((task) => task.isDone);
 
-  const inProgressTasks = selectedDayTasks.filter((task) => {
+  const todoTasks: TaskDetailDTO[] = [];
+  const inProgressTasks: TaskDetailDTO[] = [];
+  const doneTasks: TaskDetailDTO[] = [];
+  const overdueTasks: TaskDetailDTO[] = [];
+  const allTasks: TaskDetailDTO[] = [];
+
+  const isInProgress = (task: TaskDetailDTO) => {
     if (!task.startTime || !task.endTime) return false;
     const start = new Date(task.startTime);
     const end = new Date(task.endTime);
     return !task.isDone && today >= start && today < end;
-  });
+  };
 
-  const overdueTasks = selectedDayTasks.filter((task) => {
+  const isOverdue = (task: TaskDetailDTO) => {
     if (!task.endTime) return false;
-    return !task.isDone && isBefore(new Date(task.endTime), new Date());
-  });
+    return !task.isDone && isBefore(new Date(task.endTime), today);
+  };
 
-  let allTasks;
-  if (isSameDay(selectedDay, today)) {
-    allTasks = [...todoTasks, ...doneTasks, ...inProgressTasks, ...overdueTasks];
-  } else if (isAfter(selectedDay, today)) {
-    allTasks = [...todoTasks, ...inProgressTasks];
-  } else {
-    allTasks = [...doneTasks, ...overdueTasks];
+  for (const task of selectedDayTasks) {
+    const isTaskTodo = isTodo(task);
+    const isTaskInProgress = isInProgress(task);
+    const isTaskDone = task.isDone;
+    const isTaskOverdue = isOverdue(task);
+
+    if (isTaskTodo) todoTasks.push(task);
+    if (isTaskInProgress) inProgressTasks.push(task);
+    if (isTaskDone) doneTasks.push(task);
+    if (isTaskOverdue) overdueTasks.push(task);
+
+    if (selectedDay) {
+      if (isAfter(selectedDay, today)) {
+        if (isTaskTodo || isTaskInProgress) allTasks.push(task);
+      } else if (isBefore(selectedDay, today)) {
+        if (isTaskDone || isTaskOverdue) allTasks.push(task);
+      }
+    }
   }
 
-  const todoTaskCount = todoTasks.length;
-  const inProgressTaskCount = inProgressTasks.length;
-  const doneTaskCount = doneTasks.length;
-  const overdueTaskCount = overdueTasks.length;
-  const allTaskCount = allTasks.length;
+  let finalAllTasks;
+  if (selectedDay) {
+    finalAllTasks = isSameDay(selectedDay, today) ? selectedDayTasks : allTasks;
+  } else {
+    finalAllTasks = selectedDayTasks;
+  }
 
   return [
     {
       status: "All",
-      count: allTaskCount,
-      tasks: allTasks,
+      count: finalAllTasks.length,
+      tasks: finalAllTasks,
     },
     {
       status: "To Do",
-      count: todoTaskCount,
+      count: todoTasks.length,
       tasks: todoTasks,
     },
     {
       status: "In Progress",
-      count: inProgressTaskCount,
+      count: inProgressTasks.length,
       tasks: inProgressTasks,
     },
     {
       status: "Done",
-      count: doneTaskCount,
+      count: doneTasks.length,
       tasks: doneTasks,
     },
     {
       status: "Overdue",
-      count: overdueTaskCount,
+      count: overdueTasks.length,
       tasks: overdueTasks,
     },
   ];
