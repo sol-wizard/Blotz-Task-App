@@ -82,23 +82,6 @@ jobs:
           with:
             path: code-coverage-results.md
             header: code-coverage
-          with:
-            filename: blotztask-test/TestResults/**/coverage.cobertura.xml
-            badge: true
-            fail_below_min: false
-            format: markdown
-            hide_branch_rate: false
-            hide_complexity: true
-            indicators: true
-            output: both
-            thresholds: '60 80'
-
-        - name: Post Code Coverage
-          uses: marocchino/sticky-pull-request-comment@v2
-          if: always() && steps.check_test_results.outputs.results_exist == 'true'
-          with:
-            path: code-coverage-results.md
-            header: code-coverage
 
         - name: Publish the project
           run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
