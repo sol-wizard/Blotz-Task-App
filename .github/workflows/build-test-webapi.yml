@@ -54,12 +54,19 @@ jobs:
           run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test_results.trx" --results-directory ./TestResults
           working-directory: ./blotztask-test
 
-        - name: Publish Test Results
-          uses: EnricoMi/publish-unit-test-result-action@v2
-          if: always()  # Runs even if tests fail, so we get the comment
+        - name: Generate Test Summary
+          uses: test-summary/action@v2
           with:
-            files: "blotztask-test/TestResults/**/*.trx"
-            comment_mode: always
+            paths: "blotztask-test/TestResults/**/*.trx"
+            output: "test-summary.md"
+          if: always()
+
+        - name: Post Test Summary
+          uses: marocchino/sticky-pull-request-comment@v2
+          with:
+            path: "test-summary.md"
+            header: test-summary
+          if: always()
 
         - name: Publish the project
           run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
