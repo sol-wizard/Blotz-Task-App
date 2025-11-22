@@ -14,8 +14,6 @@ jobs:
     build-and-test-backend:
         runs-on: ubuntu-latest
         permissions:
-          checks: write      # Required for dorny/test-reporter
-          pull-requests: write # Optional: to post comments if configured
           contents: read     # Required to checkout code
 
 
@@ -49,18 +47,9 @@ jobs:
           run: dotnet build --configuration Release --no-restore
           working-directory: ./blotztask-test
 
-        - name: Run tests
-          run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test_results.trx" --results-directory ./TestResults
+        - name: Run .NET Tests
+          run: dotnet test --configuration Release --no-build --verbosity normal --logger "junit;LogFilePath=./TestResults/test-results.xml" --results-directory ./TestResults
           working-directory: ./blotztask-test
-
-        - name: Test Report
-          uses: dorny/test-reporter@v1
-          if: success() || failure()    # Run even if tests fail
-          with:
-            name: .NET Test Results
-            path: '**/TestResults/*.trx'
-            reporter: dotnet-trx
-
 
         - name: Publish the project
           run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
