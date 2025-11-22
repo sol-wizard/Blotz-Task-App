@@ -1,4 +1,4 @@
-import { FloatingTaskDTO } from "@/feature/star-spark/models/floatingTaskDto";
+import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
 import React from "react";
 import { Modal, View, Text, Pressable, Image } from "react-native";

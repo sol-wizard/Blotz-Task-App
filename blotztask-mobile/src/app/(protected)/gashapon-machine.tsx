@@ -12,7 +12,7 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
 import { pickRandomTask } from "@/feature/star-spark/utils/pick-random-task";
-import { FloatingTaskDTO } from "@/feature/star-spark/models/floatingTaskDto";
+import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 
 export default function GashaponMachine() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
