@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,8 +13,6 @@ import { isEqual } from "date-fns";
 import { combineDateTime } from "./util/combine-date-time";
 import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
-import { LabelDTO } from "@/shared/models/label-dto";
-import { fetchAllLabel } from "@/shared/services/label-service";
 import { Snackbar } from "react-native-paper";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 
