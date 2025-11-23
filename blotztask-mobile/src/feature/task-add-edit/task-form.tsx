@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
@@ -54,8 +54,14 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     !startCombined || !endCombined || isEqual(startCombined, endCombined) ? "reminder" : "event";
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
-  const labelId = useWatch({ control, name: "labelId" });
   const { labels = [], isLoading, isError } = useAllLabels();
+  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isError) {
+      setSnackbarMessage("Failed to load categories. Please try again.");
+    }
+  }, [isError]);
 
   const handleFormSubmit = (data: TaskFormField) => {
     onSubmit(data);
@@ -103,11 +109,10 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
             {/* Label Select */}
             <View className="mb-8">
-              {/* <Text className="font-balooBold text-3xl leading-normal">Category</Text> */}
               {isLoading ? (
                 <Text className="font-baloo text-lg text-tertiary mt-3">Loading categories...</Text>
               ) : (
-                <LabelSelect control={control} labels={labels} selectedValue={labelId} />
+                <LabelSelect control={control} labels={labels} />
               )}
             </View>
 
@@ -131,15 +136,15 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         </FormProvider>
       </View>
       <Snackbar
-        visible={isError}
-        onDismiss={() => {}}
+        visible={!!snackbarMessage}
+        onDismiss={() => setSnackbarMessage(null)}
         duration={3000}
         action={{
           label: "Dismiss",
-          onPress: () => {},
+          onPress: () => setSnackbarMessage(null),
         }}
       >
-        Failed to load categories. Please check your connection.
+        {snackbarMessage}
       </Snackbar>
     </>
   );

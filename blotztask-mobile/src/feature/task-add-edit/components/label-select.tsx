@@ -6,10 +6,9 @@ import { LabelDTO } from "@/shared/models/label-dto";
 interface LabelSelectProps {
   control: any;
   labels: LabelDTO[];
-  selectedValue: number | null;
 }
 
-export function LabelSelect({ control, labels, selectedValue }: LabelSelectProps) {
+export function LabelSelect({ control, labels }: LabelSelectProps) {
   const Chip = ({
     item,
     selected,
@@ -36,18 +35,16 @@ export function LabelSelect({ control, labels, selectedValue }: LabelSelectProps
     <Controller
       control={control}
       name="labelId"
-      render={({ field: { onChange } }) => {
+      render={({ field: { onChange, value } }) => {
         return (
           <View className="flex-row flex-wrap mt-3">
             {labels.map((l) => (
               <Chip
                 key={l.labelId}
                 item={l}
-                selected={selectedValue === l.labelId}
+                selected={value === l.labelId}
                 onPress={() => {
-                  // If the clicked one is already selected, deselect it (set to null)
-                  // Otherwise, select the new labelId
-                  const nextValue = selectedValue === l.labelId ? null : l.labelId;
+                  const nextValue = value === l.labelId ? null : l.labelId;
                   onChange(nextValue);
                 }}
               />
