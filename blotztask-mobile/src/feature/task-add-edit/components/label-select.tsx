@@ -25,18 +25,8 @@ export function LabelSelect({ control, labels, selectedValue }: LabelSelectProps
       disabled={disabled}
       onPress={onPress}
       accessibilityRole="button"
-      style={{
-        opacity: disabled ? 0.5 : 1,
-        minHeight: 44, // 满足 accessibility 要求
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: 12,
-        backgroundColor: item.color,
-        borderWidth: selected ? 2 : 0, // 选中时显示黑色边框
-        borderColor: selected ? "#000" : "transparent",
-        marginRight: 8,
-        marginBottom: 8,
-      }}
+      style={{ backgroundColor: item.color }}
+      className={`min-h-[44px] px-[14px] py-[10px] rounded-xl mr-2 mb-2 ${selected ? "border-2 border-black" : "border-0 border-transparent"}`}
     >
       <Text className="font-baloo">{item.name}</Text>
     </Pressable>
@@ -48,7 +38,7 @@ export function LabelSelect({ control, labels, selectedValue }: LabelSelectProps
       name="labelId"
       render={({ field: { onChange } }) => {
         return (
-          <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 12 }}>
+          <View className="flex-row flex-wrap mt-3">
             {labels.map((l) => (
               <Chip
                 key={l.labelId}

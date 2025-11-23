@@ -16,6 +16,7 @@ import { SegmentToggle } from "./components/segment-toggle";
 import { LabelDTO } from "@/shared/models/label-dto";
 import { fetchAllLabel } from "@/shared/services/label-service";
 import { Snackbar } from "react-native-paper";
+import { useAllLabels } from "@/shared/hooks/useAllLabels";
 
 type TaskFormProps =
   | {
@@ -56,22 +57,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
   const labelId = useWatch({ control, name: "labelId" });
-  const [labels, setLabels] = useState<LabelDTO[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  const refreshLabels = useCallback(async () => {
-    try {
-      const data = await fetchAllLabel();
-      setLabels(data);
-    } catch (error) {
-      console.error("Failed to refresh labels:", error);
-      setError("Failed to load categories. Please try again.");
-    }
-  }, []);
-
-  useEffect(() => {
-    refreshLabels();
-  }, [refreshLabels]);
+  const { labels = [], isLoading, isError } = useAllLabels();
 
   const handleFormSubmit = (data: TaskFormField) => {
     onSubmit(data);
@@ -120,7 +106,11 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             {/* Label Select */}
             <View className="mb-8">
               {/* <Text className="font-balooBold text-3xl leading-normal">Category</Text> */}
-              <LabelSelect control={control} labels={labels} selectedValue={labelId} />
+              {isLoading ? (
+                <Text className="font-baloo text-lg text-tertiary mt-3">Loading categories...</Text>
+              ) : (
+                <LabelSelect control={control} labels={labels} selectedValue={labelId} />
+              )}
             </View>
 
             <FormDivider />
@@ -143,17 +133,15 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         </FormProvider>
       </View>
       <Snackbar
-        visible={error != null}
-        onDismiss={() => setError(null)}
+        visible={isError}
+        onDismiss={() => {}}
         duration={3000}
         action={{
           label: "Dismiss",
-          onPress: () => {
-            setError(null);
-          },
+          onPress: () => {},
         }}
       >
-        {error}
+        Failed to load categories. Please check your connection.
       </Snackbar>
     </>
   );
