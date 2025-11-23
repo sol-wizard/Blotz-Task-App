@@ -16,20 +16,24 @@ export const TaskCheckbox = ({
   haptic = false,
 }: TaskCheckboxProps) => {
   const handlePress = () => {
+    if (disabled) return;
+
     if (haptic) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+
     onPress();
   };
+
   return (
     <Pressable
-      className={`w-8 h-8 rounded-[10px] border-[3px] mr-3 items-center justify-center ${
-        checked ? "bg-neutral-300 border-neutral-300" : "bg-white border-gray-300"
-      } ${disabled ? "opacity-50" : ""}`}
+      className={`w-8 h-8 rounded-[10px] mr-3 items-center justify-center border-[3px] 
+        ${checked ? "bg-[#E3EFFE] border-[#E3EFFE]" : "bg-white border-gray-300"} 
+        ${disabled ? "opacity-50" : ""}`}
       onPress={handlePress}
       disabled={disabled}
     >
-      {checked && <MaterialIcons name="check" color={"white"} size={14} />}
+      {checked && <MaterialIcons name="check" size={20} color="#3D8DE0" />}
     </Pressable>
   );
 };
