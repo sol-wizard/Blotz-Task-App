@@ -11,7 +11,7 @@ Start Time: {{$startTime}}
 End Time: {{$endTime}}
 
 Guidelines:
-- If the task title or description does not convey a specific, actionable goal, return an empty array.
+- If the task title or description does not convey a actionable goal, return an empty array.
 - Break the task into logical, actionable subtasks.
 - Don't make assumptions about the task. Only generate subtasks that's actually involved in and closely related to the task.
 - You don't need to cover the whole time span of the task. Avoid generating too many subtasks. Make subtasks doable in reality.
@@ -22,7 +22,7 @@ Guidelines:
 - If task EndTime is null, estimate reasonable subtask durations.
 
 Output language rule:
-- If the user's input is in Chinese, you MUST output the subtask ""title"" in Chinese.
+- The language of the subtask titles MUST match the language of the task title.
 
 Return the result as a JSON object with a 'Subtasks' array.
 ";
