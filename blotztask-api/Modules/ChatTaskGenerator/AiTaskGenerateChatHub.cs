@@ -48,22 +48,18 @@ public class AiTaskGenerateChatHub : Hub
         {
             timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
         }
-        catch (TimeZoneNotFoundException)
+        catch (Exception ex)
         {
-            timeZone = TimeZoneInfo.FindSystemTimeZoneById("Australia/Melbourne");
-            _logger.LogWarning("TimeZone not found in HttpContext. ConnectionId: {ConnectionId}", Context.ConnectionId);
-        }
-        catch (InvalidTimeZoneException ex)
-        {
-            _logger.LogWarning(ex,
-                "TimeZone {TimeZoneId} invalid. Falling back to UTC. ConnectionId: {ConnectionId}",
-                timeZoneId, Context.ConnectionId);
-
+            _logger.LogWarning(
+                ex,
+                "Failed to resolve time zone '{TimeZoneId}'. Falling back to UTC.",
+                timeZoneId
+            );
             timeZone = TimeZoneInfo.Utc;
         }
 
-        var userLocalNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
 
+        var userLocalNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
 
         await _chatHistoryManagerService.InitializeNewConversation(userId, userLocalNow);
         await base.OnConnectedAsync();
