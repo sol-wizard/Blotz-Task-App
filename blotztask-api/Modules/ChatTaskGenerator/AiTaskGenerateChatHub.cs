@@ -30,11 +30,42 @@ public class AiTaskGenerateChatHub : Hub
         var httpContext = Context.GetHttpContext();
         if (httpContext?.Items.TryGetValue("UserId", out var userIdObj) != true || userIdObj is not Guid userId)
         {
-            _logger.LogWarning("UserId not found in HttpContext.Items. ConnectionId: {ConnectionId}", Context.ConnectionId);
+            _logger.LogWarning("UserId not found in HttpContext.Items. ConnectionId: {ConnectionId}",
+                Context.ConnectionId);
             throw new HubException("UserId not found in HttpContext. Connection rejected.");
         }
-        
-        await _chatHistoryManagerService.InitializeNewConversation(userId);
+
+        var timeZoneId = httpContext!.Request.Query["timeZone"].ToString();
+
+        if (string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            _logger.LogWarning("TimeZone is null in HttpContext. ConnectionId: {ConnectionId}", Context.ConnectionId);
+            timeZoneId = "UTC";
+        }
+
+        TimeZoneInfo timeZone;
+        try
+        {
+            timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            timeZone = TimeZoneInfo.FindSystemTimeZoneById("Australia/Melbourne");
+            _logger.LogWarning("TimeZone not found in HttpContext. ConnectionId: {ConnectionId}", Context.ConnectionId);
+        }
+        catch (InvalidTimeZoneException ex)
+        {
+            _logger.LogWarning(ex,
+                "TimeZone {TimeZoneId} invalid. Falling back to UTC. ConnectionId: {ConnectionId}",
+                timeZoneId, Context.ConnectionId);
+
+            timeZone = TimeZoneInfo.Utc;
+        }
+
+        var userNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
+
+
+        await _chatHistoryManagerService.InitializeNewConversation(userId, userNow);
         await base.OnConnectedAsync();
     }
 
@@ -58,7 +89,7 @@ public class AiTaskGenerateChatHub : Hub
             chatHistory.AddUserMessage(message);
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
 
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, cancellationToken: ct);
+            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
         }
         catch (AiTaskGenerationException ex)
         {
@@ -69,6 +100,5 @@ public class AiTaskGenerateChatHub : Hub
             };
             await Clients.Caller.SendAsync("ReceiveMessage", aiServiceError);
         }
-        
     }
 }
