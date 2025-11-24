@@ -8,7 +8,6 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { usePostHog } from "posthog-react-native";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
-import { AiTaskDTO } from "../models/ai-task-dto";
 
 export const AiTaskGenerateModal = ({
   sheetRef,
