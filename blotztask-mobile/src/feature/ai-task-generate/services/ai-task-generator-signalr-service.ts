@@ -17,8 +17,11 @@ export const signalRService = {
       throw new Error("No token found in SecureStore.");
     }
 
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const url = `${SIGNALR_HUBS_CHAT}?timeZone=${encodeURIComponent(timeZone)}`;
+
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl(SIGNALR_HUBS_CHAT, {
+      .withUrl(url, {
         accessTokenFactory: () => token,
       })
       .withAutomaticReconnect()

@@ -1,14 +1,19 @@
+using System.Globalization;
+
 namespace BlotzTask.Modules.ChatTaskGenerator.Constants;
 
 public static class AiTaskGeneratorPrompts
 {
     public static string GetSystemMessage(DateTime currentTime, DayOfWeek dayOfWeek)
     {
+        
+        var formattedTime = currentTime.ToString("yyyy-MM-dd'T'HH:mm", CultureInfo.InvariantCulture);
+       
         return $"""
                        You are a task extraction assistant. Extract actionable tasks from user input.
 
                        For your information:
-                           currentTime: {currentTime:yyyy-MM-ddTHH:mm:ss}
+                           currentTime: {formattedTime}
                            dayOfWeek: {dayOfWeek}
 
                        Task Generation Guidelines:
@@ -27,6 +32,10 @@ public static class AiTaskGeneratorPrompts
                        - If an end time or time frame is implied, set a reasonable start_time. 
                        - If a start time or time frame is implied, set a reasonable end_time. 
                        - If only start time or end time is provided and the other one cannot be reasonably inferred, set them to be equal.
+                       - When the user uses relative expressions like "next Monday", "this Friday", "下周一":
+                        * Always compute the date RELATIVE to currentTime.
+                        * Example: if currentTime is 2025-11-24T20:58 and dayOfWeek is Monday,
+                          then "next Monday" MUST be 2025-12-01 (7 days later).
                        
                        TASK LABEL RULES (STRICT):
                         - Every generated task MUST include a `task_label` field.
