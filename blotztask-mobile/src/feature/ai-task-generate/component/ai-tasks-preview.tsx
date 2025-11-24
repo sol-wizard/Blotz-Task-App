@@ -35,18 +35,18 @@ export function AiTasksPreview({
     return () => {
       if (!finishedAllStepsRef.current) {
         posthog.capture("ai_task_interaction_completed", {
-          ai_output: JSON.stringify(aiTasks),
+          ai_output: JSON.stringify(localTasks),
           user_input: userInput,
           outcome: "abandoned",
           is_voice_input: isVoiceInput,
-          ai_generated_task_count: aiTasks?.length ?? 0,
+          ai_generated_task_count: localTasks?.length ?? 0,
           user_add_task_count: 0,
         });
       }
     };
-  }, [aiTasks, isVoiceInput, userInput]);
+  }, [localTasks, isVoiceInput, userInput]);
 
-  const createDisabled = isAdding || aiTasks?.length === 0;
+  const createDisabled = isAdding || localTasks?.length === 0;
 
   const onDeleteTask = (taskId: string) => {
     setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
@@ -57,17 +57,17 @@ export function AiTasksPreview({
   };
 
   const handleAddTasks = async () => {
-    if (isAdding || !aiTasks?.length) return;
+    if (isAdding || !localTasks?.length) return;
 
     try {
-      const payloads = aiTasks.map(convertAiTaskToAddTaskItemDTO);
+      const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
       await Promise.all(payloads.map((payload) => addTask(payload)));
       finishedAllStepsRef.current = true;
 
       posthog.capture("ai_task_interaction_completed", {
-        ai_output: JSON.stringify(aiTasks),
+        ai_output: JSON.stringify(localTasks),
         user_input: userInput,
-        ai_generate_task_count: aiTasks?.length ?? 0,
+        ai_generate_task_count: localTasks?.length ?? 0,
         user_add_task_count: payloads.length ?? 0,
         outcome: "accepted",
         is_voice_input: isVoiceInput,
@@ -84,9 +84,9 @@ export function AiTasksPreview({
     setModalType("input");
 
     posthog.capture("ai_task_interaction_completed", {
-      ai_output: JSON.stringify(aiTasks),
+      ai_output: JSON.stringify(localTasks),
       user_input: userInput,
-      ai_generate_task_count: aiTasks?.length ?? 0,
+      ai_generate_task_count: localTasks?.length ?? 0,
       outcome: "go_back",
       user_add_task_count: 0,
       is_voice_input: isVoiceInput,
