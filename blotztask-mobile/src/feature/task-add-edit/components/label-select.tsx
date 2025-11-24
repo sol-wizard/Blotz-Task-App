@@ -1,69 +1,54 @@
-import React, { useEffect, useState } from "react";
-import { View } from "react-native";
-import { Menu, Button } from "react-native-paper";
+import React from "react";
+import { View, Pressable, Text } from "react-native";
 import { Controller } from "react-hook-form";
 import { LabelDTO } from "@/shared/models/label-dto";
-import { fetchAllLabel } from "@/shared/services/label-service";
 
-export function LabelSelect({ control }: { control: any }) {
-  const [visible, setVisible] = useState(false);
-  const [labels, setLabels] = useState<LabelDTO[]>([]);
+interface LabelSelectProps {
+  control: any;
+  labels: LabelDTO[];
+}
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const labelData = await fetchAllLabel();
-        setLabels(labelData);
-      } catch (error) {
-        console.error("Error loading labels:", error);
-      }
-    })();
-  }, []);
+export function LabelSelect({ control, labels }: LabelSelectProps) {
+  const Chip = ({
+    item,
+    selected,
+    onPress,
+    disabled,
+  }: {
+    item: LabelDTO;
+    selected: boolean;
+    onPress: () => void;
+    disabled?: boolean;
+  }) => (
+    <Pressable
+      disabled={disabled}
+      onPress={onPress}
+      accessibilityRole="button"
+      style={{ backgroundColor: item.color }}
+      className={`min-h-[44px] px-[14px] py-[10px] rounded-xl mr-2 mb-2 ${selected ? "border-2 border-black" : "border-0 border-transparent"}`}
+    >
+      <Text className="font-baloo">{item.name}</Text>
+    </Pressable>
+  );
 
   return (
     <Controller
       control={control}
       name="labelId"
-      render={({ field: { value, onChange, onBlur }, fieldState: { error } }) => {
-        const selected = labels.find((opt) => opt.labelId === value);
-        const borderColor = error ? "#EF4444" /* red-500 */ : "#E5E7EB"; /* gray-200 */
-
+      render={({ field: { onChange, value } }) => {
         return (
-          <View>
-            <Menu
-              visible={visible}
-              onDismiss={() => setVisible(false)}
-              anchorPosition="bottom"
-              anchor={
-                <Button
-                  mode="outlined"
-                  icon="label-outline"
-                  onPress={() => setVisible(true)}
-                  style={{ borderRadius: 12, borderColor, borderWidth: 1 }}
-                  labelStyle={{ fontSize: 12, color: "#444964" }}
-                >
-                  {selected?.name || "No Label"}
-                </Button>
-              }
-            >
-              <Menu.Item
+          <View className="flex-row flex-wrap mt-3">
+            {labels.map((l) => (
+              <Chip
+                key={l.labelId}
+                item={l}
+                selected={value === l.labelId}
                 onPress={() => {
-                  onChange(null);
-                  setVisible(false);
+                  const nextValue = value === l.labelId ? null : l.labelId;
+                  onChange(nextValue);
                 }}
-                title="No Label"
               />
-              {labels.map((opt) => (
-                <Menu.Item
-                  key={opt.labelId}
-                  onPress={() => {
-                    onChange(Number(opt.labelId)); // ensure number if schema expects number
-                    setVisible(false);
-                  }}
-                  title={opt.name}
-                />
-              ))}
-            </Menu>
+            ))}
           </View>
         );
       }}
