@@ -35,27 +35,15 @@ public class AiTaskGenerateChatHub : Hub
             throw new HubException("UserId not found in HttpContext. Connection rejected.");
         }
 
-        var timeZoneId = httpContext!.Request.Query["timeZone"].ToString();
-
-        if (string.IsNullOrWhiteSpace(timeZoneId))
-        {
-            _logger.LogWarning("TimeZone is null in HttpContext. ConnectionId: {ConnectionId}", Context.ConnectionId);
-            timeZoneId = "UTC";
-        }
-
-        TimeZoneInfo timeZone;
+        var timeZone = TimeZoneInfo.Utc;
+        var timeZoneId = httpContext?.Request.Query["timeZone"].ToString();
         try
         {
             timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(
-                ex,
-                "Failed to resolve time zone '{TimeZoneId}'. Falling back to UTC.",
-                timeZoneId
-            );
-            timeZone = TimeZoneInfo.Utc;
+            _logger.LogWarning(ex, "Invalid time zone '{TimeZoneId}'. Using UTC.", timeZoneId);
         }
 
 
