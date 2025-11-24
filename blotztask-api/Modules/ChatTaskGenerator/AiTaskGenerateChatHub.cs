@@ -62,10 +62,10 @@ public class AiTaskGenerateChatHub : Hub
             timeZone = TimeZoneInfo.Utc;
         }
 
-        var userNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
+        var userLocalNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
 
 
-        await _chatHistoryManagerService.InitializeNewConversation(userId, userNow);
+        await _chatHistoryManagerService.InitializeNewConversation(userId, userLocalNow);
         await base.OnConnectedAsync();
     }
 
