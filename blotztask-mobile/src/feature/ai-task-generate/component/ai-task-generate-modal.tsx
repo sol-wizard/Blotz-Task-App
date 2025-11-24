@@ -6,6 +6,9 @@ import { TaskAddedSuccess } from "./task-added-success";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { usePostHog } from "posthog-react-native";
+import { useAllLabels } from "@/shared/hooks/useAllLabels";
+import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
+import { AiTaskDTO } from "../models/ai-task-dto";
 
 export const AiTaskGenerateModal = ({
   sheetRef,
@@ -32,11 +35,17 @@ export const AiTaskGenerateModal = ({
     }
   }, [inputError]);
 
+  const { labels, isLoading } = useAllLabels();
+
+  const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map((task) =>
+    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
+  );
+
   switch (modalType) {
     case "task-preview":
       return (
         <AiTasksPreview
-          aiMessage={aiGeneratedMessage}
+          aiTasks={aiGeneratedTasks}
           userInput={text}
           setModalType={setModalType}
           isVoiceInput={isVoiceInput}
@@ -60,7 +69,7 @@ export const AiTaskGenerateModal = ({
           setIsVoiceInput={setIsVoiceInput}
           sheetRef={sheetRef}
           errorMessage={aiGeneratedMessage?.errorMessage}
-          isAiGenerating={isAiGenerating}
+          isAiGenerating={isAiGenerating || isLoading}
         />
       );
   }
