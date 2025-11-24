@@ -50,12 +50,7 @@ export default function LoadingScreen() {
         />
         <Image
           source={ASSETS.loadingShadow}
-          style={{
-            width: 120,
-            height: 24,
-            marginTop: -10,
-            opacity: 0.8,
-          }} // shadow
+          className="w-[120px] h-[24px] -mt-[10px] opacity-80"
           resizeMode="contain"
         />
       </View>
