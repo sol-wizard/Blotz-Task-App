@@ -36,6 +36,7 @@ public class ChatHistoryManagerService(
         if (_chatHistory != null) return await Task.FromResult(_chatHistory);
 
         var chatHistory = new ChatHistory();
+        
 
         chatHistory.AddSystemMessage(
             AiTaskGeneratorPrompts.GetSystemMessage(
