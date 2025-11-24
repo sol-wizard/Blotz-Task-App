@@ -8,38 +8,45 @@ import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { ScrollView } from "react-native-gesture-handler";
 import { usePostHog } from "posthog-react-native";
-import { AiResultMessageDTO } from "../models/ai-result-message-dto";
-import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { useAllLabels } from "@/shared/hooks/useAllLabels";
-import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 
 export function AiTasksPreview({
-  aiMessage,
+  aiTasks,
   setModalType,
   isVoiceInput,
   userInput,
   sheetRef,
 }: {
-  aiMessage?: AiResultMessageDTO;
+  aiTasks?: AiTaskDTO[];
   setModalType: (v: BottomSheetType) => void;
   isVoiceInput: boolean;
   userInput: string;
   sheetRef: React.RefObject<BottomSheetModal | null>;
 }) {
   const { addTask, isAdding } = useTaskMutations();
-  const { labels, isLoading } = useAllLabels();
-  const posthog = usePostHog();
+  const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
 
-  const aiGeneratedTasks = aiMessage?.extractedTasks.map((task) =>
-    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
-  );
-  const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiGeneratedTasks ?? []);
+  const posthog = usePostHog();
 
   const finishedAllStepsRef = useRef<boolean>(false);
 
-  const createDisabled = isAdding || localTasks.length === 0;
+  useEffect(() => {
+    return () => {
+      if (!finishedAllStepsRef.current) {
+        posthog.capture("ai_task_interaction_completed", {
+          ai_output: JSON.stringify(localTasks),
+          user_input: userInput,
+          outcome: "abandoned",
+          is_voice_input: isVoiceInput,
+          ai_generated_task_count: localTasks?.length ?? 0,
+          user_add_task_count: 0,
+        });
+      }
+    };
+  }, [localTasks, isVoiceInput, userInput]);
+
+  const createDisabled = isAdding || localTasks?.length === 0;
 
   const onDeleteTask = (taskId: string) => {
     setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
@@ -50,7 +57,7 @@ export function AiTasksPreview({
   };
 
   const handleAddTasks = async () => {
-    if (isAdding || !localTasks.length) return;
+    if (isAdding || !localTasks?.length) return;
 
     try {
       const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
@@ -58,9 +65,9 @@ export function AiTasksPreview({
       finishedAllStepsRef.current = true;
 
       posthog.capture("ai_task_interaction_completed", {
-        ai_output: JSON.stringify(aiMessage),
+        ai_output: JSON.stringify(localTasks),
         user_input: userInput,
-        ai_generate_task_count: aiGeneratedTasks?.length ?? 0,
+        ai_generate_task_count: localTasks?.length ?? 0,
         user_add_task_count: payloads.length ?? 0,
         outcome: "accepted",
         is_voice_input: isVoiceInput,
@@ -77,42 +84,19 @@ export function AiTasksPreview({
     setModalType("input");
 
     posthog.capture("ai_task_interaction_completed", {
-      ai_output: JSON.stringify(aiMessage),
+      ai_output: JSON.stringify(localTasks),
       user_input: userInput,
-      ai_generate_task_count: aiGeneratedTasks?.length ?? 0,
+      ai_generate_task_count: localTasks?.length ?? 0,
       outcome: "go_back",
       user_add_task_count: 0,
       is_voice_input: isVoiceInput,
     });
   };
 
-  useEffect(() => {
-    return () => {
-      if (!finishedAllStepsRef.current) {
-        posthog.capture("ai_task_interaction_completed", {
-          ai_output: JSON.stringify(aiMessage),
-          user_input: userInput,
-          outcome: "abandoned",
-          is_voice_input: isVoiceInput,
-          ai_generated_task_count: aiGeneratedTasks?.length ?? 0,
-          user_add_task_count: 0,
-        });
-      }
-    };
-  }, [aiGeneratedTasks?.length, aiMessage, isVoiceInput, posthog, userInput]);
-
-  if (isLoading) {
-    return (
-      <View className="items-center justify-center">
-        <CustomSpinner size={60} />
-      </View>
-    );
-  }
-
   return (
     <View className="mb-10 items-center justify-between">
       <ScrollView className="pb-5 w-full min-h-20 max-h-200">
-        {localTasks.map((task) => (
+        {localTasks?.map((task) => (
           <AiTaskCard
             key={task.id}
             task={task}
