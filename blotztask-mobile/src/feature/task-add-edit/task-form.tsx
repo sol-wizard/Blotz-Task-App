@@ -136,15 +136,14 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         </FormProvider>
       </View>
       <Snackbar
-        visible={snackbarVisible} // 使用新的布尔 state
-        onDismiss={() => setSnackbarVisible(false)} // 关闭时，只重置我们自己的 state
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
         duration={3000}
         action={{
           label: "Dismiss",
           onPress: () => setSnackbarVisible(false),
         }}
       >
-        {/* 直接把错误消息硬编码在这里 */}
         Failed to load categories. Please try again.
       </Snackbar>
     </>
