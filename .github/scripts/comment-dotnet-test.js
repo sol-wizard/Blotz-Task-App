@@ -39,18 +39,31 @@ module.exports = async function commentDotnetTest({ github, context }) {
   }
 
   // 3. 解析覆盖率 (XPlat Code Coverage → cobertura)
+  function findCoverageFile(dir) {
+    const files = fs.readdirSync(dir, { withFileTypes: true });
+
+    for (const file of files) {
+      const fullPath = path.join(dir, file.name);
+
+      if (file.isDirectory()) {
+        const found = findCoverageFile(fullPath);
+        if (found) return found;
+      } else if (file.name.toLowerCase().endsWith("coverage.cobertura.xml")) {
+        return fullPath;
+      }
+    }
+
+    return null;
+  }
   let coverageSummary = null;
   const coveragePackages = [];
 
   try {
-    const files = fs.readdirSync(resultsDir);
-    const coverageFile = files.find((f) =>
-      f.toLowerCase().endsWith("coverage.cobertura.xml")
-    );
+    const resultsDir = "./TestResults";
+    const coverageFilePath = findCoverageFile(resultsDir);
 
-    if (coverageFile) {
-      const coveragePath = path.join(resultsDir, coverageFile);
-      const covXml = fs.readFileSync(coveragePath, "utf8");
+    if (coverageFilePath) {
+      const covXml = fs.readFileSync(coverageFilePath, "utf8");
 
       // 根节点 summary：<coverage line-rate="0.75" branch-rate="0" lines-covered="402" lines-valid="33078" branches-covered="0" branches-valid="462" ...>
       const summaryMatch = covXml.match(
