@@ -3,7 +3,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useCallback, useRef } from "react";
 import * as Haptics from "expo-haptics";
-import { Audio } from "expo-av";
+import { useAudioPlayer } from "expo-audio";
 import { ASSETS } from "@/shared/constants/assets";
 
 export const MachineButton = ({
@@ -30,17 +30,7 @@ export const MachineButton = ({
   const lastStep = useSharedValue(0);
 
   // 音效实例
-  const spinSoundRef = useRef<Audio.Sound | null>(null);
-  const loadSound = async () => {
-    try {
-      const { sound } = await Audio.Sound.createAsync(ASSETS.buttonSpin);
-      spinSoundRef.current = sound;
-    } catch (e) {
-      console.warn("Failed to load buttonSpin sound", e);
-    }
-  };
-
-  loadSound();
+  const soundPlayer = useAudioPlayer(ASSETS.buttonSpin);
 
   const handleReleaseOnJS = useCallback(
     (deltaThisTurn: number, newTotal: number) => {
@@ -49,18 +39,10 @@ export const MachineButton = ({
     [onRelease],
   );
 
-  const playSpinSound = async () => {
-    try {
-      if (!spinSoundRef.current) return;
-      await spinSoundRef.current.replayAsync();
-    } catch (e) {
-      console.warn("Failed to play buttonSpin sound", e);
-    }
-  };
-
   const triggerFeedback = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    playSpinSound();
+    soundPlayer.seekTo(0);
+    soundPlayer.play();
   };
 
   const panGesture = Gesture.Pan()
