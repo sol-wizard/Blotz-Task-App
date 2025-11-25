@@ -59,7 +59,6 @@ module.exports = async function commentDotnetTest({ github, context }) {
   const coveragePackages = [];
 
   try {
-    const resultsDir = "./TestResults";
     const coverageFilePath = findCoverageFile(resultsDir);
 
     if (coverageFilePath) {
