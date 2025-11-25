@@ -41,14 +41,14 @@ export function TaskStatusRow({
             statusName="All"
             taskCount={allTaskCount}
           />
-          {(isToday || isFutureDate) && (
-            <TaskStatusButton
-              isSelected={selectedStatus === "To Do"}
-              onChange={() => onChange("To Do")}
-              statusName="To Do"
-              taskCount={todoTaskCount}
-            />
-          )}
+
+          <TaskStatusButton
+            isSelected={selectedStatus === "To Do"}
+            onChange={() => onChange("To Do")}
+            statusName="To Do"
+            taskCount={todoTaskCount}
+          />
+
           {(isToday || isFutureDate) && (
             <TaskStatusButton
               isSelected={selectedStatus === "In Progress"}

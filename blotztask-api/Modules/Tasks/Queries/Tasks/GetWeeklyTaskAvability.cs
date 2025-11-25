@@ -25,7 +25,8 @@ public class GetWeeklyTaskAvabilityQueryHandler(
         CancellationToken ct = default)
     {
         var startDateUtc = query.MondayUtc;
-        var endDateUtcExclusive = query.MondayUtc.Date.AddDays(8);
+
+        var endDateUtcExclusive = query.MondayUtc.AddDays(8);
 
         logger.LogInformation("Getting task days from {startDateUtc} to {endDateUtcExclusive}", startDateUtc,
             endDateUtcExclusive);
@@ -54,7 +55,10 @@ public class GetWeeklyTaskAvabilityQueryHandler(
             {
                 if (t.StartTime.HasValue && t.EndTime.HasValue) return t.StartTime < dayEnd && t.EndTime >= dayStart;
 
-                return t.CreatedAt >= dayStart && t.CreatedAt < dayEnd;
+                var createdAtUtc = DateTime.SpecifyKind(t.CreatedAt, DateTimeKind.Utc);
+                var createdAtUtcOffset = new DateTimeOffset(createdAtUtc, TimeSpan.Zero);
+
+                return createdAtUtcOffset >= dayStart && createdAtUtcOffset < dayEnd;
             });
 
             result.Add(new DailyTaskIndicatorDto

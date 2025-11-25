@@ -44,7 +44,7 @@ export function filterSelectedTask({
       if (isAfter(selectedDay, today)) {
         if (isTaskTodo || isTaskInProgress) allTasks.push(task);
       } else if (isBefore(selectedDay, today)) {
-        if (isTaskDone || isTaskOverdue) allTasks.push(task);
+        if (isTaskTodo || isTaskDone || isTaskOverdue) allTasks.push(task);
       }
     }
   }
