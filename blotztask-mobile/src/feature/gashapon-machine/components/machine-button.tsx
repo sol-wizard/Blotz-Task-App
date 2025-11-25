@@ -1,7 +1,9 @@
-import React, { useCallback } from "react";
 import { Image } from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, runOnJS } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+import { useCallback } from "react";
+import * as Haptics from "expo-haptics";
+import { useAudioPlayer } from "expo-audio";
 import { ASSETS } from "@/shared/constants/assets";
 
 export const MachineButton = ({
@@ -13,16 +15,22 @@ export const MachineButton = ({
   onRelease?: (deltaThisTurn: number, newTotal: number) => void;
   setButtonPicLoaded: (loaded: boolean) => void;
 }) => {
-  const totalRotation = useSharedValue(0);
+  const KNOB_STEP = 20;
 
+  const totalRotation = useSharedValue(0);
   const dragRotation = useSharedValue(0);
 
   const startTotalRotation = useSharedValue(0);
   const prevRawAngle = useSharedValue(0);
 
   const unwrappedFingerAngle = useSharedValue(0);
-
   const startUnwrappedAngle = useSharedValue(0);
+
+  // 记录“当前处于第几个 10° 台阶”
+  const lastStep = useSharedValue(0);
+
+  // 音效实例
+  const soundPlayer = useAudioPlayer(ASSETS.buttonSpin);
 
   const handleReleaseOnJS = useCallback(
     (deltaThisTurn: number, newTotal: number) => {
@@ -30,6 +38,12 @@ export const MachineButton = ({
     },
     [onRelease],
   );
+
+  const triggerFeedback = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    soundPlayer.seekTo(0);
+    soundPlayer.play();
+  };
 
   const panGesture = Gesture.Pan()
     .onStart((e) => {
@@ -49,6 +63,7 @@ export const MachineButton = ({
       startTotalRotation.value = totalRotation.value;
 
       dragRotation.value = 0;
+      lastStep.value = 0; // 本次拖拽重新开始计算刻度
     })
     .onUpdate((e) => {
       const centerX = size / 2;
@@ -69,12 +84,26 @@ export const MachineButton = ({
       }
 
       unwrappedFingerAngle.value = unwrappedFingerAngle.value + diff;
-
       prevRawAngle.value = angleDeg;
 
       const deltaThisTurn = unwrappedFingerAngle.value - startUnwrappedAngle.value;
 
       dragRotation.value = deltaThisTurn;
+
+      // ⭐ 每跨过一个 20° 的档位，震动 + 播放 buttonSpin
+      const currentStep = Math.trunc(deltaThisTurn / KNOB_STEP);
+      const previousStep = lastStep.value;
+
+      if (currentStep !== previousStep) {
+        const stepDiff = currentStep - previousStep;
+        const stepsCrossed = Math.abs(stepDiff);
+
+        for (let i = 0; i < stepsCrossed; i++) {
+          runOnJS(triggerFeedback)();
+        }
+
+        lastStep.value = currentStep;
+      }
     })
     .onEnd(() => {
       const newTotal = startTotalRotation.value + dragRotation.value;

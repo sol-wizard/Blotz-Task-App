@@ -21,7 +21,6 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
 
   const filteredSelectedDayTasks = filterSelectedTask({
     selectedDayTasks: selectedDayTasks ?? [],
-    selectedDay,
   });
   const safeFilteredTasks = Array.isArray(filteredSelectedDayTasks) ? filteredSelectedDayTasks : [];
   const tasksOfSelectedStatus = safeFilteredTasks.find(
