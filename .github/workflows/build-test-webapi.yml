@@ -65,6 +65,7 @@ jobs:
           filename: "blotztask-test/TestResults/**/coverage.cobertura.xml"
           format: "markdown"
           output: both
+          file: code-coverage-results.md
 
       - name: Add Coverage PR Comment
         if: ${{ github.event_name == 'pull_request' && !cancelled() }}
