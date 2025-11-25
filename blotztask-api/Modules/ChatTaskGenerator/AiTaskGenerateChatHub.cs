@@ -30,11 +30,26 @@ public class AiTaskGenerateChatHub : Hub
         var httpContext = Context.GetHttpContext();
         if (httpContext?.Items.TryGetValue("UserId", out var userIdObj) != true || userIdObj is not Guid userId)
         {
-            _logger.LogWarning("UserId not found in HttpContext.Items. ConnectionId: {ConnectionId}", Context.ConnectionId);
+            _logger.LogWarning("UserId not found in HttpContext.Items. ConnectionId: {ConnectionId}",
+                Context.ConnectionId);
             throw new HubException("UserId not found in HttpContext. Connection rejected.");
         }
-        
-        await _chatHistoryManagerService.InitializeNewConversation(userId);
+
+        var timeZone = TimeZoneInfo.Utc;
+        var timeZoneId = httpContext?.Request.Query["timeZone"].ToString();
+        try
+        {
+            timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Invalid time zone '{TimeZoneId}'. Using UTC.", timeZoneId);
+        }
+
+
+        var userLocalNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
+
+        await _chatHistoryManagerService.InitializeNewConversation(userId, userLocalNow);
         await base.OnConnectedAsync();
     }
 
@@ -58,7 +73,7 @@ public class AiTaskGenerateChatHub : Hub
             chatHistory.AddUserMessage(message);
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
 
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, cancellationToken: ct);
+            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
         }
         catch (AiTaskGenerationException ex)
         {
@@ -69,6 +84,5 @@ public class AiTaskGenerateChatHub : Hub
             };
             await Clients.Caller.SendAsync("ReceiveMessage", aiServiceError);
         }
-        
     }
 }
