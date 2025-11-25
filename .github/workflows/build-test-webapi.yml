@@ -59,14 +59,6 @@ jobs:
         with:
           files: "blotztask-test/TestResults/**/*.trx"
 
-      - name: Coveralls
-        if: (!cancelled())
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: blotztask-test/TestResults/**/coverage.cobertura.xml
-          format: cobertura
-
       - name: Publish the project
         run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
         working-directory: ./blotztask-api
@@ -74,3 +66,11 @@ jobs:
       - name: Generate EF Core migration script
         working-directory: ./blotztask-api
         run: dotnet ef migrations script -o ${{ runner.temp }}/migrations.sql
+
+      - name: Coveralls
+        if: (!cancelled())
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: blotztask-test/TestResults/**/coverage.cobertura.xml
+          format: cobertura
