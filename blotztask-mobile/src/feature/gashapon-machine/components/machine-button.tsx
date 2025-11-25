@@ -1,7 +1,7 @@
 import { Image } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import * as Haptics from "expo-haptics";
 import { useAudioPlayer } from "expo-audio";
 import { ASSETS } from "@/shared/constants/assets";
