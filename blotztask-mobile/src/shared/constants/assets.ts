@@ -45,9 +45,14 @@ export const SVGIMAGES = {
   dashedSettings: DashedSettings,
 } as const;
 
+export const SOUNDS = {
+  buttonSpin: require("../../../assets/sounds/button-spin.mp3"),
+};
+
 // Export all assets for convenience
 export const ASSETS = {
   ...LOTTIE_ANIMATIONS,
   ...PNGIMAGES,
   ...SVGIMAGES,
+  ...SOUNDS,
 } as const;

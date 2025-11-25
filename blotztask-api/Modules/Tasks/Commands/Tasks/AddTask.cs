@@ -1,17 +1,16 @@
+using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Shared;
-using System.ComponentModel.DataAnnotations;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;
 
 public class AddTaskCommand
 {
-    [Required]
-    public required AddTaskItemDto TaskDetails { get; init; }
-    [Required]
-    public required Guid UserId { get; set; }
+    [Required] public required AddTaskItemDto TaskDetails { get; init; }
+
+    [Required] public required Guid UserId { get; set; }
 }
 
 public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommandHandler> logger)
@@ -20,7 +19,8 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
     {
         logger.LogInformation("Adding new task for user {UserId}", command.UserId);
 
-        TaskTimeValidator.ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime, command.TaskDetails.TimeType);
+        TaskTimeValidator.ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime,
+            command.TaskDetails.TimeType);
 
         var newTask = new TaskItem
         {
@@ -32,7 +32,7 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
             LabelId = command.TaskDetails.LabelId,
             UserId = command.UserId,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         db.TaskItems.Add(newTask);
