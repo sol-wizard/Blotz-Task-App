@@ -54,10 +54,18 @@ jobs:
         working-directory: ./blotztask-test
 
       - name: Publish test results as PR comment
-        if: github.event_name == 'pull_request'
+        if: (!cancelled())
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: "blotztask-test/TestResults/**/*.trx"
+
+      - name: Coveralls
+        if: (!cancelled())
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: blotztask-test/TestResults/**/coverage.cobertura.xml
+          format: cobertura
 
       - name: Publish the project
         run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
