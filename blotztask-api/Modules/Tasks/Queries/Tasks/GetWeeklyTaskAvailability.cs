@@ -5,23 +5,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
-public class GetWeeklyTaskAvabilityRequest
+public class GetWeeklyTaskAvailabilityRequest
 {
     [BindRequired] public DateTimeOffset MondayUtc { get; set; }
 }
 
-public class GetWeeklyTaskAvabilityQuery
+public class GetWeeklyTaskAvailabilityQuery
 {
     [Required] public required Guid UserId { get; init; }
 
     [BindRequired] public DateTimeOffset MondayUtc { get; set; }
 }
 
-public class GetWeeklyTaskAvabilityQueryHandler(
+public class GetWeeklyTaskAvailabilityQueryHandler(
     BlotzTaskDbContext db,
-    ILogger<GetWeeklyTaskAvabilityQueryHandler> logger)
+    ILogger<GetWeeklyTaskAvailabilityQueryHandler> logger)
 {
-    public async Task<List<DailyTaskIndicatorDto>> Handle(GetWeeklyTaskAvabilityQuery query,
+    public async Task<List<DailyTaskIndicatorDto>> Handle(GetWeeklyTaskAvailabilityQuery query,
         CancellationToken ct = default)
     {
         var startDateUtc = query.MondayUtc;

@@ -34,7 +34,7 @@ public class DataSeeder
         return userId;
     }
 
-    public async Task<TaskItem> CreateTaskAsync(Guid userId, string title, DateTimeOffset start, DateTimeOffset end)
+    public async Task<TaskItem> CreateTaskAsync(Guid userId, string title, DateTimeOffset? start, DateTimeOffset? end, DateTimeOffset? createdAt = null)
     {
         var task = new TaskItem
         {
@@ -42,8 +42,8 @@ public class DataSeeder
             UserId = userId,
             StartTime = start,
             EndTime = end,
-            TimeType = TaskTimeType.RangeTime,
-            CreatedAt = DateTime.UtcNow,
+            TimeType = start.HasValue && end.HasValue ? TaskTimeType.RangeTime : null,
+            CreatedAt = createdAt?.DateTime ?? DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
