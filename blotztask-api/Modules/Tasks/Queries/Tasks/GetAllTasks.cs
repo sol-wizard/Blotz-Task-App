@@ -17,7 +17,7 @@ public class GetAllTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetAllTasksQ
 
         var tasks = await db.TaskItems
             .Where(t => t.UserId == query.UserId)
-            .OrderByDescending(t => t.StartTime ?? DateTimeOffset.MinValue)
+            .OrderByDescending(t => t.StartTime).ThenBy(t => t.Title)
             .Select(task => new AllTaskItemDto
             {
                 Id = task.Id,
@@ -26,12 +26,14 @@ public class GetAllTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetAllTasksQ
                 StartTime = task.StartTime,
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
-                Label = task.Label != null ? new LabelDto
-                {
-                    LabelId = task.Label.LabelId,
-                    Name = task.Label.Name,
-                    Color = task.Label.Color
-                } : null
+                Label = task.Label != null
+                    ? new LabelDto
+                    {
+                        LabelId = task.Label.LabelId,
+                        Name = task.Label.Name,
+                        Color = task.Label.Color
+                    }
+                    : null
             })
             .ToListAsync(ct);
 

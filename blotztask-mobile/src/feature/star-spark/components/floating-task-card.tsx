@@ -40,7 +40,8 @@ export const FloatingTaskCard = ({
 
           <View className="mt-4 flex-row items-center justify-between">
             <Text className="text-xs text-[#6B7280] font-balooThin">
-              {floatingTask.createdAt && format(floatingTask.createdAt, "dd MMM HH:mm")}
+              {floatingTask.createdAt &&
+                format(new Date(floatingTask.createdAt + "Z"), "dd MMM HH:mm")}
             </Text>
 
             <View className="w-6 h-6 items-center justify-center">
