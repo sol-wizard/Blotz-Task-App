@@ -33,6 +33,7 @@ export default function StarSparkScreen() {
       setSnackbarMsg("Task deleted");
       setSnackbarVisible(true);
     } catch (e) {
+      console.error("Failed to delete task", e);
       setSnackbarMsg("Failed to delete task");
       setSnackbarVisible(true);
     } finally {
