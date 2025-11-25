@@ -72,7 +72,7 @@ jobs:
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           recreate: true
-          path: coverage-summary.md
+          path: code-coverage-results.md
 
       - name: Publish the project
         run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
