@@ -10,9 +10,23 @@ export function filterSelectedTask({
   selectedDay?: Date;
 }): TaskFilterGroup[] {
   const allTasks = selectedDayTasks;
-  const todoTasks = selectedDayTasks.filter(isTodo);
-  const inProgressTasks = selectedDayTasks.filter(isInProgress);
-  const overdueTasks = selectedDayTasks.filter(isOverdue);
+
+  const todoTasks: TaskDetailDTO[] = [];
+  const inProgressTasks: TaskDetailDTO[] = [];
+  const doneTasks: TaskDetailDTO[] = [];
+  const overdueTasks: TaskDetailDTO[] = [];
+
+  for (const task of selectedDayTasks) {
+    const isTaskTodo = isTodo(task);
+    const isTaskInProgress = isInProgress(task);
+    const isTaskDone = task.isDone;
+    const isTaskOverdue = isOverdue(task);
+
+    if (isTaskTodo) todoTasks.push(task);
+    if (isTaskInProgress) inProgressTasks.push(task);
+    if (isTaskDone) doneTasks.push(task);
+    if (isTaskOverdue) overdueTasks.push(task);
+  }
 
   return [
     {
