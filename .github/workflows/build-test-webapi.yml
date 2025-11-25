@@ -59,6 +59,20 @@ jobs:
         with:
           files: "blotztask-test/TestResults/**/*.trx"
 
+      - name: Generate coverage summary
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: "blotztask-test/TestResults/**/coverage.cobertura.xml"
+          format: "markdown"
+          output: both
+
+      - name: Add Coverage PR Comment
+        if: ${{ github.event_name == 'pull_request' && !cancelled() }}
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          recreate: true
+          path: coverage-summary.md
+
       - name: Publish the project
         run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
         working-directory: ./blotztask-api
@@ -66,11 +80,3 @@ jobs:
       - name: Generate EF Core migration script
         working-directory: ./blotztask-api
         run: dotnet ef migrations script -o ${{ runner.temp }}/migrations.sql
-
-      - name: Coveralls
-        if: (!cancelled())
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: blotztask-test/TestResults/**/coverage.cobertura.xml
-          format: cobertura
