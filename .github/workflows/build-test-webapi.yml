@@ -53,14 +53,11 @@ jobs:
         run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test_results.trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
         working-directory: ./blotztask-test
 
-      - name: Comment test & coverage result on PR
+      - name: Publish test results as PR comment
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const commentDotnetTest = require('./.github/scripts/comment-dotnet-test.js');
-            await commentDotnetTest({ github, context });
+          files: "blotztask-test/TestResults/**/*.trx"
 
       - name: Publish the project
         run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
