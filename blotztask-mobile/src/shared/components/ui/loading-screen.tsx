@@ -1,6 +1,6 @@
 import { ASSETS } from "@/shared/constants/assets";
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, View, Text } from "react-native";
+import { Animated, Easing, View, Text, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoadingScreen() {
@@ -41,14 +41,20 @@ export default function LoadingScreen() {
 
   return (
     <SafeAreaView className="items-center justify-center flex-1 bg-transparent">
-      <View pointerEvents="none">
+      <View pointerEvents="none" className="items-center">
         <Animated.Image
           source={ASSETS.loadingBun}
-          style={[{ width: 80, height: 80, transform: [{ translateY: bounceAnim }, { scale }] }]}
+          className="w-[60px] h-[60px]"
+          style={{ transform: [{ translateY: bounceAnim }, { scale }] }}
+          resizeMode="contain"
+        />
+        <Image
+          source={ASSETS.loadingShadow}
+          className="w-[120px] h-[24px] -mt-[10px] opacity-80"
           resizeMode="contain"
         />
       </View>
-      <Text className="font-balooBold text-3xl mt-4">Loading...</Text>
+      <Text className="font-balooBold text-2xl mt-4">Loading...</Text>
     </SafeAreaView>
   );
 }
