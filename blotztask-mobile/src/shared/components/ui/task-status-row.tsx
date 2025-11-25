@@ -41,30 +41,28 @@ export function TaskStatusRow({
             statusName="All"
             taskCount={allTaskCount}
           />
-          {(isToday || isFutureDate) && (
-            <TaskStatusButton
-              isSelected={selectedStatus === "To Do"}
-              onChange={() => onChange("To Do")}
-              statusName="To Do"
-              taskCount={todoTaskCount}
-            />
-          )}
-          {(isToday || isFutureDate) && (
-            <TaskStatusButton
-              isSelected={selectedStatus === "In Progress"}
-              onChange={() => onChange("In Progress")}
-              statusName="In Progress"
-              taskCount={inProgressTaskCount}
-            />
-          )}
-          {(isToday || isPastDate) && (
-            <TaskStatusButton
-              isSelected={selectedStatus === "Done"}
-              onChange={() => onChange("Done")}
-              statusName="Done"
-              taskCount={doneTaskCount}
-            />
-          )}
+
+          <TaskStatusButton
+            isSelected={selectedStatus === "To Do"}
+            onChange={() => onChange("To Do")}
+            statusName="To Do"
+            taskCount={todoTaskCount}
+          />
+
+          <TaskStatusButton
+            isSelected={selectedStatus === "In Progress"}
+            onChange={() => onChange("In Progress")}
+            statusName="In Progress"
+            taskCount={inProgressTaskCount}
+          />
+
+          <TaskStatusButton
+            isSelected={selectedStatus === "Done"}
+            onChange={() => onChange("Done")}
+            statusName="Done"
+            taskCount={doneTaskCount}
+          />
+
           {(isToday || isPastDate) && (
             <TaskStatusButton
               isSelected={selectedStatus === "Overdue"}
