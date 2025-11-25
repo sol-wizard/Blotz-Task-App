@@ -39,7 +39,7 @@ export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
 export async function fetchFloatingTasks(): Promise<FloatingTaskDTO[]> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/floating`;
   const data: TaskDetailDTO[] = await apiClient.get(url);
-  console.log("fetchFloatingTasks data:", data);
+
   return data;
 }
 
