@@ -32,17 +32,3 @@ export async function scheduleTaskReminder(task: TaskDetailDTO) {
   console.log("Notification scheduled with ID:", notificationId);
   return notificationId;
 }
-
-export async function rescheduleTaskReminder(task: TaskDetailDTO): Promise<string | undefined> {
-  if (!task.startTime) return undefined;
-  const notificationId = "a1b90388-7a14-4de5-ad13-f2fa0e8220f6";
-  if (notificationId) {
-    try {
-      await Notifications.cancelScheduledNotificationAsync(notificationId);
-    } catch (e) {
-      console.warn("Failed to cancel old notification:", e);
-    }
-  }
-
-  return scheduleTaskReminder(task);
-}
