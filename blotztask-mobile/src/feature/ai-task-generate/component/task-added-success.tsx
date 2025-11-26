@@ -3,11 +3,7 @@ import { View, Text, Image, ImageBackground } from "react-native";
 
 export const TaskSuccessCheck = () => {
   return (
-    <ImageBackground
-      source={require("../../../../assets/images-png/background.png")}
-      className="flex-1 justify-center items-center py-8"
-      resizeMode="cover"
-    >
+    <View className="flex-1 bg-[#F3F8FF] justify-center items-center py-8">
       <View className="w-40 h-32 justify-center items-center relative">
         <Image
           source={require("../../../../assets/images-png/loading-logo.png")}
@@ -25,6 +21,6 @@ export const TaskSuccessCheck = () => {
       <Text className="mt-6 text-[20px] font-bold text-[#3F4354] text-center">
         Yay! Task added!
       </Text>
-    </ImageBackground>
+    </View>
   );
 };
