@@ -22,6 +22,7 @@ export async function scheduleTaskReminder(task: TaskDetailDTO) {
       data: {
         taskId: task.id,
       },
+      categoryIdentifier: "task-reminder",
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,

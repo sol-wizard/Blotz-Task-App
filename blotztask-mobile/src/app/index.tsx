@@ -15,6 +15,16 @@ Notifications.setNotificationHandler({
   }),
 });
 
+Notifications.setNotificationCategoryAsync("task-reminder", [
+  {
+    identifier: "MARK_DONE",
+    buttonTitle: "Mark as done",
+    options: {
+      opensAppToForeground: true,
+    },
+  },
+]);
+
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
