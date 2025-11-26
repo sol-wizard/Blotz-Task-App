@@ -8,19 +8,12 @@ import { FilteredTaskList } from "../components/filtered-task-list";
 import { useTaskDays } from "../hooks/useTaskDays";
 import { getMarkedDates, getSelectedDates } from "../util/get-marked-dates";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
-import * as Notifications from "expo-notifications";
 
 export default function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const { weeklyTaskAvability, isLoading } = useTaskDays({ selectedDay });
-  const { notification } = usePushNotificationSetup();
-  console.log("notification permission status:", notification?.request?.content?.title);
-  useEffect(() => {
-    Notifications.getPermissionsAsync().then((res) => {
-      console.log("Notification permission:", res);
-    });
-  }, []);
+  usePushNotificationSetup();
 
   let markedDates;
   if (!isLoading) {
