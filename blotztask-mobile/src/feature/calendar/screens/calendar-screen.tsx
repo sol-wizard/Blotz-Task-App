@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { SafeAreaView } from "react-native";
