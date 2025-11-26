@@ -6,6 +6,7 @@ import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
+import { rescheduleTaskReminder } from "@/feature/task-add-edit/util/schedule-task-reminder";
 
 // TODO: Fix flickering stale selected task in task detail page while navigating back
 const TaskEditScreen = () => {
@@ -40,6 +41,7 @@ const TaskEditScreen = () => {
         ...dto,
         id: selectedTask.id,
       });
+      await rescheduleTaskReminder(selectedTask);
 
       router.back();
       console.log("Task submitted successfully");
