@@ -6,6 +6,8 @@ import { SafeAreaView } from "react-native";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
+import { scheduleTaskReminder } from "@/feature/task-add-edit/util/schedule-task-reminder";
+import { fetchTaskById } from "@/shared/services/task-service";
 
 function TaskCreateScreen() {
   const router = useRouter();
@@ -15,8 +17,12 @@ function TaskCreateScreen() {
   const handleTaskSubmit = async (formValues: TaskFormField) => {
     try {
       const dto = mapFormToAddTaskItemDTO(formValues);
-      await addTask(dto);
+      const newTaskId = await addTask(dto);
       posthog.capture("manual_task_creation");
+
+      const newTask = await fetchTaskById(newTaskId);
+      scheduleTaskReminder(newTask);
+
       router.back();
       console.log("Task created successfully");
     } catch (error) {

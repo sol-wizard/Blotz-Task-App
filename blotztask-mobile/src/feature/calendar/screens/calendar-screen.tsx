@@ -1,18 +1,26 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { SafeAreaView } from "react-native";
-
 import { theme } from "@/shared/constants/theme";
 import CalendarHeader from "../components/calendar-header";
 import { FilteredTaskList } from "../components/filtered-task-list";
 import { useTaskDays } from "../hooks/useTaskDays";
 import { getMarkedDates, getSelectedDates } from "../util/get-marked-dates";
+import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
+import * as Notifications from "expo-notifications";
 
 export default function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const { weeklyTaskAvability, isLoading } = useTaskDays({ selectedDay });
+  const { notification } = usePushNotificationSetup();
+  console.log("notification permission status:", notification?.request?.content?.title);
+  useEffect(() => {
+    Notifications.getPermissionsAsync().then((res) => {
+      console.log("Notification permission:", res);
+    });
+  }, []);
 
   let markedDates;
   if (!isLoading) {

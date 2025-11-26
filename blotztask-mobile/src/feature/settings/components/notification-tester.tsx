@@ -3,7 +3,7 @@ import { schedulePushNotification } from "@/shared/services/notifications";
 import { Text, View, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
 
-export default function NotificationTester() {
+export default function NotificationTrigger() {
   const { notification } = usePushNotificationSetup();
 
   return (
