@@ -7,13 +7,9 @@ export async function scheduleTaskReminder(task: TaskDetailDTO) {
 
   const triggerTime = taskStartTime - 10 * 60 * 1000;
 
-  if (triggerTime <= Date.now()) {
-    console.log("Trigger time is in the past. No notification scheduled.");
-    return;
-  }
+  if (triggerTime <= Date.now()) return;
 
   const triggerDate = new Date(triggerTime);
-  console.log("Scheduling notification for:", triggerDate);
 
   const notificationId = await Notifications.scheduleNotificationAsync({
     content: {
@@ -29,6 +25,6 @@ export async function scheduleTaskReminder(task: TaskDetailDTO) {
       date: triggerDate,
     },
   });
-  console.log("Notification scheduled with ID:", notificationId);
+
   return notificationId;
 }
