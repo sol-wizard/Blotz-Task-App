@@ -70,7 +70,7 @@ jobs:
         if: (!cancelled())
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          recreate: true
+          recreate: false
           path: code-coverage-results.md
 
       - name: Publish the project
