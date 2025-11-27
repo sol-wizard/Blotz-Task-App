@@ -23,9 +23,17 @@ export default function SettingsScreen() {
     <SafeAreaView className="flex-1 p-6">
       <Text className="text-5xl font-bold text-gray-800 font-balooExtraBold pt-10">Settings</Text>
       <Text className="text-4xl font-bold text-gray-800 font-balooBold mt-6 py-2">General</Text>
-      <View className="bg-white shadow rounded-2xl p-6 flex-row items-center">
+      <View className="bg-white shadow rounded-2xl px-4 py-6 flex-row items-center">
         <UserProfile profile={userProfile} />
-        <Text className="text-gray-800 font-baloo text-2xl ml-4">{userProfile?.displayName}</Text>
+        <View className="ml-2 flex-1">
+          <Text
+            className="text-gray-800 font-baloo text-2xl ml-3"
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {userProfile?.displayName}
+          </Text>
+        </View>
       </View>
 
       <View className="bg-[#CCE3B7] rounded-2xl mt-10 pb-6">

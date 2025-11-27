@@ -31,20 +31,21 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange, sheetRef }: 
   const formatDate = formatAiTaskCardDate({ startTime: task.startTime, endTime: task.endTime });
 
   return (
-    <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
+    <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] min-h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
       <View
         className="w-2 h-full rounded-full"
         style={{ backgroundColor: task.label?.color ?? theme.colors.disabled }}
       />
 
-      <View className="flex-1 flex-row items-center justify-between ml-4">
+      <View className="flex-1 flex-row items-center ml-4">
         <BottomSheetTextInput
           value={draftTitle}
           onChangeText={setDraftTitle}
           onBlur={handleEdit}
           onSubmitEditing={handleEdit}
           returnKeyType="done"
-          className="mr-3 text-lg font-semibold leading-5"
+          multiline
+          className="flex-1 mr-3 text-lg font-semibold leading-5"
           style={{ color: theme.colors.onSurface }}
           placeholder="Task title"
           placeholderTextColor={theme.colors.disabled}
@@ -54,7 +55,7 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange, sheetRef }: 
         />
 
         {task.startTime || task.endTime ? (
-          <View className="items-center ml-2">
+          <View className="items-center ml-2 flex-shrink-0">
             {formatTime && (
               <Text className="text-sm font-medium ml-1 text-tertiary">{formatTime}</Text>
             )}
