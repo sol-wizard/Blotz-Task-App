@@ -28,7 +28,7 @@ export const TaskRevealModal = ({ visible, task, onClose, onDoNow }: TaskRevealM
           <View className="items-center mb-4">
             <Image source={imageSource} className="w-16 h-16 mb-3" resizeMode="contain" />
 
-            <Text className="text-gray-500 text-sm font-balooThin">Reveal New Task</Text>
+            <Text className="text-gray-500 text-sm font-balooThin">Reveal A New Task</Text>
             <Text className="text-slate-800 text-2xl font-bold mt-1 text-center font-baloo">
               {task?.title}
             </Text>

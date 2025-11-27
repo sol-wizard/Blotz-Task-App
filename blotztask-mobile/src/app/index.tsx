@@ -4,6 +4,26 @@ import { View, ActivityIndicator } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
 import { useQueryClient } from "@tanstack/react-query";
+import * as Notifications from "expo-notifications";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
+Notifications.setNotificationCategoryAsync("task-reminder", [
+  {
+    identifier: "MARK_DONE",
+    buttonTitle: "Mark as done",
+    options: {
+      opensAppToForeground: true,
+    },
+  },
+]);
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
