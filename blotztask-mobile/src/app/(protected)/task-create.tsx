@@ -7,7 +7,6 @@ import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { scheduleTaskReminder } from "@/shared/util/schedule-task-reminder";
-import { fetchTaskById } from "@/shared/services/task-service";
 import { NotificationTaskDTO } from "@/shared/models/notification-task-dto";
 
 function TaskCreateScreen() {
