@@ -1,7 +1,7 @@
-import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import * as Notifications from "expo-notifications";
+import { NotificationTaskDTO } from "../models/notification-task-dto";
 
-export async function scheduleTaskReminder(task: TaskDetailDTO) {
+export async function scheduleTaskReminder(task: NotificationTaskDTO) {
   if (!task.startTime) return;
   const taskStartTime = new Date(task.startTime).getTime();
 

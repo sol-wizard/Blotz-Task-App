@@ -6,8 +6,9 @@ import { SafeAreaView } from "react-native";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
-import { scheduleTaskReminder } from "@/feature/task-add-edit/util/schedule-task-reminder";
+import { scheduleTaskReminder } from "@/shared/util/schedule-task-reminder";
 import { fetchTaskById } from "@/shared/services/task-service";
+import { NotificationTaskDTO } from "@/shared/models/notification-task-dto";
 
 function TaskCreateScreen() {
   const router = useRouter();
@@ -20,8 +21,12 @@ function TaskCreateScreen() {
       const newTaskId = await addTask(dto);
       posthog.capture("manual_task_creation");
 
-      const newTask = await fetchTaskById(newTaskId);
-      scheduleTaskReminder(newTask);
+      const notificationTask: NotificationTaskDTO = {
+        id: newTaskId,
+        title: dto.title,
+        startTime: dto.startTime?.toISOString(),
+      };
+      scheduleTaskReminder(notificationTask);
 
       router.back();
       console.log("Task created successfully");
