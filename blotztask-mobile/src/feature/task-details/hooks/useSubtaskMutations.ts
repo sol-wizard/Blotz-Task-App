@@ -24,6 +24,7 @@ export const useSubtaskMutations = () => {
     onSuccess: (_, variables) => {
       console.log("Added/Replaced subtasks", variables.subtasks, "to", variables.taskId);
       queryClient.invalidateQueries({ queryKey: ["subtasks", variables.taskId] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onError: (error) => {
       console.error("Failed to add subtasks:", error);
@@ -36,6 +37,7 @@ export const useSubtaskMutations = () => {
     onSuccess: (_, variables) => {
       console.log("Deleted subtask", variables.subtaskId);
       queryClient.invalidateQueries({ queryKey: ["subtasks", variables.parentTaskId] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onError: (error) => {
       console.error("Failed to delete subtask:", error);
@@ -46,6 +48,7 @@ export const useSubtaskMutations = () => {
     mutationFn: updateSubtask,
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["subtasks", variables.parentTaskId] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onError: (error) => {
       console.error("Failed to update subtask:", error);
