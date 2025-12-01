@@ -1,10 +1,10 @@
 import React from "react";
-import { View, Text, Image, ImageBackground } from "react-native";
+import { View, Text, Image } from "react-native";
 
-export const TaskSuccessCheck = () => {
+export const TaskAddedSuccess = () => {
   return (
-    <View className="flex-1 bg-[#F3F8FF] justify-center items-center py-8">
-      <View className="w-40 h-32 justify-center items-center relative">
+    <View className="flex-1 w-full bg-[#F3F8FF] justify-center items-center py-8">
+      <View className="w-24 h-16 justify-center items-center relative">
         <Image
           source={require("../../../../assets/images-png/loading-logo.png")}
           className="w-full h-full"
@@ -13,7 +13,7 @@ export const TaskSuccessCheck = () => {
 
         <Image
           source={require("../../../../assets/images-png/success-check.png")}
-          className="w-14 h-14 absolute right-2 bottom-0"
+          className="w-6 h-6 absolute right-2 bottom-0"
           resizeMode="contain"
         />
       </View>

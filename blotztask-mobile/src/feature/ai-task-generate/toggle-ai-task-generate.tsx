@@ -27,7 +27,7 @@ export const ToggleAiTaskGenerate = () => {
         ref={aiVoiceInputModalRef}
         backdropComponent={renderBottomSheetBackdrop}
         backgroundStyle={{
-          backgroundColor: "#FFFFFF",
+          backgroundColor: "#F3F8FF",
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
         }}
