@@ -18,6 +18,7 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
+import { SubtaskProgressBar } from "./subtask-progress-bar";
 
 const ACTION_WIDTH = 64;
 const OPEN_X = -ACTION_WIDTH;
@@ -135,43 +136,48 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
       <GestureDetector gesture={pan}>
         <Animated.View style={cardStyle} className="bg-white rounded-2xl">
           <Pressable onPress={() => navigateToTaskDetails(task)} disabled={isLoading}>
-            <View className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}>
-              <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
-                <TaskCheckbox
-                  checked={task.isDone}
-                  onPress={() => toggleTask(task.id)}
-                  disabled={isLoading}
-                  haptic={!task.isDone}
-                />
+            <View className="flex-col">
+              <View className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}>
+                <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
+                  <TaskCheckbox
+                    checked={task.isDone}
+                    onPress={() => toggleTask(task.id)}
+                    disabled={isLoading}
+                    haptic={!task.isDone}
+                  />
 
-                <View
-                  className="w-[6px] h-[30px] rounded-[3px] mr-3"
-                  style={{ backgroundColor: dividerColor }}
-                />
-              </Animated.View>
-              <View className="flex-1 flex-row justify-between items-center">
-                <View className="justify-start pt-0">
-                  <Text
-                    className={`text-xl font-baloo w-60 ${task.isDone ? "text-neutral-400 line-through" : "text-black"}`}
-                  >
-                    {task.title}
-                  </Text>
-                  {timePeriod && (
-                    <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
-                      {timePeriod}
+                  <View
+                    className="w-[6px] h-[30px] rounded-[3px] mr-3"
+                    style={{ backgroundColor: dividerColor }}
+                  />
+                </Animated.View>
+
+                <View className="flex-1 flex-row justify-between items-center">
+                  <View className="justify-start pt-0">
+                    <Text
+                      className={`text-xl font-baloo w-60 ${task.isDone ? "text-neutral-400 line-through" : "text-black"}`}
+                    >
+                      {task.title}
+                    </Text>
+                    {timePeriod && (
+                      <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
+                        {timePeriod}
+                      </Text>
+                    )}
+                  </View>
+
+                  {task.endTime &&
+                    new Date(task.endTime).getTime() <= new Date().getTime() &&
+                    !task.isDone && <Text className="text-warning font-baloo text-lg">Late</Text>}
+                  {task.endTime && new Date(task.endTime).getTime() > new Date().getTime() && (
+                    <Text className="text-tertiary font-baloo text-lg">
+                      {format(parseISO(task.endTime), "H:mm")}
                     </Text>
                   )}
                 </View>
-
-                {task.endTime &&
-                  new Date(task.endTime).getTime() <= new Date().getTime() &&
-                  !task.isDone && <Text className="text-warning font-baloo text-lg">Late</Text>}
-                {task.endTime && new Date(task.endTime).getTime() > new Date().getTime() && (
-                  <Text className="text-tertiary font-baloo text-lg">
-                    {format(parseISO(task.endTime), "H:mm")}
-                  </Text>
-                )}
               </View>
+
+              <SubtaskProgressBar subtasks={task.subtasks} />
             </View>
           </Pressable>
         </Animated.View>

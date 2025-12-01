@@ -1,4 +1,5 @@
 import { LabelDTO } from "./label-dto";
+import { SubtaskDTO } from "../../feature/task-details/models/subtask-dto";
 
 export enum TaskTimeType {
   Single = 0,
@@ -14,4 +15,5 @@ export interface TaskDetailDTO {
   startTime?: string;
   endTime?: string;
   timeType: TaskTimeType | null;
+  subtasks?: SubtaskDTO[];
 }
