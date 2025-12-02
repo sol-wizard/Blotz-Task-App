@@ -39,6 +39,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
 
 
         var tasks = await db.TaskItems
+            .AsNoTracking()
             .Where(t => t.UserId == query.UserId &&
                         (
                             // Tasks in date range
@@ -57,7 +58,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                              t.StartTime <= endDateUtc
                             )
                         ))
-            .OrderBy(t => t.StartTime).ThenBy(t => t.Title)
+            .OrderBy(t => t.StartTime).ThenBy(t => t.EndTime).ThenBy(t => t.Title)
             .Select(task => new TaskByDateItemDto
             {
                 Id = task.Id,

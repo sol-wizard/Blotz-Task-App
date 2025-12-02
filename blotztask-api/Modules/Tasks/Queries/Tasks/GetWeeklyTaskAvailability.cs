@@ -26,13 +26,14 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
     {
         var startDateUtc = query.MondayUtc;
 
-        var endDateUtcExclusive = query.MondayUtc.AddDays(8);
+        var endDateUtcExclusive = query.MondayUtc.AddDays(7);
 
         logger.LogInformation("Getting task days from {startDateUtc} to {endDateUtcExclusive}", startDateUtc,
             endDateUtcExclusive);
 
 
         var tasks = await db.TaskItems
+            .AsNoTracking()
             .Where(t => t.UserId == query.UserId &&
                         (
                             // Tasks in date range

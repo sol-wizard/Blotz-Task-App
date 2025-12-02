@@ -1,131 +1,93 @@
-import { Controller } from "react-hook-form";
+import { useController } from "react-hook-form";
 import { View, Text, Pressable } from "react-native";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { useState } from "react";
-import { Calendar, DateData } from "react-native-calendars";
 import TimePicker from "./time-picker";
+import { SingleDateCalendar } from "./single-date-calendar";
 
-type Props = {
-  control: any;
-};
+export const ReminderTab = ({ control }: { control: any }) => {
+  const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
-export const ReminderTab = ({ control }: Props) => {
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const {
+    field: { value: startDate, onChange: onStartDateChange },
+  } = useController({
+    control,
+    name: "startDate",
+  });
 
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const {
+    field: { value: startTime, onChange: onStartTimeChange },
+  } = useController({
+    control,
+    name: "startTime",
+  });
+
+  const {
+    field: { onChange: onEndDateChange },
+  } = useController({
+    control,
+    name: "endDate",
+  });
+
+  const {
+    field: { onChange: onEndTimeChange },
+  } = useController({
+    control,
+    name: "endTime",
+  });
+
+  const dateDisplayText = startDate ? format(startDate, "MMM dd, yyyy") : "Select Date";
+  const timeDisplayText = startTime ? format(startTime, "hh:mm a") : "Select Time";
 
   return (
     <View className="mb-4">
-      <Controller
-        control={control}
-        name="startDate"
-        render={({ field: { onChange: onStartDateChange, value: startDate } }) => {
-          return (
-            <Controller
-              control={control}
-              name="endDate"
-              render={({ field: { onChange: onEndDateChange } }) => {
-                const displayText = startDate ? format(startDate, "MMM dd, yyyy") : "Select Date";
-                return (
-                  <View className="mb-4">
-                    <View className="flex-row justify-between">
-                      <Text className="font-baloo text-secondary text-2xl mt-1">Date</Text>
-                      <Pressable
-                        onPress={() => setShowCalendar((prev) => !prev)}
-                        className="bg-background px-4 py-2 rounded-xl"
-                      >
-                        <Text className="text-xl font-balooThin text-secondary">{displayText}</Text>
-                      </Pressable>
-                    </View>
+      {/* Date  */}
+      <View className="mb-4">
+        <View className="flex-row justify-between">
+          <Text className="font-baloo text-secondary text-2xl mt-1">Date</Text>
+          <Pressable
+            onPress={() => setActiveSelector((prev) => (prev === "date" ? null : "date"))}
+            className="bg-background px-4 py-2 rounded-xl"
+          >
+            <Text className="text-xl font-balooThin text-secondary">{dateDisplayText}</Text>
+          </Pressable>
+        </View>
 
-                    {showCalendar && (
-                      <Calendar
-                        onDayPress={(day: DateData) => {
-                          const asDate = parseISO(day.dateString);
+        {activeSelector === "date" && (
+          <SingleDateCalendar
+            onStartDateChange={(nextDate: Date) => {
+              onStartDateChange(nextDate);
+              onEndDateChange(nextDate);
+            }}
+          />
+        )}
+      </View>
 
-                          setSelectedDate(day.dateString);
-                          onStartDateChange(asDate);
-                          onEndDateChange(asDate);
-                        }}
-                        markedDates={
-                          selectedDate
-                            ? {
-                                [selectedDate]: {
-                                  selected: true,
-                                  selectedColor: "#EEFBE1",
-                                  selectedTextColor: "#9AD513",
-                                },
-                              }
-                            : {}
-                        }
-                        theme={{
-                          todayTextColor: "#BAD5FA",
-                          arrowColor: "#9AD513",
-                          textDayFontFamily: "BalooBold",
-                          textDayHeaderFontFamily: "BalooBold",
-                          textMonthFontFamily: "BalooBold",
-                          dayTextColor: "#333",
-                          textDisabledColor: "#bbb",
-                        }}
-                        enableSwipeMonths
-                      />
-                    )}
-                  </View>
-                );
+      {/* Time  */}
+      <View className="justify-center">
+        <View className="flex-row justify-between">
+          <Text className="font-baloo text-secondary text-2xl mt-1">Time</Text>
+
+          <Pressable
+            onPress={() => setActiveSelector((prev) => (prev === "time" ? null : "time"))}
+            className="bg-background px-4 py-2 rounded-xl"
+          >
+            <Text className="text-xl font-balooThin text-secondary ">{timeDisplayText}</Text>
+          </Pressable>
+        </View>
+
+        <View className="items-center">
+          {activeSelector === "time" && (
+            <TimePicker
+              value={startTime}
+              onChange={(nextTime: Date) => {
+                onStartTimeChange(nextTime);
+                onEndTimeChange(nextTime);
               }}
             />
-          );
-        }}
-      />
-
-      <Controller
-        control={control}
-        name="startTime"
-        render={({ field: { onChange: onStartTimeChange, value: startTime } }) => {
-          return (
-            <Controller
-              control={control}
-              name="endTime"
-              render={({ field: { onChange: onEndTimeChange } }) => {
-                const handleChange = (selectedTime?: Date) => {
-                  if (selectedTime) {
-                    onStartTimeChange(selectedTime);
-                    onEndTimeChange(selectedTime);
-                  }
-                };
-                return (
-                  <View className="justify-center">
-                    <View className="flex-row justify-between">
-                      <Text className="font-baloo text-secondary text-2xl mt-1">Time</Text>
-
-                      <Pressable
-                        onPress={() => {
-                          if (!startTime) {
-                            onStartTimeChange(new Date());
-                            onEndTimeChange(new Date());
-                          }
-                          setShowTimePicker((prev) => !prev);
-                        }}
-                        className="bg-background px-4 py-2 rounded-xl"
-                      >
-                        <Text className="text-xl font-balooThin text-secondary ">
-                          {startTime ? format(startTime, "hh:mm a") : "Select Time"}
-                        </Text>
-                      </Pressable>
-                    </View>
-                    <View className="items-center">
-                      {showTimePicker && (
-                        <TimePicker value={startTime} onChange={(v: Date) => handleChange(v)} />
-                      )}
-                    </View>
-                  </View>
-                );
-              }}
-            />
-          );
-        }}
-      />
+          )}
+        </View>
+      </View>
     </View>
   );
 };
