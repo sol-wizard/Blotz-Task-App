@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { View, Text } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
-import { eachDayOfInterval, format, isAfter, parseISO } from "date-fns";
+import { eachDayOfInterval, format, isAfter, isBefore, isSameDay, parseISO } from "date-fns";
+import { is } from "zod/v4/locales";
 
 type MarkedDate = {
   color?: string;
@@ -65,11 +66,11 @@ const DoubleDatesCalendar = ({
 
   const onDayPress = (day: DateData) => {
     const selected = parseISO(day.dateString);
-    if (startDate && isAfter(startDate, selected)) {
-      return;
+    if (isSameDay(startDate, selected) || isBefore(startDate, selected)) {
+      setEndDate(selected);
     }
 
-    setEndDate(selected);
+    return;
   };
 
   return (
