@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Labels.DTOs;
 using BlotzTask.Modules.Tasks.Enums;
+using BlotzTask.Modules.Tasks.Queries.SubTasks;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
@@ -73,7 +74,17 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                         Name = task.Label.Name,
                         Color = task.Label.Color
                     }
-                    : null
+                    : null,
+                Subtasks = task.Subtasks.OrderBy(st => st.Order).Select(st => new SubtaskDetailDto
+                {
+                    SubTaskId = st.Id,
+                    ParentTaskId = st.ParentTaskId,
+                    Title = st.Title,
+                    Description = st.Description,
+                    Duration = st.Duration,
+                    Order = st.Order,
+                    IsDone = st.IsDone
+                }).ToList()
             })
             .ToListAsync(ct);
 
@@ -92,4 +103,5 @@ public class TaskByDateItemDto
     public bool IsDone { get; set; }
     public LabelDto? Label { get; set; }
     public TaskTimeType? TimeType { get; set; }
+    public List<SubtaskDetailDto> Subtasks { get; set; } = [];
 }
