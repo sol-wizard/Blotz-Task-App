@@ -10,6 +10,8 @@ import { ScrollView } from "react-native-gesture-handler";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { scheduleTaskReminder } from "@/shared/util/schedule-task-reminder";
+import { NotificationTaskDTO } from "@/shared/models/notification-task-dto";
 
 export function AiTasksPreview({
   aiTasks,
@@ -61,7 +63,21 @@ export function AiTasksPreview({
 
     try {
       const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
-      await Promise.all(payloads.map((payload) => addTask(payload)));
+
+      const newTaskIds = await Promise.all(payloads.map((payload) => addTask(payload)));
+
+      newTaskIds.forEach((newTaskId, index) => {
+        const dto = payloads[index];
+
+        const notificationTask: NotificationTaskDTO = {
+          id: newTaskId,
+          title: dto.title,
+          startTime: dto.startTime?.toISOString(),
+        };
+
+        scheduleTaskReminder(notificationTask);
+      });
+
       finishedAllStepsRef.current = true;
 
       posthog.capture("ai_task_interaction_completed", {
