@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import Modal from "react-native-modal";
-import { Calendar } from "react-native-calendars";
+import { View, Text } from "react-native";
+import { Calendar, DateData } from "react-native-calendars";
 import { eachDayOfInterval, format, isAfter, parseISO } from "date-fns";
 
 type MarkedDate = {
@@ -18,26 +17,17 @@ const DATE_COLORS = {
   text: "#9AD513",
 };
 
-interface CalendarDatePickerProps {
-  startDate: string | null;
-  allowRangeSelection: boolean;
-  onClose: () => void;
-  onSave: (startDate: string | null, endDate: string | null) => void;
-}
-
-const DoubleDatesCalendar: React.FC<CalendarDatePickerProps> = ({
+const DoubleDatesCalendar = ({
   startDate,
-  allowRangeSelection,
-  onClose,
-  onSave,
+  endDate,
+  setEndDate,
+}: {
+  startDate: Date;
+  endDate: Date;
+  setEndDate: (v: Date) => void;
 }) => {
-  const [endDate, setEndDate] = useState<string | null>(null);
-
-  const getDatesInRange = (start: string, end: string): MarkedDates => {
-    const startObj = parseISO(start);
-    const endObj = parseISO(end);
-
-    const days = eachDayOfInterval({ start: startObj, end: endObj });
+  const getDatesInRange = (start: Date, end: Date): MarkedDates => {
+    const days = eachDayOfInterval({ start, end });
     const dates: MarkedDates = {};
 
     for (const d of days) {
@@ -57,40 +47,10 @@ const DoubleDatesCalendar: React.FC<CalendarDatePickerProps> = ({
     return dates;
   };
 
-  const onDayPress = (day: { dateString: string }) => {
-    if (!allowRangeSelection) {
-      setEndDate(null);
-      return;
-    }
-
-    if (!startDate) {
-      setStartDate(day.dateString);
-      setEndDate(null);
-      return;
-    }
-
-    if (!endDate) {
-      if (day.dateString === startDate) {
-        setEndDate(startDate);
-      } else if (isAfter(parseISO(day.dateString), parseISO(startDate))) {
-        setEndDate(day.dateString);
-      } else {
-        setStartDate(day.dateString);
-        setEndDate(null);
-      }
-      return;
-    }
-
-    setStartDate(day.dateString);
-    setEndDate(null);
-  };
-
   const markedDates: MarkedDates = (() => {
-    if (!startDate) return {};
-
     if (!endDate) {
       return {
-        [startDate]: {
+        [startDate.toDateString()]: {
           startingDay: true,
           endingDay: true,
           color: DATE_COLORS.background,
@@ -103,15 +63,13 @@ const DoubleDatesCalendar: React.FC<CalendarDatePickerProps> = ({
     return getDatesInRange(startDate, endDate);
   })();
 
-  const handleConfirm = () => {
-    onSave(startDate, endDate);
-    handleClose();
-  };
+  const onDayPress = (day: DateData) => {
+    const selected = parseISO(day.dateString);
+    if (startDate && isAfter(startDate, selected)) {
+      return;
+    }
 
-  const handleClose = () => {
-    setStartDate(null);
-    setEndDate(null);
-    onClose();
+    setEndDate(selected);
   };
 
   return (
@@ -129,9 +87,6 @@ const DoubleDatesCalendar: React.FC<CalendarDatePickerProps> = ({
         }}
         enableSwipeMonths
       />
-
-      {startDate && <Text className="mt-2 text-gray-700">Start: {startDate}</Text>}
-      {endDate && <Text className="mt-1 text-gray-700">End: {endDate}</Text>}
     </View>
   );
 };

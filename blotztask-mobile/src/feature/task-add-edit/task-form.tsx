@@ -12,7 +12,7 @@ import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
 import { Snackbar } from "react-native-paper";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
-import { DateTimeSelector } from "./components/date-time-selector";
+import { EventTab } from "./components/event-tab";
 
 type TaskFormProps =
   | {
@@ -48,10 +48,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
 
-  let initialTab: SegmentButtonValue = "reminder";
-  if (mode === "edit" && dto.startTime) {
-    initialTab = "event";
-  }
+  const hasEventTimes =
+    dto?.startTime && dto?.endTime && dto.startTime.getTime() !== dto.endTime.getTime();
+  const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
   const { labels = [], isLoading, isError } = useAllLabels();
@@ -113,7 +112,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
 
             {isActiveTab === "reminder" && <ReminderTab control={control} />}
-            {isActiveTab === "event" && <DateTimeSelector control={control} />}
+            {isActiveTab === "event" && <EventTab control={control} />}
             <FormDivider />
 
             {/* Label Select */}

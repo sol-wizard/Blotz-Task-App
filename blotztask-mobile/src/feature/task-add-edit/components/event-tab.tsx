@@ -1,47 +1,61 @@
 import { useState } from "react";
 import { Pressable, View, Text } from "react-native";
 import { SingleDateCalendar } from "./single-date-calendar";
-import { format } from "date-fns";
+import { addDays, differenceInCalendarDays, format, isAfter } from "date-fns";
 import { useController } from "react-hook-form";
 import TimePicker from "./time-picker";
+import DoubleDatesCalendar from "./double-dates-calendar";
 
-export const DateTimeSelector = ({ control }: { control: any }) => {
+export const EventTab = ({ control }: { control: any }) => {
   const [activeSelector, setActiveSelector] = useState<
     "startDate" | "startTime" | "endDate" | "endTime" | null
   >(null);
 
   const {
-    field: { value: startDateValue, onChange: onChangeStartDate },
+    field: { value: startDateValue, onChange: startDateOnChange },
   } = useController({
     control,
     name: "startDate",
   });
 
   const {
-    field: { value: startTimeValue, onChange: onChangeStartTime },
+    field: { value: startTimeValue, onChange: startTimeOnChange },
   } = useController({
     control,
     name: "startTime",
   });
 
   const {
-    field: { value: endValue, onChange: onChangeEnd },
+    field: { value: endDateValue, onChange: endDateOnChange },
   } = useController({
     control,
     name: "endDate",
   });
 
   const {
-    field: { value: endTimeValue, onChange: onChangeEndTime },
+    field: { value: endTimeValue, onChange: endTimeOnChange },
   } = useController({
     control,
     name: "endTime",
   });
 
+  const handleStartDateChange = (nextDate: Date) => {
+    const previousSpan =
+      startDateValue && endDateValue
+        ? Math.max(differenceInCalendarDays(endDateValue, startDateValue), 0)
+        : 0;
+
+    startDateOnChange(nextDate);
+
+    if (endDateValue && isAfter(nextDate, endDateValue)) {
+      endDateOnChange(addDays(nextDate, previousSpan));
+    }
+  };
+
   return (
-    <View>
-      <View>
-        <View className="flex-row justify-between mb-4">
+    <View className="mb-4">
+      <View className="mb-4">
+        <View className="flex-row justify-between">
           <Text className="font-baloo text-secondary text-2xl mt-1">Start</Text>
 
           <View className="flex-row">
@@ -70,10 +84,10 @@ export const DateTimeSelector = ({ control }: { control: any }) => {
         </View>
 
         {activeSelector === "startDate" && (
-          <SingleDateCalendar onStartDateChange={onChangeStartDate} />
+          <SingleDateCalendar onStartDateChange={handleStartDateChange} />
         )}
         {activeSelector === "startTime" && (
-          <TimePicker value={startTimeValue} onChange={(v: Date) => onChangeStartTime(v)} />
+          <TimePicker value={startTimeValue} onChange={(v: Date) => startTimeOnChange(v)} />
         )}
       </View>
 
@@ -87,7 +101,7 @@ export const DateTimeSelector = ({ control }: { control: any }) => {
               className="bg-background px-4 py-2 rounded-xl mr-2"
             >
               <Text className="text-xl font-balooThin text-secondary">
-                {endValue ? format(endValue, "MMM dd, yyyy") : "Select Date"}
+                {endDateValue ? format(endDateValue, "MMM dd, yyyy") : "Select Date"}
               </Text>
             </Pressable>
 
@@ -101,9 +115,15 @@ export const DateTimeSelector = ({ control }: { control: any }) => {
             </Pressable>
           </View>
         </View>
-        {activeSelector === "endDate" && <SingleDateCalendar onStartDateChange={onChangeEnd} />}
+        {activeSelector === "endDate" && (
+          <DoubleDatesCalendar
+            startDate={startDateValue}
+            endDate={endDateValue}
+            setEndDate={endDateOnChange}
+          />
+        )}
         {activeSelector === "endTime" && (
-          <TimePicker value={endTimeValue} onChange={(v: Date) => onChangeEndTime(v)} />
+          <TimePicker value={endTimeValue} onChange={(v: Date) => endTimeOnChange(v)} />
         )}
       </View>
     </View>
