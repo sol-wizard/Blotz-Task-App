@@ -1,8 +1,6 @@
-import React, { useState } from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
-import { eachDayOfInterval, format, isAfter, isBefore, isSameDay, parseISO } from "date-fns";
-import { is } from "zod/v4/locales";
+import { eachDayOfInterval, format, isBefore, isSameDay, parseISO } from "date-fns";
 
 type MarkedDate = {
   color?: string;
