@@ -1,9 +1,9 @@
 import { Controller } from "react-hook-form";
 import { View, Text, Pressable } from "react-native";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { useState } from "react";
-import { Calendar, DateData } from "react-native-calendars";
 import TimePicker from "./time-picker";
+import { SingleDateCalendar } from "./single-date-calendar";
 
 type Props = {
   control: any;
@@ -12,8 +12,6 @@ type Props = {
 export const ReminderTab = ({ control }: Props) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   return (
     <View className="mb-4">
@@ -39,38 +37,7 @@ export const ReminderTab = ({ control }: Props) => {
                       </Pressable>
                     </View>
 
-                    {showCalendar && (
-                      <Calendar
-                        onDayPress={(day: DateData) => {
-                          const asDate = parseISO(day.dateString);
-
-                          setSelectedDate(day.dateString);
-                          onStartDateChange(asDate);
-                          onEndDateChange(asDate);
-                        }}
-                        markedDates={
-                          selectedDate
-                            ? {
-                                [selectedDate]: {
-                                  selected: true,
-                                  selectedColor: "#EEFBE1",
-                                  selectedTextColor: "#9AD513",
-                                },
-                              }
-                            : {}
-                        }
-                        theme={{
-                          todayTextColor: "#BAD5FA",
-                          arrowColor: "#9AD513",
-                          textDayFontFamily: "BalooBold",
-                          textDayHeaderFontFamily: "BalooBold",
-                          textMonthFontFamily: "BalooBold",
-                          dayTextColor: "#333",
-                          textDisabledColor: "#bbb",
-                        }}
-                        enableSwipeMonths
-                      />
-                    )}
+                    {showCalendar && <SingleDateCalendar onStartDateChange={onStartDateChange} />}
                   </View>
                 );
               }}

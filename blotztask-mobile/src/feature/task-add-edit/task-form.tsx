@@ -8,11 +8,11 @@ import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "../../shared/components/ui/form-divider";
 import { ReminderTab } from "./components/reminder-tab";
-import { EventTab } from "./components/event-tab";
 import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
 import { Snackbar } from "react-native-paper";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
+import { DateTimeSelector } from "./components/date-time-selector";
 
 type TaskFormProps =
   | {
@@ -113,7 +113,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
 
             {isActiveTab === "reminder" && <ReminderTab control={control} />}
-            {isActiveTab === "event" && <EventTab control={control} />}
+            {isActiveTab === "event" && <DateTimeSelector control={control} />}
             <FormDivider />
 
             {/* Label Select */}

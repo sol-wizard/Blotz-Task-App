@@ -19,19 +19,18 @@ const DATE_COLORS = {
 };
 
 interface CalendarDatePickerProps {
+  startDate: string | null;
   allowRangeSelection: boolean;
-  visible: boolean;
   onClose: () => void;
   onSave: (startDate: string | null, endDate: string | null) => void;
 }
 
-const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
+const DoubleDatesCalendar: React.FC<CalendarDatePickerProps> = ({
+  startDate,
   allowRangeSelection,
-  visible,
   onClose,
   onSave,
 }) => {
-  const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
   const getDatesInRange = (start: string, end: string): MarkedDates => {
@@ -60,7 +59,6 @@ const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
 
   const onDayPress = (day: { dateString: string }) => {
     if (!allowRangeSelection) {
-      setStartDate(day.dateString);
       setEndDate(null);
       return;
     }
@@ -117,48 +115,25 @@ const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
   };
 
   return (
-    <Modal
-      isVisible={visible}
-      backdropColor="black"
-      backdropOpacity={0.5}
-      onBackdropPress={handleClose}
-      presentationStyle="overFullScreen"
-    >
-      <View className="w-full max-w-md rounded-2xl bg-white p-4 mx-auto">
-        <Calendar
-          markingType="period"
-          markedDates={markedDates}
-          onDayPress={onDayPress}
-          theme={{
-            todayTextColor: "#BAD5FA",
-            arrowColor: "#9AD513",
-            textDayFontFamily: "BalooBold",
-            textDayHeaderFontFamily: "BalooBold",
-            textMonthFontFamily: "BalooBold",
-          }}
-          enableSwipeMonths
-        />
+    <View className="w-full max-w-md rounded-2xl bg-white p-4 mx-auto">
+      <Calendar
+        markingType="period"
+        markedDates={markedDates}
+        onDayPress={onDayPress}
+        theme={{
+          todayTextColor: "#BAD5FA",
+          arrowColor: "#9AD513",
+          textDayFontFamily: "BalooBold",
+          textDayHeaderFontFamily: "BalooBold",
+          textMonthFontFamily: "BalooBold",
+        }}
+        enableSwipeMonths
+      />
 
-        {startDate && <Text className="mt-2 text-gray-700">Start: {startDate}</Text>}
-        {endDate && <Text className="mt-1 text-gray-700">End: {endDate}</Text>}
-
-        <View className="flex-row justify-end mt-3 space-x-3 gap-2">
-          <TouchableOpacity onPress={handleClose} className="px-4 py-2 rounded-lg bg-gray-200">
-            <Text className="text-gray-700 font-medium">Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleConfirm}
-            className={`px-4 py-2 rounded-lg ${
-              allowRangeSelection && (!startDate || !endDate) ? "bg-gray-300" : "bg-lime-400"
-            }`}
-            disabled={allowRangeSelection && (!startDate || !endDate)}
-          >
-            <Text className="text-white font-medium">Confirm</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
+      {startDate && <Text className="mt-2 text-gray-700">Start: {startDate}</Text>}
+      {endDate && <Text className="mt-1 text-gray-700">End: {endDate}</Text>}
+    </View>
   );
 };
 
-export default CalendarDatePicker;
+export default DoubleDatesCalendar;
