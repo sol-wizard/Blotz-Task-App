@@ -12,6 +12,7 @@ type Props = {
 export const ReminderTab = ({ control }: Props) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
   return (
     <View className="mb-4">
@@ -30,14 +31,18 @@ export const ReminderTab = ({ control }: Props) => {
                     <View className="flex-row justify-between">
                       <Text className="font-baloo text-secondary text-2xl mt-1">Date</Text>
                       <Pressable
-                        onPress={() => setShowCalendar((prev) => !prev)}
+                        onPress={() =>
+                          setActiveSelector((prev) => (prev === "date" ? null : "date"))
+                        }
                         className="bg-background px-4 py-2 rounded-xl"
                       >
                         <Text className="text-xl font-balooThin text-secondary">{displayText}</Text>
                       </Pressable>
                     </View>
 
-                    {showCalendar && <SingleDateCalendar onStartDateChange={onStartDateChange} />}
+                    {activeSelector === "date" && (
+                      <SingleDateCalendar onStartDateChange={onStartDateChange} />
+                    )}
                   </View>
                 );
               }}
@@ -67,13 +72,9 @@ export const ReminderTab = ({ control }: Props) => {
                       <Text className="font-baloo text-secondary text-2xl mt-1">Time</Text>
 
                       <Pressable
-                        onPress={() => {
-                          if (!startTime) {
-                            onStartTimeChange(new Date());
-                            onEndTimeChange(new Date());
-                          }
-                          setShowTimePicker((prev) => !prev);
-                        }}
+                        onPress={() =>
+                          setActiveSelector((prev) => (prev === "time" ? null : "time"))
+                        }
                         className="bg-background px-4 py-2 rounded-xl"
                       >
                         <Text className="text-xl font-balooThin text-secondary ">
@@ -82,7 +83,7 @@ export const ReminderTab = ({ control }: Props) => {
                       </Pressable>
                     </View>
                     <View className="items-center">
-                      {showTimePicker && (
+                      {activeSelector === "time" && (
                         <TimePicker value={startTime} onChange={(v: Date) => handleChange(v)} />
                       )}
                     </View>
