@@ -27,16 +27,25 @@ type TaskFormProps =
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
+  const hasEventTimes =
+    dto?.startTime && dto?.endTime && dto.startTime.getTime() !== dto.endTime.getTime();
+  const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
+
+  const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
+
+  const { labels = [], isLoading, isError } = useAllLabels();
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+
   const oneHourLater = new Date(Date.now() + 3600000);
 
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
     description: dto?.description ?? "",
     labelId: dto?.labelId ?? null,
-    startDate: dto?.startTime ?? new Date(),
-    startTime: dto?.startTime ?? new Date(),
-    endDate: dto?.endTime ?? oneHourLater,
-    endTime: dto?.endTime ?? oneHourLater,
+    startDate: dto?.startTime ?? null,
+    startTime: dto?.startTime ?? null,
+    endDate: dto?.endTime ?? null,
+    endTime: dto?.endTime ?? null,
   };
 
   const form = useForm<TaskFormField>({
@@ -47,14 +56,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
-
-  const hasEventTimes =
-    dto?.startTime && dto?.endTime && dto.startTime.getTime() !== dto.endTime.getTime();
-  const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
-
-  const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
-  const { labels = [], isLoading, isError } = useAllLabels();
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
 
   useEffect(() => {
     if (isError) {
@@ -77,11 +78,17 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const handleTabChange = (next: SegmentButtonValue) => {
     setIsActiveTab(next);
-
-    setValue("startDate", defaultValues.startDate);
-    setValue("startTime", defaultValues.startTime);
-    setValue("endDate", defaultValues.endDate);
-    setValue("endTime", defaultValues.endTime);
+    if (next === "reminder") {
+      setValue("startDate", defaultValues.startDate);
+      setValue("startTime", defaultValues.startTime);
+      setValue("endDate", defaultValues.endDate);
+      setValue("endTime", defaultValues.endTime);
+    } else {
+      setValue("startDate", new Date());
+      setValue("startTime", new Date());
+      setValue("endDate", oneHourLater);
+      setValue("endTime", oneHourLater);
+    }
   };
 
   return (
