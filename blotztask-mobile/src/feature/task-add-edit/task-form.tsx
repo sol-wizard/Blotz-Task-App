@@ -8,13 +8,11 @@ import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "../../shared/components/ui/form-divider";
 import { ReminderTab } from "./components/reminder-tab";
-import { EventTab } from "./components/event-tab";
-import { isEqual } from "date-fns";
-import { combineDateTime } from "./util/combine-date-time";
 import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
 import { Snackbar } from "react-native-paper";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
+import { EventTab } from "./components/event-tab";
 
 type TaskFormProps =
   | {
@@ -29,14 +27,16 @@ type TaskFormProps =
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
+  const oneHourLater = new Date(Date.now() + 3600000);
+
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
     description: dto?.description ?? "",
     labelId: dto?.labelId ?? null,
-    startDate: dto?.startTime ?? null,
-    startTime: dto?.startTime ?? null,
-    endDate: dto?.endTime ?? null,
-    endTime: dto?.endTime ?? null,
+    startDate: dto?.startTime ?? new Date(),
+    startTime: dto?.startTime ?? new Date(),
+    endDate: dto?.endTime ?? oneHourLater,
+    endTime: dto?.endTime ?? oneHourLater,
   };
 
   const form = useForm<TaskFormField>({
@@ -48,10 +48,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
 
-  const startCombined = combineDateTime(defaultValues.startDate, defaultValues.startTime);
-  const endCombined = combineDateTime(defaultValues.endDate, defaultValues.endTime);
-  const initialTab: SegmentButtonValue =
-    !startCombined || !endCombined || isEqual(startCombined, endCombined) ? "reminder" : "event";
+  const hasEventTimes =
+    dto?.startTime && dto?.endTime && dto.startTime.getTime() !== dto.endTime.getTime();
+  const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
   const { labels = [], isLoading, isError } = useAllLabels();
@@ -64,16 +63,25 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   }, [isError]);
 
   const handleFormSubmit = (data: TaskFormField) => {
+    if (isActiveTab === "reminder") {
+      onSubmit({
+        ...data,
+        endDate: data.startDate,
+        endTime: data.startTime,
+      });
+      return;
+    }
+
     onSubmit(data);
   };
 
   const handleTabChange = (next: SegmentButtonValue) => {
     setIsActiveTab(next);
 
-    setValue("startDate", null);
-    setValue("startTime", null);
-    setValue("endDate", null);
-    setValue("endTime", null);
+    setValue("startDate", defaultValues.startDate);
+    setValue("startTime", defaultValues.startTime);
+    setValue("endDate", defaultValues.endDate);
+    setValue("endTime", defaultValues.endTime);
   };
 
   return (
