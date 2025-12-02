@@ -22,6 +22,20 @@ export const ReminderTab = ({ control }: { control: any }) => {
     name: "startTime",
   });
 
+  const {
+    field: { onChange: onEndDateChange },
+  } = useController({
+    control,
+    name: "endDate",
+  });
+
+  const {
+    field: { onChange: onEndTimeChange },
+  } = useController({
+    control,
+    name: "endTime",
+  });
+
   const dateDisplayText = startDate ? format(startDate, "MMM dd, yyyy") : "Select Date";
   const timeDisplayText = startTime ? format(startTime, "hh:mm a") : "Select Time";
 
@@ -39,7 +53,14 @@ export const ReminderTab = ({ control }: { control: any }) => {
           </Pressable>
         </View>
 
-        {activeSelector === "date" && <SingleDateCalendar onStartDateChange={onStartDateChange} />}
+        {activeSelector === "date" && (
+          <SingleDateCalendar
+            onStartDateChange={(nextDate: Date) => {
+              onStartDateChange(nextDate);
+              onEndDateChange(nextDate);
+            }}
+          />
+        )}
       </View>
 
       {/* Time  */}
@@ -57,7 +78,13 @@ export const ReminderTab = ({ control }: { control: any }) => {
 
         <View className="items-center">
           {activeSelector === "time" && (
-            <TimePicker value={startTime} onChange={onStartTimeChange} />
+            <TimePicker
+              value={startTime}
+              onChange={(nextTime: Date) => {
+                onStartTimeChange(nextTime);
+                onEndTimeChange(nextTime);
+              }}
+            />
           )}
         </View>
       </View>
