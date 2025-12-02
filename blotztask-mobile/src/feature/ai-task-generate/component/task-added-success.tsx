@@ -1,6 +1,6 @@
 import { ASSETS } from "@/shared/constants/assets";
 import React from "react";
-import { View, Text, Image } from "react-native";
+import { View, Image } from "react-native";
 
 export const TaskAddedSuccess = () => {
   return (
