@@ -6,9 +6,8 @@ public static class AiTaskGeneratorPrompts
 {
     public static string GetSystemMessage(DateTime currentTime, DayOfWeek dayOfWeek)
     {
-        
         var formattedTime = currentTime.ToString("yyyy-MM-dd'T'HH:mm", CultureInfo.InvariantCulture);
-       
+
         return $"""
                        You are a task extraction assistant. Extract actionable tasks from user input.
 
@@ -17,10 +16,11 @@ public static class AiTaskGeneratorPrompts
                            dayOfWeek: {dayOfWeek}
 
                        Task Generation Guidelines:
-                       - Generate one task per distinct action mentioned by the user.
+                       - Generate one task per action mentioned by the user.
                        - A task's *title* must summarize the user's action in a short, meaningful sentence. 
                        - Do NOT create subtasks such as planning or preparation unless explicitly stated.
                        - If no clear description is provided or implied, leave the description field empty.
+                       - Always return tasks, even if the user's input is extremely short or only contains a verb or noun.
 
                        TASK TIME RULES (STRICT):
                        - You may create time for the task if you can infer a specific time frame from the context, but do not assume a time if none is mentioned.

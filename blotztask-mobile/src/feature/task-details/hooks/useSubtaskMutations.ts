@@ -3,12 +3,14 @@ import {
   createBreakDownSubtasks,
   deleteSubtask,
   updateSubtask,
+  toggleSubtaskCompletion,
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
 
 export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();
-  const breakdownMutation = useMutation({
+  const breakdownMutation = useMutation<BreakdownSubtaskDTO[] | undefined, void, number>({
     mutationFn: createBreakDownSubtasks,
     onSuccess: (data) => {
       console.log("Subtasks created:", data);
@@ -22,7 +24,6 @@ export const useSubtaskMutations = () => {
   const replaceSubtasksMutation = useMutation({
     mutationFn: replaceSubtasks,
     onSuccess: (_, variables) => {
-      console.log("Added/Replaced subtasks", variables.subtasks, "to", variables.taskId);
       queryClient.invalidateQueries({ queryKey: ["subtasks", variables.taskId] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
@@ -55,6 +56,17 @@ export const useSubtaskMutations = () => {
     },
   });
 
+  const toggleSubtaskcompletion = useMutation({
+    mutationFn: toggleSubtaskCompletion,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subtasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+    onError: (error) => {
+      console.error("Failed to toggle subtask completion:", error);
+    },
+  });
+
   return {
     // Breakdown
     breakDownTask: breakdownMutation.mutateAsync,
@@ -75,5 +87,10 @@ export const useSubtaskMutations = () => {
     updateSubtask: updateSubtaskMutation.mutateAsync,
     isUpdatingSubtask: updateSubtaskMutation.isPending,
     isUpdateSubtaskError: updateSubtaskMutation.error,
+
+    // Toggle completion
+    toggleSubtaskcompletion: toggleSubtaskcompletion.mutateAsync,
+    isTogglingSubtaskCompletion: toggleSubtaskcompletion.isPending,
+    toggleSubtaskCompletionError: toggleSubtaskcompletion.error,
   };
 };
