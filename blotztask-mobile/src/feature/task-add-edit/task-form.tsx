@@ -36,8 +36,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const { labels = [], isLoading, isError } = useAllLabels();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
 
-  const oneHourLater = new Date(Date.now() + 3600000);
-
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
     description: dto?.description ?? "",
@@ -78,17 +76,21 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const handleTabChange = (next: SegmentButtonValue) => {
     setIsActiveTab(next);
-    if (next === "reminder") {
+
+    if (mode === "edit" || next === "reminder") {
       setValue("startDate", defaultValues.startDate);
       setValue("startTime", defaultValues.startTime);
       setValue("endDate", defaultValues.endDate);
       setValue("endTime", defaultValues.endTime);
-    } else {
-      setValue("startDate", new Date());
-      setValue("startTime", new Date());
-      setValue("endDate", oneHourLater);
-      setValue("endTime", oneHourLater);
+      return;
     }
+
+    const start = new Date();
+    const oneHourLater = new Date(start.getTime() + 3600000);
+    setValue("startDate", start);
+    setValue("startTime", start);
+    setValue("endDate", oneHourLater);
+    setValue("endTime", oneHourLater);
   };
 
   return (
