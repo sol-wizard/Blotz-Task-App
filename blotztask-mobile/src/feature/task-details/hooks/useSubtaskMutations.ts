@@ -5,10 +5,11 @@ import {
   updateSubtask,
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
 
 export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();
-  const breakdownMutation = useMutation({
+  const breakdownMutation = useMutation<BreakdownSubtaskDTO[] | undefined, void, number>({
     mutationFn: createBreakDownSubtasks,
     onSuccess: (data) => {
       console.log("Subtasks created:", data);
@@ -22,7 +23,6 @@ export const useSubtaskMutations = () => {
   const replaceSubtasksMutation = useMutation({
     mutationFn: replaceSubtasks,
     onSuccess: (_, variables) => {
-      console.log("Added/Replaced subtasks", variables.subtasks, "to", variables.taskId);
       queryClient.invalidateQueries({ queryKey: ["subtasks", variables.taskId] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
