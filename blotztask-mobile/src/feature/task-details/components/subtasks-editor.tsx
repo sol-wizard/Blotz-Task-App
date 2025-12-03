@@ -26,8 +26,8 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     isReplacingSubtasks,
     deleteSubtask,
     isDeletingSubtask,
-    updateSubtask,
     isUpdatingSubtask,
+    toggleSubtaskcompletion,
   } = useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -35,22 +35,6 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
 
   const onBack = () => {
     setIsEditMode(false);
-  };
-
-  const handleToggle = async (id: number) => {
-    const subtask = fetchedSubtasks?.find((s) => s.subTaskId === id);
-    if (subtask) {
-      try {
-        await updateSubtask({
-          ...subtask,
-          isDone: !subtask.isDone,
-        });
-      } catch (error) {
-        console.error("Failed to toggle subtask:", error);
-        // TODO: Implement error screen
-        Alert.alert("Error", "Failed to update subtask. Please try again.");
-      }
-    }
   };
 
   const handleRefresh = async () => {
@@ -159,7 +143,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
           subtasks={fetchedSubtasks}
           isEditMode={isEditMode}
           onDelete={handleDelete}
-          onToggle={handleToggle}
+          onToggle={toggleSubtaskcompletion}
           color={taskColor}
         />
       </View>
