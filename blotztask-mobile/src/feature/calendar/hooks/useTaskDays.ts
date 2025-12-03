@@ -1,12 +1,13 @@
 import { fetchWeeklyTaskAvailability } from "@/shared/services/task-service";
 import { useQuery } from "@tanstack/react-query";
-import { startOfWeek } from "date-fns";
+import { format, startOfWeek } from "date-fns";
 
 export const useTaskDays = ({ selectedDay }: { selectedDay: Date }) => {
   const monday = startOfWeek(selectedDay, { weekStartsOn: 1 });
+  const mondayKey = format(monday, "yyyy-MM-dd");
 
   const { data: weeklyTaskAvability = [], isLoading } = useQuery({
-    queryKey: ["taskDays", monday.toISOString()],
+    queryKey: ["taskDays", mondayKey],
     queryFn: () => fetchWeeklyTaskAvailability(monday),
   });
 
