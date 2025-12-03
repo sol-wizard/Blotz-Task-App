@@ -3,6 +3,7 @@ import {
   createBreakDownSubtasks,
   deleteSubtask,
   updateSubtask,
+  toggleSubtaskCompletion,
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
@@ -55,6 +56,17 @@ export const useSubtaskMutations = () => {
     },
   });
 
+  const toggleSubtaskcompletion = useMutation({
+    mutationFn: toggleSubtaskCompletion,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subtasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+    onError: (error) => {
+      console.error("Failed to toggle subtask completion:", error);
+    },
+  });
+
   return {
     // Breakdown
     breakDownTask: breakdownMutation.mutateAsync,
@@ -75,5 +87,10 @@ export const useSubtaskMutations = () => {
     updateSubtask: updateSubtaskMutation.mutateAsync,
     isUpdatingSubtask: updateSubtaskMutation.isPending,
     isUpdateSubtaskError: updateSubtaskMutation.error,
+
+    // Toggle completion
+    toggleSubtaskcompletion: toggleSubtaskcompletion.mutateAsync,
+    isTogglingSubtaskCompletion: toggleSubtaskcompletion.isPending,
+    toggleSubtaskCompletionError: toggleSubtaskcompletion.error,
   };
 };

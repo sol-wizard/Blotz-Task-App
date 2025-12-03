@@ -2,6 +2,7 @@ import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import { SubtaskDTO } from "../models/subtask-dto";
 import { BreakdownSubtaskDTO } from "@/feature/task-details/models/breakdown-subtask-dto";
 import { apiClient } from "@/shared/services/api/client";
+import { ca } from "zod/v4/locales";
 
 export const createBreakDownSubtasks = async (
   taskId: number,
@@ -16,6 +17,16 @@ export const createBreakDownSubtasks = async (
     console.error("Error fetching subtasks:", error);
   }
 };
+
+export async function toggleSubtaskCompletion(subtaskId: number): Promise<void> {
+  try {
+    const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/subtask-completion-status/${subtaskId}`;
+    await apiClient.put(url);
+  } catch (error) {
+    console.error("Error toggling subtask completion:", error);
+    throw error;
+  }
+}
 
 export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   const taskId = newSubtask.parentTaskId;
