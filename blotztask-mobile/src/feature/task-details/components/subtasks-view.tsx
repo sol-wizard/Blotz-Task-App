@@ -4,7 +4,6 @@ import { ASSETS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
-import { BreakdownSubtaskDTO } from "@/feature/task-details/models/breakdown-subtask-dto";
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import SubtasksEditor from "./subtasks-editor";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -35,7 +34,7 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const handleBreakDown = async () => {
     if (isBreakingDown || isReplacingSubtasks) return;
     try {
-      const subtasks: BreakdownSubtaskDTO[] = (await breakDownTask(parentTask.id)) ?? [];
+      const subtasks = (await breakDownTask(parentTask.id)) ?? [];
       if (subtasks.length > 0) {
         await replaceSubtasks({
           taskId: parentTask.id,
