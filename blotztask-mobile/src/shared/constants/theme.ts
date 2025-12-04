@@ -48,6 +48,10 @@ export const theme = {
     heading: "#000000", // pure black (headings / titles)
     warning: "#F56767", // soft red (warning state)
     fallback: "#f5f9fa", // grey fallback for tasks without labels
+    calendarBackground: "#F5F9FA",
+    calendarSelectedBackground: "#EBF0FE",
+    calendarSelectedText: "#333333",
+    calendarTodayText: "#000000",
   },
   fonts: configureFonts({ config: fonts }),
 };
