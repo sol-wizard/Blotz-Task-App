@@ -3,6 +3,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { SubtaskCheckbox } from "@/feature/task-details/ui/custom-radio-checkbox";
 import { theme } from "@/shared/constants/theme";
 import { convertSubtaskTimeForm } from "../utils/convert-subtask-time-form";
+import { black } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
 
 type SubtaskItemData = {
   id: number;
@@ -57,12 +58,7 @@ export default function SubtaskItem({
       )}
 
       <View className="text-sm min-w-[50px] px-2 py-1 rounded bg-blue-100 items-center justify-center">
-        <Text
-          className="text-sm font-baloo font-bold"
-          style={{
-            color: theme.colors.heading,
-          }}
-        >
+        <Text className="text-sm font-baloo font-bold text-black">
           {subtask.duration ? convertSubtaskTimeForm(subtask.duration) : ""}
         </Text>
       </View>
