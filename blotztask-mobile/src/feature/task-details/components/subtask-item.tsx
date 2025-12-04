@@ -3,7 +3,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { SubtaskCheckbox } from "@/feature/task-details/ui/custom-radio-checkbox";
 import { theme } from "@/shared/constants/theme";
 import { convertSubtaskTimeForm } from "../utils/convert-subtask-time-form";
-import { black } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
 
 type SubtaskItemData = {
   id: number;
