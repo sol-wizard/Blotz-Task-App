@@ -9,27 +9,27 @@ function createApiClient() {
   setupResponseInterceptor(instance);
 
   return {
-    async get<T = any>(url: string, config = {}): Promise<T> {
+    async get<T>(url: string, config = {}): Promise<T> {
       const response = await instance.get<T>(url, config);
       return response.data;
     },
 
-    async post<T = any>(url: string, data?: any, config = {}): Promise<T> {
+    async post<T>(url: string, data?: unknown, config = {}): Promise<T> {
       const response = await instance.post<T>(url, data, config);
       return response.data;
     },
 
-    async put<T = any>(url: string, data?: any, config = {}): Promise<T> {
+    async put<T>(url: string, data?: unknown, config = {}): Promise<T> {
       const response = await instance.put<T>(url, data, config);
       return response.data;
     },
 
-    async patch<T = any>(url: string, data?: any, config = {}): Promise<T> {
+    async patch<T>(url: string, data?: unknown, config = {}): Promise<T> {
       const response = await instance.patch<T>(url, data, config);
       return response.data;
     },
 
-    async delete<T = any>(url: string, config = {}): Promise<T> {
+    async delete<T>(url: string, config = {}): Promise<T> {
       const response = await instance.delete<T>(url, config);
       return response.data;
     },

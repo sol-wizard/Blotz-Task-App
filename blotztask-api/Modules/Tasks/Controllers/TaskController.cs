@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -17,9 +18,12 @@ public class TaskController(
     DeleteTaskCommandHandler deleteTaskCommandHandler,
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
-    GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler
+    GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler,
+    ILogger<TaskController> logger
 ) : ControllerBase
 {
+    private readonly ILogger<TaskController> _logger = logger;
+
     [HttpGet("{id}")]
     public async Task<TaskByIdItemDto> GetTaskById(int id, CancellationToken ct)
     {
@@ -34,6 +38,13 @@ public class TaskController(
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
+        var stopwatch = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "Handling GetTaskByDate for user {UserId} starting at {StartDateUtc} (IncludeFloatingForToday: {IncludeFloatingForToday})",
+            userId,
+            getTasksByDateRequest.StartDateUtc,
+            getTasksByDateRequest.IncludeFloatingForToday);
+
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
@@ -42,6 +53,11 @@ public class TaskController(
         };
 
         var result = await getTasksByDateQueryHandler.Handle(query, ct);
+        _logger.LogInformation(
+            "GetTaskByDate finished for user {UserId}. Returned {TaskCount} tasks in {ElapsedMs}ms",
+            userId,
+            result.Count(),
+            stopwatch.ElapsedMilliseconds);
         return result;
     }
 
