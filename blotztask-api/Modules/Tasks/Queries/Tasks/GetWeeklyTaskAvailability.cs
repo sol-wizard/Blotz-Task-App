@@ -44,6 +44,12 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                             (t.StartTime == null && t.EndTime == null &&
                              t.CreatedAt >= startDateUtc &&
                              t.CreatedAt < endDateUtcExclusive)))
+            .Select(t => new
+            {
+                t.StartTime,
+                t.EndTime,
+                t.CreatedAt
+            })
             .ToListAsync(ct);
 
         var result = new List<DailyTaskIndicatorDto>();
