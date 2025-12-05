@@ -32,9 +32,9 @@ export default function StarSparkScreen() {
           placeholder=""
           onChangeText={setSearchQuery}
           value={searchQuery}
-          iconColor="#D1D1D6"
+          iconColor={theme.colors.disabled}
           style={{
-            backgroundColor: theme.colors.surface,
+            backgroundColor: theme.colors.background,
             marginHorizontal: 20,
             borderRadius: 30,
             height: 40,

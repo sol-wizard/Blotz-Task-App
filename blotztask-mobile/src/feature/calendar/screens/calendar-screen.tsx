@@ -11,10 +11,10 @@ import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetu
 
 // Define the theme object outside the component to prevent re-renders
 const calendarTheme = {
-  calendarBackground: theme.colors.calendarBackground,
-  selectedDayBackgroundColor: theme.colors.calendarSelectedBackground,
-  selectedDayTextColor: theme.colors.calendarSelectedText,
-  todayTextColor: theme.colors.calendarTodayText,
+  calendarBackground: theme.colors.background,
+  selectedDayBackgroundColor: "#EBF0FE",
+  selectedDayTextColor: "#333333",
+  todayTextColor: "#000000",
   textDayFontWeight: "bold" as const,
   dayTextColor: theme.colors.disabled,
   textDayFontFamily: "InterBold",
