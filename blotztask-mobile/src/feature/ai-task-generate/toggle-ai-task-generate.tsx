@@ -58,11 +58,7 @@ export const ToggleAiTaskGenerate = () => {
       );
       break;
     case "add-task-success":
-      modalContent = (
-        <View className="flex-1 w-full bg-[#F5F9FA]">
-          <TaskAddedSuccess />
-        </View>
-      );
+      modalContent = <TaskAddedSuccess />;
       break;
     case "input":
     default:
