@@ -16,7 +16,7 @@ export const TaskRevealModal = ({ visible, task, onClose, onDoNow }: TaskRevealM
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
       <View className="flex-1 bg-black/40 items-center justify-center">
         <View
-          className="w-80 rounded-3xl bg-[#F5F9FA] px-6 py-7"
+          className="w-80 rounded-3xl bg-background px-6 py-7"
           style={{
             shadowColor: "#000",
             shadowOpacity: 0.1,
