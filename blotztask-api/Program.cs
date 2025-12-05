@@ -34,45 +34,11 @@ builder.Services.AddCustomCors();
 
 var app = builder.Build();
 
-var logger = app.Logger;
-
-app.Use(async (context, next) =>
-{
-    var sw = Stopwatch.StartNew();
-    logger.LogInformation("Request starting {Method} {Path}",
-        context.Request.Method, context.Request.Path);
-
-    await next();
-
-    sw.Stop();
-    logger.LogInformation("Request finished {Method} {Path} in {Elapsed} ms, StatusCode {StatusCode}",
-        context.Request.Method,
-        context.Request.Path,
-        sw.ElapsedMilliseconds,
-        context.Response.StatusCode);
-});
-
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-app.Use(async (context, next) =>
-{
-    var sw = Stopwatch.StartNew();
-    await next();
-    sw.Stop();
-    logger.LogInformation("From ErrorHandlingMiddleware -> end of pipeline took {Elapsed} ms for {Path}",
-        sw.ElapsedMilliseconds, context.Request.Path);
-});
 
 app.UseCors("AllowSpecificOrigin");
 
-app.Use(async (context, next) =>
-{
-    var sw = Stopwatch.StartNew();
-    await next();
-    sw.Stop();
-    logger.LogInformation("From Authentication -> end of pipeline took {Elapsed} ms for {Path}",
-        sw.ElapsedMilliseconds, context.Request.Path);
-});
 
 app.UseAuthentication();
 app.UseAuthorization();
