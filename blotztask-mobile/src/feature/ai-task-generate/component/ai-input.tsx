@@ -4,7 +4,9 @@ import { VoiceInput } from "./voice-input";
 import { WriteInput } from "./write-input";
 import { Pressable, View, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { AiResultMessageDTO } from "../models/ai-result-message-dto";
+import { usePostHog } from "posthog-react-native";
 
 export const AiInput = ({
   text,
@@ -17,6 +19,7 @@ export const AiInput = ({
   setInputError,
   errorMessage,
   isAiGenerating,
+  aiGeneratedMessage,
 }: {
   text: string;
   setText: (v: string) => void;
@@ -28,7 +31,9 @@ export const AiInput = ({
   setInputError: (v: boolean) => void;
   errorMessage?: string;
   isAiGenerating: boolean;
+  aiGeneratedMessage?: AiResultMessageDTO;
 }) => {
+  const posthog = usePostHog();
   const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
     AsyncStorage.getItem("ai_language_preference").then((saved) => {
       if (saved === "en-US" || saved === "zh-CN") {
@@ -37,6 +42,20 @@ export const AiInput = ({
     });
     return "zh-CN";
   });
+
+  useEffect(() => {
+    if (generateTaskError) {
+      posthog.capture("ai_task_interaction_completed", {
+        ai_output: JSON.stringify(aiGeneratedMessage),
+        user_input: text,
+        ai_generate_task_count: 0,
+        user_add_task_count: 0,
+        outcome: "error",
+        is_voice_input: isVoiceInput,
+      });
+    }
+  }, [generateTaskError]);
+
   return (
     <View className="w-96">
       <View className="flex-row mb-8 -ml-6 items-center">
