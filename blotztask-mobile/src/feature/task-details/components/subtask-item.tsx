@@ -57,12 +57,7 @@ export default function SubtaskItem({
       )}
 
       <View className="text-sm min-w-[50px] px-2 py-1 rounded bg-blue-100 items-center justify-center">
-        <Text
-          className="text-sm font-baloo font-bold"
-          style={{
-            color: theme.colors.heading,
-          }}
-        >
+        <Text className="text-sm font-baloo font-bold text-black">
           {subtask.duration ? convertSubtaskTimeForm(subtask.duration) : ""}
         </Text>
       </View>

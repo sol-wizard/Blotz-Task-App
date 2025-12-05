@@ -36,22 +36,12 @@ export const theme = {
   colors: {
     ...MD3LightTheme.colors,
     background: "#F5F9FA", // very light gray (app background)
-    surface: "#F5F9FA", // very light gray (card / surface background)
-    surfaceVariant: "#F5F9FA", // very light gray (alternative surface background)
     primary: "#8C8C8C", // medium gray (primary button background)
     secondary: "#D9D9D9",
     disabled: "#D1D1D6", // medium gray (disabled text for date figures not selected on calendar)
-    onPrimary: "#FFFFFF", // white (text/icon on primary)
     onSurface: "#444964", // dark gray (default text on surface)
-    onBackground: "#444964", // dark gray (default text on background)
-    error: "#F56767", // soft red (error / danger)
-    heading: "#000000", // pure black (headings / titles)
     warning: "#F56767", // soft red (warning state)
     fallback: "#f5f9fa", // grey fallback for tasks without labels
-    calendarBackground: "#F5F9FA",
-    calendarSelectedBackground: "#EBF0FE",
-    calendarSelectedText: "#333333",
-    calendarTodayText: "#000000",
   },
   fonts: configureFonts({ config: fonts }),
 };

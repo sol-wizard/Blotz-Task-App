@@ -9,6 +9,7 @@ import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
 import StarSparkScreen from "./star-spark";
 import { router } from "expo-router";
+import { theme } from "@/shared/constants/theme";
 
 const routes = [
   {
@@ -104,13 +105,13 @@ export default function ProtectedIndex() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F9FA" }} edges={["bottom"]}>
+    <SafeAreaView edges={["bottom"]} className="flex-1 bg-background">
       <BottomNavigation
         navigationState={{ index, routes }}
         onIndexChange={handleIndexChange}
         renderScene={renderScene}
         barStyle={{
-          backgroundColor: "#F5F9FA",
+          backgroundColor: theme.colors.background,
           height: 40,
           elevation: 0,
           marginBottom: 40,

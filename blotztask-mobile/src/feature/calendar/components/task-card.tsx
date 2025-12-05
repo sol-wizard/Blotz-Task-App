@@ -55,6 +55,8 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
   // Gesture: only allow left swipe, snap to 0 or OPEN_X on release
   const pan = Gesture.Pan()
     .enabled(!isLoading)
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-10, 10])
     .onUpdate((e) => {
       if (e.translationX < 0) {
         translateX.value = Math.max(OPEN_X, e.translationX);
@@ -170,7 +172,7 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
                     new Date(task.endTime).getTime() <= new Date().getTime() &&
                     !task.isDone && <Text className="text-warning font-baloo text-lg">Late</Text>}
                   {task.endTime && new Date(task.endTime).getTime() > new Date().getTime() && (
-                    <Text className="text-tertiary font-baloo text-lg">
+                    <Text className="text-primary font-baloo text-lg">
                       {format(parseISO(task.endTime), "H:mm")}
                     </Text>
                   )}

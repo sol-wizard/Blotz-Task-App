@@ -7,11 +7,9 @@ module.exports = {
     extend: {
       colors: {
         background: "#F5F9FA",
-        surface: "#FFFFFF",
         warning: "#F56767",
-        primary: "#000000",
+        primary: "#8C8C8C",
         secondary: "#444964",
-        tertiary: "#8C8C8C",
       },
       fontFamily: {
         balooThin: ["BalooThin"],

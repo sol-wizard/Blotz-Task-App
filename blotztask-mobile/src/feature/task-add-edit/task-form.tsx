@@ -113,7 +113,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 name="description"
                 placeholder="Add a note"
                 control={control}
-                className="font-baloo text-lg text-tertiary"
+                className="font-baloo text-lg text-primary"
               />
             </View>
 
@@ -127,7 +127,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             {/* Label Select */}
             <View className="mb-8">
               {isLoading ? (
-                <Text className="font-baloo text-lg text-tertiary mt-3">Loading categories...</Text>
+                <Text className="font-baloo text-lg text-primary mt-3">Loading categories...</Text>
               ) : (
                 <LabelSelect control={control} labels={labels} />
               )}

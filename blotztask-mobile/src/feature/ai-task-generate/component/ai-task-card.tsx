@@ -57,10 +57,10 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange, sheetRef }: 
         {task.startTime || task.endTime ? (
           <View className="items-center ml-2 flex-shrink-0">
             {formatTime && (
-              <Text className="text-sm font-medium ml-1 text-tertiary">{formatTime}</Text>
+              <Text className="text-sm font-medium ml-1 text-primary">{formatTime}</Text>
             )}
             {formatDate && (
-              <Text className="text-sm font-medium ml-1 text-tertiary">{formatDate}</Text>
+              <Text className="text-sm font-medium ml-1 text-primary">{formatDate}</Text>
             )}
           </View>
         ) : null}
