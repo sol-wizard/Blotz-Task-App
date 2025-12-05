@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Platform, Pressable, Image, View } from "react-native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
@@ -10,7 +10,6 @@ import { ASSETS } from "@/shared/constants/assets";
 import { mapExtractedTaskDTOToAiTaskDTO } from "./utils/map-extracted-to-task-dto";
 import { useAiTaskGenerator } from "./hooks/useAiTaskGenerator";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
-import { usePostHog } from "posthog-react-native";
 import { BottomSheetType } from "./models/bottom-sheet-type";
 
 export const ToggleAiTaskGenerate = () => {
@@ -26,7 +25,6 @@ export const ToggleAiTaskGenerate = () => {
   const [text, setText] = useState("");
   const [isVoiceInput, setIsVoiceInput] = useState(true);
   const { labels, isLoading } = useAllLabels();
-  const posthog = usePostHog();
 
   const openModal = async () => {
     await connect();
@@ -39,19 +37,6 @@ export const ToggleAiTaskGenerate = () => {
     setInputError(false);
     disconnect();
   };
-
-  useEffect(() => {
-    if (!inputError) {
-      posthog.capture("ai_task_interaction_completed", {
-        ai_output: JSON.stringify(aiGeneratedMessage),
-        user_input: text,
-        ai_generate_task_count: 0,
-        user_add_task_count: 0,
-        outcome: "error",
-        is_voice_input: isVoiceInput,
-      });
-    }
-  }, [inputError]);
 
   const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map((task) =>
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
@@ -93,6 +78,7 @@ export const ToggleAiTaskGenerate = () => {
           sheetRef={aiVoiceInputModalRef}
           errorMessage={aiGeneratedMessage?.errorMessage}
           isAiGenerating={isAiGenerating || isLoading}
+          aiGeneratedMessage={aiGeneratedMessage}
         />
       );
   }
