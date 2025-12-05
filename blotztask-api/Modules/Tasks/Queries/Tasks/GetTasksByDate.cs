@@ -5,6 +5,7 @@ using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Queries.SubTasks;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
@@ -28,6 +29,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
 {
     public async Task<List<TaskByDateItemDto>> Handle(GetTasksByDateQuery query, CancellationToken ct = default)
     {
+        var stopwatch = Stopwatch.StartNew();
         logger.LogInformation(
             "Fetching tasks by end time for user {UserId} up to {StartDateUtc}. Whether including floating tasks for today is {IncludeFloatingForToday}",
             query.UserId, query.StartDateUtc, query.IncludeFloatingForToday);
@@ -38,7 +40,9 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
         var endDateUtc = query.StartDateUtc.AddDays(1);
 
 
+        var queryStopwatch = Stopwatch.StartNew();
         var tasks = await db.TaskItems
+            .AsNoTracking()
             .Where(t => t.UserId == query.UserId &&
                         (
                             // Tasks in date range
@@ -57,7 +61,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                              t.StartTime <= endDateUtc
                             )
                         ))
-            .OrderBy(t => t.StartTime).ThenBy(t => t.Title)
+            .OrderBy(t => t.StartTime).ThenBy(t => t.EndTime).ThenBy(t => t.Title)
             .Select(task => new TaskByDateItemDto
             {
                 Id = task.Id,
@@ -88,7 +92,12 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
             })
             .ToListAsync(ct);
 
-        logger.LogInformation("Successfully fetched {TaskCount} tasks for user {UserId}", tasks.Count, query.UserId);
+        logger.LogInformation(
+            "Successfully fetched {TaskCount} tasks for user {UserId} in {ElapsedMs}ms (DB query {DbElapsedMs}ms)",
+            tasks.Count,
+            query.UserId,
+            stopwatch.ElapsedMilliseconds,
+            queryStopwatch.ElapsedMilliseconds);
         return tasks;
     }
 }

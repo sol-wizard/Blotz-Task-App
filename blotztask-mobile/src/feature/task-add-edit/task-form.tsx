@@ -8,13 +8,11 @@ import { FormTextInput } from "@/shared/components/ui/form-text-input";
 import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "../../shared/components/ui/form-divider";
 import { ReminderTab } from "./components/reminder-tab";
-import { EventTab } from "./components/event-tab";
-import { isEqual } from "date-fns";
-import { combineDateTime } from "./util/combine-date-time";
 import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
 import { Snackbar } from "react-native-paper";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
+import { EventTab } from "./components/event-tab";
 
 type TaskFormProps =
   | {
@@ -29,6 +27,15 @@ type TaskFormProps =
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
+  const hasEventTimes =
+    dto?.startTime && dto?.endTime && dto.startTime.getTime() !== dto.endTime.getTime();
+  const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
+
+  const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
+
+  const { labels = [], isLoading, isError } = useAllLabels();
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
     description: dto?.description ?? "",
@@ -48,15 +55,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
 
-  const startCombined = combineDateTime(defaultValues.startDate, defaultValues.startTime);
-  const endCombined = combineDateTime(defaultValues.endDate, defaultValues.endTime);
-  const initialTab: SegmentButtonValue =
-    !startCombined || !endCombined || isEqual(startCombined, endCombined) ? "reminder" : "event";
-
-  const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
-  const { labels = [], isLoading, isError } = useAllLabels();
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
-
   useEffect(() => {
     if (isError) {
       setSnackbarVisible(true);
@@ -64,16 +62,35 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   }, [isError]);
 
   const handleFormSubmit = (data: TaskFormField) => {
+    if (isActiveTab === "reminder") {
+      onSubmit({
+        ...data,
+        endDate: data.startDate,
+        endTime: data.startTime,
+      });
+      return;
+    }
+
     onSubmit(data);
   };
 
   const handleTabChange = (next: SegmentButtonValue) => {
     setIsActiveTab(next);
 
-    setValue("startDate", null);
-    setValue("startTime", null);
-    setValue("endDate", null);
-    setValue("endTime", null);
+    if (mode === "edit" || next === "reminder") {
+      setValue("startDate", defaultValues.startDate);
+      setValue("startTime", defaultValues.startTime);
+      setValue("endDate", defaultValues.endDate);
+      setValue("endTime", defaultValues.endTime);
+      return;
+    }
+
+    const start = new Date();
+    const oneHourLater = new Date(start.getTime() + 3600000);
+    setValue("startDate", start);
+    setValue("startTime", start);
+    setValue("endDate", oneHourLater);
+    setValue("endTime", oneHourLater);
   };
 
   return (
@@ -96,7 +113,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 name="description"
                 placeholder="Add a note"
                 control={control}
-                className="font-baloo text-lg text-tertiary"
+                className="font-baloo text-lg text-primary"
               />
             </View>
 
@@ -110,7 +127,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             {/* Label Select */}
             <View className="mb-8">
               {isLoading ? (
-                <Text className="font-baloo text-lg text-tertiary mt-3">Loading categories...</Text>
+                <Text className="font-baloo text-lg text-primary mt-3">Loading categories...</Text>
               ) : (
                 <LabelSelect control={control} labels={labels} />
               )}

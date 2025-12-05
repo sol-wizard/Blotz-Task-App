@@ -26,8 +26,8 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     isReplacingSubtasks,
     deleteSubtask,
     isDeletingSubtask,
-    updateSubtask,
     isUpdatingSubtask,
+    toggleSubtaskcompletion,
   } = useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -35,22 +35,6 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
 
   const onBack = () => {
     setIsEditMode(false);
-  };
-
-  const handleToggle = async (id: number) => {
-    const subtask = fetchedSubtasks?.find((s) => s.subTaskId === id);
-    if (subtask) {
-      try {
-        await updateSubtask({
-          ...subtask,
-          isDone: !subtask.isDone,
-        });
-      } catch (error) {
-        console.error("Failed to toggle subtask:", error);
-        // TODO: Implement error screen
-        Alert.alert("Error", "Failed to update subtask. Please try again.");
-      }
-    }
   };
 
   const handleRefresh = async () => {
@@ -96,7 +80,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
   ) {
     return (
       <View className="flex-1 items-center justify-center">
-        <Text className="text-base font-baloo text-tertiary">Loading subtasks...</Text>
+        <Text className="text-base font-baloo text-primary">Loading subtasks...</Text>
       </View>
     );
   }
@@ -118,7 +102,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
   if (!fetchedSubtasks || fetchedSubtasks.length === 0) {
     return (
       <View className="flex-1 items-center justify-center">
-        <Text className="text-base font-baloo text-tertiary">No subtasks yet</Text>
+        <Text className="text-base font-baloo text-primary">No subtasks yet</Text>
         <TouchableOpacity onPress={onBack} className="mt-4">
           <Text className="text-blue-500 font-balooSemiBold">Go Back</Text>
         </TouchableOpacity>
@@ -159,7 +143,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
           subtasks={fetchedSubtasks}
           isEditMode={isEditMode}
           onDelete={handleDelete}
-          onToggle={handleToggle}
+          onToggle={toggleSubtaskcompletion}
           color={taskColor}
         />
       </View>
@@ -172,7 +156,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
       ) : (
         <TouchableOpacity
           onPress={handleAddSubtask}
-          className="mx-0 mb-10 mt-4 rounded-2xl border-2 border-dashed py-2.5 items-center justify-center border-[#8c8c8c]"
+          className="mx-0 mb-10 mt-4 rounded-2xl border-2 border-dashed py-2.5 items-center justify-center border-primary"
         >
           <Text className="font-baloo text-lg text-center">Add more subtasks</Text>
         </TouchableOpacity>

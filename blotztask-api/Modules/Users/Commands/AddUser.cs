@@ -49,6 +49,9 @@ public class SyncUserCommandHandler(
         }
 
         var now = DateTime.UtcNow;
+
+        logger.LogInformation("Looking up existing AppUser for Auth0UserId: {Auth0UserId}", auth0UserId);
+
         var existing = await db.AppUsers.SingleOrDefaultAsync(u => u.Auth0UserId == auth0UserId, ct);
 
         if (existing is null)
@@ -77,6 +80,10 @@ public class SyncUserCommandHandler(
         existing.DisplayName = displayName;
         existing.PictureUrl = pictureUrl;
         existing.UpdatedAt = now;
+
+        logger.LogInformation(
+            "Persisting updates to AppUser (Id: {Id}, Auth0Id: {Auth0UserId})",
+            existing.Id, existing.Auth0UserId);
 
         await db.SaveChangesAsync(ct);
 

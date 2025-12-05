@@ -9,6 +9,19 @@ import { useTaskDays } from "../hooks/useTaskDays";
 import { getMarkedDates, getSelectedDates } from "../util/get-marked-dates";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 
+// Define the theme object outside the component to prevent re-renders
+const calendarTheme = {
+  calendarBackground: theme.colors.background,
+  selectedDayBackgroundColor: "#EBF0FE",
+  selectedDayTextColor: "#333333",
+  todayTextColor: "#000000",
+  textDayFontWeight: "bold" as const,
+  dayTextColor: theme.colors.disabled,
+  textDayFontFamily: "InterBold",
+  textDayHeaderFontFamily: "InterThin",
+  textDayFontSize: 16,
+};
+
 export default function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
@@ -38,17 +51,7 @@ export default function CalendarScreen() {
           <WeekCalendar
             onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
             current={format(selectedDay, "yyyy-MM-dd")}
-            theme={{
-              calendarBackground: "#F5F9FA",
-              selectedDayBackgroundColor: "#EBF0FE",
-              selectedDayTextColor: "#333333",
-              todayTextColor: "#000000",
-              textDayFontWeight: "bold",
-              dayTextColor: theme.colors.disabled,
-              textDayFontFamily: "InterBold",
-              textDayHeaderFontFamily: "InterThin",
-              textDayFontSize: 16,
-            }}
+            theme={calendarTheme}
             markedDates={markedDates}
             allowShadow={false}
             firstDay={1}

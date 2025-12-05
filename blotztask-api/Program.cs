@@ -32,9 +32,11 @@ builder.Services.AddSemanticKernelServices(builder.Configuration, builder.Enviro
 builder.Services.AddCustomCors();
 
 var app = builder.Build();
+
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseCors("AllowSpecificOrigin");
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<UserContextMiddleware>();
