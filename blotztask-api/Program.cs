@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using BlotzTask.Extension;
 using BlotzTask.Middleware;
 using BlotzTask.Modules.BreakDown;
@@ -36,9 +35,7 @@ var app = builder.Build();
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-
 app.UseCors("AllowSpecificOrigin");
-
 
 app.UseAuthentication();
 app.UseAuthorization();
