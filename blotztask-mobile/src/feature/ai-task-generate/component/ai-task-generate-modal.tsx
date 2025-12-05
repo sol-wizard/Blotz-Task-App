@@ -8,6 +8,7 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { usePostHog } from "posthog-react-native";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
+import { View } from "react-native";
 
 export const AiTaskGenerateModal = ({
   sheetRef,
@@ -53,7 +54,11 @@ export const AiTaskGenerateModal = ({
       );
 
     case "add-task-success":
-      return <TaskAddedSuccess />;
+      return (
+        <View className="flex-1 w-full bg-[#F5F9FA]">
+          <TaskAddedSuccess />
+        </View>
+      );
 
     case "input":
     default:
