@@ -35,6 +35,7 @@ public class TaskController(
     public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate(
         [FromQuery] GetTasksByDateRequest getTasksByDateRequest, CancellationToken ct)
     {
+
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
@@ -78,7 +79,8 @@ public class TaskController(
     }
 
     [HttpGet("weekly-task-availability")]
-    public async Task<IEnumerable<DailyTaskIndicatorDto>> GetWeeklyTaskAvailability([FromQuery] GetWeeklyTaskAvailabilityRequest getWeeklyTaskAvailabilityRequest,
+    public async Task<IEnumerable<DailyTaskIndicatorDto>> GetWeeklyTaskAvailability(
+        [FromQuery] GetWeeklyTaskAvailabilityRequest getWeeklyTaskAvailabilityRequest,
         CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
