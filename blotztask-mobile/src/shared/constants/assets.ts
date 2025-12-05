@@ -36,7 +36,7 @@ export const PNGIMAGES = {
   starSpark: require("../../../assets/images-png/star-spark.png"),
   settingIcon: require("../../../assets/images-png/setting-icon.png"),
   machineEyes: require("../../../assets/images-png/machine-eyes.png"),
-  addTask: require("../../../assets/images-png/check-success.png"),
+  addTask: require("../../../assets/images-png/add-success.png"),
 } as const;
 
 export const SVGIMAGES = {
