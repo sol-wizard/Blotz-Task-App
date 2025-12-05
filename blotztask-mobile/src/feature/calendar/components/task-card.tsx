@@ -12,7 +12,7 @@ import Animated, {
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "@/shared/constants/theme";
-import { format, parseISO } from "date-fns";
+import { format, isSameDay, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -100,6 +100,28 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
     endTime: task.endTime,
   });
 
+  const startDate = task.startTime ? parseISO(task.startTime) : null;
+  const endDate = task.endTime ? parseISO(task.endTime) : null;
+  const now = new Date();
+  const isOverdue = !!endDate && endDate.getTime() <= now.getTime() && !task.isDone;
+  const isSingleDayToday =
+    !!startDate && !!endDate && isSameDay(startDate, endDate) && isSameDay(endDate, now);
+
+  let statusContent: React.ReactNode = null;
+  if (endDate) {
+    if (isOverdue) {
+      statusContent = isSingleDayToday ? (
+        <Text className="text-warning font-baloo text-lg">{format(endDate, "H:mm")}</Text>
+      ) : (
+        <Text className="text-warning font-baloo text-lg">Late</Text>
+      );
+    } else {
+      statusContent = (
+        <Text className="text-primary font-baloo text-lg">{format(endDate, "H:mm")}</Text>
+      );
+    }
+  }
+
   return (
     <View className="relative mx-4 my-2 rounded-2xl bg-white overflow-hidden">
       {/* Right action area with delete button */}
@@ -168,14 +190,7 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
                     )}
                   </View>
 
-                  {task.endTime &&
-                    new Date(task.endTime).getTime() <= new Date().getTime() &&
-                    !task.isDone && <Text className="text-warning font-baloo text-lg">Late</Text>}
-                  {task.endTime && new Date(task.endTime).getTime() > new Date().getTime() && (
-                    <Text className="text-primary font-baloo text-lg">
-                      {format(parseISO(task.endTime), "H:mm")}
-                    </Text>
-                  )}
+                  {statusContent}
                 </View>
               </View>
 
