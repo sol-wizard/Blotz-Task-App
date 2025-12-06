@@ -28,9 +28,10 @@ interface TaskCardProps {
   task: TaskDetailDTO;
   deleteTask: (id: number) => Promise<void>;
   isDeleting: boolean;
+  selectedDay: Date;
 }
 
-export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps) {
+export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) {
   const { toggleTask, isToggling } = useTaskMutations();
   const queryClient = useQueryClient();
 
@@ -55,6 +56,8 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
   // Gesture: only allow left swipe, snap to 0 or OPEN_X on release
   const pan = Gesture.Pan()
     .enabled(!isLoading)
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-10, 10])
     .onUpdate((e) => {
       if (e.translationX < 0) {
         translateX.value = Math.max(OPEN_X, e.translationX);
@@ -96,7 +99,12 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
   const timePeriod = formatDateRange({
     startTime: task.startTime,
     endTime: task.endTime,
+    selectedDay,
   });
+
+  const endDate = task.endTime ? parseISO(task.endTime) : null;
+
+  const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
 
   return (
     <View className="relative mx-4 my-2 rounded-2xl bg-white overflow-hidden">
@@ -166,14 +174,13 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
                     )}
                   </View>
 
-                  {task.endTime &&
-                    new Date(task.endTime).getTime() <= new Date().getTime() &&
-                    !task.isDone && <Text className="text-warning font-baloo text-lg">Late</Text>}
-                  {task.endTime && new Date(task.endTime).getTime() > new Date().getTime() && (
-                    <Text className="text-tertiary font-baloo text-lg">
-                      {format(parseISO(task.endTime), "H:mm")}
+                  {endDate ? (
+                    <Text
+                      className={`${isOverdue ? "text-warning" : "text-primary"} font-baloo text-lg`}
+                    >
+                      {format(endDate, "H:mm")}
                     </Text>
-                  )}
+                  ) : null}
                 </View>
               </View>
 
