@@ -20,14 +20,12 @@ export const WriteInput = ({
   errorMessage?: string;
   isAiGenerating: boolean;
 }) => {
-  const inputRef = useRef<TextInput | null>(null);
-
   const sendAndDismiss = (msg: string) => {
     const val = msg.trim();
     if (!val) return;
     sendMessage(val);
     setText(val);
-    inputRef.current?.blur();
+    Keyboard.dismiss();
     sheetRef.current?.collapse();
   };
 
@@ -42,7 +40,6 @@ export const WriteInput = ({
   return (
     <View>
       <BottomSheetTextInput
-        ref={inputRef}
         onChangeText={handleChange}
         onSubmitEditing={() => sendAndDismiss(text)}
         returnKeyType="done"
