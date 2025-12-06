@@ -7,17 +7,15 @@ import { ErrorMessageCard } from "./error-message-card";
 export const WriteInput = ({
   text,
   setText,
-  sheetRef,
-  hasError,
   sendMessage,
+  sheetRef,
   errorMessage,
   isAiGenerating,
 }: {
   text: string;
   setText: (v: string) => void;
-  sheetRef: React.RefObject<BottomSheetModal | null>;
-  hasError: boolean;
   sendMessage: (v: string) => void;
+  sheetRef: React.RefObject<BottomSheetModal | null>;
   errorMessage?: string;
   isAiGenerating: boolean;
 }) => {
@@ -41,7 +39,6 @@ export const WriteInput = ({
   return (
     <View>
       <BottomSheetTextInput
-        value={text}
         onChangeText={handleChange}
         onSubmitEditing={() => sendAndDismiss(text)}
         returnKeyType="done"
@@ -52,7 +49,7 @@ export const WriteInput = ({
         className="min-h-[100px] bg-white text-xl text-gray-800 font-baloo"
         style={{ textAlignVertical: "top" }}
       />
-      {hasError && <ErrorMessageCard errorMessage={errorMessage} />}
+      {errorMessage && !isAiGenerating && <ErrorMessageCard errorMessage={errorMessage} />}
       {isAiGenerating && (
         <View className="items-center">
           <CustomSpinner size={60} />

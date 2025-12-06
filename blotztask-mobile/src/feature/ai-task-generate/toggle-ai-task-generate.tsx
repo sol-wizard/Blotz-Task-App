@@ -17,24 +17,22 @@ export const ToggleAiTaskGenerate = () => {
 
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const { aiGeneratedMessage, sendMessage, inputError, setInputError, connect, disconnect } =
-    useAiTaskGenerator({
-      setIsAiGenerating,
-      setModalType,
-    });
+  const { aiGeneratedMessage, sendMessage, connect, disconnect } = useAiTaskGenerator({
+    setIsAiGenerating,
+    setModalType,
+  });
   const [text, setText] = useState("");
   const [isVoiceInput, setIsVoiceInput] = useState(true);
   const { labels, isLoading } = useAllLabels();
 
   const openModal = async () => {
-    await connect();
     aiVoiceInputModalRef.current?.present();
+    await connect();
   };
 
   const resetModal = () => {
     setModalType("input");
     setText("");
-    setInputError(false);
     disconnect();
   };
 
@@ -66,13 +64,10 @@ export const ToggleAiTaskGenerate = () => {
         <AiInput
           text={text}
           setText={setText}
-          generateTaskError={inputError}
-          setInputError={setInputError}
+          sheetRef={aiVoiceInputModalRef}
           sendMessage={sendMessage}
           isVoiceInput={isVoiceInput}
           setIsVoiceInput={setIsVoiceInput}
-          sheetRef={aiVoiceInputModalRef}
-          errorMessage={aiGeneratedMessage?.errorMessage}
           isAiGenerating={isAiGenerating || isLoading}
           aiGeneratedMessage={aiGeneratedMessage}
         />
@@ -100,7 +95,7 @@ export const ToggleAiTaskGenerate = () => {
           borderTopRightRadius: 24,
         }}
         onDismiss={resetModal}
-        snapPoints={["70%"]}
+        snapPoints={["50%", "70%"]}
         keyboardBehavior={Platform.OS === "ios" ? "extend" : "interactive"}
         keyboardBlurBehavior="restore"
         enableContentPanningGesture={false}

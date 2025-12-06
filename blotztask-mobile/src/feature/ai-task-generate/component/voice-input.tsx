@@ -10,17 +10,13 @@ import { ErrorMessageCard } from "./error-message-card";
 
 export const VoiceInput = ({
   setText,
-  hasError,
   sendMessage,
-  setInputError,
   errorMessage,
   language,
   isAiGenerating,
 }: {
   setText: (v: string) => void;
-  hasError: boolean;
   sendMessage: (v: string) => void;
-  setInputError: (v: boolean) => void;
   errorMessage?: string;
   language: string;
   isAiGenerating: boolean;
@@ -40,7 +36,7 @@ export const VoiceInput = ({
 
   return (
     <View className="items-center">
-      {hasError ? (
+      {errorMessage && !isAiGenerating ? (
         <ErrorMessageCard errorMessage={errorMessage} />
       ) : (
         <View className="w-96 mb-16" style={{ minHeight: 80 }}>
@@ -59,7 +55,6 @@ export const VoiceInput = ({
           <Pressable
             onLongPress={async () => {
               setText("");
-              setInputError(false);
               try {
                 await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               } catch {
