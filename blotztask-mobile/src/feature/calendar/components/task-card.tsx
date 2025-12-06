@@ -28,9 +28,10 @@ interface TaskCardProps {
   task: TaskDetailDTO;
   deleteTask: (id: number) => Promise<void>;
   isDeleting: boolean;
+  selectedDay: Date;
 }
 
-export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps) {
+export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) {
   const { toggleTask, isToggling } = useTaskMutations();
   const queryClient = useQueryClient();
 
@@ -98,6 +99,7 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
   const timePeriod = formatDateRange({
     startTime: task.startTime,
     endTime: task.endTime,
+    selectedDay,
   });
 
   const startDate = task.startTime ? parseISO(task.startTime) : null;
@@ -106,21 +108,6 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
   const isOverdue = !!endDate && endDate.getTime() <= now.getTime() && !task.isDone;
   const isSingleDayToday =
     !!startDate && !!endDate && isSameDay(startDate, endDate) && isSameDay(endDate, now);
-
-  let statusContent: React.ReactNode = null;
-  if (endDate) {
-    if (isOverdue) {
-      statusContent = isSingleDayToday ? (
-        <Text className="text-warning font-baloo text-lg">{format(endDate, "H:mm")}</Text>
-      ) : (
-        <Text className="text-warning font-baloo text-lg">Late</Text>
-      );
-    } else {
-      statusContent = (
-        <Text className="text-primary font-baloo text-lg">{format(endDate, "H:mm")}</Text>
-      );
-    }
-  }
 
   return (
     <View className="relative mx-4 my-2 rounded-2xl bg-white overflow-hidden">
@@ -190,7 +177,13 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
                     )}
                   </View>
 
-                  {statusContent}
+                  {endDate ? (
+                    <Text
+                      className={`${isOverdue ? "text-warning" : "text-primary"} font-baloo text-lg`}
+                    >
+                      {format(endDate, "H:mm")}
+                    </Text>
+                  ) : null}
                 </View>
               </View>
 
