@@ -1,9 +1,9 @@
 import { InputModeSwitch } from "./input-mode-switch";
 import { VoiceInput } from "./voice-input";
 import { WriteInput } from "./write-input";
-import { Pressable, View, Text } from "react-native";
+import { Pressable, View, Text, Keyboard } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
@@ -38,7 +38,12 @@ export const AiInput = ({
   return (
     <View className="w-96">
       <View className="flex-row mb-8 -ml-6 items-center">
-        <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} setText={setText} />
+        <InputModeSwitch
+          value={isVoiceInput}
+          onChange={setIsVoiceInput}
+          setText={setText}
+          sheetRef={sheetRef}
+        />
         <Pressable
           onPress={() => {
             const newLang = language === "en-US" ? "zh-CN" : "en-US";
