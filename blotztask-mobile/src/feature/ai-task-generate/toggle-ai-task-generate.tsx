@@ -17,7 +17,7 @@ export const ToggleAiTaskGenerate = () => {
 
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const { aiGeneratedMessage, sendMessage, connect, disconnect, resetState } = useAiTaskGenerator({
+  const { aiGeneratedMessage, sendMessage, connect, disconnect } = useAiTaskGenerator({
     setIsAiGenerating,
     setModalType,
   });
@@ -26,14 +26,13 @@ export const ToggleAiTaskGenerate = () => {
   const { labels, isLoading } = useAllLabels();
 
   const openModal = async () => {
-    await connect();
     aiVoiceInputModalRef.current?.present();
+    await connect();
   };
 
   const resetModal = () => {
     setModalType("input");
     setText("");
-    resetState();
     disconnect();
   };
 

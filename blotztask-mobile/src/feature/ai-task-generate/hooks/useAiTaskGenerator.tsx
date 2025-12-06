@@ -14,10 +14,6 @@ export function useAiTaskGenerator({
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
 
-  const resetState = () => {
-    setAiGeneratedMessage(undefined);
-  };
-
   const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
     setAiGeneratedMessage(receivedAiMessage);
     if (!receivedAiMessage.isSuccess) {
@@ -67,6 +63,7 @@ export function useAiTaskGenerator({
       console.error("Error stopping SignalR connection:", error);
     } finally {
       setConnection(null);
+      setAiGeneratedMessage(undefined);
     }
   };
 
@@ -94,6 +91,5 @@ export function useAiTaskGenerator({
     sendMessage,
     connect,
     disconnect,
-    resetState,
   };
 }
