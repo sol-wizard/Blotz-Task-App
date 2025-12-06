@@ -64,6 +64,7 @@ export const ToggleAiTaskGenerate = () => {
         <AiInput
           text={text}
           setText={setText}
+          sheetRef={aiVoiceInputModalRef}
           sendMessage={sendMessage}
           isVoiceInput={isVoiceInput}
           setIsVoiceInput={setIsVoiceInput}
@@ -94,7 +95,7 @@ export const ToggleAiTaskGenerate = () => {
           borderTopRightRadius: 24,
         }}
         onDismiss={resetModal}
-        snapPoints={["70%"]}
+        snapPoints={["50%", "70%"]}
         keyboardBehavior={Platform.OS === "ios" ? "extend" : "interactive"}
         keyboardBlurBehavior="restore"
         enableContentPanningGesture={false}

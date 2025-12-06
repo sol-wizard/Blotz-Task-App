@@ -5,10 +5,12 @@ import { Pressable, View, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 export const AiInput = ({
   text,
   setText,
+  sheetRef,
   sendMessage,
   isVoiceInput,
   setIsVoiceInput,
@@ -17,6 +19,7 @@ export const AiInput = ({
 }: {
   text: string;
   setText: (v: string) => void;
+  sheetRef: React.RefObject<BottomSheetModal | null>;
   sendMessage: (v: string) => void;
   isVoiceInput: boolean;
   setIsVoiceInput: (v: boolean) => void;
@@ -63,6 +66,7 @@ export const AiInput = ({
           text={text}
           setText={setText}
           sendMessage={sendMessage}
+          sheetRef={sheetRef}
           errorMessage={aiGeneratedMessage?.errorMessage}
           isAiGenerating={isAiGenerating}
         />

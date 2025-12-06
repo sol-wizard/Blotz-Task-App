@@ -1,28 +1,34 @@
 import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { theme } from "@/shared/constants/theme";
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
-import { View, Keyboard } from "react-native";
+import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { View, Keyboard, TextInput } from "react-native";
 import { ErrorMessageCard } from "./error-message-card";
+import { useRef } from "react";
 
 export const WriteInput = ({
   text,
   setText,
   sendMessage,
+  sheetRef,
   errorMessage,
   isAiGenerating,
 }: {
   text: string;
   setText: (v: string) => void;
   sendMessage: (v: string) => void;
+  sheetRef: React.RefObject<BottomSheetModal | null>;
   errorMessage?: string;
   isAiGenerating: boolean;
 }) => {
+  const inputRef = useRef<TextInput | null>(null);
+
   const sendAndDismiss = (msg: string) => {
     const val = msg.trim();
     if (!val) return;
     sendMessage(val);
     setText(val);
-    Keyboard.dismiss();
+    inputRef.current?.blur();
+    sheetRef.current?.collapse();
   };
 
   const handleChange = (value: string) => {
@@ -36,6 +42,7 @@ export const WriteInput = ({
   return (
     <View>
       <BottomSheetTextInput
+        ref={inputRef}
         onChangeText={handleChange}
         onSubmitEditing={() => sendAndDismiss(text)}
         returnKeyType="done"
