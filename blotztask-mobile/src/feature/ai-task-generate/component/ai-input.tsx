@@ -17,7 +17,6 @@ export const AiInput = ({
   setIsVoiceInput,
   generateTaskError,
   setInputError,
-  errorMessage,
   isAiGenerating,
   aiGeneratedMessage,
 }: {
@@ -29,7 +28,6 @@ export const AiInput = ({
   setIsVoiceInput: (v: boolean) => void;
   generateTaskError: boolean;
   setInputError: (v: boolean) => void;
-  errorMessage?: string;
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
 }) => {
@@ -80,7 +78,7 @@ export const AiInput = ({
           sendMessage={sendMessage}
           hasError={generateTaskError}
           setInputError={setInputError}
-          errorMessage={errorMessage}
+          errorMessage={aiGeneratedMessage?.errorMessage}
           language={language}
           isAiGenerating={isAiGenerating}
         />
@@ -91,7 +89,7 @@ export const AiInput = ({
           sendMessage={sendMessage}
           hasError={generateTaskError}
           sheetRef={sheetRef}
-          errorMessage={errorMessage}
+          errorMessage={aiGeneratedMessage?.errorMessage}
           isAiGenerating={isAiGenerating}
         />
       )}

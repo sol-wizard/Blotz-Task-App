@@ -72,7 +72,6 @@ export const ToggleAiTaskGenerate = () => {
           isVoiceInput={isVoiceInput}
           setIsVoiceInput={setIsVoiceInput}
           sheetRef={aiVoiceInputModalRef}
-          errorMessage={aiGeneratedMessage?.errorMessage}
           isAiGenerating={isAiGenerating || isLoading}
           aiGeneratedMessage={aiGeneratedMessage}
         />
