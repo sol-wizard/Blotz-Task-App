@@ -9,7 +9,7 @@ import { BottomSheetType } from "../models/bottom-sheet-type";
 import { ScrollView } from "react-native-gesture-handler";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { scheduleTaskReminder } from "@/shared/util/schedule-task-reminder";
 import { NotificationTaskDTO } from "@/shared/models/notification-task-dto";
 
@@ -111,7 +111,7 @@ export function AiTasksPreview({
 
   return (
     <View className="mb-10 items-center justify-between">
-      <ScrollView className="pb-5 w-full min-h-20 max-h-200">
+      <BottomSheetScrollView className="pb-5 w-full min-h-20 max-h-200">
         {localTasks?.map((task) => (
           <AiTaskCard
             key={task.id}
@@ -121,7 +121,7 @@ export function AiTasksPreview({
             sheetRef={sheetRef}
           />
         ))}
-      </ScrollView>
+      </BottomSheetScrollView>
 
       <View className="flex-row justify-center items-center mb-4">
         <Pressable
