@@ -17,11 +17,10 @@ export const ToggleAiTaskGenerate = () => {
 
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const { aiGeneratedMessage, sendMessage, inputError, setInputError, connect, disconnect } =
-    useAiTaskGenerator({
-      setIsAiGenerating,
-      setModalType,
-    });
+  const { aiGeneratedMessage, sendMessage, connect, disconnect, resetState } = useAiTaskGenerator({
+    setIsAiGenerating,
+    setModalType,
+  });
   const [text, setText] = useState("");
   const [isVoiceInput, setIsVoiceInput] = useState(true);
   const { labels, isLoading } = useAllLabels();
@@ -34,7 +33,7 @@ export const ToggleAiTaskGenerate = () => {
   const resetModal = () => {
     setModalType("input");
     setText("");
-    setInputError(false);
+    resetState();
     disconnect();
   };
 
@@ -66,12 +65,9 @@ export const ToggleAiTaskGenerate = () => {
         <AiInput
           text={text}
           setText={setText}
-          generateTaskError={inputError}
-          setInputError={setInputError}
           sendMessage={sendMessage}
           isVoiceInput={isVoiceInput}
           setIsVoiceInput={setIsVoiceInput}
-          sheetRef={aiVoiceInputModalRef}
           isAiGenerating={isAiGenerating || isLoading}
           aiGeneratedMessage={aiGeneratedMessage}
         />

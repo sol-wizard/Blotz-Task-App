@@ -13,13 +13,16 @@ export function useAiTaskGenerator({
 }) {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
-  const [inputError, setInputError] = useState<boolean>(false);
+
+  const resetState = () => {
+    setAiGeneratedMessage(undefined);
+  };
 
   const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
     setAiGeneratedMessage(receivedAiMessage);
     if (!receivedAiMessage.isSuccess) {
       setIsAiGenerating(false);
-      setInputError(true);
+
       setModalType("input");
     } else {
       setModalType("task-preview");
@@ -49,7 +52,6 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("Error connecting to SignalR:", error);
       setIsAiGenerating(false);
-      setInputError(true);
       setModalType("input");
     }
   };
@@ -69,7 +71,6 @@ export function useAiTaskGenerator({
   };
 
   const sendMessage = async (text: string) => {
-    setInputError(false);
     if (!text.trim()) return;
     setIsAiGenerating(true);
     if (connection) {
@@ -78,23 +79,21 @@ export function useAiTaskGenerator({
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
         setIsAiGenerating(false);
-        setInputError(true);
         setModalType("input");
       }
     } else {
       console.warn("Cannot send message: Not connected.");
       setIsAiGenerating(false);
-      setInputError(true);
+
       setModalType("input");
     }
   };
 
   return {
-    inputError,
-    setInputError,
     aiGeneratedMessage,
     sendMessage,
     connect,
     disconnect,
+    resetState,
   };
 }

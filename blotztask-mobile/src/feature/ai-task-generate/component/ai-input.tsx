@@ -1,37 +1,28 @@
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { InputModeSwitch } from "./input-mode-switch";
 import { VoiceInput } from "./voice-input";
 import { WriteInput } from "./write-input";
 import { Pressable, View, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
-import { usePostHog } from "posthog-react-native";
 
 export const AiInput = ({
   text,
   setText,
-  sheetRef,
   sendMessage,
   isVoiceInput,
   setIsVoiceInput,
-  generateTaskError,
-  setInputError,
   isAiGenerating,
   aiGeneratedMessage,
 }: {
   text: string;
   setText: (v: string) => void;
-  sheetRef: React.RefObject<BottomSheetModal | null>;
   sendMessage: (v: string) => void;
   isVoiceInput: boolean;
   setIsVoiceInput: (v: boolean) => void;
-  generateTaskError: boolean;
-  setInputError: (v: boolean) => void;
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
 }) => {
-  const posthog = usePostHog();
   const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
     AsyncStorage.getItem("ai_language_preference").then((saved) => {
       if (saved === "en-US" || saved === "zh-CN") {
@@ -40,19 +31,6 @@ export const AiInput = ({
     });
     return "zh-CN";
   });
-
-  useEffect(() => {
-    if (generateTaskError) {
-      posthog.capture("ai_task_interaction_completed", {
-        ai_output: JSON.stringify(aiGeneratedMessage),
-        user_input: text,
-        ai_generate_task_count: 0,
-        user_add_task_count: 0,
-        outcome: "error",
-        is_voice_input: isVoiceInput,
-      });
-    }
-  }, [generateTaskError]);
 
   return (
     <View className="w-96">
@@ -76,8 +54,6 @@ export const AiInput = ({
         <VoiceInput
           setText={setText}
           sendMessage={sendMessage}
-          hasError={generateTaskError}
-          setInputError={setInputError}
           errorMessage={aiGeneratedMessage?.errorMessage}
           language={language}
           isAiGenerating={isAiGenerating}
@@ -87,8 +63,6 @@ export const AiInput = ({
           text={text}
           setText={setText}
           sendMessage={sendMessage}
-          hasError={generateTaskError}
-          sheetRef={sheetRef}
           errorMessage={aiGeneratedMessage?.errorMessage}
           isAiGenerating={isAiGenerating}
         />

@@ -1,22 +1,18 @@
 import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { theme } from "@/shared/constants/theme";
-import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { View, Keyboard } from "react-native";
 import { ErrorMessageCard } from "./error-message-card";
 
 export const WriteInput = ({
   text,
   setText,
-  sheetRef,
-  hasError,
   sendMessage,
   errorMessage,
   isAiGenerating,
 }: {
   text: string;
   setText: (v: string) => void;
-  sheetRef: React.RefObject<BottomSheetModal | null>;
-  hasError: boolean;
   sendMessage: (v: string) => void;
   errorMessage?: string;
   isAiGenerating: boolean;
@@ -27,7 +23,6 @@ export const WriteInput = ({
     sendMessage(val);
     setText(val);
     Keyboard.dismiss();
-    sheetRef.current?.collapse();
   };
 
   const handleChange = (value: string) => {
@@ -52,7 +47,7 @@ export const WriteInput = ({
         className="min-h-[100px] bg-white text-xl text-gray-800 font-baloo"
         style={{ textAlignVertical: "top" }}
       />
-      {hasError && <ErrorMessageCard errorMessage={errorMessage} />}
+      {errorMessage && !isAiGenerating && <ErrorMessageCard errorMessage={errorMessage} />}
       {isAiGenerating && (
         <View className="items-center">
           <CustomSpinner size={60} />
