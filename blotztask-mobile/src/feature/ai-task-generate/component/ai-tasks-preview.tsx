@@ -98,7 +98,7 @@ export function AiTasksPreview({
 
   const handleGoBack = () => {
     setModalType("input");
-
+    sheetRef.current?.collapse();
     posthog.capture("ai_task_interaction_completed", {
       ai_output: JSON.stringify(localTasks),
       user_input: userInput,
