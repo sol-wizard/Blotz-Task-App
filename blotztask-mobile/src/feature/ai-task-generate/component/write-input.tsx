@@ -36,7 +36,6 @@ export const WriteInput = ({
   return (
     <View>
       <BottomSheetTextInput
-        value={text}
         onChangeText={handleChange}
         onSubmitEditing={() => sendAndDismiss(text)}
         returnKeyType="done"
