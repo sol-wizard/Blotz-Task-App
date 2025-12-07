@@ -1,82 +1,20 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useRef } from "react";
 import { Platform, Pressable, Image } from "react-native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
-import { AiTasksPreview } from "./component/ai-tasks-preview";
-import { AiInput } from "./component/ai-input";
-import { TaskAddedSuccess } from "./component/task-added-success";
+
 import { ASSETS } from "@/shared/constants/assets";
-import { mapExtractedTaskDTOToAiTaskDTO } from "./utils/map-extracted-to-task-dto";
-import { useAiTaskGenerator } from "./hooks/useAiTaskGenerator";
-import { useAllLabels } from "@/shared/hooks/useAllLabels";
-import { BottomSheetType } from "./models/bottom-sheet-type";
+
+import { AiTaskGenerateModal } from "./component/ai-modal-content";
 
 export const ToggleAiTaskGenerate = () => {
   const aiVoiceInputModalRef = useRef<BottomSheetModal>(null);
 
-  const [modalType, setModalType] = useState<BottomSheetType>("input");
-  const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const { aiGeneratedMessage, sendMessage, connect, disconnect } = useAiTaskGenerator({
-    setIsAiGenerating,
-    setModalType,
-  });
-  const [text, setText] = useState("");
-  const [isVoiceInput, setIsVoiceInput] = useState(true);
-  const { labels, isLoading } = useAllLabels();
-
-  const openModal = async () => {
-    aiVoiceInputModalRef.current?.present();
-    await connect();
-  };
-
-  const resetModal = () => {
-    setModalType("input");
-    setText("");
-    disconnect();
-  };
-
-  const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map((task) =>
-    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
-  );
-  const modalBackgroundColor = modalType === "add-task-success" ? "#F5F9FA" : "#FFFFFF";
-
-  let modalContent: ReactNode;
-
-  switch (modalType) {
-    case "task-preview":
-      modalContent = (
-        <AiTasksPreview
-          aiTasks={aiGeneratedTasks}
-          userInput={text}
-          setModalType={setModalType}
-          isVoiceInput={isVoiceInput}
-          sheetRef={aiVoiceInputModalRef}
-        />
-      );
-      break;
-    case "add-task-success":
-      modalContent = <TaskAddedSuccess />;
-      break;
-    case "input":
-    default:
-      modalContent = (
-        <AiInput
-          text={text}
-          setText={setText}
-          sheetRef={aiVoiceInputModalRef}
-          sendMessage={sendMessage}
-          isVoiceInput={isVoiceInput}
-          setIsVoiceInput={setIsVoiceInput}
-          isAiGenerating={isAiGenerating || isLoading}
-          aiGeneratedMessage={aiGeneratedMessage}
-        />
-      );
-  }
-
+  const openSheet = () => aiVoiceInputModalRef.current?.present();
   return (
     <>
-      <Pressable onPress={openModal}>
+      <Pressable onPress={openSheet}>
         <GradientCircle size={58}>
           <Image
             source={ASSETS.whiteBun}
@@ -85,25 +23,21 @@ export const ToggleAiTaskGenerate = () => {
           />
         </GradientCircle>
       </Pressable>
-
       <BottomSheetModal
         ref={aiVoiceInputModalRef}
         backdropComponent={renderBottomSheetBackdrop}
         backgroundStyle={{
-          backgroundColor: modalBackgroundColor,
+          backgroundColor: "#FFFFFF",
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
         }}
-        onDismiss={resetModal}
-        snapPoints={["50%", "70%"]}
+        snapPoints={["70%"]}
         keyboardBehavior={Platform.OS === "ios" ? "extend" : "interactive"}
         keyboardBlurBehavior="restore"
-        enableContentPanningGesture={false}
-        enableHandlePanningGesture={true}
         enablePanDownToClose={false}
       >
         <BottomSheetView className="justify-between items-center" style={{ minHeight: 300 }}>
-          {modalContent}
+          <AiTaskGenerateModal sheetRef={aiVoiceInputModalRef} />
         </BottomSheetView>
       </BottomSheetModal>
     </>

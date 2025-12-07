@@ -6,7 +6,6 @@ import { AiTaskCard } from "./ai-task-card";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
-import { ScrollView } from "react-native-gesture-handler";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
@@ -46,7 +45,7 @@ export function AiTasksPreview({
         });
       }
     };
-  }, [localTasks, isVoiceInput, userInput]);
+  }, [localTasks]);
 
   const createDisabled = isAdding || localTasks?.length === 0;
 
@@ -90,6 +89,7 @@ export function AiTasksPreview({
       });
 
       setModalType("add-task-success");
+      sheetRef.current?.collapse();
       setLocalTasks([]);
     } catch (error) {
       console.log("Add tasks failed", error);
