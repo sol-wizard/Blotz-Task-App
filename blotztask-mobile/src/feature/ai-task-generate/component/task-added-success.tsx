@@ -1,5 +1,4 @@
 import { ASSETS } from "@/shared/constants/assets";
-import { BottomSheetView } from "@gorhom/bottom-sheet";
 import React from "react";
 import { View, Image, Text } from "react-native";
 

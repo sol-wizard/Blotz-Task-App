@@ -3,9 +3,7 @@ import { Platform, Pressable, Image, Dimensions, KeyboardAvoidingView } from "re
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
-
 import { ASSETS } from "@/shared/constants/assets";
-
 import { AiModalContent } from "./component/ai-modal-content";
 import { BottomSheetType } from "./models/bottom-sheet-type";
 
@@ -15,8 +13,6 @@ export const ToggleAiTaskGenerate = () => {
   const modalBackgroundColor = modalType === "add-task-success" ? "#F5F9FA" : "#FFFFFF";
 
   const openSheet = () => aiVoiceInputModalRef.current?.present();
-
-  const MAX_SHEET_HEIGHT = Dimensions.get("window").height * 0.8;
 
   return (
     <>
