@@ -1,14 +1,13 @@
 /* eslint-disable camelcase */
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
-import { View, Pressable, ActivityIndicator, ScrollView, KeyboardAvoidingView } from "react-native";
+import { View, Pressable, ActivityIndicator, ScrollView } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { scheduleTaskReminder } from "@/shared/util/schedule-task-reminder";
 import { NotificationTaskDTO } from "@/shared/models/notification-task-dto";
 
@@ -17,13 +16,11 @@ export function AiTasksPreview({
   setModalType,
   isVoiceInput,
   userInput,
-  sheetRef,
 }: {
   aiTasks?: AiTaskDTO[];
   setModalType: (v: BottomSheetType) => void;
   isVoiceInput: boolean;
   userInput: string;
-  sheetRef: React.RefObject<BottomSheetModal | null>;
 }) {
   const { addTask, isAdding } = useTaskMutations();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
@@ -89,7 +86,7 @@ export function AiTasksPreview({
       });
 
       setModalType("add-task-success");
-      sheetRef.current?.collapse();
+
       setLocalTasks([]);
     } catch (error) {
       console.log("Add tasks failed", error);
@@ -98,7 +95,7 @@ export function AiTasksPreview({
 
   const handleGoBack = () => {
     setModalType("input");
-    sheetRef.current?.collapse();
+
     posthog.capture("ai_task_interaction_completed", {
       ai_output: JSON.stringify(localTasks),
       user_input: userInput,
@@ -111,19 +108,18 @@ export function AiTasksPreview({
 
   return (
     <View className="min-h-80">
-      <ScrollView className="w-full">
+      <ScrollView className="w-full max-h-[93%]">
         {localTasks?.map((task) => (
           <AiTaskCard
             key={task.id}
             task={task}
             handleTaskDelete={onDeleteTask}
             onTitleChange={onTitleChange}
-            sheetRef={sheetRef}
           />
         ))}
       </ScrollView>
 
-      <View className="flex-row justify-center items-center mb-8 mt-4">
+      <View className="flex-row justify-center items-center mb-8 mt-6">
         <Pressable
           onPress={handleGoBack}
           className="w-12 h-12 rounded-full items-center justify-center bg-black mx-8 font-bold"

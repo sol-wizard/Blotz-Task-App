@@ -7,12 +7,10 @@ export function InputModeSwitch({
   value,
   onChange,
   setText,
-  sheetRef,
 }: {
   value: boolean;
   onChange: (v: boolean) => void;
   setText: (v: string) => void;
-  sheetRef: React.RefObject<BottomSheetModal | null>;
 }) {
   return (
     <View className="bg-blue-50 rounded-full flex-row">
@@ -22,7 +20,6 @@ export function InputModeSwitch({
         onPress={() => {
           onChange(true);
           setText("");
-          sheetRef.current?.collapse();
         }}
         style={{ width: 32, height: 32, borderRadius: 9999 }}
         className={value ? "bg-black" : "bg-blue-100"}
