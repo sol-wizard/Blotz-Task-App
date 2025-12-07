@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
-import { View, Pressable, ActivityIndicator } from "react-native";
+import { View, Pressable, ActivityIndicator, ScrollView } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
@@ -110,8 +110,8 @@ export function AiTasksPreview({
   };
 
   return (
-    <View className="mb-10 items-center justify-between min-h-80">
-      <BottomSheetScrollView className="pb-5 w-full max-h-200">
+    <View className="mb-10 items-center justify-between">
+      <BottomSheetScrollView className="pb-5 w-full">
         {localTasks?.map((task) => (
           <AiTaskCard
             key={task.id}
@@ -122,7 +122,6 @@ export function AiTasksPreview({
           />
         ))}
       </BottomSheetScrollView>
-
       <View className="flex-row justify-center items-center mb-4">
         <Pressable
           onPress={handleGoBack}

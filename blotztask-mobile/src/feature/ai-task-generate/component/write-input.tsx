@@ -47,7 +47,7 @@ export const WriteInput = ({
         placeholderTextColor={theme.colors.secondary}
         multiline
         className="min-h-[100px] bg-white text-xl text-gray-800 font-baloo"
-        style={{ textAlignVertical: "top" }}
+        style={{ textAlignVertical: "top", marginLeft: 30 }}
       />
       {errorMessage && !isAiGenerating && <ErrorMessageCard errorMessage={errorMessage} />}
       {isAiGenerating && (

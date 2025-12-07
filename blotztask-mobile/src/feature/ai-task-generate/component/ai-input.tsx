@@ -5,7 +5,7 @@ import { Pressable, View, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 
 export const AiInput = ({
   text,
@@ -36,8 +36,8 @@ export const AiInput = ({
   });
 
   return (
-    <View className="w-96">
-      <View className="flex-row mb-8 -ml-6 items-center">
+    <BottomSheetView className="min-h-96">
+      <View className="flex-row mb-8 ml-4 items-center">
         <InputModeSwitch
           value={isVoiceInput}
           onChange={setIsVoiceInput}
@@ -76,6 +76,6 @@ export const AiInput = ({
           isAiGenerating={isAiGenerating}
         />
       )}
-    </View>
+    </BottomSheetView>
   );
 };

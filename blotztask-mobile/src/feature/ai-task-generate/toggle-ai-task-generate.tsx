@@ -39,13 +39,11 @@ export const ToggleAiTaskGenerate = () => {
         keyboardBlurBehavior="restore"
         enablePanDownToClose={false}
       >
-        <BottomSheetView className="justify-between items-center" style={{ minHeight: 300 }}>
-          <AiModalContent
-            sheetRef={aiVoiceInputModalRef}
-            modalType={modalType}
-            setModalType={setModalType}
-          />
-        </BottomSheetView>
+        <AiModalContent
+          sheetRef={aiVoiceInputModalRef}
+          modalType={modalType}
+          setModalType={setModalType}
+        />
       </BottomSheetModal>
     </>
   );
