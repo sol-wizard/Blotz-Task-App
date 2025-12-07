@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
 import { TaskAddedSuccess } from "./task-added-success";
@@ -10,15 +10,18 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
 
-export const AiTaskGenerateModal = ({
+export const AiModalContent = ({
   sheetRef,
+  modalType,
+  setModalType,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
+  modalType: BottomSheetType;
+  setModalType: (type: BottomSheetType) => void;
 }) => {
   const [text, setText] = useState("");
   const [isVoiceInput, setIsVoiceInput] = useState(true);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const [modalType, setModalType] = useState<BottomSheetType>("input");
   const { aiGeneratedMessage, sendMessage } = useAiTaskGenerator({
     setIsAiGenerating,
     setModalType,

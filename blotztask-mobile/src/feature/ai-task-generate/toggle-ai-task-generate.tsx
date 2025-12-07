@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Platform, Pressable, Image } from "react-native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
@@ -6,10 +6,13 @@ import { GradientCircle } from "@/shared/components/common/gradient-circle";
 
 import { ASSETS } from "@/shared/constants/assets";
 
-import { AiTaskGenerateModal } from "./component/ai-modal-content";
+import { AiModalContent } from "./component/ai-modal-content";
+import { BottomSheetType } from "./models/bottom-sheet-type";
 
 export const ToggleAiTaskGenerate = () => {
   const aiVoiceInputModalRef = useRef<BottomSheetModal>(null);
+  const [modalType, setModalType] = useState<BottomSheetType>("input");
+  const modalBackgroundColor = modalType === "add-task-success" ? "#F5F9FA" : "#FFFFFF";
 
   const openSheet = () => aiVoiceInputModalRef.current?.present();
   return (
@@ -27,7 +30,7 @@ export const ToggleAiTaskGenerate = () => {
         ref={aiVoiceInputModalRef}
         backdropComponent={renderBottomSheetBackdrop}
         backgroundStyle={{
-          backgroundColor: "#FFFFFF",
+          backgroundColor: modalBackgroundColor,
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
         }}
@@ -37,7 +40,11 @@ export const ToggleAiTaskGenerate = () => {
         enablePanDownToClose={false}
       >
         <BottomSheetView className="justify-between items-center" style={{ minHeight: 300 }}>
-          <AiTaskGenerateModal sheetRef={aiVoiceInputModalRef} />
+          <AiModalContent
+            sheetRef={aiVoiceInputModalRef}
+            modalType={modalType}
+            setModalType={setModalType}
+          />
         </BottomSheetView>
       </BottomSheetModal>
     </>
