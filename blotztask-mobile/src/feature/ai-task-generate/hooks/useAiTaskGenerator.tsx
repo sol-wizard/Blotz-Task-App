@@ -65,6 +65,7 @@ export function useAiTaskGenerator({
           .stop()
           .then(() => {
             console.log("SignalR Connection Stopped.");
+            setModalType("input");
             newConnection!.off("ReceiveMessage", receiveMessageHandler);
           })
           .catch((error) => console.error("Error stopping SignalR connection:", error));

@@ -34,7 +34,7 @@ export const ToggleAiTaskGenerate = () => {
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
         }}
-        snapPoints={["70%"]}
+        snapPoints={["40%", "70%"]}
         keyboardBehavior={Platform.OS === "ios" ? "extend" : "interactive"}
         keyboardBlurBehavior="restore"
         enablePanDownToClose={false}
