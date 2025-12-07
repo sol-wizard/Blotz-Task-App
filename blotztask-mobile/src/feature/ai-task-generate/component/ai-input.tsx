@@ -36,7 +36,7 @@ export const AiInput = ({
   });
 
   return (
-    <BottomSheetView className="min-h-96">
+    <View>
       <View className="flex-row mb-8 ml-4 items-center">
         <InputModeSwitch
           value={isVoiceInput}
@@ -76,6 +76,6 @@ export const AiInput = ({
           isAiGenerating={isAiGenerating}
         />
       )}
-    </BottomSheetView>
+    </View>
   );
 };

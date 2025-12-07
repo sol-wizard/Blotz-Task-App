@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Platform, Pressable, Image } from "react-native";
+import { Platform, Pressable, Image, Dimensions, KeyboardAvoidingView } from "react-native";
 import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { renderBottomSheetBackdrop } from "@/shared/components/ui/render-bottomsheet-backdrop";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
@@ -15,6 +15,9 @@ export const ToggleAiTaskGenerate = () => {
   const modalBackgroundColor = modalType === "add-task-success" ? "#F5F9FA" : "#FFFFFF";
 
   const openSheet = () => aiVoiceInputModalRef.current?.present();
+
+  const MAX_SHEET_HEIGHT = Dimensions.get("window").height * 0.8;
+
   return (
     <>
       <Pressable onPress={openSheet}>
@@ -34,16 +37,18 @@ export const ToggleAiTaskGenerate = () => {
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
         }}
-        snapPoints={["40%", "70%"]}
         keyboardBehavior={Platform.OS === "ios" ? "extend" : "interactive"}
         keyboardBlurBehavior="restore"
         enablePanDownToClose={false}
+        snapPoints={["40%", "70%"]}
       >
-        <AiModalContent
-          sheetRef={aiVoiceInputModalRef}
-          modalType={modalType}
-          setModalType={setModalType}
-        />
+        <BottomSheetView style={{ minHeight: 300 }}>
+          <AiModalContent
+            sheetRef={aiVoiceInputModalRef}
+            modalType={modalType}
+            setModalType={setModalType}
+          />
+        </BottomSheetView>
       </BottomSheetModal>
     </>
   );

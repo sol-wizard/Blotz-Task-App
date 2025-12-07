@@ -37,7 +37,7 @@ export const WriteInput = ({
   };
 
   return (
-    <View>
+    <View className="mr-6">
       <BottomSheetTextInput
         onChangeText={handleChange}
         onSubmitEditing={() => sendAndDismiss(text)}

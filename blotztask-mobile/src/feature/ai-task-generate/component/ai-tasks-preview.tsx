@@ -1,14 +1,14 @@
 /* eslint-disable camelcase */
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
-import { View, Pressable, ActivityIndicator, ScrollView } from "react-native";
+import { View, Pressable, ActivityIndicator, ScrollView, KeyboardAvoidingView } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetScrollView, BottomSheetView } from "@gorhom/bottom-sheet";
 import { scheduleTaskReminder } from "@/shared/util/schedule-task-reminder";
 import { NotificationTaskDTO } from "@/shared/models/notification-task-dto";
 
@@ -110,8 +110,8 @@ export function AiTasksPreview({
   };
 
   return (
-    <View className="mb-10 items-center justify-between">
-      <BottomSheetScrollView className="pb-5 w-full">
+    <View className="min-h-80">
+      <ScrollView className="w-full">
         {localTasks?.map((task) => (
           <AiTaskCard
             key={task.id}
@@ -121,8 +121,9 @@ export function AiTasksPreview({
             sheetRef={sheetRef}
           />
         ))}
-      </BottomSheetScrollView>
-      <View className="flex-row justify-center items-center mb-4">
+      </ScrollView>
+
+      <View className="flex-row justify-center items-center mb-8 mt-4">
         <Pressable
           onPress={handleGoBack}
           className="w-12 h-12 rounded-full items-center justify-center bg-black mx-8 font-bold"
