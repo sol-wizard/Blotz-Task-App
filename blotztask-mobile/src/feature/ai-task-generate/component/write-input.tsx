@@ -13,7 +13,6 @@ export const WriteInput = ({
   text: string;
   setText: (v: string) => void;
   sendMessage: (v: string) => void;
-
   errorMessage?: string;
   isAiGenerating: boolean;
 }) => {

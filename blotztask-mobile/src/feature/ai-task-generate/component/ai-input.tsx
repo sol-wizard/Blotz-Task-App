@@ -9,7 +9,6 @@ import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 export const AiInput = ({
   text,
   setText,
-
   sendMessage,
   isVoiceInput,
   setIsVoiceInput,
@@ -18,7 +17,6 @@ export const AiInput = ({
 }: {
   text: string;
   setText: (v: string) => void;
-
   sendMessage: (v: string) => void;
   isVoiceInput: boolean;
   setIsVoiceInput: (v: boolean) => void;
