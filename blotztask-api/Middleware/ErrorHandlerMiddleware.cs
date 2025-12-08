@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using BlotzTask.Shared.Exceptions;
 using BlotzTask.Shared.Responses;
 
@@ -16,16 +17,36 @@ public class ErrorHandlingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        var sw = Stopwatch.StartNew();
+
+        _logger.LogInformation(
+            "ErrorHandlingMiddleware starting for {Path}",
+            context.Request.Path);
+
         try
         {
             await _next(context);
-        }
 
+            sw.Stop();
+            _logger.LogInformation(
+                "ErrorHandlingMiddleware finished for {Path} in {Elapsed} ms with status code {StatusCode}",
+                context.Request.Path,
+                sw.ElapsedMilliseconds,
+                context.Response.StatusCode);
+        }
         catch (UnauthorizedAccessException ex)
         {
-            var errorMessage = string.IsNullOrWhiteSpace(ex.Message) ? "Unauthorized access." : ex.Message;
+            sw.Stop();
 
-            _logger.LogWarning(ex, "Unauthorized access attempt: {Message}", errorMessage);
+            var errorMessage = string.IsNullOrWhiteSpace(ex.Message)
+                ? "Unauthorized access."
+                : ex.Message;
+
+            _logger.LogWarning(
+                ex,
+                "Unauthorized access attempt after {Elapsed} ms: {Message}",
+                sw.ElapsedMilliseconds,
+                errorMessage);
 
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsJsonAsync(new ApiResponse<object>
@@ -34,10 +55,15 @@ public class ErrorHandlingMiddleware
                 Message = errorMessage
             });
         }
-
         catch (NotFoundException ex)
         {
-            _logger.LogError(ex, "Not found error: {Message}", ex.Message);
+            sw.Stop();
+
+            _logger.LogError(
+                ex,
+                "Not found error after {Elapsed} ms: {Message}",
+                sw.ElapsedMilliseconds,
+                ex.Message);
 
             context.Response.StatusCode = StatusCodes.Status404NotFound;
             await context.Response.WriteAsJsonAsync(new ApiResponse<object>
@@ -46,10 +72,15 @@ public class ErrorHandlingMiddleware
                 Message = ex.Message
             });
         }
-
         catch (ArgumentException ex)
         {
-            _logger.LogWarning(ex, "Bad request: {Message}", ex.Message);
+            sw.Stop();
+
+            _logger.LogWarning(
+                ex,
+                "Bad request after {Elapsed} ms: {Message}",
+                sw.ElapsedMilliseconds,
+                ex.Message);
 
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             await context.Response.WriteAsJsonAsync(new ApiResponse<object>
@@ -58,10 +89,15 @@ public class ErrorHandlingMiddleware
                 Message = ex.Message
             });
         }
-
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An unhandled exception occurred: {Message}", ex.Message);
+            sw.Stop();
+
+            _logger.LogError(
+                ex,
+                "Unhandled exception after {Elapsed} ms: {Message}",
+                sw.ElapsedMilliseconds,
+                ex.Message);
 
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             await context.Response.WriteAsJsonAsync(new ApiResponse<object>
