@@ -1,4 +1,3 @@
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import React from "react";
 import { View } from "react-native";
 import { IconButton } from "react-native-paper";
