@@ -14,8 +14,7 @@ import { Snackbar } from "react-native-paper";
 export default function StarSparkScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const { floatingTasks, isLoading } = useFloatingTasks();
-  const { deleteTask } = useTaskMutations();
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const { deleteTask, isDeleting } = useTaskMutations();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState("");
 
@@ -27,17 +26,13 @@ export default function StarSparkScreen() {
   };
 
   const handleDeleteTask = async (id: number) => {
-    setDeletingId(id);
     try {
-      await deleteTask(id);
+      await deleteTask(id); // ⭐ 直接调用 mutation
       setSnackbarMsg("Task deleted");
       setSnackbarVisible(true);
-    } catch (e) {
-      console.error("Failed to delete task", e);
+    } catch {
       setSnackbarMsg("Failed to delete task");
       setSnackbarVisible(true);
-    } finally {
-      setDeletingId(null);
     }
   };
 
@@ -75,7 +70,7 @@ export default function StarSparkScreen() {
         <FloatingTaskDualView
           tasks={floatingTasks}
           onDeleteTask={handleDeleteTask}
-          deletingId={deletingId}
+          isDeleting={isDeleting} // ⭐ 传一个全局 isDeleting 下去
           onPressTask={handlePressTask}
         />
       )}

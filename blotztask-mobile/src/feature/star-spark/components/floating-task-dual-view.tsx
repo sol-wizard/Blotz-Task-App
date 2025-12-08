@@ -8,12 +8,12 @@ type ToggledMap = Record<number, boolean>;
 export const FloatingTaskDualView = ({
   tasks,
   onDeleteTask,
-  deletingId,
+  isDeleting,
   onPressTask,
 }: {
   tasks: FloatingTaskDTO[];
   onDeleteTask: (id: number) => void;
-  deletingId: number | null;
+  isDeleting: boolean;
   onPressTask: (task: FloatingTaskDTO) => void;
 }) => {
   const [toggledMap, setToggledMap] = useState<ToggledMap>({});
@@ -42,10 +42,10 @@ export const FloatingTaskDualView = ({
                 <FloatingTaskCard
                   key={item.id}
                   floatingTask={item}
-                  isToggled={isToggled}
+                  isToggled={!!toggledMap[item.id]}
                   onToggle={() => handleToggle(item.id)}
                   onDelete={onDeleteTask}
-                  isDeleting={deletingId === item.id}
+                  isDeleting={isDeleting} // ⭐ 每张卡都拿到同一个 isDeleting
                   onPressCard={onPressTask}
                 />
               );
@@ -59,10 +59,10 @@ export const FloatingTaskDualView = ({
                 <FloatingTaskCard
                   key={item.id}
                   floatingTask={item}
-                  isToggled={isToggled}
+                  isToggled={!!toggledMap[item.id]}
                   onToggle={() => handleToggle(item.id)}
                   onDelete={onDeleteTask}
-                  isDeleting={deletingId === item.id}
+                  isDeleting={isDeleting}
                   onPressCard={onPressTask}
                 />
               );
