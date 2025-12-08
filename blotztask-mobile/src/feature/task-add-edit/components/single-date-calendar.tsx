@@ -10,7 +10,6 @@ export const SingleDateCalendar = ({
   onStartDateChange: (...event: any[]) => void;
 }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(defaultStartDate);
-  console.log("defaultStartDate", defaultStartDate);
 
   return (
     <Calendar
