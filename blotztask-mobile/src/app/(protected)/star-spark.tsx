@@ -70,7 +70,7 @@ export default function StarSparkScreen() {
         <FloatingTaskDualView
           tasks={floatingTasks}
           onDeleteTask={handleDeleteTask}
-          isDeleting={isDeleting} // ⭐ 传一个全局 isDeleting 下去
+          isDeleting={isDeleting}
           onPressTask={handlePressTask}
         />
       )}

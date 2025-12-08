@@ -37,7 +37,6 @@ export const FloatingTaskDualView = ({
         <View className="flex-row">
           <View className="flex-1 mr-1.5">
             {leftColumn.map((item) => {
-              const isToggled = !!toggledMap[item.id];
               return (
                 <FloatingTaskCard
                   key={item.id}
@@ -45,7 +44,7 @@ export const FloatingTaskDualView = ({
                   isToggled={!!toggledMap[item.id]}
                   onToggle={() => handleToggle(item.id)}
                   onDelete={onDeleteTask}
-                  isDeleting={isDeleting} // ⭐ 每张卡都拿到同一个 isDeleting
+                  isDeleting={isDeleting}
                   onPressCard={onPressTask}
                 />
               );
@@ -54,7 +53,6 @@ export const FloatingTaskDualView = ({
 
           <View className="flex-1 ml-1.5">
             {rightColumn.map((item) => {
-              const isToggled = !!toggledMap[item.id];
               return (
                 <FloatingTaskCard
                   key={item.id}
