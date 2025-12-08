@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using BlotzTask.Shared.Exceptions;
 using BlotzTask.Shared.Responses;
 
@@ -17,23 +16,15 @@ public class ErrorHandlingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        
-
         try
         {
             await _next(context);
-
-            
         }
         catch (UnauthorizedAccessException ex)
         {
-            
+            var errorMessage = string.IsNullOrWhiteSpace(ex.Message) ? "Unauthorized access." : ex.Message;
+            _logger.LogWarning(ex, "Unauthorized access attempt: {Message}", errorMessage);
 
-            var errorMessage = string.IsNullOrWhiteSpace(ex.Message)
-                ? "Unauthorized access."
-                : ex.Message;
-
-           
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsJsonAsync(new ApiResponse<object>
             {
@@ -43,10 +34,7 @@ public class ErrorHandlingMiddleware
         }
         catch (NotFoundException ex)
         {
-            
-
-           
-
+            _logger.LogError(ex, "Not found error: {Message}", ex.Message);
             context.Response.StatusCode = StatusCodes.Status404NotFound;
             await context.Response.WriteAsJsonAsync(new ApiResponse<object>
             {
@@ -56,8 +44,7 @@ public class ErrorHandlingMiddleware
         }
         catch (ArgumentException ex)
         {
-           
-
+            _logger.LogWarning(ex, "Bad request: {Message}", ex.Message);
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             await context.Response.WriteAsJsonAsync(new ApiResponse<object>
             {
@@ -67,8 +54,7 @@ public class ErrorHandlingMiddleware
         }
         catch (Exception ex)
         {
-            
-
+            _logger.LogError(ex, "An unhandled exception occurred: {Message}", ex.Message);
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             await context.Response.WriteAsJsonAsync(new ApiResponse<object>
             {
