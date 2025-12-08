@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Image } from "react-native";
+import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
 import { FloatingTaskDTO } from "../models/floating-task-dto";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
@@ -9,10 +9,16 @@ export const FloatingTaskCard = ({
   floatingTask,
   isToggled,
   onToggle,
+  isDeleting,
+  onDelete,
+  onPressCard,
 }: {
   floatingTask: FloatingTaskDTO;
   isToggled: boolean;
   onToggle: () => void;
+  isDeleting: boolean;
+  onDelete: (id: number) => void;
+  onPressCard: (task: FloatingTaskDTO) => void;
 }) => {
   const iconSource = getLabelIcon(floatingTask.label?.name);
 
@@ -28,7 +34,13 @@ export const FloatingTaskCard = ({
 
   return (
     <View className="mb-4">
-      <Pressable onLongPress={onToggle}>
+      <Pressable
+        onLongPress={onToggle}
+        onPress={() => {
+          if (isToggled) return;
+          onPressCard(floatingTask);
+        }}
+      >
         <View
           className={`bg-white rounded-3xl p-4 ${isToggled ? "border-2 border-[#3D8DE0]" : ""}`}
         >
@@ -53,9 +65,13 @@ export const FloatingTaskCard = ({
 
       {isToggled && (
         <View className="flex-row justify-end mt-3">
-          <Pressable>
+          <Pressable onPress={() => onDelete(floatingTask.id)} disabled={isDeleting}>
             <View className="w-8 h-8 bg-warning rounded-xl items-center justify-center">
-              <MaterialCommunityIcons name="trash-can-outline" color="#fff" size={18} />
+              {isDeleting ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <MaterialCommunityIcons name="trash-can-outline" color="#fff" size={18} />
+              )}
             </View>
           </Pressable>
 

@@ -8,10 +8,33 @@ import { router } from "expo-router";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { FloatingTaskDualView } from "@/feature/star-spark/components/floating-task-dual-view";
 import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { Snackbar } from "react-native-paper";
 
 export default function StarSparkScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const { floatingTasks, isLoading } = useFloatingTasks();
+  const { deleteTask, isDeleting } = useTaskMutations();
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState("");
+
+  const handlePressTask = (task: any) => {
+    router.push({
+      pathname: "/task-edit",
+      params: { taskId: String(task.id) },
+    });
+  };
+
+  const handleDeleteTask = async (id: number) => {
+    try {
+      await deleteTask(id); // ⭐ 直接调用 mutation
+      setSnackbarMsg("Task deleted");
+      setSnackbarVisible(true);
+    } catch {
+      setSnackbarMsg("Failed to delete task");
+      setSnackbarVisible(true);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -41,10 +64,28 @@ export default function StarSparkScreen() {
           }}
         />
       </View>
+
       {isLoading && <LoadingScreen />}
       {!isLoading && floatingTasks && floatingTasks.length > 0 && (
-        <FloatingTaskDualView tasks={floatingTasks} />
+        <FloatingTaskDualView
+          tasks={floatingTasks}
+          onDeleteTask={handleDeleteTask}
+          isDeleting={isDeleting}
+          onPressTask={handlePressTask}
+        />
       )}
+
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+        action={{
+          label: "Dismiss",
+          onPress: () => setSnackbarVisible(false),
+        }}
+      >
+        {snackbarMsg}
+      </Snackbar>
     </SafeAreaView>
   );
 }
