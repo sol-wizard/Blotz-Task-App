@@ -55,8 +55,8 @@ export default function AiTaskSheetScreen() {
     let targetPct = 38;
 
     if (modalType === "task-preview") {
-      const base = 45;
-      const perTask = 10;
+      const base = 35;
+      const perTask = 5;
       targetPct = Math.min(80, base + taskCount * perTask);
     } else if (modalType === "add-task-success") {
       targetPct = 40;
@@ -66,7 +66,7 @@ export default function AiTaskSheetScreen() {
   }, [modalType]);
 
   return (
-    <View className="flex-1 bg-[rgba(0,0,0,0.4)]">
+    <View className="flex-1 bg-transparent">
       <Pressable className="absolute inset-0" onPress={() => router.back()} />
 
       <Animated.View

@@ -80,7 +80,7 @@ export default function ProtectedLayout() {
         options={{
           headerShown: false,
           presentation: "transparentModal",
-          animation: "slide_from_bottom",
+          animation: "fade",
           contentStyle: { backgroundColor: "rgba(0,0,0,0.4)" },
           gestureEnabled: false,
           fullScreenGestureEnabled: false,
