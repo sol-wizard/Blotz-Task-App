@@ -33,7 +33,8 @@ builder.Services.AddAuth0ApiAuthentication(options =>
     options.Domain = builder.Configuration["Auth0:Domain"];
     options.JwtBearerOptions = new JwtBearerOptions
     {
-        Audience = builder.Configuration["Auth0:Audience"]
+        Audience = builder.Configuration["Auth0:Audience"],
+        AutomaticRefreshInterval = TimeSpan.FromHours(72)
     };
 });
 builder.Services.AddAzureOpenAi();
