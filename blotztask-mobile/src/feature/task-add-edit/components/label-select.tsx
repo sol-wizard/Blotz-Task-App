@@ -25,7 +25,7 @@ export function LabelSelect({ control, labels }: LabelSelectProps) {
       onPress={onPress}
       accessibilityRole="button"
       style={{ backgroundColor: item.color }}
-      className={`min-h-[44px] px-[14px] py-[10px] rounded-xl mr-2 mb-2 ${selected ? "border-2 border-black" : "border-0 border-transparent"}`}
+      className={`min-h-[44px] px-[14px] py-[10px] rounded-xl mr-2 mb-2 border-2 ${selected ? "border-black" : "border-transparent"}`}
     >
       <Text className="font-baloo">{item.name}</Text>
     </Pressable>
