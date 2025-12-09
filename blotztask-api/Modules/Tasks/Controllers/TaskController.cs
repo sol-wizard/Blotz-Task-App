@@ -35,11 +35,12 @@ public class TaskController(
     public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate(
         [FromQuery] GetTasksByDateRequest getTasksByDateRequest, CancellationToken ct)
     {
+        var stopwatch = Stopwatch.StartNew();
 
+        _logger.LogInformation("Resolving UserId from HttpContext for GetTaskByDate");
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
-        var stopwatch = Stopwatch.StartNew();
         _logger.LogInformation(
             "Handling GetTaskByDate for user {UserId} starting at {StartDateUtc} (IncludeFloatingForToday: {IncludeFloatingForToday})",
             userId,
@@ -83,6 +84,9 @@ public class TaskController(
         [FromQuery] GetWeeklyTaskAvailabilityRequest getWeeklyTaskAvailabilityRequest,
         CancellationToken ct)
     {
+        var stopwatch = Stopwatch.StartNew();
+
+        _logger.LogInformation("Resolving UserId from HttpContext for GetWeeklyTaskAvailability");
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
@@ -92,7 +96,17 @@ public class TaskController(
             MondayUtc = getWeeklyTaskAvailabilityRequest.MondayUtc
         };
 
+        _logger.LogInformation(
+            "Timing GetWeeklyTaskAvailability for user {UserId} at MondayUtc {MondayUtc}; elapsed so far {ElapsedMs}ms",
+            userId,
+            getWeeklyTaskAvailabilityRequest.MondayUtc,
+            stopwatch.ElapsedMilliseconds);
+            
         var result = await getWeeklyTaskAvailabilityQueryHandler.Handle(query, ct);
+        _logger.LogInformation(
+            "GetWeeklyTaskAvailability finished for user {UserId} in {ElapsedMs}ms",
+            userId,
+            stopwatch.ElapsedMilliseconds);
         return result;
     }
 
