@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using BlotzTask.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
@@ -24,14 +25,18 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
     public async Task<List<DailyTaskIndicatorDto>> Handle(GetWeeklyTaskAvailabilityQuery query,
         CancellationToken ct = default)
     {
+        var stopwatch = Stopwatch.StartNew();
         var startDateUtc = query.MondayUtc;
 
         var endDateUtcExclusive = query.MondayUtc.AddDays(7);
 
-        logger.LogInformation("Getting task days from {startDateUtc} to {endDateUtcExclusive}", startDateUtc,
+        logger.LogInformation(
+            "Fetching weekly task availability for user {UserId} from {startDateUtc} to {endDateUtcExclusive}",
+            query.UserId,
+            startDateUtc,
             endDateUtcExclusive);
 
-
+        var queryStopwatch = Stopwatch.StartNew();
         var tasks = await db.TaskItems
             .AsNoTracking()
             .Where(t => t.UserId == query.UserId &&
@@ -51,6 +56,11 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                 t.CreatedAt
             })
             .ToListAsync(ct);
+        logger.LogInformation(
+            "Fetched {TaskCount} tasks for weekly availability for user {UserId} (DB query {DbElapsedMs}ms)",
+            tasks.Count,
+            query.UserId,
+            queryStopwatch.ElapsedMilliseconds);
 
         var result = new List<DailyTaskIndicatorDto>();
 
@@ -74,6 +84,11 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                 HasTask = hasTask
             });
         }
+
+        logger.LogInformation(
+            "Computed weekly task availability for user {UserId} in {ElapsedMs}ms",
+            query.UserId,
+            stopwatch.ElapsedMilliseconds);
 
         return result;
     }
