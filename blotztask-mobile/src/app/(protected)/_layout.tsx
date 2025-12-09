@@ -75,6 +75,17 @@ export default function ProtectedLayout() {
           },
         }}
       />
+      <Stack.Screen
+        name="ai-task-sheet"
+        options={{
+          headerShown: false,
+          presentation: "transparentModal",
+          animation: "fade",
+          contentStyle: { backgroundColor: "rgba(0,0,0,0.4)" },
+          gestureEnabled: false,
+          fullScreenGestureEnabled: false,
+        }}
+      />
     </Stack>
   );
 }
