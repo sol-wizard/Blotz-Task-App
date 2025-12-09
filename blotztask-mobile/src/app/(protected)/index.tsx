@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { View } from "react-native";
+import { Pressable, View, Image } from "react-native";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import SettingsScreen from "@/feature/settings/settings-screen";
-import { ToggleAiTaskGenerate } from "@/feature/ai-task-generate/toggle-ai-task-generate";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
 import StarSparkScreen from "./star-spark";
 import { router } from "expo-router";
 import { theme } from "@/shared/constants/theme";
+import { GradientCircle } from "@/shared/components/common/gradient-circle";
 
 const routes = [
   {
@@ -122,7 +122,15 @@ export default function ProtectedIndex() {
       />
 
       <View className="absolute left-4 right-4 items-center" style={{ bottom: insets.bottom + 6 }}>
-        <ToggleAiTaskGenerate />
+        <Pressable onPress={() => router.push("/ai-task-sheet")}>
+          <GradientCircle size={58}>
+            <Image
+              source={ASSETS.whiteBun}
+              resizeMode="contain"
+              style={[{ width: 28, height: 28, position: "absolute" }]}
+            />
+          </GradientCircle>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
