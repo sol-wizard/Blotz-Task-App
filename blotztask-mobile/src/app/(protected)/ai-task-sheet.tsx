@@ -15,7 +15,6 @@ export default function AiTaskSheetScreen() {
     setIsAiGenerating,
     setModalType,
   });
-  const offset = { closed: 0, opened: 20 };
 
   return (
     <View className="flex-1 bg-transparent">
