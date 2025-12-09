@@ -47,11 +47,13 @@ export const WriteInput = ({
       />
 
       {errorMessage && !isAiGenerating && <ErrorMessageCard errorMessage={errorMessage} />}
-      {isAiGenerating && (
-        <View className="items-center">
-          <CustomSpinner size={60} />
-        </View>
-      )}
+
+      <View
+        className={`${isAiGenerating ? "opacity-100" : "opacity-0"} items-center`}
+        style={isAiGenerating ? {} : { pointerEvents: "none" }}
+      >
+        <CustomSpinner size={60} />
+      </View>
     </View>
   );
 };
