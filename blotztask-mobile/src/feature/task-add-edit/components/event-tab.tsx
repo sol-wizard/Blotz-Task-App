@@ -84,7 +84,10 @@ export const EventTab = ({ control }: { control: any }) => {
         </View>
 
         {activeSelector === "startDate" && (
-          <SingleDateCalendar onStartDateChange={handleStartDateChange} />
+          <SingleDateCalendar
+            onStartDateChange={handleStartDateChange}
+            defaultStartDate={format(new Date(startDateValue), "yyyy-MM-dd")}
+          />
         )}
         {activeSelector === "startTime" && (
           <TimePicker value={startTimeValue} onChange={(v: Date) => startTimeOnChange(v)} />

@@ -3,11 +3,14 @@ import { useState } from "react";
 import { Calendar, DateData } from "react-native-calendars";
 
 export const SingleDateCalendar = ({
+  defaultStartDate,
   onStartDateChange,
 }: {
+  defaultStartDate: string;
   onStartDateChange: (...event: any[]) => void;
 }) => {
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(defaultStartDate);
+
   return (
     <Calendar
       onDayPress={(day: DateData) => {
