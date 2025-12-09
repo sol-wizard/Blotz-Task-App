@@ -22,25 +22,39 @@ export async function clearTokens(): Promise<void> {
   await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
 }
 
+let refreshTokenPromise: Promise<string> | null = null;
+
 export async function refreshToken(): Promise<string> {
-  console.log("starts refresh token!");
-  const refreshTokenValue = await getRefreshToken();
-
-  if (!refreshTokenValue) {
-    throw new Error("No refresh token available");
+  if (refreshTokenPromise) {
+    console.log("wait for ongoing refresh token");
+    return refreshTokenPromise;
   }
 
-  const credentials = await auth0.auth.refreshToken({ refreshToken: refreshTokenValue });
+  refreshTokenPromise = (async () => {
+    console.log("starts refresh token!");
 
-  if (!credentials.accessToken) {
-    throw new Error("Failed to refresh token");
+    const refreshTokenValue = await getRefreshToken();
+    if (!refreshTokenValue) {
+      throw new Error("No refresh token available");
+    }
+
+    const credentials = await auth0.auth.refreshToken({
+      refreshToken: refreshTokenValue,
+    });
+
+    console.log("get new tokens");
+
+    await setAuthToken(credentials.accessToken);
+    if (credentials.refreshToken) {
+      await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, credentials.refreshToken);
+    }
+
+    return credentials.accessToken;
+  })();
+
+  try {
+    return await refreshTokenPromise;
+  } finally {
+    refreshTokenPromise = null;
   }
-
-  await setAuthToken(credentials.accessToken);
-
-  if (credentials.refreshToken) {
-    await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, credentials.refreshToken);
-  }
-
-  return credentials.accessToken;
 }
