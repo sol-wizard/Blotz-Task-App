@@ -38,6 +38,7 @@ public class UserContextMiddleware
 
 
             var appUser = await dbContext.AppUsers
+                .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Auth0UserId == auth0UserId);
 
             var afterDbMs = sw.ElapsedMilliseconds;
