@@ -1,14 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
-import { View, Pressable, Keyboard, Animated, Platform, KeyboardAvoidingView } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useState } from "react";
+import { View, Pressable } from "react-native";
 import { router } from "expo-router";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { AiModalContent } from "@/feature/ai-task-generate/component/ai-modal-content";
 import { AiResultMessageDTO } from "@/feature/ai-task-generate/models/ai-result-message-dto";
 import { useAiTaskGenerator } from "@/feature/ai-task-generate/hooks/useAiTaskGenerator";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 export default function AiTaskSheetScreen() {
-  const insets = useSafeAreaInsets();
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
 
@@ -16,15 +15,12 @@ export default function AiTaskSheetScreen() {
     setIsAiGenerating,
     setModalType,
   });
+  const offset = { closed: 0, opened: 20 };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1"
-    >
-      <View className="flex-1 bg-transparent">
-        <Pressable className="flex-1" onPress={() => router.back()} />
-
+    <View className="flex-1 bg-transparent">
+      <Pressable className="flex-1" onPress={() => router.back()} />
+      <KeyboardAvoidingView behavior={"padding"}>
         <View
           className="left-0 right-0 bottom-0 rounded-t-3xl px-4 pt-4 min-h-[200px]"
           style={{
@@ -39,7 +35,7 @@ export default function AiTaskSheetScreen() {
             isAiGenerating={isAiGenerating}
           />
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }

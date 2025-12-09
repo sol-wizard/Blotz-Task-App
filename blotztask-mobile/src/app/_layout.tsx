@@ -22,6 +22,7 @@ import { theme } from "@/shared/constants/theme";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/shared/util/queryClient";
 import * as Sentry from "@sentry/react-native";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 export default function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
@@ -39,7 +40,6 @@ export default function RootLayout() {
   Sentry.init({
     dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
     sendDefaultPii: true,
-    enableLogs: true,
     enableNative: true,
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1,
@@ -63,11 +63,13 @@ export default function RootLayout() {
               <BottomSheetModalProvider>
                 <Portal.Host>
                   <SafeAreaProvider>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="index" options={{ headerShown: false }} />
-                      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                      <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-                    </Stack>
+                    <KeyboardProvider>
+                      <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen name="index" options={{ headerShown: false }} />
+                        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                        <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+                      </Stack>
+                    </KeyboardProvider>
                   </SafeAreaProvider>
                 </Portal.Host>
               </BottomSheetModalProvider>
