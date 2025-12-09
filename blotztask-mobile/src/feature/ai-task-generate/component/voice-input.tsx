@@ -51,7 +51,7 @@ export const VoiceInput = ({
       )}
 
       {!isAiGenerating ? (
-        <View className="my-4 items-center">
+        <View className="mt-4 mb-8 items-center">
           <Pressable
             onLongPress={async () => {
               setText("");
@@ -83,7 +83,7 @@ export const VoiceInput = ({
           </Pressable>
         </View>
       ) : (
-        <View className="items-center my-4">
+        <View className="items-center mt-4 mb-8">
           <CustomSpinner size={60} />
         </View>
       )}

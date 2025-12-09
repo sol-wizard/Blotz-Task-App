@@ -42,14 +42,14 @@ export const WriteInput = ({
         placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
         placeholderTextColor={theme.colors.secondary}
         multiline
-        className="min-h-[100px] bg-white text-xl text-gray-800 font-baloo"
+        className="min-h-[140px] bg-white text-xl text-gray-800 font-baloo"
         style={{ textAlignVertical: "top", marginLeft: 30 }}
       />
 
       {errorMessage && !isAiGenerating && <ErrorMessageCard errorMessage={errorMessage} />}
 
       <View
-        className={`${isAiGenerating ? "opacity-100" : "opacity-0"} items-center`}
+        className={`${isAiGenerating ? "opacity-100" : "opacity-0"} items-center my-6`}
         style={isAiGenerating ? {} : { pointerEvents: "none" }}
       >
         <CustomSpinner size={60} />

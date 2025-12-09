@@ -28,7 +28,6 @@ export default function AiTaskSheetScreen() {
         <View
           className="left-0 right-0 bottom-0 rounded-t-3xl px-4 pt-4 min-h-[200px]"
           style={{
-            paddingBottom: insets.bottom + 16,
             backgroundColor: modalType === "add-task-success" ? "#F5F9FA" : "#FFFFFF",
           }}
         >
