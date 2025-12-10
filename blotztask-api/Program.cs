@@ -21,7 +21,7 @@ builder.Services.AddCoreServices();
 builder.Services.AddChatTaskGeneratorModule();
 
 builder.Services.AddTaskModule();
-builder.Services.AddUserModule();
+builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddLabelModule();
 builder.Services.AddTaskBreakdownModule();
 builder.Services.AddTimeEstimateModule();
@@ -30,7 +30,7 @@ builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 
 builder.Services.AddAuth0ApiAuthentication(options =>
 {
-    options.Domain = builder.Configuration["Auth0:Domain"];
+    options.Domain = builder.Configuration["Auth0:Management:Domain"];
     options.JwtBearerOptions = new JwtBearerOptions
     {
         Audience = builder.Configuration["Auth0:Audience"],

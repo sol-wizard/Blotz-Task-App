@@ -9,7 +9,12 @@ namespace BlotzTask.Modules.Users;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class UserController(SyncUserCommandHandler syncUserCommandHandler, GetUserProfileQueryHandler getUserProfileQueryHandler, ILogger<UserController> logger, IConfiguration configuration) : ControllerBase
+public class UserController(
+    SyncUserCommandHandler syncUserCommandHandler,
+    GetUserProfileQueryHandler getUserProfileQueryHandler,
+    UpdateUserProfileCommandHandler updateUserProfileCommandHandler,
+    ILogger<UserController> logger,
+    IConfiguration configuration) : ControllerBase
 {
     [HttpPost("user-sync")]
     [AllowAnonymous]
@@ -20,13 +25,13 @@ public class UserController(SyncUserCommandHandler syncUserCommandHandler, GetUs
         CancellationToken ct)
     {
         var expected = configuration["ApiKeys:UserSync"];
-        
+
         if (string.IsNullOrWhiteSpace(expected) || apiKey != expected)
         {
             logger.LogWarning("Unauthorized webhook call");
             return Unauthorized();
         }
-        
+
         var result = await syncUserCommandHandler.Handle(new SyncUserCommand(user), ct);
         return Ok(result);
     }
@@ -36,14 +41,26 @@ public class UserController(SyncUserCommandHandler syncUserCommandHandler, GetUs
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new InvalidOperationException("UserProfile not found");
-        
+
         var query = new GetUserProfileQuery
         {
             UserId = userId
         };
-        
-        return await getUserProfileQueryHandler.Handle(query, ct);;
+
+        return await getUserProfileQueryHandler.Handle(query, ct);
+        ;
+    }
+
+    [HttpPut]
+    public async Task<string> UpdateProfile([FromBody] UpdateUserDto updateUserDto, CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var command = new UpdateUserProfileCommand
+        {
+            Id = userId,
+            DisplayName = updateUserDto.DisplayName
+        };
+        return await updateUserProfileCommandHandler.Handle(command, ct);
     }
 }
-
-
