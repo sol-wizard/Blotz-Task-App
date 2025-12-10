@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View, Image } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -29,7 +29,9 @@ export default function GashaponMachine() {
 
   const MAX_STARS = 30;
 
-  const limitedFloatingTasks = floatingTasks ?? [].slice(0, MAX_STARS);
+  const limitedFloatingTasks = useMemo(() => {
+    return (floatingTasks ?? []).slice(0, MAX_STARS);
+  }, [floatingTasks]);
 
   const handleDoNow = () => {
     console.log("Do it now pressed!");
@@ -43,17 +45,17 @@ export default function GashaponMachine() {
   };
 
   const handleTryAgain = () => {
-    // 触发星球返回动画
     setReturnStarTrigger((prev) => prev + 1);
+    setModalVisible(false);
   };
 
   const handleReturnAnimationComplete = () => {
-    // 返回动画完成后，重置状态
+    resetStarsPhysics();
     setStarLabelName("");
     setRandomTask(null);
   };
 
-  const { entities, handleRelease } = useGashaponMachineConfig({
+  const { entities, handleRelease, resetStarsPhysics } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
     floatingTasks: limitedFloatingTasks,
   });
@@ -144,6 +146,7 @@ export default function GashaponMachine() {
           trigger={returnStarTrigger}
           onAnimationComplete={handleReturnAnimationComplete}
         />
+
       </SafeAreaView>
     </LinearGradient>
   );
