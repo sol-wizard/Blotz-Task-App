@@ -24,7 +24,7 @@ export const useGashaponMachineConfig = ({
   const starsRef = useRef<Matter.Body[]>([]);
   const isGateOpenRef = useRef(false);
   const starPassedRef = useRef(false);
-  const droppedStarIndexRef = useRef<number>(-1);  // 保存星星的原始索引
+  const droppedStarIndexRef = useRef<number>(-1); // 保存星星的原始索引
   const floatingTasksRef = useRef<FloatingTaskDTO[]>([]);
   const starLabelsRef = useRef<string[]>([]);
 
@@ -73,7 +73,7 @@ export const useGashaponMachineConfig = ({
         let star = starsRef.current[idx];
         const labelName = getLabelNameByIndex(idx);
         const entityKey = getStarEntityKey(idx);
-        
+
         // 使用原始索引计算位置
         const col = idx % 6;
         const row = Math.floor(idx / 6);
@@ -100,14 +100,14 @@ export const useGashaponMachineConfig = ({
           console.log(`Re-adding ${star.label} to world`);
           Matter.World.add(world, star);
         }
-        
+
         // 重置物理属性 - 保持和初始化一样的物理参数
         Matter.Body.setPosition(star, { x, y });
         Matter.Body.setVelocity(star, { x: 0, y: 0 });
         Matter.Body.setAngularVelocity(star, 0);
         // 不应用额外的力，让重力自然作用（像初始化一样）
         Matter.Sleeping.set(star, false);
-        
+
         // 重新创建实体（如果被删除了）
         updatedEntities[entityKey] = {
           body: star,
@@ -243,10 +243,10 @@ export const useGashaponMachineConfig = ({
           console.log(`⚡ Star ${star.label} passed sensor, removing`);
           const starIndex = starsRef.current.indexOf(star);
           const labelName = getLabelNameByIndex(starIndex);
-          
+
           // 保存星星的索引，用于后续重置
           droppedStarIndexRef.current = starIndex;
-          
+
           starPassedRef.current = true;
           closeGate();
           onStarDropped(labelName);
