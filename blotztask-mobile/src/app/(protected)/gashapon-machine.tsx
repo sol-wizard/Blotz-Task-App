@@ -146,7 +146,6 @@ export default function GashaponMachine() {
           trigger={returnStarTrigger}
           onAnimationComplete={handleReturnAnimationComplete}
         />
-
       </SafeAreaView>
     </LinearGradient>
   );
