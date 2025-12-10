@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Users.Services;
 using BlotzTask.Shared.Exceptions;
@@ -6,8 +7,8 @@ namespace BlotzTask.Modules.Users.Commands;
 
 public class UpdateUserProfileCommand
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public string? DisplayName { get; set; }
+    public Guid Id { get; set; }
+    public string DisplayName { get; set; }
 }
 
 public class UpdateUserProfileCommandHandler(
@@ -44,5 +45,5 @@ public class UpdateUserProfileCommandHandler(
 
 public class UpdateUserDto
 {
-    public string? DisplayName { get; set; }
+    [Required] public string DisplayName { get; set; }
 }
