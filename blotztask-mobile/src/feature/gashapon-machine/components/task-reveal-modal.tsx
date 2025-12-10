@@ -8,10 +8,28 @@ type TaskRevealModalProps = {
   task: FloatingTaskDTO | null;
   onClose: () => void;
   onDoNow: () => void;
+  onTryAgain?: () => void;
 };
 
-export const TaskRevealModal = ({ visible, task, onClose, onDoNow }: TaskRevealModalProps) => {
+export const TaskRevealModal = ({
+  visible,
+  task,
+  onClose,
+  onDoNow,
+  onTryAgain,
+}: TaskRevealModalProps) => {
   const imageSource = getLabelIcon(task?.label?.name);
+
+  const handleTryAgain = () => {
+    onTryAgain?.();
+    onClose();
+  };
+
+  const handleDoNow = () => {
+    onDoNow();
+    onClose();
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
       <View className="flex-1 bg-black/40 items-center justify-center">
@@ -36,17 +54,14 @@ export const TaskRevealModal = ({ visible, task, onClose, onDoNow }: TaskRevealM
 
           <View className="flex-row justify-between mt-2">
             <Pressable
-              onPress={onClose}
+              onPress={handleTryAgain}
               className="flex-1 mr-2 bg-white rounded-full h-11 items-center justify-center"
             >
               <Text className="text-gray-400 font-semibold font-baloo">Try again</Text>
             </Pressable>
 
             <Pressable
-              onPress={() => {
-                onDoNow();
-                onClose();
-              }}
+              onPress={handleDoNow}
               className="flex-1 ml-2 rounded-full h-11 items-center justify-center bg-[#99D612]"
             >
               <Text className="text-slate-900 font-semibold font-baloo">Do it now</Text>
