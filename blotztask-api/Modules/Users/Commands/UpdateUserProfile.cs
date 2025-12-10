@@ -23,14 +23,8 @@ public class UpdateUserProfileCommandHandler(
         var user = await db.AppUsers.FindAsync(profileCommand.Id, ct);
 
         if (user == null) throw new NotFoundException($"User with ID {profileCommand.Id} not found.");
-
-        user.DisplayName = profileCommand.DisplayName;
+        
         var auth0UserId = user.Auth0UserId;
-
-        db.AppUsers.Update(user);
-        await db.SaveChangesAsync(ct);
-
-        logger.LogInformation("User Profile for user {UserId} updated successfully in database.", profileCommand.Id);
 
         await auth0ManagementService.UpdateUserProfileAsync(
             auth0UserId,
@@ -38,6 +32,9 @@ public class UpdateUserProfileCommandHandler(
         );
 
         logger.LogInformation("User Profile for user {UserId} updated successfully in auth0.", profileCommand.Id);
+
+        var auth0User = await auth0ManagementService.GetUserAsync(auth0UserId, ct);
+        
 
         return "User profile updated successfully.";
     }

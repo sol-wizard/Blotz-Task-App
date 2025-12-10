@@ -11,9 +11,11 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Manual registration of command handlers
-        services.Configure<Auth0ManagementSettings>(
-            configuration.GetSection("Auth0:Management"));
+        services.Configure<Auth0ManagementSettings>(options =>
+        {
+            configuration.GetSection("Auth0:Management").Bind(options);
+            options.Domain = configuration["Auth0:Domain"];
+        });
         services.AddScoped<SyncUserCommandHandler>();
         services.AddScoped<GetUserProfileQueryHandler>();
         services.AddScoped<UpdateUserProfileCommandHandler>();

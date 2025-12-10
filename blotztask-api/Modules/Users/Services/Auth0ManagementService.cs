@@ -11,6 +11,9 @@ public interface IAuth0ManagementService
 {
     Task UpdateUserProfileAsync(string auth0UserId, string? displayName,
         CancellationToken ct = default);
+
+    Task<User> GetUserAsync(string auth0UserId,
+        CancellationToken ct = default);
 }
 
 public class Auth0ManagementService : IAuth0ManagementService
@@ -68,34 +71,44 @@ public class Auth0ManagementService : IAuth0ManagementService
         }
     }
 
+    public async Task<User> GetUserAsync(string auth0UserId, CancellationToken ct = default)
+    {
+        var token = await GetManagementTokenAsync(ct);
+
+        var managementClient = new ManagementApiClient(
+            token,
+            new Uri($"https://{_settings.Domain}/api/v2"));
+        try
+        {
+            var user = await managementClient.Users.GetAsync(auth0UserId, cancellationToken: ct);
+            _logger.LogInformation("Getting Auth0 user profile for {Auth0UserId}", auth0UserId);
+            return user;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get user{Auth0UserId} from Auth0 API", auth0UserId);
+            throw;
+        }
+    }
+
     private async Task<string> GetManagementTokenAsync(CancellationToken ct)
     {
         if (!string.IsNullOrEmpty(_cachedToken) && DateTime.UtcNow < _tokenExpiresAtUtc) return _cachedToken!;
 
-        var authClient = new AuthenticationApiClient(
-            new Uri($"https://{_settings.Domain}"));
+        using var authClient = new AuthenticationApiClient(_settings.Domain);
 
-        var tokenRequest = new ClientCredentialsTokenRequest
+        var token = await authClient.GetTokenAsync(new ClientCredentialsTokenRequest
         {
+            Audience = $"https://{_settings.Domain}/api/v2/",
             ClientId = _settings.ClientId,
-            ClientSecret = _settings.ClientSecret,
-            Audience = _settings.Audience
-        };
+            ClientSecret = _settings.ClientSecret
+        });
 
-        AccessTokenResponse tokenResponse;
-        try
-        {
-            tokenResponse = await authClient.GetTokenAsync(tokenRequest, ct);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to obtain Auth0 management API token via SDK");
-            throw new InvalidOperationException("Failed to obtain Auth0 management API token.", ex);
-        }
+        var managementApiAccessToken = token.AccessToken;
 
-        _cachedToken = tokenResponse.AccessToken;
+        _cachedToken = managementApiAccessToken;
 
-        _tokenExpiresAtUtc = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn - 60);
+        _tokenExpiresAtUtc = DateTime.UtcNow.AddSeconds(token.ExpiresIn - 60);
 
         return _cachedToken!;
     }
