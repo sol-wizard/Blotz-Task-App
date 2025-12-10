@@ -3,29 +3,17 @@ import { SubtaskDTO } from "../models/subtask-dto";
 import { BreakdownSubtaskDTO } from "@/feature/task-details/models/breakdown-subtask-dto";
 import { apiClient } from "@/shared/services/api/client";
 
-export const createBreakDownSubtasks = async (
-  taskId: number,
-): Promise<BreakdownSubtaskDTO[] | undefined> => {
+export const createBreakDownSubtasks = async (taskId: number) => {
   if (!taskId) return;
 
   try {
     const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/TaskBreakdown/${taskId}`;
-    const data: BreakdownSubtaskDTO[] = await apiClient.post(url);
+    const data: BreakdownSubtaskDTO = await apiClient.post(url);
     return data;
   } catch (error) {
     console.error("Error fetching subtasks:", error);
   }
 };
-
-export async function toggleSubtaskCompletion(subtaskId: number): Promise<void> {
-  try {
-    const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/subtask-completion-status/${subtaskId}`;
-    await apiClient.put(url);
-  } catch (error) {
-    console.error("Error toggling subtask completion:", error);
-    throw error;
-  }
-}
 
 export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   const taskId = newSubtask.parentTaskId;
@@ -75,5 +63,15 @@ export async function deleteSubtask(subtaskId: number): Promise<void> {
   } catch (err) {
     console.error("Error deleting subtask:", err);
     throw new Error("Delete subtask failed");
+  }
+}
+
+export async function toggleSubtaskStatus(subtaskId: number): Promise<void> {
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/subtask-completion-status/${subtaskId}`;
+  try {
+    await apiClient.put(url);
+  } catch (err) {
+    console.error("Error toggling subtask status:", err);
+    throw new Error("Toggle subtask status failed");
   }
 }
