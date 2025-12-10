@@ -17,7 +17,7 @@ public static class DependencyInjection
         services.AddScoped<SyncUserCommandHandler>();
         services.AddScoped<GetUserProfileQueryHandler>();
         services.AddScoped<UpdateUserProfileCommandHandler>();
-        services.AddHttpClient<IAuth0ManagementService, Auth0ManagementService>();
+        services.AddScoped<IAuth0ManagementService, Auth0ManagementService>();
         // Manual registration of query handlers 
         return services;
     }
