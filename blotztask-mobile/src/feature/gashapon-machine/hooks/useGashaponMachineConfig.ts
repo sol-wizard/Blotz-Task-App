@@ -6,7 +6,7 @@ import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
-import { getLabelNameFromStarLabel, getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
+import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
 
 export const useGashaponMachineConfig = ({
   starRadius = 15,
@@ -24,6 +24,13 @@ export const useGashaponMachineConfig = ({
   const starsRef = useRef<Matter.Body[]>([]);
   const isGateOpenRef = useRef(false);
   const starPassedRef = useRef(false);
+  const droppedStarIndexRef = useRef<number>(-1);  // 保存星星的原始索引
+  const floatingTasksRef = useRef<FloatingTaskDTO[]>([]);
+  const starLabelsRef = useRef<string[]>([]);
+
+  const getLabelNameByIndex = (idx: number) =>
+    starLabelsRef.current[idx] ?? floatingTasksRef.current[idx]?.label?.name ?? "no-label";
+  const getStarEntityKey = (idx: number) => `star-${idx}`;
 
   const handleRelease = (deltaThisTurn: number) => {
     if (Math.abs(deltaThisTurn) > 60) {
@@ -43,7 +50,89 @@ export const useGashaponMachineConfig = ({
     }
   };
 
+  const resetStarsPhysics = () => {
+    if (!worldRef.current) return;
+    if (droppedStarIndexRef.current < 0) {
+      console.warn("No dropped star index recorded; skipping reset.");
+      return;
+    }
+
+    const world = worldRef.current;
+    const starRadius = 15;
+    const gapX = starRadius * 2 + 5;
+    const gapY = starRadius * 2 + 5;
+
+    console.log(`Resetting star index: ${droppedStarIndexRef.current}`);
+
+    setEntities((prevEntities) => {
+      const updatedEntities = { ...prevEntities };
+
+      // 如果有保存的索引，用索引直接获取
+      if (droppedStarIndexRef.current >= 0) {
+        const idx = droppedStarIndexRef.current;
+        let star = starsRef.current[idx];
+        const labelName = getLabelNameByIndex(idx);
+        const entityKey = getStarEntityKey(idx);
+        
+        // 使用原始索引计算位置
+        const col = idx % 6;
+        const row = Math.floor(idx / 6);
+
+        const x = 90 + col * gapX;
+        const y = 230 + row * gapY;
+
+        if (!star) {
+          console.warn(`Star body missing for index ${idx}, recreating.`);
+          star = Matter.Bodies.circle(x, y, starRadius, {
+            restitution: 0.4,
+            friction: 0.05,
+            frictionStatic: 0.2,
+            frictionAir: 0.01,
+            label: entityKey,
+          });
+          starsRef.current[idx] = star;
+        }
+
+        console.log(`Resetting star ${star.label} at original index ${idx}, position (${x}, ${y})`);
+
+        // 重新添加到世界
+        if (!world.bodies.includes(star)) {
+          console.log(`Re-adding ${star.label} to world`);
+          Matter.World.add(world, star);
+        }
+        
+        // 重置物理属性 - 保持和初始化一样的物理参数
+        Matter.Body.setPosition(star, { x, y });
+        Matter.Body.setVelocity(star, { x: 0, y: 0 });
+        Matter.Body.setAngularVelocity(star, 0);
+        // 不应用额外的力，让重力自然作用（像初始化一样）
+        Matter.Sleeping.set(star, false);
+        
+        // 重新创建实体（如果被删除了）
+        updatedEntities[entityKey] = {
+          body: star,
+          texture: getLabelIcon(labelName),
+          renderer: CapsuleToyRenderer,
+        };
+        console.log(`Re-created entity for ${entityKey} with label ${labelName}`);
+      }
+
+      return updatedEntities;
+    });
+
+    starPassedRef.current = false;
+    droppedStarIndexRef.current = -1;
+    closeGate();
+  };
+
   useEffect(() => {
+    if (!floatingTasks || floatingTasks.length === 0) {
+      return;
+    }
+
+    floatingTasksRef.current = floatingTasks;
+    starLabelsRef.current = floatingTasks.map((task) => task.label?.name ?? "no-label");
+
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
     worldRef.current = world;
@@ -108,13 +197,12 @@ export const useGashaponMachineConfig = ({
 
       const x = 90 + col * gapX;
       const y = 230 + row * gapY;
-      const labelName = floatingTasks[i].label?.name ?? "no-label";
       const star = Matter.Bodies.circle(x, y, starRadius, {
         restitution: 0.4,
         friction: 0.05,
         frictionStatic: 0.2,
         frictionAir: 0.01,
-        label: `star-${i}-label-${labelName}`,
+        label: getStarEntityKey(i),
       });
 
       stars.push(star);
@@ -130,9 +218,10 @@ export const useGashaponMachineConfig = ({
     };
 
     stars.forEach((star, idx) => {
-      const labelName = floatingTasks[idx].label?.name ?? "no-label";
+      const labelName = getLabelNameByIndex(idx);
+      const entityKey = getStarEntityKey(idx);
 
-      newEntities[`star-${idx}-label-${labelName}`] = {
+      newEntities[entityKey] = {
         body: star,
         texture: getLabelIcon(labelName),
         renderer: CapsuleToyRenderer,
@@ -152,11 +241,20 @@ export const useGashaponMachineConfig = ({
 
         if (star && sensor) {
           console.log(`⚡ Star ${star.label} passed sensor, removing`);
-          const labelName = getLabelNameFromStarLabel(star.label);
-
+          const starIndex = starsRef.current.indexOf(star);
+          const labelName = getLabelNameByIndex(starIndex);
+          
+          // 保存星星的索引，用于后续重置
+          droppedStarIndexRef.current = starIndex;
+          
           starPassedRef.current = true;
           closeGate();
           onStarDropped(labelName);
+
+          // Remove the star from physics world
+          if (worldRef.current && starsRef.current.includes(star)) {
+            Matter.World.remove(worldRef.current, star);
+          }
         }
       });
     });
@@ -187,7 +285,7 @@ export const useGashaponMachineConfig = ({
       Matter.World.clear(world, false);
       Matter.Engine.clear(engine);
     };
-  }, []);
+  }, [floatingTasks]);
 
-  return { entities, handleRelease };
+  return { entities, handleRelease, resetStarsPhysics };
 };

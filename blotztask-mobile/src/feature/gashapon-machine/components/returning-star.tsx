@@ -5,11 +5,11 @@ import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const MACHINE_ENTRY_X = SCREEN_WIDTH / 2 - 45;
-const MACHINE_ENTRY_Y = SCREEN_HEIGHT / 2 - 170;
+const MACHINE_ENTRY_Y = SCREEN_HEIGHT / 2 - 170;  // 机器顶部入口
 const MACHINE_PILE_MIN_X = SCREEN_WIDTH / 2 - 130;
 const MACHINE_PILE_MAX_X = SCREEN_WIDTH / 2 + 20;
-const MACHINE_PILE_MIN_Y = SCREEN_HEIGHT / 2 + 70;
-const MACHINE_PILE_MAX_Y = SCREEN_HEIGHT / 2 + 170;
+const MACHINE_PILE_MIN_Y = SCREEN_HEIGHT / 2 + 70;   // 初始化星星堆位置开始
+const MACHINE_PILE_MAX_Y = SCREEN_HEIGHT / 2 + 170;  // 初始化星星堆位置结束
 
 type Point = {
   x: number;
