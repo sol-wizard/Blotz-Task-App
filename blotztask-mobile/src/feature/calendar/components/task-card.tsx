@@ -239,17 +239,13 @@ export default function TaskCard({ task, deleteTask, isDeleting }: TaskCardProps
                             : "bg-white border-gray-300"
                         }`}
                       >
-                        {subtask.isDone && (
-                          <MaterialIcons name="check" size={16} color="white" />
-                        )}
+                        {subtask.isDone && <MaterialIcons name="check" size={16} color="white" />}
                       </View>
 
                       {/* Subtask Title */}
                       <Text
                         className={`flex-1 text-base font-baloo ${
-                          subtask.isDone
-                            ? "text-gray-400 line-through opacity-60"
-                            : "text-gray-700"
+                          subtask.isDone ? "text-gray-400 line-through opacity-60" : "text-gray-700"
                         }`}
                       >
                         {subtask.title}
