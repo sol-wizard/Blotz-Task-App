@@ -77,7 +77,8 @@ public class Auth0ManagementService : IAuth0ManagementService
 
         var managementClient = new ManagementApiClient(
             token,
-            new Uri($"https://{_settings.Domain}/api/v2"));
+            new Uri(_settings.Audience)
+        );
         try
         {
             var user = await managementClient.Users.GetAsync(auth0UserId, cancellationToken: ct);
@@ -99,7 +100,7 @@ public class Auth0ManagementService : IAuth0ManagementService
 
         var token = await authClient.GetTokenAsync(new ClientCredentialsTokenRequest
         {
-            Audience = $"https://{_settings.Domain}/api/v2/",
+            Audience = _settings.Audience,
             ClientId = _settings.ClientId,
             ClientSecret = _settings.ClientSecret
         });
