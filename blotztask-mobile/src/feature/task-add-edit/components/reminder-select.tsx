@@ -37,7 +37,11 @@ export const ReminderSelect: React.FC<ReminderSelectProps> = ({ control, name = 
             labelField="label"
             valueField="value"
             value={value}
-            onChange={(item) => onChange(item.value)}
+            onChange={(item) => {
+              const raw = item.value;
+              console.log("Selected reminder:", raw);
+              onChange(raw === "none" ? null : raw);
+            }}
             style={{
               minWidth: 230,
               paddingHorizontal: 4,
