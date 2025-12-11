@@ -30,7 +30,7 @@ builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 
 builder.Services.AddAuth0ApiAuthentication(options =>
 {
-    options.Domain = builder.Configuration["Auth0:Management:Domain"];
+    options.Domain = builder.Configuration["Auth0:Domain"];
     options.JwtBearerOptions = new JwtBearerOptions
     {
         Audience = builder.Configuration["Auth0:Audience"],
