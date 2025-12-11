@@ -6,12 +6,12 @@ import { Dropdown } from "react-native-element-dropdown";
 import { Ionicons } from "@expo/vector-icons";
 import { FormDivider } from "@/shared/components/ui/form-divider";
 
-type ReminderSelectProps = {
+type AlertSelectProps = {
   control: Control<any>;
   name?: string;
 };
 
-const REMINDER_OPTIONS = [
+const ALERT_OPTIONS = [
   { label: "None", value: "None" },
   { label: "At the start of the event", value: 0 },
   { label: "5 mins before", value: 300 },
@@ -22,7 +22,7 @@ const REMINDER_OPTIONS = [
   { label: "1 day before", value: 86400 },
 ];
 
-export const ReminderSelect: React.FC<ReminderSelectProps> = ({ control, name = "reminder" }) => {
+export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "notificationId" }) => {
   return (
     <Controller
       control={control}
@@ -30,10 +30,10 @@ export const ReminderSelect: React.FC<ReminderSelectProps> = ({ control, name = 
       defaultValue={300}
       render={({ field: { value, onChange } }) => (
         <View className="flex-row items-center justify-between">
-          <Text className="font-baloo text-secondary text-2xl mt-1">Reminder</Text>
+          <Text className="font-baloo text-secondary text-2xl mt-1">Alert</Text>
 
           <Dropdown
-            data={REMINDER_OPTIONS}
+            data={ALERT_OPTIONS}
             labelField="label"
             valueField="value"
             value={value}
