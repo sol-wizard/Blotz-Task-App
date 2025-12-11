@@ -46,7 +46,7 @@ public class UpdateUserProfileCommandHandler(
     }
 }
 
-public class UpdateUserDto
+public class UpdateUserProfileDto
 {
     public required string DisplayName { get; set; }
 }
