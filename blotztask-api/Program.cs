@@ -21,7 +21,7 @@ builder.Services.AddCoreServices();
 builder.Services.AddChatTaskGeneratorModule();
 
 builder.Services.AddTaskModule();
-builder.Services.AddUserModule();
+builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddLabelModule();
 builder.Services.AddTaskBreakdownModule();
 builder.Services.AddTimeEstimateModule();
