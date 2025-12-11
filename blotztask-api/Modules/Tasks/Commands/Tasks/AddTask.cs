@@ -30,6 +30,7 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
             EndTime = command.TaskDetails.EndTime,
             TimeType = command.TaskDetails.TimeType,
             LabelId = command.TaskDetails.LabelId,
+            NotificationId = command.TaskDetails.NotificationId,
             UserId = command.UserId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -52,4 +53,6 @@ public class AddTaskItemDto
     public DateTimeOffset? StartTime { get; set; }
     public TaskTimeType? TimeType { get; set; }
     public int? LabelId { get; set; }
+
+    public string? NotificationId { get; set; }
 }

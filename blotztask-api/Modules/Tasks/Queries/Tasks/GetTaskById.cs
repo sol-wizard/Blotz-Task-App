@@ -1,16 +1,15 @@
+using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Labels.DTOs;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Shared.Exceptions;
-using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
 public class GetTasksByIdQuery
 {
-    [Required]
-    public required int TaskId { get; init; }
+    [Required] public required int TaskId { get; init; }
 }
 
 public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQueryHandler> logger)
@@ -28,13 +27,16 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
                 StartTime = task.StartTime,
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
-                Label = task.Label == null ? null : new LabelDto
-                {
-                    LabelId = task.Label.LabelId,
-                    Name = task.Label.Name,
-                    Color = task.Label.Color
-                },
-                TimeType = task.TimeType,
+                NotificationId = task.NotificationId,
+                Label = task.Label == null
+                    ? null
+                    : new LabelDto
+                    {
+                        LabelId = task.Label.LabelId,
+                        Name = task.Label.Name,
+                        Color = task.Label.Color
+                    },
+                TimeType = task.TimeType
             })
             .FirstOrDefaultAsync(ct);
 
@@ -44,11 +46,9 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
                 result.Title);
             return result;
         }
-        else
-        {
-            logger.LogWarning("No task found with ID {TaskId}", query.TaskId);
-            throw new NotFoundException($"No task found with ID {query.TaskId}");
-        }
+
+        logger.LogWarning("No task found with ID {TaskId}", query.TaskId);
+        throw new NotFoundException($"No task found with ID {query.TaskId}");
     }
 }
 
@@ -62,4 +62,5 @@ public class TaskByIdItemDto
     public bool IsDone { get; set; }
     public LabelDto? Label { get; set; }
     public TaskTimeType? TimeType { get; set; }
+    public string? NotificationId { get; set; }
 }

@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Labels.DTOs;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Queries.SubTasks;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
@@ -71,6 +71,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
                 TimeType = task.TimeType,
+                NotificationId = task.NotificationId,
                 Label = task.Label != null
                     ? new LabelDto
                     {
@@ -113,4 +114,5 @@ public class TaskByDateItemDto
     public LabelDto? Label { get; set; }
     public TaskTimeType? TimeType { get; set; }
     public List<SubtaskDetailDto> Subtasks { get; set; } = [];
+    public string? NotificationId { get; set; }
 }

@@ -9,6 +9,7 @@ public class TaskItem
 {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
+
     public required string Title { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset? StartTime { get; set; }
@@ -22,6 +23,5 @@ public class TaskItem
     public int? LabelId { get; set; }
     public Label? Label { get; set; }
     public ICollection<Subtask> Subtasks { get; set; } = new List<Subtask>();
-    
     public string? NotificationId { get; set; }
 }

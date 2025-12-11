@@ -26,6 +26,7 @@ public class GetAllTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetAllTasksQ
                 StartTime = task.StartTime,
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
+                NotificationId = task.NotificationId,
                 Label = task.Label != null
                     ? new LabelDto
                     {
@@ -51,4 +52,5 @@ public class AllTaskItemDto
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
     public LabelDto? Label { get; set; }
+    public string? NotificationId { get; set; }
 }

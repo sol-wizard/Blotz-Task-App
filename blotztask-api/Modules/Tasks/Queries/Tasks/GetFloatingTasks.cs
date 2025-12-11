@@ -32,6 +32,7 @@ public class GetFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetFloa
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
                 CreatedAt = task.CreatedAt,
+                NotificationId = task.NotificationId,
                 Label = task.Label != null
                     ? new LabelDto
                     {
@@ -59,4 +60,5 @@ public class FloatingTaskItemDto
     public bool IsDone { get; set; }
     public DateTime CreatedAt { get; set; }
     public LabelDto? Label { get; set; }
+    public string? NotificationId { get; set; }
 }
