@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Users.Services;
 using BlotzTask.Shared.Exceptions;
@@ -49,5 +48,5 @@ public class UpdateUserProfileCommandHandler(
 
 public class UpdateUserDto
 {
-    [Required] public string DisplayName { get; set; }
+    public required string DisplayName { get; set; }
 }
