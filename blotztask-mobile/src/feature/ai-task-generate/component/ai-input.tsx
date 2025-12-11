@@ -35,23 +35,20 @@ export const AiInput = ({
   const [voiceInputDisabled, setVoiceInputDisabled] = useState(false);
 
   const checkLocation = async () => {
+    if (Platform.OS !== "android") return;
+
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") return;
 
-      const location = await Location.getCurrentPositionAsync({});
-      const addresses = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
+      const { coords } = await Location.getCurrentPositionAsync({});
+      const addresses = await Location.reverseGeocodeAsync(coords);
+
+      const isInChinaMainland = addresses.some(({ isoCountryCode, country }) => {
+        return isoCountryCode === "CN" || country?.toLowerCase().includes("china");
       });
 
-      const isInChinaMainland = addresses.some((address) => {
-        const code = address.isoCountryCode;
-        const country = address.country?.toLowerCase();
-        return code === "CN" || country?.includes("china");
-      });
-
-      if (isInChinaMainland && Platform.OS === "android") {
+      if (isInChinaMainland) {
         setVoiceInputDisabled(true);
         setIsVoiceInput(false);
       }
