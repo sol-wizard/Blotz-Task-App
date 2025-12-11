@@ -1,7 +1,6 @@
-import React from "react";
 import { View } from "react-native";
 
-export const FormDivider = () => {
+export const FormDivider = ({ marginVertical = 16 }: { marginVertical?: number }) => {
   return (
     <View
       style={{
@@ -11,7 +10,7 @@ export const FormDivider = () => {
         borderWidth: 1,
         borderColor: "#D1D5DB",
         borderStyle: "dashed",
-        marginVertical: 16,
+        marginVertical,
       }}
     >
       <View

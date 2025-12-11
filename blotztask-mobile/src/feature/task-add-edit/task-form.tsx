@@ -13,6 +13,7 @@ import { SegmentToggle } from "./components/segment-toggle";
 import { Snackbar } from "react-native-paper";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
+import { ReminderSelect } from "./components/reminder-select";
 
 type TaskFormProps =
   | {
@@ -44,6 +45,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     startTime: dto?.startTime ?? null,
     endDate: dto?.endTime ?? null,
     endTime: dto?.endTime ?? null,
+    reminder: 300,
   };
 
   const form = useForm<TaskFormField>({
@@ -123,6 +125,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             {isActiveTab === "reminder" && <ReminderTab control={control} />}
             {isActiveTab === "event" && <EventTab control={control} />}
             <FormDivider />
+            <ReminderSelect control={control} />
+            <FormDivider />
 
             {/* Label Select */}
             <View className="mb-8">
@@ -132,8 +136,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 <LabelSelect control={control} labels={labels} />
               )}
             </View>
-
-            <FormDivider />
           </ScrollView>
 
           {/* Submit */}
