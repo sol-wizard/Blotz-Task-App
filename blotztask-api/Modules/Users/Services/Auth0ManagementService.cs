@@ -51,7 +51,7 @@ public class Auth0ManagementService : IAuth0ManagementService
 
         var managementClient = new ManagementApiClient(
             token,
-            new Uri($"https://{_settings.Domain}/api/v2"));
+            new Uri(_settings.Audience));
 
         var updateRequest = new UserUpdateRequest
         {
