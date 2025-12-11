@@ -33,7 +33,7 @@ export const WriteInput = ({
   };
 
   return (
-    <View className="mr-6">
+    <View className="mr-6 mt-2">
       <TextInput
         onChangeText={handleChange}
         onSubmitEditing={() => sendAndDismiss(text)}

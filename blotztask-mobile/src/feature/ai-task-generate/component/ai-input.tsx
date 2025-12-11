@@ -1,10 +1,11 @@
 import { InputModeSwitch } from "./input-mode-switch";
 import { VoiceInput } from "./voice-input";
 import { WriteInput } from "./write-input";
-import { Pressable, View, Text } from "react-native";
+import { Platform, Pressable, View, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
+import * as Location from "expo-location";
 
 export const AiInput = ({
   text,
@@ -31,26 +32,60 @@ export const AiInput = ({
     });
     return "zh-CN";
   });
+  const [voiceInputDisabled, setVoiceInputDisabled] = useState(false);
+
+  const checkLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+
+      const location = await Location.getCurrentPositionAsync({});
+      const addresses = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      const isInChinaMainland = addresses.some((address) => {
+        const code = address.isoCountryCode;
+        const country = address.country?.toLowerCase();
+        return code === "CN" || country?.includes("china");
+      });
+
+      if (isInChinaMainland && Platform.OS === "android") {
+        setVoiceInputDisabled(true);
+        setIsVoiceInput(false);
+      }
+    } catch (error) {
+      console.warn("Failed to check location for voice input availability", error);
+    }
+  };
+
+  useEffect(() => {
+    checkLocation();
+  }, []);
 
   return (
     <View>
-      <View className="flex-row mb-8 ml-4 items-center">
-        <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} setText={setText} />
-        <Pressable
-          onPress={() => {
-            const newLang = language === "en-US" ? "zh-CN" : "en-US";
-            setLanguage(newLang);
-            AsyncStorage.setItem("ai_language_preference", newLang);
-          }}
-          className="w-8 h-8 bg-black rounded-full items-center justify-center ml-8"
-        >
-          <Text className="text-white font-bold text-base">
-            {language === "en-US" ? "EN" : "中"}
-          </Text>
-        </Pressable>
-      </View>
+      {!voiceInputDisabled && (
+        <View className="flex-row mb-8 ml-4 items-center">
+          <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} setText={setText} />
 
-      {isVoiceInput ? (
+          <Pressable
+            onPress={() => {
+              const newLang = language === "en-US" ? "zh-CN" : "en-US";
+              setLanguage(newLang);
+              AsyncStorage.setItem("ai_language_preference", newLang);
+            }}
+            className="w-8 h-8 bg-black rounded-full items-center justify-center ml-8"
+          >
+            <Text className="text-white font-bold text-base">
+              {language === "en-US" ? "EN" : "中"}
+            </Text>
+          </Pressable>
+        </View>
+      )}
+
+      {isVoiceInput && !voiceInputDisabled ? (
         <VoiceInput
           setText={setText}
           sendMessage={sendMessage}
