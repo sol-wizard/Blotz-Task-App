@@ -2,8 +2,8 @@ import * as Notifications from "expo-notifications";
 import { NotificationTaskDTO } from "../models/notification-task-dto";
 
 export async function scheduleTaskReminder(task: NotificationTaskDTO) {
-  if (!task.startTime) return;
-  const taskStartTime = new Date(task.startTime).getTime();
+  if (!task.alertTime) return;
+  const taskStartTime = new Date(task.alertTime).getTime();
 
   const triggerTime = taskStartTime - 10 * 60 * 1000;
 
@@ -15,9 +15,6 @@ export async function scheduleTaskReminder(task: NotificationTaskDTO) {
     content: {
       title: "⏰ Task Reminder",
       body: task.title,
-      data: {
-        taskId: task.id,
-      },
       categoryIdentifier: "task-reminder",
     },
     trigger: {

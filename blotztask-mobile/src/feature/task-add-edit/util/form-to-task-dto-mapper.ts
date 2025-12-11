@@ -1,10 +1,10 @@
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
-import { TaskFormField } from "../models/task-form-schema";
 import { isSameMinute } from "date-fns";
 import { TaskTimeType } from "@/shared/models/task-detail-dto";
 import { isMultiDay } from "./date-time-helpers";
+import { SubmitTaskDTO } from "../models/submit-task-dto";
 
-export function mapFormToAddTaskItemDTO(form: TaskFormField): AddTaskItemDTO {
+export function mapFormToAddTaskItemDTO(form: SubmitTaskDTO): AddTaskItemDTO {
   const { startDate, startTime, endDate, endTime } = form;
 
   const start = startDate != null ? mergeDateTime(startDate, startTime ?? undefined) : undefined;
