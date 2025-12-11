@@ -60,19 +60,7 @@ export function AiTasksPreview({
     try {
       const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
 
-      const newTaskIds = await Promise.all(payloads.map((payload) => addTask(payload)));
-
-      newTaskIds.forEach((newTaskId, index) => {
-        const dto = payloads[index];
-
-        const notificationTask: NotificationTaskDTO = {
-          id: newTaskId,
-          title: dto.title,
-          startTime: dto.startTime?.toISOString(),
-        };
-
-        scheduleTaskReminder(notificationTask);
-      });
+      await Promise.all(payloads.map((payload) => addTask(payload)));
 
       finishedAllStepsRef.current = true;
 

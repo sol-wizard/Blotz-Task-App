@@ -8,5 +8,5 @@ export interface EditTaskItemDTO {
   endTime?: Date;
   labelId?: number;
   timeType: TaskTimeType | null;
-  notificationId?: string;
+  notificationId: string | null;
 }

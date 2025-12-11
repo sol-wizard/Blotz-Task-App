@@ -6,6 +6,7 @@ import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
+import { SubmitTaskDTO } from "@/feature/task-add-edit/models/submit-task-dto";
 
 // TODO: Fix flickering stale selected task in task detail page while navigating back
 const TaskEditScreen = () => {
@@ -29,12 +30,14 @@ const TaskEditScreen = () => {
     endTime: selectedTask.endTime ? new Date(selectedTask.endTime) : undefined,
     labelId: selectedTask.label ? selectedTask.label.labelId : undefined,
     timeType: selectedTask.timeType,
+    notificationId: selectedTask.notificationId,
   };
 
-  const handleTaskSubmit = async (formValues: TaskFormField) => {
+  const handleTaskSubmit = async (formValues: SubmitTaskDTO) => {
     try {
       // Convert form to DTO
       const dto = mapFormToAddTaskItemDTO(formValues);
+      console.log("Submitting task with data:", dto);
 
       await updateTask({
         ...dto,

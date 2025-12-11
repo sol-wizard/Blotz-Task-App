@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -101,7 +102,7 @@ public class TaskController(
             userId,
             getWeeklyTaskAvailabilityRequest.MondayUtc,
             stopwatch.ElapsedMilliseconds);
-            
+
         var result = await getWeeklyTaskAvailabilityQueryHandler.Handle(query, ct);
         _logger.LogInformation(
             "GetWeeklyTaskAvailability finished for user {UserId} in {ElapsedMs}ms",
@@ -126,6 +127,8 @@ public class TaskController(
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        var json = JsonSerializer.Serialize(addtaskItem);
+        Console.WriteLine($"AddTask payload: {json}");
 
         var command = new AddTaskCommand
         {

@@ -28,7 +28,7 @@ interface TaskCardProps {
   task: TaskDetailDTO;
   deleteTask: (id: number) => Promise<void>;
   isDeleting: boolean;
-  selectedDay: Date;
+  selectedDay?: Date;
 }
 
 export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) {

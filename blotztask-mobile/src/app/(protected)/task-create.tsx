@@ -1,5 +1,4 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
-import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-task-dto-mapper";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native";
@@ -16,6 +15,7 @@ function TaskCreateScreen() {
   const handleTaskSubmit = async (formValues: SubmitTaskDTO) => {
     try {
       const dto = mapFormToAddTaskItemDTO(formValues);
+      console.log("Creating task with data:", dto);
       await addTask(dto);
       posthog.capture("manual_task_creation");
 

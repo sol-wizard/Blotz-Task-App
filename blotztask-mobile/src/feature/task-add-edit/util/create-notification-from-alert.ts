@@ -13,8 +13,9 @@ export async function createNotificationFromAlert(taskData: TaskFormField) {
 
   const notificationTask: NotificationTaskDTO = {
     title: taskData.title,
-    alertTime: notificationTime.toISOString(),
+    alertTime: notificationTime,
   };
+  console.log("Scheduling notification with data:", notificationTask);
   const notificationId = await scheduleTaskReminder(notificationTask);
   return notificationId;
 }

@@ -44,8 +44,10 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   useEffect(() => {
     async function loadTriggerTime() {
+      console.log("Loading trigger time for notification ID:", dto?.notificationId);
       const triggerTime = await getNotificationTime(dto?.endTime!, dto?.notificationId!);
       setTriggerTime(triggerTime);
+      console.log("Loaded trigger time:", triggerTime);
     }
     if (mode === "edit") loadTriggerTime();
   }, [mode]);
@@ -81,6 +83,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       await Notifications.cancelScheduledNotificationAsync(dto?.notificationId);
     }
     const notificationId = await createNotificationFromAlert(data);
+    console.log("Scheduled Notification ID:", notificationId);
     const payload = { ...data, notificationId };
 
     if (isActiveTab === "reminder") {

@@ -3,13 +3,6 @@ import { NotificationTaskDTO } from "../models/notification-task-dto";
 
 export async function scheduleTaskReminder(task: NotificationTaskDTO) {
   if (!task.alertTime) return;
-  const taskStartTime = new Date(task.alertTime).getTime();
-
-  const triggerTime = taskStartTime - 10 * 60 * 1000;
-
-  if (triggerTime <= Date.now()) return;
-
-  const triggerDate = new Date(triggerTime);
 
   const notificationId = await Notifications.scheduleNotificationAsync({
     content: {
@@ -19,7 +12,7 @@ export async function scheduleTaskReminder(task: NotificationTaskDTO) {
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
-      date: triggerDate,
+      date: new Date(task.alertTime),
     },
   });
 

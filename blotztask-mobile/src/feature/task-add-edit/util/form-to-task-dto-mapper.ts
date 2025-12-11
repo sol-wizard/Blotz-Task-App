@@ -26,6 +26,7 @@ export function mapFormToAddTaskItemDTO(form: SubmitTaskDTO): AddTaskItemDTO {
     endTime: taskTimeType === TaskTimeType.Single ? start : end,
     timeType: taskTimeType,
     labelId: form.labelId ?? undefined,
+    notificationId: form.notificationId ?? null,
   };
 }
 

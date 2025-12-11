@@ -20,6 +20,7 @@ export async function getNotificationTime(
   const triggerDate = new Date(triggerTimestamp);
 
   const diffSeconds = Math.round((taskEndTime.getTime() - triggerDate.getTime()) / 1000);
+  console.log("Computed diffSeconds:", diffSeconds);
 
   const matched = ALLOWED_REMINDER_SECONDS.find((v) => v === diffSeconds);
 
