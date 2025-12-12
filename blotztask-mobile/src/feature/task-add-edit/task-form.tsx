@@ -15,13 +15,12 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
 import { AlertSelect } from "./components/alert-select";
 import { createNotificationFromAlert } from "./util/create-notification-from-alert";
-
 import * as Notifications from "expo-notifications";
 import {
   buildTaskTimePayload,
   calculateAlertSeconds,
   calculateAlertTime,
-} from "./util/calculate-alert-time";
+} from "./util/time-convertion";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 
 type TaskFormProps =
@@ -78,12 +77,14 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     }
     const notificationId = await createNotificationFromAlert(data);
     console.log("Scheduled Notification ID:", notificationId);
+
     const { startTime, endTime, timeType } = buildTaskTimePayload(
       data.startDate,
       data.startTime,
-      data.endDate,
-      data.endTime,
+      isActiveTab === "reminder" ? data.startDate : data.endDate,
+      isActiveTab === "reminder" ? data.startTime : data.endTime,
     );
+
     const alertTime = calculateAlertTime(data.startTime, data.alert);
     const submitTask: AddTaskItemDTO = {
       title: data.title,
@@ -95,11 +96,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       alertTime: alertTime ?? undefined,
       notificationId,
     };
-
-    if (isActiveTab === "reminder") {
-      onSubmit(submitTask);
-      return;
-    }
 
     onSubmit(submitTask);
   };

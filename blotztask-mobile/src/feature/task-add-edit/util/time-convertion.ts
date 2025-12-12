@@ -1,6 +1,5 @@
 import { TaskTimeType } from "@/shared/models/task-detail-dto";
-import { isSameMinute } from "date-fns";
-import { isMultiDay } from "./date-time-helpers";
+import { isSameDay, isSameMinute } from "date-fns";
 
 const ALLOWED_ALERT_SECONDS = [0, 300, 600, 1800, 3600, 7200, 86400];
 
@@ -24,11 +23,8 @@ export function calculateAlertTime(
   startTime: Date | null | undefined,
   reminderSeconds: number | null | undefined,
 ): Date | null {
-  if (!startTime || reminderSeconds == null) return null;
-
-  if (!ALLOWED_ALERT_SECONDS.includes(reminderSeconds)) {
+  if (!startTime || !reminderSeconds || !ALLOWED_ALERT_SECONDS.includes(reminderSeconds))
     return null;
-  }
 
   const alertMs = startTime.getTime() - reminderSeconds * 1000;
   return new Date(alertMs);
@@ -75,3 +71,6 @@ function mergeDateTime(date: Date, time?: Date): Date {
   }
   return merged;
 }
+
+const isMultiDay = (startDate: Date | null, endDate: Date | null) =>
+  !!(startDate && endDate && !isSameDay(startDate, endDate));
