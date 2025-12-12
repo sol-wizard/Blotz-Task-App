@@ -68,6 +68,7 @@ export const AiInput = ({
           sendMessage={sendMessage}
           errorMessage={aiGeneratedMessage?.errorMessage}
           isAiGenerating={isAiGenerating}
+          setAiGeneratedMessage={setAiGeneratedMessage}
         />
       )}
     </View>

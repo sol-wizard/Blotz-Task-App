@@ -33,8 +33,6 @@ export const VoiceInput = ({
       console.log("Final transcript:", transcript?.trim());
       sendMessage(transcript.trim());
     }
-    setTranscript("");
-    console.log("transcript:", transcript?.trim());
   };
 
   return (
@@ -44,7 +42,7 @@ export const VoiceInput = ({
       ) : (
         <View className="w-96 mb-16" style={{ minHeight: 80 }}>
           <Text
-            className={`text-xl font-bold ${transcript?.trim() ? "text-black" : "text-[#D1D1D6]"}`}
+            className={`text-2xl font-baloo font-bold ${transcript?.trim() ? "text-black" : "text-[#D1D1D6]"}`}
           >
             {transcript?.trim()
               ? transcript
@@ -57,6 +55,7 @@ export const VoiceInput = ({
         <View className="mt-4 mb-8 items-center">
           <Pressable
             onLongPress={async () => {
+              setTranscript("");
               setAiGeneratedMessage();
 
               try {
