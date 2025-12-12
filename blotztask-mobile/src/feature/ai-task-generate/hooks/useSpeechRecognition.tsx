@@ -27,7 +27,8 @@ export function useSpeechRecognition({ language = "en-US" }: { language?: string
       return;
     }
 
-    const isLanguageReady = await ensureLanguageModel(language);
+    const offlineLocale = language === "zh-CN" ? "cmn-Hans-CN" : language;
+    const isLanguageReady = await ensureLanguageModel(offlineLocale);
     if (!isLanguageReady) {
       console.warn(`Offline model for ${language} not ready, aborting start.`);
       return;
