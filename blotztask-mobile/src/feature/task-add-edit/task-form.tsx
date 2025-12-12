@@ -15,20 +15,25 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
 import { AlertSelect } from "./components/alert-select";
 import { createNotificationFromAlert } from "./util/create-notification-from-alert";
-import { SubmitTaskDTO } from "./models/submit-task-dto";
+
 import * as Notifications from "expo-notifications";
-import { getNotificationTime } from "./util/get-notification-time";
+import {
+  buildTaskTimePayload,
+  calculateAlertSeconds,
+  calculateAlertTime,
+} from "./util/calculate-alert-time";
+import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 
 type TaskFormProps =
   | {
       mode: "create";
       dto?: undefined;
-      onSubmit: (data: SubmitTaskDTO) => void;
+      onSubmit: (data: AddTaskItemDTO) => void;
     }
   | {
       mode: "edit";
       dto: EditTaskItemDTO;
-      onSubmit: (data: SubmitTaskDTO) => void;
+      onSubmit: (data: AddTaskItemDTO) => void;
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
@@ -37,20 +42,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
-  const [triggerTime, setTriggerTime] = useState<number | null>(null);
 
   const { labels = [], isLoading, isError } = useAllLabels();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
-
-  useEffect(() => {
-    async function loadTriggerTime() {
-      console.log("Loading trigger time for notification ID:", dto?.notificationId);
-      const triggerTime = await getNotificationTime(dto?.endTime!, dto?.notificationId!);
-      setTriggerTime(triggerTime);
-      console.log("Loaded trigger time:", triggerTime);
-    }
-    if (mode === "edit") loadTriggerTime();
-  }, [mode]);
 
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
@@ -60,7 +54,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     startTime: dto?.startTime ?? null,
     endDate: dto?.endTime ?? null,
     endTime: dto?.endTime ?? null,
-    alert: triggerTime ?? 300,
+    alert: calculateAlertSeconds(dto?.startTime, dto?.alertTime) ?? 300,
   };
 
   const form = useForm<TaskFormField>({
@@ -84,18 +78,30 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     }
     const notificationId = await createNotificationFromAlert(data);
     console.log("Scheduled Notification ID:", notificationId);
-    const payload = { ...data, notificationId };
+    const { startTime, endTime, timeType } = buildTaskTimePayload(
+      data.startDate,
+      data.startTime,
+      data.endDate,
+      data.endTime,
+    );
+    const alertTime = calculateAlertTime(data.startTime, data.alert);
+    const submitTask: AddTaskItemDTO = {
+      title: data.title,
+      description: data.description ?? undefined,
+      startTime: startTime,
+      endTime: endTime,
+      labelId: data.labelId ?? undefined,
+      timeType,
+      alertTime: alertTime ?? undefined,
+      notificationId,
+    };
 
     if (isActiveTab === "reminder") {
-      onSubmit({
-        ...payload,
-        endDate: payload.startDate,
-        endTime: payload.startTime,
-      });
+      onSubmit(submitTask);
       return;
     }
 
-    onSubmit(payload);
+    onSubmit(submitTask);
   };
 
   const handleTabChange = (next: SegmentButtonValue) => {

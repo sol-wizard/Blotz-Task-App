@@ -1,22 +1,19 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
-import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-task-dto-mapper";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
-import { SubmitTaskDTO } from "@/feature/task-add-edit/models/submit-task-dto";
+import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 
 function TaskCreateScreen() {
   const router = useRouter();
   const { addTask, isAdding } = useTaskMutations();
   const posthog = usePostHog();
 
-  const handleTaskSubmit = async (formValues: SubmitTaskDTO) => {
+  const handleTaskSubmit = async (submitTask: AddTaskItemDTO) => {
     try {
-      const dto = mapFormToAddTaskItemDTO(formValues);
-      console.log("Creating task with data:", dto);
-      await addTask(dto);
+      await addTask(submitTask);
       posthog.capture("manual_task_creation");
 
       router.back();
