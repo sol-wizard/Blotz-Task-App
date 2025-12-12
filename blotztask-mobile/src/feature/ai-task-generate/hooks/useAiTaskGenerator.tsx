@@ -16,7 +16,7 @@ export function useAiTaskGenerator({
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
-    console.log("Sending message:", text);
+
     setIsAiGenerating(true);
     if (connection) {
       try {

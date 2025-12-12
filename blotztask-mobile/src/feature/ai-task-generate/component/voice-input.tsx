@@ -30,7 +30,6 @@ export const VoiceInput = ({
   const handleMicPressOut = async () => {
     await stopListening();
     if (transcript?.trim()) {
-      console.log("Final transcript:", transcript?.trim());
       sendMessage(transcript.trim());
     }
   };
