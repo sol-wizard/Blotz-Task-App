@@ -102,16 +102,16 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
     };
   });
 
-  const endDate = task.endTime ? parseISO(task.endTime) : null;
-
-  const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
-
   // Dividing line is visible and hidden with the action area
   const dividerStyle = useAnimatedStyle(() => {
     const progress = interpolate(-translateX.value, [0, ACTION_WIDTH], [0, 1], Extrapolation.CLAMP);
     return { opacity: progress };
   });
+  
+  const endDate = task.endTime ? parseISO(task.endTime) : null;
 
+  const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
+  
   // Create a sense of being pushed away
   const leftExtrasStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value * 1.25 }],
