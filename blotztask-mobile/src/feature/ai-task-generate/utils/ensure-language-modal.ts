@@ -7,9 +7,7 @@ export const ensureLanguageModel = async (locales: string | string[]) => {
   const targetLocales = Array.isArray(locales) ? locales : [locales];
 
   try {
-    const supportedLocales = await ExpoSpeechRecognitionModule.getSupportedLocales({
-      androidRecognitionServicePackage: "com.google.android.as",
-    });
+    const supportedLocales = await ExpoSpeechRecognitionModule.getSupportedLocales({});
 
     const missingLocales = targetLocales.filter(
       (locale) => !supportedLocales.installedLocales.includes(locale),

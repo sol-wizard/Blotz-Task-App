@@ -38,6 +38,11 @@ export function useSpeechRecognition({ language = "en-US" }: { language?: string
       lang: language,
       interimResults: true,
       continuous: false,
+      addsPunctuation: true,
+      androidIntentOptions: {
+        EXTRA_ENABLE_LANGUAGE_DETECTION: true,
+        EXTRA_ENABLE_LANGUAGE_SWITCH: "balanced",
+      },
     });
   };
 

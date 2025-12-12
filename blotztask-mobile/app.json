@@ -39,7 +39,15 @@
     "plugins": [
       "expo-router",
       "patch-project",
-      "expo-speech-recognition",
+      [
+        "expo-speech-recognition",
+        {
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.as"
+          ]
+        }
+      ],
       "expo-secure-store",
       [
         "expo-dev-client",
