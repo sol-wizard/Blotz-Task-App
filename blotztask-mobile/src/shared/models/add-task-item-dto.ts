@@ -8,4 +8,5 @@ export interface AddTaskItemDTO {
   labelId?: number;
   timeType: TaskTimeType | null;
   notificationId: string | null;
+  alertTime?: Date;
 }
