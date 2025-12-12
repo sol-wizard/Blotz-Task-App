@@ -1,11 +1,10 @@
 import { InputModeSwitch } from "./input-mode-switch";
 import { VoiceInput } from "./voice-input";
 import { WriteInput } from "./write-input";
-import { Platform, Pressable, View, Text } from "react-native";
+import { Pressable, View, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
-import * as Location from "expo-location";
 
 export const AiInput = ({
   text,

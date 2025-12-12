@@ -1,11 +1,13 @@
-import React, { useState } from "react";
-import { View, Pressable } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Pressable, Platform } from "react-native";
 import { router } from "expo-router";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { AiModalContent } from "@/feature/ai-task-generate/component/ai-modal-content";
 import { AiResultMessageDTO } from "@/feature/ai-task-generate/models/ai-result-message-dto";
 import { useAiTaskGenerator } from "@/feature/ai-task-generate/hooks/useAiTaskGenerator";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { ensureLanguageModal } from "@/feature/ai-task-generate/utils/ensure-language-modal";
+import { requestMicrophonePermission } from "@/feature/ai-task-generate/utils/request-microphone-permission";
 
 export default function AiTaskSheetScreen() {
   const [modalType, setModalType] = useState<BottomSheetType>("input");
@@ -15,6 +17,13 @@ export default function AiTaskSheetScreen() {
     setIsAiGenerating,
     setModalType,
   });
+
+  useEffect(() => {
+    requestMicrophonePermission();
+    if (Platform.OS !== "android") return;
+
+    ensureLanguageModal();
+  }, []);
 
   return (
     <View className="flex-1 bg-transparent">
