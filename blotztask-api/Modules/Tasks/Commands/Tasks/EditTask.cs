@@ -32,6 +32,7 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
         task.EndTime = command.TaskDetails.EndTime;
         task.TimeType = command.TaskDetails.TimeType;
         task.NotificationId = command.TaskDetails.NotificationId;
+        task.AlertTime = command.TaskDetails.AlertTime;
         task.UpdatedAt = DateTime.UtcNow;
         task.LabelId = command.TaskDetails.LabelId;
 
@@ -59,4 +60,5 @@ public class EditTaskItemDto
     public TaskTimeType? TimeType { get; set; }
     public int? LabelId { get; set; }
     public string? NotificationId { get; set; }
+    public DateTimeOffset? AlertTime { get; set; }
 }

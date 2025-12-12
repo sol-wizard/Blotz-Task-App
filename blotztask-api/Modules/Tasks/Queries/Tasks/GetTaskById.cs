@@ -28,6 +28,7 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
                 NotificationId = task.NotificationId,
+                AlertTime = task.AlertTime,
                 Label = task.Label == null
                     ? null
                     : new LabelDto
@@ -63,4 +64,5 @@ public class TaskByIdItemDto
     public LabelDto? Label { get; set; }
     public TaskTimeType? TimeType { get; set; }
     public string? NotificationId { get; set; }
+    public DateTimeOffset? AlertTime { get; set; }
 }
