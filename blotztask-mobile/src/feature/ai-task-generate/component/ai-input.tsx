@@ -32,57 +32,27 @@ export const AiInput = ({
     });
     return "zh-CN";
   });
-  const [voiceInputDisabled, setVoiceInputDisabled] = useState(false);
-
-  const checkLocation = async () => {
-    if (Platform.OS !== "android") return;
-
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
-
-      const { coords } = await Location.getCurrentPositionAsync({});
-      const addresses = await Location.reverseGeocodeAsync(coords);
-
-      const isInChinaMainland = addresses.some(({ isoCountryCode, country }) => {
-        return isoCountryCode === "CN" || country?.toLowerCase().includes("china");
-      });
-
-      if (isInChinaMainland) {
-        setVoiceInputDisabled(true);
-        setIsVoiceInput(false);
-      }
-    } catch (error) {
-      console.warn("Failed to check location for voice input availability", error);
-    }
-  };
-
-  useEffect(() => {
-    checkLocation();
-  }, []);
 
   return (
     <View>
-      {!voiceInputDisabled && (
-        <View className="flex-row mb-8 ml-4 items-center">
-          <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} setText={setText} />
+      <View className="flex-row mb-8 ml-4 items-center">
+        <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} setText={setText} />
 
-          <Pressable
-            onPress={() => {
-              const newLang = language === "en-US" ? "zh-CN" : "en-US";
-              setLanguage(newLang);
-              AsyncStorage.setItem("ai_language_preference", newLang);
-            }}
-            className="w-8 h-8 bg-black rounded-full items-center justify-center ml-8"
-          >
-            <Text className="text-white font-bold text-base">
-              {language === "en-US" ? "EN" : "中"}
-            </Text>
-          </Pressable>
-        </View>
-      )}
+        <Pressable
+          onPress={() => {
+            const newLang = language === "en-US" ? "zh-CN" : "en-US";
+            setLanguage(newLang);
+            AsyncStorage.setItem("ai_language_preference", newLang);
+          }}
+          className="w-8 h-8 bg-black rounded-full items-center justify-center ml-8"
+        >
+          <Text className="text-white font-bold text-base">
+            {language === "en-US" ? "EN" : "中"}
+          </Text>
+        </Pressable>
+      </View>
 
-      {isVoiceInput && !voiceInputDisabled ? (
+      {isVoiceInput ? (
         <VoiceInput
           setText={setText}
           sendMessage={sendMessage}
