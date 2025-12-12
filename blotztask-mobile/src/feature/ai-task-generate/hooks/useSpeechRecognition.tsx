@@ -45,5 +45,6 @@ export function useSpeechRecognition({ language = "en-US" }: { language?: string
     recognizing,
     transcript,
     stopListening: () => ExpoSpeechRecognitionModule.stop(),
+    setTranscript,
   };
 }

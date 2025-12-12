@@ -14,6 +14,7 @@ export const AiInput = ({
   setIsVoiceInput,
   isAiGenerating,
   aiGeneratedMessage,
+  setAiGeneratedMessage,
 }: {
   text: string;
   setText: (v: string) => void;
@@ -22,6 +23,7 @@ export const AiInput = ({
   setIsVoiceInput: (v: boolean) => void;
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
+  setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) => {
   const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
     AsyncStorage.getItem("ai_language_preference").then((saved) => {
@@ -53,11 +55,11 @@ export const AiInput = ({
 
       {isVoiceInput ? (
         <VoiceInput
-          setText={setText}
           sendMessage={sendMessage}
           errorMessage={aiGeneratedMessage?.errorMessage}
           language={language}
           isAiGenerating={isAiGenerating}
+          setAiGeneratedMessage={setAiGeneratedMessage}
         />
       ) : (
         <WriteInput

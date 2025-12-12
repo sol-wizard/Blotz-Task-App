@@ -13,7 +13,7 @@ export default function AiTaskSheetScreen() {
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
 
-  const { aiGeneratedMessage, sendMessage } = useAiTaskGenerator({
+  const { aiGeneratedMessage, sendMessage, setAiGeneratedMessage } = useAiTaskGenerator({
     setIsAiGenerating,
     setModalType,
   });
@@ -39,6 +39,7 @@ export default function AiTaskSheetScreen() {
             aiGeneratedMessage={aiGeneratedMessage as AiResultMessageDTO | undefined}
             sendMessage={sendMessage}
             isAiGenerating={isAiGenerating}
+            setAiGeneratedMessage={setAiGeneratedMessage}
           />
         </View>
       </KeyboardAvoidingView>

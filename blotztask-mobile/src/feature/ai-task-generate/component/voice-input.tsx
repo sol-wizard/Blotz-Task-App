@@ -7,32 +7,34 @@ import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import LottieView from "lottie-react-native";
 import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { ErrorMessageCard } from "./error-message-card";
+import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 
 export const VoiceInput = ({
-  setText,
   sendMessage,
   errorMessage,
   language,
   isAiGenerating,
+  setAiGeneratedMessage,
 }: {
-  setText: (v: string) => void;
   sendMessage: (v: string) => void;
   errorMessage?: string;
   language: string;
   isAiGenerating: boolean;
+  setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) => {
-  const { handleStartListening, recognizing, transcript, stopListening } = useSpeechRecognition({
-    language,
-  });
+  const { handleStartListening, recognizing, transcript, stopListening, setTranscript } =
+    useSpeechRecognition({
+      language,
+    });
 
   const handleMicPressOut = async () => {
     await stopListening();
-
     if (transcript?.trim()) {
       console.log("Final transcript:", transcript?.trim());
-      setText(transcript.trim());
       sendMessage(transcript.trim());
     }
+    setTranscript("");
+    console.log("transcript:", transcript?.trim());
   };
 
   return (
@@ -55,7 +57,7 @@ export const VoiceInput = ({
         <View className="mt-4 mb-8 items-center">
           <Pressable
             onLongPress={async () => {
-              setText("");
+              setAiGeneratedMessage();
 
               try {
                 await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

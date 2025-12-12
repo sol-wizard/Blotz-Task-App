@@ -33,7 +33,7 @@ export const WriteInput = ({
   };
 
   return (
-    <View className="mr-6 mt-2">
+    <View className="mr-6 mt-2 items-center">
       <TextInput
         onChangeText={handleChange}
         onSubmitEditing={() => sendAndDismiss(text)}
@@ -47,13 +47,14 @@ export const WriteInput = ({
       />
 
       {errorMessage && !isAiGenerating && <ErrorMessageCard errorMessage={errorMessage} />}
-
-      <View
-        className={`${isAiGenerating ? "opacity-100" : "opacity-0"} items-center my-6`}
-        style={isAiGenerating ? {} : { pointerEvents: "none" }}
-      >
-        <CustomSpinner size={60} />
-      </View>
+      {!errorMessage && (
+        <View
+          className={`${isAiGenerating ? "opacity-100" : "opacity-0"} items-center my-6`}
+          style={isAiGenerating ? {} : { pointerEvents: "none" }}
+        >
+          <CustomSpinner size={60} />
+        </View>
+      )}
     </View>
   );
 };

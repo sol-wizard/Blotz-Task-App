@@ -75,5 +75,6 @@ export function useAiTaskGenerator({
   return {
     aiGeneratedMessage,
     sendMessage,
+    setAiGeneratedMessage,
   };
 }
