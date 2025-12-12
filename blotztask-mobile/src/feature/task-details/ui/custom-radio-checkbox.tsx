@@ -1,26 +1,45 @@
+import { MaterialIcons } from "@expo/vector-icons";
 import { View, Pressable } from "react-native";
 import { theme } from "@/shared/constants/theme";
+import * as Haptics from "expo-haptics";
 
 type SubtaskCheckboxProps = {
+  // checked: boolean;
+  // onPress: () => void;
+  // color?: string;
   checked: boolean;
   onPress: () => void;
-  color?: string;
+  disabled?: boolean;
+  haptic?: boolean;
 };
 
-export const SubtaskCheckbox = ({ checked, onPress, color = theme.colors.disabled }: SubtaskCheckboxProps) => {
+export const SubtaskCheckbox = ({ 
+  checked,
+  onPress,
+  disabled = false,
+  haptic = false, 
+  }: SubtaskCheckboxProps) => {const handlePress = () => {
+      if (disabled) return;
+  
+      if (haptic) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+  
+      onPress();
+    };
   return (
     <Pressable
-      className="w-6 h-6 rounded-full border-2 mr-4 items-center justify-center"
-      style={{
-        borderColor: checked ? color : theme.colors.disabled,
-      }}
-      onPress={onPress}
+      className={`w-7 h-7 rounded-[8px] mr-3 items-center justify-center border-[3px] 
+        ${checked ? "bg-[#E3EFFE] border-[#E3EFFE]" : "bg-white border-gray-300"} 
+        ${disabled ? "opacity-50" : ""}`}
+      // style={{
+      //   borderColor: checked ? color : theme.colors.disabled,
+      // }}
+      onPress={handlePress}
+      disabled={disabled}
     >
       {checked && (
-        <View
-          className="w-3 h-3 rounded-full"
-          style={{ backgroundColor: color }}
-        />
+        <MaterialIcons name="check" size={16} color="#3D8DE0" />
       )}
     </Pressable>
   );
