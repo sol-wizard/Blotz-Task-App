@@ -1,5 +1,6 @@
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from "expo-speech-recognition";
 import { useState } from "react";
+import { ensureLanguageModel } from "../utils/ensure-language-modal";
 
 export function useSpeechRecognition({ language = "en-US" }: { language?: string } = {}) {
   const [recognizing, setRecognizing] = useState(false);
@@ -23,6 +24,12 @@ export function useSpeechRecognition({ language = "en-US" }: { language?: string
 
     if (!perm.granted) {
       console.warn("Speech recognition permission not granted:", perm);
+      return;
+    }
+
+    const isLanguageReady = await ensureLanguageModel(language);
+    if (!isLanguageReady) {
+      console.warn(`Offline model for ${language} not ready, aborting start.`);
       return;
     }
 
