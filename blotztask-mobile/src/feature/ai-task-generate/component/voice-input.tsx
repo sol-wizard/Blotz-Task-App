@@ -29,6 +29,7 @@ export const VoiceInput = ({
     await stopListening();
 
     if (transcript?.trim()) {
+      console.log("Final transcript:", transcript?.trim());
       setText(transcript.trim());
       sendMessage(transcript.trim());
     }
@@ -55,6 +56,7 @@ export const VoiceInput = ({
           <Pressable
             onLongPress={async () => {
               setText("");
+
               try {
                 await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               } catch {

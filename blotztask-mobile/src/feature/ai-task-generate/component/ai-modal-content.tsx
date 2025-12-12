@@ -54,6 +54,7 @@ export const AiModalContent = ({
           isVoiceInput={isVoiceInput}
           setIsVoiceInput={setIsVoiceInput}
           isAiGenerating={isAiGenerating || isLoading}
+          aiGeneratedMessage={aiGeneratedMessage}
         />
       );
   }
