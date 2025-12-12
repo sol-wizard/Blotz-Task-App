@@ -23,7 +23,6 @@ export const useSubtaskMutations = () => {
   const replaceSubtasksMutation = useMutation({
     mutationFn: replaceSubtasks,
     onSuccess: (_, variables) => {
-      console.log("Added/Replaced subtasks", variables.subtasks, "to", variables.taskId);
       queryClient.invalidateQueries({ queryKey: ["subtasks", variables.taskId] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },

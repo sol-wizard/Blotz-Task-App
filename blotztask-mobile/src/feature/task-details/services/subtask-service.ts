@@ -3,12 +3,14 @@ import { SubtaskDTO } from "../models/subtask-dto";
 import { BreakdownSubtaskDTO } from "@/feature/task-details/models/breakdown-subtask-dto";
 import { apiClient } from "@/shared/services/api/client";
 
-export const createBreakDownSubtasks = async (taskId: number) => {
+export const createBreakDownSubtasks = async (
+  taskId: number,
+): Promise<BreakdownSubtaskDTO[] | undefined> => {
   if (!taskId) return;
 
   try {
     const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/TaskBreakdown/${taskId}`;
-    const data: BreakdownSubtaskDTO = await apiClient.post(url);
+    const data: BreakdownSubtaskDTO[] = await apiClient.post(url);
     return data;
   } catch (error) {
     console.error("Error fetching subtasks:", error);
