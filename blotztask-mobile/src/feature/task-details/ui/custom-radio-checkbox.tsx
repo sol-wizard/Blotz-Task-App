@@ -29,18 +29,23 @@ export const SubtaskCheckbox = ({
     };
   return (
     <Pressable
-      className={`w-7 h-7 rounded-[8px] mr-3 items-center justify-center border-[3px] 
-        ${checked ? "bg-[#E3EFFE] border-[#E3EFFE]" : "bg-white border-gray-300"} 
-        ${disabled ? "opacity-50" : ""}`}
-      // style={{
-      //   borderColor: checked ? color : theme.colors.disabled,
-      // }}
       onPress={handlePress}
       disabled={disabled}
+      className={`
+        mr-3 items-center justify-center
+        rounded-[12px]
+        w-7 h-7
+        border-[2px]
+        ${checked ? "bg-[#E3EFFE] border-[#C3D7FE]" : "bg-white border-[#DFE5F0]"}
+        ${disabled ? "opacity-40" : ""}
+      `}
     >
       {checked && (
-        <MaterialIcons name="check" size={16} color="#3D8DE0" />
+        <View className="w-4 h-4 rounded-[8px] items-center justify-center bg-[#3D8DE0]">
+          <MaterialIcons name="check" size={12} color="#FFFFFF" />
+        </View>
       )}
     </Pressable>
+
   );
 };
