@@ -73,10 +73,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   }, [isError]);
 
   const handleFormSubmit = async (data: TaskFormField) => {
-    if (mode === "edit") {
+    if (mode === "edit" && dto?.alertTime && dto?.alertTime > new Date()) {
       await cancelNotification({
         notificationId: dto?.notificationId,
-        alertTime: dto?.alertTime?.toISOString(),
       });
     }
 

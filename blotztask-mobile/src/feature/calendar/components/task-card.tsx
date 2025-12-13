@@ -125,10 +125,10 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           onPress={async () => {
             if (isLoading) return;
             await deleteTask(task.id);
-            await cancelNotification({
-              notificationId: task?.notificationId,
-              alertTime: task?.alertTime,
-            });
+            if (task.alertTime && new Date(task.alertTime) > new Date())
+              await cancelNotification({
+                notificationId: task?.notificationId,
+              });
             translateX.value = withTiming(0);
             runOnJS(setActionsEnabled)(false);
           }}
@@ -156,10 +156,10 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                     checked={task.isDone}
                     onPress={async () => {
                       toggleTask(task.id);
-                      await cancelNotification({
-                        notificationId: task?.notificationId,
-                        alertTime: task?.alertTime,
-                      });
+                      if (task.alertTime && new Date(task.alertTime) > new Date())
+                        await cancelNotification({
+                          notificationId: task?.notificationId,
+                        });
                     }}
                     disabled={isLoading}
                     haptic={!task.isDone}
