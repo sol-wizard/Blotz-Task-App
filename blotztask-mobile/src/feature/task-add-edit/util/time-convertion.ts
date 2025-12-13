@@ -1,7 +1,7 @@
 import { TaskTimeType } from "@/shared/models/task-detail-dto";
 import { isSameDay, isSameMinute } from "date-fns";
 
-const ALLOWED_ALERT_SECONDS = [0, 300, 600, 1800, 3600, 7200, 86400];
+const ALLOWED_ALERT_SECONDS = [0, 300, 600, 1800, 3600, 7200, 86400, 604800];
 
 export function calculateAlertSeconds(
   startTime: Date | null | undefined,

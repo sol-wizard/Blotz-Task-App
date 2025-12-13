@@ -19,6 +19,7 @@ const ALERT_OPTIONS = [
   { label: "1 hour before", value: 3600 },
   { label: "2 hours before", value: 7200 },
   { label: "1 day before", value: 86400 },
+  { label: "1 week before", value: 604800 },
 ];
 
 export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "alert" }) => {
