@@ -14,12 +14,14 @@ export const AiModalContent = ({
   aiGeneratedMessage,
   sendMessage,
   isAiGenerating,
+  setAiGeneratedMessage,
 }: {
   modalType: BottomSheetType;
   setModalType: (type: BottomSheetType) => void;
   aiGeneratedMessage?: AiResultMessageDTO;
   sendMessage: (text: string) => Promise<void>;
   isAiGenerating: boolean;
+  setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) => {
   const [text, setText] = useState("");
   const [isVoiceInput, setIsVoiceInput] = useState(true);
@@ -54,6 +56,8 @@ export const AiModalContent = ({
           isVoiceInput={isVoiceInput}
           setIsVoiceInput={setIsVoiceInput}
           isAiGenerating={isAiGenerating || isLoading}
+          aiGeneratedMessage={aiGeneratedMessage}
+          setAiGeneratedMessage={setAiGeneratedMessage}
         />
       );
   }

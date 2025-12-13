@@ -16,6 +16,7 @@ export function useAiTaskGenerator({
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
+
     setIsAiGenerating(true);
     if (connection) {
       try {
@@ -23,13 +24,11 @@ export function useAiTaskGenerator({
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
         setIsAiGenerating(false);
-
         setModalType("input");
       }
     } else {
       console.warn("Cannot send message: Not connected.");
       setIsAiGenerating(false);
-
       setModalType("input");
     }
   };
@@ -76,5 +75,6 @@ export function useAiTaskGenerator({
   return {
     aiGeneratedMessage,
     sendMessage,
+    setAiGeneratedMessage,
   };
 }
