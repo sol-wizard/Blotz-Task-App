@@ -19,11 +19,6 @@ public class GetFloatingTasksByQueryHandler(BlotzTaskDbContext db, ILogger<GetFl
     {
         
         var rawQuery = request.Query?.Trim() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(rawQuery))
-        {
-            logger.LogInformation("Empty query string for user {UserId}", request.UserId);
-            return [];
-        }
         
         var keyword = rawQuery.ToLower();
         logger.LogInformation("Searching floating tasks for user {UserId} with query {Query}", request.UserId, rawQuery);
