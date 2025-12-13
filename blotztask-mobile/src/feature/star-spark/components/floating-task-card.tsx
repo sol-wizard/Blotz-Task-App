@@ -7,6 +7,7 @@ import { estimateTaskTime } from "../services/task-time-estimate-service";
 import { useState } from "react";
 import { FloatingTaskTimeEstimateModal } from "./floating-task-time-estimate-modal";
 import { TaskTimeEstimation } from "../models/task-time-estimation";
+import { convertSubtaskTimeForm } from "@/feature/task-details/utils/convert-subtask-time-form";
 
 export const FloatingTaskCard = ({
   floatingTask,
@@ -36,42 +37,9 @@ export const FloatingTaskCard = ({
     setEstimate(null);
   };
 
-  const formatDuration = (duration: string | number | undefined): string | null => {
-  if (duration == null) return null;
-  let minutes: number | null = null;
-
-  if (typeof duration === "number") {
-    minutes = duration;
-  }
-  else if (/^\d+$/.test(duration)) {
-    minutes = Number(duration);
-  }
-  else if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(duration)) {
-    const parts = duration.split(":");
-    const hours = Number(parts[0]);
-    const mins = Number(parts[1]);
-
-    if (Number.isFinite(hours) && Number.isFinite(mins)) {
-      minutes = hours * 60 + mins;
-    }
-  }
-
-  if (minutes == null || !Number.isFinite(minutes)) return null;
-  if (minutes === 0) return "< 1 min";
-  if (minutes < 60) return `${minutes} min`;
-
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-
-  if (m === 0) return `${h} h`;
-  return `${h} h ${m} min`;
-};
-
 
   const handleEstimateTime = async (task: FloatingTaskDTO) => {
     try {
-      setError(null);
-      setEstimate(null);
       setIsModalVisible(true);      
       setIsEstimating(true);        
 
@@ -82,9 +50,8 @@ export const FloatingTaskCard = ({
       };
 
       const result = await estimateTaskTime(payload);
-      console.log("Estimation result:", result);
 
-      const formatted = formatDuration(result.duration);
+      const formatted = convertSubtaskTimeForm(result.duration);
 
       if (formatted == null) {
         setError("Could not estimate time, please try again later.");
