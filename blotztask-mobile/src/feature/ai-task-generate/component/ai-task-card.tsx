@@ -1,19 +1,17 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, Keyboard } from "react-native";
+import { View, Text, Pressable, Keyboard, TextInput } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import { theme } from "@/shared/constants/theme";
 import { formatAiTaskCardDate, formatAiTaskCardTime } from "../utils/format-ai-task-card-time";
-import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 
 type Props = {
   task: AiTaskDTO;
   handleTaskDelete: (taskId: string) => void;
   onTitleChange?: (taskId: string, newTitle: string) => void;
-  sheetRef: React.RefObject<BottomSheetModal | null>;
 };
 
-export function AiTaskCard({ task, handleTaskDelete, onTitleChange, sheetRef }: Props) {
+export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
   const [draftTitle, setDraftTitle] = useState(task.title);
 
   const handleEdit = () => {
@@ -25,7 +23,6 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange, sheetRef }: 
     }
 
     Keyboard.dismiss();
-    sheetRef.current?.collapse();
   };
   const formatTime = formatAiTaskCardTime({ startTime: task.startTime, endTime: task.endTime });
   const formatDate = formatAiTaskCardDate({ startTime: task.startTime, endTime: task.endTime });
@@ -38,7 +35,7 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange, sheetRef }: 
       />
 
       <View className="flex-1 flex-row items-center ml-4">
-        <BottomSheetTextInput
+        <TextInput
           value={draftTitle}
           onChangeText={setDraftTitle}
           onBlur={handleEdit}
@@ -57,10 +54,10 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange, sheetRef }: 
         {task.startTime || task.endTime ? (
           <View className="items-center ml-2 flex-shrink-0">
             {formatTime && (
-              <Text className="text-sm font-medium ml-1 text-tertiary">{formatTime}</Text>
+              <Text className="text-sm font-medium ml-1 text-primary">{formatTime}</Text>
             )}
             {formatDate && (
-              <Text className="text-sm font-medium ml-1 text-tertiary">{formatDate}</Text>
+              <Text className="text-sm font-medium ml-1 text-primary">{formatDate}</Text>
             )}
           </View>
         ) : null}

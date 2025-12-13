@@ -7,45 +7,41 @@ import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import LottieView from "lottie-react-native";
 import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { ErrorMessageCard } from "./error-message-card";
+import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 
 export const VoiceInput = ({
-  setText,
-  hasError,
   sendMessage,
-  setInputError,
   errorMessage,
   language,
   isAiGenerating,
+  setAiGeneratedMessage,
 }: {
-  setText: (v: string) => void;
-  hasError: boolean;
   sendMessage: (v: string) => void;
-  setInputError: (v: boolean) => void;
   errorMessage?: string;
   language: string;
   isAiGenerating: boolean;
+  setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) => {
-  const { handleStartListening, recognizing, transcript, stopListening } = useSpeechRecognition({
-    language,
-  });
+  const { handleStartListening, recognizing, transcript, stopListening, setTranscript } =
+    useSpeechRecognition({
+      language,
+    });
 
   const handleMicPressOut = async () => {
     await stopListening();
-
     if (transcript?.trim()) {
-      setText(transcript.trim());
       sendMessage(transcript.trim());
     }
   };
 
   return (
     <View className="items-center">
-      {hasError ? (
+      {errorMessage && !isAiGenerating ? (
         <ErrorMessageCard errorMessage={errorMessage} />
       ) : (
         <View className="w-96 mb-16" style={{ minHeight: 80 }}>
           <Text
-            className={`text-xl font-bold ${transcript?.trim() ? "text-black" : "text-[#D1D1D6]"}`}
+            className={`text-2xl font-baloo font-bold ${transcript?.trim() ? "text-black" : "text-[#D1D1D6]"}`}
           >
             {transcript?.trim()
               ? transcript
@@ -55,11 +51,12 @@ export const VoiceInput = ({
       )}
 
       {!isAiGenerating ? (
-        <View className="mt-6 items-center mb-16">
+        <View className="mt-4 mb-8 items-center">
           <Pressable
             onLongPress={async () => {
-              setText("");
-              setInputError(false);
+              setTranscript("");
+              setAiGeneratedMessage();
+
               try {
                 await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               } catch {
@@ -88,7 +85,7 @@ export const VoiceInput = ({
           </Pressable>
         </View>
       ) : (
-        <View className="mt-6 items-center mb-16">
+        <View className="items-center mt-4 mb-8">
           <CustomSpinner size={60} />
         </View>
       )}

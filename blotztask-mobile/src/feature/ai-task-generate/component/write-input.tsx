@@ -1,25 +1,23 @@
 import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { theme } from "@/shared/constants/theme";
-import { BottomSheetModal, BottomSheetTextInput } from "@gorhom/bottom-sheet";
-import { View, Keyboard } from "react-native";
+import { View, Keyboard, TextInput } from "react-native";
 import { ErrorMessageCard } from "./error-message-card";
+import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 
 export const WriteInput = ({
   text,
   setText,
-  sheetRef,
-  hasError,
   sendMessage,
   errorMessage,
   isAiGenerating,
+  setAiGeneratedMessage,
 }: {
   text: string;
   setText: (v: string) => void;
-  sheetRef: React.RefObject<BottomSheetModal | null>;
-  hasError: boolean;
   sendMessage: (v: string) => void;
   errorMessage?: string;
   isAiGenerating: boolean;
+  setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) => {
   const sendAndDismiss = (msg: string) => {
     const val = msg.trim();
@@ -27,34 +25,34 @@ export const WriteInput = ({
     sendMessage(val);
     setText(val);
     Keyboard.dismiss();
-    sheetRef.current?.collapse();
-  };
-
-  const handleChange = (value: string) => {
-    setText(value);
-    if (value.endsWith("\n")) {
-      sendAndDismiss(value);
-      return;
-    }
   };
 
   return (
-    <View>
-      <BottomSheetTextInput
-        value={text}
-        onChangeText={handleChange}
-        onSubmitEditing={() => sendAndDismiss(text)}
-        returnKeyType="done"
+    <View className="mt-2 items-center w-full">
+      <TextInput
+        onChangeText={(v: string) => setText(v)}
+        onKeyPress={({ nativeEvent: { key } }) => {
+          if (key === "Enter") {
+            const cleaned = text.replace(/\n$/, "").trim();
+            if (!cleaned) return;
+            setAiGeneratedMessage();
+            sendAndDismiss(cleaned);
+          }
+        }}
         enablesReturnKeyAutomatically
         placeholder="I have a team meeting scheduled for 9am today...And 10am workout."
         placeholderTextColor={theme.colors.secondary}
         multiline
-        className="min-h-[100px] bg-white text-xl text-gray-800 font-baloo"
-        style={{ textAlignVertical: "top" }}
+        className="min-h-[140px] w-11/12 max-w-[360px] bg-white text-2xl text-gray-800 font-baloo"
+        style={{ textAlignVertical: "top", textAlign: "left" }}
       />
-      {hasError && <ErrorMessageCard errorMessage={errorMessage} />}
-      {isAiGenerating && (
-        <View className="items-center">
+
+      {errorMessage && !isAiGenerating && <ErrorMessageCard errorMessage={errorMessage} />}
+      {!errorMessage && (
+        <View
+          className={`${isAiGenerating ? "opacity-100" : "opacity-0"} items-center my-6`}
+          style={isAiGenerating ? {} : { pointerEvents: "none" }}
+        >
           <CustomSpinner size={60} />
         </View>
       )}

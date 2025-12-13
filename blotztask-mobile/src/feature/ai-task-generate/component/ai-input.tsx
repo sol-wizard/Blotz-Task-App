@@ -1,33 +1,29 @@
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { InputModeSwitch } from "./input-mode-switch";
 import { VoiceInput } from "./voice-input";
 import { WriteInput } from "./write-input";
 import { Pressable, View, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
+import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 
 export const AiInput = ({
   text,
   setText,
-  sheetRef,
   sendMessage,
   isVoiceInput,
   setIsVoiceInput,
-  generateTaskError,
-  setInputError,
-  errorMessage,
   isAiGenerating,
+  aiGeneratedMessage,
+  setAiGeneratedMessage,
 }: {
   text: string;
   setText: (v: string) => void;
-  sheetRef: React.RefObject<BottomSheetModal | null>;
   sendMessage: (v: string) => void;
   isVoiceInput: boolean;
   setIsVoiceInput: (v: boolean) => void;
-  generateTaskError: boolean;
-  setInputError: (v: boolean) => void;
-  errorMessage?: string;
   isAiGenerating: boolean;
+  aiGeneratedMessage?: AiResultMessageDTO;
+  setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) => {
   const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
     AsyncStorage.getItem("ai_language_preference").then((saved) => {
@@ -37,10 +33,12 @@ export const AiInput = ({
     });
     return "zh-CN";
   });
+
   return (
-    <View className="w-96">
-      <View className="flex-row mb-8 -ml-6 items-center">
+    <View>
+      <View className="flex-row mb-8 ml-4 items-center">
         <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} setText={setText} />
+
         <Pressable
           onPress={() => {
             const newLang = language === "en-US" ? "zh-CN" : "en-US";
@@ -57,23 +55,20 @@ export const AiInput = ({
 
       {isVoiceInput ? (
         <VoiceInput
-          setText={setText}
           sendMessage={sendMessage}
-          hasError={generateTaskError}
-          setInputError={setInputError}
-          errorMessage={errorMessage}
+          errorMessage={aiGeneratedMessage?.errorMessage}
           language={language}
           isAiGenerating={isAiGenerating}
+          setAiGeneratedMessage={setAiGeneratedMessage}
         />
       ) : (
         <WriteInput
           text={text}
           setText={setText}
           sendMessage={sendMessage}
-          hasError={generateTaskError}
-          sheetRef={sheetRef}
-          errorMessage={errorMessage}
+          errorMessage={aiGeneratedMessage?.errorMessage}
           isAiGenerating={isAiGenerating}
+          setAiGeneratedMessage={setAiGeneratedMessage}
         />
       )}
     </View>

@@ -107,7 +107,7 @@ export const useGashaponMachineConfig = ({
       const row = Math.floor(i / 6);
 
       const x = 90 + col * gapX;
-      const y = 220 + row * gapY;
+      const y = 230 + row * gapY;
       const labelName = floatingTasks[i].label?.name ?? "no-label";
       const star = Matter.Bodies.circle(x, y, starRadius, {
         restitution: 0.4,

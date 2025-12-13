@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -18,9 +19,12 @@ public class TaskController(
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
     GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler,
-    GetFloatingTasksByQueryHandler getFloatingTasksByQueryHandler
+    GetFloatingTasksByQueryHandler getFloatingTasksByQueryHandler,
+    ILogger<TaskController> logger
 ) : ControllerBase
 {
+    private readonly ILogger<TaskController> _logger = logger;
+
     [HttpGet("{id}")]
     public async Task<TaskByIdItemDto> GetTaskById(int id, CancellationToken ct)
     {
@@ -32,8 +36,17 @@ public class TaskController(
     public async Task<IEnumerable<TaskByDateItemDto>> GetTaskByDate(
         [FromQuery] GetTasksByDateRequest getTasksByDateRequest, CancellationToken ct)
     {
+        var stopwatch = Stopwatch.StartNew();
+
+        _logger.LogInformation("Resolving UserId from HttpContext for GetTaskByDate");
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        _logger.LogInformation(
+            "Handling GetTaskByDate for user {UserId} starting at {StartDateUtc} (IncludeFloatingForToday: {IncludeFloatingForToday})",
+            userId,
+            getTasksByDateRequest.StartDateUtc,
+            getTasksByDateRequest.IncludeFloatingForToday);
 
         var query = new GetTasksByDateQuery
         {
@@ -43,6 +56,11 @@ public class TaskController(
         };
 
         var result = await getTasksByDateQueryHandler.Handle(query, ct);
+        _logger.LogInformation(
+            "GetTaskByDate finished for user {UserId}. Returned {TaskCount} tasks in {ElapsedMs}ms",
+            userId,
+            result.Count(),
+            stopwatch.ElapsedMilliseconds);
         return result;
     }
 
@@ -83,9 +101,13 @@ public class TaskController(
     }
 
     [HttpGet("weekly-task-availability")]
-    public async Task<IEnumerable<DailyTaskIndicatorDto>> GetWeeklyTaskAvailability([FromQuery] GetWeeklyTaskAvailabilityRequest getWeeklyTaskAvailabilityRequest,
+    public async Task<IEnumerable<DailyTaskIndicatorDto>> GetWeeklyTaskAvailability(
+        [FromQuery] GetWeeklyTaskAvailabilityRequest getWeeklyTaskAvailabilityRequest,
         CancellationToken ct)
     {
+        var stopwatch = Stopwatch.StartNew();
+
+        _logger.LogInformation("Resolving UserId from HttpContext for GetWeeklyTaskAvailability");
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
@@ -95,7 +117,17 @@ public class TaskController(
             MondayUtc = getWeeklyTaskAvailabilityRequest.MondayUtc
         };
 
+        _logger.LogInformation(
+            "Timing GetWeeklyTaskAvailability for user {UserId} at MondayUtc {MondayUtc}; elapsed so far {ElapsedMs}ms",
+            userId,
+            getWeeklyTaskAvailabilityRequest.MondayUtc,
+            stopwatch.ElapsedMilliseconds);
+            
         var result = await getWeeklyTaskAvailabilityQueryHandler.Handle(query, ct);
+        _logger.LogInformation(
+            "GetWeeklyTaskAvailability finished for user {UserId} in {ElapsedMs}ms",
+            userId,
+            stopwatch.ElapsedMilliseconds);
         return result;
     }
 

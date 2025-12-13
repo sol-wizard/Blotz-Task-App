@@ -20,7 +20,8 @@
         "NSCameraUsageDescription": "Allow BlotzTask to use the camera for calls and taking photos.",
         "NSSpeechRecognitionUsageDescription": "We use speech recognition so you can add tasks by voice.",
         "NSMicrophoneUsageDescription": "Allow BlotzTask to use the microphone for voice and video calls.",
-        "NSMotionUsageDescription": "This app uses motion data to simulate gravity and allow capsule toys to move when you shake your phone."
+        "NSMotionUsageDescription": "This app uses motion data to simulate gravity and allow capsule toys to move when you shake your phone.",
+        "NSLocationWhenInUseUsageDescription": "Allow BlotzTask to use your location to check regional availability."
       },
       "appleTeamId": "LXC29JARY5",
       "icon": "./assets/images-png/blotz-icon.png"
@@ -29,9 +30,7 @@
       "appName": "BlotzTask",
       "edgeToEdgeEnabled": true,
       "package": "com.blotz.blotztask",
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO", "android.permission.ACCESS_FINE_LOCATION"]
     },
     "web": {
       "bundler": "metro",
@@ -40,7 +39,12 @@
     "plugins": [
       "expo-router",
       "patch-project",
-      "expo-speech-recognition",
+      [
+        "expo-speech-recognition",
+        {
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
+        }
+      ],
       "expo-secure-store",
       [
         "expo-dev-client",

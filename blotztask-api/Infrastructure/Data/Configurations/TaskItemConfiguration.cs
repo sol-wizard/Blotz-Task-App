@@ -8,6 +8,8 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
 {
     public void Configure(EntityTypeBuilder<TaskItem> builder)
     {
+        builder.HasIndex(t => new { t.UserId, t.StartTime, t.EndTime });
+
         builder.ToTable(t =>
         {
             t.HasCheckConstraint($"CK_TaskItem_Time_Valid",
