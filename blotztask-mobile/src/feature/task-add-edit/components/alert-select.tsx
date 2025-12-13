@@ -22,7 +22,7 @@ const ALERT_OPTIONS = [
   { label: "1 day before", value: 86400 },
 ];
 
-export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "notificationId" }) => {
+export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "alert" }) => {
   return (
     <Controller
       control={control}

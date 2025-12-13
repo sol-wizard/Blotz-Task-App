@@ -72,11 +72,10 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   }, [isError]);
 
   const handleFormSubmit = async (data: TaskFormField) => {
+    console.log("🍎 handleFormSubmit form data:", data);
     if (mode === "edit" && dto?.notificationId) {
       await Notifications.cancelScheduledNotificationAsync(dto?.notificationId);
     }
-    const notificationId = await createNotificationFromAlert(data);
-    console.log("Scheduled Notification ID:", notificationId);
 
     const { startTime, endTime, timeType } = buildTaskTimePayload(
       data.startDate,
@@ -84,6 +83,13 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       isActiveTab === "reminder" ? data.startDate : data.endDate,
       isActiveTab === "reminder" ? data.startTime : data.endTime,
     );
+
+    const notificationId = await createNotificationFromAlert({
+      startTime,
+      alert: data.alert,
+      title: data.title,
+    });
+    console.log("notificationId:", notificationId);
 
     const alertTime = calculateAlertTime(data.startTime, data.alert);
     const submitTask: AddTaskItemDTO = {
@@ -149,6 +155,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             {isActiveTab === "reminder" && <ReminderTab control={control} />}
             {isActiveTab === "event" && <EventTab control={control} />}
             <FormDivider />
+
             <AlertSelect control={control} />
             <FormDivider />
 

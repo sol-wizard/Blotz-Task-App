@@ -23,8 +23,12 @@ export function calculateAlertTime(
   startTime: Date | null | undefined,
   reminderSeconds: number | null | undefined,
 ): Date | null {
-  if (!startTime || !reminderSeconds || !ALLOWED_ALERT_SECONDS.includes(reminderSeconds))
+  if (!startTime || reminderSeconds == null || !ALLOWED_ALERT_SECONDS.includes(reminderSeconds)) {
+    console.log(
+      "!startTime || !reminderSeconds || !ALLOWED_ALERT_SECONDS.includes(reminderSeconds)",
+    );
     return null;
+  }
 
   const alertMs = startTime.getTime() - reminderSeconds * 1000;
   return new Date(alertMs);

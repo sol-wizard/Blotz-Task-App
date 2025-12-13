@@ -1,18 +1,28 @@
 import { NotificationTaskDTO } from "@/shared/models/notification-task-dto";
-import TaskFormField from "../models/task-form-schema";
 import { scheduleTaskReminder } from "@/shared/util/schedule-task-reminder";
 
-export async function createNotificationFromAlert(taskData: TaskFormField) {
-  if (!taskData.startTime || !taskData.alert) {
+export async function createNotificationFromAlert({
+  startTime,
+  alert,
+  title,
+}: {
+  startTime?: Date | null;
+  alert?: number | null;
+  title: string;
+}) {
+  if (!startTime || alert == null) {
+    console.log("no starttime or no alert");
     return null;
   }
-  const notificationTime = new Date(taskData.startTime.getTime() - taskData.alert * 1000);
+  const notificationTime = new Date(startTime.getTime() - alert * 1000);
+  console.log("notificationTime:", notificationTime.toLocaleString());
   if (notificationTime <= new Date()) {
+    console.log("notificationTime <= new Date()");
     return null;
   }
 
   const notificationTask: NotificationTaskDTO = {
-    title: taskData.title,
+    title: title,
     alertTime: notificationTime,
   };
   console.log("Scheduling notification with data:", notificationTask);
