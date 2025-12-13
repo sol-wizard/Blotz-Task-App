@@ -1,13 +1,13 @@
-﻿using BlotzTask.Infrastructure.Data;
+﻿using System.ComponentModel.DataAnnotations;
+using BlotzTask.Infrastructure.Data;
 using BlotzTask.Shared.Exceptions;
-using System.ComponentModel.DataAnnotations;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;
 
 public class TaskStatusUpdateCommand
 {
-    [Required]
-    public int TaskId { get; init; }
+    [Required] public int TaskId { get; init; }
+
     public bool? IsDone { get; init; }
 }
 
@@ -19,13 +19,11 @@ public class TaskStatusUpdateCommandHandler(BlotzTaskDbContext db, ILogger<TaskS
 
         var task = await db.TaskItems.FindAsync(command.TaskId, ct);
 
-        if (task == null)
-        {
-            throw new NotFoundException($"Task with ID {command.TaskId} was not found.");
-        }
+        if (task == null) throw new NotFoundException($"Task with ID {command.TaskId} was not found.");
 
         // If task.IsDone is null, set it to be false, otherwise, toggle the task.IsDone
         task.IsDone = command.IsDone ?? !task.IsDone;
+        task.NotificationId = null;
 
         logger.LogInformation("The completion status of task {Id} was changed to {IsDone}", task.Id, task.IsDone);
 

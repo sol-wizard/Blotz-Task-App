@@ -15,5 +15,7 @@ export interface TaskDetailDTO {
   startTime?: string;
   endTime?: string;
   timeType: TaskTimeType | null;
+  notificationId: string | null;
   subtasks?: SubtaskDTO[];
+  alertTime?: string;
 }

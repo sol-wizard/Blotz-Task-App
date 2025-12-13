@@ -1,11 +1,10 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
 import { EditTaskItemDTO } from "@/feature/task-add-edit/models/edit-task-item-dto";
-import { mapFormToAddTaskItemDTO } from "@/feature/task-add-edit/util/form-to-task-dto-mapper";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
+import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 
 // TODO: Fix flickering stale selected task in task detail page while navigating back
 const TaskEditScreen = () => {
@@ -29,16 +28,15 @@ const TaskEditScreen = () => {
     endTime: selectedTask.endTime ? new Date(selectedTask.endTime) : undefined,
     labelId: selectedTask.label ? selectedTask.label.labelId : undefined,
     timeType: selectedTask.timeType,
+    notificationId: selectedTask.notificationId,
+    alertTime: selectedTask.alertTime ? new Date(selectedTask.alertTime) : undefined,
   };
 
-  const handleTaskSubmit = async (formValues: TaskFormField) => {
+  const handleTaskSubmit = async (formValues: AddTaskItemDTO) => {
     try {
-      // Convert form to DTO
-      const dto = mapFormToAddTaskItemDTO(formValues);
-
       await updateTask({
-        ...dto,
         id: selectedTask.id,
+        ...formValues,
       });
 
       router.back();
