@@ -19,6 +19,7 @@ public class TaskController(
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
     GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler,
+    GetFloatingTasksByQueryHandler getFloatingTasksByQueryHandler,
     ILogger<TaskController> logger
 ) : ControllerBase
 {
@@ -76,6 +77,26 @@ public class TaskController(
         };
 
         var result = await getFloatingTasksQueryHandler.Handle(query, ct);
+        return result;
+    }
+
+    [HttpGet("search")]
+    public async Task<IEnumerable<FloatingTaskItemByQueryDto>> GetFloatingTasksByQuery([FromQuery] string query, CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return [];
+        }
+
+        var searchQuery = new GetFloatingTasksByQuery
+        {
+            UserId = userId,
+            Query = query
+        };
+        
+        var result = await getFloatingTasksByQueryHandler.Handle(searchQuery, ct);
         return result;
     }
 
