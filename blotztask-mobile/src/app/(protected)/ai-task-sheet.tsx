@@ -6,7 +6,7 @@ import { AiModalContent } from "@/feature/ai-task-generate/component/ai-modal-co
 import { AiResultMessageDTO } from "@/feature/ai-task-generate/models/ai-result-message-dto";
 import { useAiTaskGenerator } from "@/feature/ai-task-generate/hooks/useAiTaskGenerator";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { ensureLanguageModel } from "@/feature/ai-task-generate/utils/ensure-language-modal";
+import { prepareLanguagePackage } from "@/feature/ai-task-generate/utils/prepare-language-package";
 import { requestMicrophonePermission } from "@/feature/ai-task-generate/utils/request-microphone-permission";
 
 export default function AiTaskSheetScreen() {
@@ -20,7 +20,7 @@ export default function AiTaskSheetScreen() {
 
   useEffect(() => {
     requestMicrophonePermission();
-    ensureLanguageModel(["en-US", "cmn-Hans-CN"]);
+    prepareLanguagePackage(["en-US", "cmn-Hans-CN"]);
   }, []);
 
   return (
