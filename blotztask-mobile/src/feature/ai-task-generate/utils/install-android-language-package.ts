@@ -14,7 +14,6 @@ export const installAndroidLanguagePackage = async (locales: string | string[]) 
     );
 
     if (missingLocales.length === 0) {
-      console.log("All target offline models already installed:", targetLocales.join(", "));
       return true;
     }
 
