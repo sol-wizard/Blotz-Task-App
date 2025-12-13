@@ -8,7 +8,6 @@ export function useSpeechRecognition({ language = "en-US" }: { language?: string
 
   useSpeechRecognitionEvent("start", () => {
     setRecognizing(true);
-    console.log("Speech recognition started");
   });
 
   useSpeechRecognitionEvent("end", () => setRecognizing(false));
