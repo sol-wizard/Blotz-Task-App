@@ -26,6 +26,10 @@ export async function createNotificationFromAlert({
     alertTime: notificationTime,
   };
   console.log("Scheduling notification with data:", notificationTask);
-  const notificationId = await scheduleTaskReminder(notificationTask);
-  return notificationId;
+  try {
+    const notificationId = await scheduleTaskReminder(notificationTask);
+    return notificationId;
+  } catch {
+    return null;
+  }
 }
