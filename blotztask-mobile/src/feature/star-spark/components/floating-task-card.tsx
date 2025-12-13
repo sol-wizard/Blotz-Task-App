@@ -1,9 +1,13 @@
-import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, Image, ActivityIndicator} from "react-native";
 import { FloatingTaskDTO } from "../models/floating-task-dto";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { getLabelIcon } from "../utils/get-label-icon";
 import { estimateTaskTime } from "../services/task-time-estimate-service";
+import { useState } from "react";
+import { FloatingTaskTimeEstimateModal } from "./floating-task-time-estimate-modal";
+import { TaskTimeEstimation } from "../models/task-time-estimation";
+import { convertSubtaskTimeForm } from "@/feature/task-details/utils/convert-subtask-time-form";
 
 export const FloatingTaskCard = ({
   floatingTask,
@@ -22,15 +26,47 @@ export const FloatingTaskCard = ({
 }) => {
   const iconSource = getLabelIcon(floatingTask.label?.name);
 
-  const handleEstimateTime = async (floatingTask: FloatingTaskDTO) => {
-    const floatingTaskForEstimate = {
-      id: floatingTask.id,
-      title: floatingTask.title,
-      description: floatingTask.description,
-    };
-    const result = await estimateTaskTime(floatingTaskForEstimate);
-    console.log("FloatingTaskCard time estimate:", result);
+  const [isEstimating, setIsEstimating] = useState(false);
+  const [estimate, setEstimate] = useState<TaskTimeEstimation | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+    setError(null);
+    setEstimate(null);
   };
+
+
+  const handleEstimateTime = async (task: FloatingTaskDTO) => {
+    try {
+      setIsModalVisible(true);      
+      setIsEstimating(true);        
+
+      const payload = {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+      };
+
+      const result = await estimateTaskTime(payload);
+
+      const formatted = convertSubtaskTimeForm(result.duration);
+
+      if (formatted == null) {
+        setError("Could not estimate time, please try again later.");
+        setEstimate(null);
+      } else {
+        setEstimate({ ...result, duration: formatted });
+      }
+    } catch (e) {
+      console.log("estimateTaskTime error:", e);
+      setError("Could not estimate time, please try again later.");
+    } finally {
+      setIsEstimating(false);      
+    }
+  };
+
 
   return (
     <View className="mb-4">
@@ -82,6 +118,14 @@ export const FloatingTaskCard = ({
           </Pressable>
         </View>
       )}
+      <FloatingTaskTimeEstimateModal
+        visible={isModalVisible}
+        onClose={closeModal}
+        durationText={estimate?.duration ?? undefined}
+        error={error}
+        isEstimating={isEstimating}
+      />
+
     </View>
   );
 };
