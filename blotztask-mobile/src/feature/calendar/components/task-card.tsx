@@ -19,6 +19,7 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
+import { cancelNotification } from "@/shared/util/cancel-notification";
 
 const ACTION_WIDTH = 64;
 const OPEN_X = -ACTION_WIDTH;
@@ -124,6 +125,10 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           onPress={async () => {
             if (isLoading) return;
             await deleteTask(task.id);
+            await cancelNotification({
+              notificationId: task?.notificationId,
+              alertTime: task?.alertTime,
+            });
             translateX.value = withTiming(0);
             runOnJS(setActionsEnabled)(false);
           }}
@@ -149,7 +154,13 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                 <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
                   <TaskCheckbox
                     checked={task.isDone}
-                    onPress={() => toggleTask(task.id)}
+                    onPress={async () => {
+                      toggleTask(task.id);
+                      await cancelNotification({
+                        notificationId: task?.notificationId,
+                        alertTime: task?.alertTime,
+                      });
+                    }}
                     disabled={isLoading}
                     haptic={!task.isDone}
                   />

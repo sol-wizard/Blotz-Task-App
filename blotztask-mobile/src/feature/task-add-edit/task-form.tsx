@@ -22,6 +22,7 @@ import {
   calculateAlertTime,
 } from "./util/time-convertion";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { cancelNotification } from "@/shared/util/cancel-notification";
 
 type TaskFormProps =
   | {
@@ -44,6 +45,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { labels = [], isLoading, isError } = useAllLabels();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const initialAlertTime = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
 
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
@@ -53,7 +55,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     startTime: dto?.startTime ?? null,
     endDate: dto?.endTime ?? null,
     endTime: dto?.endTime ?? null,
-    alert: calculateAlertSeconds(dto?.startTime, dto?.alertTime) ?? 300,
+    alert: initialAlertTime ?? 300,
   };
 
   const form = useForm<TaskFormField>({
@@ -72,8 +74,11 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   }, [isError]);
 
   const handleFormSubmit = async (data: TaskFormField) => {
-    if (mode === "edit" && dto?.notificationId) {
-      await Notifications.cancelScheduledNotificationAsync(dto?.notificationId);
+    if (mode === "edit") {
+      await cancelNotification({
+        notificationId: dto?.notificationId,
+        alertTime: dto?.alertTime?.toISOString(),
+      });
     }
 
     const { startTime, endTime, timeType } = buildTaskTimePayload(
