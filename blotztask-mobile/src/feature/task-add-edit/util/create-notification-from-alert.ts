@@ -11,13 +11,11 @@ export async function createNotificationFromAlert({
   title: string;
 }) {
   if (!startTime || alert == null) {
-    console.log("no starttime or no alert");
     return null;
   }
   const notificationTime = new Date(startTime.getTime() - alert * 1000);
-  console.log("notificationTime:", notificationTime.toLocaleString());
+
   if (notificationTime <= new Date()) {
-    console.log("notificationTime <= new Date()");
     return null;
   }
 
@@ -25,7 +23,7 @@ export async function createNotificationFromAlert({
     title: title,
     alertTime: notificationTime,
   };
-  console.log("Scheduling notification with data:", notificationTask);
+
   try {
     const notificationId = await scheduleTaskReminder(notificationTask);
     return notificationId;

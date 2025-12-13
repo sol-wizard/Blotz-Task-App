@@ -72,7 +72,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   }, [isError]);
 
   const handleFormSubmit = async (data: TaskFormField) => {
-    console.log("🍎 handleFormSubmit form data:", data);
     if (mode === "edit" && dto?.notificationId) {
       await Notifications.cancelScheduledNotificationAsync(dto?.notificationId);
     }
@@ -89,7 +88,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       alert: data.alert,
       title: data.title,
     });
-    console.log("notificationId:", notificationId);
 
     const alertTime = calculateAlertTime(data.startTime, data.alert);
     const submitTask: AddTaskItemDTO = {
