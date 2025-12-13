@@ -12,7 +12,7 @@ type AlertSelectProps = {
 };
 
 const ALERT_OPTIONS = [
-  { label: "None", value: "None" },
+  { label: "None", value: null },
   { label: "At the start of the event", value: 0 },
   { label: "5 mins before", value: 300 },
   { label: "10 mins before", value: 600 },
@@ -36,12 +36,15 @@ export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "alert
             data={ALERT_OPTIONS}
             labelField="label"
             valueField="value"
-            value={value}
-            onChange={(item) => {
-              const raw = item.value;
-              console.log("Selected reminder:", raw);
-              onChange(raw === "none" ? null : raw);
+            placeholder="None"
+            placeholderStyle={{
+              fontSize: 16,
+              color: "#444964",
+              textAlign: "right",
+              fontFamily: "BalooRegular",
             }}
+            value={value}
+            onChange={(item) => onChange(item.value)}
             style={{
               minWidth: 230,
               paddingHorizontal: 4,
@@ -61,7 +64,7 @@ export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "alert
               elevation: 4,
             }}
             renderItem={(item, selected) => (
-              <View key={item.value}>
+              <View key={item.label}>
                 <View className="flex-row h-12 items-center">
                   <View className="w-6 items-center justify-center mr-1">
                     {selected && <Ionicons name="checkmark" size={18} color="#3E415C" />}
