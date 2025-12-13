@@ -13,17 +13,26 @@ import { SegmentToggle } from "./components/segment-toggle";
 import { Snackbar } from "react-native-paper";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
+import { AlertSelect } from "./components/alert-select";
+import { createNotificationFromAlert } from "./util/create-notification-from-alert";
+import {
+  buildTaskTimePayload,
+  calculateAlertSeconds,
+  calculateAlertTime,
+} from "./util/time-convertion";
+import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { cancelNotification } from "@/shared/util/cancel-notification";
 
 type TaskFormProps =
   | {
       mode: "create";
       dto?: undefined;
-      onSubmit: (data: TaskFormField) => void;
+      onSubmit: (data: AddTaskItemDTO) => void;
     }
   | {
       mode: "edit";
       dto: EditTaskItemDTO;
-      onSubmit: (data: TaskFormField) => void;
+      onSubmit: (data: AddTaskItemDTO) => void;
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
@@ -35,6 +44,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { labels = [], isLoading, isError } = useAllLabels();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const initialAlertTime = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
 
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
@@ -44,6 +54,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     startTime: dto?.startTime ?? null,
     endDate: dto?.endTime ?? null,
     endTime: dto?.endTime ?? null,
+    alert: initialAlertTime ?? 300,
   };
 
   const form = useForm<TaskFormField>({
@@ -61,17 +72,39 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     }
   }, [isError]);
 
-  const handleFormSubmit = (data: TaskFormField) => {
-    if (isActiveTab === "reminder") {
-      onSubmit({
-        ...data,
-        endDate: data.startDate,
-        endTime: data.startTime,
+  const handleFormSubmit = async (data: TaskFormField) => {
+    if (mode === "edit" && dto?.alertTime && dto?.alertTime > new Date()) {
+      await cancelNotification({
+        notificationId: dto?.notificationId,
       });
-      return;
     }
 
-    onSubmit(data);
+    const { startTime, endTime, timeType } = buildTaskTimePayload(
+      data.startDate,
+      data.startTime,
+      isActiveTab === "reminder" ? data.startDate : data.endDate,
+      isActiveTab === "reminder" ? data.startTime : data.endTime,
+    );
+
+    const notificationId = await createNotificationFromAlert({
+      startTime,
+      alert: data.alert,
+      title: data.title,
+    });
+
+    const alertTime = calculateAlertTime(data.startTime, data.alert);
+    const submitTask: AddTaskItemDTO = {
+      title: data.title,
+      description: data.description ?? undefined,
+      startTime: startTime,
+      endTime: endTime,
+      labelId: data.labelId ?? undefined,
+      timeType,
+      alertTime: alertTime ?? undefined,
+      notificationId,
+    };
+
+    onSubmit(submitTask);
   };
 
   const handleTabChange = (next: SegmentButtonValue) => {
@@ -124,6 +157,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             {isActiveTab === "event" && <EventTab control={control} />}
             <FormDivider />
 
+            <AlertSelect control={control} />
+            <FormDivider />
+
             {/* Label Select */}
             <View className="mb-8">
               {isLoading ? (
@@ -132,8 +168,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 <LabelSelect control={control} labels={labels} />
               )}
             </View>
-
-            <FormDivider />
           </ScrollView>
 
           {/* Submit */}

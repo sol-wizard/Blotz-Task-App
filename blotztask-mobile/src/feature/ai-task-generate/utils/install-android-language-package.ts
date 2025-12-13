@@ -1,7 +1,7 @@
 import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 import { Platform } from "react-native";
 
-export const ensureLanguageModel = async (locales: string | string[]) => {
+export const installAndroidLanguagePackage = async (locales: string | string[]) => {
   if (Platform.OS !== "android") return true;
 
   const targetLocales = Array.isArray(locales) ? locales : [locales];
@@ -14,7 +14,6 @@ export const ensureLanguageModel = async (locales: string | string[]) => {
     );
 
     if (missingLocales.length === 0) {
-      console.log("All target offline models already installed:", targetLocales.join(", "));
       return true;
     }
 
