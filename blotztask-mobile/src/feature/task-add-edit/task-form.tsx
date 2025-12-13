@@ -15,7 +15,6 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
 import { AlertSelect } from "./components/alert-select";
 import { createNotificationFromAlert } from "./util/create-notification-from-alert";
-import * as Notifications from "expo-notifications";
 import {
   buildTaskTimePayload,
   calculateAlertSeconds,
