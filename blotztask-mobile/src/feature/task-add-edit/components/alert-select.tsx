@@ -1,4 +1,3 @@
-// ReminderSelect.tsx
 import React from "react";
 import { View, Text } from "react-native";
 import { Controller, Control } from "react-hook-form";
