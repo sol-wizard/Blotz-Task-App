@@ -51,7 +51,7 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
 export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<number> => {
   try {
     const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`;
-    console.log("Adding task with data:", addTaskForm);
+
     const newTaskId: number = await apiClient.post(url, addTaskForm);
     return newTaskId;
   } catch (error) {
