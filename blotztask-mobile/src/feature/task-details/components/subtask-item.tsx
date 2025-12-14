@@ -1,6 +1,5 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { SubtaskCheckbox } from "@/feature/task-details/ui/custom-radio-checkbox";
 import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
 import { theme } from "@/shared/constants/theme";
 import { convertSubtaskTimeForm } from "../utils/convert-subtask-time-form";
