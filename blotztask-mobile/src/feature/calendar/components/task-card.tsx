@@ -180,6 +180,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                     }}
                     disabled={isLoading}
                     haptic={!task.isDone}
+                    size={32}
                   />
 
                   <View
