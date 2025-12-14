@@ -7,6 +7,7 @@ interface TaskCheckboxProps {
   onPress: () => void;
   disabled?: boolean;
   haptic?: boolean;
+  size?: number;
 }
 
 export const TaskCheckbox = ({
@@ -14,6 +15,7 @@ export const TaskCheckbox = ({
   onPress,
   disabled = false,
   haptic = false,
+  size=32,
 }: TaskCheckboxProps) => {
   const handlePress = () => {
     if (disabled) return;
@@ -27,10 +29,11 @@ export const TaskCheckbox = ({
 
   return (
     <Pressable
-      className={`w-8 h-8 rounded-[10px] mr-3 items-center justify-center border-[3px] 
+      className={`mr-3 items-center justify-center border-[3px] 
         ${checked ? "bg-[#E3EFFE] border-[#E3EFFE]" : "bg-white border-gray-300"} 
         ${disabled ? "opacity-50" : ""}`}
       onPress={handlePress}
+      style={{ width: size, height: size, borderRadius: size / 4 }}
       disabled={disabled}
     >
       {checked && <MaterialIcons name="check" size={20} color="#3D8DE0" />}
