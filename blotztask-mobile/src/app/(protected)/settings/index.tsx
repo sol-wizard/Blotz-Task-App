@@ -1,10 +1,11 @@
 import { View, Text, Pressable, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { PNGIMAGES } from "@/shared/constants/assets";
 import { FormDivider } from "@/shared/components/ui/form-divider";
-import { MenuItem } from "./modals/menu-item";
+import { MenuItem, MenuKey } from "@/feature/settings/modals/menu-item";
 
 const menuItems: MenuItem[] = [
   { key: "account", label: "Account", icon: "account-outline" },
@@ -14,6 +15,7 @@ const menuItems: MenuItem[] = [
 ];
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const { userProfile } = useUserProfile();
 
   const avatarSource = userProfile?.pictureUrl
@@ -21,8 +23,17 @@ export default function SettingsScreen() {
     : PNGIMAGES.blotzIcon;
 
   const handleProfileEdit = () => console.log("Edit profile pressed");
-  const handleMenuPress = (key: string) => {
-    console.log(`Settings tab pressed: ${key}`);
+
+  const handleMenuPress = (key: MenuKey) => {
+    if (key == "account") {
+      router.push("/(protected)/settings/account");
+    } else if (key == "task-handling") {
+      router.push("/(protected)/settings/task-handling");
+    } else if (key == "notifications") {
+      router.push("/(protected)/settings/notifications");
+    } else if (key == "under-development") {
+      router.push("/(protected)/settings/all-tasks");
+    }
   };
 
   return (
