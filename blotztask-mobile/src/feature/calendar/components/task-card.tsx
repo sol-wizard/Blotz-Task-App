@@ -22,6 +22,7 @@ import { SubtaskProgressBar } from "./subtask-progress-bar";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
 import { convertSubtaskTimeForm } from "@/feature/task-details/utils/convert-subtask-time-form";
+import { cancelNotification } from "@/shared/util/cancel-notification";
 
 const ACTION_WIDTH = 64;
 const OPEN_X = -ACTION_WIDTH;
@@ -31,7 +32,7 @@ interface TaskCardProps {
   task: TaskDetailDTO;
   deleteTask: (id: number) => Promise<void>;
   isDeleting: boolean;
-  selectedDay: Date;
+  selectedDay?: Date;
 }
 
 export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) {
@@ -107,11 +108,11 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
     const progress = interpolate(-translateX.value, [0, ACTION_WIDTH], [0, 1], Extrapolation.CLAMP);
     return { opacity: progress };
   });
-  
+
   const endDate = task.endTime ? parseISO(task.endTime) : null;
 
   const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
-  
+
   // Create a sense of being pushed away
   const leftExtrasStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value * 1.25 }],
@@ -141,6 +142,10 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           onPress={async () => {
             if (isLoading) return;
             await deleteTask(task.id);
+            if (task.alertTime && new Date(task.alertTime) > new Date())
+              await cancelNotification({
+                notificationId: task?.notificationId,
+              });
             translateX.value = withTiming(0);
             runOnJS(setActionsEnabled)(false);
           }}
@@ -166,7 +171,13 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                 <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
                   <TaskCheckbox
                     checked={task.isDone}
-                    onPress={() => toggleTask(task.id)}
+                    onPress={async () => {
+                      toggleTask(task.id);
+                      if (task.alertTime && new Date(task.alertTime) > new Date())
+                        await cancelNotification({
+                          notificationId: task?.notificationId,
+                        });
+                    }}
                     disabled={isLoading}
                     haptic={!task.isDone}
                   />

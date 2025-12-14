@@ -14,6 +14,7 @@ export const AiInput = ({
   setIsVoiceInput,
   isAiGenerating,
   aiGeneratedMessage,
+  setAiGeneratedMessage,
 }: {
   text: string;
   setText: (v: string) => void;
@@ -22,6 +23,7 @@ export const AiInput = ({
   setIsVoiceInput: (v: boolean) => void;
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
+  setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) => {
   const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
     AsyncStorage.getItem("ai_language_preference").then((saved) => {
@@ -36,6 +38,7 @@ export const AiInput = ({
     <View>
       <View className="flex-row mb-8 ml-4 items-center">
         <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} setText={setText} />
+
         <Pressable
           onPress={() => {
             const newLang = language === "en-US" ? "zh-CN" : "en-US";
@@ -52,11 +55,11 @@ export const AiInput = ({
 
       {isVoiceInput ? (
         <VoiceInput
-          setText={setText}
           sendMessage={sendMessage}
           errorMessage={aiGeneratedMessage?.errorMessage}
           language={language}
           isAiGenerating={isAiGenerating}
+          setAiGeneratedMessage={setAiGeneratedMessage}
         />
       ) : (
         <WriteInput
@@ -65,6 +68,7 @@ export const AiInput = ({
           sendMessage={sendMessage}
           errorMessage={aiGeneratedMessage?.errorMessage}
           isAiGenerating={isAiGenerating}
+          setAiGeneratedMessage={setAiGeneratedMessage}
         />
       )}
     </View>
