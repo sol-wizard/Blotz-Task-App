@@ -3,11 +3,8 @@ import { FloatingTaskDTO } from "../models/floating-task-dto";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { getLabelIcon } from "../utils/get-label-icon";
-import { estimateTaskTime } from "../services/task-time-estimate-service";
 import { useState } from "react";
 import { FloatingTaskTimeEstimateModal } from "./floating-task-time-estimate-modal";
-import { TaskTimeEstimation } from "../models/task-time-estimation";
-import { convertSubtaskTimeForm } from "@/feature/task-details/utils/convert-subtask-time-form";
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
 
 export const FloatingTaskCard = ({
