@@ -22,4 +22,6 @@ public class TaskItem
     public int? LabelId { get; set; }
     public Label? Label { get; set; }
     public ICollection<Subtask> Subtasks { get; set; } = new List<Subtask>();
+    public string? NotificationId { get; set; }
+    public DateTimeOffset? AlertTime { get; set; }
 }

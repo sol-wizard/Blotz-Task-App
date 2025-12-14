@@ -122,7 +122,7 @@ public class TaskController(
             userId,
             getWeeklyTaskAvailabilityRequest.MondayUtc,
             stopwatch.ElapsedMilliseconds);
-            
+
         var result = await getWeeklyTaskAvailabilityQueryHandler.Handle(query, ct);
         _logger.LogInformation(
             "GetWeeklyTaskAvailability finished for user {UserId} in {ElapsedMs}ms",
@@ -147,6 +147,7 @@ public class TaskController(
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
 
         var command = new AddTaskCommand
         {
