@@ -5,13 +5,33 @@ import { useRouter } from "expo-router";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { PNGIMAGES } from "@/shared/constants/assets";
 import { FormDivider } from "@/shared/components/ui/form-divider";
-import { MenuItem, MenuKey } from "@/feature/settings/modals/menu-item";
+import { SettingsMenuItem } from "@/feature/settings/modals/settings-menu-item";
 
-const menuItems: MenuItem[] = [
-  { key: "account", label: "Account", icon: "account-outline" },
-  { key: "task-handling", label: "Task Handling", icon: "file-check-outline" },
-  { key: "notifications", label: "Notifications", icon: "bell-outline" },
-  { key: "under-development", label: "Under Development", icon: "cog-outline" },
+const menuItems: SettingsMenuItem[] = [
+  {
+    key: "account",
+    label: "Account",
+    icon: "account-outline",
+    route: "/(protected)/settings/account",
+  },
+  {
+    key: "task-handling",
+    label: "Task Handling",
+    icon: "file-check-outline",
+    route: "/(protected)/settings/task-handling",
+  },
+  {
+    key: "notifications",
+    label: "Notifications",
+    icon: "bell-outline",
+    route: "/(protected)/settings/notifications",
+  },
+  {
+    key: "under-development",
+    label: "Under Development",
+    icon: "cog-outline",
+    route: "/(protected)/settings/all-tasks",
+  },
 ];
 
 export default function SettingsScreen() {
@@ -23,18 +43,6 @@ export default function SettingsScreen() {
     : PNGIMAGES.blotzIcon;
 
   const handleProfileEdit = () => console.log("Edit profile pressed");
-
-  const handleMenuPress = (key: MenuKey) => {
-    if (key == "account") {
-      router.push("/(protected)/settings/account");
-    } else if (key == "task-handling") {
-      router.push("/(protected)/settings/task-handling");
-    } else if (key == "notifications") {
-      router.push("/(protected)/settings/notifications");
-    } else if (key == "under-development") {
-      router.push("/(protected)/settings/all-tasks");
-    }
-  };
 
   return (
     <SafeAreaView className="flex-1 bg-background py-4">
@@ -59,7 +67,7 @@ export default function SettingsScreen() {
           {menuItems.map((item, index) => (
             <View key={item.key} className="w-11/12">
               <Pressable
-                onPress={() => handleMenuPress(item.key)}
+                onPress={() => router.push(item.route)}
                 className="flex-row items-center justify-between px-4 py-4"
               >
                 <View className="flex-row items-center">
