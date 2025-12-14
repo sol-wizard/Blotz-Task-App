@@ -1,11 +1,15 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, View } from "react-native";
+import { ReturnButton } from "@/shared/components/ui/return-button";
 
-export default function NotificationSettingsScreen() {
+export default function NotificationScreen() {
   return (
-    <SafeAreaView className="flex-1 items-center justify-center bg-[#F2F7FB]">
-      <View className="items-center">
-        <Text className="text-3xl font-balooExtraBold text-[#363853]">Notifications</Text>
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="flex-row px-6 pt-6">
+        <ReturnButton />
+        <View className="flex-1 items-center">
+          <Text className="text-3xl font-balooExtraBold text-secondary">Notifications</Text>
+        </View>
       </View>
     </SafeAreaView>
   );
