@@ -8,8 +8,6 @@ import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { scheduleTaskReminder } from "@/shared/util/schedule-task-reminder";
-import { NotificationTaskDTO } from "@/shared/models/notification-task-dto";
 
 export function AiTasksPreview({
   aiTasks,
@@ -60,19 +58,7 @@ export function AiTasksPreview({
     try {
       const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
 
-      const newTaskIds = await Promise.all(payloads.map((payload) => addTask(payload)));
-
-      newTaskIds.forEach((newTaskId, index) => {
-        const dto = payloads[index];
-
-        const notificationTask: NotificationTaskDTO = {
-          id: newTaskId,
-          title: dto.title,
-          startTime: dto.startTime?.toISOString(),
-        };
-
-        scheduleTaskReminder(notificationTask);
-      });
+      await Promise.all(payloads.map((payload) => addTask(payload)));
 
       finishedAllStepsRef.current = true;
 
