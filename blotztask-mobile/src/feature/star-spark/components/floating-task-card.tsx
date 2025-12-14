@@ -8,6 +8,7 @@ import { useState } from "react";
 import { FloatingTaskTimeEstimateModal } from "./floating-task-time-estimate-modal";
 import { TaskTimeEstimation } from "../models/task-time-estimation";
 import { convertSubtaskTimeForm } from "@/feature/task-details/utils/convert-subtask-time-form";
+import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
 
 export const FloatingTaskCard = ({
   floatingTask,
@@ -25,46 +26,17 @@ export const FloatingTaskCard = ({
   onPressCard: (task: FloatingTaskDTO) => void;
 }) => {
   const iconSource = getLabelIcon(floatingTask.label?.name);
-
-  const [isEstimating, setIsEstimating] = useState(false);
-  const [estimate, setEstimate] = useState<TaskTimeEstimation | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  const estimateMutation = useEstimateTaskTime();
+  
   const closeModal = () => {
     setIsModalVisible(false);
-    setError(null);
-    setEstimate(null);
-  };
+    estimateMutation.reset();
+  }
 
-
-  const handleEstimateTime = async (task: FloatingTaskDTO) => {
-    try {
-      setIsModalVisible(true);      
-      setIsEstimating(true);        
-
-      const payload = {
-        id: task.id,
-        title: task.title,
-        description: task.description,
-      };
-
-      const result = await estimateTaskTime(payload);
-
-      const formatted = convertSubtaskTimeForm(result.duration);
-
-      if (formatted == null) {
-        setError("Could not estimate time, please try again later.");
-        setEstimate(null);
-      } else {
-        setEstimate({ ...result, duration: formatted });
-      }
-    } catch (e) {
-      console.log("estimateTaskTime error:", e);
-      setError("Could not estimate time, please try again later.");
-    } finally {
-      setIsEstimating(false);      
-    }
+ const handleEstimateTime = (task: FloatingTaskDTO) => {
+    setIsModalVisible(true);
+    estimateMutation.mutate(task);
   };
 
 
@@ -121,9 +93,9 @@ export const FloatingTaskCard = ({
       <FloatingTaskTimeEstimateModal
         visible={isModalVisible}
         onClose={closeModal}
-        durationText={estimate?.duration ?? undefined}
-        error={error}
-        isEstimating={isEstimating}
+        durationText={estimateMutation.data?.duration}
+        isEstimating={estimateMutation.isPending}
+        error={estimateMutation.error ? estimateMutation.error.message : null}
       />
 
     </View>
