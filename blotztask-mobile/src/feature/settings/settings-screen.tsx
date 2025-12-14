@@ -1,63 +1,71 @@
-import { View, Text, Pressable } from "react-native";
-import { useRouter } from "expo-router";
-import { useLogout } from "@/shared/hooks/uselogout";
-import { usePostHog } from "posthog-react-native";
+import { type ComponentProps } from "react";
+import { View, Text, Pressable, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import UserProfile from "../calendar/components/user-profile";
+import { useRouter } from "expo-router";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
+import { PNGIMAGES } from "@/shared/constants/assets";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const logout = useLogout();
-  const posthog = usePostHog();
   const { userProfile } = useUserProfile();
 
-  const handleSignOut = async () => {
-    await logout();
-    posthog.reset();
-    router.replace("/(auth)/onboarding");
+  type IconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
+  type MenuItem = { key: string; label: string; icon: IconName };
+
+  const avatarSource = userProfile?.pictureUrl
+    ? { uri: userProfile.pictureUrl }
+    : PNGIMAGES.blotzIcon;
+
+  const handleBack = () => router.back();
+  const handleProfileEdit = () => console.log("Edit profile pressed");
+  const handleMenuPress = (key: string) => {
+    console.log(`Settings tab pressed: ${key}`);
   };
 
-  return (
-    <SafeAreaView className="flex-1 p-6">
-      <Text className="text-5xl font-bold text-gray-800 font-balooExtraBold pt-10">Settings</Text>
-      <Text className="text-4xl font-bold text-gray-800 font-balooBold mt-6 py-2">General</Text>
-      <View className="bg-white shadow rounded-2xl px-4 py-6 flex-row items-center">
-        <UserProfile profile={userProfile} />
-        <View className="ml-2 flex-1">
-          <Text
-            className="text-gray-800 font-baloo text-2xl ml-3"
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {userProfile?.displayName}
-          </Text>
-        </View>
-      </View>
+  const menuItems: MenuItem[] = [
+    { key: "account", label: "Account", icon: "account-outline" },
+    { key: "time-preferences", label: "Time Preferences", icon: "earth" },
+    { key: "notifications", label: "Notifications", icon: "bell-outline" },
+    { key: "under-development", label: "Under Development", icon: "cog-outline" },
+  ];
 
-      <View className="bg-[#CCE3B7] rounded-2xl mt-10 pb-6">
-        <Text className="text-3xl font-bold text-gray-800 font-balooBold py-2 mt-4 ml-4">
-          Under Development (Beta)
-        </Text>
-        <View className="items-center gap-3">
+  return (
+    <SafeAreaView className="flex-1 bg-[#F2F7FB] py-4">
+      <Text className="text-center text-4xl font-balooExtraBold text-secondary pt-2">Settings</Text>
+
+      <View className="px-8 py-10 w-full items-center">
+        <View>
+          <Image source={avatarSource} className="w-24 h-24 rounded-full" resizeMode="cover" />
           <Pressable
-            onPress={() => router.push("/(protected)/all-tasks")}
-            className="bg-white rounded-xl w-96 py-4 items-start flex-row justify-between pr-4"
+            onPress={handleProfileEdit}
+            className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-white items-center justify-center"
           >
-            <Text className="text-gray-800 font-baloo text-xl ml-4">Go to All Tasks page</Text>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="black" />
+            <MaterialCommunityIcons name="pencil-minus-outline" size={18} color="#363853" />
           </Pressable>
         </View>
-      </View>
+        <Text className="text-2xl font-balooExtraBold text-[#363853] mt-5">
+          {userProfile?.displayName ?? "Mii"}
+        </Text>
+        <Text className="text-base font-baloo text-gray-500 mt-1">Beta 1.0</Text>
 
-      <View className="items-center mt-10">
-        <Pressable
-          onPress={handleSignOut}
-          className="bg-white rounded-xl w-96 py-4 items-center justify-center pr-4 shadow"
-        >
-          <Text className="text-red-500 font-baloo text-xl ml-4">Sign Out</Text>
-        </Pressable>
+        <View className="mt-8 w-full bg-white rounded-2xl border border-[#E5E7EB]">
+          {menuItems.map((item, index) => (
+            <View key={item.key}>
+              <Pressable
+                onPress={() => handleMenuPress(item.key)}
+                className="flex-row items-center justify-between px-4 py-4"
+              >
+                <View className="flex-row items-center">
+                  <MaterialCommunityIcons name={item.icon} size={22} color="#363853" />
+                  <Text className="text-lg font-baloo text-[#363853] ml-3">{item.label}</Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={22} color="#9CA3AF" />
+              </Pressable>
+              {index < menuItems.length - 1 && <View className="h-px bg-[#E5E7EB] ml-12" />}
+            </View>
+          ))}
+        </View>
       </View>
     </SafeAreaView>
   );
