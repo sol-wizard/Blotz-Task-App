@@ -4,10 +4,10 @@ export interface EditTaskItemDTO {
   id: number;
   title: string;
   description?: string;
-  startTime?: Date;
-  endTime?: Date;
+  startTime?: string;
+  endTime?: string;
   labelId?: number;
   timeType: TaskTimeType | null;
   notificationId?: string | null;
-  alertTime?: Date;
+  alertTime?: string;
 }

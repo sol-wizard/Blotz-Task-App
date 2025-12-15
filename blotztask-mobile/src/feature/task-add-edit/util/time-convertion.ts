@@ -3,18 +3,18 @@ import { isSameDay, isSameMinute } from "date-fns";
 
 const ALLOWED_ALERT_SECONDS = [0, 300, 600, 1800, 3600, 7200, 86400, 604800];
 
-export function calculateAlertSeconds(
-  startTime: Date | null | undefined,
-  alertTime: Date | null | undefined,
-): number | null {
+export function calculateAlertSeconds(startTime?: string, alertTime?: string): number | null {
   if (!startTime || !alertTime) return null;
 
-  const startMs = startTime.getTime();
-  const alertMs = alertTime.getTime();
+  const start = new Date(startTime);
+  const alert = new Date(alertTime);
 
-  if (alertMs >= startMs) return null;
+  if (isNaN(start.getTime()) || isNaN(alert.getTime())) {
+    return null;
+  }
+  if (alert >= start) return null;
 
-  const diffSeconds = Math.floor((startMs - alertMs) / 1000);
+  const diffSeconds = Math.floor((start.getTime() - alert.getTime()) / 1000);
 
   return (ALLOWED_ALERT_SECONDS as readonly number[]).includes(diffSeconds) ? diffSeconds : null;
 }
