@@ -60,7 +60,7 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDateUtc = clientStartDateUtc,
+            StartDate = clientStartDateUtc,
             IncludeFloatingForToday = false
         };
 
@@ -107,7 +107,7 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         var londonQuery = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDateUtc = londonRequestDateUtc,
+            StartDate = londonRequestDateUtc,
             IncludeFloatingForToday = false
         };
 
@@ -119,7 +119,7 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         var parisQuery = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDateUtc = parisRequestDateUtc,
+            StartDate = parisRequestDateUtc,
             IncludeFloatingForToday = false
         };
 
@@ -162,7 +162,7 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         var queryRequestingFloatingTasks = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDateUtc = userSelectedDateUtc,
+            StartDate = userSelectedDateUtc,
             IncludeFloatingForToday = true
         };
 
@@ -170,7 +170,7 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         var queryHidingFloatingTasks = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDateUtc = userSelectedDateUtc,
+            StartDate = userSelectedDateUtc,
             IncludeFloatingForToday = false
         };
 

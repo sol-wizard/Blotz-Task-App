@@ -31,7 +31,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
     {
         var stopwatch = Stopwatch.StartNew();
         logger.LogInformation(
-            "Fetching tasks by end time for user {UserId} up to {StartDateUtc}. Whether including floating tasks for today is {IncludeFloatingForToday}",
+            "Fetching tasks by end time for user {UserId} up to {StartDate}. Whether including floating tasks for today is {IncludeFloatingForToday}",
             query.UserId, query.StartDate, query.IncludeFloatingForToday);
 
         var todayStartUtc = DateTime.UtcNow.Date;
