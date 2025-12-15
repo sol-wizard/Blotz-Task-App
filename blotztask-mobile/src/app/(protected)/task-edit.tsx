@@ -24,12 +24,12 @@ const TaskEditScreen = () => {
     id: selectedTask.id,
     title: selectedTask.title,
     description: selectedTask.description,
-    startTime: selectedTask.startTime ? new Date(selectedTask.startTime) : undefined,
-    endTime: selectedTask.endTime ? new Date(selectedTask.endTime) : undefined,
+    startTime: selectedTask.startTime,
+    endTime: selectedTask.endTime,
     labelId: selectedTask.label ? selectedTask.label.labelId : undefined,
     timeType: selectedTask.timeType,
     notificationId: selectedTask.notificationId,
-    alertTime: selectedTask.alertTime ? new Date(selectedTask.alertTime) : undefined,
+    alertTime: selectedTask.alertTime,
   };
 
   const handleTaskSubmit = async (formValues: AddTaskItemDTO) => {

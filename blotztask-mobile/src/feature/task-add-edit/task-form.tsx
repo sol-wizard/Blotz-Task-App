@@ -22,6 +22,7 @@ import {
 } from "./util/time-convertion";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { cancelNotification } from "@/shared/util/cancel-notification";
+import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 
 type TaskFormProps =
   | {
@@ -36,8 +37,7 @@ type TaskFormProps =
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
-  const hasEventTimes =
-    dto?.startTime && dto?.endTime && dto.startTime.getTime() !== dto.endTime.getTime();
+  const hasEventTimes = dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime;
   const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
@@ -50,10 +50,10 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     title: dto?.title ?? "",
     description: dto?.description ?? "",
     labelId: dto?.labelId ?? null,
-    startDate: dto?.startTime ?? null,
-    startTime: dto?.startTime ?? null,
-    endDate: dto?.endTime ?? null,
-    endTime: dto?.endTime ?? null,
+    startDate: dto?.startTime ? new Date(dto?.startTime) : null,
+    startTime: dto?.startTime ? new Date(dto?.startTime) : null,
+    endDate: dto?.endTime ? new Date(dto?.endTime) : null,
+    endTime: dto?.endTime ? new Date(dto?.endTime) : null,
     alert: initialAlertTime ?? 300,
   };
 
@@ -73,7 +73,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   }, [isError]);
 
   const handleFormSubmit = async (data: TaskFormField) => {
-    if (mode === "edit" && dto?.alertTime && dto?.alertTime > new Date()) {
+    if (mode === "edit" && dto?.alertTime && new Date(dto?.alertTime) > new Date()) {
       await cancelNotification({
         notificationId: dto?.notificationId,
       });
@@ -96,11 +96,11 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     const submitTask: AddTaskItemDTO = {
       title: data.title,
       description: data.description ?? undefined,
-      startTime: startTime,
-      endTime: endTime,
+      startTime: startTime ? convertToDateTimeOffset(startTime) : undefined,
+      endTime: endTime ? convertToDateTimeOffset(endTime) : undefined,
       labelId: data.labelId ?? undefined,
       timeType,
-      alertTime: alertTime ?? undefined,
+      alertTime: alertTime ? convertToDateTimeOffset(alertTime) : undefined,
       notificationId,
     };
 
