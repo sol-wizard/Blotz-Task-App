@@ -17,8 +17,7 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
 {
     public async Task<int> Handle(AddTaskCommand command, CancellationToken ct = default)
     {
-        logger.LogInformation("Adding new task for user {UserId}, task startTime is {startTime}", command.UserId,
-            command.TaskDetails.StartTime);
+        logger.LogInformation("Adding new task for user {UserId}", command.UserId);
 
 
         TaskTimeValidator.ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime,
