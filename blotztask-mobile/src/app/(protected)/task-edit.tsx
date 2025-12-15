@@ -40,7 +40,6 @@ const TaskEditScreen = () => {
       });
 
       router.back();
-      console.log("Task submitted successfully");
     } catch (error) {
       console.error("Failed to submit task:", error);
     }
