@@ -73,6 +73,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   }, [isError]);
 
   const handleFormSubmit = async (data: TaskFormField) => {
+    // If editing and the existing alert is still scheduled in the future, cancel the old notification first
     if (mode === "edit" && dto?.alertTime && new Date(dto?.alertTime) > new Date()) {
       await cancelNotification({
         notificationId: dto?.notificationId,
