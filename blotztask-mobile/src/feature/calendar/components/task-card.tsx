@@ -107,14 +107,14 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
     return { opacity: progress };
   });
 
-  const endDate = task.endTime ? parseISO(task.endTime) : null;
-
-  const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
-
   // Create a sense of being pushed away
   const leftExtrasStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value * 1.25 }],
   }));
+
+  const endDate = task.endTime ? parseISO(task.endTime) : null;
+
+  const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
 
   const timePeriod = formatDateRange({
     startTime: task.startTime,
