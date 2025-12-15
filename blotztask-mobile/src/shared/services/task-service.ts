@@ -16,7 +16,6 @@ export async function fetchTasksForDate(
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/by-date?startDate=${encodeURIComponent(startDate)}&includeFloatingForToday=${includeFloatingForToday}`;
 
   const data: TaskDetailDTO[] = await apiClient.get(url);
-
   return data;
 }
 
