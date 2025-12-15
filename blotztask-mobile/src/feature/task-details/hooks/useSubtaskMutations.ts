@@ -3,7 +3,7 @@ import {
   createBreakDownSubtasks,
   deleteSubtask,
   updateSubtask,
-  toggleSubtaskCompletion,
+  toggleSubtaskStatus,
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
@@ -56,14 +56,15 @@ export const useSubtaskMutations = () => {
     },
   });
 
-  const toggleSubtaskcompletion = useMutation({
-    mutationFn: toggleSubtaskCompletion,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subtasks"] });
+  const toggleSubtaskStatusMutation = useMutation({
+    mutationFn: ({ subtaskId }: { subtaskId: number; parentTaskId: number }) =>
+      toggleSubtaskStatus(subtaskId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["subtasks", variables.parentTaskId] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onError: (error) => {
-      console.error("Failed to toggle subtask completion:", error);
+      console.error("Failed to toggle subtask status:", error);
     },
   });
 
@@ -88,9 +89,9 @@ export const useSubtaskMutations = () => {
     isUpdatingSubtask: updateSubtaskMutation.isPending,
     isUpdateSubtaskError: updateSubtaskMutation.error,
 
-    // Toggle completion
-    toggleSubtaskcompletion: toggleSubtaskcompletion.mutateAsync,
-    isTogglingSubtaskCompletion: toggleSubtaskcompletion.isPending,
-    toggleSubtaskCompletionError: toggleSubtaskcompletion.error,
+    // Toggle subtask status
+    toggleSubtaskStatus: toggleSubtaskStatusMutation.mutateAsync,
+    isTogglingSubtaskStatus: toggleSubtaskStatusMutation.isPending,
+    toggleSubtaskStatusError: toggleSubtaskStatusMutation.error,
   };
 };
