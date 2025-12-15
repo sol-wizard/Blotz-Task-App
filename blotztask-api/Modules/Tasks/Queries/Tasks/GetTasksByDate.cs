@@ -39,9 +39,8 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
         var sevenDayWindowStartUtc = todayEndUtc.AddDays(-6);
         var endDateUtc = query.StartDate.AddDays(1);
 
-        var userOffset = query.StartDate.Offset;
-        var nowForUser = DateTimeOffset.UtcNow.ToOffset(userOffset);
-        var isFutureDay = query.StartDate > nowForUser.Date;
+        var userToday = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
+        var isFutureDay = query.StartDate > userToday.Date;
 
 
         var queryStopwatch = Stopwatch.StartNew();
