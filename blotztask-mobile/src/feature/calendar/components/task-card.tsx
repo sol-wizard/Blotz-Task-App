@@ -112,15 +112,15 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
     transform: [{ translateX: translateX.value * 1.25 }],
   }));
 
-  const endDate = task.endTime ? parseISO(task.endTime) : null;
-
-  const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
-
   const timePeriod = formatDateRange({
     startTime: task.startTime,
     endTime: task.endTime,
     selectedDay,
   });
+
+  const endDate = task.endTime ? parseISO(task.endTime) : null;
+
+  const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
 
   return (
     <View className="relative mx-4 my-2 rounded-2xl bg-white overflow-hidden">
