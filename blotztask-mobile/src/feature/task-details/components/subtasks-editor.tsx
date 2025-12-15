@@ -27,7 +27,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     deleteSubtask,
     isDeletingSubtask,
     isUpdatingSubtask,
-    toggleSubtaskcompletion,
+    toggleSubtaskStatus,
   } = useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -143,7 +143,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
           subtasks={fetchedSubtasks}
           isEditMode={isEditMode}
           onDelete={handleDelete}
-          onToggle={toggleSubtaskcompletion}
+          onToggle={(subtaskId) => toggleSubtaskStatus({ subtaskId, parentTaskId: parentTask.id })}
           color={taskColor}
         />
       </View>
