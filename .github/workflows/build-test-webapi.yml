@@ -66,8 +66,19 @@ jobs:
           format: "markdown"
           output: both
 
-      - name: Add Coverage PR Comment
+      - name: Check coverage file exists
         if: (!cancelled())
+        id: coverage_file
+        shell: bash
+        run: |
+          if [ -f "code-coverage-results.md" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Add Coverage PR Comment
+        if: (!cancelled() && steps.coverage_file.outputs.exists == 'true')
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           recreate: false
