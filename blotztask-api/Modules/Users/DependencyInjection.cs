@@ -20,7 +20,6 @@ public static class DependencyInjection
         services.AddScoped<GetUserProfileQueryHandler>();
         services.AddScoped<UpdateUserProfileCommandHandler>();
         services.AddScoped<IAuth0ManagementService, Auth0ManagementService>();
-        services.AddScoped<UserPreferenceService>();
         // Manual registration of query handlers 
         return services;
     }
