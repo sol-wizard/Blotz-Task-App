@@ -27,6 +27,7 @@
       "icon": "./assets/images-png/blotz-icon.png"
     },
     "android": {
+      "versionCode": 4,
       "appName": "BlotzTask",
       "edgeToEdgeEnabled": true,
       "package": "com.blotz.blotztask",

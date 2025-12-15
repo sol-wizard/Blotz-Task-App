@@ -3,13 +3,13 @@ import { BottomNavigation } from "react-native-paper";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Pressable, View, Image } from "react-native";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
-import SettingsScreen from "@/feature/settings/settings-screen";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
 import StarSparkScreen from "./star-spark";
 import { router } from "expo-router";
 import { theme } from "@/shared/constants/theme";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
+import SettingsScreen from "./settings";
 
 const routes = [
   {
