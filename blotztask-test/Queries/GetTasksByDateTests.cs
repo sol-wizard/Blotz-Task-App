@@ -28,39 +28,39 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         
         // Simulate a user in UTC+8 selecting "2024-11-21"
         // Their "Start of Day" is 2024-11-21 00:00:00 +08:00 -> 2024-11-20 16:00:00 UTC
-        var clientStartDateUtc = new DateTime(2024, 11, 20, 16, 0, 0, DateTimeKind.Utc);
+        var clientStartDate = new DateTime(2024, 11, 20, 16, 0, 0, DateTimeKind.Utc);
         
         // The API calculates the window as: [clientStartDateUtc] to [clientStartDateUtc + 1 Day]
         // Window: Nov 20 16:00 UTC -> Nov 21 16:00 UTC
 
         // 1. Task Inside Window: Clearly inside
-        await _seeder.CreateTaskAsync(userId, "Task Inside Window", clientStartDateUtc.AddHours(2), clientStartDateUtc.AddHours(3));
+        await _seeder.CreateTaskAsync(userId, "Task Inside Window", clientStartDate.AddHours(2), clientStartDate.AddHours(3));
         
         // 2. Task Spanning Window: Starts before, ends inside
-        await _seeder.CreateTaskAsync(userId, "Task Spanning Window", clientStartDateUtc.AddHours(-1), clientStartDateUtc.AddHours(1));
+        await _seeder.CreateTaskAsync(userId, "Task Spanning Window", clientStartDate.AddHours(-1), clientStartDate.AddHours(1));
         
         // 3. Boundary Edge Case (START): Task ends EXACTLY when the window starts
         // Logic: t.EndTime >= query.StartDateUtc
         // This task belongs to the PREVIOUS day but touches the boundary. 
         // Currently INCLUDED due to >= logic.
-        await _seeder.CreateTaskAsync(userId, "Task Ending At Start", clientStartDateUtc.AddHours(-1), clientStartDateUtc);
+        await _seeder.CreateTaskAsync(userId, "Task Ending At Start", clientStartDate.AddHours(-1), clientStartDate);
 
         // 4. Boundary Edge Case (END): Task starts EXACTLY when the window ends
         // Logic: t.StartTime < endDateUtc
         // This task belongs to the NEXT day.
         // Currently EXCLUDED due to < logic.
-        await _seeder.CreateTaskAsync(userId, "Task Starting At End", clientStartDateUtc.AddDays(1), clientStartDateUtc.AddDays(1).AddHours(1));
+        await _seeder.CreateTaskAsync(userId, "Task Starting At End", clientStartDate.AddDays(1), clientStartDate.AddDays(1).AddHours(1));
 
         // 5. Task Outside (Before): Ends well before start
-        await _seeder.CreateTaskAsync(userId, "Task Outside (Before)", clientStartDateUtc.AddHours(-5), clientStartDateUtc.AddHours(-4));
+        await _seeder.CreateTaskAsync(userId, "Task Outside (Before)", clientStartDate.AddHours(-5), clientStartDate.AddHours(-4));
         
         // 6. Task Outside (After): Starts well after end
-        await _seeder.CreateTaskAsync(userId, "Task Outside (After)", clientStartDateUtc.AddDays(1).AddHours(1), clientStartDateUtc.AddDays(1).AddHours(2));
+        await _seeder.CreateTaskAsync(userId, "Task Outside (After)", clientStartDate.AddDays(1).AddHours(1), clientStartDate.AddDays(1).AddHours(2));
 
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDate = clientStartDateUtc,
+            StartDate = clientStartDate,
             IncludeFloatingForToday = false
         };
 
