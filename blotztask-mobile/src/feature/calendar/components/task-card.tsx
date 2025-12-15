@@ -42,8 +42,6 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
   const [isExpanded, setIsExpanded] = useState(false);
 
   const hasSubtasks = task.subtasks && task.subtasks.length > 0;
-  const completedCount = task.subtasks?.filter((s) => s.isDone).length ?? 0;
-  const totalCount = task.subtasks?.length ?? 0;
 
   const handleToggleSubtask = async (subtaskId: number) => {
     await toggleSubtaskStatus({ subtaskId, parentTaskId: task.id });
@@ -198,13 +196,6 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                       >
                         {task.title}
                       </Text>
-                      {hasSubtasks && (
-                        <View className="ml-2 px-2 py-0.5 bg-gray-200 rounded-md">
-                          <Text className="text-xs font-baloo text-gray-600">
-                            {completedCount}/{totalCount}
-                          </Text>
-                        </View>
-                      )}
                     </View>
                     {timePeriod && (
                       <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
