@@ -17,16 +17,6 @@ export const createBreakDownSubtasks = async (
   }
 };
 
-export async function toggleSubtaskCompletion(subtaskId: number): Promise<void> {
-  try {
-    const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/subtask-completion-status/${subtaskId}`;
-    await apiClient.put(url);
-  } catch (error) {
-    console.error("Error toggling subtask completion:", error);
-    throw error;
-  }
-}
-
 export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   const taskId = newSubtask.parentTaskId;
   const subtaskId = newSubtask.subTaskId;
@@ -75,5 +65,15 @@ export async function deleteSubtask(subtaskId: number): Promise<void> {
   } catch (err) {
     console.error("Error deleting subtask:", err);
     throw new Error("Delete subtask failed");
+  }
+}
+
+export async function toggleSubtaskStatus(subtaskId: number): Promise<void> {
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask/subtask-completion-status/${subtaskId}`;
+  try {
+    await apiClient.put(url);
+  } catch (err) {
+    console.error("Error toggling subtask status:", err);
+    throw new Error("Toggle subtask status failed");
   }
 }
