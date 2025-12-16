@@ -11,9 +11,11 @@ import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 export const AiModalContent = ({
   modalType,
   setModalType,
+  language,
 }: {
   modalType: BottomSheetType;
   setModalType: (type: BottomSheetType) => void;
+  language: string;
 }) => {
   const [text, setText] = useState("");
 
@@ -53,6 +55,7 @@ export const AiModalContent = ({
           sendMessage={sendMessage}
           isAiGenerating={isAiGenerating || isLoading}
           aiGeneratedMessage={aiGeneratedMessage}
+          language={language}
         />
       );
   }

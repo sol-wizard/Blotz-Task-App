@@ -18,22 +18,15 @@ export const AiInput = ({
   sendMessage,
   isAiGenerating,
   aiGeneratedMessage,
+  language,
 }: {
   text: string;
   setText: (v: string) => void;
   sendMessage: (v: string) => void;
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
+  language: string;
 }) => {
-  const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
-    AsyncStorage.getItem("ai_language_preference").then((saved) => {
-      if (saved === "en-US" || saved === "zh-CN") {
-        setLanguage(saved);
-      }
-    });
-    return "zh-CN";
-  });
-
   const { handleStartListening, recognizing, transcript, stopListening } = useSpeechRecognition({
     language,
   });
@@ -61,21 +54,6 @@ export const AiInput = ({
 
   return (
     <View className="pt-2">
-      <View className="flex-row mb-8 ml-6 items-center">
-        <Pressable
-          onPress={() => {
-            const newLang = language === "en-US" ? "zh-CN" : "en-US";
-            setLanguage(newLang);
-            AsyncStorage.setItem("ai_language_preference", newLang);
-          }}
-          className="w-8 h-8 bg-black rounded-full items-center justify-center"
-        >
-          <Text className="text-white font-bold text-base">
-            {language === "en-US" ? "EN" : "中"}
-          </Text>
-        </Pressable>
-      </View>
-
       <View className="items-center">
         <View className="w-96 mb-10" style={{ minHeight: 60 }}>
           <TextInput
@@ -92,7 +70,7 @@ export const AiInput = ({
             placeholder="Hold to speak or tap to write..."
             placeholderTextColor={theme.colors.secondary}
             multiline
-            className="w-11/12 bg-white text-2xl text-gray-800 font-baloo"
+            className="w-11/12 bg-white text-xl text-gray-800 font-baloo"
             style={{ textAlignVertical: "top", textAlign: "left" }}
           />
           {aiGeneratedMessage?.errorMessage && (
