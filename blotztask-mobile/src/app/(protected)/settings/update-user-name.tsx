@@ -20,7 +20,7 @@ export default function UpdateUserNameScreen() {
     try {
       await updateUser({ displayName: name.trim() });
       router.back();
-    } catch (error) {
+    } catch {
       setSnackbarVisible(true);
     }
   };
