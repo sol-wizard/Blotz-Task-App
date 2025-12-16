@@ -3,12 +3,15 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { useState } from "react";
+import { useUserMutation } from "@/feature/settings/hooks/useUserMutation";
 
 export default function UpdateUserNameScreen() {
   const router = useRouter();
   const { userProfile } = useUserProfile();
   const [name, setName] = useState(userProfile?.displayName ?? "");
   const doneEnabled = name.trim().length > 0;
+
+  const { updateUserMutation, isUserUpdating, userUpdateError } = useUserMutation();
 
   return (
     <SafeAreaView className="flex-1 bg-background px-6 py-8">
