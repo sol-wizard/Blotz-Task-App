@@ -39,7 +39,6 @@
     },
     "plugins": [
       "expo-router",
-      "patch-project",
       "expo-speech-recognition",
       "expo-secure-store",
       [
