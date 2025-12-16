@@ -27,7 +27,7 @@
       "icon": "./assets/images-png/blotz-icon.png"
     },
     "android": {
-      "versionCode": 4,
+      "versionCode": 5,
       "appName": "BlotzTask",
       "edgeToEdgeEnabled": true,
       "package": "com.blotz.blotztask",
@@ -39,7 +39,6 @@
     },
     "plugins": [
       "expo-router",
-      "patch-project",
       "expo-speech-recognition",
       "expo-secure-store",
       [
@@ -64,7 +63,8 @@
           "organization": "nicoles-project"
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      ["./plugins/withCustomGradleProperties"]
     ],
     "experiments": {
       "typedRoutes": true
