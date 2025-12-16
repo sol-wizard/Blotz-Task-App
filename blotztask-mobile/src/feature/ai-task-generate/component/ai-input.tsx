@@ -1,6 +1,5 @@
-import { Pressable, View, Text, Vibration, TextInput, Keyboard } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { Pressable, View, Vibration, TextInput, Keyboard } from "react-native";
+import { useEffect } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,6 +19,7 @@ export const AiInput = ({
   isAiGenerating,
   aiGeneratedMessage,
   language,
+  cancelGeneration,
 }: {
   text: string;
   setText: (v: string) => void;
@@ -27,6 +27,7 @@ export const AiInput = ({
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
   language: string;
+  cancelGeneration: () => Promise<void>;
 }) => {
   const { handleStartListening, recognizing, transcript, stopListening } = useSpeechRecognition({
     language,
@@ -115,7 +116,7 @@ export const AiInput = ({
             <View className="w-full" />
             <CustomSpinner size={60} style={{ marginRight: 10 }} />
             <View className="w-full">
-              <CloseButton />
+              <CloseButton onPress={cancelGeneration} />
             </View>
           </View>
         )}

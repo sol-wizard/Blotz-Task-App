@@ -1,6 +1,4 @@
-using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
-using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -9,6 +7,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 [Authorize]
 public class AiTaskGenerateChatHub : Hub
 {
+    private static CancellationTokenSource? _currentCancellationToken;
     private readonly IAiTaskGenerateService _aiTaskGenerateService;
     private readonly IChatHistoryManagerService _chatHistoryManagerService;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
@@ -63,26 +62,42 @@ public class AiTaskGenerateChatHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task SendMessage(string user, string message)
+    public Task CancelGeneration()
     {
-        try
+        _logger.LogInformation("CTS starts to cancel.");
+        _logger.LogInformation(
+            "CancelGeneration called. Conn={Conn}, CtsNull={IsNull}, CtsHash={CtsHash}, IsCanceled={IsCanceled}",
+            Context.ConnectionId,
+            _currentCancellationToken == null,
+            _currentCancellationToken?.GetHashCode(),
+            _currentCancellationToken?.IsCancellationRequested
+        );
+        if (_currentCancellationToken == null || _currentCancellationToken.IsCancellationRequested)
         {
-            var ct = Context.ConnectionAborted;
-            var chatHistory = _chatHistoryManagerService.GetChatHistory();
-
-            chatHistory.AddUserMessage(message);
-            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
-
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
+            _logger.LogInformation("Ai generation doesn't exist or has been cancelled.");
+            return Task.CompletedTask;
         }
-        catch (AiTaskGenerationException ex)
-        {
-            var aiServiceError = new AiGenerateMessage
-            {
-                IsSuccess = false,
-                ErrorMessage = ex.Message
-            };
-            await Clients.Caller.SendAsync("ReceiveMessage", aiServiceError);
-        }
+
+        _currentCancellationToken.Cancel();
+        return Task.CompletedTask;
+    }
+
+    public Task SendMessage(string user, string message)
+    {
+        _currentCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
+            Context.ConnectionAborted
+        );
+        _logger.LogInformation(
+            "CTS created. CTS.Hash={CtsHash}, Token.CanBeCanceled={CanBeCanceled}, Token.IsCancellationRequested={IsCanceled}, ConnectionId={ConnectionId}",
+            _currentCancellationToken.GetHashCode(),
+            _currentCancellationToken.Token.CanBeCanceled,
+            _currentCancellationToken.Token.IsCancellationRequested,
+            Context.ConnectionId
+        );
+        var chatHistory = _chatHistoryManagerService.GetChatHistory();
+        chatHistory.AddUserMessage(message);
+        _ = _aiTaskGenerateService.RunAsync(Context.ConnectionId, _currentCancellationToken.Token);
+
+        return Task.CompletedTask;
     }
 }

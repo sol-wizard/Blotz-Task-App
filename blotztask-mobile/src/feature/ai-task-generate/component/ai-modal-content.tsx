@@ -21,10 +21,11 @@ export const AiModalContent = ({
 
   const [isAiGenerating, setIsAiGenerating] = useState(false);
 
-  const { aiGeneratedMessage, sendMessage, setAiGeneratedMessage } = useAiTaskGenerator({
-    setIsAiGenerating,
-    setModalType,
-  });
+  const { aiGeneratedMessage, sendMessage, setAiGeneratedMessage, cancelGenerationHandler } =
+    useAiTaskGenerator({
+      setIsAiGenerating,
+      setModalType,
+    });
 
   const { labels, isLoading } = useAllLabels();
 
@@ -56,6 +57,7 @@ export const AiModalContent = ({
           isAiGenerating={isAiGenerating || isLoading}
           aiGeneratedMessage={aiGeneratedMessage}
           language={language}
+          cancelGeneration={cancelGenerationHandler}
         />
       );
   }
