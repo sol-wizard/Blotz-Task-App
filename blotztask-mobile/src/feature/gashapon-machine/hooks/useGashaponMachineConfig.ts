@@ -8,16 +8,21 @@ import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
+import { MACHINE_ENTRY_POINT_ENGINE } from "../utils/gashapon-coordinates";
 
 export const useGashaponMachineConfig = ({
   starRadius = 15,
   onStarDropped,
   floatingTasks,
+  getPendingDrop,
+  clearPendingDrop,
   debugWalls = false,
 }: {
   starRadius?: number;
-  onStarDropped: (v: string) => void;
+  onStarDropped: (payload: { labelName: string; taskId?: number }) => void;
   floatingTasks: FloatingTaskDTO[];
+  getPendingDrop?: () => { taskId: number; labelName: string } | null;
+  clearPendingDrop?: () => void;
   debugWalls?: boolean;
 }) => {
   const [entities, setEntities] = useState<EntityMap>({});
@@ -30,6 +35,8 @@ export const useGashaponMachineConfig = ({
   const isGateOpenRef = useRef(false);
   const starPassedRef = useRef(false);
   const droppedStarIndexRef = useRef<number>(-1); // 保存星星的原始索引
+  const droppedStarLabelRef = useRef<string>(""); // 保存掉出星星的标签，用于返回动画
+  const droppedTaskIdRef = useRef<number>(-1); // 保存掉出任务的ID
   const floatingTasksRef = useRef<FloatingTaskDTO[]>([]);
   const starLabelsRef = useRef<string[]>([]);
 
@@ -49,7 +56,16 @@ export const useGashaponMachineConfig = ({
     const task = floatingTasksRef.current[idx];
     // Handle both camelCase (label.name) and PascalCase (Label.Name) from API
     const label = (task as any)?.label ?? (task as any)?.Label;
-    return label?.name ?? label?.Name ?? "no-label";
+    const labelName = label?.name ?? label?.Name ?? "no-label";
+    return labelName;
+  };
+
+  const getLabelNameByDroppedStarIndex = () => {
+    // Use the saved label instead of looking it up, since floatingTasksRef may have changed
+    if (!droppedStarLabelRef.current) {
+      return "no-label";
+    }
+    return droppedStarLabelRef.current;
   };
   const getStarEntityKey = (idx: number) => `star-${idx}`;
 
@@ -113,12 +129,24 @@ export const useGashaponMachineConfig = ({
       if (droppedStarIndexRef.current >= 0) {
         const idx = droppedStarIndexRef.current;
         let star = starsRef.current[idx];
-        const labelName = getLabelNameByIndex(idx);
+        const labelName = getLabelNameByDroppedStarIndex();
         const entityKey = getStarEntityKey(idx);
 
-        // Reset position to machine top entry point so star falls naturally into pile
-        const x = 140; // Center of machine opening
-        const y = 250; // Top of machine interior
+        // Respawn at the machine top entry so the user can see it drop back into the pile,
+        // but guide it towards a random point inside the pile zone.
+        const spawnX = MACHINE_ENTRY_POINT_ENGINE.x;
+        const spawnY = MACHINE_ENTRY_POINT_ENGINE.y;
+
+        // Pile zone (engine coordinates)
+        const pileLeft = 70;
+        const pileRight = 330;
+        const pileTop = 320;
+        const pileBottom = 460;
+        const targetX = pileLeft + Math.random() * (pileRight - pileLeft);
+        const targetY = pileTop + Math.random() * (pileBottom - pileTop);
+
+        const x = spawnX;
+        const y = spawnY;
 
         if (!star) {
           console.warn(`Star body missing for index ${idx}, recreating.`);
@@ -140,9 +168,18 @@ export const useGashaponMachineConfig = ({
           Matter.World.add(world, star);
         }
 
-        // 重置物理属性 - 让星星自然掉落到星星堆
+        // 重置物理属性 - 从顶部掉落，并尽量落到堆里的随机区域
         Matter.Body.setPosition(star, { x, y });
-        Matter.Body.setVelocity(star, { x: 0, y: 0 });
+
+        // Approximate time to fall to targetY: t ~= sqrt(2*dy/g)
+        // Use initial vx to drift towards targetX during the fall.
+        const dy = Math.max(80, targetY - y);
+        const g = Math.max(0.1, (world as any)?.gravity?.y ?? 0.6);
+        const t = Math.sqrt((2 * dy) / g);
+        const vxRaw = (targetX - x) / Math.max(0.1, t);
+        const vx = Math.max(-6, Math.min(6, vxRaw));
+
+        Matter.Body.setVelocity(star, { x: vx, y: 0 });
         Matter.Body.setAngularVelocity(star, 0);
         Matter.Sleeping.set(star, false);
 
@@ -164,6 +201,8 @@ export const useGashaponMachineConfig = ({
     setTimeout(() => {
       starPassedRef.current = false;
       droppedStarIndexRef.current = -1;
+      droppedStarLabelRef.current = "";
+      droppedTaskIdRef.current = -1;
       closeGate();
       console.log("Reset complete, gate closed");
 
@@ -174,7 +213,7 @@ export const useGashaponMachineConfig = ({
   };
 
   const beginReturnFlow = () => {
-    // Called from UI when user taps Try again.
+    // Called from UI when user taps Cancel.
     if (machineStateRef.current !== "revealed") {
       console.warn(`beginReturnFlow ignored; state=${machineStateRef.current}`);
       return;
@@ -188,10 +227,11 @@ export const useGashaponMachineConfig = ({
     }
 
     floatingTasksRef.current = floatingTasks;
-    starLabelsRef.current = floatingTasks.map((task) => {
+    starLabelsRef.current = floatingTasks.map((task, idx) => {
       // Handle both camelCase (label.name) and PascalCase (Label.Name) from API
       const label = (task as any)?.label ?? (task as any)?.Label;
-      return label?.name ?? label?.Name ?? "no-label";
+      const labelName = label?.name ?? label?.Name ?? "no-label";
+      return labelName;
     });
 
     const engine = Matter.Engine.create({ enableSleeping: false });
@@ -310,22 +350,36 @@ export const useGashaponMachineConfig = ({
         const sensor = bodyA.label === "dropSensor" || bodyB.label === "dropSensor";
 
         if (star && sensor) {
+          // Only treat this as a "drop" when the user has opened the gate.
+          // Prevents occasional sensor hits from background physics jitter.
+          if (!isGateOpenRef.current || machineStateRef.current !== "idle") {
+            return;
+          }
           console.log(`⚡ Star ${star.label} passed sensor, removing`);
           const starIndex = starsRef.current.indexOf(star);
           if (starIndex < 0) {
             console.warn(`Star ${star.label} not found in starsRef; ignoring sensor event.`);
             return;
           }
-          const labelName = getLabelNameByIndex(starIndex);
+          const pending = getPendingDrop?.() ?? null;
+          const fallbackLabelName = getLabelNameByIndex(starIndex);
+          const fallbackTaskId = floatingTasksRef.current[starIndex]?.id;
+          const labelName = pending?.labelName ?? fallbackLabelName;
+          const taskId = pending?.taskId ?? fallbackTaskId;
 
           // 保存星星的索引，用于后续重置
           droppedStarIndexRef.current = starIndex;
+          // 保存标签名，以便后续返回动画使用（即使任务列表改变）
+          droppedStarLabelRef.current = labelName;
+          // 保存任务ID
+          droppedTaskIdRef.current = taskId ?? -1;
 
-          console.log(`Dropped star index ${starIndex} label ${labelName}`);
+          console.log(`Dropped star index ${starIndex} label ${labelName} taskId ${taskId ?? "n/a"}`);
 
           starPassedRef.current = true;
           closeGate();
-          onStarDropped(labelName);
+          onStarDropped({ labelName, taskId });
+          clearPendingDrop?.();
 
           transition("revealed", "sensorDrop");
 

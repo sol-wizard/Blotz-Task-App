@@ -12,7 +12,6 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { ReturningStarAnimations } from "@/feature/gashapon-machine/components/returning-star";
 import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
-import { pickRandomTask } from "@/feature/star-spark/utils/pick-random-task";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 
 export default function GashaponMachine() {
@@ -24,12 +23,16 @@ export default function GashaponMachine() {
   const [returnStarTrigger, setReturnStarTrigger] = useState(0);
   const [starLabelName, setStarLabelName] = useState("");
   const [randomTask, setRandomTask] = useState<FloatingTaskDTO | null>(null);
+  const pendingDropRef = useRef<{ taskId: number; labelName: string } | null>(null);
 
   // Prevent late/duplicate return-animation completions from triggering physics reset
   const latestReturnTriggerRef = useRef(0);
   const returnResetConsumedRef = useRef(true);
 
   const { floatingTasks, isLoading } = useFloatingTasks();
+
+  // Set true temporarily to visualize inner walls (helps diagnose leaks/clogs around chute).
+  const DEBUG_WALLS = false;
 
   const MAX_STARS = 30;
 
@@ -41,20 +44,45 @@ export default function GashaponMachine() {
     console.log("Do it now pressed!");
   };
 
-  const handleStarDropped = (starLabelName: string) => {
-    setStarLabelName(starLabelName);
-    const randomTask = pickRandomTask(floatingTasks ?? [], starLabelName);
-    setRandomTask(randomTask);
+  const handleStarDropped = (payload: { labelName: string; taskId?: number }) => {
+    setStarLabelName(payload.labelName);
+    const droppedTask = (floatingTasks ?? []).find((t) => t.id === payload.taskId) ?? null;
+    setRandomTask(droppedTask);
     setDropStarTrigger((prev) => prev + 1);
+  };
+
+  const pickRandomLabeledTask = (tasks: FloatingTaskDTO[]) => {
+    const labeled = tasks.map((t) => {
+      if (!t.label?.name) {
+        return { ...t, label: { name: "default" } }; // Assign default label for null labels
+      }
+      return t;
+    });
+    return labeled[Math.floor(Math.random() * labeled.length)];
   };
 
   const { entities, handleRelease, resetStarsPhysics, beginReturnFlow } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
     floatingTasks: limitedFloatingTasks,
-    debugWalls: false,
+    getPendingDrop: () => pendingDropRef.current,
+    clearPendingDrop: () => {
+      pendingDropRef.current = null;
+    },
+    debugWalls: DEBUG_WALLS,
   });
 
-  const handleTryAgain = () => {
+  const handleReleaseWithTaskPick = (deltaThisTurn: number) => {
+    // Pick the next task BEFORE the ball drops, to guarantee a labeled star.
+    if (!pendingDropRef.current && limitedFloatingTasks.length > 0) {
+      const t = pickRandomLabeledTask(limitedFloatingTasks);
+      if (t?.id && t.label?.name) {
+        pendingDropRef.current = { taskId: t.id, labelName: t.label.name };
+      }
+    }
+    handleRelease(deltaThisTurn);
+  };
+
+  const handleCancel = () => {
     beginReturnFlow();
     setReturnStarTrigger((prev) => {
       const next = prev + 1;
@@ -66,7 +94,7 @@ export default function GashaponMachine() {
   };
 
   const handleReturnAnimationComplete = () => {
-    // Only allow one reset per Try again trigger
+    // Only allow one reset per Cancel trigger
     if (returnResetConsumedRef.current) return;
     returnResetConsumedRef.current = true;
     resetStarsPhysics();
@@ -89,9 +117,10 @@ export default function GashaponMachine() {
         <TaskRevealModal
           visible={isModalVisible}
           task={randomTask}
+          floatingTasks={floatingTasks ?? []}
           onClose={() => setModalVisible(false)}
           onDoNow={handleDoNow}
-          onTryAgain={handleTryAgain}
+          onCancel={handleCancel}
         />
         {!isAllLoaded && <LoadingScreen />}
 
@@ -144,7 +173,7 @@ export default function GashaponMachine() {
             onLoad={() => setEyesPicLoaded(true)}
           />
 
-          <MachineButton setButtonPicLoaded={setButtonPicLoaded} onRelease={handleRelease} />
+          <MachineButton setButtonPicLoaded={setButtonPicLoaded} onRelease={handleReleaseWithTaskPick} />
         </View>
 
         <DroppedStar

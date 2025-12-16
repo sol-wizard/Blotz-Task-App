@@ -1,27 +1,29 @@
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
-import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
+import { debugTaskLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
 import React from "react";
 import { Modal, View, Text, Pressable, Image } from "react-native";
 
 type TaskRevealModalProps = {
   visible: boolean;
   task: FloatingTaskDTO | null;
+  floatingTasks?: FloatingTaskDTO[];
   onClose: () => void;
   onDoNow: () => void;
-  onTryAgain?: () => void;
+  onCancel?: () => void;
 };
 
 export const TaskRevealModal = ({
   visible,
   task,
+  floatingTasks,
   onClose,
   onDoNow,
-  onTryAgain,
+  onCancel,
 }: TaskRevealModalProps) => {
-  const imageSource = getLabelIcon(task?.label?.name);
+  const imageSource = debugTaskLabelIcon(floatingTasks, task?.id);
 
-  const handleTryAgain = () => {
-    onTryAgain?.();
+  const handleCancel = () => {
+    onCancel?.();
     onClose();
   };
 
@@ -54,10 +56,10 @@ export const TaskRevealModal = ({
 
           <View className="flex-row justify-between mt-2">
             <Pressable
-              onPress={handleTryAgain}
+              onPress={handleCancel}
               className="flex-1 mr-2 bg-white rounded-full h-11 items-center justify-center"
             >
-              <Text className="text-gray-400 font-semibold font-baloo">Try again</Text>
+              <Text className="text-gray-400 font-semibold font-baloo">Cancel</Text>
             </Pressable>
 
             <Pressable
