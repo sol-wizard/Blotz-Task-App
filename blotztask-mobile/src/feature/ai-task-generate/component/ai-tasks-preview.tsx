@@ -93,7 +93,7 @@ export function AiTasksPreview({
 
   return (
     <View className="items-center max-h-[600px]">
-      <ScrollView className="w-full my-4">
+      <ScrollView className="w-full mt-4 mb-8">
         {localTasks?.map((task) => (
           <AiTaskCard
             key={task.id}
@@ -104,7 +104,7 @@ export function AiTasksPreview({
         ))}
       </ScrollView>
 
-      <View className="flex-row justify-center items-center my-4">
+      <View className="flex-row justify-center items-center mt-4 mb-10">
         <Pressable
           onPress={handleGoBack}
           className="w-12 h-12 rounded-full items-center justify-center bg-black mx-8 font-bold"
