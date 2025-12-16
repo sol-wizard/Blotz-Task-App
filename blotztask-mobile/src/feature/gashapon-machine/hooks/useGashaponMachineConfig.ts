@@ -34,9 +34,9 @@ export const useGashaponMachineConfig = ({
   const starsRef = useRef<Matter.Body[]>([]);
   const isGateOpenRef = useRef(false);
   const starPassedRef = useRef(false);
-  const droppedStarIndexRef = useRef<number>(-1); // 保存星星的原始索引
-  const droppedStarLabelRef = useRef<string>(""); // 保存掉出星星的标签，用于返回动画
-  const droppedTaskIdRef = useRef<number>(-1); // 保存掉出任务的ID
+  const droppedStarIndexRef = useRef<number>(-1); // save the original index of the dropped star
+  const droppedStarLabelRef = useRef<string>(""); // save the label of the dropped star for return animation
+  const droppedTaskIdRef = useRef<number>(-1); // save the ID of the dropped task
   const floatingTasksRef = useRef<FloatingTaskDTO[]>([]);
   const starLabelsRef = useRef<string[]>([]);
 
@@ -117,8 +117,6 @@ export const useGashaponMachineConfig = ({
 
     const world = worldRef.current;
     const starRadius = 15;
-    const gapX = starRadius * 2 + 5;
-    const gapY = starRadius * 2 + 5;
 
     console.log(`Resetting star index: ${droppedStarIndexRef.current}`);
 
@@ -162,13 +160,13 @@ export const useGashaponMachineConfig = ({
 
         console.log(`Resetting star ${star.label} at original index ${idx}, position (${x}, ${y})`);
 
-        // 重新添加到世界
+        // Re-add to world
         if (!world.bodies.includes(star)) {
           console.log(`Re-adding ${star.label} to world`);
           Matter.World.add(world, star);
         }
 
-        // 重置物理属性 - 从顶部掉落，并尽量落到堆里的随机区域
+        // Reset physics properties - drop from top and try to land in a random area within the pile
         Matter.Body.setPosition(star, { x, y });
 
         // Approximate time to fall to targetY: t ~= sqrt(2*dy/g)
@@ -183,7 +181,7 @@ export const useGashaponMachineConfig = ({
         Matter.Body.setAngularVelocity(star, 0);
         Matter.Sleeping.set(star, false);
 
-        // 重新创建实体（如果被删除了）- 直接修改 prevEntities
+        // Re-create entity (if deleted) - directly modify prevEntities
         prevEntities[entityKey] = {
           body: star,
           texture: getLabelIcon(labelName),
@@ -367,14 +365,16 @@ export const useGashaponMachineConfig = ({
           const labelName = pending?.labelName ?? fallbackLabelName;
           const taskId = pending?.taskId ?? fallbackTaskId;
 
-          // 保存星星的索引，用于后续重置
+          // Save the index of the star for later reset
           droppedStarIndexRef.current = starIndex;
-          // 保存标签名，以便后续返回动画使用（即使任务列表改变）
+          // Save the label for return animation (even if task list changes)
           droppedStarLabelRef.current = labelName;
-          // 保存任务ID
+          // Save the task ID
           droppedTaskIdRef.current = taskId ?? -1;
 
-          console.log(`Dropped star index ${starIndex} label ${labelName} taskId ${taskId ?? "n/a"}`);
+          console.log(
+            `Dropped star index ${starIndex} label ${labelName} taskId ${taskId ?? "n/a"}`,
+          );
 
           starPassedRef.current = true;
           closeGate();

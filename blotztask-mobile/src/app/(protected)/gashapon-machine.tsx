@@ -173,7 +173,10 @@ export default function GashaponMachine() {
             onLoad={() => setEyesPicLoaded(true)}
           />
 
-          <MachineButton setButtonPicLoaded={setButtonPicLoaded} onRelease={handleReleaseWithTaskPick} />
+          <MachineButton
+            setButtonPicLoaded={setButtonPicLoaded}
+            onRelease={handleReleaseWithTaskPick}
+          />
         </View>
 
         <DroppedStar

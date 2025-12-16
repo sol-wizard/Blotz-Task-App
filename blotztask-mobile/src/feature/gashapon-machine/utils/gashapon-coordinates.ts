@@ -20,8 +20,7 @@ export const engineToScreenAbsolute = (point: Point): Point => {
   const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
   const x = (screenWidth - GAME_ENGINE_SIZE.width) / 2 + point.x;
-  const y =
-    screenHeight - GAME_ENGINE_STYLE_BOTTOM - GAME_ENGINE_SIZE.height + point.y;
+  const y = screenHeight - GAME_ENGINE_STYLE_BOTTOM - GAME_ENGINE_SIZE.height + point.y;
 
   return { x, y };
 };

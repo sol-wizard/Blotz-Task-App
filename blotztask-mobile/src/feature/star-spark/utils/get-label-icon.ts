@@ -33,7 +33,7 @@ export const getLabelNameFromStarLabel = (starLabel: string): string => {
 
 export const debugTaskLabelIcon = (
   tasks: FloatingTaskDTO[] | undefined,
-  taskId: number | undefined
+  taskId: number | undefined,
 ) => {
   if (!tasks) {
     console.debug("No tasks provided.");

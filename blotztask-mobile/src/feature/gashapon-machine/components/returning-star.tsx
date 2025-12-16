@@ -4,12 +4,6 @@ import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-type Point = {
-  x: number;
-  y: number;
-};
-
-
 interface ReturningStarProps {
   starLabelName: string;
   trigger: number;
