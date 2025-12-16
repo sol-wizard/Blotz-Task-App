@@ -1,9 +1,11 @@
-import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, Image, ActivityIndicator} from "react-native";
 import { FloatingTaskDTO } from "../models/floating-task-dto";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { getLabelIcon } from "../utils/get-label-icon";
-import { estimateTaskTime } from "../services/task-time-estimate-service";
+import { useState } from "react";
+import { FloatingTaskTimeEstimateModal } from "./floating-task-time-estimate-modal";
+import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
 
 export const FloatingTaskCard = ({
   floatingTask,
@@ -21,16 +23,19 @@ export const FloatingTaskCard = ({
   onPressCard: (task: FloatingTaskDTO) => void;
 }) => {
   const iconSource = getLabelIcon(floatingTask.label?.name);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const estimateMutation = useEstimateTaskTime();
+  
+  const closeModal = () => {
+    setIsModalVisible(false);
+    estimateMutation.reset();
+  }
 
-  const handleEstimateTime = async (floatingTask: FloatingTaskDTO) => {
-    const floatingTaskForEstimate = {
-      id: floatingTask.id,
-      title: floatingTask.title,
-      description: floatingTask.description,
-    };
-    const result = await estimateTaskTime(floatingTaskForEstimate);
-    console.log("FloatingTaskCard time estimate:", result);
+ const handleEstimateTime = (task: FloatingTaskDTO) => {
+    setIsModalVisible(true);
+    estimateMutation.mutate(task);
   };
+
 
   return (
     <View className="mb-4">
@@ -82,6 +87,14 @@ export const FloatingTaskCard = ({
           </Pressable>
         </View>
       )}
+      <FloatingTaskTimeEstimateModal
+        visible={isModalVisible}
+        onClose={closeModal}
+        durationText={estimateMutation.data?.duration}
+        isEstimating={estimateMutation.isPending}
+        error={estimateMutation.error ? estimateMutation.error.message : null}
+      />
+
     </View>
   );
 };
