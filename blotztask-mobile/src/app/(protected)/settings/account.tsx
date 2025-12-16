@@ -61,7 +61,6 @@ export default function AccountScreen() {
 
               <View className="flex-row items-center ">
                 <Text className="text-lg font-baloo text-secondary mr-2">{userProfile?.email}</Text>
-                <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
               </View>
             </View>
             <Text className="text-primary font-balooThin text-sm">
@@ -74,7 +73,6 @@ export default function AccountScreen() {
             <View className="flex-row items-center">
               <Text className="text-lg font-baloo text-secondary ml-3">Password</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
           </Pressable>
         </View>
       </View>
