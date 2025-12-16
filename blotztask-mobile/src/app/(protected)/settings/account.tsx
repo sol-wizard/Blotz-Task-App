@@ -35,7 +35,10 @@ export default function AccountScreen() {
 
       <View className="mt-8 w-full bg-white rounded-2xl items-center">
         <View className="w-11/12">
-          <Pressable className="px-4 ml-3">
+          <Pressable
+            className="px-4 ml-3"
+            onPress={() => router.push("/(protected)/settings/update-user-name")}
+          >
             <View className="flex-row items-center justify-between pt-4 pb">
               <Text className="text-lg font-baloo text-secondary ">Name</Text>
 
