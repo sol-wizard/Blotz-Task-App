@@ -65,18 +65,9 @@ public class AiTaskGenerateChatHub : Hub
     public Task CancelGeneration()
     {
         _logger.LogInformation("CTS starts to cancel.");
-        _logger.LogInformation(
-            "CancelGeneration called. Conn={Conn}, CtsNull={IsNull}, CtsHash={CtsHash}, IsCanceled={IsCanceled}",
-            Context.ConnectionId,
-            _currentCancellationToken == null,
-            _currentCancellationToken?.GetHashCode(),
-            _currentCancellationToken?.IsCancellationRequested
-        );
+
         if (_currentCancellationToken == null || _currentCancellationToken.IsCancellationRequested)
-        {
-            _logger.LogInformation("Ai generation doesn't exist or has been cancelled.");
             return Task.CompletedTask;
-        }
 
         _currentCancellationToken.Cancel();
         return Task.CompletedTask;
@@ -87,13 +78,7 @@ public class AiTaskGenerateChatHub : Hub
         _currentCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
             Context.ConnectionAborted
         );
-        _logger.LogInformation(
-            "CTS created. CTS.Hash={CtsHash}, Token.CanBeCanceled={CanBeCanceled}, Token.IsCancellationRequested={IsCanceled}, ConnectionId={ConnectionId}",
-            _currentCancellationToken.GetHashCode(),
-            _currentCancellationToken.Token.CanBeCanceled,
-            _currentCancellationToken.Token.IsCancellationRequested,
-            Context.ConnectionId
-        );
+
         var chatHistory = _chatHistoryManagerService.GetChatHistory();
         chatHistory.AddUserMessage(message);
         _ = _aiTaskGenerateService.RunAsync(Context.ConnectionId, _currentCancellationToken.Token);

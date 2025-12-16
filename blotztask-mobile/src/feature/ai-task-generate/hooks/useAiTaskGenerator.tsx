@@ -45,12 +45,10 @@ export function useAiTaskGenerator({
   };
 
   const cancelGenerationHandler = async () => {
-    console.log("CANCEL pressed at", Date.now());
     if (!connection) return;
 
     try {
       await signalRService.invoke(connection, "CancelGeneration");
-      console.log("CANCEL invoke resolved at", Date.now());
     } catch (e) {
       console.error("CancelGeneration invoke failed:", e);
     } finally {
