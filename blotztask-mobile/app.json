@@ -64,7 +64,7 @@
         }
       ],
       "expo-audio",
-      ["./withCustomGradleProperties"]
+      ["./plugins/withCustomGradleProperties"]
     ],
     "experiments": {
       "typedRoutes": true
