@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { withGradleProperties } = require("@expo/config-plugins");
 
 module.exports = function withCustomGradleProperties(config) {
