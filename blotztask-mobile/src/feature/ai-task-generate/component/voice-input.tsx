@@ -36,19 +36,14 @@ export const VoiceInput = ({
 
   return (
     <View className="items-center">
-      {errorMessage && !isAiGenerating ? (
-        <ErrorMessageCard errorMessage={errorMessage} />
-      ) : (
-        <View className="w-96 mb-16" style={{ minHeight: 80 }}>
-          <Text
-            className={`text-2xl font-baloo font-bold ${transcript?.trim() ? "text-black" : "text-[#D1D1D6]"}`}
-          >
-            {transcript?.trim()
-              ? transcript
-              : "Just hold and talk to me — I’ll make a task for you"}
-          </Text>
-        </View>
-      )}
+      <View className="w-96 mb-10" style={{ minHeight: 60 }}>
+        <Text
+          className={`text-xl font-baloo font-bold mb-10 ${transcript?.trim() ? "text-black" : "text-[#D1D1D6]"}`}
+        >
+          {transcript?.trim() ? transcript : "Just hold and talk to me — I’ll make a task for you"}
+        </Text>
+        {errorMessage && !isAiGenerating && <ErrorMessageCard errorMessage={errorMessage} />}
+      </View>
 
       {!isAiGenerating ? (
         <View className="mt-4 mb-8 items-center">

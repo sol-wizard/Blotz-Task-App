@@ -43,15 +43,15 @@ public class TaskController(
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
         _logger.LogInformation(
-            "Handling GetTaskByDate for user {UserId} starting at {StartDateUtc} (IncludeFloatingForToday: {IncludeFloatingForToday})",
+            "Handling GetTaskByDate for user {UserId} starting at {StartDate} (IncludeFloatingForToday: {IncludeFloatingForToday})",
             userId,
-            getTasksByDateRequest.StartDateUtc,
+            getTasksByDateRequest.StartDate,
             getTasksByDateRequest.IncludeFloatingForToday);
 
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDateUtc = getTasksByDateRequest.StartDateUtc,
+            StartDate = getTasksByDateRequest.StartDate,
             IncludeFloatingForToday = getTasksByDateRequest.IncludeFloatingForToday
         };
 

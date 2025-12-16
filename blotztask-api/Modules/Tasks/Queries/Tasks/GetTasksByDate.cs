@@ -11,7 +11,7 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
 public class GetTasksByDateRequest
 {
-    [BindRequired] public DateTime StartDateUtc { get; set; }
+    [BindRequired] public DateTimeOffset StartDate { get; set; }
 
     [BindRequired] public bool IncludeFloatingForToday { get; set; }
 }
@@ -20,7 +20,7 @@ public class GetTasksByDateQuery
 {
     [Required] public required Guid UserId { get; init; }
 
-    [Required] public DateTime StartDateUtc { get; init; }
+    [Required] public DateTimeOffset StartDate { get; init; }
 
     [Required] public bool IncludeFloatingForToday { get; init; } = false;
 }
@@ -31,13 +31,16 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
     {
         var stopwatch = Stopwatch.StartNew();
         logger.LogInformation(
-            "Fetching tasks by end time for user {UserId} up to {StartDateUtc}. Whether including floating tasks for today is {IncludeFloatingForToday}",
-            query.UserId, query.StartDateUtc, query.IncludeFloatingForToday);
+            "Fetching tasks by end time for user {UserId} up to {StartDate}. Whether including floating tasks for today is {IncludeFloatingForToday}",
+            query.UserId, query.StartDate, query.IncludeFloatingForToday);
 
         var todayStartUtc = DateTime.UtcNow.Date;
         var todayEndUtc = todayStartUtc.AddDays(1);
         var sevenDayWindowStartUtc = todayEndUtc.AddDays(-6);
-        var endDateUtc = query.StartDateUtc.AddDays(1);
+        var endDateUtc = query.StartDate.AddDays(1);
+
+        var userToday = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
+        var isFutureDay = query.StartDate > userToday.Date;
 
 
         var queryStopwatch = Stopwatch.StartNew();
@@ -47,16 +50,17 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                         (
                             // Tasks in date range
                             (t.StartTime != null && t.EndTime != null &&
-                             t.StartTime < endDateUtc && t.EndTime >= query.StartDateUtc)
+                             t.StartTime < endDateUtc && t.EndTime >= query.StartDate)
                             ||
                             // Floating tasks
                             (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null &&
-                             t.CreatedAt >= query.StartDateUtc &&
+                             t.CreatedAt >= query.StartDate &&
                              t.CreatedAt < endDateUtc)
                             ||
                             // Overdue tasks within 7 days but not in selected day
                             (t.EndTime != null
                              && !t.IsDone
+                             && !isFutureDay
                              && t.EndTime < DateTime.UtcNow && t.EndTime >= sevenDayWindowStartUtc &&
                              t.StartTime <= endDateUtc
                             )

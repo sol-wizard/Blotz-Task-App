@@ -10,7 +10,7 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { theme } from "@/shared/constants/theme";
 import { format, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
@@ -19,6 +19,9 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
+import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
+import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
+import { convertSubtaskTimeForm } from "@/feature/task-details/utils/convert-subtask-time-form";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 
 const ACTION_WIDTH = 64;
@@ -34,7 +37,19 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) {
   const { toggleTask, isToggling } = useTaskMutations();
+  const { toggleSubtaskStatus, isTogglingSubtaskStatus } = useSubtaskMutations();
   const queryClient = useQueryClient();
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const hasSubtasks = task.subtasks && task.subtasks.length > 0;
+
+  const handleToggleSubtask = async (subtaskId: number) => {
+    await toggleSubtaskStatus({ subtaskId, parentTaskId: task.id });
+  };
+
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
 
   const navigateToTaskDetails = (task: TaskDetailDTO) => {
     queryClient.setQueryData(["taskId", task.id], task);
@@ -163,6 +178,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                     }}
                     disabled={isLoading}
                     haptic={!task.isDone}
+                    size={32}
                   />
 
                   <View
@@ -172,12 +188,15 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                 </Animated.View>
 
                 <View className="flex-1 flex-row justify-between items-center">
-                  <View className="justify-start pt-0">
-                    <Text
-                      className={`text-xl font-baloo w-60 ${task.isDone ? "text-neutral-400 line-through" : "text-black"}`}
-                    >
-                      {task.title}
-                    </Text>
+                  <View className="justify-start pt-0 flex-1">
+                    <View className="flex-row items-center">
+                      <Text
+                        className={`text-xl font-baloo ${task.isDone ? "text-neutral-400 line-through" : "text-black"}`}
+                        numberOfLines={1}
+                      >
+                        {task.title}
+                      </Text>
+                    </View>
                     {timePeriod && (
                       <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
                         {timePeriod}
@@ -185,17 +204,73 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                     )}
                   </View>
 
-                  {endDate ? (
-                    <Text
-                      className={`${isOverdue ? "text-warning" : "text-primary"} font-baloo text-lg`}
-                    >
-                      {format(endDate, "H:mm")}
-                    </Text>
-                  ) : null}
+                  <View className="flex-row items-center">
+                    {endDate ? (
+                      <Text
+                        className={`${isOverdue ? "text-warning" : "text-primary"} font-baloo text-lg`}
+                      >
+                        {format(endDate, "H:mm")}
+                      </Text>
+                    ) : null}
+                    {hasSubtasks && (
+                      <Pressable
+                        onPress={toggleExpand}
+                        className="ml-2 p-1"
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        <MaterialIcons
+                          name={isExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+                          size={24}
+                          color="#9CA3AF"
+                        />
+                      </Pressable>
+                    )}
+                  </View>
                 </View>
               </View>
 
-              <SubtaskProgressBar subtasks={task.subtasks} />
+              {!isExpanded && <SubtaskProgressBar subtasks={task.subtasks} />}
+
+              {/* Expanded Subtask List */}
+              {isExpanded && hasSubtasks && (
+                <View className="px-5 pb-4">
+                  {task.subtasks?.map((subtask: SubtaskDTO) => (
+                    <Pressable
+                      key={subtask.subTaskId}
+                      onPress={() => handleToggleSubtask(subtask.subTaskId)}
+                      disabled={isTogglingSubtaskStatus}
+                      className={`flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
+                    >
+                      {/* Subtask Checkbox */}
+                      <View
+                        className={`w-6 h-6 rounded-lg mr-3 items-center justify-center border-2 ${
+                          subtask.isDone
+                            ? "bg-[#4CAF50] border-[#4CAF50]"
+                            : "bg-white border-gray-300"
+                        }`}
+                      >
+                        {subtask.isDone && <MaterialIcons name="check" size={16} color="white" />}
+                      </View>
+
+                      {/* Subtask Title */}
+                      <Text
+                        className={`flex-1 text-base font-baloo ${
+                          subtask.isDone ? "text-gray-400 line-through opacity-60" : "text-gray-700"
+                        }`}
+                      >
+                        {subtask.title}
+                      </Text>
+
+                      {/* Subtask Duration */}
+                      {subtask.duration && (
+                        <Text className="text-sm text-gray-400 font-baloo ml-2">
+                          {convertSubtaskTimeForm(subtask.duration)}
+                        </Text>
+                      )}
+                    </Pressable>
+                  ))}
+                </View>
+              )}
             </View>
           </Pressable>
         </Animated.View>
