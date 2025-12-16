@@ -18,6 +18,7 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<DeletedTaskItem> DeletedTaskItems { get; set; }
     public DbSet<Subtask> Subtasks => Set<Subtask>();
     public DbSet<AppUser> AppUsers { get; set; }
+    public DbSet<UserPreference> UserPreferences { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
