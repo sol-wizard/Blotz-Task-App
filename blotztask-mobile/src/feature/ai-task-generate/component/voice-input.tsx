@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Vibration } from "react-native";
+import { View, Pressable, Vibration, TextInput, Keyboard } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { ASSETS } from "@/shared/constants/assets";
@@ -8,24 +8,44 @@ import LottieView from "lottie-react-native";
 import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { ErrorMessageCard } from "./error-message-card";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
+import { theme } from "@/shared/constants/theme";
+import { useEffect } from "react";
 
 export const VoiceInput = ({
+  text,
   sendMessage,
   errorMessage,
   language,
   isAiGenerating,
   setAiGeneratedMessage,
+  setText,
 }: {
+  text: string;
   sendMessage: (v: string) => void;
   errorMessage?: string;
   language: string;
   isAiGenerating: boolean;
   setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
+  setText: (v: string) => void;
 }) => {
   const { handleStartListening, recognizing, transcript, stopListening, setTranscript } =
     useSpeechRecognition({
       language,
     });
+
+  useEffect(() => {
+    if (transcript) {
+      setText(transcript);
+    }
+  }, [transcript]);
+
+  const sendWriteContent = (msg: string) => {
+    const val = msg.trim();
+    if (!val) return;
+    sendMessage(val);
+    setText(val);
+    Keyboard.dismiss();
+  };
 
   const handleMicPressOut = async () => {
     await stopListening();
@@ -37,11 +57,23 @@ export const VoiceInput = ({
   return (
     <View className="items-center">
       <View className="w-96 mb-10" style={{ minHeight: 60 }}>
-        <Text
-          className={`text-xl font-baloo font-bold mb-10 ${transcript?.trim() ? "text-black" : "text-[#D1D1D6]"}`}
-        >
-          {transcript?.trim() ? transcript : "Just hold and talk to me — I’ll make a task for you"}
-        </Text>
+        <TextInput
+          value={text}
+          onChangeText={(v: string) => setText(v)}
+          onKeyPress={({ nativeEvent: { key } }) => {
+            if (key === "Enter") {
+              const cleaned = text.replace(/\n$/, "").trim();
+              if (!cleaned) return;
+              sendWriteContent(cleaned);
+            }
+          }}
+          enablesReturnKeyAutomatically
+          placeholder="Hold to speak or tap to write..."
+          placeholderTextColor={theme.colors.secondary}
+          multiline
+          className="bg-white text-2xl text-gray-800 font-baloo mb-8"
+          style={{ textAlignVertical: "top", textAlign: "left" }}
+        />
         {errorMessage && !isAiGenerating && <ErrorMessageCard errorMessage={errorMessage} />}
       </View>
 

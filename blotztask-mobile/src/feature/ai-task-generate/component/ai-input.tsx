@@ -1,6 +1,4 @@
-import { InputModeSwitch } from "./input-mode-switch";
 import { VoiceInput } from "./voice-input";
-import { WriteInput } from "./write-input";
 import { Pressable, View, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
@@ -35,17 +33,15 @@ export const AiInput = ({
   });
 
   return (
-    <View>
-      <View className="flex-row mb-8 ml-4 items-center">
-        <InputModeSwitch value={isVoiceInput} onChange={setIsVoiceInput} setText={setText} />
-
+    <View className="pt-2">
+      <View className="flex-row mb-8 ml-6 items-center">
         <Pressable
           onPress={() => {
             const newLang = language === "en-US" ? "zh-CN" : "en-US";
             setLanguage(newLang);
             AsyncStorage.setItem("ai_language_preference", newLang);
           }}
-          className="w-8 h-8 bg-black rounded-full items-center justify-center ml-8"
+          className="w-8 h-8 bg-black rounded-full items-center justify-center"
         >
           <Text className="text-white font-bold text-base">
             {language === "en-US" ? "EN" : "中"}
@@ -53,24 +49,15 @@ export const AiInput = ({
         </Pressable>
       </View>
 
-      {isVoiceInput ? (
-        <VoiceInput
-          sendMessage={sendMessage}
-          errorMessage={aiGeneratedMessage?.errorMessage}
-          language={language}
-          isAiGenerating={isAiGenerating}
-          setAiGeneratedMessage={setAiGeneratedMessage}
-        />
-      ) : (
-        <WriteInput
-          text={text}
-          setText={setText}
-          sendMessage={sendMessage}
-          errorMessage={aiGeneratedMessage?.errorMessage}
-          isAiGenerating={isAiGenerating}
-          setAiGeneratedMessage={setAiGeneratedMessage}
-        />
-      )}
+      <VoiceInput
+        text={text}
+        setText={setText}
+        sendMessage={sendMessage}
+        errorMessage={aiGeneratedMessage?.errorMessage}
+        language={language}
+        isAiGenerating={isAiGenerating}
+        setAiGeneratedMessage={setAiGeneratedMessage}
+      />
     </View>
   );
 };
