@@ -13,7 +13,8 @@
     },
     "preview": {
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "credentialsSource": "local"
       },
       "distribution": "internal",
       "autoIncrement": true,
