@@ -7,9 +7,7 @@ type CloseButtonProps = {
   disabled?: boolean;
 };
 
-export const CloseButton = ({ onPress, size = 34, disabled = false }: CloseButtonProps) => {
-  const iconSize = size * 0.45;
-
+export const CloseButton = ({ onPress, size = 30, disabled = false }: CloseButtonProps) => {
   return (
     <Pressable
       onPress={onPress}
@@ -17,7 +15,7 @@ export const CloseButton = ({ onPress, size = 34, disabled = false }: CloseButto
       className="rounded-full items-center justify-center bg-[#f4f7f9]"
       style={{ width: size, height: size, opacity: disabled ? 0.6 : 1 }}
     >
-      <Ionicons name="close" size={iconSize} color="#9ca3af" />
+      <Ionicons name="close" size={17} color="#9ca3af" />
     </Pressable>
   );
 };

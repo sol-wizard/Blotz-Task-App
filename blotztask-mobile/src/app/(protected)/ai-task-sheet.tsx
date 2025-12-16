@@ -48,7 +48,7 @@ export default function AiTaskSheetScreen() {
                 {language === "en-US" ? "EN" : "中"}
               </Text>
             </Pressable>
-            <CloseButton onPress={() => router.back()} />
+            <CloseButton onPress={() => router.back()} size={40} />
           </View>
           <AiModalContent modalType={modalType} setModalType={setModalType} language={language} />
         </View>

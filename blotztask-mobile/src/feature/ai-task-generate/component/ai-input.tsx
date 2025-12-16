@@ -11,6 +11,7 @@ import LottieView from "lottie-react-native";
 import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
+import { CloseButton } from "./close-button";
 
 export const AiInput = ({
   text,
@@ -110,8 +111,12 @@ export const AiInput = ({
             </Pressable>
           </View>
         ) : (
-          <View className="items-center mt-4 mb-8">
-            <CustomSpinner size={60} />
+          <View className="flex-row items-center mt-4 mb-8 w-full px-2 justify-center">
+            <View className="w-full" />
+            <CustomSpinner size={60} style={{ marginRight: 10 }} />
+            <View className="w-full">
+              <CloseButton />
+            </View>
           </View>
         )}
       </View>
