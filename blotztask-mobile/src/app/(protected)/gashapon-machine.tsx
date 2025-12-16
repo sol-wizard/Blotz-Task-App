@@ -58,6 +58,7 @@ export default function GashaponMachine() {
   const { entities, handleRelease, resetStarsPhysics } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
     floatingTasks: limitedFloatingTasks,
+    debugWalls: false,
   });
 
   const gameEngineReady = !!entities.physics;

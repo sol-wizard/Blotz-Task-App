@@ -39,6 +39,11 @@ export async function fetchFloatingTasks(): Promise<FloatingTaskDTO[]> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/floating`;
   const data: TaskDetailDTO[] = await apiClient.get(url);
 
+  // Debug: log raw API response to check label field names
+  if (data && data.length > 0) {
+    console.log("[fetchFloatingTasks] raw first item:", JSON.stringify(data[0]));
+  }
+
   return data;
 }
 

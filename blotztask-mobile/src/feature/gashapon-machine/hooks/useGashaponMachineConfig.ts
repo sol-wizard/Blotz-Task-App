@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { createRectangleBetweenPoints } from "../utils/create-rectangle-between-points";
 import { EntityMap } from "../models/entity-map";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
+import { WallRenderer } from "../components/wall-renderer";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
@@ -12,10 +13,12 @@ export const useGashaponMachineConfig = ({
   starRadius = 15,
   onStarDropped,
   floatingTasks,
+  debugWalls = false,
 }: {
   starRadius?: number;
   onStarDropped: (v: string) => void;
   floatingTasks: FloatingTaskDTO[];
+  debugWalls?: boolean;
 }) => {
   const [entities, setEntities] = useState<EntityMap>({});
 
@@ -28,8 +31,13 @@ export const useGashaponMachineConfig = ({
   const floatingTasksRef = useRef<FloatingTaskDTO[]>([]);
   const starLabelsRef = useRef<string[]>([]);
 
-  const getLabelNameByIndex = (idx: number) =>
-    starLabelsRef.current[idx] ?? floatingTasksRef.current[idx]?.label?.name ?? "no-label";
+  const getLabelNameByIndex = (idx: number) => {
+    if (starLabelsRef.current[idx]) return starLabelsRef.current[idx];
+    const task = floatingTasksRef.current[idx];
+    // Handle both camelCase (label.name) and PascalCase (Label.Name) from API
+    const label = (task as any)?.label ?? (task as any)?.Label;
+    return label?.name ?? label?.Name ?? "no-label";
+  };
   const getStarEntityKey = (idx: number) => `star-${idx}`;
 
   const handleRelease = (deltaThisTurn: number) => {
@@ -64,9 +72,9 @@ export const useGashaponMachineConfig = ({
 
     console.log(`Resetting star index: ${droppedStarIndexRef.current}`);
 
+    // Directly mutate entities instead of creating new object
+    // GameEngine holds reference to entities, so mutation updates it
     setEntities((prevEntities) => {
-      const updatedEntities = { ...prevEntities };
-
       // 如果有保存的索引，用索引直接获取
       if (droppedStarIndexRef.current >= 0) {
         const idx = droppedStarIndexRef.current;
@@ -74,12 +82,10 @@ export const useGashaponMachineConfig = ({
         const labelName = getLabelNameByIndex(idx);
         const entityKey = getStarEntityKey(idx);
 
-        // 使用原始索引计算位置
-        const col = idx % 6;
-        const row = Math.floor(idx / 6);
-
-        const x = 90 + col * gapX;
-        const y = 230 + row * gapY;
+        // Reset position to machine top entry (where animation ends)
+        // This should be inside the machine, near the top, so star falls naturally
+        const x = 140; // Center-ish of machine opening
+        const y = 250; // Near top of star pile area
 
         if (!star) {
           console.warn(`Star body missing for index ${idx}, recreating.`);
@@ -108,21 +114,27 @@ export const useGashaponMachineConfig = ({
         // 不应用额外的力，让重力自然作用（像初始化一样）
         Matter.Sleeping.set(star, false);
 
-        // 重新创建实体（如果被删除了）
-        updatedEntities[entityKey] = {
+        // 重新创建实体（如果被删除了）- 直接修改 prevEntities
+        prevEntities[entityKey] = {
           body: star,
           texture: getLabelIcon(labelName),
           renderer: CapsuleToyRenderer,
         };
         console.log(`Re-created entity for ${entityKey} with label ${labelName}`);
+        console.log(`Star body position after reset: (${star.position.x}, ${star.position.y})`);
+        console.log(`Star body in world: ${world.bodies.includes(star)}`);
       }
 
-      return updatedEntities;
+      return prevEntities; // Return same reference for GameEngine
     });
 
-    starPassedRef.current = false;
-    droppedStarIndexRef.current = -1;
-    closeGate();
+    // Clear index AFTER setEntities completes
+    setTimeout(() => {
+      starPassedRef.current = false;
+      droppedStarIndexRef.current = -1;
+      closeGate();
+      console.log("Reset complete, gate closed");
+    }, 100);
   };
 
   useEffect(() => {
@@ -131,7 +143,11 @@ export const useGashaponMachineConfig = ({
     }
 
     floatingTasksRef.current = floatingTasks;
-    starLabelsRef.current = floatingTasks.map((task) => task.label?.name ?? "no-label");
+    starLabelsRef.current = floatingTasks.map((task) => {
+      // Handle both camelCase (label.name) and PascalCase (Label.Name) from API
+      const label = (task as any)?.label ?? (task as any)?.Label;
+      return label?.name ?? label?.Name ?? "no-label";
+    });
 
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
@@ -217,6 +233,15 @@ export const useGashaponMachineConfig = ({
       },
     };
 
+    if (debugWalls) {
+      wallBodies.forEach((wall) => {
+        newEntities[wall.label] = {
+          body: wall,
+          renderer: WallRenderer,
+        };
+      });
+    }
+
     stars.forEach((star, idx) => {
       const labelName = getLabelNameByIndex(idx);
       const entityKey = getStarEntityKey(idx);
@@ -242,10 +267,16 @@ export const useGashaponMachineConfig = ({
         if (star && sensor) {
           console.log(`⚡ Star ${star.label} passed sensor, removing`);
           const starIndex = starsRef.current.indexOf(star);
+          if (starIndex < 0) {
+            console.warn(`Star ${star.label} not found in starsRef; ignoring sensor event.`);
+            return;
+          }
           const labelName = getLabelNameByIndex(starIndex);
 
           // 保存星星的索引，用于后续重置
           droppedStarIndexRef.current = starIndex;
+
+          console.log(`Dropped star index ${starIndex} label ${labelName}`);
 
           starPassedRef.current = true;
           closeGate();
