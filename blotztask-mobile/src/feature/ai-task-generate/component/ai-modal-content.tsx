@@ -6,24 +6,23 @@ import { TaskAddedSuccess } from "./task-added-success";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
-import { AiResultMessageDTO } from "../models/ai-result-message-dto";
+import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 
 export const AiModalContent = ({
   modalType,
   setModalType,
-  aiGeneratedMessage,
-  sendMessage,
-  isAiGenerating,
-  setAiGeneratedMessage,
 }: {
   modalType: BottomSheetType;
   setModalType: (type: BottomSheetType) => void;
-  aiGeneratedMessage?: AiResultMessageDTO;
-  sendMessage: (text: string) => Promise<void>;
-  isAiGenerating: boolean;
-  setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) => {
   const [text, setText] = useState("");
+
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+
+  const { aiGeneratedMessage, sendMessage, setAiGeneratedMessage } = useAiTaskGenerator({
+    setIsAiGenerating,
+    setModalType,
+  });
 
   const { labels, isLoading } = useAllLabels();
 

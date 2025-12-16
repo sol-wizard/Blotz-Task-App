@@ -34,16 +34,15 @@ export const AiInput = ({
     return "zh-CN";
   });
 
-  const { handleStartListening, recognizing, transcript, stopListening, setTranscript } =
-    useSpeechRecognition({
-      language,
-    });
+  const { handleStartListening, recognizing, transcript, stopListening } = useSpeechRecognition({
+    language,
+  });
 
   useEffect(() => {
     if (transcript) {
       setText(transcript);
     }
-  }, [transcript, setText]);
+  }, [transcript]);
 
   const sendAndDismiss = (msg: string) => {
     const val = msg.trim();
@@ -96,7 +95,7 @@ export const AiInput = ({
             className="w-11/12 bg-white text-2xl text-gray-800 font-baloo"
             style={{ textAlignVertical: "top", textAlign: "left" }}
           />
-          {aiGeneratedMessage?.errorMessage && !isAiGenerating && (
+          {aiGeneratedMessage?.errorMessage && (
             <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
           )}
         </View>
@@ -105,8 +104,6 @@ export const AiInput = ({
           <View className="mt-4 mb-10 items-center">
             <Pressable
               onLongPress={async () => {
-                setTranscript("");
-
                 try {
                   await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 } catch {
