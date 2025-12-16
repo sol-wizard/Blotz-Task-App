@@ -33,6 +33,9 @@ export const ReturningStarAnimations: React.FC<ReturningStarProps> = ({
   const [activeStarIcon, setActiveStarIcon] = useState<ImageSourcePropType | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  const latestTriggerRef = useRef<number>(0);
+  const completionFiredForTriggerRef = useRef<number>(0);
+
   const rewardTranslateX = useRef(new Animated.Value(0)).current;
   const rewardTranslateY = useRef(new Animated.Value(0)).current;
   const rewardScale = useRef(new Animated.Value(1)).current;
@@ -45,6 +48,12 @@ export const ReturningStarAnimations: React.FC<ReturningStarProps> = ({
 
   useEffect(() => {
     if (!trigger || !starLabelName) return;
+
+    latestTriggerRef.current = trigger;
+    // Allow completion for this trigger exactly once
+    if (completionFiredForTriggerRef.current === trigger) {
+      return;
+    }
 
     const icon = getLabelIcon(starLabelName);
     // Target: machine entry point (top of machine)
@@ -59,35 +68,46 @@ export const ReturningStarAnimations: React.FC<ReturningStarProps> = ({
     rewardScale.setValue(1);
     rewardRotate.setValue(0);
 
-    const moveDuration = 500;
+    const moveDuration = 600; // Longer duration for smoother animation
 
     // Simple animation: move from center to machine top entry, then let physics take over
     const animation = Animated.parallel([
       Animated.timing(rewardTranslateX, {
         toValue: entryPoint.x,
         duration: moveDuration,
-        easing: Easing.out(Easing.cubic),
+        easing: Easing.inOut(Easing.quad), // Smoother easing
         useNativeDriver: true,
       }),
       Animated.timing(rewardTranslateY, {
         toValue: entryPoint.y,
         duration: moveDuration,
-        easing: Easing.out(Easing.cubic),
+        easing: Easing.inOut(Easing.quad), // Smoother easing
         useNativeDriver: true,
       }),
       Animated.timing(rewardScale, {
-        toValue: 0.6, // Shrink to match physics star size
+        toValue: 0.5, // Shrink to match physics star size
         duration: moveDuration,
+        easing: Easing.inOut(Easing.quad),
         useNativeDriver: true,
       }),
       Animated.timing(rewardRotate, {
-        toValue: 0.5,
+        toValue: 0.3, // Less rotation for smoother look
         duration: moveDuration,
+        easing: Easing.inOut(Easing.quad),
         useNativeDriver: true,
       }),
     ]);
 
     animation.start(() => {
+      // Guard against late/duplicate callbacks from previous animations
+      if (latestTriggerRef.current !== trigger) {
+        return;
+      }
+      if (completionFiredForTriggerRef.current === trigger) {
+        return;
+      }
+      completionFiredForTriggerRef.current = trigger;
+
       setIsAnimating(false);
       setActiveStarIcon(null);
       // Physics will handle the natural drop into the pile

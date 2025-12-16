@@ -22,6 +22,8 @@ export const useGashaponMachineConfig = ({
 }) => {
   const [entities, setEntities] = useState<EntityMap>({});
 
+  type MachineState = "idle" | "revealed" | "returning";
+
   const gateRef = useRef<Matter.Body | null>(null);
   const worldRef = useRef<Matter.World | null>(null);
   const starsRef = useRef<Matter.Body[]>([]);
@@ -30,6 +32,17 @@ export const useGashaponMachineConfig = ({
   const droppedStarIndexRef = useRef<number>(-1); // 保存星星的原始索引
   const floatingTasksRef = useRef<FloatingTaskDTO[]>([]);
   const starLabelsRef = useRef<string[]>([]);
+
+  const isResettingRef = useRef(false);
+  const machineStateRef = useRef<MachineState>("idle");
+
+  const transition = (next: MachineState, reason: string) => {
+    const prev = machineStateRef.current;
+    if (prev !== next) {
+      console.log(`[machine] ${prev} -> ${next} (${reason})`);
+      machineStateRef.current = next;
+    }
+  };
 
   const getLabelNameByIndex = (idx: number) => {
     if (starLabelsRef.current[idx]) return starLabelsRef.current[idx];
@@ -43,6 +56,10 @@ export const useGashaponMachineConfig = ({
   const handleRelease = (deltaThisTurn: number) => {
     if (Math.abs(deltaThisTurn) > 60) {
       if (gateRef.current && !isGateOpenRef.current) {
+        // Only allow spinning/opening the gate when we're not in the middle of returning.
+        if (machineStateRef.current === "returning") {
+          return;
+        }
         Matter.Body.translate(gateRef.current, { x: -60, y: 0 });
         isGateOpenRef.current = true;
         console.log("gate is opened");
@@ -60,10 +77,27 @@ export const useGashaponMachineConfig = ({
 
   const resetStarsPhysics = () => {
     if (!worldRef.current) return;
+
+    // Prevent re-entrancy and avoid resetting during/just after a new drop/spin.
+    if (isResettingRef.current) {
+      console.warn("resetStarsPhysics already running; skipping.");
+      return;
+    }
+
+    // Only allow reset as part of the explicit return flow.
+    if (machineStateRef.current !== "returning") {
+      console.warn(
+        `resetStarsPhysics called while state=${machineStateRef.current}; skipping reset to prevent state bleed.`,
+      );
+      return;
+    }
+
     if (droppedStarIndexRef.current < 0) {
       console.warn("No dropped star index recorded; skipping reset.");
       return;
     }
+
+    isResettingRef.current = true;
 
     const world = worldRef.current;
     const starRadius = 15;
@@ -82,10 +116,9 @@ export const useGashaponMachineConfig = ({
         const labelName = getLabelNameByIndex(idx);
         const entityKey = getStarEntityKey(idx);
 
-        // Reset position to machine top entry (where animation ends)
-        // This should be inside the machine, near the top, so star falls naturally
-        const x = 140; // Center-ish of machine opening
-        const y = 250; // Near top of star pile area
+        // Reset position to machine top entry point so star falls naturally into pile
+        const x = 140; // Center of machine opening
+        const y = 250; // Top of machine interior
 
         if (!star) {
           console.warn(`Star body missing for index ${idx}, recreating.`);
@@ -107,11 +140,10 @@ export const useGashaponMachineConfig = ({
           Matter.World.add(world, star);
         }
 
-        // 重置物理属性 - 保持和初始化一样的物理参数
+        // 重置物理属性 - 让星星自然掉落到星星堆
         Matter.Body.setPosition(star, { x, y });
         Matter.Body.setVelocity(star, { x: 0, y: 0 });
         Matter.Body.setAngularVelocity(star, 0);
-        // 不应用额外的力，让重力自然作用（像初始化一样）
         Matter.Sleeping.set(star, false);
 
         // 重新创建实体（如果被删除了）- 直接修改 prevEntities
@@ -134,7 +166,20 @@ export const useGashaponMachineConfig = ({
       droppedStarIndexRef.current = -1;
       closeGate();
       console.log("Reset complete, gate closed");
+
+      isResettingRef.current = false;
+
+      transition("idle", "resetComplete");
     }, 100);
+  };
+
+  const beginReturnFlow = () => {
+    // Called from UI when user taps Try again.
+    if (machineStateRef.current !== "revealed") {
+      console.warn(`beginReturnFlow ignored; state=${machineStateRef.current}`);
+      return;
+    }
+    transition("returning", "tryAgain");
   };
 
   useEffect(() => {
@@ -282,6 +327,8 @@ export const useGashaponMachineConfig = ({
           closeGate();
           onStarDropped(labelName);
 
+          transition("revealed", "sensorDrop");
+
           // Remove the star from physics world
           if (worldRef.current && starsRef.current.includes(star)) {
             Matter.World.remove(worldRef.current, star);
@@ -318,5 +365,5 @@ export const useGashaponMachineConfig = ({
     };
   }, [floatingTasks]);
 
-  return { entities, handleRelease, resetStarsPhysics };
+  return { entities, handleRelease, resetStarsPhysics, beginReturnFlow };
 };

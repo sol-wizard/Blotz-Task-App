@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { View, Image } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -25,6 +25,10 @@ export default function GashaponMachine() {
   const [starLabelName, setStarLabelName] = useState("");
   const [randomTask, setRandomTask] = useState<FloatingTaskDTO | null>(null);
 
+  // Prevent late/duplicate return-animation completions from triggering physics reset
+  const latestReturnTriggerRef = useRef(0);
+  const returnResetConsumedRef = useRef(true);
+
   const { floatingTasks, isLoading } = useFloatingTasks();
 
   const MAX_STARS = 30;
@@ -44,22 +48,31 @@ export default function GashaponMachine() {
     setDropStarTrigger((prev) => prev + 1);
   };
 
-  const handleTryAgain = () => {
-    setReturnStarTrigger((prev) => prev + 1);
-    setModalVisible(false);
-  };
-
-  const handleReturnAnimationComplete = () => {
-    resetStarsPhysics();
-    setStarLabelName("");
-    setRandomTask(null);
-  };
-
-  const { entities, handleRelease, resetStarsPhysics } = useGashaponMachineConfig({
+  const { entities, handleRelease, resetStarsPhysics, beginReturnFlow } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
     floatingTasks: limitedFloatingTasks,
     debugWalls: false,
   });
+
+  const handleTryAgain = () => {
+    beginReturnFlow();
+    setReturnStarTrigger((prev) => {
+      const next = prev + 1;
+      latestReturnTriggerRef.current = next;
+      returnResetConsumedRef.current = false;
+      return next;
+    });
+    setModalVisible(false);
+  };
+
+  const handleReturnAnimationComplete = () => {
+    // Only allow one reset per Try again trigger
+    if (returnResetConsumedRef.current) return;
+    returnResetConsumedRef.current = true;
+    resetStarsPhysics();
+    setStarLabelName("");
+    setRandomTask(null);
+  };
 
   const gameEngineReady = !!entities.physics;
   const isAllLoaded =
