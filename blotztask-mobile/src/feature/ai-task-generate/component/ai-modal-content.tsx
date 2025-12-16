@@ -34,7 +34,12 @@ export const AiModalContent = ({
   switch (modalType) {
     case "task-preview":
       return (
-        <AiTasksPreview aiTasks={aiGeneratedTasks} userInput={text} setModalType={setModalType} />
+        <AiTasksPreview
+          aiTasks={aiGeneratedTasks}
+          userInput={text}
+          setModalType={setModalType}
+          setAiGeneratedMessage={setAiGeneratedMessage}
+        />
       );
 
     case "add-task-success":
@@ -49,7 +54,6 @@ export const AiModalContent = ({
           sendMessage={sendMessage}
           isAiGenerating={isAiGenerating || isLoading}
           aiGeneratedMessage={aiGeneratedMessage}
-          setAiGeneratedMessage={setAiGeneratedMessage}
         />
       );
   }

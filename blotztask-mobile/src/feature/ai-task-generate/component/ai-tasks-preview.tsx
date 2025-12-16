@@ -8,15 +8,18 @@ import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 
 export function AiTasksPreview({
   aiTasks,
   setModalType,
   userInput,
+  setAiGeneratedMessage,
 }: {
   aiTasks?: AiTaskDTO[];
   setModalType: (v: BottomSheetType) => void;
   userInput: string;
+  setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) {
   const { addTask, isAdding } = useTaskMutations();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
@@ -76,6 +79,7 @@ export function AiTasksPreview({
   };
 
   const handleGoBack = () => {
+    setAiGeneratedMessage();
     setModalType("input");
 
     posthog.capture("ai_task_interaction_completed", {
