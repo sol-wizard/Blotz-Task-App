@@ -8,8 +8,6 @@ export const AiInput = ({
   text,
   setText,
   sendMessage,
-  isVoiceInput,
-  setIsVoiceInput,
   isAiGenerating,
   aiGeneratedMessage,
   setAiGeneratedMessage,
@@ -17,8 +15,6 @@ export const AiInput = ({
   text: string;
   setText: (v: string) => void;
   sendMessage: (v: string) => void;
-  isVoiceInput: boolean;
-  setIsVoiceInput: (v: boolean) => void;
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
   setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;

@@ -12,12 +12,10 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 export function AiTasksPreview({
   aiTasks,
   setModalType,
-  isVoiceInput,
   userInput,
 }: {
   aiTasks?: AiTaskDTO[];
   setModalType: (v: BottomSheetType) => void;
-  isVoiceInput: boolean;
   userInput: string;
 }) {
   const { addTask, isAdding } = useTaskMutations();
@@ -34,7 +32,6 @@ export function AiTasksPreview({
           ai_output: JSON.stringify(localTasks),
           user_input: userInput,
           outcome: "abandoned",
-          is_voice_input: isVoiceInput,
           ai_generated_task_count: localTasks?.length ?? 0,
           user_add_task_count: 0,
         });
@@ -68,7 +65,6 @@ export function AiTasksPreview({
         ai_generate_task_count: localTasks?.length ?? 0,
         user_add_task_count: payloads.length ?? 0,
         outcome: "accepted",
-        is_voice_input: isVoiceInput,
       });
 
       setModalType("add-task-success");
@@ -88,7 +84,6 @@ export function AiTasksPreview({
       ai_generate_task_count: localTasks?.length ?? 0,
       outcome: "go_back",
       user_add_task_count: 0,
-      is_voice_input: isVoiceInput,
     });
   };
 

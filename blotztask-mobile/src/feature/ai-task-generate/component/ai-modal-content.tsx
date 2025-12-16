@@ -24,7 +24,6 @@ export const AiModalContent = ({
   setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) => {
   const [text, setText] = useState("");
-  const [isVoiceInput, setIsVoiceInput] = useState(true);
 
   const { labels, isLoading } = useAllLabels();
 
@@ -35,12 +34,7 @@ export const AiModalContent = ({
   switch (modalType) {
     case "task-preview":
       return (
-        <AiTasksPreview
-          aiTasks={aiGeneratedTasks}
-          userInput={text}
-          setModalType={setModalType}
-          isVoiceInput={isVoiceInput}
-        />
+        <AiTasksPreview aiTasks={aiGeneratedTasks} userInput={text} setModalType={setModalType} />
       );
 
     case "add-task-success":
@@ -53,8 +47,6 @@ export const AiModalContent = ({
           text={text}
           setText={setText}
           sendMessage={sendMessage}
-          isVoiceInput={isVoiceInput}
-          setIsVoiceInput={setIsVoiceInput}
           isAiGenerating={isAiGenerating || isLoading}
           aiGeneratedMessage={aiGeneratedMessage}
           setAiGeneratedMessage={setAiGeneratedMessage}
