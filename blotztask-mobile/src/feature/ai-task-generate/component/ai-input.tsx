@@ -10,7 +10,6 @@ import LottieView from "lottie-react-native";
 import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
-import { CloseButton } from "./close-button";
 
 export const AiInput = ({
   text,
