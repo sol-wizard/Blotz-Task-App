@@ -7,6 +7,7 @@ const DetailsView = ({
   taskDescription: string;
   setDescription: (v: string) => void;
 }) => {
+  const hasContent = taskDescription.trim().length > 0;
   return (
     <View className="bg-gray-100 rounded-xl p-4 min-h-80">
       <TextInput
@@ -17,12 +18,22 @@ const DetailsView = ({
         textAlignVertical="top"
         className="font-baloo text-[#3E4A5A] text-base"
         style={{
-          flex: 1,        // 占掉上半空間
+          flex: 1,
         }}
       />
       <View className="mt-3 items-end">
-        <TouchableOpacity className="bg-[#E3EFFE] rounded-2xl px-4 py-2">
-          <Text className="text-xs font-balooBold text-[#3E4A5A]">Save</Text>
+        <TouchableOpacity
+          disabled={!hasContent}
+          className={`
+            rounded-xl px-4 py-2
+            ${hasContent ? "bg-[#9AD513]":"bg-[ #D1D1D6]"}
+          `}
+        >
+          <Text
+            className={`text-xs font-balooBold`}
+          >
+            Save
+          </Text>
         </TouchableOpacity>
       </View>
     </View>

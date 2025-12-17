@@ -114,6 +114,10 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     <View className="flex-1">
       {/* Top Action Bar */}
       <View className="flex-row justify-between items-center mb-4">
+        <Text className="font-balooBold text-xl text-[#3E4A5A]">
+          Subtasks
+        </Text>
+        <View className="flex-row items-center">
         {isEditMode ? (
           <TouchableOpacity onPress={onBack} className="p-2">
             <MaterialIcons name="arrow-back" size={28} />
@@ -135,6 +139,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
             <MaterialIcons name="reorder" size={24} />
           </TouchableOpacity>
         )}
+        </View>
       </View>
 
       {/* Subtasks List */}
