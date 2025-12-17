@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons} from "@expo/vector-icons";
 
 type tabTypes = "Details" | "Subtasks";
 export default function TaskDetailsScreen() {
@@ -116,7 +116,6 @@ export default function TaskDetailsScreen() {
       {/* Tabs Switch*/}
       <View className="flex-1 pt-6 px-6 bg-white rounded-t-[3rem]">
         <View className="flex-row justify-around mb-6">
-          {/* <Text className="text-lg font-balooBold pb-3">Details</Text> */}
           <DetailsView
             taskDescription={descriptionText}
             setDescription={setDescriptionText}
