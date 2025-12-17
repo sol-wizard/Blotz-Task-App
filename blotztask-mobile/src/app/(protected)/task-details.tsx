@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
+import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard, ScrollView } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsView from "../../feature/task-details/components/details-view";
@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 
 type tabTypes = "Details" | "Subtasks";
 export default function TaskDetailsScreen() {
@@ -116,26 +116,23 @@ export default function TaskDetailsScreen() {
       {/* Tabs Switch*/}
       <View className="flex-1 pt-6 px-6 bg-white rounded-t-[3rem]">
         <View className="flex-row justify-around mb-6">
-          <TouchableOpacity onPress={() => setActiveTab("Details")} className="flex-1 items-center">
-            <Text className={"text-lg font-balooBold pb-3"}>Details</Text>
-            {activeTab === "Details" && <View className="w-full h-1 bg-blue-100 rounded-full" />}
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setActiveTab("Subtasks")}
-            className="flex-1 items-center"
-          >
-            <Text className={"text-lg font-balooBold pb-3"}>Subtasks</Text>
-            {activeTab === "Subtasks" && <View className="w-full h-1 bg-blue-100 rounded-full" />}
-          </TouchableOpacity>
+          {/* <Text className="text-lg font-balooBold pb-3">Details</Text> */}
+          <DetailsView
+            taskDescription={descriptionText}
+            setDescription={setDescriptionText}
+          />
+          
         </View>
 
         {/* Render the active tab */}
         <View className="flex-1 px-4">
-          {activeTab === "Details" ? (
+          {/* {activeTab === "Details" ? (
             <DetailsView taskDescription={descriptionText} setDescription={setDescriptionText} />
           ) : (
             <SubtasksView parentTask={selectedTask} />
-          )}
+          )} */}
+
+          <SubtasksView parentTask={selectedTask} />
         </View>
       </View>
     </SafeAreaView>

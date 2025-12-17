@@ -66,14 +66,14 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   // Show initial breakdown view if no subtasks exist yet
   return (
     <View>
-      <View className="mt-4 p-4 bg-background rounded-3xl">
+      {/* <View className="mt-4 p-4 bg-background rounded-3xl">
         <Text className="font-balooBold text-xl text-blue-500">
           {isLoading
             ? "Breaking your tasks into tiny bite-sized pieces~"
             : "Big tasks can feel heavy. Try breaking them into bite-sized actions."}
         </Text>
         <Image source={ASSETS.greenBun} className="w-15 h-15 self-end" />
-      </View>
+      </View> */}
 
       <Pressable
         onPress={handleBreakDown}
