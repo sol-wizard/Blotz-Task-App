@@ -70,7 +70,7 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
       <Pressable
         onPress={handleBreakDown}
         disabled={isLoading}
-        className={`flex-row items-center justify-center self-center mt-8 rounded-3xl h-[55px] w-[180px] ${
+        className={`flex-row items-center justify-center self-center mt-8 rounded-2xl h-[55px] w-full ${
           isLoading ? "bg-gray-300" : "bg-[#EBF0FE] active:bg-gray-100"
         }`}
       >
@@ -79,7 +79,7 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
         ) : (
           <>
             <MaterialCommunityIcons name="format-list-checkbox" size={24} color="#3b82f6" />
-            <Text className="ml-2 text-blue-500 text-xl font-balooBold">Breakdown</Text>
+            <Text className="ml-2 text-blue-500 text-xl font-balooBold">Breakdown Task</Text>
           </>
         )}
       </Pressable>

@@ -117,7 +117,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
         <Text className="font-balooBold text-xl text-[#3E4A5A]">
           Subtasks
         </Text>
-        <View className="flex-row items-center">
+        <View className="flex-row items-center mr-1">
         {isEditMode ? (
           <TouchableOpacity onPress={onBack} className="p-2">
             <MaterialIcons name="arrow-back" size={28} />
