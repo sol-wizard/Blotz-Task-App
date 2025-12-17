@@ -19,7 +19,6 @@ export const AiInput = ({
   isAiGenerating,
   aiGeneratedMessage,
   language,
-  cancelGeneration,
 }: {
   text: string;
   setText: (v: string) => void;
@@ -27,7 +26,6 @@ export const AiInput = ({
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
   language: string;
-  cancelGeneration: () => Promise<void>;
 }) => {
   const { handleStartListening, recognizing, transcript, stopListening } = useSpeechRecognition({
     language,
@@ -113,11 +111,7 @@ export const AiInput = ({
           </View>
         ) : (
           <View className="flex-row items-center mt-4 mb-8 w-full px-2 justify-center">
-            <View className="w-full" />
             <CustomSpinner size={60} style={{ marginRight: 10 }} />
-            <View className="w-full">
-              <CloseButton onPress={cancelGeneration} />
-            </View>
           </View>
         )}
       </View>
