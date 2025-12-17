@@ -1,5 +1,3 @@
-// BlotzTask.Shared/Exceptions/AiTaskGenerationException.cs
-
 using Microsoft.AspNetCore.SignalR;
 
 namespace BlotzTask.Shared.Exceptions;

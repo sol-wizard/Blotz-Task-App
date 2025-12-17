@@ -8,17 +8,18 @@ import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 
 export function AiTasksPreview({
   aiTasks,
   setModalType,
-  isVoiceInput,
   userInput,
+  setAiGeneratedMessage,
 }: {
   aiTasks?: AiTaskDTO[];
   setModalType: (v: BottomSheetType) => void;
-  isVoiceInput: boolean;
   userInput: string;
+  setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) {
   const { addTask, isAdding } = useTaskMutations();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
@@ -34,7 +35,6 @@ export function AiTasksPreview({
           ai_output: JSON.stringify(localTasks),
           user_input: userInput,
           outcome: "abandoned",
-          is_voice_input: isVoiceInput,
           ai_generated_task_count: localTasks?.length ?? 0,
           user_add_task_count: 0,
         });
@@ -68,7 +68,6 @@ export function AiTasksPreview({
         ai_generate_task_count: localTasks?.length ?? 0,
         user_add_task_count: payloads.length ?? 0,
         outcome: "accepted",
-        is_voice_input: isVoiceInput,
       });
 
       setModalType("add-task-success");
@@ -80,6 +79,7 @@ export function AiTasksPreview({
   };
 
   const handleGoBack = () => {
+    setAiGeneratedMessage();
     setModalType("input");
 
     posthog.capture("ai_task_interaction_completed", {
@@ -88,13 +88,12 @@ export function AiTasksPreview({
       ai_generate_task_count: localTasks?.length ?? 0,
       outcome: "go_back",
       user_add_task_count: 0,
-      is_voice_input: isVoiceInput,
     });
   };
 
   return (
     <View className="items-center max-h-[600px]">
-      <ScrollView className="w-full my-4">
+      <ScrollView className="w-full mt-4 mb-8">
         {localTasks?.map((task) => (
           <AiTaskCard
             key={task.id}
@@ -105,7 +104,7 @@ export function AiTasksPreview({
         ))}
       </ScrollView>
 
-      <View className="flex-row justify-center items-center my-4">
+      <View className="flex-row justify-center items-center mt-4 mb-10">
         <Pressable
           onPress={handleGoBack}
           className="w-12 h-12 rounded-full items-center justify-center bg-black mx-8 font-bold"

@@ -6,27 +6,27 @@ import { TaskAddedSuccess } from "./task-added-success";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
-import { AiResultMessageDTO } from "../models/ai-result-message-dto";
+import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 
 export const AiModalContent = ({
   modalType,
   setModalType,
-  aiGeneratedMessage,
-  sendMessage,
-  isAiGenerating,
-  setAiGeneratedMessage,
+  language,
 }: {
   modalType: BottomSheetType;
   setModalType: (type: BottomSheetType) => void;
-  aiGeneratedMessage?: AiResultMessageDTO;
-  sendMessage: (text: string) => Promise<void>;
-  isAiGenerating: boolean;
-  setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
+  language: string;
 }) => {
   const [text, setText] = useState("");
-  const [isVoiceInput, setIsVoiceInput] = useState(true);
 
-  const { labels, isLoading } = useAllLabels();
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+
+  const { aiGeneratedMessage, sendMessage, setAiGeneratedMessage } = useAiTaskGenerator({
+    setIsAiGenerating,
+    setModalType,
+  });
+
+  const { labels } = useAllLabels();
 
   const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map((task) =>
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
@@ -39,7 +39,7 @@ export const AiModalContent = ({
           aiTasks={aiGeneratedTasks}
           userInput={text}
           setModalType={setModalType}
-          isVoiceInput={isVoiceInput}
+          setAiGeneratedMessage={setAiGeneratedMessage}
         />
       );
 
@@ -53,11 +53,9 @@ export const AiModalContent = ({
           text={text}
           setText={setText}
           sendMessage={sendMessage}
-          isVoiceInput={isVoiceInput}
-          setIsVoiceInput={setIsVoiceInput}
-          isAiGenerating={isAiGenerating || isLoading}
+          isAiGenerating={isAiGenerating}
           aiGeneratedMessage={aiGeneratedMessage}
-          setAiGeneratedMessage={setAiGeneratedMessage}
+          language={language}
         />
       );
   }
