@@ -1,7 +1,6 @@
-using System.Text.Json;
+using System.Text.Json; using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Shared.Exceptions;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
@@ -11,14 +10,12 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 public interface IAiTaskGenerateService
 {
     Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct);
-    Task RunAsync(string id, CancellationToken ct);
 }
 
 public class AiTaskGenerateService(
     IChatHistoryManagerService chatHistoryManagerService,
     IChatCompletionService chatCompletionService,
     ILogger<AiTaskGenerateService> logger,
-    IHubContext<AiTaskGenerateChatHub> hub,
     Kernel kernel)
     : IAiTaskGenerateService
 {
@@ -33,7 +30,7 @@ public class AiTaskGenerateService(
                 Temperature = 0.2, // Low temperature for more deterministic, consistent breakdowns
                 ResponseFormat = typeof(AiGenerateMessage) // Enforces structured output via JSON Schema
             };
-
+            
             var chatResults = await chatCompletionService.GetChatMessageContentsAsync(
                 chatHistory,
                 executionSettings,
@@ -42,7 +39,7 @@ public class AiTaskGenerateService(
             );
 
             var functionResultMessage = chatResults.LastOrDefault();
-
+            
             logger.LogInformation(functionResultMessage?.Content);
 
             if (functionResultMessage == null)
@@ -105,27 +102,6 @@ public class AiTaskGenerateService(
             logger.LogWarning("FULL EXCEPTION DETAILS: {ExceptionMessage}", ex.ToString());
             throw new AiTaskGenerationException(AiErrorCode.Unknown,
                 "An unhandled exception occurred during AI task generation.", ex);
-        }
-    }
-
-    public async Task RunAsync(
-        string connectionId,
-        CancellationToken token
-    )
-    {
-        try
-        {
-            var result = await GenerateAiResponse(token);
-
-            if (token.IsCancellationRequested) return;
-
-            await hub.Clients.Client(connectionId)
-                .SendAsync("ReceiveMessage", result);
-        }
-        catch (OperationCanceledException)
-        {
-            await hub.Clients.Client(connectionId)
-                .SendAsync("AiCanceled");
         }
     }
 }
