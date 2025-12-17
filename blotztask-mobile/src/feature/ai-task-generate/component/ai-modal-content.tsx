@@ -27,7 +27,7 @@ export const AiModalContent = ({
       setModalType,
     });
 
-  const { labels, isLoading } = useAllLabels();
+  const { labels } = useAllLabels();
 
   const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map((task) =>
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
@@ -54,7 +54,7 @@ export const AiModalContent = ({
           text={text}
           setText={setText}
           sendMessage={sendMessage}
-          isAiGenerating={isAiGenerating || isLoading}
+          isAiGenerating={isAiGenerating}
           aiGeneratedMessage={aiGeneratedMessage}
           language={language}
           cancelGeneration={cancelGenerationHandler}
