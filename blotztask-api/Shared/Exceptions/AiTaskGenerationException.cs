@@ -26,6 +26,14 @@ public class AiTaskGenerationException : HubException
     public AiErrorCode Code { get; }
 }
 
+public sealed class AiTaskGenerationCanceledException : AiTaskGenerationException
+{
+    public AiTaskGenerationCanceledException(string? message = null, Exception? inner = null)
+        : base(AiErrorCode.Canceled, message ?? "AI task generation was canceled.", inner)
+    {
+    }
+}
+
 public sealed class AiEmptyResponseException
     : AiTaskGenerationException
 {

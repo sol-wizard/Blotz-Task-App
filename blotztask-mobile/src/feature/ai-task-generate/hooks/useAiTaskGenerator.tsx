@@ -44,6 +44,20 @@ export function useAiTaskGenerator({
     }
   };
 
+  const cancelGenerationHandler = async () => {
+    if (!connection) return;
+
+    try {
+      await signalRService.invoke(connection, "CancelGeneration");
+    } catch (e) {
+      console.error("CancelGeneration invoke failed:", e);
+    } finally {
+      setModalType("input");
+      setIsAiGenerating(false);
+      setAiGeneratedMessage(undefined);
+    }
+  };
+
   useEffect(() => {
     let newConnection: signalR.HubConnection | null = null;
     const startConnection = async () => {
@@ -76,5 +90,6 @@ export function useAiTaskGenerator({
     aiGeneratedMessage,
     sendMessage,
     setAiGeneratedMessage,
+    cancelGenerationHandler,
   };
 }

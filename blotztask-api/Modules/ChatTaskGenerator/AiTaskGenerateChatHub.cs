@@ -1,6 +1,4 @@
-using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
-using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -9,6 +7,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 [Authorize]
 public class AiTaskGenerateChatHub : Hub
 {
+    private static CancellationTokenSource? _currentCancellationToken;
     private readonly IAiTaskGenerateService _aiTaskGenerateService;
     private readonly IChatHistoryManagerService _chatHistoryManagerService;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
@@ -63,26 +62,27 @@ public class AiTaskGenerateChatHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task SendMessage(string user, string message)
+    public Task CancelGeneration()
     {
-        try
-        {
-            var ct = Context.ConnectionAborted;
-            var chatHistory = _chatHistoryManagerService.GetChatHistory();
+        _logger.LogInformation("CTS starts to cancel.");
 
-            chatHistory.AddUserMessage(message);
-            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
+        if (_currentCancellationToken == null || _currentCancellationToken.IsCancellationRequested)
+            return Task.CompletedTask;
 
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
-        }
-        catch (AiTaskGenerationException ex)
-        {
-            var aiServiceError = new AiGenerateMessage
-            {
-                IsSuccess = false,
-                ErrorMessage = ex.Message
-            };
-            await Clients.Caller.SendAsync("ReceiveMessage", aiServiceError);
-        }
+        _currentCancellationToken.Cancel();
+        return Task.CompletedTask;
+    }
+
+    public Task SendMessage(string user, string message)
+    {
+        _currentCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(
+            Context.ConnectionAborted
+        );
+
+        var chatHistory = _chatHistoryManagerService.GetChatHistory();
+        chatHistory.AddUserMessage(message);
+        _ = _aiTaskGenerateService.RunAsync(Context.ConnectionId, _currentCancellationToken.Token);
+
+        return Task.CompletedTask;
     }
 }
