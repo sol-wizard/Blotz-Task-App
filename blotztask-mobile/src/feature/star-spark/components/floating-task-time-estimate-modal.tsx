@@ -3,7 +3,8 @@ import Modal from "react-native-modal";
 
 interface Props {
   visible: boolean;
-  onClose: () => void;
+  setIsModalVisible: (v: boolean) => void;
+  pickTime: () => void;
   durationText?: string;
   error?: string | null;
   isEstimating?: boolean;
@@ -11,15 +12,22 @@ interface Props {
 
 export const FloatingTaskTimeEstimateModal = ({
   visible,
-  onClose,
+  setIsModalVisible,
+  pickTime,
   durationText,
   error,
   isEstimating,
 }: Props) => {
+  const handlePickTime = () => {
+    setIsModalVisible(false);
+    pickTime();
+  };
+
+  const handleStartNow = () => {};
   return (
     <Modal
       isVisible={visible}
-      onBackdropPress={onClose}
+      onBackdropPress={() => setIsModalVisible(false)}
       backdropOpacity={0.4}
       animationIn="fadeIn"
       animationOut="fadeOut"
@@ -43,12 +51,12 @@ export const FloatingTaskTimeEstimateModal = ({
               </Text>
 
               <View className="mt-8 flex-row items-center justify-end">
-                <Pressable onPress={onClose}>
+                <Pressable onPress={handlePickTime}>
                   <Text className="text-sm text-primary font-baloo">Pick a time</Text>
                 </Pressable>
 
                 <Pressable
-                  onPress={onClose}
+                  onPress={handleStartNow}
                   className="h-9 px-6 rounded-xl bg-[#9AD513] items-center justify-center ml-6"
                 >
                   <Text className="text-sm text-onSurface font-baloo">Start now</Text>

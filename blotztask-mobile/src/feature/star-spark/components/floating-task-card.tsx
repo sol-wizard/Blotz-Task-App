@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Image, ActivityIndicator} from "react-native";
+import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
 import { FloatingTaskDTO } from "../models/floating-task-dto";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
@@ -6,6 +6,7 @@ import { getLabelIcon } from "../utils/get-label-icon";
 import { useState } from "react";
 import { FloatingTaskTimeEstimateModal } from "./floating-task-time-estimate-modal";
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
+import { router } from "expo-router";
 
 export const FloatingTaskCard = ({
   floatingTask,
@@ -25,17 +26,20 @@ export const FloatingTaskCard = ({
   const iconSource = getLabelIcon(floatingTask.label?.name);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const estimateMutation = useEstimateTaskTime();
-  
+
   const closeModal = () => {
     setIsModalVisible(false);
     estimateMutation.reset();
-  }
+    router.push({
+      pathname: "/task-edit",
+      params: { taskId: String(floatingTask.id) },
+    });
+  };
 
- const handleEstimateTime = (task: FloatingTaskDTO) => {
+  const handleEstimateTime = (task: FloatingTaskDTO) => {
     setIsModalVisible(true);
     estimateMutation.mutate(task);
   };
-
 
   return (
     <View className="mb-4">
@@ -89,12 +93,12 @@ export const FloatingTaskCard = ({
       )}
       <FloatingTaskTimeEstimateModal
         visible={isModalVisible}
+        setIsModalVisible={setIsModalVisible}
         onClose={closeModal}
         durationText={estimateMutation.data?.duration}
         isEstimating={estimateMutation.isPending}
         error={estimateMutation.error ? estimateMutation.error.message : null}
       />
-
     </View>
   );
 };
