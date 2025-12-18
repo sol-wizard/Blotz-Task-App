@@ -2,6 +2,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, View, Pressable } from "react-native";
 import { useState } from "react";
 import { ReturnButton } from "@/shared/components/ui/return-button";
+import { ToggleSwitch } from "@/feature/settings/components/toggle-switch";
 
 export default function TaskHandlingScreen() {
   const [isAutoRolloverEnabled, setIsAutoRolloverEnabled] = useState(false);
@@ -28,18 +29,7 @@ export default function TaskHandlingScreen() {
           </Text>
         </View>
 
-        <Pressable
-          onPress={toggleAutoRollover}
-          className={`w-12 h-7 rounded-full p-1 ${
-            isAutoRolloverEnabled ? "bg-highlight" : "bg-gray-300"
-          }`}
-        >
-          <View
-            className={`w-5 h-5 rounded-full bg-white ${
-              isAutoRolloverEnabled ? "self-end" : "self-start"
-            }`}
-          />
-        </Pressable>
+        <ToggleSwitch value={isAutoRolloverEnabled} onChange={toggleAutoRollover} />
       </View>
     </SafeAreaView>
   );
