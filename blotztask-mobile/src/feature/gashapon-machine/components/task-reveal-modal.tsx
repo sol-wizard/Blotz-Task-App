@@ -1,5 +1,5 @@
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
-import { debugTaskLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
+import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
 import React from "react";
 import { Modal, View, Text, Pressable, Image } from "react-native";
 
@@ -15,13 +15,11 @@ type TaskRevealModalProps = {
 export const TaskRevealModal = ({
   visible,
   task,
-  floatingTasks,
+  onCancel,
   onClose,
   onDoNow,
-  onCancel,
 }: TaskRevealModalProps) => {
-  const imageSource = debugTaskLabelIcon(floatingTasks, task?.id);
-
+  const imageSource = getLabelIcon(task?.label?.name);
   const handleCancel = () => {
     onCancel?.();
     onClose();

@@ -31,14 +31,9 @@ export default function GashaponMachine() {
 
   const { floatingTasks, isLoading } = useFloatingTasks();
 
-  // Set true temporarily to visualize inner walls (helps diagnose leaks/clogs around chute).
-  const DEBUG_WALLS = false;
-
   const MAX_STARS = 30;
 
-  const limitedFloatingTasks = useMemo(() => {
-    return (floatingTasks ?? []).slice(0, MAX_STARS);
-  }, [floatingTasks]);
+  const limitedFloatingTasks = floatingTasks ?? [].slice(0, MAX_STARS);
 
   const handleDoNow = () => {
     console.log("Do it now pressed!");
@@ -68,7 +63,6 @@ export default function GashaponMachine() {
     clearPendingDrop: () => {
       pendingDropRef.current = null;
     },
-    debugWalls: DEBUG_WALLS,
   });
 
   const handleReleaseWithTaskPick = (deltaThisTurn: number) => {
