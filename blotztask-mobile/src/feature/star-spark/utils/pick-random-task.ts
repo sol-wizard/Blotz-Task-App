@@ -1,6 +1,5 @@
 import { FloatingTaskDTO } from "../models/floating-task-dto";
 
-// Pick a random task from the list (ignore label, just return any task)
 export const pickRandomTask = (tasks: FloatingTaskDTO[], labelName: string) => {
   let candidates;
   if (labelName == "no-label") {

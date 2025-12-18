@@ -3,12 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import { createRectangleBetweenPoints } from "../utils/create-rectangle-between-points";
 import { EntityMap } from "../models/entity-map";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
-import { WallRenderer } from "../components/wall-renderer";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
-import { MACHINE_ENTRY_POINT_ENGINE } from "../utils/gashapon-coordinates";
 
 export const useGashaponMachineConfig = ({
   starRadius = 15,
@@ -16,14 +14,12 @@ export const useGashaponMachineConfig = ({
   floatingTasks,
   getPendingDrop,
   clearPendingDrop,
-  debugWalls = false,
 }: {
   starRadius?: number;
   onStarDropped: (payload: { labelName: string; taskId?: number }) => void;
   floatingTasks: FloatingTaskDTO[];
   getPendingDrop?: () => { taskId: number; labelName: string } | null;
   clearPendingDrop?: () => void;
-  debugWalls?: boolean;
 }) => {
   const [entities, setEntities] = useState<EntityMap>({});
 
@@ -130,11 +126,6 @@ export const useGashaponMachineConfig = ({
         const labelName = getLabelNameByDroppedStarIndex();
         const entityKey = getStarEntityKey(idx);
 
-        // Respawn at the machine top entry so the user can see it drop back into the pile,
-        // but guide it towards a random point inside the pile zone.
-        const spawnX = MACHINE_ENTRY_POINT_ENGINE.x;
-        const spawnY = MACHINE_ENTRY_POINT_ENGINE.y;
-
         // Pile zone (engine coordinates)
         const pileLeft = 70;
         const pileRight = 330;
@@ -143,8 +134,8 @@ export const useGashaponMachineConfig = ({
         const targetX = pileLeft + Math.random() * (pileRight - pileLeft);
         const targetY = pileTop + Math.random() * (pileBottom - pileTop);
 
-        const x = spawnX;
-        const y = spawnY;
+        const x = 140;
+        const y = 250;
 
         if (!star) {
           console.warn(`Star body missing for index ${idx}, recreating.`);
@@ -315,15 +306,6 @@ export const useGashaponMachineConfig = ({
         world: world,
       },
     };
-
-    if (debugWalls) {
-      wallBodies.forEach((wall) => {
-        newEntities[wall.label] = {
-          body: wall,
-          renderer: WallRenderer,
-        };
-      });
-    }
 
     stars.forEach((star, idx) => {
       const labelName = getLabelNameByIndex(idx);

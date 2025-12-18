@@ -30,11 +30,9 @@ export const cleanupSystem = (entities: EntityMap) => {
       const y = entity.body.position.y;
 
       if (y > thresholdY) {
-        const stillInWorld = world.bodies.includes(entity.body);
-        if (!stillInWorld) {
-          console.log(`🧹 Removing dropped star entity (body already removed): ${key}`);
-          delete entities[key];
-        }
+        console.log(`🧹 Removing dropped star: ${key}`);
+
+        delete entities[key];
       }
     }
   });
