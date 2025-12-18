@@ -12,11 +12,9 @@ export const useGashaponMachineConfig = ({
   starRadius = 15,
   onStarDropped,
   floatingTasks,
-  getPendingDrop,
-  clearPendingDrop,
 }: {
   starRadius?: number;
-  onStarDropped: (payload: { labelName: string; taskId?: number }) => void;
+  onStarDropped: (labelName: string) => void;
   floatingTasks: FloatingTaskDTO[];
   getPendingDrop?: () => { taskId: number; labelName: string } | null;
   clearPendingDrop?: () => void;
@@ -304,28 +302,15 @@ export const useGashaponMachineConfig = ({
           }
           console.log(`⚡ Star ${star.label} passed sensor, removing`);
           const starIndex = starsRef.current.indexOf(star);
-          if (starIndex < 0) {
-            console.warn(`Star ${star.label} not found in starsRef; ignoring sensor event.`);
-            return;
-          }
-          const pending = getPendingDrop?.() ?? null;
-          const fallbackLabelName = getLabelNameByIndex(starIndex);
-          const fallbackTaskId = floatingTasksRef.current[starIndex]?.id;
-          const labelName = pending?.labelName ?? fallbackLabelName;
-          const taskId = pending?.taskId ?? fallbackTaskId;
+          const labelName = getLabelNameByIndex(starIndex);
 
           // Save the index of the star for later reset
           droppedStarIndexRef.current = starIndex;
           // Save the label for return animation (even if task list changes)
           droppedStarLabelRef.current = labelName;
 
-          console.log(
-            `Dropped star index ${starIndex} label ${labelName} taskId ${taskId ?? "n/a"}`,
-          );
-
           closeGate();
-          onStarDropped({ labelName, taskId });
-          clearPendingDrop?.();
+          onStarDropped(labelName);
 
           transition("revealed", "sensorDrop");
 

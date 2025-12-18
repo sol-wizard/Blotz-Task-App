@@ -24,7 +24,6 @@ export default function GashaponMachine() {
   const [returnStarTrigger, setReturnStarTrigger] = useState(0);
   const [starLabelName, setStarLabelName] = useState("");
   const [randomTask, setRandomTask] = useState<FloatingTaskDTO | null>(null);
-  const pendingDropRef = useRef<{ taskId: number; labelName: string } | null>(null);
 
   // Prevent late/duplicate return-animation completions from triggering physics reset
   const latestReturnTriggerRef = useRef(0);
@@ -40,9 +39,9 @@ export default function GashaponMachine() {
     console.log("Do it now pressed!");
   };
 
-  const handleStarDropped = (payload: { labelName: string; taskId?: number }) => {
-    setStarLabelName(payload.labelName);
-    const randomTask = (floatingTasks ?? []).find((t) => t.id === payload.taskId) ?? null;
+  const handleStarDropped = (starLabelName: string) => {
+    setStarLabelName(starLabelName);
+    const randomTask = pickRandomTask(floatingTasks ?? [], starLabelName);
     setRandomTask(randomTask);
     setDropStarTrigger((prev) => prev + 1);
   };
@@ -50,22 +49,7 @@ export default function GashaponMachine() {
   const { entities, handleRelease, resetStarsPhysics, beginReturnFlow } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
     floatingTasks: limitedFloatingTasks,
-    getPendingDrop: () => pendingDropRef.current,
-    clearPendingDrop: () => {
-      pendingDropRef.current = null;
-    },
   });
-
-  const handleReleaseWithTaskPick = (deltaThisTurn: number) => {
-    // Pick the next task BEFORE the ball drops, to guarantee a labeled star.
-    if (!pendingDropRef.current && limitedFloatingTasks.length > 0) {
-      const t = pickRandomTask(limitedFloatingTasks);
-      if (t?.id && t.label?.name) {
-        pendingDropRef.current = { taskId: t.id, labelName: t.label.name };
-      }
-    }
-    handleRelease(deltaThisTurn);
-  };
 
   const handleCancel = () => {
     beginReturnFlow();
@@ -158,10 +142,7 @@ export default function GashaponMachine() {
             onLoad={() => setEyesPicLoaded(true)}
           />
 
-          <MachineButton
-            setButtonPicLoaded={setButtonPicLoaded}
-            onRelease={handleReleaseWithTaskPick}
-          />
+          <MachineButton setButtonPicLoaded={setButtonPicLoaded} onRelease={handleRelease} />
         </View>
 
         <DroppedStar

@@ -1,6 +1,6 @@
 import { FloatingTaskDTO } from "../models/floating-task-dto";
 
-export const pickRandomTask = (tasks: FloatingTaskDTO[], labelName?: string) => {
+export const pickRandomTask = (tasks: FloatingTaskDTO[], labelName: string) => {
   let candidates;
   if (labelName == "no-label") {
     candidates = tasks.filter((t) => t.label === null);
