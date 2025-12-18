@@ -8,11 +8,12 @@ const DateItem = ({ label, value }: { label: string; value?: string }) => {
     if (!val) return "-";
 
     const d = new Date(val);
+    const time = format(d, "HH:mm");
 
-    if (isToday(d)) return "Today";
-    if (isTomorrow(d)) return "Tomorrow";
+    if (isToday(d)) return `Today ${time}`;
+    if (isTomorrow(d)) return `Tomorrow ${time}`;
 
-    return format(d, "dd/MM/yyyy hh:mm a");
+    return format(d, "MMM d H:mm");
   };
 
   return (
@@ -29,6 +30,18 @@ const DateItem = ({ label, value }: { label: string; value?: string }) => {
 };
 
 const TaskDateRange = ({ startTime, endTime }: { startTime?: string; endTime?: string }) => {
+  const isSingleTime = !startTime || !endTime || startTime === endTime;
+
+  if (isSingleTime) {
+    const single = startTime ?? endTime;
+
+    return (
+      <View className="flex-row items-start mb-8">
+        <DateItem label="Time" value={single} />
+      </View>
+    );
+  }
+
   return (
     <View className="flex-row items-start mb-8">
       <DateItem label="Start from" value={startTime} />
