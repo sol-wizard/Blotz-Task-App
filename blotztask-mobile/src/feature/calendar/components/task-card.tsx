@@ -21,7 +21,7 @@ import { router } from "expo-router";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
-import { convertSubtaskTimeForm } from "@/feature/task-details/utils/convert-subtask-time-form";
+import { convertDurationToText } from "@/shared/util/convert-duration";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 
 const ACTION_WIDTH = 64;
@@ -264,7 +264,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                       {/* Subtask Duration */}
                       {subtask.duration && (
                         <Text className="text-sm text-gray-400 font-baloo ml-2">
-                          {convertSubtaskTimeForm(subtask.duration)}
+                          {convertDurationToText(subtask.duration)}
                         </Text>
                       )}
                     </Pressable>
