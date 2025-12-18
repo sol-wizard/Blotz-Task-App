@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text, View, Pressable } from "react-native";
+import { Text, View } from "react-native";
 import { useState } from "react";
 import { ReturnButton } from "@/shared/components/ui/return-button";
 import { ToggleSwitch } from "@/feature/settings/components/toggle-switch";
