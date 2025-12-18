@@ -7,7 +7,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FormDivider } from "@/shared/components/ui/form-divider";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
-import { useLogout } from "@/shared/hooks/useLogout";
+import { useLogout } from "@/shared/hooks/uselogout";
 
 export default function AccountScreen() {
   const logout = useLogout();
