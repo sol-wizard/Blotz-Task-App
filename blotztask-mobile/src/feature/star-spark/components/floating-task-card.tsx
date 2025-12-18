@@ -10,6 +10,7 @@ import { router } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { TaskTimeType } from "@/shared/models/task-detail-dto";
+import { convertDurationToMinutes, convertDurationToText } from "@/shared/util/convert-duration";
 
 export const FloatingTaskCard = ({
   floatingTask,
@@ -28,11 +29,11 @@ export const FloatingTaskCard = ({
 }) => {
   const iconSource = getLabelIcon(floatingTask.label?.name);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const estimateMutation = useEstimateTaskTime();
+
   const { updateTask } = useTaskMutations();
+  const { estimateTime, isEstimating, timeResult, estimateError } = useEstimateTaskTime();
 
   const pickTime = () => {
-    estimateMutation.reset();
     router.push({
       pathname: "/task-edit",
       params: { taskId: String(floatingTask.id) },
@@ -41,11 +42,11 @@ export const FloatingTaskCard = ({
 
   const handleEstimateTime = (task: FloatingTaskDTO) => {
     setIsModalVisible(true);
-    estimateMutation.mutate(task);
+    estimateTime(task);
   };
 
   const handleStartNow = async () => {
-    const durationMinutes = estimateMutation.data?.durationMinutes;
+    const durationMinutes = convertDurationToMinutes(timeResult ?? "");
     if (durationMinutes === undefined) return;
 
     const startTime = new Date();
@@ -118,9 +119,9 @@ export const FloatingTaskCard = ({
         pickTime={pickTime}
         handleStartNow={handleStartNow}
         setIsModalVisible={setIsModalVisible}
-        durationText={estimateMutation.data?.durationText}
-        isEstimating={estimateMutation.isPending}
-        error={estimateMutation.error ? estimateMutation.error.message : null}
+        durationText={convertDurationToText(timeResult ?? "")}
+        isEstimating={isEstimating}
+        error={estimateError ? estimateError.message : null}
       />
     </View>
   );
