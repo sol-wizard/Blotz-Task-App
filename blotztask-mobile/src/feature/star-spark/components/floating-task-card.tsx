@@ -1,12 +1,15 @@
 import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
 import { FloatingTaskDTO } from "../models/floating-task-dto";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { format } from "date-fns";
+import { addMinutes, format } from "date-fns";
 import { getLabelIcon } from "../utils/get-label-icon";
 import { useState } from "react";
 import { FloatingTaskTimeEstimateModal } from "./floating-task-time-estimate-modal";
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
 import { router } from "expo-router";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
+import { TaskTimeType } from "@/shared/models/task-detail-dto";
 
 export const FloatingTaskCard = ({
   floatingTask,
@@ -26,9 +29,9 @@ export const FloatingTaskCard = ({
   const iconSource = getLabelIcon(floatingTask.label?.name);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const estimateMutation = useEstimateTaskTime();
+  const { updateTask } = useTaskMutations();
 
-  const closeModal = () => {
-    setIsModalVisible(false);
+  const pickTime = () => {
     estimateMutation.reset();
     router.push({
       pathname: "/task-edit",
@@ -41,6 +44,25 @@ export const FloatingTaskCard = ({
     estimateMutation.mutate(task);
   };
 
+  const handleStartNow = async () => {
+    const durationMinutes = estimateMutation.data?.durationMinutes;
+    if (durationMinutes === undefined) return;
+
+    const startTime = new Date();
+    const endTime = addMinutes(startTime, durationMinutes);
+
+    await updateTask({
+      id: floatingTask.id,
+      title: floatingTask.title,
+      description: floatingTask.description,
+      startTime: convertToDateTimeOffset(startTime),
+      endTime: convertToDateTimeOffset(endTime),
+      labelId: floatingTask.label?.labelId,
+      timeType: TaskTimeType.Range,
+    });
+
+    setIsModalVisible(false);
+  };
   return (
     <View className="mb-4">
       <Pressable
@@ -93,9 +115,10 @@ export const FloatingTaskCard = ({
       )}
       <FloatingTaskTimeEstimateModal
         visible={isModalVisible}
+        pickTime={pickTime}
+        handleStartNow={handleStartNow}
         setIsModalVisible={setIsModalVisible}
-        onClose={closeModal}
-        durationText={estimateMutation.data?.duration}
+        durationText={estimateMutation.data?.durationText}
         isEstimating={estimateMutation.isPending}
         error={estimateMutation.error ? estimateMutation.error.message : null}
       />

@@ -5,6 +5,7 @@ interface Props {
   visible: boolean;
   setIsModalVisible: (v: boolean) => void;
   pickTime: () => void;
+  handleStartNow: () => void;
   durationText?: string;
   error?: string | null;
   isEstimating?: boolean;
@@ -15,6 +16,7 @@ export const FloatingTaskTimeEstimateModal = ({
   setIsModalVisible,
   pickTime,
   durationText,
+  handleStartNow,
   error,
   isEstimating,
 }: Props) => {
@@ -23,7 +25,6 @@ export const FloatingTaskTimeEstimateModal = ({
     pickTime();
   };
 
-  const handleStartNow = () => {};
   return (
     <Modal
       isVisible={visible}
@@ -73,7 +74,7 @@ export const FloatingTaskTimeEstimateModal = ({
                 Could not estimate time, please try again later.
               </Text>
 
-              <Pressable onPress={onClose} className="items-center">
+              <Pressable onPress={() => setIsModalVisible(false)} className="items-center">
                 <Text className="text-sm text-gray-400 font-balooThin">Dismiss</Text>
               </Pressable>
             </>
