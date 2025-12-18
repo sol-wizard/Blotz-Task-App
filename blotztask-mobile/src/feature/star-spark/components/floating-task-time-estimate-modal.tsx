@@ -48,7 +48,7 @@ export const FloatingTaskTimeEstimateModal = ({
             <>
               <Text className="text-xl leading-6 text-onSurface font-baloo">
                 We&apos;ve estimated this task will take around{" "}
-                <Text className="text-[#9AD513]">{durationText}</Text>. You can do it now!
+                <Text className="text-highlight">{durationText}</Text>. You can do it now!
               </Text>
 
               <View className="mt-8 flex-row items-center justify-end">
@@ -58,7 +58,7 @@ export const FloatingTaskTimeEstimateModal = ({
 
                 <Pressable
                   onPress={handleStartNow}
-                  className="h-9 px-6 rounded-xl bg-[#9AD513] items-center justify-center ml-6"
+                  className="h-9 px-6 rounded-xl bg-highlight items-center justify-center ml-6"
                 >
                   <Text className="text-sm text-onSurface font-baloo">Start now</Text>
                 </Pressable>
