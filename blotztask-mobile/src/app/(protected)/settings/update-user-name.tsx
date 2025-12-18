@@ -39,7 +39,7 @@ export default function UpdateUserNameScreen() {
         <Pressable
           disabled={!doneEnabled || isUserUpdating}
           onPress={handleUpdate}
-          className={`rounded-lg px-3 py-2 ${doneEnabled ? "bg-[#9AD513]" : "bg-gray-200"} ${
+          className={`rounded-lg px-3 py-2 ${doneEnabled ? "bg-highlight" : "bg-gray-200"} ${
             isUserUpdating ? "opacity-70" : ""
           }`}
         >

@@ -28,7 +28,7 @@ const menuItems: SettingsMenuItem[] = [
   },
   {
     key: "under-development",
-    label: "Under Development",
+    label: "All tasks page (beta)",
     icon: "cog-outline",
     route: "/(protected)/settings/all-tasks",
   },

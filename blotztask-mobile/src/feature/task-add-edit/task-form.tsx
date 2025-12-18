@@ -95,8 +95,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
     const alertTime = calculateAlertTime(data.startTime, data.alert);
     const submitTask: AddTaskItemDTO = {
-      title: data.title,
-      description: data.description ?? undefined,
+      title: data.title.trim(),
+      description: data.description?.trim() ?? undefined,
       startTime: startTime ? convertToDateTimeOffset(startTime) : undefined,
       endTime: endTime ? convertToDateTimeOffset(endTime) : undefined,
       labelId: data.labelId ?? undefined,

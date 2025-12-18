@@ -1,4 +1,4 @@
-export function convertSubtaskTimeForm(timeStr: string): string {
+export function convertDurationToText(timeStr: string): string {
   const [hours, minutes, seconds] = timeStr.split(":").map(Number);
 
   if (minutes === 0 && seconds === 0) {
@@ -11,3 +11,8 @@ export function convertSubtaskTimeForm(timeStr: string): string {
     return `${hours > 0 ? hours + "h " : ""}${minutes > 0 ? minutes + "min" : ""}`;
   }
 }
+
+export const convertDurationToMinutes = (duration: string): number => {
+  const [hours, minutes, seconds] = duration.split(":").map(Number);
+  return hours * 60 + minutes + Math.ceil(seconds / 60);
+};

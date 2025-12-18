@@ -1,13 +1,13 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Pressable, Text, View } from "react-native";
 import { ReturnButton } from "@/shared/components/ui/return-button";
-import { useLogout } from "@/shared/hooks/uselogout";
 import { usePostHog } from "posthog-react-native";
 import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FormDivider } from "@/shared/components/ui/form-divider";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
+import { useLogout } from "@/shared/hooks/useLogout";
 
 export default function AccountScreen() {
   const logout = useLogout();
