@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
 import { theme } from "@/shared/constants/theme";
-import { convertSubtaskTimeForm } from "../utils/convert-subtask-time-form";
+import { convertDurationToText } from "../../../shared/util/convert-duration";
 
 type SubtaskItemData = {
   id: number;
@@ -64,7 +64,7 @@ export default function SubtaskItem({
 
       <View className="text-sm min-w-[50px] px-2 py-1 rounded bg-blue-100 items-center justify-center">
         <Text className="text-sm font-baloo font-bold text-black">
-          {subtask.duration ? convertSubtaskTimeForm(subtask.duration) : ""}
+          {subtask.duration ? convertDurationToText(subtask.duration) : ""}
         </Text>
       </View>
 
