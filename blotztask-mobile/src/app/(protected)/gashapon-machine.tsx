@@ -10,7 +10,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { TaskRevealModal } from "@/feature/gashapon-machine/components/task-reveal-modal";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
-import { ReturningStarAnimations } from "@/feature/gashapon-machine/components/returning-star";
 import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
 import { pickRandomTask } from "@/feature/gashapon-machine/utils/pick-random-task";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
@@ -21,7 +20,6 @@ export default function GashaponMachine() {
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
-  const [returnStarTrigger, setReturnStarTrigger] = useState(0);
   const [starLabelName, setStarLabelName] = useState("");
   const [randomTask, setRandomTask] = useState<FloatingTaskDTO | null>(null);
 
@@ -49,11 +47,7 @@ export default function GashaponMachine() {
   });
 
   const handleCancel = () => {
-    setReturnStarTrigger((prev) => prev + 1);
     setModalVisible(false);
-  };
-
-  const handleReturnAnimationComplete = () => {
     resetStarsPhysics();
   };
 
@@ -135,12 +129,6 @@ export default function GashaponMachine() {
           setTaskRevealModalVisible={() => {
             setModalVisible(true);
           }}
-        />
-
-        <ReturningStarAnimations
-          starLabelName={starLabelName}
-          trigger={returnStarTrigger}
-          onAnimationComplete={handleReturnAnimationComplete}
         />
       </SafeAreaView>
     </LinearGradient>

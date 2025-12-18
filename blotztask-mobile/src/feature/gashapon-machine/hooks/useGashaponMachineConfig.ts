@@ -31,7 +31,6 @@ export const useGashaponMachineConfig = ({
   const droppedStarLabelRef = useRef<string>(""); // save the label of the dropped star for return animation
   const floatingTasksRef = useRef<FloatingTaskDTO[]>([]);
 
-  const isResettingRef = useRef(false);
   const machineStateRef = useRef<MachineState>("idle");
 
   const transition = (next: MachineState, reason: string) => {
@@ -88,8 +87,6 @@ export const useGashaponMachineConfig = ({
       return;
     }
 
-    isResettingRef.current = true;
-
     const world = worldRef.current;
     const starRadius = 15;
 
@@ -100,6 +97,7 @@ export const useGashaponMachineConfig = ({
 
     if (droppedStarIndexRef.current >= 0) {
       const idx = droppedStarIndexRef.current;
+      const labelToRestore = getLabelNameByDroppedStarIndex();
       let star = starsRef.current[idx];
       const entityKey = getStarEntityKey(idx);
       const x = 140;
@@ -131,10 +129,9 @@ export const useGashaponMachineConfig = ({
       Matter.Sleeping.set(star, false);
 
       setEntities((prevEntities) => {
-        const labelName = getLabelNameByDroppedStarIndex();
         prevEntities[entityKey] = {
           body: star,
-          texture: getLabelIcon(labelName),
+          texture: getLabelIcon(labelToRestore),
           renderer: CapsuleToyRenderer,
         };
         return prevEntities;
