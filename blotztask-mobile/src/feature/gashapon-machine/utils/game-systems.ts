@@ -23,7 +23,6 @@ export const cleanupSystem = (entities: EntityMap) => {
   if (!physics) return entities;
 
   const thresholdY = 449;
-  const world = physics.world;
 
   Object.entries(entities).forEach(([key, entity]) => {
     if (isGameEntity(entity) && entity.body.label.startsWith("star")) {

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { View, Image } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";

@@ -21,8 +21,6 @@ export const ReturningStarAnimations: React.FC<ReturningStarProps> = ({
   const latestTriggerRef = useRef<number>(0);
   const completionFiredForTriggerRef = useRef<number>(0);
 
-  const rewardTranslateX = useRef(new Animated.Value(0)).current;
-  const rewardTranslateY = useRef(new Animated.Value(0)).current;
   const rewardScale = useRef(new Animated.Value(1)).current;
   const rewardRotate = useRef(new Animated.Value(0)).current;
   const rewardOpacity = useRef(new Animated.Value(1)).current;
@@ -47,8 +45,6 @@ export const ReturningStarAnimations: React.FC<ReturningStarProps> = ({
     setIsAnimating(true);
 
     // Start from screen center (where modal was)
-    rewardTranslateX.setValue(0);
-    rewardTranslateY.setValue(0);
     rewardScale.setValue(1);
     rewardRotate.setValue(0);
     rewardOpacity.setValue(1);
@@ -102,16 +98,7 @@ export const ReturningStarAnimations: React.FC<ReturningStarProps> = ({
     return () => {
       animation.stop();
     };
-  }, [
-    trigger,
-    starLabelName,
-    onAnimationComplete,
-    rewardRotate,
-    rewardScale,
-    rewardTranslateX,
-    rewardTranslateY,
-    rewardOpacity,
-  ]);
+  }, [trigger, starLabelName, onAnimationComplete, rewardRotate, rewardScale, rewardOpacity]);
 
   if (!isAnimating) return null;
 
@@ -128,12 +115,7 @@ export const ReturningStarAnimations: React.FC<ReturningStarProps> = ({
             top: SCREEN_HEIGHT / 2 - 50,
             zIndex: 30,
             opacity: rewardOpacity,
-            transform: [
-              { translateX: rewardTranslateX },
-              { translateY: rewardTranslateY },
-              { scale: rewardScale },
-              { rotate },
-            ],
+            transform: [{ scale: rewardScale }, { rotate }],
             shadowColor: "#FFFFFF",
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.7,

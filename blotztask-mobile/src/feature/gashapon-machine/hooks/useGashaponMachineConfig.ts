@@ -29,12 +29,9 @@ export const useGashaponMachineConfig = ({
   const worldRef = useRef<Matter.World | null>(null);
   const starsRef = useRef<Matter.Body[]>([]);
   const isGateOpenRef = useRef(false);
-  const starPassedRef = useRef(false);
   const droppedStarIndexRef = useRef<number>(-1); // save the original index of the dropped star
   const droppedStarLabelRef = useRef<string>(""); // save the label of the dropped star for return animation
-  const droppedTaskIdRef = useRef<number>(-1); // save the ID of the dropped task
   const floatingTasksRef = useRef<FloatingTaskDTO[]>([]);
-  const starLabelsRef = useRef<string[]>([]);
 
   const isResettingRef = useRef(false);
   const machineStateRef = useRef<MachineState>("idle");
@@ -48,7 +45,6 @@ export const useGashaponMachineConfig = ({
   };
 
   const getLabelNameByIndex = (idx: number) => {
-    if (starLabelsRef.current[idx]) return starLabelsRef.current[idx];
     const task = floatingTasksRef.current[idx];
     // Handle both camelCase (label.name) and PascalCase (Label.Name) from API
     const label = (task as any)?.label ?? (task as any)?.Label;
@@ -83,7 +79,6 @@ export const useGashaponMachineConfig = ({
       console.log("close gate");
       Matter.Body.translate(gateRef.current, { x: 60, y: 0 });
       isGateOpenRef.current = false;
-      starPassedRef.current = false;
     }
   };
 
@@ -149,26 +144,17 @@ export const useGashaponMachineConfig = ({
           starsRef.current[idx] = star;
         }
 
-        console.log(`Resetting star ${star.label} at original index ${idx}, position (${x}, ${y})`);
+        console.log(`Resetting star ${star.label} at original index ${idx}`);
 
-        // Re-add to world
+        // Re-add to world if needed
         if (!world.bodies.includes(star)) {
-          console.log(`Re-adding ${star.label} to world`);
           Matter.World.add(world, star);
         }
 
-        // Reset physics properties - drop from top and try to land in a random area within the pile
+        // Reset physics properties - drop from top and land inside the machine
         Matter.Body.setPosition(star, { x, y });
-
-        // Approximate time to fall to targetY: t ~= sqrt(2*dy/g)
-        // Use initial vx to drift towards targetX during the fall.
-        const dy = Math.max(80, targetY - y);
-        const g = Math.max(0.1, (world as any)?.gravity?.y ?? 0.6);
-        const t = Math.sqrt((2 * dy) / g);
-        const vxRaw = (targetX - x) / Math.max(0.1, t);
-        const vx = Math.max(-6, Math.min(6, vxRaw));
-
-        Matter.Body.setVelocity(star, { x: vx, y: 0 });
+        // Fall by gravity
+        Matter.Body.setVelocity(star, { x: 0, y: 0 });
         Matter.Body.setAngularVelocity(star, 0);
         Matter.Sleeping.set(star, false);
 
@@ -178,9 +164,6 @@ export const useGashaponMachineConfig = ({
           texture: getLabelIcon(labelName),
           renderer: CapsuleToyRenderer,
         };
-        console.log(`Re-created entity for ${entityKey} with label ${labelName}`);
-        console.log(`Star body position after reset: (${star.position.x}, ${star.position.y})`);
-        console.log(`Star body in world: ${world.bodies.includes(star)}`);
       }
 
       return prevEntities; // Return same reference for GameEngine
@@ -188,10 +171,8 @@ export const useGashaponMachineConfig = ({
 
     // Clear index AFTER setEntities completes
     setTimeout(() => {
-      starPassedRef.current = false;
       droppedStarIndexRef.current = -1;
       droppedStarLabelRef.current = "";
-      droppedTaskIdRef.current = -1;
       closeGate();
       console.log("Reset complete, gate closed");
 
@@ -216,12 +197,6 @@ export const useGashaponMachineConfig = ({
     }
 
     floatingTasksRef.current = floatingTasks;
-    starLabelsRef.current = floatingTasks.map((task, idx) => {
-      // Handle both camelCase (label.name) and PascalCase (Label.Name) from API
-      const label = (task as any)?.label ?? (task as any)?.Label;
-      const labelName = label?.name ?? label?.Name ?? "no-label";
-      return labelName;
-    });
 
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
@@ -351,14 +326,11 @@ export const useGashaponMachineConfig = ({
           droppedStarIndexRef.current = starIndex;
           // Save the label for return animation (even if task list changes)
           droppedStarLabelRef.current = labelName;
-          // Save the task ID
-          droppedTaskIdRef.current = taskId ?? -1;
 
           console.log(
             `Dropped star index ${starIndex} label ${labelName} taskId ${taskId ?? "n/a"}`,
           );
 
-          starPassedRef.current = true;
           closeGate();
           onStarDropped({ labelName, taskId });
           clearPendingDrop?.();
