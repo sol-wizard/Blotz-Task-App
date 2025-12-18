@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { View, Image } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,7 +12,7 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { ReturningStarAnimations } from "@/feature/gashapon-machine/components/returning-star";
 import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
-import { pickRandomTask } from "@/feature/star-spark/utils/pick-random-task";
+import { pickRandomTask } from "@/feature/gashapon-machine/utils/pick-random-task";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 
 export default function GashaponMachine() {
@@ -25,10 +25,6 @@ export default function GashaponMachine() {
   const [starLabelName, setStarLabelName] = useState("");
   const [randomTask, setRandomTask] = useState<FloatingTaskDTO | null>(null);
 
-  // Prevent late/duplicate return-animation completions from triggering physics reset
-  const latestReturnTriggerRef = useRef(0);
-  const returnResetConsumedRef = useRef(true);
-
   const { floatingTasks, isLoading } = useFloatingTasks();
 
   const MAX_STARS = 30;
@@ -37,6 +33,7 @@ export default function GashaponMachine() {
 
   const handleDoNow = () => {
     console.log("Do it now pressed!");
+    setModalVisible(false);
   };
 
   const handleStarDropped = (starLabelName: string) => {
@@ -46,29 +43,18 @@ export default function GashaponMachine() {
     setDropStarTrigger((prev) => prev + 1);
   };
 
-  const { entities, handleRelease, resetStarsPhysics, beginReturnFlow } = useGashaponMachineConfig({
+  const { entities, handleRelease, resetStarsPhysics } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
     floatingTasks: limitedFloatingTasks,
   });
 
   const handleCancel = () => {
-    beginReturnFlow();
-    setReturnStarTrigger((prev) => {
-      const next = prev + 1;
-      latestReturnTriggerRef.current = next;
-      returnResetConsumedRef.current = false;
-      return next;
-    });
+    setReturnStarTrigger((prev) => prev + 1);
     setModalVisible(false);
   };
 
   const handleReturnAnimationComplete = () => {
-    // Only allow one reset per Cancel trigger
-    if (returnResetConsumedRef.current) return;
-    returnResetConsumedRef.current = true;
     resetStarsPhysics();
-    setStarLabelName("");
-    setRandomTask(null);
   };
 
   const gameEngineReady = !!entities.physics;
@@ -86,8 +72,6 @@ export default function GashaponMachine() {
         <TaskRevealModal
           visible={isModalVisible}
           task={randomTask}
-          floatingTasks={floatingTasks ?? []}
-          onClose={() => setModalVisible(false)}
           onDoNow={handleDoNow}
           onCancel={handleCancel}
         />

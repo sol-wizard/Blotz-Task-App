@@ -83,20 +83,6 @@ export const useGashaponMachineConfig = ({
   const resetStarsPhysics = () => {
     if (!worldRef.current) return;
 
-    // Prevent re-entrancy and avoid resetting during/just after a new drop/spin.
-    if (isResettingRef.current) {
-      console.warn("resetStarsPhysics already running; skipping.");
-      return;
-    }
-
-    // Only allow reset as part of the explicit return flow.
-    if (machineStateRef.current !== "returning") {
-      console.warn(
-        `resetStarsPhysics called while state=${machineStateRef.current}; skipping reset to prevent state bleed.`,
-      );
-      return;
-    }
-
     if (droppedStarIndexRef.current < 0) {
       console.warn("No dropped star index recorded; skipping reset.");
       return;
@@ -111,74 +97,54 @@ export const useGashaponMachineConfig = ({
 
     // Directly mutate entities instead of creating new object
     // GameEngine holds reference to entities, so mutation updates it
-    setEntities((prevEntities) => {
-      // 如果有保存的索引，用索引直接获取
-      if (droppedStarIndexRef.current >= 0) {
-        const idx = droppedStarIndexRef.current;
-        let star = starsRef.current[idx];
+
+    if (droppedStarIndexRef.current >= 0) {
+      const idx = droppedStarIndexRef.current;
+      let star = starsRef.current[idx];
+      const entityKey = getStarEntityKey(idx);
+      const x = 140;
+      const y = 250;
+
+      if (!star) {
+        console.warn(`Star body missing for index ${idx}, recreating.`);
+        star = Matter.Bodies.circle(x, y, starRadius, {
+          restitution: 0.4,
+          friction: 0.05,
+          frictionStatic: 0.2,
+          frictionAir: 0.01,
+          label: entityKey,
+        });
+        starsRef.current[idx] = star;
+      }
+
+      console.log(`Resetting star ${star.label} at original index ${idx}`);
+
+      // Re-add to world if needed
+      if (!world.bodies.includes(star)) {
+        Matter.World.add(world, star);
+      }
+
+      // Reset physics properties - drop from top and land inside the machine
+      Matter.Body.setPosition(star, { x, y });
+      Matter.Body.setVelocity(star, { x: 0, y: 0 });
+      Matter.Body.setAngularVelocity(star, 0);
+      Matter.Sleeping.set(star, false);
+
+      setEntities((prevEntities) => {
         const labelName = getLabelNameByDroppedStarIndex();
-        const entityKey = getStarEntityKey(idx);
-
-        const x = 140;
-        const y = 250;
-
-        if (!star) {
-          console.warn(`Star body missing for index ${idx}, recreating.`);
-          star = Matter.Bodies.circle(x, y, starRadius, {
-            restitution: 0.4,
-            friction: 0.05,
-            frictionStatic: 0.2,
-            frictionAir: 0.01,
-            label: entityKey,
-          });
-          starsRef.current[idx] = star;
-        }
-
-        console.log(`Resetting star ${star.label} at original index ${idx}`);
-
-        // Re-add to world if needed
-        if (!world.bodies.includes(star)) {
-          Matter.World.add(world, star);
-        }
-
-        // Reset physics properties - drop from top and land inside the machine
-        Matter.Body.setPosition(star, { x, y });
-        // Fall by gravity
-        Matter.Body.setVelocity(star, { x: 0, y: 0 });
-        Matter.Body.setAngularVelocity(star, 0);
-        Matter.Sleeping.set(star, false);
-
-        // Re-create entity (if deleted) - directly modify prevEntities
         prevEntities[entityKey] = {
           body: star,
           texture: getLabelIcon(labelName),
           renderer: CapsuleToyRenderer,
         };
-      }
-
-      return prevEntities; // Return same reference for GameEngine
-    });
-
-    // Clear index AFTER setEntities completes
-    setTimeout(() => {
-      droppedStarIndexRef.current = -1;
-      droppedStarLabelRef.current = "";
-      closeGate();
-      console.log("Reset complete, gate closed");
-
-      isResettingRef.current = false;
-
-      transition("idle", "resetComplete");
-    }, 100);
-  };
-
-  const beginReturnFlow = () => {
-    // Called from UI when user taps Cancel.
-    if (machineStateRef.current !== "revealed") {
-      console.warn(`beginReturnFlow ignored; state=${machineStateRef.current}`);
-      return;
+        return prevEntities;
+      });
     }
-    transition("returning", "tryAgain");
+    droppedStarIndexRef.current = -1;
+    droppedStarLabelRef.current = "";
+    closeGate();
+    console.log("Reset complete, gate closed");
+    transition("idle", "resetComplete");
   };
 
   useEffect(() => {
@@ -350,5 +316,5 @@ export const useGashaponMachineConfig = ({
     };
   }, [floatingTasks]);
 
-  return { entities, handleRelease, resetStarsPhysics, beginReturnFlow };
+  return { entities, handleRelease, resetStarsPhysics };
 };

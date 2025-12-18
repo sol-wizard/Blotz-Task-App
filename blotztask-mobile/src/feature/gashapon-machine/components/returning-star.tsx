@@ -91,7 +91,6 @@ export const ReturningStarAnimations: React.FC<ReturningStarProps> = ({
 
       setIsAnimating(false);
       setActiveStarIcon(null);
-      // Physics will handle the natural drop into the pile
       onAnimationComplete();
     });
 
