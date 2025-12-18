@@ -42,6 +42,7 @@ export const theme = {
     onSurface: "#444964", // dark gray (default text on surface)
     warning: "#F56767", // soft red (warning state)
     fallback: "#f5f9fa", // grey fallback for tasks without labels
+    highlight: "#9AD513",
   },
   fonts: configureFonts({ config: fonts }),
 };
