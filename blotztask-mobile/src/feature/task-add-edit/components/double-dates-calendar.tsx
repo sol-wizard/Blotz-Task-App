@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
 import { eachDayOfInterval, format, isBefore, isSameDay, parseISO } from "date-fns";
+import { theme } from "@/shared/constants/theme";
 
 type MarkedDate = {
   color?: string;
@@ -13,7 +14,7 @@ type MarkedDates = Record<string, MarkedDate>;
 
 const DATE_COLORS = {
   background: "#EEFBE1",
-  text: "#9AD513",
+  text: theme.colors.highlight,
 };
 
 const DoubleDatesCalendar = ({
@@ -79,7 +80,7 @@ const DoubleDatesCalendar = ({
         onDayPress={onDayPress}
         theme={{
           todayTextColor: "#BAD5FA",
-          arrowColor: "#9AD513",
+          arrowColor: theme.colors.highlight,
           textDayFontFamily: "BalooBold",
           textDayHeaderFontFamily: "BalooBold",
           textMonthFontFamily: "BalooBold",
