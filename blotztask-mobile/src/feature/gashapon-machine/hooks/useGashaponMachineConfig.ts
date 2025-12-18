@@ -121,14 +121,6 @@ export const useGashaponMachineConfig = ({
         const labelName = getLabelNameByDroppedStarIndex();
         const entityKey = getStarEntityKey(idx);
 
-        // Pile zone (engine coordinates)
-        const pileLeft = 70;
-        const pileRight = 330;
-        const pileTop = 320;
-        const pileBottom = 460;
-        const targetX = pileLeft + Math.random() * (pileRight - pileLeft);
-        const targetY = pileTop + Math.random() * (pileBottom - pileTop);
-
         const x = 140;
         const y = 250;
 
