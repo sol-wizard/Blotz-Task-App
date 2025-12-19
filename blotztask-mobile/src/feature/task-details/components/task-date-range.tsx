@@ -1,13 +1,25 @@
 import React from "react";
 import { MaterialIcons } from "@expo/vector-icons";
-import { format, isToday, isTomorrow } from "date-fns";
+import { format, isToday, isTomorrow, isFuture, isSameDay, isAfter, startOfDay } from "date-fns";
 import { View, Text } from "react-native";
 
-const DateItem = ({ label, value }: { label: string; value?: string }) => {
-  const formatDate = (val?: string) => {
-    if (!val) return "-";
+const DateItem = ({
+  label,
+  value,
+  isStart,
+}: {
+  label: string;
+  value?: string;
+  isStart?: boolean;
+}) => {
+  if (!value) return null;
+  const d = new Date(value);
 
-    const d = new Date(val);
+  const today = new Date();
+  const isFutureDate = !isSameDay(d, today) && isAfter(startOfDay(d), startOfDay(today));
+  const iconName = isStart && isFutureDate ? "date-range" : "schedule";
+
+  const formatDate = (val: string) => {
     const time = format(d, "HH:mm");
 
     if (isToday(d)) return `Today ${time}`;
@@ -18,9 +30,12 @@ const DateItem = ({ label, value }: { label: string; value?: string }) => {
 
   return (
     <View className="flex-row items-center mr-10">
-      <View className="w-10 h-10 rounded-full border-2 border-gray-500 border-dashed justify-center items-center mr-2">
-        <MaterialIcons name="schedule" size={20} color="#6B7280" />
-      </View>
+      {isStart && (
+        <View className="justify-center items-center mr-2">
+          <MaterialIcons name={iconName} size={30} color="#6B7280" />
+        </View>
+      )}
+
       <View>
         <Text className="font-baloo">{label}</Text>
         <Text className="font-balooBold">{formatDate(value)}</Text>
@@ -30,22 +45,20 @@ const DateItem = ({ label, value }: { label: string; value?: string }) => {
 };
 
 const TaskDateRange = ({ startTime, endTime }: { startTime?: string; endTime?: string }) => {
-  const isSingleTime = !startTime || !endTime || startTime === endTime;
-
+  if (!startTime && !endTime) return null;
+  const isSingleTime = !!startTime && !!endTime && startTime === endTime;
   if (isSingleTime) {
-    const single = startTime ?? endTime;
-
     return (
       <View className="flex-row items-start mb-8">
-        <DateItem label="Time" value={single} />
+        <DateItem label="Time" value={startTime} isStart />
       </View>
     );
   }
 
   return (
     <View className="flex-row items-start mb-8">
-      <DateItem label="Start from" value={startTime} />
-      <DateItem label="End at" value={endTime} />
+      <DateItem label="Start from" value={startTime} isStart={true} />
+      <DateItem label="End at" value={endTime} isStart={false} />
     </View>
   );
 };
