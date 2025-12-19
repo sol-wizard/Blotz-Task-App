@@ -1,5 +1,5 @@
 import { theme } from "@/shared/constants/theme";
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, Image, Pressable } from "react-native";
 import { Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,7 +10,7 @@ import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { Snackbar } from "react-native-paper";
 import { useStarSparkSearchEffects } from "@/feature/star-spark/hooks/useStarSparkSearchEffects";
-import { router, useFocusEffect } from "expo-router";
+import { router} from "expo-router";
 
 
 
@@ -21,27 +21,26 @@ export default function StarSparkScreen() {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState("");
 
-  const notify = useCallback((msg: string) => {
-    setSnackbarMsg(msg);
+  const {
+  floatingTasksResult,
+  showLoading,
+  isSearchError,
+  searchError,
+} = useStarSparkSearchEffects({
+  searchQuery,
+  floatingTasks,
+  isLoadingAll: isLoading,
+  debouncedMs: 300,
+});
+
+
+useEffect(() => {
+  if (isSearchError) {
+    setSnackbarMsg((searchError as any)?.message ?? "Failed to search tasks");
     setSnackbarVisible(true);
-  }, []);
+  }
+}, [isSearchError, searchError]);
 
-  useFocusEffect(
-    useCallback(() => {
-      setSearchQuery("");
-
-      setSnackbarVisible(false);
-      setSnackbarMsg("");
-    }, [])
-  );
-
-  const { tasksToShow, showLoading } = useStarSparkSearchEffects({
-    searchQuery,
-    floatingTasks,
-    isLoadingAll: isLoading,
-    debouncedMs: 300,
-    onNotify: notify,
-  });
 
   const handlePressTask = (task: any) => {
     router.push({
@@ -116,9 +115,9 @@ export default function StarSparkScreen() {
       </View>
 
       {showLoading && <LoadingScreen />}
-      {!showLoading && tasksToShow.length > 0 && (
+      {!showLoading && floatingTasksResult.length > 0 && (
         <FloatingTaskDualView
-          tasks={tasksToShow}
+          tasks={floatingTasksResult}
           onDeleteTask={handleDeleteTask}
           isDeleting={isDeleting}
           onPressTask={handlePressTask}

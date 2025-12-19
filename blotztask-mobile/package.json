@@ -20,6 +20,7 @@
     "@quidone/react-native-wheel-picker": "^1.6.0",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.4.1",
+    "@react-native-community/hooks": "^100.1.0",
     "@react-native-community/voice": "^1.1.9",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/elements": "^2.3.8",
@@ -84,6 +85,7 @@
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "tailwindcss": "^3.4.17",
+    "use-debounce": "^10.0.6",
     "zod": "^4.0.5",
     "zustand": "^5.0.8"
   },
