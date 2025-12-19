@@ -20,9 +20,6 @@ export const useGashaponMachineConfig = ({
   clearPendingDrop?: () => void;
 }) => {
   const [entities, setEntities] = useState<EntityMap>({});
-
-  type MachineState = "idle" | "revealed" | "returning";
-
   const gateRef = useRef<Matter.Body | null>(null);
   const worldRef = useRef<Matter.World | null>(null);
   const starsRef = useRef<Matter.Body[]>([]);
@@ -30,16 +27,6 @@ export const useGashaponMachineConfig = ({
   const droppedStarIndexRef = useRef<number>(-1); // save the original index of the dropped star
   const droppedStarLabelRef = useRef<string>(""); // save the label of the dropped star for return animation
   const floatingTasksRef = useRef<FloatingTaskDTO[]>([]);
-
-  const machineStateRef = useRef<MachineState>("idle");
-
-  const transition = (next: MachineState, reason: string) => {
-    const prev = machineStateRef.current;
-    if (prev !== next) {
-      console.log(`[machine] ${prev} -> ${next} (${reason})`);
-      machineStateRef.current = next;
-    }
-  };
 
   const getLabelNameByIndex = (idx: number) => {
     const task = floatingTasksRef.current[idx];
@@ -62,9 +49,6 @@ export const useGashaponMachineConfig = ({
     if (Math.abs(deltaThisTurn) > 60) {
       if (gateRef.current && !isGateOpenRef.current) {
         // Only allow spinning/opening the gate when we're not in the middle of returning.
-        if (machineStateRef.current === "returning") {
-          return;
-        }
         Matter.Body.translate(gateRef.current, { x: -60, y: 0 });
         isGateOpenRef.current = true;
         console.log("gate is opened");
@@ -90,8 +74,6 @@ export const useGashaponMachineConfig = ({
     const world = worldRef.current;
     const starRadius = 15;
 
-    console.log(`Resetting star index: ${droppedStarIndexRef.current}`);
-
     // Directly mutate entities instead of creating new object
     // GameEngine holds reference to entities, so mutation updates it
 
@@ -114,9 +96,6 @@ export const useGashaponMachineConfig = ({
         });
         starsRef.current[idx] = star;
       }
-
-      console.log(`Resetting star ${star.label} at original index ${idx}`);
-
       // Re-add to world if needed
       if (!world.bodies.includes(star)) {
         Matter.World.add(world, star);
@@ -125,8 +104,6 @@ export const useGashaponMachineConfig = ({
       // Reset physics properties - drop from top and land inside the machine
       Matter.Body.setPosition(star, { x, y });
       Matter.Body.setVelocity(star, { x: 0, y: 0 });
-      Matter.Body.setAngularVelocity(star, 0);
-      Matter.Sleeping.set(star, false);
 
       setEntities((prevEntities) => {
         prevEntities[entityKey] = {
@@ -139,9 +116,6 @@ export const useGashaponMachineConfig = ({
     }
     droppedStarIndexRef.current = -1;
     droppedStarLabelRef.current = "";
-    closeGate();
-    console.log("Reset complete, gate closed");
-    transition("idle", "resetComplete");
   };
 
   useEffect(() => {
@@ -258,12 +232,6 @@ export const useGashaponMachineConfig = ({
         const sensor = bodyA.label === "dropSensor" || bodyB.label === "dropSensor";
 
         if (star && sensor) {
-          // Only treat this as a "drop" when the user has opened the gate.
-          // Prevents occasional sensor hits from background physics jitter.
-          if (!isGateOpenRef.current || machineStateRef.current !== "idle") {
-            return;
-          }
-          console.log(`⚡ Star ${star.label} passed sensor, removing`);
           const starIndex = starsRef.current.indexOf(star);
           const labelName = getLabelNameByIndex(starIndex);
 
@@ -274,9 +242,6 @@ export const useGashaponMachineConfig = ({
 
           closeGate();
           onStarDropped(labelName);
-
-          transition("revealed", "sensorDrop");
-
           // Remove the star from physics world
           if (worldRef.current && starsRef.current.includes(star)) {
             Matter.World.remove(worldRef.current, star);
