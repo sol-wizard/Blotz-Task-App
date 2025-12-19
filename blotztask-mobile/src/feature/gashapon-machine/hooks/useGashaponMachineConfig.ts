@@ -6,7 +6,7 @@ import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
-import { getLabelNameFromStarLabel, getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
+import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
 
 export const useGashaponMachineConfig = ({
   starRadius = 15,
@@ -14,20 +14,41 @@ export const useGashaponMachineConfig = ({
   floatingTasks,
 }: {
   starRadius?: number;
-  onStarDropped: (v: string) => void;
+  onStarDropped: (labelName: string) => void;
   floatingTasks: FloatingTaskDTO[];
+  getPendingDrop?: () => { taskId: number; labelName: string } | null;
+  clearPendingDrop?: () => void;
 }) => {
   const [entities, setEntities] = useState<EntityMap>({});
-
   const gateRef = useRef<Matter.Body | null>(null);
   const worldRef = useRef<Matter.World | null>(null);
   const starsRef = useRef<Matter.Body[]>([]);
   const isGateOpenRef = useRef(false);
-  const starPassedRef = useRef(false);
+  const droppedStarIndexRef = useRef<number>(-1); // save the original index of the dropped star
+  const droppedStarLabelRef = useRef<string>(""); // save the label of the dropped star for return animation
+  const floatingTasksRef = useRef<FloatingTaskDTO[]>([]);
+
+  const getLabelNameByIndex = (idx: number) => {
+    const task = floatingTasksRef.current[idx];
+    // Handle both camelCase (label.name) and PascalCase (Label.Name) from API
+    const label = (task as any)?.label ?? (task as any)?.Label;
+    const labelName = label?.name ?? label?.Name ?? "no-label";
+    return labelName;
+  };
+
+  const getLabelNameByDroppedStarIndex = () => {
+    // Use the saved label instead of looking it up, since floatingTasksRef may have changed
+    if (!droppedStarLabelRef.current) {
+      return "no-label";
+    }
+    return droppedStarLabelRef.current;
+  };
+  const getStarEntityKey = (idx: number) => `star-${idx}`;
 
   const handleRelease = (deltaThisTurn: number) => {
     if (Math.abs(deltaThisTurn) > 60) {
       if (gateRef.current && !isGateOpenRef.current) {
+        // Only allow spinning/opening the gate when we're not in the middle of returning.
         Matter.Body.translate(gateRef.current, { x: -60, y: 0 });
         isGateOpenRef.current = true;
         console.log("gate is opened");
@@ -39,11 +60,71 @@ export const useGashaponMachineConfig = ({
       console.log("close gate");
       Matter.Body.translate(gateRef.current, { x: 60, y: 0 });
       isGateOpenRef.current = false;
-      starPassedRef.current = false;
     }
   };
 
+  const resetStarsPhysics = () => {
+    if (!worldRef.current) return;
+
+    if (droppedStarIndexRef.current < 0) {
+      console.warn("No dropped star index recorded; skipping reset.");
+      return;
+    }
+
+    const world = worldRef.current;
+    const starRadius = 15;
+
+    // Directly mutate entities instead of creating new object
+    // GameEngine holds reference to entities, so mutation updates it
+
+    if (droppedStarIndexRef.current >= 0) {
+      const idx = droppedStarIndexRef.current;
+      const labelToRestore = getLabelNameByDroppedStarIndex();
+      let star = starsRef.current[idx];
+      const entityKey = getStarEntityKey(idx);
+      const x = 140;
+      const y = 250;
+
+      if (!star) {
+        console.warn(`Star body missing for index ${idx}, recreating.`);
+        star = Matter.Bodies.circle(x, y, starRadius, {
+          restitution: 0.4,
+          friction: 0.05,
+          frictionStatic: 0.2,
+          frictionAir: 0.01,
+          label: entityKey,
+        });
+        starsRef.current[idx] = star;
+      }
+      // Re-add to world if needed
+      if (!world.bodies.includes(star)) {
+        Matter.World.add(world, star);
+      }
+
+      // Reset physics properties - drop from top and land inside the machine
+      Matter.Body.setPosition(star, { x, y });
+      Matter.Body.setVelocity(star, { x: 0, y: 0 });
+
+      setEntities((prevEntities) => {
+        prevEntities[entityKey] = {
+          body: star,
+          texture: getLabelIcon(labelToRestore),
+          renderer: CapsuleToyRenderer,
+        };
+        return prevEntities;
+      });
+    }
+    droppedStarIndexRef.current = -1;
+    droppedStarLabelRef.current = "";
+  };
+
   useEffect(() => {
+    if (!floatingTasks || floatingTasks.length === 0) {
+      return;
+    }
+
+    floatingTasksRef.current = floatingTasks;
+
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
     worldRef.current = world;
@@ -108,13 +189,12 @@ export const useGashaponMachineConfig = ({
 
       const x = 90 + col * gapX;
       const y = 230 + row * gapY;
-      const labelName = floatingTasks[i].label?.name ?? "no-label";
       const star = Matter.Bodies.circle(x, y, starRadius, {
         restitution: 0.4,
         friction: 0.05,
         frictionStatic: 0.2,
         frictionAir: 0.01,
-        label: `star-${i}-label-${labelName}`,
+        label: getStarEntityKey(i),
       });
 
       stars.push(star);
@@ -130,9 +210,10 @@ export const useGashaponMachineConfig = ({
     };
 
     stars.forEach((star, idx) => {
-      const labelName = floatingTasks[idx].label?.name ?? "no-label";
+      const labelName = getLabelNameByIndex(idx);
+      const entityKey = getStarEntityKey(idx);
 
-      newEntities[`star-${idx}-label-${labelName}`] = {
+      newEntities[entityKey] = {
         body: star,
         texture: getLabelIcon(labelName),
         renderer: CapsuleToyRenderer,
@@ -152,11 +233,20 @@ export const useGashaponMachineConfig = ({
 
         if (star && sensor) {
           console.log(`⚡ Star ${star.label} passed sensor, removing`);
-          const labelName = getLabelNameFromStarLabel(star.label);
+          const starIndex = starsRef.current.indexOf(star);
+          const labelName = getLabelNameByIndex(starIndex);
 
-          starPassedRef.current = true;
+          // Save the index of the star for later reset
+          droppedStarIndexRef.current = starIndex;
+          // Save the label for return animation (even if task list changes)
+          droppedStarLabelRef.current = labelName;
+
           closeGate();
           onStarDropped(labelName);
+          // Remove the star from physics world
+          if (worldRef.current && starsRef.current.includes(star)) {
+            Matter.World.remove(worldRef.current, star);
+          }
         }
       });
     });
@@ -187,7 +277,7 @@ export const useGashaponMachineConfig = ({
       Matter.World.clear(world, false);
       Matter.Engine.clear(engine);
     };
-  }, []);
+  }, [floatingTasks]);
 
-  return { entities, handleRelease };
+  return { entities, handleRelease, resetStarsPhysics };
 };
