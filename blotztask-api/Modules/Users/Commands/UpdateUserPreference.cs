@@ -8,7 +8,7 @@ public class UpdateUserPreferenceCommand
 {
     public Guid UserId { get; set; }
     [Required]
-    public required UpdateUserPreferenceDto Preferences { get; set; }
+    public required UpdateUserPreferenceDto UserPreferences { get; set; }
 }
 
 public class UpdateUserPreferenceCommandHandler(
@@ -24,11 +24,11 @@ public class UpdateUserPreferenceCommandHandler(
         if (preference == null)
             throw new NotFoundException($"User preferences for user ID {command.UserId} not found.");
 
-        preference.AutoRollover = command.Preferences.AutoRollover;
-        preference.UpcomingNotification = command.Preferences.UpcomingNotification;
-        preference.OverdueNotification = command.Preferences.OverdueNotification;
-        preference.DailyPlanningNotification = command.Preferences.DailyPlanningNotification;
-        preference.EveningWrapUpNotification = command.Preferences.EveningWrapUpNotification;
+        preference.AutoRollover = command.UserPreferences.AutoRollover;
+        preference.UpcomingNotification = command.UserPreferences.UpcomingNotification;
+        preference.OverdueNotification = command.UserPreferences.OverdueNotification;
+        preference.DailyPlanningNotification = command.UserPreferences.DailyPlanningNotification;
+        preference.EveningWrapUpNotification = command.UserPreferences.EveningWrapUpNotification;
 
         db.UserPreferences.Update(preference);
         await db.SaveChangesAsync(ct);

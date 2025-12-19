@@ -138,7 +138,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("DeletedTaskItems", t =>
+                    b.ToTable("DeletedTaskItems", null, t =>
                         {
                             t.HasCheckConstraint("CK_DeletedTaskItem_SingleTime_Equals", "([TimeType] IS NULL) OR ([TimeType] <> 0) OR ([StartTime] = [EndTime])");
 
@@ -245,7 +245,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId", "StartTime", "EndTime");
 
-                    b.ToTable("TaskItems", t =>
+                    b.ToTable("TaskItems", null, t =>
                         {
                             t.HasCheckConstraint("CK_TaskItem_SingleTime_Equals", "([TimeType] IS NULL) OR ([TimeType] <> 0) OR ([StartTime] = [EndTime])");
 
@@ -289,7 +289,7 @@ namespace BlotzTask.Migrations
                     b.HasIndex("Auth0UserId")
                         .IsUnique();
 
-                    b.ToTable("AppUsers");
+                    b.ToTable("AppUsers", (string)null);
 
                     b.HasData(
                         new

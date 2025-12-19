@@ -21,7 +21,7 @@ public class UserPreferencesController(
         var command = new UpdateUserPreferenceCommand
         {
             UserId = userId,
-            Preferences = updateUserPreferenceDto
+            UserPreferences = updateUserPreferenceDto
         };
 
         return await updateUserPreferenceCommandHandler.Handle(command, ct);
