@@ -12,7 +12,6 @@ const DetailsView = ({
   onSave,
   canSave
 }: DetailsViewProps) => {
-  // const hasContent = taskDescription.trim().length > 0;
   return (
     <View className="bg-gray-100 rounded-xl p-4 min-h-80">
       <TextInput

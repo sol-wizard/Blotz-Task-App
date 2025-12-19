@@ -69,7 +69,6 @@ export default function TaskDetailsScreen() {
   }
 
   const canSaveDescription =
-    descriptionText.trim().length > 0 &&
     descriptionText.trim() !== (selectedTask.description ?? "").trim();
 
   return (
