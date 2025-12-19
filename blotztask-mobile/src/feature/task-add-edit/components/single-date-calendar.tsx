@@ -1,3 +1,4 @@
+import { theme } from "@/shared/constants/theme";
 import { parseISO } from "date-fns";
 import { useState } from "react";
 import { Calendar, DateData } from "react-native-calendars";
@@ -25,14 +26,14 @@ export const SingleDateCalendar = ({
               [selectedDate]: {
                 selected: true,
                 selectedColor: "#EEFBE1",
-                selectedTextColor: "#9AD513",
+                selectedTextColor: theme.colors.highlight,
               },
             }
           : {}
       }
       theme={{
         todayTextColor: "#BAD5FA",
-        arrowColor: "#9AD513",
+        arrowColor: theme.colors.highlight,
         textDayFontFamily: "BalooBold",
         textDayHeaderFontFamily: "BalooBold",
         textMonthFontFamily: "BalooBold",
