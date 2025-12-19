@@ -1,9 +1,16 @@
 import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
 import { FloatingTaskDTO } from "../models/floating-task-dto";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { format } from "date-fns";
+import { addMinutes, format } from "date-fns";
 import { getLabelIcon } from "../utils/get-label-icon";
-import { estimateTaskTime } from "../services/task-time-estimate-service";
+import { useState } from "react";
+import { FloatingTaskTimeEstimateModal } from "./floating-task-time-estimate-modal";
+import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
+import { router } from "expo-router";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
+import { TaskTimeType } from "@/shared/models/task-detail-dto";
+import { convertDurationToMinutes, convertDurationToText } from "@/shared/util/convert-duration";
 
 export const FloatingTaskCard = ({
   floatingTask,
@@ -21,17 +28,42 @@ export const FloatingTaskCard = ({
   onPressCard: (task: FloatingTaskDTO) => void;
 }) => {
   const iconSource = getLabelIcon(floatingTask.label?.name);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const handleEstimateTime = async (floatingTask: FloatingTaskDTO) => {
-    const floatingTaskForEstimate = {
+  const { updateTask } = useTaskMutations();
+  const { estimateTime, isEstimating, timeResult, estimateError } = useEstimateTaskTime();
+
+  const pickTime = () => {
+    router.push({
+      pathname: "/task-edit",
+      params: { taskId: String(floatingTask.id) },
+    });
+  };
+
+  const handleEstimateTime = (task: FloatingTaskDTO) => {
+    setIsModalVisible(true);
+    estimateTime(task);
+  };
+
+  const handleStartNow = async () => {
+    const durationMinutes = convertDurationToMinutes(timeResult ?? "");
+    if (durationMinutes === undefined) return;
+
+    const startTime = new Date();
+    const endTime = addMinutes(startTime, durationMinutes);
+
+    await updateTask({
       id: floatingTask.id,
       title: floatingTask.title,
       description: floatingTask.description,
-    };
-    const result = await estimateTaskTime(floatingTaskForEstimate);
-    console.log("FloatingTaskCard time estimate:", result);
-  };
+      startTime: convertToDateTimeOffset(startTime),
+      endTime: convertToDateTimeOffset(endTime),
+      labelId: floatingTask.label?.labelId,
+      timeType: TaskTimeType.Range,
+    });
 
+    setIsModalVisible(false);
+  };
   return (
     <View className="mb-4">
       <Pressable
@@ -82,6 +114,15 @@ export const FloatingTaskCard = ({
           </Pressable>
         </View>
       )}
+      <FloatingTaskTimeEstimateModal
+        visible={isModalVisible}
+        pickTime={pickTime}
+        handleStartNow={handleStartNow}
+        setIsModalVisible={setIsModalVisible}
+        durationText={convertDurationToText(timeResult ?? "")}
+        isEstimating={isEstimating}
+        error={estimateError ? estimateError.message : null}
+      />
     </View>
   );
 };

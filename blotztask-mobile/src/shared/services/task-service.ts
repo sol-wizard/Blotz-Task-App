@@ -5,18 +5,17 @@ import { apiClient } from "./api/client";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 import { DailyTaskIndicatorDTO } from "@/feature/calendar/models/daily-task-indicator-dto";
 import { startOfDay } from "date-fns";
+import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 
 export async function fetchTasksForDate(
   date: Date,
   includeFloatingForToday: boolean,
 ): Promise<TaskDetailDTO[]> {
-  const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
-  const startDateUtc = startOfDay.toISOString();
+  const startDate = convertToDateTimeOffset(startOfDay(date));
 
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/by-date?startDateUtc=${encodeURIComponent(startDateUtc)}&includeFloatingForToday=${includeFloatingForToday}`;
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/by-date?startDate=${encodeURIComponent(startDate)}&includeFloatingForToday=${includeFloatingForToday}`;
 
   const data: TaskDetailDTO[] = await apiClient.get(url);
-
   return data;
 }
 
@@ -40,6 +39,12 @@ export async function fetchFloatingTasks(): Promise<FloatingTaskDTO[]> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/floating`;
   const data: TaskDetailDTO[] = await apiClient.get(url);
 
+  return data;
+}
+
+export async function fetchFloatingTasksByQuery(query: string): Promise<FloatingTaskDTO[]> {
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/search`;
+  const data: FloatingTaskDTO[] = await apiClient.get(url, {params: { query},});
   return data;
 }
 

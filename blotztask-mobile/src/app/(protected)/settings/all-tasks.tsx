@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Snackbar, IconButton } from "react-native-paper";
+import { Snackbar } from "react-native-paper";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, SafeAreaView, View, Text } from "react-native";
-import { router } from "expo-router";
 import { TaskStatusRow } from "@/shared/components/ui/task-status-row";
 import TaskCard from "@/feature/calendar/components/task-card";
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
@@ -11,6 +10,7 @@ import UserProfile from "@/feature/calendar/components/user-profile";
 import { TaskStatusType } from "@/feature/calendar/models/task-status-type";
 import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { ReturnButton } from "@/shared/components/ui/return-button";
 
 export default function AllTasksScreen() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
@@ -50,7 +50,7 @@ export default function AllTasksScreen() {
     <SafeAreaView className="flex-1">
       {/* Header with back button */}
       <View className="flex-row items-center px-5 pt-2">
-        <IconButton icon="arrow-left" size={24} onPress={() => router.back()} iconColor="#6B7280" />
+        <ReturnButton />
         <View className="flex-1 flex-row items-center justify-between">
           <Text className="text-5xl font-bold text-gray-800 font-balooExtraBold items-end pt-8">
             All Tasks
