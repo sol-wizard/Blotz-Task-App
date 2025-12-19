@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsView from "../../feature/task-details/components/details-view";
@@ -54,7 +54,7 @@ export default function TaskDetailsScreen() {
         <Text className="text-lg text-gray-600">Selected Task not found.</Text>
         <TouchableOpacity
           onPress={async () => {
-            await handleUpdateDescription(descriptionText);
+            await handleUpdateDescription();
             router.back();
           }}
         >
