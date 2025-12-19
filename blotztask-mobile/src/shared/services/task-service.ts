@@ -42,6 +42,12 @@ export async function fetchFloatingTasks(): Promise<FloatingTaskDTO[]> {
   return data;
 }
 
+export async function fetchFloatingTasksByQuery(query: string): Promise<FloatingTaskDTO[]> {
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/search`;
+  const data: FloatingTaskDTO[] = await apiClient.get(url, {params: { query},});
+  return data;
+}
+
 export async function toggleTaskCompletion(taskId: number): Promise<void> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/task-completion-status/${taskId}`;
   await apiClient.put(url);
