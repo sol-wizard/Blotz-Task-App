@@ -1,15 +1,18 @@
 import { theme } from "@/shared/constants/theme";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { View, Text, Image, Pressable } from "react-native";
 import { Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ASSETS } from "@/shared/constants/assets";
-import { router } from "expo-router";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { FloatingTaskDualView } from "@/feature/star-spark/components/floating-task-dual-view";
 import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { Snackbar } from "react-native-paper";
+import { useStarSparkSearchEffects } from "@/feature/star-spark/hooks/useStarSparkSearchEffects";
+import { router, useFocusEffect } from "expo-router";
+
+
 
 export default function StarSparkScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,6 +20,28 @@ export default function StarSparkScreen() {
   const { deleteTask, isDeleting } = useTaskMutations();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState("");
+
+  const notify = useCallback((msg: string) => {
+    setSnackbarMsg(msg);
+    setSnackbarVisible(true);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setSearchQuery("");
+
+      setSnackbarVisible(false);
+      setSnackbarMsg("");
+    }, [])
+  );
+
+  const { tasksToShow, showLoading } = useStarSparkSearchEffects({
+    searchQuery,
+    floatingTasks,
+    isLoadingAll: isLoading,
+    debouncedMs: 300,
+    onNotify: notify,
+  });
 
   const handlePressTask = (task: any) => {
     router.push({
@@ -27,7 +52,7 @@ export default function StarSparkScreen() {
 
   const handleDeleteTask = async (id: number) => {
     try {
-      await deleteTask(id); // ⭐ 直接调用 mutation
+      await deleteTask(id); 
       setSnackbarMsg("Task deleted");
       setSnackbarVisible(true);
     } catch {
@@ -35,6 +60,7 @@ export default function StarSparkScreen() {
       setSnackbarVisible(true);
     }
   };
+
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -47,28 +73,52 @@ export default function StarSparkScreen() {
         </Pressable>
       </View>
 
-      <View className="bg-[#CDF79A] w-68 h-36 rounded-3xl mx-8 my-6">
-        <Text className="font-baloo text-xl text-secondary my-4 ml-4">
+      <View className="bg-[#CDF79A] mx-8 my-6 rounded-3xl"
+      style={{ minHeight: 110, position: "relative",
+    overflow: "hidden", }}>
+      <Image
+        source={ASSETS.transparentStar}
+        style={{
+          position: "absolute",
+          top: 5,
+          right: -5,
+          width: 100,
+          height: 100,
+          opacity: 1,
+        }}
+      />
+        <Text className="font-baloo text-xl text-secondary mt-5 mb-4 mx-4 text-onSurface">
           Ready to turn a spark into action?
         </Text>
+        
         <Searchbar
-          placeholder=""
-          onChangeText={setSearchQuery}
           value={searchQuery}
+          onChangeText={setSearchQuery}
+          icon={'magnify'}
+          placeholderTextColor={theme.colors.disabled}
+          clearIcon={searchQuery ? 'close' : undefined}
           iconColor={theme.colors.disabled}
           style={{
             backgroundColor: theme.colors.background,
-            marginHorizontal: 20,
-            borderRadius: 30,
+            borderTopLeftRadius: 8,
+            borderTopRightRadius: 8,
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
             height: 40,
+            marginHorizontal: 12,
           }}
+          inputStyle={{ 
+            fontSize: 16,
+            fontFamily: 'BalooRegular',
+            paddingBottom: 14,
+           }}
         />
       </View>
 
-      {isLoading && <LoadingScreen />}
-      {!isLoading && floatingTasks && floatingTasks.length > 0 && (
+      {showLoading && <LoadingScreen />}
+      {!showLoading && tasksToShow.length > 0 && (
         <FloatingTaskDualView
-          tasks={floatingTasks}
+          tasks={tasksToShow}
           onDeleteTask={handleDeleteTask}
           isDeleting={isDeleting}
           onPressTask={handlePressTask}
