@@ -1,6 +1,6 @@
 import React from "react";
 import { MaterialIcons } from "@expo/vector-icons";
-import { format, isToday, isTomorrow, isFuture, isSameDay, isAfter, startOfDay } from "date-fns";
+import { format, isToday, isTomorrow, isSameDay, isAfter, startOfDay } from "date-fns";
 import { View, Text } from "react-native";
 
 const DateItem = ({
