@@ -10,6 +10,7 @@ module.exports = {
         warning: "#F56767",
         primary: "#8C8C8C",
         secondary: "#444964",
+        highlight: "#9AD513",
       },
       fontFamily: {
         balooThin: ["BalooThin"],
