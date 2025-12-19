@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard, ScrollView } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
@@ -18,29 +18,34 @@ export default function TaskDetailsScreen() {
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading } = useTaskById({ taskId });
   const { updateTask, isUpdating } = useTaskMutations();
-  const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
+  const [descriptionText, setDescriptionText] = useState("");
   const [activeTab, setActiveTab] = useState<tabTypes>("Details");
 
   useEffect(() => {
     if (selectedTask) {
       setDescriptionText(selectedTask.description || "");
     }
-  }, [selectedTask?.description]);
+  }, [selectedTask]);
 
-  const handleUpdateDescription = async (newDescription: string) => {
+  const handleUpdateDescription = useCallback(async () => {
     if (!selectedTask) return;
-    if (newDescription === (selectedTask.description ?? "")) return;
+
+    const trimmed = descriptionText.trim();
+    const original = (selectedTask.description ?? "").trim();
+
+    // 沒改內容就不打 API
+    if (trimmed === original) return;
 
     await updateTask({
       id: selectedTask.id,
       title: selectedTask.title,
-      description: newDescription,
+      description: trimmed,
       startTime: selectedTask.startTime ? new Date(selectedTask.startTime) : undefined,
       endTime: selectedTask.endTime ? new Date(selectedTask.endTime) : undefined,
       labelId: selectedTask.label?.labelId,
       timeType: selectedTask.timeType ?? null,
     });
-  };
+  }, [selectedTask, descriptionText, updateTask]);
 
   if (!selectedTask) {
     console.warn("No selected task found");
@@ -62,6 +67,10 @@ export default function TaskDetailsScreen() {
   if (isLoading || isUpdating) {
     return <LoadingScreen />;
   }
+
+  const canSaveDescription =
+    descriptionText.trim().length > 0 &&
+    descriptionText.trim() !== (selectedTask.description ?? "").trim();
 
   return (
     <SafeAreaView
@@ -95,7 +104,7 @@ export default function TaskDetailsScreen() {
             <MaterialCommunityIcons
               name="pencil-minus-outline"
               onPress={async () => {
-                await handleUpdateDescription(descriptionText);
+                await handleUpdateDescription();
                 router.push({
                   pathname: "/(protected)/task-edit",
                   params: { taskId: selectedTask.id },
@@ -119,6 +128,8 @@ export default function TaskDetailsScreen() {
           <DetailsView
             taskDescription={descriptionText}
             setDescription={setDescriptionText}
+            canSave={canSaveDescription}
+            onSave={handleUpdateDescription}
           />
           
         </View>

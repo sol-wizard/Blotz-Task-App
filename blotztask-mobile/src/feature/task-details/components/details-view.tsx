@@ -1,13 +1,18 @@
 import { View, TextInput, TouchableOpacity, Text } from "react-native";
 
+type DetailsViewProps = {
+  taskDescription: string;
+  setDescription: (v: string) => void;
+  canSave: boolean;
+  onSave: () => void;
+};
 const DetailsView = ({
   taskDescription,
   setDescription,
-}: {
-  taskDescription: string;
-  setDescription: (v: string) => void;
-}) => {
-  const hasContent = taskDescription.trim().length > 0;
+  onSave,
+  canSave
+}: DetailsViewProps) => {
+  // const hasContent = taskDescription.trim().length > 0;
   return (
     <View className="bg-gray-100 rounded-xl p-4 min-h-80">
       <TextInput
@@ -23,10 +28,11 @@ const DetailsView = ({
       />
       <View className="mt-3 items-end">
         <TouchableOpacity
-          disabled={!hasContent}
+          onPress={onSave}
+          disabled={!canSave}
           className={`
             rounded-xl px-4 py-2
-            ${hasContent ? "bg-[#9AD513]":"bg-[ #D1D1D6]"}
+            ${canSave ? "bg-[#9AD513]":"bg-[ #D1D1D6]"}
           `}
         >
           <Text
