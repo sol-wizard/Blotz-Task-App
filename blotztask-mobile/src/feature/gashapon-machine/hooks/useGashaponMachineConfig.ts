@@ -232,6 +232,7 @@ export const useGashaponMachineConfig = ({
         const sensor = bodyA.label === "dropSensor" || bodyB.label === "dropSensor";
 
         if (star && sensor) {
+          console.log(`⚡ Star ${star.label} passed sensor, removing`);
           const starIndex = starsRef.current.indexOf(star);
           const labelName = getLabelNameByIndex(starIndex);
 
