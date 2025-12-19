@@ -6,11 +6,11 @@ import { Modal, View, Text, Pressable, Image } from "react-native";
 type TaskRevealModalProps = {
   visible: boolean;
   task: FloatingTaskDTO | null;
-  onClose: () => void;
   onDoNow: () => void;
+  onCancel?: () => void;
 };
 
-export const TaskRevealModal = ({ visible, task, onClose, onDoNow }: TaskRevealModalProps) => {
+export const TaskRevealModal = ({ visible, task, onCancel, onDoNow }: TaskRevealModalProps) => {
   const imageSource = getLabelIcon(task?.label?.name);
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
@@ -36,17 +36,14 @@ export const TaskRevealModal = ({ visible, task, onClose, onDoNow }: TaskRevealM
 
           <View className="flex-row justify-between mt-2">
             <Pressable
-              onPress={onClose}
+              onPress={onCancel}
               className="flex-1 mr-2 bg-white rounded-full h-11 items-center justify-center"
             >
-              <Text className="text-gray-400 font-semibold font-baloo">Try again</Text>
+              <Text className="text-gray-400 font-semibold font-baloo">Cancel</Text>
             </Pressable>
 
             <Pressable
-              onPress={() => {
-                onDoNow();
-                onClose();
-              }}
+              onPress={onDoNow}
               className="flex-1 ml-2 rounded-full h-11 items-center justify-center bg-[#99D612]"
             >
               <Text className="text-slate-900 font-semibold font-baloo">Do it now</Text>

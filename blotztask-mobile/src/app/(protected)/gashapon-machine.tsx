@@ -11,7 +11,7 @@ import { TaskRevealModal } from "@/feature/gashapon-machine/components/task-reve
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
-import { pickRandomTask } from "@/feature/star-spark/utils/pick-random-task";
+import { pickRandomTask } from "@/feature/gashapon-machine/utils/pick-random-task";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 
 export default function GashaponMachine() {
@@ -31,7 +31,9 @@ export default function GashaponMachine() {
 
   const handleDoNow = () => {
     console.log("Do it now pressed!");
+    setModalVisible(false);
   };
+
   const handleStarDropped = (starLabelName: string) => {
     setStarLabelName(starLabelName);
     const randomTask = pickRandomTask(floatingTasks ?? [], starLabelName);
@@ -39,10 +41,15 @@ export default function GashaponMachine() {
     setDropStarTrigger((prev) => prev + 1);
   };
 
-  const { entities, handleRelease } = useGashaponMachineConfig({
+  const { entities, handleRelease, resetStarsPhysics } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
     floatingTasks: limitedFloatingTasks,
   });
+
+  const handleCancel = () => {
+    setModalVisible(false);
+    resetStarsPhysics();
+  };
 
   const gameEngineReady = !!entities.physics;
   const isAllLoaded =
@@ -59,8 +66,8 @@ export default function GashaponMachine() {
         <TaskRevealModal
           visible={isModalVisible}
           task={randomTask}
-          onClose={() => setModalVisible(false)}
           onDoNow={handleDoNow}
+          onCancel={handleCancel}
         />
         {!isAllLoaded && <LoadingScreen />}
 
