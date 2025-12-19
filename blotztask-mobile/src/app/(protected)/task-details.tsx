@@ -11,7 +11,6 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { MaterialCommunityIcons} from "@expo/vector-icons";
 
-type tabTypes = "Details" | "Subtasks";
 export default function TaskDetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ taskId: string }>();
@@ -19,7 +18,6 @@ export default function TaskDetailsScreen() {
   const { selectedTask, isLoading } = useTaskById({ taskId });
   const { updateTask, isUpdating } = useTaskMutations();
   const [descriptionText, setDescriptionText] = useState("");
-  const [activeTab, setActiveTab] = useState<tabTypes>("Details");
 
   useEffect(() => {
     if (selectedTask) {
