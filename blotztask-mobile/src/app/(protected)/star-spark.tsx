@@ -30,7 +30,6 @@ export default function StarSparkScreen() {
   searchQuery,
   floatingTasks,
   isLoadingAll: isLoading,
-  debouncedMs: 300,
 });
 
 
