@@ -32,3 +32,13 @@ export const fetchUserPreferences = async (): Promise<UserPreferencesDTO> => {
     throw new Error("Failed to load user preferences");
   }
 };
+
+export const updateUserPreferences = async (preferences: UserPreferencesDTO): Promise<string> => {
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/user-preferences`;
+  try {
+    return await apiClient.put(url, preferences);
+  } catch (err: any) {
+    console.error("Update user preferences failed:", err);
+    throw new Error("Failed to update user preferences");
+  }
+};

@@ -9,7 +9,6 @@ export function useUserPreferencesQuery() {
   });
 
   return {
-    fetchUserPreferencesAsync: userPreferencesQuery.refetch,
     isUserPreferencesLoading: userPreferencesQuery.isLoading,
     userPreferencesError: userPreferencesQuery.error,
     userPreferences: userPreferencesQuery.data,
