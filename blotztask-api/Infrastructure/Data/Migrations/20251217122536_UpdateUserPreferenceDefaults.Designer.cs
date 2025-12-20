@@ -4,6 +4,7 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251217122536_UpdateUserPreferenceDefaults")]
+    partial class UpdateUserPreferenceDefaults
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -339,17 +342,6 @@ namespace BlotzTask.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("UserPreferences", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = new Guid("718ccb8f-ce52-4e51-8cfe-2a44cdca77d1"),
-                            AutoRollover = true,
-                            DailyPlanningNotification = false,
-                            EveningWrapUpNotification = false,
-                            OverdueNotification = true,
-                            UpcomingNotification = true
-                        });
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>

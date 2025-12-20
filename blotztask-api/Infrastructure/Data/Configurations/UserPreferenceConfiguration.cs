@@ -22,13 +22,13 @@ namespace BlotzTask.Infrastructure.Data.Configurations
                    .HasDefaultValue(true);
 
             builder.Property(x => x.OverdueNotification)
-                   .HasDefaultValue(false);
+                   .HasDefaultValue(true);
 
             builder.Property(x => x.DailyPlanningNotification)
-                   .HasDefaultValue(true);
+                   .HasDefaultValue(false);
 
             builder.Property(x => x.EveningWrapUpNotification)
-                   .HasDefaultValue(true);
+                   .HasDefaultValue(false);
         }
     }
 }
