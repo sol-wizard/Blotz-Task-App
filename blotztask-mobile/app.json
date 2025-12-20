@@ -27,8 +27,6 @@
       "icon": "./assets/images-png/blotz-icon.png"
     },
     "android": {
-      "versionCode": 5,
-      "appName": "BlotzTask",
       "edgeToEdgeEnabled": true,
       "package": "com.blotz.blotztask",
       "permissions": ["android.permission.RECORD_AUDIO", "android.permission.ACCESS_FINE_LOCATION"]
