@@ -8,6 +8,7 @@ public class UpdateUserProfileCommand
 {
     public Guid Id { get; set; }
     public string DisplayName { get; set; } = string.Empty;
+    public string PictureUrl { get; set; } = string.Empty;
 }
 
 public class UpdateUserProfileCommandHandler(
@@ -27,7 +28,8 @@ public class UpdateUserProfileCommandHandler(
 
         await auth0ManagementService.UpdateUserProfileAsync(
             auth0UserId,
-            profileCommand.DisplayName
+            profileCommand.DisplayName,
+            profileCommand.PictureUrl
         );
 
         logger.LogInformation("Updated User Profile for user {UserId} successfully in auth0.", profileCommand.Id);
@@ -36,6 +38,7 @@ public class UpdateUserProfileCommandHandler(
         logger.LogInformation("Found User Profile for user {UserId} in auth0.", profileCommand.Id);
 
         user.DisplayName = auth0User.FullName;
+        user.PictureUrl = auth0User.Picture;
         user.UpdatedAt = DateTime.UtcNow;
 
         db.AppUsers.Update(user);
@@ -49,4 +52,5 @@ public class UpdateUserProfileCommandHandler(
 public class UpdateUserProfileDto
 {
     public required string DisplayName { get; set; }
+    public string PictureUrl { get; set; }
 }
