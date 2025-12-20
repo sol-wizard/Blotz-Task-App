@@ -55,7 +55,7 @@ export default function AccountScreen() {
           </Pressable>
 
           <FormDivider marginVertical={2} />
-          <Pressable className="px-4 ml-3">
+          <Pressable className="px-4 ml-3 mb-3">
             <View className="flex-row items-center justify-between pt-4 pb">
               <Text className="text-lg font-baloo text-secondary ">Email</Text>
 
@@ -66,13 +66,6 @@ export default function AccountScreen() {
             <Text className="text-primary font-balooThin text-sm">
               Used for login and notifications.
             </Text>
-          </Pressable>
-
-          <FormDivider marginVertical={2} />
-          <Pressable className="flex-row items-center justify-between px-4 py-4">
-            <View className="flex-row items-center">
-              <Text className="text-lg font-baloo text-secondary ml-3">Password</Text>
-            </View>
           </Pressable>
         </View>
       </View>
