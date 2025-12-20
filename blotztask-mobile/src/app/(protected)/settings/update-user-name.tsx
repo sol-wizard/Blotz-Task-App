@@ -18,7 +18,7 @@ export default function UpdateUserNameScreen() {
   const handleUpdate = async () => {
     if (!doneEnabled || isUserUpdating) return;
     try {
-      await updateUser({ displayName: name.trim() });
+      await updateUser({ displayName: name.trim(), pictureUrl: userProfile?.pictureUrl ?? "" });
       router.back();
     } catch {
       setSnackbarVisible(true);

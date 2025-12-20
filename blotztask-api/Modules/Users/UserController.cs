@@ -52,14 +52,16 @@ public class UserController(
     }
 
     [HttpPut]
-    public async Task<string> UpdateUserProfile([FromBody] UpdateUserProfileDto updateUserProfileDto, CancellationToken ct)
+    public async Task<string> UpdateUserProfile([FromBody] UpdateUserProfileDto updateUserProfileDto,
+        CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         var command = new UpdateUserProfileCommand
         {
             Id = userId,
-            DisplayName = updateUserProfileDto.DisplayName
+            DisplayName = updateUserProfileDto.DisplayName,
+            PictureUrl = updateUserProfileDto.PictureUrl
         };
         return await updateUserProfileCommandHandler.Handle(command, ct);
     }
