@@ -8,7 +8,8 @@ namespace BlotzTask.Modules.Users;
 [Route("api/user-preferences")]
 [Authorize]
 public class UserPreferencesController(
-    UpdateUserPreferenceCommandHandler updateUserPreferenceCommandHandler) : ControllerBase
+    UpdateUserPreferenceCommandHandler updateUserPreferenceCommandHandler
+) : ControllerBase
 {
     [HttpPut]
     public async Task<string> UpdateUserPreferences(
@@ -26,5 +27,18 @@ public class UserPreferencesController(
 
         return await updateUserPreferenceCommandHandler.Handle(command, ct);
     }
-}
 
+    /*[HttpGet]
+    public async Task<string> GetUserPreferences(CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        var query = new GetUserPreferenceQuery
+        {
+            UserId = userId,
+        };
+        return await getUserPreferencesQueryHandler.Handle(query, ct);
+
+    }*/
+}
