@@ -69,6 +69,13 @@ public class SyncUserCommandHandler(
             db.AppUsers.Add(row);
             await db.SaveChangesAsync(ct);
 
+            var userPreference = new UserPreference
+            {
+                UserId = row.Id
+            };
+            db.UserPreferences.Add(userPreference);
+            await db.SaveChangesAsync(ct);
+
             logger.LogInformation(
                 "Created new AppUser (Id: {Id}, Auth0Id: {Auth0UserId})",
                 row.Id, row.Auth0UserId);
