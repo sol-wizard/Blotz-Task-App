@@ -35,6 +35,7 @@ export default function NotificationScreen() {
       await updateUserPreferencesAsync(newUserPreferences);
     } catch (error) {
       setSnackbarVisible(true);
+      console.log("Failed to updateUserPreferences:", error);
     }
   };
 
