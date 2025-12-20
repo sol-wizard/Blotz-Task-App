@@ -42,7 +42,9 @@ export default function SettingsScreen() {
     ? { uri: userProfile.pictureUrl }
     : PNGIMAGES.blotzIcon;
 
-  const handleProfileEdit = () => console.log("Edit profile pressed");
+  const handleProfileEdit = () => {
+    router.push("/(protected)/settings/avatar" as const);
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background py-4">

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "avatars": [
+    {
+      "id": "avatar1",
+      "label": "Avatar1",
+      "url": "https://stgblotzstaging.blob.core.windows.net/avatars/preset/avatar1.png"
+    },
+    {
+      "id": "avatar2",
+      "label": "Avatar2",
+      "url": "https://stgblotzstaging.blob.core.windows.net/avatars/preset/avatar2.png"
+    },
+    {
+      "id": "avatar3",
+      "label": "Avatar3",
+      "url": "https://stgblotzstaging.blob.core.windows.net/avatars/preset/avatar3.png"
+    },
+    {
+      "id": "avatar4",
+      "label": "Avatar4",
+      "url": "https://stgblotzstaging.blob.core.windows.net/avatars/preset/avatar4.png"
+    }
+  ]
+}
