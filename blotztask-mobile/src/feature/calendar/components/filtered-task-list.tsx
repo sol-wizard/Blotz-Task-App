@@ -37,11 +37,17 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
         isDeleting={isDeleting}
         selectedDay={selectedDay}
       />
+      <TaskCard
+        task={item}
+        deleteTask={deleteTask}
+        isDeleting={isDeleting}
+        selectedDay={selectedDay}
+      />
     </View>
   );
 
   return (
-    <>
+    <View className="flex-1">
       <TaskStatusRow
         allTaskCount={findStatusCount("All")}
         todoTaskCount={findStatusCount("To Do")}

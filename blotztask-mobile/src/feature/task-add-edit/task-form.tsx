@@ -22,6 +22,8 @@ import {
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
+import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 type TaskFormProps =
   | {
@@ -38,12 +40,17 @@ type TaskFormProps =
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const hasEventTimes = dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime;
   const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
+  const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
 
   const { labels = [], isLoading } = useAllLabels();
 
   const initialAlertTime = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
+
+  const defaultAlert = userPreferences?.upcomingNotification
+    ? (initialAlertTime ?? 300)
+    : (initialAlertTime ?? null);
 
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
@@ -53,7 +60,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     startTime: dto?.startTime ? new Date(dto?.startTime) : null,
     endDate: dto?.endTime ? new Date(dto?.endTime) : null,
     endTime: dto?.endTime ? new Date(dto?.endTime) : null,
-    alert: initialAlertTime ?? 300,
+    alert: defaultAlert,
   };
 
   const form = useForm<TaskFormField>({
@@ -64,6 +71,10 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
+
+  if (isUserPreferencesLoading) {
+    return <LoadingScreen />;
+  }
 
   const handleFormSubmit = async (data: TaskFormField) => {
     // If editing and the existing alert is still scheduled in the future, cancel the old notification first
@@ -80,13 +91,17 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       isActiveTab === "reminder" ? data.startTime : data.endTime,
     );
 
-    const notificationId = await createNotificationFromAlert({
-      startTime,
-      alert: data.alert,
-      title: data.title,
-    });
+    let notificationId = null;
+    let alertTime = undefined;
+    if (userPreferences?.upcomingNotification) {
+      notificationId = await createNotificationFromAlert({
+        startTime,
+        alert: data.alert,
+        title: data.title,
+      });
+      alertTime = calculateAlertTime(data.startTime, data.alert);
+    }
 
-    const alertTime = calculateAlertTime(data.startTime, data.alert);
     const submitTask: AddTaskItemDTO = {
       title: data.title.trim(),
       description: data.description?.trim() ?? undefined,
@@ -124,7 +139,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     <>
       <View className="flex-1 bg-white">
         <FormProvider {...form}>
-          <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
+          <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
             {/* Title */}
             <View className="mb-4 bg-white">
               <FormTextInput
@@ -135,7 +150,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
               />
             </View>
 
-            <View className="mb-8 py-3 bg-background rounded-2xl px-4">
+            <View className="py-3 bg-background rounded-2xl px-4">
               <FormTextInput
                 name="description"
                 placeholder="Add a note"
