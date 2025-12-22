@@ -6,7 +6,7 @@ export const fetchAllLabel = async (): Promise<LabelDTO[]> => {
   try {
     const result: LabelDTO[] = await apiClient.get(url);
     return result;
-  } catch (err: any) {
+  } catch {
     throw new Error("Failed to fetch labels.");
   }
 };

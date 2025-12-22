@@ -3,7 +3,7 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { useState } from "react";
-import { useUserMutation } from "@/feature/settings/hooks/useUserMutation";
+import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 
 export default function UpdateUserNameScreen() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export default function UpdateUserNameScreen() {
 
   const doneEnabled = name.trim().length > 0;
 
-  const { updateUserProfile: updateUser, isUserUpdating, userUpdateError } = useUserMutation();
+  const { updateUserProfile: updateUser, isUserUpdating } = useUserProfileMutation();
 
   const handleUpdate = async () => {
     if (!doneEnabled || isUserUpdating) return;

@@ -17,7 +17,7 @@ export async function fetchTasksForDate(
 
   try {
     return await apiClient.get(url);
-  } catch (err: any) {
+  } catch {
     throw new Error("Failed to fetch tasks for selected day");
   }
 }
@@ -29,7 +29,7 @@ export async function fetchWeeklyTaskAvailability(date: Date): Promise<DailyTask
 
   try {
     return await apiClient.get(url);
-  } catch (err: any) {
+  } catch {
     throw new Error("Failed to fetch weekly task availability.");
   }
 }
@@ -38,7 +38,7 @@ export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`;
   try {
     return await apiClient.get(url);
-  } catch (err: any) {
+  } catch {
     throw new Error("Failed to fetch task by Id.");
   }
 }
@@ -47,7 +47,7 @@ export async function fetchFloatingTasks(): Promise<FloatingTaskDTO[]> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/floating`;
   try {
     return await apiClient.get(url);
-  } catch (err: any) {
+  } catch {
     throw new Error("Failed to fetch floating task.");
   }
 }
@@ -67,7 +67,7 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
 
   try {
     await apiClient.put(url);
-  } catch (err: any) {
+  } catch {
     throw new Error("Failed to toggle task.");
   }
 }
@@ -78,7 +78,7 @@ export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<number> 
 
     const newTaskId: number = await apiClient.post(url, addTaskForm);
     return newTaskId;
-  } catch (error) {
+  } catch {
     throw new Error("Failed to add task.");
   }
 };
@@ -87,7 +87,7 @@ export async function updateTaskItem(updatedTask: EditTaskItemDTO): Promise<void
   try {
     const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${updatedTask.id}`;
     await apiClient.put(url, updatedTask);
-  } catch (error) {
+  } catch {
     throw new Error("Failed to update task.");
   }
 }
@@ -96,7 +96,7 @@ export async function deleteTask(taskId: number): Promise<void> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`;
   try {
     await apiClient.delete(url);
-  } catch (err: any) {
+  } catch {
     throw new Error("Failed to delete task.");
   }
 }
@@ -106,7 +106,7 @@ export async function getAllTasks(): Promise<TaskDetailDTO[]> {
   try {
     const data: TaskDetailDTO[] = await apiClient.get(url);
     return data;
-  } catch (err: any) {
+  } catch {
     throw new Error("Failed to fetch all tasks.");
   }
 }

@@ -1,33 +1,7 @@
 import { TouchableOpacity, View, Text } from "react-native";
-import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
+import Toast, { ErrorToast } from "react-native-toast-message";
 
 export const toastConfig = {
-  success: (props: any) => (
-    <View className="flex-row items-center bg-gray-900 rounded-[10px] h-10 px-3 w-96">
-      <View className="flex-1">
-        <BaseToast
-          {...props}
-          style={{
-            backgroundColor: "#111827",
-          }}
-          contentContainerStyle={{ paddingHorizontal: 4 }}
-          text1Style={{
-            color: "#fff",
-            fontSize: 14,
-            fontFamily: "BalooRegular",
-          }}
-        />
-
-        <TouchableOpacity
-          onPress={() => Toast.hide()}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Text className="text-white text-base ml-2">✕</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  ),
-
   error: (props: any) => (
     <View className="flex-row items-center bg-gray-900 rounded-[10px] h-10 px-3 w-96">
       <View className="flex-1">

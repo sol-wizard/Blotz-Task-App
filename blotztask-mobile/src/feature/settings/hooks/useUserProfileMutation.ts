@@ -3,7 +3,7 @@ import { UpdateUserProfileDTO } from "../modals/update-user-profile-dto";
 import { updateUserProfile } from "@/shared/services/user-service";
 import { queryClient } from "@/shared/util/queryClient";
 
-export function useUserMutation() {
+export function useUserProfileMutation() {
   const updateUserProfileMutation = useMutation({
     mutationKey: ["updateUserProfile"],
     mutationFn: (userProfile: UpdateUserProfileDTO) => updateUserProfile(userProfile),
@@ -14,6 +14,5 @@ export function useUserMutation() {
   return {
     updateUserProfile: updateUserProfileMutation.mutateAsync,
     isUserUpdating: updateUserProfileMutation.isPending,
-    userUpdateError: updateUserProfileMutation.error,
   };
 }

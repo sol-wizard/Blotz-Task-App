@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Image, Pressable, SafeAreaView, Text, View } from "react-native";
-
 import { ReturnButton } from "@/shared/components/ui/return-button";
 import avatarData from "@/shared/constants/avatar.json";
-import { useUserMutation } from "@/feature/settings/hooks/useUserMutation";
+import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AvatarDTO } from "@/feature/settings/modals/avatar-dto";
 
@@ -19,11 +18,10 @@ export default function AvatarScreen() {
     return null;
   });
 
-  const { updateUserProfile, isUserUpdating, userUpdateError } = useUserMutation();
+  const { updateUserProfile, isUserUpdating } = useUserProfileMutation();
 
   const handleAvatarSelect = async (avatar: AvatarDTO) => {
     if (isUserUpdating) return;
-
     setSelectedAvatarUrl(avatar.url);
 
     try {
@@ -31,7 +29,7 @@ export default function AvatarScreen() {
         displayName: userProfile?.displayName ?? "",
         pictureUrl: avatar.url,
       });
-    } catch (e) {
+    } catch {
       console.log("Failed to update avatar.");
     }
   };
