@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchTaskById } from "../services/task-service";
+import { taskKeys } from "../util/query-key-factory";
 
 export const useTaskById = ({ taskId }: { taskId: number }) => {
   const qc = useQueryClient();
@@ -8,7 +9,7 @@ export const useTaskById = ({ taskId }: { taskId: number }) => {
     isLoading,
     isFetching,
   } = useQuery({
-    queryKey: ["taskId", taskId],
+    queryKey: taskKeys.byId(taskId),
     queryFn: () => fetchTaskById(taskId),
     initialData: () => qc.getQueryData(["taskId", taskId]),
   });

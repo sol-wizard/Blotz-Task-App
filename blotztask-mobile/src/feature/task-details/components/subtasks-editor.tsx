@@ -130,17 +130,10 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
       </View>
 
       {/* Add More Subtasks Button / Drag to Reorder - Fixed at bottom */}
-      {isEditMode ? (
+      {isEditMode ?? (
         <View className="mx-0 mb-10 mt-4 rounded-2xl py-2.5 items-center justify-center">
           <Text className="font-baloo text-[#8BC34A] text-lg text-center">Drag to reorder~</Text>
         </View>
-      ) : (
-        <TouchableOpacity
-          onPress={handleAddSubtask}
-          className="mx-0 mb-10 mt-4 rounded-2xl border-2 border-dashed py-2.5 items-center justify-center border-primary"
-        >
-          <Text className="font-baloo text-lg text-center">Add more subtasks</Text>
-        </TouchableOpacity>
       )}
     </View>
   );

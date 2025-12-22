@@ -37,12 +37,6 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
         isDeleting={isDeleting}
         selectedDay={selectedDay}
       />
-      <TaskCard
-        task={item}
-        deleteTask={deleteTask}
-        isDeleting={isDeleting}
-        selectedDay={selectedDay}
-      />
     </View>
   );
 
@@ -71,6 +65,6 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
       ) : (
         <TaskListPlaceholder selectedStatus={selectedStatus} />
       )}
-    </>
+    </View>
   );
 };
