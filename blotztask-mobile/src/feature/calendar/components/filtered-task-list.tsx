@@ -32,12 +32,17 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
     <View className="shadow shadow-gray-300">
-      <TaskCard task={item} deleteTask={deleteTask} isDeleting={isDeleting} selectedDay={selectedDay} />
+      <TaskCard
+        task={item}
+        deleteTask={deleteTask}
+        isDeleting={isDeleting}
+        selectedDay={selectedDay}
+      />
     </View>
   );
 
   return (
-    <>
+    <View className="flex-1">
       <TaskStatusRow
         allTaskCount={findStatusCount("All")}
         todoTaskCount={findStatusCount("To Do")}
@@ -69,6 +74,6 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
       >
         {deleteTaskError ? "Failed to delete task." : "Deleted task successfully!"}
       </Snackbar>
-    </>
+    </View>
   );
 };
