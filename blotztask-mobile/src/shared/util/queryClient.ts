@@ -29,7 +29,7 @@ export const queryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
+      staleTime: Infinity,
       gcTime: 1 * 60 * 1000,
       retry: 2,
       retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
