@@ -10,6 +10,8 @@ import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useStarSparkSearchEffects } from "@/feature/star-spark/hooks/useStarSparkSearchEffects";
 import { router } from "expo-router";
+import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 export default function StarSparkScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,16 +31,18 @@ export default function StarSparkScreen() {
     });
   };
 
-  const handleDeleteTask = async (id: number) => {
-    try {
-      await deleteTask(id);
-    } catch (e) {
-      console.log("Failed to delete task:", e);
-    }
+  const handleDelete = (task: FloatingTaskDTO) => {
+    const taskDetail: TaskDetailDTO = {
+      id: task.id,
+      title: task.title,
+      isDone: task.isDone,
+      timeType: 0,
+      notificationId: null,
+    };
+    deleteTask(taskDetail);
   };
-
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-background">
       <View className="flex-row justify-between items-center mt-10">
         <Text className="text-4xl font-bold text-gray-800 font-balooExtraBold pt-4 px-10">
           Star Spark
@@ -95,7 +99,7 @@ export default function StarSparkScreen() {
       {!showLoading && floatingTasksResult.length > 0 && (
         <FloatingTaskDualView
           tasks={floatingTasksResult}
-          onDeleteTask={handleDeleteTask}
+          onDeleteTask={handleDelete}
           isDeleting={isDeleting}
           onPressTask={handlePressTask}
         />

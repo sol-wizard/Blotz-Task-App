@@ -136,66 +136,64 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   };
 
   return (
-    <>
-      <View className="flex-1 bg-white">
-        <FormProvider {...form}>
-          <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
-            {/* Title */}
-            <View className="mb-4 bg-white">
-              <FormTextInput
-                name="title"
-                placeholder="New Task"
-                control={control}
-                className="font-balooBold text-4xl leading-normal"
-              />
-            </View>
-
-            <View className="py-3 bg-background rounded-2xl px-4">
-              <FormTextInput
-                name="description"
-                placeholder="Add a note"
-                control={control}
-                className="font-baloo text-lg text-primary"
-              />
-            </View>
-
-            <FormDivider />
-            <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
-
-            {isActiveTab === "reminder" && <ReminderTab control={control} />}
-            {isActiveTab === "event" && <EventTab control={control} />}
-            <FormDivider />
-
-            <AlertSelect control={control} />
-            <FormDivider />
-
-            {/* Label Select */}
-            <View className="mb-8">
-              {isLoading ? (
-                <Text className="font-baloo text-lg text-primary mt-3">Loading categories...</Text>
-              ) : (
-                <LabelSelect control={control} labels={labels} />
-              )}
-            </View>
-          </ScrollView>
-
-          {/* Submit */}
-          <View className="px-8 py-6">
-            <Pressable
-              onPress={handleSubmit(handleFormSubmit)}
-              disabled={!isValid || isSubmitting}
-              className={`w-full py-4 rounded-lg items-center justify-center ${
-                !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
-              }`}
-            >
-              <Text className="font-balooBold text-xl text-black">
-                {mode === "create" ? "Create Task" : "Update Task"}
-              </Text>
-            </Pressable>
+    <View className="flex-1 bg-white">
+      <FormProvider {...form}>
+        <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
+          {/* Title */}
+          <View className="mb-4 bg-white">
+            <FormTextInput
+              name="title"
+              placeholder="New Task"
+              control={control}
+              className="font-balooBold text-4xl leading-normal"
+            />
           </View>
-        </FormProvider>
-      </View>
-    </>
+
+          <View className="py-3 bg-background rounded-2xl px-4">
+            <FormTextInput
+              name="description"
+              placeholder="Add a note"
+              control={control}
+              className="font-baloo text-lg text-primary"
+            />
+          </View>
+
+          <FormDivider />
+          <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
+
+          {isActiveTab === "reminder" && <ReminderTab control={control} />}
+          {isActiveTab === "event" && <EventTab control={control} />}
+          <FormDivider />
+
+          <AlertSelect control={control} />
+          <FormDivider />
+
+          {/* Label Select */}
+          <View className="mb-8">
+            {isLoading ? (
+              <Text className="font-baloo text-lg text-primary mt-3">Loading categories...</Text>
+            ) : (
+              <LabelSelect control={control} labels={labels} />
+            )}
+          </View>
+        </ScrollView>
+
+        {/* Submit */}
+        <View className="px-8 py-6">
+          <Pressable
+            onPress={handleSubmit(handleFormSubmit)}
+            disabled={!isValid || isSubmitting}
+            className={`w-full py-4 rounded-lg items-center justify-center ${
+              !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
+            }`}
+          >
+            <Text className="font-balooBold text-xl text-black">
+              {mode === "create" ? "Create Task" : "Update Task"}
+            </Text>
+          </Pressable>
+        </View>
+      </FormProvider>
+    </View>
   );
 };
 

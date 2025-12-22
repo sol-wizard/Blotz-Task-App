@@ -7,7 +7,6 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useState } from "react";
 import { TaskStatusType } from "../models/task-status-type";
 import { filterSelectedTask } from "../util/task-counts";
-
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 

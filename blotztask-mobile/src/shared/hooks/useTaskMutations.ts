@@ -50,10 +50,10 @@ const useTaskMutations = () => {
     },
   });
   return {
-    addTask: addTaskMutation.mutateAsync,
-    toggleTask: toggleTaskMutation.mutateAsync,
+    addTask: addTaskMutation.mutate,
+    toggleTask: toggleTaskMutation.mutate,
     deleteTask: deleteTaskMutation.mutate,
-    updateTask: updateTaskMutation.mutateAsync,
+    updateTask: updateTaskMutation.mutate,
     isAdding: addTaskMutation.isPending,
     isToggling: toggleTaskMutation.isPending,
     isDeleting: deleteTaskMutation.isPending,
