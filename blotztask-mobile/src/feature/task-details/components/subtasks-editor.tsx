@@ -52,11 +52,6 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     setIsEditMode(!isEditMode);
   };
 
-  const handleAddSubtask = () => {
-    // TODO: implement add subtask logic
-    console.log("Implement add subtask");
-  };
-
   const handleDelete = async (id: number) => {
     try {
       await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id });

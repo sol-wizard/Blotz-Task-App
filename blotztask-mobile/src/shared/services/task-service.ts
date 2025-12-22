@@ -57,7 +57,7 @@ export async function fetchFloatingTasksByQuery(query: string): Promise<Floating
   try {
     const data: FloatingTaskDTO[] = await apiClient.get(url, { params: { query } });
     return data;
-  } catch (err: any) {
+  } catch {
     throw new Error("Failed search tasks.");
   }
 }

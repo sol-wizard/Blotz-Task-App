@@ -63,7 +63,7 @@ export default function UpdateUserNameScreen() {
           Name cannot be longer than 20 characters.
         </Text>
       )}
-      {name.trim().length == 0 && (
+      {name.trim().length === 0 && (
         <Text className="mt-2 text-sm text-red-500 font-baloo">Name cannot be empty.</Text>
       )}
     </SafeAreaView>
