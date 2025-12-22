@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Snackbar } from "react-native-paper";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, SafeAreaView, View, Text } from "react-native";
 import { TaskStatusRow } from "@/shared/components/ui/task-status-row";
@@ -17,8 +16,7 @@ export default function AllTasksScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
 
-  const { isDeleting, deleteTask, deleteTaskError, deleteTaskSuccess, resetDeleteTask } =
-    useTaskMutations();
+  const { isDeleting, deleteTask } = useTaskMutations();
 
   const filteredTaskList = filterSelectedTask({ selectedDayTasks: tasks });
   const tasksOfSelectedStatus = filteredTaskList.find(
@@ -85,14 +83,6 @@ export default function AllTasksScreen() {
       ) : (
         <TaskListPlaceholder selectedStatus={selectedStatus} />
       )}
-
-      <Snackbar
-        visible={deleteTaskSuccess || !!deleteTaskError}
-        onDismiss={resetDeleteTask}
-        duration={2200}
-      >
-        {deleteTaskError ? "Failed to delete task." : "Deleted task successfully!"}
-      </Snackbar>
     </SafeAreaView>
   );
 }

@@ -10,7 +10,6 @@ import { FormDivider } from "../../shared/components/ui/form-divider";
 import { ReminderTab } from "./components/reminder-tab";
 import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
-import { Snackbar } from "react-native-paper";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
 import { AlertSelect } from "./components/alert-select";
@@ -42,8 +41,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
 
-  const { labels = [], isLoading, isError } = useAllLabels();
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const { labels = [], isLoading } = useAllLabels();
+
   const initialAlertTime = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
 
   const defaultValues: TaskFormField = {
@@ -65,12 +64,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
-
-  useEffect(() => {
-    if (isError) {
-      setSnackbarVisible(true);
-    }
-  }, [isError]);
 
   const handleFormSubmit = async (data: TaskFormField) => {
     // If editing and the existing alert is still scheduled in the future, cancel the old notification first
@@ -187,17 +180,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           </View>
         </FormProvider>
       </View>
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={3000}
-        action={{
-          label: "Dismiss",
-          onPress: () => setSnackbarVisible(false),
-        }}
-      >
-        Failed to load categories. Please try again.
-      </Snackbar>
     </>
   );
 };

@@ -4,13 +4,12 @@ import { useRouter } from "expo-router";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { useState } from "react";
 import { useUserMutation } from "@/feature/settings/hooks/useUserMutation";
-import { Snackbar } from "react-native-paper";
 
 export default function UpdateUserNameScreen() {
   const router = useRouter();
   const { userProfile } = useUserProfile();
   const [name, setName] = useState(userProfile?.displayName ?? "");
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
+
   const doneEnabled = name.trim().length > 0;
 
   const { updateUserProfile: updateUser, isUserUpdating, userUpdateError } = useUserMutation();
@@ -20,8 +19,8 @@ export default function UpdateUserNameScreen() {
     try {
       await updateUser({ displayName: name.trim(), pictureUrl: userProfile?.pictureUrl ?? "" });
       router.back();
-    } catch {
-      setSnackbarVisible(true);
+    } catch (e) {
+      console.log("Failed to update user name:", e);
     }
   };
 
@@ -55,18 +54,6 @@ export default function UpdateUserNameScreen() {
         onChangeText={setName}
         className="mt-12 bg-white rounded-2xl px-4 py-3 text-lg font-baloo text-secondary"
       />
-
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={3000}
-        action={{
-          label: "Dismiss",
-          onPress: () => setSnackbarVisible(false),
-        }}
-      >
-        {userUpdateError ? userUpdateError.message : "Failed to update name."}
-      </Snackbar>
     </SafeAreaView>
   );
 }

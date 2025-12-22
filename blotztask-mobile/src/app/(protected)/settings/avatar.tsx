@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Image, Pressable, SafeAreaView, Text, View } from "react-native";
-import { Snackbar } from "react-native-paper";
+
 import { ReturnButton } from "@/shared/components/ui/return-button";
 import avatarData from "@/shared/constants/avatar.json";
 import { useUserMutation } from "@/feature/settings/hooks/useUserMutation";
@@ -10,7 +10,7 @@ import { AvatarDTO } from "@/feature/settings/modals/avatar-dto";
 export default function AvatarScreen() {
   const avatars = avatarData.avatars;
   const { userProfile } = useUserProfile();
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
+
   const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(() => {
     const pictureUrl = userProfile?.pictureUrl;
     if (pictureUrl && avatars.some((avatar) => avatar.url === pictureUrl)) {
@@ -31,8 +31,8 @@ export default function AvatarScreen() {
         displayName: userProfile?.displayName ?? "",
         pictureUrl: avatar.url,
       });
-    } catch {
-      setSnackbarVisible(true);
+    } catch (e) {
+      console.log("Failed to update avatar.");
     }
   };
 
@@ -72,18 +72,6 @@ export default function AvatarScreen() {
           );
         })}
       </View>
-
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={3000}
-        action={{
-          label: "Dismiss",
-          onPress: () => setSnackbarVisible(false),
-        }}
-      >
-        {userUpdateError ? userUpdateError.message : "Failed to update avatar."}
-      </Snackbar>
     </SafeAreaView>
   );
 }
