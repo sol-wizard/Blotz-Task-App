@@ -11,7 +11,7 @@ export const useTaskById = ({ taskId }: { taskId: number }) => {
   } = useQuery({
     queryKey: taskKeys.byId(taskId),
     queryFn: () => fetchTaskById(taskId),
-    initialData: () => qc.getQueryData(["taskId", taskId]),
+    initialData: () => qc.getQueryData(taskKeys.byId(taskId)),
   });
 
   return {

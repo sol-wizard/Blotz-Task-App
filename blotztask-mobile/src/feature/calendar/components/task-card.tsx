@@ -170,7 +170,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                   <TaskCheckbox
                     checked={task.isDone}
                     onPress={async () => {
-                      toggleTask(task.id);
+                      toggleTask({ taskId: task.id, selectedDay });
                       if (task.alertTime && new Date(task.alertTime) > new Date())
                         await cancelNotification({
                           notificationId: task?.notificationId,

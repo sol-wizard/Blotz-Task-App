@@ -24,7 +24,22 @@ const useTaskMutations = () => {
   });
 
   const toggleTaskMutation = useMutation({
-    mutationFn: (taskId: number) => toggleTaskCompletion(taskId),
+    mutationFn: ({ taskId, selectedDay }: { taskId: number; selectedDay?: Date }) =>
+      toggleTaskCompletion(taskId),
+    onMutate: async (data) => {
+      if (!data?.selectedDay) return;
+      const prevSelectedDayData = queryClient.getQueryData<any>(
+        taskKeys.selectedDay(convertToDateTimeOffset(startOfDay(data.selectedDay))),
+      );
+      const toggleInList = (list: any[] | undefined) =>
+        list?.map((t) => (t.id === data.taskId ? { ...t, isCompleted: !t.isCompleted } : t));
+      queryClient.setQueryData(taskKeys.all, toggleInList(prevSelectedDayData));
+      return { prevSelectedDayData };
+    },
+    onError: (_err, _taskId, context) => {
+      if (!context) return;
+      queryClient.setQueryData(taskKeys.all, context.prevSelectedDayData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: taskKeys.floating() });
