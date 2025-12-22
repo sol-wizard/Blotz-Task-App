@@ -23,6 +23,7 @@ import {
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
+import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
 
 type TaskFormProps =
   | {
@@ -39,12 +40,18 @@ type TaskFormProps =
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const hasEventTimes = dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime;
   const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
+  const { userPreferences, isUserPreferencesLoading, userPreferencesError } =
+    useUserPreferencesQuery();
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
 
   const { labels = [], isLoading, isError } = useAllLabels();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const initialAlertTime = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
+
+  const defaultAlert = userPreferences?.upcomingNotification
+    ? (initialAlertTime ?? 300)
+    : (initialAlertTime ?? null);
 
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
@@ -54,7 +61,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     startTime: dto?.startTime ? new Date(dto?.startTime) : null,
     endDate: dto?.endTime ? new Date(dto?.endTime) : null,
     endTime: dto?.endTime ? new Date(dto?.endTime) : null,
-    alert: initialAlertTime ?? 300,
+    alert: defaultAlert,
   };
 
   const form = useForm<TaskFormField>({
@@ -87,13 +94,17 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       isActiveTab === "reminder" ? data.startTime : data.endTime,
     );
 
-    const notificationId = await createNotificationFromAlert({
-      startTime,
-      alert: data.alert,
-      title: data.title,
-    });
+    var notificationId = null;
+    var alertTime = undefined;
+    if (userPreferences?.upcomingNotification) {
+      notificationId = await createNotificationFromAlert({
+        startTime,
+        alert: data.alert,
+        title: data.title,
+      });
+      alertTime = calculateAlertTime(data.startTime, data.alert);
+    }
 
-    const alertTime = calculateAlertTime(data.startTime, data.alert);
     const submitTask: AddTaskItemDTO = {
       title: data.title.trim(),
       description: data.description?.trim() ?? undefined,
