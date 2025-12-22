@@ -119,11 +119,8 @@ export const useGashaponMachineConfig = ({
   };
 
   useEffect(() => {
-    if (!floatingTasks || floatingTasks.length === 0) {
-      return;
-    }
-
-    floatingTasksRef.current = floatingTasks;
+    const tasks = floatingTasks || [];
+    floatingTasksRef.current = tasks;
 
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
