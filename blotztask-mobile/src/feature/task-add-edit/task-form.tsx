@@ -99,8 +99,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       isActiveTab === "reminder" ? data.startTime : data.endTime,
     );
 
-    var notificationId = null;
-    var alertTime = undefined;
+    let notificationId = null;
+    let alertTime = undefined;
     if (userPreferences?.upcomingNotification) {
       notificationId = await createNotificationFromAlert({
         startTime,
