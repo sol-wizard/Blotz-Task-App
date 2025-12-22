@@ -9,7 +9,6 @@ export default function UpdateUserNameScreen() {
   const router = useRouter();
   const { userProfile } = useUserProfile();
   const [name, setName] = useState(userProfile?.displayName ?? "");
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
 
   const enableDoneButton = name.trim().length > 0 && name.trim().length <= 20;
 
