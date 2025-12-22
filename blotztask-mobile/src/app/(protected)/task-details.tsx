@@ -10,6 +10,7 @@ import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 
 type tabTypes = "Details" | "Subtasks";
 export default function TaskDetailsScreen() {
@@ -35,8 +36,12 @@ export default function TaskDetailsScreen() {
       id: selectedTask.id,
       title: selectedTask.title,
       description: newDescription,
-      startTime: selectedTask.startTime ? new Date(selectedTask.startTime) : undefined,
-      endTime: selectedTask.endTime ? new Date(selectedTask.endTime) : undefined,
+      startTime: selectedTask.startTime
+        ? convertToDateTimeOffset(new Date(selectedTask.startTime))
+        : undefined,
+      endTime: selectedTask.endTime
+        ? convertToDateTimeOffset(new Date(selectedTask.endTime))
+        : undefined,
       labelId: selectedTask.label?.labelId,
       timeType: selectedTask.timeType ?? null,
     });
