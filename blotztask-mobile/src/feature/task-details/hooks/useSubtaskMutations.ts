@@ -7,6 +7,7 @@ import {
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
+import { subtaskKeys, taskKeys } from "@/shared/util/query-key-factory";
 
 export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();
@@ -14,7 +15,6 @@ export const useSubtaskMutations = () => {
     mutationFn: createBreakDownSubtasks,
     onSuccess: (data) => {
       console.log("Subtasks created:", data);
-      // generated on the fly, no need to update queryClient, just return to component
     },
     onError: (error) => {
       console.error("Failed to create subtasks:", error);
@@ -24,8 +24,8 @@ export const useSubtaskMutations = () => {
   const replaceSubtasksMutation = useMutation({
     mutationFn: replaceSubtasks,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["subtasks", variables.taskId] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.taskId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
     onError: (error) => {
       console.error("Failed to add subtasks:", error);
@@ -37,8 +37,8 @@ export const useSubtaskMutations = () => {
       deleteSubtask(subtaskId),
     onSuccess: (_, variables) => {
       console.log("Deleted subtask", variables.subtaskId);
-      queryClient.invalidateQueries({ queryKey: ["subtasks", variables.parentTaskId] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
     onError: (error) => {
       console.error("Failed to delete subtask:", error);
