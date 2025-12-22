@@ -24,6 +24,7 @@ import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 type TaskFormProps =
   | {
@@ -45,7 +46,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
 
-  const { labels = [], isLoading, isError } = useAllLabels();
+  const { labels = [], isLoading, loadingLabelError } = useAllLabels();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const initialAlertTime = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
 
@@ -74,10 +75,14 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const { isValid, isSubmitting } = formState;
 
   useEffect(() => {
-    if (isError) {
+    if (loadingLabelError || userPreferencesError) {
       setSnackbarVisible(true);
     }
-  }, [isError]);
+  }, [loadingLabelError, userPreferencesError]);
+
+  if (isUserPreferencesLoading) {
+    return <LoadingScreen />;
+  }
 
   const handleFormSubmit = async (data: TaskFormField) => {
     // If editing and the existing alert is still scheduled in the future, cancel the old notification first
@@ -207,7 +212,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           onPress: () => setSnackbarVisible(false),
         }}
       >
-        Failed to load categories. Please try again.
+        {userPreferencesError
+          ? "Failed to load user preferences. Please try again."
+          : "Failed to load categories. Please try again."}
       </Snackbar>
     </>
   );
