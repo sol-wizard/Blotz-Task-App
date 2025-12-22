@@ -3,7 +3,6 @@ import { View, ScrollView } from "react-native";
 import { TaskStatusType } from "../../../feature/calendar/models/task-status-type";
 import { TaskStatusButton } from "@/shared/components/ui/task-status-button";
 import { startOfDay, isBefore, isAfter } from "date-fns";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export function TaskStatusRow({
   allTaskCount,
@@ -33,8 +32,13 @@ export function TaskStatusRow({
   const isToday = !isPastDate && !isFutureDate;
 
   return (
-    <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} className="mb-4 h-4">
-      <View className="flex-row gap-2 px-4 items-center py-4">
+    <ScrollView
+      horizontal={true}
+      showsHorizontalScrollIndicator={false}
+      style={{ flexGrow: 0, flexShrink: 0 }}
+      className="py-3"
+    >
+      <View className="flex-row gap-2 px-4 items-center">
         <TaskStatusButton
           isSelected={selectedStatus === "All"}
           onChange={() => onChange("All")}
