@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, View } from "react-native";
 import { ReturnButton } from "@/shared/components/ui/return-button";

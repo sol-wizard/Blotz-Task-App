@@ -5,6 +5,7 @@ import { estimateTaskTime } from "../services/task-time-estimate-service";
 export const useEstimateTaskTime = () => {
   const estimateMutation = useMutation({
     mutationFn: (task: FloatingTaskDTO) => estimateTaskTime(task),
+    meta: { silent: true },
   });
 
   return {

@@ -7,13 +7,12 @@ export const createBreakDownSubtasks = async (
   taskId: number,
 ): Promise<BreakdownSubtaskDTO[] | undefined> => {
   if (!taskId) return;
-
   try {
     const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/TaskBreakdown/${taskId}`;
     const data: BreakdownSubtaskDTO[] = await apiClient.post(url);
     return data;
-  } catch (error) {
-    console.error("Error fetching subtasks:", error);
+  } catch {
+    throw new Error("Error fetching subtasks");
   }
 };
 
@@ -25,7 +24,6 @@ export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   try {
     await apiClient.put(url, { ...newSubtask });
   } catch (err: any) {
-    console.error("Update subtask failed:", err);
     throw new Error("Update subtask failed");
   }
 }
