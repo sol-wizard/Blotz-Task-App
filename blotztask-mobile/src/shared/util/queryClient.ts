@@ -1,14 +1,27 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
+import Toast from "react-native-toast-message";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
-      console.log("Query Error:", query.queryKey, error);
+      if (query.meta?.silent) return;
+
+      const msg = getErrorMessage(error);
+      Toast.show({
+        type: "error",
+        text1: msg,
+      });
     },
   }),
   mutationCache: new MutationCache({
-    onError: (error, variables) => {
-      console.error("[Mutation Error]", String(error), variables);
+    onError: (error, _variables, _context, mutation) => {
+      if (mutation.meta?.silent) return;
+
+      const msg = getErrorMessage(error);
+      Toast.show({
+        type: "error",
+        text1: msg,
+      });
     },
     onSuccess: (data, variables) => {
       console.log("[Mutation Success]", data, variables);
@@ -31,3 +44,15 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+
+  const anyErr = error as any;
+  return (
+    anyErr?.response?.data?.message ||
+    anyErr?.response?.data?.error ||
+    anyErr?.message ||
+    "Something went wrong"
+  );
+}
