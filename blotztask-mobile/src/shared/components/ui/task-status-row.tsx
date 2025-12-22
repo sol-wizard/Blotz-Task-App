@@ -1,8 +1,9 @@
 import React from "react";
-import { View, ScrollView, SafeAreaView } from "react-native";
+import { View, ScrollView } from "react-native";
 import { TaskStatusType } from "../../../feature/calendar/models/task-status-type";
 import { TaskStatusButton } from "@/shared/components/ui/task-status-button";
 import { startOfDay, isBefore, isAfter } from "date-fns";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export function TaskStatusRow({
   allTaskCount,
@@ -32,47 +33,45 @@ export function TaskStatusRow({
   const isToday = !isPastDate && !isFutureDate;
 
   return (
-    <SafeAreaView>
-      <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} className="mb-4">
-        <View className="flex-row gap-2 px-4 items-center py-4">
-          <TaskStatusButton
-            isSelected={selectedStatus === "All"}
-            onChange={() => onChange("All")}
-            statusName="All"
-            taskCount={allTaskCount}
-          />
+    <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} className="mb-4 h-4">
+      <View className="flex-row gap-2 px-4 items-center py-4">
+        <TaskStatusButton
+          isSelected={selectedStatus === "All"}
+          onChange={() => onChange("All")}
+          statusName="All"
+          taskCount={allTaskCount}
+        />
 
-          <TaskStatusButton
-            isSelected={selectedStatus === "To Do"}
-            onChange={() => onChange("To Do")}
-            statusName="To Do"
-            taskCount={todoTaskCount}
-          />
+        <TaskStatusButton
+          isSelected={selectedStatus === "To Do"}
+          onChange={() => onChange("To Do")}
+          statusName="To Do"
+          taskCount={todoTaskCount}
+        />
 
-          <TaskStatusButton
-            isSelected={selectedStatus === "In Progress"}
-            onChange={() => onChange("In Progress")}
-            statusName="In Progress"
-            taskCount={inProgressTaskCount}
-          />
+        <TaskStatusButton
+          isSelected={selectedStatus === "In Progress"}
+          onChange={() => onChange("In Progress")}
+          statusName="In Progress"
+          taskCount={inProgressTaskCount}
+        />
 
-          <TaskStatusButton
-            isSelected={selectedStatus === "Done"}
-            onChange={() => onChange("Done")}
-            statusName="Done"
-            taskCount={doneTaskCount}
-          />
+        <TaskStatusButton
+          isSelected={selectedStatus === "Done"}
+          onChange={() => onChange("Done")}
+          statusName="Done"
+          taskCount={doneTaskCount}
+        />
 
-          {(isToday || isPastDate) && (
-            <TaskStatusButton
-              isSelected={selectedStatus === "Overdue"}
-              onChange={() => onChange("Overdue")}
-              statusName="Overdue"
-              taskCount={overdueTaskCount}
-            />
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        {(isToday || isPastDate) && (
+          <TaskStatusButton
+            isSelected={selectedStatus === "Overdue"}
+            onChange={() => onChange("Overdue")}
+            statusName="Overdue"
+            taskCount={overdueTaskCount}
+          />
+        )}
+      </View>
+    </ScrollView>
   );
 }

@@ -142,7 +142,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     <>
       <View className="flex-1 bg-white">
         <FormProvider {...form}>
-          <ScrollView className="flex-col py-6 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
+          <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
             {/* Title */}
             <View className="mb-4 bg-white">
               <FormTextInput
@@ -153,7 +153,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
               />
             </View>
 
-            <View className="mb-8 py-3 bg-background rounded-2xl px-4">
+            <View className="py-3 bg-background rounded-2xl px-4">
               <FormTextInput
                 name="description"
                 placeholder="Add a note"
