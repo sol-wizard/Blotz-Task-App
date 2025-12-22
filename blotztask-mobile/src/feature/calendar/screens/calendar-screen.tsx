@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
-import { SafeAreaView } from "react-native";
+
 import { theme } from "@/shared/constants/theme";
 import CalendarHeader from "../components/calendar-header";
 import { FilteredTaskList } from "../components/filtered-task-list";
 import { useTaskDays } from "../hooks/useTaskDays";
 import { getMarkedDates, getSelectedDates } from "../util/get-marked-dates";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Define the theme object outside the component to prevent re-renders
 const calendarTheme = {

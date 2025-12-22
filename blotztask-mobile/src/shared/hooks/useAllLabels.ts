@@ -14,6 +14,6 @@ export const useAllLabels = () => {
   return {
     labels: labels ?? [],
     isLoading,
-    isError,
+    loadingLabelError: isError,
   };
 };

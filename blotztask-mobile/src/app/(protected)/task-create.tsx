@@ -1,10 +1,10 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 function TaskCreateScreen() {
   const router = useRouter();
