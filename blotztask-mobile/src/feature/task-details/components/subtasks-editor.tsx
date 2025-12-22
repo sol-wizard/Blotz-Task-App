@@ -12,12 +12,7 @@ type SubtasksEditorProps = {
 };
 
 const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
-  const {
-    data: fetchedSubtasks,
-    isLoading,
-    isError,
-    refetch,
-  } = useSubtasksByParentId(parentTask.id);
+  const { data: fetchedSubtasks, isLoading } = useSubtasksByParentId(parentTask.id);
 
   const {
     breakDownTask,
@@ -81,20 +76,6 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-base font-baloo text-primary">Loading subtasks...</Text>
-      </View>
-    );
-  }
-
-  if (isError) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-base font-baloo text-red-500">Failed to load subtasks</Text>
-        <TouchableOpacity onPress={() => refetch()} className="mt-4">
-          <Text className="text-blue-500 font-balooSemiBold">Retry</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onBack} className="mt-2">
-          <Text className="text-gray-500 font-baloo">Go Back</Text>
-        </TouchableOpacity>
       </View>
     );
   }

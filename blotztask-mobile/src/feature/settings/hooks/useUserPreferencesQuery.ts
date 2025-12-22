@@ -10,7 +10,6 @@ export function useUserPreferencesQuery() {
 
   return {
     isUserPreferencesLoading: userPreferencesQuery.isLoading,
-    userPreferencesError: userPreferencesQuery.error,
     userPreferences: userPreferencesQuery.data,
   };
 }

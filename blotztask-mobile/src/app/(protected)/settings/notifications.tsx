@@ -9,11 +9,9 @@ import { UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 export default function NotificationScreen() {
-  const { isUserPreferencesLoading, userPreferencesError, userPreferences } =
-    useUserPreferencesQuery();
+  const { isUserPreferencesLoading, userPreferences } = useUserPreferencesQuery();
 
-  const { updateUserPreferencesAsync, isUpdatingUserPreferences, updateUserPreferencesError } =
-    useUserPreferencesMutation();
+  const { updateUserPreferencesAsync, isUpdatingUserPreferences } = useUserPreferencesMutation();
 
   const handleUpdateUserPreferences = async () => {
     if (!userPreferences) return;

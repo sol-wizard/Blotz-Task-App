@@ -72,26 +72,21 @@ export const useSubtaskMutations = () => {
     // Breakdown
     breakDownTask: breakdownMutation.mutateAsync,
     isBreakingDown: breakdownMutation.isPending,
-    breakDownError: breakdownMutation.error,
 
     // Add/Replace subtasks
     replaceSubtasks: replaceSubtasksMutation.mutateAsync,
     isReplacingSubtasks: replaceSubtasksMutation.isPending,
-    replaceSubtasksError: replaceSubtasksMutation.error,
 
     // Delete subtask
     deleteSubtask: deleteSubtaskMutation.mutateAsync,
     isDeletingSubtask: deleteSubtaskMutation.isPending,
-    deleteSubtaskError: deleteSubtaskMutation.error,
 
     //Update subtask
     updateSubtask: updateSubtaskMutation.mutateAsync,
     isUpdatingSubtask: updateSubtaskMutation.isPending,
-    isUpdateSubtaskError: updateSubtaskMutation.error,
 
     // Toggle subtask status
     toggleSubtaskStatus: toggleSubtaskStatusMutation.mutateAsync,
     isTogglingSubtaskStatus: toggleSubtaskStatusMutation.isPending,
-    toggleSubtaskStatusError: toggleSubtaskStatusMutation.error,
   };
 };

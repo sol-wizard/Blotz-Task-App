@@ -15,6 +15,5 @@ export function useUserPreferencesMutation() {
   return {
     updateUserPreferencesAsync: mutation.mutateAsync,
     isUpdatingUserPreferences: mutation.isPending,
-    updateUserPreferencesError: mutation.error,
   };
 }
