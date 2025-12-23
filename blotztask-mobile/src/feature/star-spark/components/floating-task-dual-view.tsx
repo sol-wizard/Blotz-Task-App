@@ -12,7 +12,7 @@ export const FloatingTaskDualView = ({
   onPressTask,
 }: {
   tasks: FloatingTaskDTO[];
-  onDeleteTask: (id: number) => void;
+  onDeleteTask: (t: FloatingTaskDTO) => void;
   isDeleting: boolean;
   onPressTask: (task: FloatingTaskDTO) => void;
 }) => {

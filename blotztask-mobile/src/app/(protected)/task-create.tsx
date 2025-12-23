@@ -28,7 +28,7 @@ function TaskCreateScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
       <TaskForm mode="create" onSubmit={handleTaskSubmit} />
     </SafeAreaView>
   );
