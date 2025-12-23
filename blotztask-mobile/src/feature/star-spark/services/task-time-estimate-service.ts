@@ -11,6 +11,6 @@ export const estimateTaskTime = async (
     return taskTimeEstimation;
   } catch (error) {
     console.error("Error estimating task time:", error);
-    throw error;
+    throw new Error("Failed to estimate task time.");
   }
 };

@@ -1,5 +1,5 @@
 import { theme } from "@/shared/constants/theme";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { View, Text, Image, Pressable } from "react-native";
 import { Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,38 +8,21 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { FloatingTaskDualView } from "@/feature/star-spark/components/floating-task-dual-view";
 import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { Snackbar } from "react-native-paper";
 import { useStarSparkSearchEffects } from "@/feature/star-spark/hooks/useStarSparkSearchEffects";
-import { router} from "expo-router";
-
-
+import { router } from "expo-router";
+import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
+import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 export default function StarSparkScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const { floatingTasks, isLoading } = useFloatingTasks();
   const { deleteTask, isDeleting } = useTaskMutations();
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
-  const [snackbarMsg, setSnackbarMsg] = useState("");
 
-  const {
-  floatingTasksResult,
-  showLoading,
-  isSearchError,
-  searchError,
-} = useStarSparkSearchEffects({
-  searchQuery,
-  floatingTasks,
-  isLoadingAll: isLoading,
-});
-
-
-useEffect(() => {
-  if (isSearchError) {
-    setSnackbarMsg((searchError as any)?.message ?? "Failed to search tasks");
-    setSnackbarVisible(true);
-  }
-}, [isSearchError, searchError]);
-
+  const { floatingTasksResult, showLoading } = useStarSparkSearchEffects({
+    searchQuery,
+    floatingTasks,
+    isLoadingAll: isLoading,
+  });
 
   const handlePressTask = (task: any) => {
     router.push({
@@ -48,20 +31,18 @@ useEffect(() => {
     });
   };
 
-  const handleDeleteTask = async (id: number) => {
-    try {
-      await deleteTask(id); 
-      setSnackbarMsg("Task deleted");
-      setSnackbarVisible(true);
-    } catch {
-      setSnackbarMsg("Failed to delete task");
-      setSnackbarVisible(true);
-    }
+  const handleDelete = (task: FloatingTaskDTO) => {
+    const taskDetail: TaskDetailDTO = {
+      id: task.id,
+      title: task.title,
+      isDone: task.isDone,
+      timeType: 0,
+      notificationId: null,
+    };
+    deleteTask(taskDetail);
   };
-
-
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-background">
       <View className="flex-row justify-between items-center mt-10">
         <Text className="text-4xl font-bold text-gray-800 font-balooExtraBold pt-4 px-10">
           Star Spark
@@ -71,30 +52,31 @@ useEffect(() => {
         </Pressable>
       </View>
 
-      <View className="bg-[#CDF79A] mx-8 my-6 rounded-3xl"
-      style={{ minHeight: 110, position: "relative",
-    overflow: "hidden", }}>
-      <Image
-        source={ASSETS.transparentStar}
-        style={{
-          position: "absolute",
-          top: 5,
-          right: -5,
-          width: 100,
-          height: 100,
-          opacity: 1,
-        }}
-      />
+      <View
+        className="bg-[#CDF79A] mx-8 my-6 rounded-3xl"
+        style={{ minHeight: 110, position: "relative", overflow: "hidden" }}
+      >
+        <Image
+          source={ASSETS.transparentStar}
+          style={{
+            position: "absolute",
+            top: 5,
+            right: -5,
+            width: 100,
+            height: 100,
+            opacity: 1,
+          }}
+        />
         <Text className="font-baloo text-xl text-secondary mt-5 mb-4 mx-4 text-onSurface">
           Ready to turn a spark into action?
         </Text>
-        
+
         <Searchbar
           value={searchQuery}
           onChangeText={setSearchQuery}
-          icon={'magnify'}
+          icon={"magnify"}
           placeholderTextColor={theme.colors.disabled}
-          clearIcon={searchQuery ? 'close' : undefined}
+          clearIcon={searchQuery ? "close" : undefined}
           iconColor={theme.colors.disabled}
           style={{
             backgroundColor: theme.colors.background,
@@ -105,11 +87,11 @@ useEffect(() => {
             height: 40,
             marginHorizontal: 12,
           }}
-          inputStyle={{ 
+          inputStyle={{
             fontSize: 16,
-            fontFamily: 'BalooRegular',
+            fontFamily: "BalooRegular",
             paddingBottom: 14,
-           }}
+          }}
         />
       </View>
 
@@ -117,23 +99,11 @@ useEffect(() => {
       {!showLoading && floatingTasksResult.length > 0 && (
         <FloatingTaskDualView
           tasks={floatingTasksResult}
-          onDeleteTask={handleDeleteTask}
+          onDeleteTask={handleDelete}
           isDeleting={isDeleting}
           onPressTask={handlePressTask}
         />
       )}
-
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={3000}
-        action={{
-          label: "Dismiss",
-          onPress: () => setSnackbarVisible(false),
-        }}
-      >
-        {snackbarMsg}
-      </Snackbar>
     </SafeAreaView>
   );
 }

@@ -24,7 +24,7 @@ export const FloatingTaskCard = ({
   isToggled: boolean;
   onToggle: () => void;
   isDeleting: boolean;
-  onDelete: (id: number) => void;
+  onDelete: (t: FloatingTaskDTO) => void;
   onPressCard: (task: FloatingTaskDTO) => void;
 }) => {
   const iconSource = getLabelIcon(floatingTask.label?.name);
@@ -97,7 +97,7 @@ export const FloatingTaskCard = ({
 
       {isToggled && (
         <View className="flex-row justify-end mt-3">
-          <Pressable onPress={() => onDelete(floatingTask.id)} disabled={isDeleting}>
+          <Pressable onPress={() => onDelete(floatingTask)} disabled={isDeleting}>
             <View className="w-8 h-8 bg-warning rounded-xl items-center justify-center">
               {isDeleting ? (
                 <ActivityIndicator size="small" color="#fff" />
@@ -121,7 +121,7 @@ export const FloatingTaskCard = ({
         setIsModalVisible={setIsModalVisible}
         durationText={convertDurationToText(timeResult ?? "")}
         isEstimating={isEstimating}
-        error={estimateError ? estimateError.message : null}
+        error={estimateError ? "Failed to estimate task time." : null}
       />
     </View>
   );

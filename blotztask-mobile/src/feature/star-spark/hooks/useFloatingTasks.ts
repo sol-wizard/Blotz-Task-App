@@ -1,9 +1,10 @@
 import { fetchFloatingTasks } from "@/shared/services/task-service";
+import { taskKeys } from "@/shared/util/query-key-factory";
 import { useQuery } from "@tanstack/react-query";
 
 export const useFloatingTasks = () => {
   const { data: floatingTasks, isLoading } = useQuery({
-    queryKey: ["floatingTasks"],
+    queryKey: taskKeys.floating(),
     queryFn: () => fetchFloatingTasks(),
   });
 

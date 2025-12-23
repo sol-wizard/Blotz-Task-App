@@ -5,6 +5,7 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // TODO: Fix flickering stale selected task in task detail page while navigating back
 const TaskEditScreen = () => {
@@ -45,7 +46,11 @@ const TaskEditScreen = () => {
     }
   };
 
-  return <TaskForm mode="edit" dto={taskEditData} onSubmit={handleTaskSubmit} />;
+  return (
+    <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+      <TaskForm mode="edit" dto={taskEditData} onSubmit={handleTaskSubmit} />
+    </SafeAreaView>
+  );
 };
 
 export default TaskEditScreen;

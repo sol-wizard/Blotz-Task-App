@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +10,6 @@ import { FormDivider } from "../../shared/components/ui/form-divider";
 import { ReminderTab } from "./components/reminder-tab";
 import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
-import { Snackbar } from "react-native-paper";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
 import { AlertSelect } from "./components/alert-select";
@@ -41,13 +40,12 @@ type TaskFormProps =
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const hasEventTimes = dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime;
   const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
-  const { userPreferences, isUserPreferencesLoading, userPreferencesError } =
-    useUserPreferencesQuery();
+  const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
 
-  const { labels = [], isLoading, loadingLabelError } = useAllLabels();
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const { labels = [], isLoading } = useAllLabels();
+
   const initialAlertTime = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
 
   const defaultAlert = userPreferences?.upcomingNotification
@@ -73,12 +71,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { handleSubmit, formState, control, setValue } = form;
   const { isValid, isSubmitting } = formState;
-
-  useEffect(() => {
-    if (loadingLabelError || userPreferencesError) {
-      setSnackbarVisible(true);
-    }
-  }, [loadingLabelError, userPreferencesError]);
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -144,79 +136,64 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   };
 
   return (
-    <>
-      <View className="flex-1 bg-white">
-        <FormProvider {...form}>
-          <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
-            {/* Title */}
-            <View className="mb-4 bg-white">
-              <FormTextInput
-                name="title"
-                placeholder="New Task"
-                control={control}
-                className="font-balooBold text-4xl leading-normal"
-              />
-            </View>
-
-            <View className="py-3 bg-background rounded-2xl px-4">
-              <FormTextInput
-                name="description"
-                placeholder="Add a note"
-                control={control}
-                className="font-baloo text-lg text-primary"
-              />
-            </View>
-
-            <FormDivider />
-            <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
-
-            {isActiveTab === "reminder" && <ReminderTab control={control} />}
-            {isActiveTab === "event" && <EventTab control={control} />}
-            <FormDivider />
-
-            <AlertSelect control={control} />
-            <FormDivider />
-
-            {/* Label Select */}
-            <View className="mb-8">
-              {isLoading ? (
-                <Text className="font-baloo text-lg text-primary mt-3">Loading categories...</Text>
-              ) : (
-                <LabelSelect control={control} labels={labels} />
-              )}
-            </View>
-          </ScrollView>
-
-          {/* Submit */}
-          <View className="px-8 py-6">
-            <Pressable
-              onPress={handleSubmit(handleFormSubmit)}
-              disabled={!isValid || isSubmitting}
-              className={`w-full py-4 rounded-lg items-center justify-center ${
-                !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
-              }`}
-            >
-              <Text className="font-balooBold text-xl text-black">
-                {mode === "create" ? "Create Task" : "Update Task"}
-              </Text>
-            </Pressable>
+    <View className="flex-1 bg-white">
+      <FormProvider {...form}>
+        <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
+          {/* Title */}
+          <View className="mb-4 bg-white">
+            <FormTextInput
+              name="title"
+              placeholder="New Task"
+              control={control}
+              className="font-balooBold text-4xl leading-normal"
+            />
           </View>
-        </FormProvider>
-      </View>
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={3000}
-        action={{
-          label: "Dismiss",
-          onPress: () => setSnackbarVisible(false),
-        }}
-      >
-        {userPreferencesError
-          ? "Failed to load user preferences. Please try again."
-          : "Failed to load categories. Please try again."}
-      </Snackbar>
-    </>
+
+          <View className="py-3 bg-background rounded-2xl px-4">
+            <FormTextInput
+              name="description"
+              placeholder="Add a note"
+              control={control}
+              className="font-baloo text-lg text-primary"
+            />
+          </View>
+
+          <FormDivider />
+          <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
+
+          {isActiveTab === "reminder" && <ReminderTab control={control} />}
+          {isActiveTab === "event" && <EventTab control={control} />}
+          <FormDivider />
+
+          <AlertSelect control={control} />
+          <FormDivider />
+
+          {/* Label Select */}
+          <View className="mb-8">
+            {isLoading ? (
+              <Text className="font-baloo text-lg text-primary mt-3">Loading categories...</Text>
+            ) : (
+              <LabelSelect control={control} labels={labels} />
+            )}
+          </View>
+        </ScrollView>
+
+        {/* Submit */}
+        <View className="px-8 py-6">
+          <Pressable
+            onPress={handleSubmit(handleFormSubmit)}
+            disabled={!isValid || isSubmitting}
+            className={`w-full py-4 rounded-lg items-center justify-center ${
+              !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
+            }`}
+          >
+            <Text className="font-balooBold text-xl text-black">
+              {mode === "create" ? "Create Task" : "Update Task"}
+            </Text>
+          </Pressable>
+        </View>
+      </FormProvider>
+    </View>
   );
 };
 

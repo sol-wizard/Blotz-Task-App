@@ -12,12 +12,7 @@ type SubtasksEditorProps = {
 };
 
 const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
-  const {
-    data: fetchedSubtasks,
-    isLoading,
-    isError,
-    refetch,
-  } = useSubtasksByParentId(parentTask.id);
+  const { data: fetchedSubtasks, isLoading } = useSubtasksByParentId(parentTask.id);
 
   const {
     breakDownTask,
@@ -57,11 +52,6 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     setIsEditMode(!isEditMode);
   };
 
-  const handleAddSubtask = () => {
-    // TODO: implement add subtask logic
-    console.log("Implement add subtask");
-  };
-
   const handleDelete = async (id: number) => {
     try {
       await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id });
@@ -81,20 +71,6 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-base font-baloo text-primary">Loading subtasks...</Text>
-      </View>
-    );
-  }
-
-  if (isError) {
-    return (
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-base font-baloo text-red-500">Failed to load subtasks</Text>
-        <TouchableOpacity onPress={() => refetch()} className="mt-4">
-          <Text className="text-blue-500 font-balooSemiBold">Retry</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onBack} className="mt-2">
-          <Text className="text-gray-500 font-baloo">Go Back</Text>
-        </TouchableOpacity>
       </View>
     );
   }
@@ -149,17 +125,10 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
       </View>
 
       {/* Add More Subtasks Button / Drag to Reorder - Fixed at bottom */}
-      {isEditMode ? (
+      {isEditMode ?? (
         <View className="mx-0 mb-10 mt-4 rounded-2xl py-2.5 items-center justify-center">
           <Text className="font-baloo text-[#8BC34A] text-lg text-center">Drag to reorder~</Text>
         </View>
-      ) : (
-        <TouchableOpacity
-          onPress={handleAddSubtask}
-          className="mx-0 mb-10 mt-4 rounded-2xl border-2 border-dashed py-2.5 items-center justify-center border-primary"
-        >
-          <Text className="font-baloo text-lg text-center">Add more subtasks</Text>
-        </TouchableOpacity>
       )}
     </View>
   );

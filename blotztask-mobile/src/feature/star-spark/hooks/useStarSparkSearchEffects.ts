@@ -15,25 +15,15 @@ export const useStarSparkSearchEffects = ({
 }) => {
   const trimmedKeyword = searchQuery.trim();
   const hasKeyword = trimmedKeyword.length > 0;
-  const [debouncedQuery] = useDebounce(
-    hasKeyword ? trimmedKeyword : "",
-    debouncedMs
-  );
+  const [debouncedQuery] = useDebounce(hasKeyword ? trimmedKeyword : "", debouncedMs);
 
-  const {
-    data: searchedTasks,
-    isLoading: isSearching,
-    isError: isSearchError,
-    error: searchError,
-  } = useFloatingTasksSearch(debouncedQuery);
+  const { data: searchedTasks, isLoading: isSearching } = useFloatingTasksSearch(debouncedQuery);
 
-  const floatingTasksResult = hasKeyword ? searchedTasks ?? [] : floatingTasks ?? [];
+  const floatingTasksResult = hasKeyword ? (searchedTasks ?? []) : (floatingTasks ?? []);
   const showLoading = isLoadingAll || (hasKeyword && isSearching);
 
   return {
     floatingTasksResult,
     showLoading,
-    isSearchError,
-    searchError
   };
 };

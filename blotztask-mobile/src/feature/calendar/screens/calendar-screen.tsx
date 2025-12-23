@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
-
 import { theme } from "@/shared/constants/theme";
 import CalendarHeader from "../components/calendar-header";
 import { FilteredTaskList } from "../components/filtered-task-list";
@@ -37,7 +36,7 @@ export default function CalendarScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView className="flex-1" edges={["top"]}>
       <CalendarHeader
         date={format(selectedDay, "yyyy-MM-dd")}
         isCalendarVisible={isCalendarVisible}

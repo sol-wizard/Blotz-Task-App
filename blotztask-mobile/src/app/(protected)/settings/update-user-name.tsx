@@ -3,26 +3,24 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { useState } from "react";
-import { useUserMutation } from "@/feature/settings/hooks/useUserMutation";
-import { Snackbar } from "react-native-paper";
+import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 
 export default function UpdateUserNameScreen() {
   const router = useRouter();
   const { userProfile } = useUserProfile();
   const [name, setName] = useState(userProfile?.displayName ?? "");
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
 
   const enableDoneButton = name.trim().length > 0 && name.trim().length <= 20;
 
-  const { updateUserProfile: updateUser, isUserUpdating, userUpdateError } = useUserMutation();
+  const { updateUserProfile: updateUser, isUserUpdating } = useUserProfileMutation();
 
   const handleUpdate = async () => {
     if (!enableDoneButton || isUserUpdating) return;
     try {
       await updateUser({ displayName: name.trim(), pictureUrl: userProfile?.pictureUrl ?? "" });
       router.back();
-    } catch {
-      setSnackbarVisible(true);
+    } catch (e) {
+      console.log("Failed to update user name:", e);
     }
   };
 
@@ -65,21 +63,9 @@ export default function UpdateUserNameScreen() {
           Name cannot be longer than 20 characters.
         </Text>
       )}
-      {name.trim().length == 0 && (
+      {name.trim().length === 0 && (
         <Text className="mt-2 text-sm text-red-500 font-baloo">Name cannot be empty.</Text>
       )}
-
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={3000}
-        action={{
-          label: "Dismiss",
-          onPress: () => setSnackbarVisible(false),
-        }}
-      >
-        {userUpdateError ? userUpdateError.message : "Failed to update name."}
-      </Snackbar>
     </SafeAreaView>
   );
 }

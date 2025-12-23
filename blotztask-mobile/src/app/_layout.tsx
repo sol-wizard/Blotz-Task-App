@@ -22,6 +22,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/shared/util/queryClient";
 import * as Sentry from "@sentry/react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import Toast from "react-native-toast-message";
+import { toastConfig } from "@/shared/components/ui/toast-config";
 
 export default function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
@@ -67,6 +69,7 @@ export default function RootLayout() {
                       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                       <Stack.Screen name="(protected)" options={{ headerShown: false }} />
                     </Stack>
+                    <Toast config={toastConfig} position="bottom" bottomOffset={110} />
                   </KeyboardProvider>
                 </SafeAreaProvider>
               </Portal.Host>

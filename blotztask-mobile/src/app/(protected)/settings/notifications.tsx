@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, View } from "react-native";
 import { ReturnButton } from "@/shared/components/ui/return-button";
@@ -7,16 +6,11 @@ import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPrefere
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
 import { UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
-import { Snackbar } from "react-native-paper";
 
 export default function NotificationScreen() {
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const { isUserPreferencesLoading, userPreferences } = useUserPreferencesQuery();
 
-  const { isUserPreferencesLoading, userPreferencesError, userPreferences } =
-    useUserPreferencesQuery();
-
-  const { updateUserPreferencesAsync, isUpdatingUserPreferences, updateUserPreferencesError } =
-    useUserPreferencesMutation();
+  const { updateUserPreferencesAsync, isUpdatingUserPreferences } = useUserPreferencesMutation();
 
   const handleUpdateUserPreferences = async () => {
     if (!userPreferences) return;
@@ -34,16 +28,9 @@ export default function NotificationScreen() {
     try {
       await updateUserPreferencesAsync(newUserPreferences);
     } catch (error) {
-      setSnackbarVisible(true);
       console.log("Failed to updateUserPreferences:", error);
     }
   };
-
-  useEffect(() => {
-    if (userPreferencesError || updateUserPreferencesError) {
-      setSnackbarVisible(true);
-    }
-  }, [userPreferencesError, updateUserPreferencesError]);
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -72,20 +59,6 @@ export default function NotificationScreen() {
           </View>
         </View>
       </View>
-
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={3000}
-        action={{
-          label: "Dismiss",
-          onPress: () => setSnackbarVisible(false),
-        }}
-      >
-        {userPreferencesError?.message ||
-          updateUserPreferencesError?.message ||
-          "Something went wrong."}
-      </Snackbar>
     </SafeAreaView>
   );
 }
