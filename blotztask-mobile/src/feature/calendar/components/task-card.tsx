@@ -30,7 +30,7 @@ const OPEN_THRESHOLD = ACTION_WIDTH * 0.55;
 
 interface TaskCardProps {
   task: TaskDetailDTO;
-  deleteTask: (id: number) => Promise<void>;
+  deleteTask: (task: TaskDetailDTO) => void;
   isDeleting: boolean;
   selectedDay?: Date;
 }
@@ -139,7 +139,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
         <Pressable
           onPress={async () => {
             if (isLoading) return;
-            await deleteTask(task.id);
+            await deleteTask(task);
             if (task.alertTime && new Date(task.alertTime) > new Date())
               await cancelNotification({
                 notificationId: task?.notificationId,
@@ -170,7 +170,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                   <TaskCheckbox
                     checked={task.isDone}
                     onPress={async () => {
-                      toggleTask(task.id);
+                      toggleTask({ taskId: task.id, selectedDay });
                       if (task.alertTime && new Date(task.alertTime) > new Date())
                         await cancelNotification({
                           notificationId: task?.notificationId,
