@@ -1,12 +1,8 @@
-import { Pressable, View, Vibration, TextInput, Keyboard } from "react-native";
-import { useEffect, useRef } from "react";
+import { View, Vibration, TextInput, Keyboard } from "react-native";
+import { useEffect } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { GradientCircle } from "@/shared/components/common/gradient-circle";
-import { ASSETS } from "@/shared/constants/assets";
 import * as Haptics from "expo-haptics";
-import LottieView from "lottie-react-native";
 import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
