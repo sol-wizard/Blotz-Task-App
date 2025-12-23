@@ -7,15 +7,13 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useState } from "react";
 import { TaskStatusType } from "../models/task-status-type";
 import { filterSelectedTask } from "../util/task-counts";
-import { Snackbar } from "react-native-paper";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
 
-  const { deleteTask, deleteTaskSuccess, resetDeleteTask, deleteTaskError, isDeleting } =
-    useTaskMutations();
+  const { deleteTask, isDeleting } = useTaskMutations();
 
   const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
 
@@ -32,12 +30,17 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
     <View className="shadow shadow-gray-300">
-      <TaskCard task={item} deleteTask={deleteTask} isDeleting={isDeleting} selectedDay={selectedDay} />
+      <TaskCard
+        task={item}
+        deleteTask={deleteTask}
+        isDeleting={isDeleting}
+        selectedDay={selectedDay}
+      />
     </View>
   );
 
   return (
-    <>
+    <View className="flex-1">
       <TaskStatusRow
         allTaskCount={findStatusCount("All")}
         todoTaskCount={findStatusCount("To Do")}
@@ -61,14 +64,6 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
       ) : (
         <TaskListPlaceholder selectedStatus={selectedStatus} />
       )}
-
-      <Snackbar
-        visible={deleteTaskSuccess || !!deleteTaskError}
-        onDismiss={resetDeleteTask}
-        duration={1500}
-      >
-        {deleteTaskError ? "Failed to delete task." : "Deleted task successfully!"}
-      </Snackbar>
-    </>
+    </View>
   );
 };

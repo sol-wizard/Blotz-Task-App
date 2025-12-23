@@ -3,25 +3,24 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { useState } from "react";
-import { useUserMutation } from "@/feature/settings/hooks/useUserMutation";
-import { Snackbar } from "react-native-paper";
+import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 
 export default function UpdateUserNameScreen() {
   const router = useRouter();
   const { userProfile } = useUserProfile();
   const [name, setName] = useState(userProfile?.displayName ?? "");
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
-  const doneEnabled = name.trim().length > 0;
 
-  const { updateUserProfile: updateUser, isUserUpdating, userUpdateError } = useUserMutation();
+  const enableDoneButton = name.trim().length > 0 && name.trim().length <= 20;
+
+  const { updateUserProfile: updateUser, isUserUpdating } = useUserProfileMutation();
 
   const handleUpdate = async () => {
-    if (!doneEnabled || isUserUpdating) return;
+    if (!enableDoneButton || isUserUpdating) return;
     try {
       await updateUser({ displayName: name.trim(), pictureUrl: userProfile?.pictureUrl ?? "" });
       router.back();
-    } catch {
-      setSnackbarVisible(true);
+    } catch (e) {
+      console.log("Failed to update user name:", e);
     }
   };
 
@@ -37,13 +36,15 @@ export default function UpdateUserNameScreen() {
         </View>
 
         <Pressable
-          disabled={!doneEnabled || isUserUpdating}
+          disabled={!enableDoneButton || isUserUpdating}
           onPress={handleUpdate}
-          className={`rounded-lg px-3 py-2 ${doneEnabled ? "bg-highlight" : "bg-gray-200"} ${
+          className={`rounded-lg px-3 py-2 ${enableDoneButton ? "bg-highlight" : "bg-gray-200"} ${
             isUserUpdating ? "opacity-70" : ""
           }`}
         >
-          <Text className={`text-sm font-baloo ${doneEnabled ? "text-black" : "text-gray-500"}`}>
+          <Text
+            className={`text-sm font-baloo ${enableDoneButton ? "text-black" : "text-gray-500"}`}
+          >
             {isUserUpdating ? "Saving..." : "Done"}
           </Text>
         </Pressable>
@@ -52,21 +53,19 @@ export default function UpdateUserNameScreen() {
       <TextInput
         placeholder={userProfile?.displayName ?? ""}
         value={name}
-        onChangeText={setName}
+        onChangeText={(text) => {
+          setName(text);
+        }}
         className="mt-12 bg-white rounded-2xl px-4 py-3 text-lg font-baloo text-secondary"
       />
-
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={3000}
-        action={{
-          label: "Dismiss",
-          onPress: () => setSnackbarVisible(false),
-        }}
-      >
-        {userUpdateError ? userUpdateError.message : "Failed to update name."}
-      </Snackbar>
+      {name.trim().length > 20 && (
+        <Text className="mt-2 text-sm text-red-500 font-baloo">
+          Name cannot be longer than 20 characters.
+        </Text>
+      )}
+      {name.trim().length === 0 && (
+        <Text className="mt-2 text-sm text-red-500 font-baloo">Name cannot be empty.</Text>
+      )}
     </SafeAreaView>
   );
 }
