@@ -11,9 +11,9 @@ import DashedSettings from "../../../assets/images-svg/settings-dashed.svg";
 // Lottie animations
 export const LOTTIE_ANIMATIONS = {
   emptyBox: require("../../../assets/animations/empty-box.json"),
-  aiLoadingEffect: require("../../../assets/animations/aiLoadingEffect.json"),
   spinner: require("../../../assets/animations/spinner.json"),
   jumpingDots: require("../../../assets/animations/jumping-dots.json"),
+  voiceBar: require("../../../assets/animations/voice-bar.json"),
 } as const;
 
 // Images

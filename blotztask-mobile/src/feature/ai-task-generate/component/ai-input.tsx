@@ -1,8 +1,8 @@
 import { Pressable, View, Vibration, TextInput, Keyboard } from "react-native";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { ASSETS } from "@/shared/constants/assets";
 import * as Haptics from "expo-haptics";
@@ -10,6 +10,7 @@ import LottieView from "lottie-react-native";
 import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
+import { VoiceButton } from "./voice-button";
 
 export const AiInput = ({
   text,
@@ -26,9 +27,10 @@ export const AiInput = ({
   aiGeneratedMessage?: AiResultMessageDTO;
   language: string;
 }) => {
-  const { handleStartListening, recognizing, transcript, stopListening } = useSpeechRecognition({
-    language,
-  });
+  const { handleStartListening, recognizing, transcript, stopListening, abortListening } =
+    useSpeechRecognition({
+      language,
+    });
 
   useEffect(() => {
     if (transcript) {
@@ -36,19 +38,35 @@ export const AiInput = ({
     }
   }, [transcript]);
 
-  const sendAndDismiss = (msg: string) => {
+  const toggleListening = async () => {
+    if (recognizing) {
+      stopListening();
+      if (transcript?.trim()) {
+        sendMessage(transcript.trim());
+      }
+      return;
+    }
+
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch {
+      Vibration.vibrate(10);
+    }
+
+    await handleStartListening();
+  };
+
+  const handleAbortListening = () => {
+    setText("");
+    abortListening();
+  };
+
+  const sendWriteInput = (msg: string) => {
     const val = msg.trim();
     if (!val) return;
     sendMessage(val);
     setText(val);
     Keyboard.dismiss();
-  };
-
-  const handleMicPressOut = async () => {
-    await stopListening();
-    if (transcript?.trim()) {
-      sendMessage(transcript.trim());
-    }
   };
 
   return (
@@ -62,7 +80,7 @@ export const AiInput = ({
               if (key === "Enter") {
                 const cleaned = text.replace(/\n$/, "").trim();
                 if (!cleaned) return;
-                sendAndDismiss(cleaned);
+                sendWriteInput(cleaned);
               }
             }}
             enablesReturnKeyAutomatically
@@ -78,36 +96,11 @@ export const AiInput = ({
         </View>
 
         {!isAiGenerating ? (
-          <View className="mt-4 mb-10 items-center">
-            <Pressable
-              onLongPress={async () => {
-                try {
-                  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                } catch {
-                  Vibration.vibrate(10);
-                }
-                await handleStartListening();
-              }}
-              onPressOut={handleMicPressOut}
-              delayLongPress={250}
-              style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
-            >
-              <View className="items-center justify-center">
-                <GradientCircle size={60}>
-                  {recognizing ? (
-                    <LottieView
-                      source={ASSETS.jumpingDots}
-                      autoPlay
-                      loop
-                      style={{ width: 80, height: 80, marginLeft: 4 }}
-                    />
-                  ) : (
-                    <Ionicons name="mic-outline" size={28} color="white" />
-                  )}
-                </GradientCircle>
-              </View>
-            </Pressable>
-          </View>
+          <VoiceButton
+            isRecognizing={recognizing}
+            toggleListening={toggleListening}
+            abortListening={handleAbortListening}
+          />
         ) : (
           <View className="flex-row items-center mt-4 mb-8 w-full px-2 justify-center">
             <CustomSpinner size={60} style={{ marginRight: 10 }} />
