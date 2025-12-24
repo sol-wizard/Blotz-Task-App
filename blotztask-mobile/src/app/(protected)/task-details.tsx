@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { MaterialCommunityIcons} from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 
 export default function TaskDetailsScreen() {
@@ -26,24 +26,25 @@ export default function TaskDetailsScreen() {
     }
   }, [selectedTask]);
 
-  const handleUpdateDescription = useCallback(async () => {
+  const handleUpdateDescription = async (newDescription: string) => {
     if (!selectedTask) return;
 
-    const trimmed = descriptionText.trim();
-    const original = (selectedTask.description ?? "").trim();
-
-    if (trimmed === original) return;
+    // if (setDescriptionText(selectedTask.description) === selectedTask.description) return;
 
     await updateTask({
       id: selectedTask.id,
       title: selectedTask.title,
-      description: trimmed,
-      startTime: selectedTask.startTime ? convertToDateTimeOffset(new Date(selectedTask.startTime)) : undefined,
-      endTime: selectedTask.endTime ? convertToDateTimeOffset(new Date(selectedTask.endTime)) : undefined,
+      description: newDescription,
+      startTime: selectedTask.startTime
+        ? convertToDateTimeOffset(new Date(selectedTask.startTime))
+        : undefined,
+      endTime: selectedTask.endTime
+        ? convertToDateTimeOffset(new Date(selectedTask.endTime))
+        : undefined,
       labelId: selectedTask.label?.labelId,
       timeType: selectedTask.timeType ?? null,
     });
-  }, [selectedTask, descriptionText, updateTask]);
+  };
 
   if (!selectedTask) {
     console.warn("No selected task found");
@@ -52,7 +53,7 @@ export default function TaskDetailsScreen() {
         <Text className="text-lg text-gray-600">Selected Task not found.</Text>
         <TouchableOpacity
           onPress={async () => {
-            await handleUpdateDescription();
+            await handleUpdateDescription(descriptionText);
             router.back();
           }}
         >
@@ -101,7 +102,7 @@ export default function TaskDetailsScreen() {
             <MaterialCommunityIcons
               name="pencil-minus-outline"
               onPress={async () => {
-                await handleUpdateDescription();
+                await handleUpdateDescription(descriptionText);
                 router.push({
                   pathname: "/(protected)/task-edit",
                   params: { taskId: selectedTask.id },
@@ -126,7 +127,7 @@ export default function TaskDetailsScreen() {
             taskDescription={descriptionText}
             setDescription={setDescriptionText}
             canSave={canSaveDescription}
-            onSave={handleUpdateDescription}
+            // onSave={handleUpdateDescription}
           />
           
         </View>

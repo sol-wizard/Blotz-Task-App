@@ -12,20 +12,12 @@ type SubtaskViewProps = {
 };
 
 const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
-  const {
-    breakDownTask,
-    isBreakingDown,
-    breakDownError,
-    replaceSubtasks,
-    isReplacingSubtasks,
-    replaceSubtasksError,
-  } = useSubtaskMutations();
+  const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
+    useSubtaskMutations();
 
-  const {
-    data: fetchedSubtasks,
-    isLoading: isLoadingSubtasks,
-    isError: isFetchingSubtasksError,
-  } = useSubtasksByParentId(parentTask.id);
+  const { data: fetchedSubtasks, isLoading: isLoadingSubtasks } = useSubtasksByParentId(
+    parentTask.id,
+  );
 
   const displaySubtasks = fetchedSubtasks || [];
   const hasSubtasks = displaySubtasks.length > 0;
@@ -40,8 +32,8 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
           subtasks: subtasks.map((subtask: AddSubtaskDTO) => ({ ...subtask })),
         });
       }
-    } catch {
-      console.error(breakDownError || replaceSubtasksError);
+    } catch (e) {
+      console.error("Subtask error:", e);
     }
   };
 
@@ -82,14 +74,6 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
           </>
         )}
       </Pressable>
-
-      {(breakDownError || replaceSubtasksError || isFetchingSubtasksError) && (
-        <Text className="text-red-500 text-center mt-3">
-          {isFetchingSubtasksError
-            ? "Failed to load subtasks."
-            : "Failed to generate or replace subtasks. Please try again."}
-        </Text>
-      )}
     </View>
   );
 };

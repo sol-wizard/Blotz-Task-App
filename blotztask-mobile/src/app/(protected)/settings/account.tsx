@@ -15,6 +15,16 @@ export default function AccountScreen() {
 
   const { userProfile, isUserProfileLoading } = useUserProfile();
 
+  const displayName =
+    userProfile?.displayName && userProfile.displayName.length > 20
+      ? `${userProfile.displayName.slice(0, 20)}...`
+      : userProfile?.displayName ?? "";
+
+  const displayEmail =
+    userProfile?.email && userProfile.email.length > 20
+      ? `${userProfile.email.slice(0, 20)}...`
+      : userProfile?.email ?? "";
+
   const handleSignOut = async () => {
     await logout();
     posthog.reset();
@@ -44,7 +54,7 @@ export default function AccountScreen() {
 
               <View className="flex-row items-center ">
                 <Text className="text-lg font-baloo text-secondary mr-2">
-                  {userProfile?.displayName}
+                  {displayName}
                 </Text>
                 <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
               </View>
@@ -55,24 +65,17 @@ export default function AccountScreen() {
           </Pressable>
 
           <FormDivider marginVertical={2} />
-          <Pressable className="px-4 ml-3">
+          <Pressable className="px-4 ml-3 mb-3">
             <View className="flex-row items-center justify-between pt-4 pb">
               <Text className="text-lg font-baloo text-secondary ">Email</Text>
 
               <View className="flex-row items-center ">
-                <Text className="text-lg font-baloo text-secondary mr-2">{userProfile?.email}</Text>
+                <Text className="text-lg font-baloo text-secondary mr-2">{displayEmail}</Text>
               </View>
             </View>
             <Text className="text-primary font-balooThin text-sm">
               Used for login and notifications.
             </Text>
-          </Pressable>
-
-          <FormDivider marginVertical={2} />
-          <Pressable className="flex-row items-center justify-between px-4 py-4">
-            <View className="flex-row items-center">
-              <Text className="text-lg font-baloo text-secondary ml-3">Password</Text>
-            </View>
           </Pressable>
         </View>
       </View>
