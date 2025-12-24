@@ -31,7 +31,7 @@ const DetailsView = ({
           disabled={!canSave}
           className={`
             rounded-xl px-4 py-2
-            ${canSave ? "bg-[#9AD513]":"bg-[ #D1D1D6]"}
+            ${canSave ? "bg-highlight":"bg-[#D1D1D6]"}
           `}
         >
           <Text

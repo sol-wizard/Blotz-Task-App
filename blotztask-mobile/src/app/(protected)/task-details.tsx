@@ -29,8 +29,6 @@ export default function TaskDetailsScreen() {
   const handleUpdateDescription = async (newDescription: string) => {
     if (!selectedTask) return;
 
-    // if (setDescriptionText(selectedTask.description) === selectedTask.description) return;
-
     await updateTask({
       id: selectedTask.id,
       title: selectedTask.title,
@@ -63,7 +61,7 @@ export default function TaskDetailsScreen() {
     );
   }
 
-  if (isLoading || isUpdating) {
+  if (isLoading) {
     return <LoadingScreen />;
   }
 
@@ -127,18 +125,13 @@ export default function TaskDetailsScreen() {
             taskDescription={descriptionText}
             setDescription={setDescriptionText}
             canSave={canSaveDescription}
-            // onSave={handleUpdateDescription}
+            onSave={() => handleUpdateDescription(descriptionText)}
           />
           
         </View>
 
         {/* Render the active tab */}
         <View className="flex-1 px-4">
-          {/* {activeTab === "Details" ? (
-            <DetailsView taskDescription={descriptionText} setDescription={setDescriptionText} />
-          ) : (
-            <SubtasksView parentTask={selectedTask} />
-          )} */}
 
           <SubtasksView parentTask={selectedTask} />
         </View>
