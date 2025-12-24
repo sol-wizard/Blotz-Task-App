@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import TaskDateRange from "../../feature/task-details/components/task-date-range";
@@ -17,7 +17,7 @@ export default function TaskDetailsScreen() {
   const params = useLocalSearchParams<{ taskId: string }>();
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading } = useTaskById({ taskId });
-  const { updateTask, isUpdating } = useTaskMutations();
+  const { updateTask } = useTaskMutations();
   const [descriptionText, setDescriptionText] = useState("");
 
   useEffect(() => {
