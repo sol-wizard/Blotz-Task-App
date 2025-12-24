@@ -13,7 +13,7 @@ const DetailsView = ({
   canSave
 }: DetailsViewProps) => {
   return (
-    <View className="bg-gray-100 rounded-xl p-4 min-h-80">
+    <View className="bg-gray-100 rounded-xl p-4 h-[190px] w-full">
       <TextInput
         value={taskDescription}
         onChangeText={setDescription}

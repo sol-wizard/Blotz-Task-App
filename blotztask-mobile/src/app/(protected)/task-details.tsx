@@ -10,6 +10,7 @@ import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { MaterialCommunityIcons} from "@expo/vector-icons";
+import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
@@ -31,15 +32,14 @@ export default function TaskDetailsScreen() {
     const trimmed = descriptionText.trim();
     const original = (selectedTask.description ?? "").trim();
 
-    // 沒改內容就不打 API
     if (trimmed === original) return;
 
     await updateTask({
       id: selectedTask.id,
       title: selectedTask.title,
       description: trimmed,
-      startTime: selectedTask.startTime ? new Date(selectedTask.startTime) : undefined,
-      endTime: selectedTask.endTime ? new Date(selectedTask.endTime) : undefined,
+      startTime: selectedTask.startTime ? convertToDateTimeOffset(new Date(selectedTask.startTime)) : undefined,
+      endTime: selectedTask.endTime ? convertToDateTimeOffset(new Date(selectedTask.endTime)) : undefined,
       labelId: selectedTask.label?.labelId,
       timeType: selectedTask.timeType ?? null,
     });
