@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Pressable, Text, Modal, TouchableWithoutFeedback } from "react-native";
+import { View, Pressable, Text } from "react-native";
 import { router } from "expo-router";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { AiModalContent } from "@/feature/ai-task-generate/component/ai-modal-content";
@@ -115,6 +115,7 @@ export default function AiTaskSheetScreen() {
                 </View>
               )}
             </View>
+            <CloseButton onPress={() => router.back()} size={40} />
           </View>
           <AiModalContent modalType={modalType} setModalType={setModalType} language={language} />
         </View>
