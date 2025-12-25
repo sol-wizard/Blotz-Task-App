@@ -119,7 +119,7 @@ export function AiTasksPreview({
           onPress={handleAddTasks}
           disabled={createDisabled}
           className={`w-12 h-12 rounded-full items-center justify-center mx-8 ${
-            createDisabled ? "bg-gray-300" : "bg-black"
+            createDisabled ? "bg-gray-300" : "bg-blue-50"
           }`}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityRole="button"
@@ -128,7 +128,7 @@ export function AiTasksPreview({
           {isAdding ? (
             <ActivityIndicator size="small" />
           ) : (
-            <Ionicons name="arrow-up" size={20} color="white" />
+            <Ionicons name="arrow-up" size={20} color="#528bda" />
           )}
         </Pressable>
       </View>
