@@ -13,19 +13,19 @@ const DateItem = ({
   isStart?: boolean;
 }) => {
   if (!value) return null;
-  const d = new Date(value);
+  const date = new Date(value);
 
   const today = new Date();
-  const isFutureDate = !isSameDay(d, today) && isAfter(startOfDay(d), startOfDay(today));
+  const isFutureDate = !isSameDay(date, today) && isAfter(startOfDay(date), startOfDay(today));
   const iconName = isStart && isFutureDate ? "date-range" : "schedule";
 
   const formatDate = (val: string) => {
-    const time = format(d, "HH:mm");
+    const time = format(date, "HH:mm");
 
-    if (isToday(d)) return `Today ${time}`;
-    if (isTomorrow(d)) return `Tomorrow ${time}`;
+    if (isToday(date)) return `Today ${time}`;
+    if (isTomorrow(date)) return `Tomorrow ${time}`;
 
-    return format(d, "MMM d H:mm");
+    return format(date, "MMM d H:mm");
   };
 
   return (
