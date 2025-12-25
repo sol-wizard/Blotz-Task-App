@@ -29,6 +29,11 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
 {
     public async Task<List<TaskByDateItemDto>> Handle(GetTasksByDateQuery query, CancellationToken ct = default)
     {
+        var autoRolloverEnabled = await db.UserPreferences
+            .AsNoTracking()
+            .Where(p => p.UserId == query.UserId)
+            .Select(p => p.AutoRollover)
+            .FirstOrDefaultAsync(ct);
         var stopwatch = Stopwatch.StartNew();
         logger.LogInformation(
             "Fetching tasks by end time for user {UserId} up to {StartDate}. Whether including floating tasks for today is {IncludeFloatingForToday}",
@@ -36,7 +41,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
 
         var todayStartUtc = DateTime.UtcNow.Date;
         var todayEndUtc = todayStartUtc.AddDays(1);
-        var sevenDayWindowStartUtc = todayEndUtc.AddDays(-6);
+        var sevenDayWindowStartUtc = todayEndUtc.AddDays(-7);
         var endDateUtc = query.StartDate.AddDays(1);
 
         var userToday = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
@@ -57,11 +62,12 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                              t.CreatedAt >= query.StartDate &&
                              t.CreatedAt < endDateUtc)
                             ||
-                            // Overdue tasks within 7 days but not in selected day
-                            (t.EndTime != null
+                            // Overdue tasks within 7 days but not in selected day (only when auto rollover enabled)
+                            (autoRolloverEnabled
+                             && t.EndTime != null
                              && !t.IsDone
                              && !isFutureDay
-                             && t.EndTime < DateTime.UtcNow && t.EndTime >= sevenDayWindowStartUtc &&
+                             && t.EndTime < query.StartDate && t.EndTime >= sevenDayWindowStartUtc &&
                              t.StartTime <= endDateUtc
                             )
                         ))
