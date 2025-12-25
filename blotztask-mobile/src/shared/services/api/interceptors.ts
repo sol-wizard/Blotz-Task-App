@@ -88,13 +88,6 @@ export function setupResponseInterceptor(api: AxiosInstance): void {
     async (error: AxiosError) => {
       const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-      console.log("===== API ERROR =====");
-      console.log("status:", error.response?.status);
-      console.log("url:", `${originalRequest.baseURL ?? ""}${originalRequest.url ?? ""}`);
-      console.log("retry?:", originalRequest._retry);
-      console.log("data:", error.response?.data);
-      console.log("=====================");
-
       const retryResult = await handleAuthError(error, api, originalRequest);
       if (retryResult) return retryResult;
 
