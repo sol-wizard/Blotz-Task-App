@@ -44,9 +44,7 @@ export default function StarSparkScreen() {
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
       <View className="flex-row justify-between items-center mt-10">
-        <Text className="text-4xl font-bold text-gray-800 font-balooExtraBold pt-4 px-10">
-          Star Spark
-        </Text>
+        <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4 px-10">Star Spark</Text>
         <Pressable onPress={() => router.push("/(protected)/gashapon-machine")}>
           <Image source={ASSETS.starSpark} className="w-12 h-12 mr-8"></Image>
         </Pressable>
