@@ -9,6 +9,7 @@ import { BottomSheetType } from "../models/bottom-sheet-type";
 import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
+import { theme } from "@/shared/constants/theme";
 
 export function AiTasksPreview({
   aiTasks,
@@ -107,12 +108,12 @@ export function AiTasksPreview({
       <View className="flex-row justify-center items-center mt-4 mb-10">
         <Pressable
           onPress={handleGoBack}
-          className="w-12 h-12 rounded-full items-center justify-center bg-black mx-8 font-bold"
+          className="w-12 h-12 rounded-full items-center justify-center bg-background mx-8 font-bold"
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <MaterialCommunityIcons name="arrow-u-left-top" size={20} color="white" />
+          <MaterialCommunityIcons name="arrow-u-left-top" size={20} color={theme.colors.primary} />
         </Pressable>
 
         <Pressable
