@@ -100,7 +100,6 @@ export default function TaskDetailsScreen() {
             <MaterialCommunityIcons
               name="pencil-minus-outline"
               onPress={async () => {
-                // await handleUpdateDescription(descriptionText);
                 router.push({
                   pathname: "/(protected)/task-edit",
                   params: { taskId: selectedTask.id },
