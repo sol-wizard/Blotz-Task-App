@@ -1,12 +1,13 @@
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 import { formatTaskTime } from "../utils/format-task-time";
+import { theme } from "@/shared/constants/theme";
 
 export const TaskSingleTimeCard = ({ startTime }: { startTime: string }) => {
   const time = formatTaskTime(startTime);
   return (
     <View className="flex-row items-center py-3">
-      <MaterialIcons name="schedule" size={20} color="#4B5063" />
+      <MaterialIcons name="schedule" size={20} color={theme.colors.onSurface} />
       <Text className="ml-2 text-primary font-balooThin">Time</Text>
       <Text className="ml-2 text-secondary font-baloo text-lg">{time}</Text>
     </View>
@@ -25,7 +26,11 @@ export const TaskRangeTimeCard = ({
 
   return (
     <View className="flex-row items-center py-3">
-      <MaterialCommunityIcons name="calendar-range-outline" size={20} color="#4B5063" />
+      <MaterialCommunityIcons
+        name="calendar-range-outline"
+        size={20}
+        color={theme.colors.onSurface}
+      />
       <Text className="ml-2 text-primary font-balooThin">Start from</Text>
       <Text className="ml-2 text-secondary font-baloo text-lg">{formattedStartTime}</Text>
       <Text className="ml-4 text-primary font-balooThin">End at</Text>
