@@ -51,8 +51,6 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
 
 public class EditTaskItemDto
 {
-    public int Id { get; set; }
-
     [Required]
     [StringLength(200, ErrorMessage = "Title cannot be longer than 200 characters.")]
     public required string Title { get; set; }
