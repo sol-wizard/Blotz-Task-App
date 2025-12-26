@@ -24,6 +24,7 @@ import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
+import { endOfDay } from "date-fns";
 
 type TaskFormProps =
   | {
@@ -57,9 +58,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     description: dto?.description ?? "",
     labelId: dto?.labelId ?? null,
     startDate: dto?.startTime ? new Date(dto?.startTime) : null,
-    startTime: dto?.startTime ? new Date(dto?.startTime) : null,
+    startTime: dto?.startTime ? new Date(dto?.startTime) : endOfDay(new Date()),
     endDate: dto?.endTime ? new Date(dto?.endTime) : null,
-    endTime: dto?.endTime ? new Date(dto?.endTime) : null,
+    endTime: dto?.endTime ? new Date(dto?.endTime) : endOfDay(new Date()),
     alert: defaultAlert,
   };
 

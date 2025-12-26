@@ -13,6 +13,10 @@ import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star"
 import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
 import { pickRandomTask } from "@/feature/gashapon-machine/utils/pick-random-task";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
+import { endOfDay } from "date-fns";
+import { router } from "expo-router";
 
 export default function GashaponMachine() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
@@ -22,6 +26,7 @@ export default function GashaponMachine() {
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
   const [starLabelName, setStarLabelName] = useState("");
   const [randomTask, setRandomTask] = useState<FloatingTaskDTO | null>(null);
+  const { updateTask } = useTaskMutations();
 
   const { floatingTasks, isLoading } = useFloatingTasks();
 
@@ -30,7 +35,19 @@ export default function GashaponMachine() {
   const limitedFloatingTasks = floatingTasks ?? [].slice(0, MAX_STARS);
 
   const handleDoNow = () => {
-    console.log("Do it now pressed!");
+    if (!randomTask) return;
+    const actionableTask = {
+      id: randomTask.id,
+      title: randomTask.title,
+      descprition: randomTask.description,
+      isDone: false,
+      startTime: convertToDateTimeOffset(new Date()),
+      endTime: convertToDateTimeOffset(endOfDay(new Date())),
+      labelId: randomTask.label?.labelId,
+      timeType: 1,
+    };
+    updateTask(actionableTask);
+    router.push("/(protected)");
     setModalVisible(false);
   };
 

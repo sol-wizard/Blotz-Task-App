@@ -55,6 +55,7 @@ export const ReminderTab = ({ control }: { control: any }) => {
 
         {activeSelector === "date" && (
           <SingleDateCalendar
+            defaultStartDate={format(startDate, "yyyy-MM-dd")}
             onStartDateChange={(nextDate: Date) => {
               onStartDateChange(nextDate);
               onEndDateChange(nextDate);
