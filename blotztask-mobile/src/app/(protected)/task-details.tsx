@@ -31,11 +31,11 @@ export default function TaskDetailsScreen() {
     }
   }, [selectedTask?.description]);
 
-  const handleUpdateDescription = async (newDescription: string) => {
+  const handleUpdateDescription = (newDescription: string) => {
     if (!selectedTask) return;
     if (newDescription === (selectedTask.description ?? "")) return;
 
-    await updateTask({
+    updateTask({
       id: selectedTask.id,
       title: selectedTask.title,
       description: newDescription,
@@ -56,8 +56,8 @@ export default function TaskDetailsScreen() {
       <View className="flex-1 items-center justify-center">
         <Text className="text-lg text-gray-600">Selected Task not found.</Text>
         <TouchableOpacity
-          onPress={async () => {
-            await handleUpdateDescription(descriptionText);
+          onPress={() => {
+            handleUpdateDescription(descriptionText);
             router.back();
           }}
         >
@@ -102,8 +102,9 @@ export default function TaskDetailsScreen() {
             </Text>
             <MaterialCommunityIcons
               name="pencil-minus-outline"
-              onPress={async () => {
-                await handleUpdateDescription(descriptionText);
+              onPress={() => {
+                handleUpdateDescription(descriptionText);
+                console.log(descriptionText);
                 router.push({
                   pathname: "/(protected)/task-edit",
                   params: { taskId: selectedTask.id },
