@@ -1,16 +1,19 @@
 import { View, TextInput, TouchableOpacity, Text } from "react-native";
+import { is } from "zod/v4/locales";
 
 type DetailsViewProps = {
   taskDescription: string;
   setDescription: (v: string) => void;
   canSave: boolean;
   onSave: () => void;
+  isUpdating: boolean;
 };
 const DetailsView = ({
   taskDescription,
   setDescription,
   onSave,
-  canSave
+  canSave,
+  isUpdating
 }: DetailsViewProps) => {
   return (
     <View className="bg-gray-100 rounded-xl p-4 h-[190px] w-full">
@@ -37,7 +40,7 @@ const DetailsView = ({
           <Text
             className={`text-xs font-balooBold`}
           >
-            Save
+            {isUpdating ? "Saving..." : "Save"}
           </Text>
         </TouchableOpacity>
       </View>

@@ -17,8 +17,8 @@ export default function TaskDetailsScreen() {
   const params = useLocalSearchParams<{ taskId: string }>();
   const taskId = Number(params.taskId ?? "");
   const { selectedTask, isLoading } = useTaskById({ taskId });
-  const { updateTask } = useTaskMutations();
-  const [descriptionText, setDescriptionText] = useState("");
+  const { updateTask, isUpdating } = useTaskMutations();
+  const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
 
   useEffect(() => {
     if (selectedTask) {
@@ -100,7 +100,7 @@ export default function TaskDetailsScreen() {
             <MaterialCommunityIcons
               name="pencil-minus-outline"
               onPress={async () => {
-                await handleUpdateDescription(descriptionText);
+                // await handleUpdateDescription(descriptionText);
                 router.push({
                   pathname: "/(protected)/task-edit",
                   params: { taskId: selectedTask.id },
@@ -126,6 +126,7 @@ export default function TaskDetailsScreen() {
             setDescription={setDescriptionText}
             canSave={canSaveDescription}
             onSave={() => handleUpdateDescription(descriptionText)}
+            isUpdating={isUpdating}
           />
           
         </View>
