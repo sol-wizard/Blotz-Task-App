@@ -19,7 +19,6 @@ const LANGUAGE_OPTIONS = [
 
 export default function AiTaskSheetScreen() {
   const [modalType, setModalType] = useState<BottomSheetType>("input");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
     AsyncStorage.getItem("ai_language_preference").then((saved) => {
       if (saved === "en-US" || saved === "zh-CN") {
@@ -37,7 +36,6 @@ export default function AiTaskSheetScreen() {
   const handleSelectLanguage = (lang: "en-US" | "zh-CN") => {
     setLanguage(lang);
     AsyncStorage.setItem("ai_language_preference", lang);
-    setIsDropdownOpen(false);
   };
 
   return (
