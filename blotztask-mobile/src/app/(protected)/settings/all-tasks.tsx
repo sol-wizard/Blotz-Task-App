@@ -51,7 +51,7 @@ export default function AllTasksScreen() {
       <View className="flex-row items-center px-5 pt-2">
         <ReturnButton />
         <View className="flex-1 flex-row items-center justify-between">
-          <Text className="text-5xl font-bold text-gray-800 font-balooExtraBold items-end pt-8">
+          <Text className="text-5xl text-gray-800 font-balooExtraBold items-end pt-8">
             All Tasks
           </Text>
           <UserProfile />
