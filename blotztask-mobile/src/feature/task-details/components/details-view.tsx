@@ -1,5 +1,4 @@
 import { View, TextInput, TouchableOpacity, Text } from "react-native";
-import { is } from "zod/v4/locales";
 
 type DetailsViewProps = {
   taskDescription: string;
