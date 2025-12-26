@@ -21,7 +21,7 @@ export default function CalendarHeader({
   return (
     <View className="flex-row items-center justify-between px-5">
       <View className="flex-row items-center gap-3">
-        <Text className="text-5xl font-bold text-gray-800 font-balooExtraBold items-end pt-10">
+        <Text className="text-5xl text-gray-800 font-balooExtraBold items-end pt-10">
           {dayOfWeek}
         </Text>
 

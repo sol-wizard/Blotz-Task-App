@@ -18,12 +18,12 @@ export default function AccountScreen() {
   const displayName =
     userProfile?.displayName && userProfile.displayName.length > 20
       ? `${userProfile.displayName.slice(0, 20)}...`
-      : userProfile?.displayName ?? "";
+      : (userProfile?.displayName ?? "");
 
   const displayEmail =
     userProfile?.email && userProfile.email.length > 20
       ? `${userProfile.email.slice(0, 20)}...`
-      : userProfile?.email ?? "";
+      : (userProfile?.email ?? "");
 
   const handleSignOut = async () => {
     await logout();
@@ -53,9 +53,7 @@ export default function AccountScreen() {
               <Text className="text-lg font-baloo text-secondary ">Name</Text>
 
               <View className="flex-row items-center ">
-                <Text className="text-lg font-baloo text-secondary mr-2">
-                  {displayName}
-                </Text>
+                <Text className="text-lg font-baloo text-secondary mr-2">{displayName}</Text>
                 <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
               </View>
             </View>
