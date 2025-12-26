@@ -47,7 +47,7 @@ export default function AiTaskSheetScreen() {
             modalType === "add-task-success" ? "bg-background" : "bg-white"
           }`}
         >
-          <View className="flex-row justify-between items-center px-2 mb-4 z-[100]">
+          <View className="flex-row justify-between items-center px-2 mb-4">
             <Dropdown
               data={LANGUAGE_OPTIONS}
               labelField="label"
