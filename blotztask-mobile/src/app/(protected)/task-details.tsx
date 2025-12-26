@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsView from "../../feature/task-details/components/details-view";
 import SubtasksView from "../../feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
@@ -11,6 +10,10 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
+import {
+  TaskRangeTimeCard,
+  TaskSingleTimeCard,
+} from "@/feature/task-details/components/task-time-card";
 
 type tabTypes = "Details" | "Subtasks";
 export default function TaskDetailsScreen() {
@@ -110,11 +113,18 @@ export default function TaskDetailsScreen() {
             />
           </View>
 
-          {/* Task Date Range */}
-          <TaskDateRange
-            startTime={selectedTask.startTime as string}
-            endTime={selectedTask.endTime as string}
-          />
+          {selectedTask.startTime && selectedTask.startTime === selectedTask.endTime && (
+            <TaskSingleTimeCard startTime={selectedTask.startTime} />
+          )}
+
+          {selectedTask.startTime &&
+            selectedTask.endTime &&
+            selectedTask.startTime != selectedTask.endTime && (
+              <TaskRangeTimeCard
+                startTime={selectedTask.startTime}
+                endTime={selectedTask.endTime}
+              />
+            )}
         </View>
       </TouchableWithoutFeedback>
 
