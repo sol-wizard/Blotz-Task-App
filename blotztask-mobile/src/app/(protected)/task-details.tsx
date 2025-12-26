@@ -33,17 +33,19 @@ export default function TaskDetailsScreen() {
     if (newDescription === (selectedTask.description ?? "")) return;
 
     await updateTask({
-      id: selectedTask.id,
-      title: selectedTask.title,
-      description: newDescription,
-      startTime: selectedTask.startTime
-        ? convertToDateTimeOffset(new Date(selectedTask.startTime))
-        : undefined,
-      endTime: selectedTask.endTime
-        ? convertToDateTimeOffset(new Date(selectedTask.endTime))
-        : undefined,
-      labelId: selectedTask.label?.labelId,
-      timeType: selectedTask.timeType ?? null,
+      taskId: selectedTask.id,
+      dto: {
+        title: selectedTask.title,
+        description: newDescription,
+        startTime: selectedTask.startTime
+          ? convertToDateTimeOffset(new Date(selectedTask.startTime))
+          : undefined,
+        endTime: selectedTask.endTime
+          ? convertToDateTimeOffset(new Date(selectedTask.endTime))
+          : undefined,
+        labelId: selectedTask.label?.labelId,
+        timeType: selectedTask.timeType ?? null,
+      },
     });
   };
 

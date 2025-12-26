@@ -36,17 +36,17 @@ export default function GashaponMachine() {
 
   const handleDoNow = () => {
     if (!randomTask) return;
-    const actionableTask = {
-      id: randomTask.id,
-      title: randomTask.title,
-      descprition: randomTask.description,
-      isDone: false,
-      startTime: convertToDateTimeOffset(new Date()),
-      endTime: convertToDateTimeOffset(endOfDay(new Date())),
-      labelId: randomTask.label?.labelId,
-      timeType: 1,
-    };
-    updateTask(actionableTask);
+    updateTask({
+      taskId: randomTask.id,
+      dto: {
+        title: randomTask.title,
+        description: randomTask.description,
+        startTime: convertToDateTimeOffset(new Date()),
+        endTime: convertToDateTimeOffset(endOfDay(new Date())),
+        labelId: randomTask.label?.labelId,
+        timeType: 1,
+      },
+    });
     router.push("/(protected)");
     setModalVisible(false);
   };
