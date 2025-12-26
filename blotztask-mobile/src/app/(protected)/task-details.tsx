@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsView from "../../feature/task-details/components/details-view";
 import SubtasksView from "../../feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
@@ -11,6 +10,10 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
+import {
+  TaskRangeTimeCard,
+  TaskSingleTimeCard,
+} from "@/feature/task-details/components/task-time-card";
 
 type tabTypes = "Details" | "Subtasks";
 export default function TaskDetailsScreen() {
@@ -28,11 +31,11 @@ export default function TaskDetailsScreen() {
     }
   }, [selectedTask?.description]);
 
-  const handleUpdateDescription = async (newDescription: string) => {
+  const handleUpdateDescription = (newDescription: string) => {
     if (!selectedTask) return;
     if (newDescription === (selectedTask.description ?? "")) return;
 
-    await updateTask({
+    updateTask({
       id: selectedTask.id,
       title: selectedTask.title,
       description: newDescription,
@@ -53,8 +56,8 @@ export default function TaskDetailsScreen() {
       <View className="flex-1 items-center justify-center">
         <Text className="text-lg text-gray-600">Selected Task not found.</Text>
         <TouchableOpacity
-          onPress={async () => {
-            await handleUpdateDescription(descriptionText);
+          onPress={() => {
+            handleUpdateDescription(descriptionText);
             router.back();
           }}
         >
@@ -99,8 +102,9 @@ export default function TaskDetailsScreen() {
             </Text>
             <MaterialCommunityIcons
               name="pencil-minus-outline"
-              onPress={async () => {
-                await handleUpdateDescription(descriptionText);
+              onPress={() => {
+                handleUpdateDescription(descriptionText);
+                console.log(descriptionText);
                 router.push({
                   pathname: "/(protected)/task-edit",
                   params: { taskId: selectedTask.id },
@@ -110,11 +114,18 @@ export default function TaskDetailsScreen() {
             />
           </View>
 
-          {/* Task Date Range */}
-          <TaskDateRange
-            startTime={selectedTask.startTime as string}
-            endTime={selectedTask.endTime as string}
-          />
+          {selectedTask.startTime && selectedTask.startTime === selectedTask.endTime && (
+            <TaskSingleTimeCard startTime={selectedTask.startTime} />
+          )}
+
+          {selectedTask.startTime &&
+            selectedTask.endTime &&
+            selectedTask.startTime != selectedTask.endTime && (
+              <TaskRangeTimeCard
+                startTime={selectedTask.startTime}
+                endTime={selectedTask.endTime}
+              />
+            )}
         </View>
       </TouchableWithoutFeedback>
 
