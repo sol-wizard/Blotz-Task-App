@@ -10,6 +10,11 @@ import { CloseButton } from "@/feature/ai-task-generate/component/close-button";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 
+const LANGUAGE_OPTIONS = [
+  { label: "English", value: "en-US" as const },
+  { label: "中文", value: "zh-CN" as const },
+];
+
 export default function AiTaskSheetScreen() {
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -38,81 +43,60 @@ export default function AiTaskSheetScreen() {
       <Pressable className="flex-1" onPress={() => router.back()} />
       <KeyboardAvoidingView behavior={"padding"}>
         <View
-          className="rounded-t-3xl px-4 pt-4 min-h-[200px]"
-          style={{
-            backgroundColor: modalType === "add-task-success" ? "#F5F9FA" : "#FFFFFF",
-          }}
+          className={`rounded-t-3xl px-4 pt-4 min-h-[200px] ${
+            modalType === "add-task-success" ? "bg-[#F5F9FA]" : "bg-white"
+          }`}
         >
-          <View className="flex-row justify-between pl-6">
-            <View className="items-start flex-1">
+          <View
+            className="flex-row justify-between items-center px-2 mb-4 z-[100]"
+            // style={{ zIndex: 1001 }}
+          >
+            <View className="relative">
               <Pressable
                 onPress={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex-row items-center bg-[#F0F4FF] px-4 py-2 rounded-2xl"
               >
                 <Text className="text-[#4A5568] font-medium mr-2">
-                  {language === "en-US" ? "English" : "中文"}
+                  {LANGUAGE_OPTIONS.find((l) => l.value === language)?.label}
                 </Text>
-                <Ionicons
-                  name={isDropdownOpen ? "chevron-up" : "chevron-down"}
-                  size={16}
-                  color="#4A5568"
-                />
+                <Ionicons name="chevron-down" size={16} color="#4A5568" />
               </Pressable>
 
               {isDropdownOpen && (
-                <View
-                  className="bg-white rounded-3xl mt-1 overflow-hidden border border-slate-100"
-                  style={{
-                    width: 160,
-                    elevation: 3,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                  }}
-                >
+                <>
                   <Pressable
-                    onPress={() => handleSelectLanguage("en-US")}
-                    className="flex-row items-center px-4 py-4"
-                  >
-                    <View className="w-6">
-                      {language === "en-US" && (
-                        <Ionicons name="checkmark" size={18} color="#334155" />
-                      )}
-                    </View>
-                    <Text
-                      className={`text-base ${language === "en-US" ? "font-bold" : ""} text-slate-700`}
-                    >
-                      English
-                    </Text>
-                  </Pressable>
-
-                  <View
-                    style={{
-                      height: 1,
-                      borderStyle: "dashed",
-                      borderWidth: 0.5,
-                      borderColor: "#CBD5E1",
-                      marginHorizontal: 12,
-                    }}
+                    className="absolute -top-[1000] -left-[1000] -right-[1000] -bottom-[1000] bg-transparent"
+                    onPress={() => setIsDropdownOpen(false)}
                   />
+                  <View className="absolute top-[45px] left-0 w-40 bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 z-[102]">
+                    {LANGUAGE_OPTIONS.map((option, index) => (
+                      <React.Fragment key={option.value}>
+                        <Pressable
+                          onPress={() => handleSelectLanguage(option.value)}
+                          className="flex-row items-center px-4 py-4 active:bg-slate-50"
+                        >
+                          <View className="w-6">
+                            {language === option.value && (
+                              <Ionicons name="checkmark" size={18} color="#334155" />
+                            )}
+                          </View>
+                          <Text
+                            className={`text-base text-slate-700 ${
+                              language === option.value ? "font-bold" : ""
+                            }`}
+                          >
+                            {option.label}
+                          </Text>
+                        </Pressable>
 
-                  <Pressable
-                    onPress={() => handleSelectLanguage("zh-CN")}
-                    className="flex-row items-center px-4 py-4"
-                  >
-                    <View className="w-6">
-                      {language === "zh-CN" && (
-                        <Ionicons name="checkmark" size={18} color="#334155" />
-                      )}
-                    </View>
-                    <Text
-                      className={`text-base ${language === "zh-CN" ? "font-bold" : ""} text-slate-700`}
-                    >
-                      中文
-                    </Text>
-                  </Pressable>
-                </View>
+                        {/* 3. 虚线分割线 (Tailwind 实现) */}
+                        {index < LANGUAGE_OPTIONS.length - 1 && (
+                          <View className="h-px border-t border-dashed border-[#CBD5E1] mx-3" />
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </View>
+                </>
               )}
             </View>
             <CloseButton onPress={() => router.back()} size={40} />
