@@ -96,7 +96,7 @@ function invalidateSelectedDayTask(
     return;
   } else {
     let cursorDay = startOfDay(start);
-    while (start <= end) {
+    while (cursorDay <= end) {
       queryClient.invalidateQueries({
         queryKey: taskKeys.selectedDay(convertToDateTimeOffset(cursorDay)),
       });
