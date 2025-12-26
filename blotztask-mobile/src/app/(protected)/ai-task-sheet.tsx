@@ -70,17 +70,17 @@ export default function AiTaskSheetScreen() {
                 marginLeft: 4,
               }}
               containerStyle={{
-                borderRadius: 28,
+                borderRadius: 16,
                 marginTop: 8,
-                width: 170,
+                width: 180,
                 overflow: "hidden",
-                borderWidth: 0,
-                backgroundColor: "white",
+                borderWidth: 1,
+                backgroundColor: "#F1F5F9",
                 shadowColor: "#000",
-                shadowOffset: { width: 0, height: 10 },
-                shadowOpacity: 0.1,
-                shadowRadius: 20,
-                elevation: 10,
+                shadowOffset: { width: 0, height: 12 },
+                shadowOpacity: 0.8,
+                shadowRadius: 16,
+                elevation: 8,
               }}
               activeColor="transparent"
               autoScroll={false}
