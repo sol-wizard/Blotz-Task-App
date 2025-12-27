@@ -1,5 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
@@ -29,11 +28,9 @@ export const AiModalContent = ({
 
   const { labels } = useAllLabels();
 
-  const aiGeneratedTasks = useMemo(() => {
-    return aiGeneratedMessage?.extractedTasks.map((task) =>
-      mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
-    );
-  }, [aiGeneratedMessage?.extractedTasks, labels]);
+  const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map((task) =>
+    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
+  );
 
   switch (modalType) {
     case "task-preview":
