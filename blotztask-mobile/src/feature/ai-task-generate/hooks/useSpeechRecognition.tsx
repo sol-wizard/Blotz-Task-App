@@ -1,6 +1,5 @@
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from "expo-speech-recognition";
 import { useState } from "react";
-import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
 
 export function useSpeechRecognition({ language = "en-US" }: { language?: string } = {}) {
   const [recognizing, setRecognizing] = useState(false);

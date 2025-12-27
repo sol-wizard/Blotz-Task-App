@@ -2,7 +2,7 @@ import { FloatingTaskDTO } from "../../star-spark/models/floating-task-dto";
 
 export const pickRandomTask = (tasks: FloatingTaskDTO[], labelName: string) => {
   let candidates;
-  if (labelName == "no-label") {
+  if (labelName === "no-label") {
     candidates = tasks.filter((t) => t.label === null);
   } else {
     candidates = tasks.filter((t) => t.label?.name === labelName);
