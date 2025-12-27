@@ -26,7 +26,7 @@ export const VoiceButton = ({
   }, [isRecognizing]);
 
   return (
-    <View className="flex-row bg-background rounded-full w-60 items-center justify-center mb-10 py-2">
+    <View className="flex-row bg-background rounded-full w-60 items-center justify-center  py-2">
       <Pressable onPress={handleAbortListening}>
         <MaterialCommunityIcons name="close" size={18} color={theme.colors.primary} />
       </Pressable>
