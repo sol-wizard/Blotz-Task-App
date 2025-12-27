@@ -14,7 +14,7 @@ type AiLanguageProps = {
   onChange: (lang: "en-US" | "zh-CN") => void;
 };
 
-export function AiLanguage({ value, onChange }: AiLanguageProps) {
+export function AiLanguagePicker({ value, onChange }: AiLanguageProps) {
   return (
     <Dropdown
       data={LANGUAGE_OPTIONS}
