@@ -25,9 +25,13 @@ public class TaskBreakdownController : ControllerBase
     {
         _logger.LogInformation("BreakdownTask called with taskId: {TaskId}", taskId);
 
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
         var command = new BreakdownTaskCommand
         {
-            TaskId = int.Parse(taskId)
+            TaskId = int.Parse(taskId),
+            UserId = userId
         };
 
         var result = await _breakdownTaskCommandHandler.Handle(command, ct);

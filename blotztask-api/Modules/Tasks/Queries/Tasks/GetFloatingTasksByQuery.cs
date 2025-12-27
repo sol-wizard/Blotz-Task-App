@@ -34,7 +34,8 @@ public class GetFloatingTasksByQueryHandler(BlotzTaskDbContext db, ILogger<GetFl
                         && t.EndTime == null
                         && t.IsDone == false
                         && t.CreatedAt < DateTime.UtcNow.Date
-                        && (t.Title.ToLower().Contains(keyword) || t.Description.ToLower().Contains(keyword))
+                        && (t.Title.ToLower().Contains(keyword)
+                            || (t.Description != null && t.Description.ToLower().Contains(keyword)))
             ).Select(task => new FloatingTaskItemByQueryDto
             {
                 Id = task.Id,

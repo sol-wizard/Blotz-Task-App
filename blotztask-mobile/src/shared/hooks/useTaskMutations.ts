@@ -12,6 +12,11 @@ import { addDays, isSameDay, startOfDay } from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 import { TaskDetailDTO } from "../models/task-detail-dto";
 
+type UpdateTaskArgs = {
+  taskId: number;
+  dto: EditTaskItemDTO;
+};
+
 const useTaskMutations = () => {
   const queryClient = useQueryClient();
 
@@ -56,12 +61,12 @@ const useTaskMutations = () => {
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: (dto: EditTaskItemDTO) => updateTaskItem(dto),
+    mutationFn: ({ taskId, dto }: UpdateTaskArgs) => updateTaskItem(taskId, dto),
     onSuccess: (_data, task) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
-      queryClient.invalidateQueries({ queryKey: taskKeys.byId(task.id) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.byId(task.taskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.floating() });
-      invalidateSelectedDayTask(queryClient, task.startTime, task.endTime);
+      invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime);
     },
   });
   return {

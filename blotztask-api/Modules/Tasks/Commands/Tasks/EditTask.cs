@@ -3,6 +3,7 @@ using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Shared;
 using BlotzTask.Shared.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Commands.Tasks;
 
@@ -11,6 +12,7 @@ public class EditTaskCommand
     [Required] public int TaskId { get; init; }
 
     [Required] public required EditTaskItemDto TaskDetails { get; init; }
+    [Required] public required Guid UserId { get; init; }
 }
 
 public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskCommandHandler> logger)
@@ -19,7 +21,8 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
     {
         logger.LogInformation("Editing task {TaskId}", command.TaskId);
 
-        var task = await db.TaskItems.FindAsync(command.TaskId, ct);
+        var task = await db.TaskItems
+            .FirstOrDefaultAsync(t => t.Id == command.TaskId && t.UserId == command.UserId, ct);
 
         if (task == null) throw new NotFoundException($"Task with ID {command.TaskId} not found.");
 
@@ -48,8 +51,6 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
 
 public class EditTaskItemDto
 {
-    public int Id { get; set; }
-
     [Required]
     [StringLength(200, ErrorMessage = "Title cannot be longer than 200 characters.")]
     public required string Title { get; set; }

@@ -10,6 +10,7 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 public class GetTasksByIdQuery
 {
     [Required] public required int TaskId { get; init; }
+    [Required] public required Guid UserId { get; init; }
 }
 
 public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQueryHandler> logger)
@@ -18,7 +19,7 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
     {
         logger.LogInformation("Fetching task with ID {TaskId}.", query.TaskId);
 
-        var result = await db.TaskItems.Where(t => t.Id == query.TaskId)
+        var result = await db.TaskItems.Where(t => t.Id == query.TaskId && t.UserId == query.UserId)
             .Select(task => new TaskByIdItemDto
             {
                 Id = task.Id,

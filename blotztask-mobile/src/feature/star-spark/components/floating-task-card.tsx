@@ -53,13 +53,15 @@ export const FloatingTaskCard = ({
     const endTime = addMinutes(startTime, durationMinutes);
 
     await updateTask({
-      id: floatingTask.id,
-      title: floatingTask.title,
-      description: floatingTask.description,
-      startTime: convertToDateTimeOffset(startTime),
-      endTime: convertToDateTimeOffset(endTime),
-      labelId: floatingTask.label?.labelId,
-      timeType: TaskTimeType.Range,
+      taskId: floatingTask.id,
+      dto: {
+        title: floatingTask.title,
+        description: floatingTask.description,
+        startTime: convertToDateTimeOffset(startTime),
+        endTime: convertToDateTimeOffset(endTime),
+        labelId: floatingTask.label?.labelId,
+        timeType: TaskTimeType.Range,
+      },
     });
 
     setIsModalVisible(false);
