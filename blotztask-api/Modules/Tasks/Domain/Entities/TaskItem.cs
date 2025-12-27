@@ -18,7 +18,7 @@ public class TaskItem
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public required Guid UserId { get; set; }
-    public AppUser User { get; set; }
+    public AppUser User { get; set; } = null!;
     public int? LabelId { get; set; }
     public Label? Label { get; set; }
     public ICollection<Subtask> Subtasks { get; set; } = new List<Subtask>();

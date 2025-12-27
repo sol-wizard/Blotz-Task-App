@@ -83,9 +83,9 @@ export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<number> 
   }
 };
 
-export async function updateTaskItem(updatedTask: EditTaskItemDTO): Promise<void> {
+export async function updateTaskItem(taskId: number, updatedTask: EditTaskItemDTO): Promise<void> {
   try {
-    const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${updatedTask.id}`;
+    const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`;
     await apiClient.put(url, updatedTask);
   } catch {
     throw new Error("Failed to update task.");
