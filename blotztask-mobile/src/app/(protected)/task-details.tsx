@@ -68,8 +68,7 @@ export default function TaskDetailsScreen() {
     return <LoadingScreen />;
   }
 
-  const canSaveDescription =
-    descriptionText.trim() !== (selectedTask.description ?? "").trim();
+  const canSaveDescription = descriptionText.trim() !== (selectedTask.description ?? "").trim();
 
   return (
     <SafeAreaView
@@ -118,7 +117,7 @@ export default function TaskDetailsScreen() {
 
           {selectedTask.startTime &&
             selectedTask.endTime &&
-            selectedTask.startTime != selectedTask.endTime && (
+            selectedTask.startTime !== selectedTask.endTime && (
               <TaskRangeTimeCard
                 startTime={selectedTask.startTime}
                 endTime={selectedTask.endTime}
@@ -137,12 +136,10 @@ export default function TaskDetailsScreen() {
             onSave={() => handleUpdateDescription(descriptionText)}
             isUpdating={isUpdating}
           />
-          
         </View>
 
         {/* Render the active tab */}
         <View className="flex-1 px-4">
-
           <SubtasksView parentTask={selectedTask} />
         </View>
       </View>
