@@ -10,6 +10,7 @@ import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { theme } from "@/shared/constants/theme";
+import { EVENTS } from "@/shared/constants/posthog-events";
 
 export function AiTasksPreview({
   aiTasks,
@@ -32,7 +33,7 @@ export function AiTasksPreview({
   useEffect(() => {
     return () => {
       if (!finishedAllStepsRef.current) {
-        posthog.capture("ai_task_interaction_completed", {
+        posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
           ai_output: JSON.stringify(localTasks),
           user_input: userInput,
           outcome: "abandoned",
@@ -63,7 +64,7 @@ export function AiTasksPreview({
 
       finishedAllStepsRef.current = true;
 
-      posthog.capture("ai_task_interaction_completed", {
+      posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
         ai_output: JSON.stringify(localTasks),
         user_input: userInput,
         ai_generate_task_count: localTasks?.length ?? 0,
@@ -83,7 +84,7 @@ export function AiTasksPreview({
     setAiGeneratedMessage();
     setModalType("input");
 
-    posthog.capture("ai_task_interaction_completed", {
+    posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
       ai_output: JSON.stringify(localTasks),
       user_input: userInput,
       ai_generate_task_count: localTasks?.length ?? 0,

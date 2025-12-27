@@ -5,6 +5,7 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { EVENTS } from "@/shared/constants/posthog-events";
 
 function TaskCreateScreen() {
   const router = useRouter();
@@ -14,7 +15,7 @@ function TaskCreateScreen() {
   const handleTaskSubmit = async (submitTask: AddTaskItemDTO) => {
     try {
       await addTask(submitTask);
-      posthog.capture("manual_task_creation");
+      posthog.capture(EVENTS.CREATE_TASK_MANUALLY);
 
       router.back();
       console.log("Task created successfully");

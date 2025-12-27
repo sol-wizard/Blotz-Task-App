@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchTasksForDate } from "../services/task-service";
 import { startOfDay } from "date-fns";
-import { taskKeys } from "../util/query-key-factory";
+import { taskKeys } from "../constants/query-key-factory";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 
 const useSelectedDayTasks = ({ selectedDay }: { selectedDay: Date }) => {
