@@ -10,7 +10,7 @@ import { VoiceButton } from "./voice-button";
 import { requestMicrophonePermission } from "../utils/request-microphone-permission";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
-import { AiLanguage } from "./ai-language";
+import { AiLanguagePicker } from "./ai-language-picker";
 
 export const AiInput = ({
   text,
@@ -111,7 +111,7 @@ export const AiInput = ({
           )}
         </View>
         <View className="flex-row items-center justify-between mb-6">
-          <AiLanguage value={language} onChange={handleSelectLanguage} />
+          <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
           {!isAiGenerating ? (
             <VoiceButton
               isRecognizing={recognizing}
