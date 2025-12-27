@@ -1,16 +1,39 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text, View } from "react-native";
-import { useState } from "react";
 import { ReturnButton } from "@/shared/components/ui/return-button";
 import { ToggleSwitch } from "@/feature/settings/components/toggle-switch";
+import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
+import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
+import { UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 export default function TaskHandlingScreen() {
-  const [isAutoRolloverEnabled, setIsAutoRolloverEnabled] = useState(false);
+  // const [isAutoRolloverEnabled, setIsAutoRolloverEnabled] = useState(false);
 
-  const toggleAutoRollover = () => {
-    setIsAutoRolloverEnabled((pre) => !pre);
-    console.log(`Auto Rollover ${isAutoRolloverEnabled ? "enabled" : "disabled"}`);
+  // const toggleAutoRollover = () => {
+  //   setIsAutoRolloverEnabled((pre) => !pre);
+  //   console.log(`Auto Rollover ${isAutoRolloverEnabled ? "enabled" : "disabled"}`);
+  // };
+  const { isUserPreferencesLoading, userPreferences } = useUserPreferencesQuery();
+  const { updateUserPreferencesAsync, isUpdatingUserPreferences } = useUserPreferencesMutation();
+  const handleToggleAutoRollover = async () => {
+    if (!userPreferences) return;
+    const newUserPreferences: UserPreferencesDTO = {
+      autoRollover: !userPreferences.autoRollover,
+      upcomingNotification: userPreferences.upcomingNotification,
+      overdueNotification: userPreferences.overdueNotification,
+      dailyPlanningNotification: userPreferences.dailyPlanningNotification,
+      eveningWrapUpNotification: userPreferences.eveningWrapUpNotification,
+    };
+    try {
+      await updateUserPreferencesAsync(newUserPreferences);
+    } catch (error) {
+      console.log("Failed to updateUserPreferences:", error);
+    }
   };
+  if (isUserPreferencesLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -29,7 +52,12 @@ export default function TaskHandlingScreen() {
           </Text>
         </View>
 
-        <ToggleSwitch value={isAutoRolloverEnabled} onChange={toggleAutoRollover} />
+        {/* <ToggleSwitch value={isAutoRolloverEnabled} onChange={toggleAutoRollover} /> */}
+        <ToggleSwitch
+          value={userPreferences?.autoRollover ?? false}
+          disabled={isUpdatingUserPreferences}
+          onChange={handleToggleAutoRollover}
+        />
       </View>
     </SafeAreaView>
   );

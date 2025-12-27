@@ -4,7 +4,8 @@ import { apiClient } from "./api/client";
 import { UpdateUserProfileDTO } from "@/feature/settings/modals/update-user-profile-dto";
 
 export const fetchUserProfile = async (): Promise<UserProfileDTO> => {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/User`;
+  // const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/User`;
+  const url = `/User`;
   try {
     return await apiClient.get(url);
   } catch (err: any) {
@@ -14,7 +15,7 @@ export const fetchUserProfile = async (): Promise<UserProfileDTO> => {
 };
 
 export const updateUserProfile = async (userProfile: UpdateUserProfileDTO): Promise<string> => {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/User`;
+  const url = `/User`;
   try {
     return await apiClient.put(url, userProfile);
   } catch (err: any) {
@@ -24,7 +25,7 @@ export const updateUserProfile = async (userProfile: UpdateUserProfileDTO): Prom
 };
 
 export const fetchUserPreferences = async (): Promise<UserPreferencesDTO> => {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/user-preferences`;
+  const url = `/user-preferences`;
   try {
     return await apiClient.get(url);
   } catch (err: any) {
@@ -34,7 +35,7 @@ export const fetchUserPreferences = async (): Promise<UserPreferencesDTO> => {
 };
 
 export const updateUserPreferences = async (preferences: UserPreferencesDTO): Promise<string> => {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/user-preferences`;
+  const url = `/user-preferences`;
   try {
     return await apiClient.put(url, preferences);
   } catch (err: any) {
