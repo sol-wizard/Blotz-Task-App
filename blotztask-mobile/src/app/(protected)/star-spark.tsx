@@ -1,5 +1,5 @@
 import { theme } from "@/shared/constants/theme";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { View, Text, Image, Pressable } from "react-native";
 import { Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,14 +9,24 @@ import { FloatingTaskDualView } from "@/feature/star-spark/components/floating-t
 import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useStarSparkSearchEffects } from "@/feature/star-spark/hooks/useStarSparkSearchEffects";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { usePostHog } from "posthog-react-native";
 
 export default function StarSparkScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const { floatingTasks, isLoading } = useFloatingTasks();
   const { deleteTask, isDeleting } = useTaskMutations();
+  const posthog = usePostHog();
+
+  useFocusEffect(
+    useCallback(() => {
+      posthog.capture("screen_viewed", {
+        screen_name: "StarSpark",
+      });
+    }, []),
+  );
 
   const { floatingTasksResult, showLoading } = useStarSparkSearchEffects({
     searchQuery,

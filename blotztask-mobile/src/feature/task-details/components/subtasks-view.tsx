@@ -6,6 +6,8 @@ import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import SubtasksEditor from "./subtasks-editor";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { usePostHog } from "posthog-react-native";
+import { EVENTS } from "@/shared/constants/posthog-events";
 
 type SubtaskViewProps = {
   parentTask: TaskDetailDTO;
@@ -14,6 +16,7 @@ type SubtaskViewProps = {
 const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
     useSubtaskMutations();
+  const posthog = usePostHog();
 
   const { data: fetchedSubtasks, isLoading: isLoadingSubtasks } = useSubtasksByParentId(
     parentTask.id,
@@ -24,6 +27,9 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
 
   const handleBreakDown = async () => {
     if (isBreakingDown || isReplacingSubtasks) return;
+
+    posthog.capture(EVENTS.BREAKDOWN_TASK);
+
     try {
       const subtasks = (await breakDownTask(parentTask.id)) ?? [];
       if (subtasks.length > 0) {
@@ -57,7 +63,6 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   // Show initial breakdown view if no subtasks exist yet
   return (
     <View>
-
       <Pressable
         onPress={handleBreakDown}
         disabled={isLoading}

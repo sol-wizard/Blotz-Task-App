@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { FloatingTaskDTO } from "../models/floating-task-dto";
 import { estimateTaskTime } from "../services/task-time-estimate-service";
 import { useState } from "react";
-import { estimateKeys } from "@/shared/util/query-key-factory";
+import { estimateKeys } from "@/shared/constants/query-key-factory";
 import { TaskTimeEstimation } from "../models/task-time-estimation";
 
 export const useEstimateTaskTime = () => {
