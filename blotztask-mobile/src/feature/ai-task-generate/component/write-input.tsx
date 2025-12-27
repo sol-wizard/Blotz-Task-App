@@ -40,7 +40,7 @@ export const WriteInput = ({
               }
             }}
             enablesReturnKeyAutomatically
-            placeholder="Hold to speak or tap to write..."
+            placeholder="What's in your mind?"
             placeholderTextColor={theme.colors.secondary}
             multiline
             className="w-11/12 bg-white text-xl text-gray-800 font-baloo"
