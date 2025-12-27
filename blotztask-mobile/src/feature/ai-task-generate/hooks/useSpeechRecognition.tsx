@@ -1,6 +1,5 @@
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from "expo-speech-recognition";
 import { useState } from "react";
-import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
 
 export function useSpeechRecognition({ language = "en-US" }: { language?: string } = {}) {
   const [recognizing, setRecognizing] = useState(false);
@@ -23,13 +22,6 @@ export function useSpeechRecognition({ language = "en-US" }: { language?: string
 
     if (!perm.granted) {
       console.warn("Speech recognition permission not granted:", perm);
-      return;
-    }
-
-    const offlineLocale = language === "zh-CN" ? "cmn-Hans-CN" : language;
-    const isLanguageReady = await installAndroidLanguagePackage(offlineLocale);
-    if (!isLanguageReady) {
-      console.warn(`Offline model for ${language} not ready, aborting start.`);
       return;
     }
 

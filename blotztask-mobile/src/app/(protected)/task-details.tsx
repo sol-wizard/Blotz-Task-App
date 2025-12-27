@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import TaskDateRange from "../../feature/task-details/components/task-date-range";
 import DetailsView from "../../feature/task-details/components/details-view";
 import SubtasksView from "../../feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
@@ -11,8 +10,11 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
+import {
+  TaskRangeTimeCard,
+  TaskSingleTimeCard,
+} from "@/feature/task-details/components/task-time-card";
 
-type tabTypes = "Details" | "Subtasks";
 export default function TaskDetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ taskId: string }>();
@@ -20,13 +22,12 @@ export default function TaskDetailsScreen() {
   const { selectedTask, isLoading } = useTaskById({ taskId });
   const { updateTask, isUpdating } = useTaskMutations();
   const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
-  const [activeTab, setActiveTab] = useState<tabTypes>("Details");
 
   useEffect(() => {
     if (selectedTask) {
       setDescriptionText(selectedTask.description || "");
     }
-  }, [selectedTask?.description]);
+  }, [selectedTask]);
 
   const handleUpdateDescription = async (newDescription: string) => {
     if (!selectedTask) return;
@@ -55,8 +56,8 @@ export default function TaskDetailsScreen() {
       <View className="flex-1 items-center justify-center">
         <Text className="text-lg text-gray-600">Selected Task not found.</Text>
         <TouchableOpacity
-          onPress={async () => {
-            await handleUpdateDescription(descriptionText);
+          onPress={() => {
+            handleUpdateDescription(descriptionText);
             router.back();
           }}
         >
@@ -66,9 +67,11 @@ export default function TaskDetailsScreen() {
     );
   }
 
-  if (isLoading || isUpdating) {
+  if (isLoading) {
     return <LoadingScreen />;
   }
+
+  const canSaveDescription = descriptionText.trim() !== (selectedTask.description ?? "").trim();
 
   return (
     <SafeAreaView
@@ -102,7 +105,6 @@ export default function TaskDetailsScreen() {
             <MaterialCommunityIcons
               name="pencil-minus-outline"
               onPress={async () => {
-                await handleUpdateDescription(descriptionText);
                 router.push({
                   pathname: "/(protected)/task-edit",
                   params: { taskId: selectedTask.id },
@@ -112,37 +114,36 @@ export default function TaskDetailsScreen() {
             />
           </View>
 
-          {/* Task Date Range */}
-          <TaskDateRange
-            startTime={selectedTask.startTime as string}
-            endTime={selectedTask.endTime as string}
-          />
+          {selectedTask.startTime && selectedTask.startTime === selectedTask.endTime && (
+            <TaskSingleTimeCard startTime={selectedTask.startTime} />
+          )}
+
+          {selectedTask.startTime &&
+            selectedTask.endTime &&
+            selectedTask.startTime !== selectedTask.endTime && (
+              <TaskRangeTimeCard
+                startTime={selectedTask.startTime}
+                endTime={selectedTask.endTime}
+              />
+            )}
         </View>
       </TouchableWithoutFeedback>
 
       {/* Tabs Switch*/}
       <View className="flex-1 pt-6 px-6 bg-white rounded-t-[3rem]">
         <View className="flex-row justify-around mb-6">
-          <TouchableOpacity onPress={() => setActiveTab("Details")} className="flex-1 items-center">
-            <Text className={"text-lg font-balooBold pb-3"}>Details</Text>
-            {activeTab === "Details" && <View className="w-full h-1 bg-blue-100 rounded-full" />}
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setActiveTab("Subtasks")}
-            className="flex-1 items-center"
-          >
-            <Text className={"text-lg font-balooBold pb-3"}>Subtasks</Text>
-            {activeTab === "Subtasks" && <View className="w-full h-1 bg-blue-100 rounded-full" />}
-          </TouchableOpacity>
+          <DetailsView
+            taskDescription={descriptionText}
+            setDescription={setDescriptionText}
+            canSave={canSaveDescription}
+            onSave={() => handleUpdateDescription(descriptionText)}
+            isUpdating={isUpdating}
+          />
         </View>
 
         {/* Render the active tab */}
         <View className="flex-1 px-4">
-          {activeTab === "Details" ? (
-            <DetailsView taskDescription={descriptionText} setDescription={setDescriptionText} />
-          ) : (
-            <SubtasksView parentTask={selectedTask} />
-          )}
+          <SubtasksView parentTask={selectedTask} />
         </View>
       </View>
     </SafeAreaView>

@@ -10,6 +10,8 @@ import { router } from "expo-router";
 import { theme } from "@/shared/constants/theme";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import SettingsScreen from "./settings";
+import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
+import { usePostHog } from "posthog-react-native";
 
 const routes = [
   {
@@ -85,6 +87,7 @@ function getTabIcon(routeKey: string, focused: boolean) {
 export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
   const insets = useSafeAreaInsets();
+  const posthog = usePostHog();
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
@@ -103,6 +106,8 @@ export default function ProtectedIndex() {
 
     setIndex(newIndex);
   };
+
+  useTrackActiveUser5s(posthog);
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-background">

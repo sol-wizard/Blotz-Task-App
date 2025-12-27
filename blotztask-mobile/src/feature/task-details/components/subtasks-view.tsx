@@ -1,12 +1,13 @@
-import { View, Text, Image, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import React from "react";
-import { ASSETS } from "@/shared/constants/assets";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import SubtasksEditor from "./subtasks-editor";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { usePostHog } from "posthog-react-native";
+import { EVENTS } from "@/shared/constants/posthog-events";
 
 type SubtaskViewProps = {
   parentTask: TaskDetailDTO;
@@ -15,6 +16,7 @@ type SubtaskViewProps = {
 const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
     useSubtaskMutations();
+  const posthog = usePostHog();
 
   const { data: fetchedSubtasks, isLoading: isLoadingSubtasks } = useSubtasksByParentId(
     parentTask.id,
@@ -25,6 +27,9 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
 
   const handleBreakDown = async () => {
     if (isBreakingDown || isReplacingSubtasks) return;
+
+    posthog.capture(EVENTS.BREAKDOWN_TASK);
+
     try {
       const subtasks = (await breakDownTask(parentTask.id)) ?? [];
       if (subtasks.length > 0) {
@@ -58,19 +63,10 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   // Show initial breakdown view if no subtasks exist yet
   return (
     <View>
-      <View className="mt-4 p-4 bg-background rounded-3xl">
-        <Text className="font-balooBold text-xl text-blue-500">
-          {isLoading
-            ? "Breaking your tasks into tiny bite-sized pieces~"
-            : "Big tasks can feel heavy. Try breaking them into bite-sized actions."}
-        </Text>
-        <Image source={ASSETS.greenBun} className="w-15 h-15 self-end" />
-      </View>
-
       <Pressable
         onPress={handleBreakDown}
         disabled={isLoading}
-        className={`flex-row items-center justify-center self-center mt-8 rounded-3xl h-[55px] w-[180px] ${
+        className={`flex-row items-center justify-center self-center mt-8 rounded-2xl h-[55px] w-full ${
           isLoading ? "bg-gray-300" : "bg-[#EBF0FE] active:bg-gray-100"
         }`}
       >
@@ -79,7 +75,7 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
         ) : (
           <>
             <MaterialCommunityIcons name="format-list-checkbox" size={24} color="#3b82f6" />
-            <Text className="ml-2 text-blue-500 text-xl font-balooBold">Breakdown</Text>
+            <Text className="ml-2 text-blue-500 text-xl font-balooBold">Breakdown Task</Text>
           </>
         )}
       </Pressable>

@@ -7,7 +7,7 @@ import {
   updateTaskItem,
 } from "../services/task-service";
 import { EditTaskItemDTO } from "@/feature/task-add-edit/models/edit-task-item-dto";
-import { taskKeys } from "../util/query-key-factory";
+import { taskKeys } from "../constants/query-key-factory";
 import { addDays, isSameDay, startOfDay } from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 import { TaskDetailDTO } from "../models/task-detail-dto";
@@ -101,7 +101,7 @@ function invalidateSelectedDayTask(
     return;
   } else {
     let cursorDay = startOfDay(start);
-    while (start <= end) {
+    while (cursorDay <= end) {
       queryClient.invalidateQueries({
         queryKey: taskKeys.selectedDay(convertToDateTimeOffset(cursorDay)),
       });
