@@ -1,5 +1,5 @@
 import { View, Vibration, TextInput, Keyboard } from "react-native";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import * as Haptics from "expo-haptics";
@@ -7,6 +7,10 @@ import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
 import { VoiceButton } from "./voice-button";
+import { requestMicrophonePermission } from "../utils/request-microphone-permission";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
+import { AiLanguage } from "./ai-language";
 
 export const AiInput = ({
   text,
@@ -14,15 +18,31 @@ export const AiInput = ({
   sendMessage,
   isAiGenerating,
   aiGeneratedMessage,
-  language,
 }: {
   text: string;
   setText: (v: string) => void;
   sendMessage: (v: string) => void;
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
-  language: string;
 }) => {
+  const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
+    AsyncStorage.getItem("ai_language_preference").then((saved: string | null) => {
+      if (saved === "en-US" || saved === "zh-CN") {
+        setLanguage(saved as "en-US" | "zh-CN");
+      }
+    });
+    return "zh-CN";
+  });
+
+  useEffect(() => {
+    requestMicrophonePermission();
+    installAndroidLanguagePackage(["en-US", "cmn-Hans-CN"]);
+  }, []);
+
+  const handleSelectLanguage = (lang: "en-US" | "zh-CN") => {
+    setLanguage(lang);
+    AsyncStorage.setItem("ai_language_preference", lang);
+  };
   const { handleStartListening, recognizing, transcript, stopListening, abortListening } =
     useSpeechRecognition({
       language,
@@ -90,18 +110,20 @@ export const AiInput = ({
             <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
           )}
         </View>
-
-        {!isAiGenerating ? (
-          <VoiceButton
-            isRecognizing={recognizing}
-            toggleListening={toggleListening}
-            abortListening={handleAbortListening}
-          />
-        ) : (
-          <View className="flex-row items-center mt-4 mb-8 w-full px-2 justify-center">
-            <CustomSpinner size={60} style={{ marginRight: 10 }} />
-          </View>
-        )}
+        <View className="flex-row items-center justify-between mb-6">
+          <AiLanguage value={language} onChange={handleSelectLanguage} />
+          {!isAiGenerating ? (
+            <VoiceButton
+              isRecognizing={recognizing}
+              toggleListening={toggleListening}
+              abortListening={handleAbortListening}
+            />
+          ) : (
+            <View className="flex-row items-center mt-4 mb-8 w-full px-2 justify-center">
+              <CustomSpinner size={60} style={{ marginRight: 10 }} />
+            </View>
+          )}
+        </View>
       </View>
     </View>
   );
