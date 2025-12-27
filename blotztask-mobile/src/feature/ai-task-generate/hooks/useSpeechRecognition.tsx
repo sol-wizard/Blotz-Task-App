@@ -26,13 +26,6 @@ export function useSpeechRecognition({ language = "en-US" }: { language?: string
       return;
     }
 
-    const offlineLocale = language === "zh-CN" ? "cmn-Hans-CN" : language;
-    const isLanguageReady = await installAndroidLanguagePackage(offlineLocale);
-    if (!isLanguageReady) {
-      console.warn(`Offline model for ${language} not ready, aborting start.`);
-      return;
-    }
-
     ExpoSpeechRecognitionModule.start({
       lang: language,
       interimResults: true,
