@@ -33,9 +33,6 @@ export const AiModalContent = ({
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
   );
 
-  const userRegion = Localization.getLocales()[0]?.regionCode?.toUpperCase();
-  const isAndroidInMainlandChina = Platform.OS === "android" && userRegion === "CN";
-
   switch (modalType) {
     case "task-preview":
       return (
@@ -52,7 +49,7 @@ export const AiModalContent = ({
 
     case "input":
     default:
-      return !isAndroidInMainlandChina ? (
+      return Platform.OS !== "android" ? (
         <AiInput
           text={text}
           setText={setText}
