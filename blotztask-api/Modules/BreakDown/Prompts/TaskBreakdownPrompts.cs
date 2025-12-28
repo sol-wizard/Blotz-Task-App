@@ -22,8 +22,14 @@ Guidelines:
 - The total duration of subtasks should not exceed (EndTime - StartTime).
 - If task EndTime is null, estimate reasonable subtask durations.
 
+
 Output language rule:
-- The language of the subtask titles MUST match the language of the task title.
+- Determine the TARGET OUTPUT LANGUAGE based ONLY on the Task Title.
+- Ignore the language of the Description completely when determining output language.
+- DO NOT override it even if the description is written in another language.
+- BEFORE producing the final output, you MUST ensure that ALL subtask titles are written in the TARGET OUTPUT LANGUAGE.
+- If any subtask title is not in the TARGET OUTPUT LANGUAGE, you MUST translate it into the TARGET OUTPUT LANGUAGE.
+
 
 Return the result as a JSON object with a 'Subtasks' array.
 ";
