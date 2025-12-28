@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Pressable, Text } from "react-native";
+import { View, Pressable, Text, Platform } from "react-native";
 import { router } from "expo-router";
 import { Dropdown } from "react-native-element-dropdown";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
@@ -10,7 +10,6 @@ import { requestMicrophonePermission } from "@/feature/ai-task-generate/utils/re
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { FormDivider } from "@/shared/components/ui/form-divider";
-import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 
 const LANGUAGE_OPTIONS = [
   { label: "English", value: "en-US" as const },
@@ -29,7 +28,7 @@ export default function AiTaskSheetScreen() {
   });
 
   useEffect(() => {
-    if (!ExpoSpeechRecognitionModule.isRecognitionAvailable()) {
+    if (Platform.OS === "android") {
       return;
     }
 
@@ -52,7 +51,7 @@ export default function AiTaskSheetScreen() {
           }`}
         >
           <View className="flex-row justify-between items-center px-2 mb-4">
-            {ExpoSpeechRecognitionModule.isRecognitionAvailable() && (
+            {Platform.OS !== "android" && (
               <Dropdown
                 data={LANGUAGE_OPTIONS}
                 labelField="label"
