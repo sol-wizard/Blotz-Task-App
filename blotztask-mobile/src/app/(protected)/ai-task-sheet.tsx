@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { View, Pressable, Text, Platform } from "react-native";
-import * as Localization from "expo-localization";
 import { router } from "expo-router";
 import { Dropdown } from "react-native-element-dropdown";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";

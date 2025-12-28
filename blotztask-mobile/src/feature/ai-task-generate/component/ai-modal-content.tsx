@@ -8,7 +8,6 @@ import { TaskAddedSuccess } from "./task-added-success";
 import { WriteInput } from "./write-input";
 import { AiInput } from "./ai-input";
 import { Platform } from "react-native";
-import * as Localization from "expo-localization";
 
 export const AiModalContent = ({
   modalType,
