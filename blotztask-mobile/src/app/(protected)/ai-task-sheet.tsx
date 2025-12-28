@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Pressable } from "react-native";
 import { router } from "expo-router";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
