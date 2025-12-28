@@ -10,8 +10,6 @@ import { requestMicrophonePermission } from "@/feature/ai-task-generate/utils/re
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { FormDivider } from "@/shared/components/ui/form-divider";
-import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
-import { pl } from "zod/v4/locales";
 
 const LANGUAGE_OPTIONS = [
   { label: "English", value: "en-US" as const },
