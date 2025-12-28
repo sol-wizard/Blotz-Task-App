@@ -29,6 +29,8 @@ Output language rule:
 - DO NOT override it even if the description is written in another language.
 - BEFORE producing the final output, you MUST ensure that ALL subtask titles are written in the TARGET OUTPUT LANGUAGE.
 - If any subtask title is not in the TARGET OUTPUT LANGUAGE, you MUST translate it into the TARGET OUTPUT LANGUAGE.
+- This language requirement applies to ALL subtasks, INCLUDING the first subtask and any tiny or frictionless actions.
+- There are NO exceptions for small, obvious, or user-provided steps.
 
 
 Return the result as a JSON object with a 'Subtasks' array.
