@@ -10,7 +10,7 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 export default function NotificationScreen() {
   const { isUserPreferencesLoading, userPreferences } = useUserPreferencesQuery();
 
-  const { updateUserPreferencesAsync, isUpdatingUserPreferences } = useUserPreferencesMutation();
+  const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
 
   const handleUpdateUserPreferences = async () => {
     if (!userPreferences) return;
@@ -25,11 +25,7 @@ export default function NotificationScreen() {
       eveningWrapUpNotification: userPreferences.eveningWrapUpNotification,
     };
 
-    try {
-      await updateUserPreferencesAsync(newUserPreferences);
-    } catch (error) {
-      console.log("Failed to updateUserPreferences:", error);
-    }
+    updateUserPreferences(newUserPreferences);
   };
 
   if (isUserPreferencesLoading) {

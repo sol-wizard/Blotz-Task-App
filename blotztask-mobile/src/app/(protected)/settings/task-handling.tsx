@@ -8,14 +8,8 @@ import { UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 export default function TaskHandlingScreen() {
-  // const [isAutoRolloverEnabled, setIsAutoRolloverEnabled] = useState(false);
-
-  // const toggleAutoRollover = () => {
-  //   setIsAutoRolloverEnabled((pre) => !pre);
-  //   console.log(`Auto Rollover ${isAutoRolloverEnabled ? "enabled" : "disabled"}`);
-  // };
   const { isUserPreferencesLoading, userPreferences } = useUserPreferencesQuery();
-  const { updateUserPreferencesAsync, isUpdatingUserPreferences } = useUserPreferencesMutation();
+  const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
   const handleToggleAutoRollover = async () => {
     if (!userPreferences) return;
     const newUserPreferences: UserPreferencesDTO = {
@@ -26,7 +20,7 @@ export default function TaskHandlingScreen() {
       eveningWrapUpNotification: userPreferences.eveningWrapUpNotification,
     };
     try {
-      await updateUserPreferencesAsync(newUserPreferences);
+      await updateUserPreferences(newUserPreferences);
     } catch (error) {
       console.log("Failed to updateUserPreferences:", error);
     }

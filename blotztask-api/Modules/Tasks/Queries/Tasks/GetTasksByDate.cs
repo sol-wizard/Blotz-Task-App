@@ -53,24 +53,6 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
 
 
         var queryStopwatch = Stopwatch.StartNew();
-        var debugOverdueCandidates = await db.TaskItems
-            .AsNoTracking()
-            .Where(t =>
-                t.UserId == query.UserId
-                && t.EndTime != null
-                && !t.IsDone
-                && !isFutureDay
-            )
-            .OrderBy(t => t.EndTime)
-            .Select(t => new { t.Id, t.EndTime, t.StartTime, t.IsDone })
-            .Take(30)
-            .ToListAsync(ct);
-
-        logger.LogInformation(
-            "DEBUG overdue candidates (first 30 by EndTime): {Items}",
-            string.Join(" | ", debugOverdueCandidates.Select(x => $"{x.Id}:{x.EndTime:O}"))
-        );
-
         var tasks = await db.TaskItems
             .AsNoTracking()
             .Where(t => t.UserId == query.UserId &&

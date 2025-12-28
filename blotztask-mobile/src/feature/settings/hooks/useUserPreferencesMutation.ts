@@ -8,19 +8,15 @@ export function useUserPreferencesMutation() {
   const mutation = useMutation({
     mutationKey: ["updateUserPreferences"],
     mutationFn: (preferences: UserPreferencesDTO) => updateUserPreferences(preferences),
-    onSuccess: async () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userKeys.preferences() });
-      // queryClient.invalidateQueries({ queryKey: taskKeys.all });
-      await queryClient.invalidateQueries({
-        predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "tasks",
-      });
+      queryClient.invalidateQueries({ queryKey: ["tasks", "selectedDay"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks", "avability"] });
     },
   });
 
   return {
-    updateUserPreferencesAsync: mutation.mutateAsync,
+    updateUserPreferences: mutation.mutate,
     isUpdatingUserPreferences: mutation.isPending,
-    isUpdateUserPreferencesError: mutation.isError,
-    updateUserPreferencesError: mutation.error,
   };
 }

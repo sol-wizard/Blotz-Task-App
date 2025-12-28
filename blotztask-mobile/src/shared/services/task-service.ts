@@ -14,7 +14,6 @@ export async function fetchTasksForDate(
   const startDate = convertToDateTimeOffset(startOfDay(date));
 
   const url = `/Task/by-date?startDate=${encodeURIComponent(startDate)}&includeFloatingForToday=${includeFloatingForToday}`;
-  console.log(url);
   try {
     return await apiClient.get(url);
   } catch {

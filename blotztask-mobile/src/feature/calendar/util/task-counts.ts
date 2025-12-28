@@ -1,13 +1,12 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { isBefore, parseISO, startOfDay } from "date-fns";
+// import { isBefore, parseISO, startOfDay } from "date-fns";
+import { isBefore } from "date-fns";
 import { TaskFilterGroup } from "../models/task-filter-group";
 
 export function filterSelectedTask({
   selectedDayTasks,
-  selectedDay,
 }: {
   selectedDayTasks: TaskDetailDTO[];
-  selectedDay: Date;
 }): TaskFilterGroup[] {
   const allTasks = selectedDayTasks;
 
@@ -17,10 +16,10 @@ export function filterSelectedTask({
   const overdueTasks: TaskDetailDTO[] = [];
 
   for (const task of selectedDayTasks) {
-    const isTaskTodo = isTodo(task, selectedDay);
+    const isTaskTodo = isTodo(task);
     const isTaskInProgress = isInProgress(task);
     const isTaskDone = task.isDone;
-    const isTaskOverdue = isOverdue(task, selectedDay);
+    const isTaskOverdue = isOverdue(task);
 
     if (isTaskTodo) todoTasks.push(task);
     if (isTaskInProgress) inProgressTasks.push(task);
@@ -57,13 +56,13 @@ export function filterSelectedTask({
   ];
 }
 
-function isTodo(task: TaskDetailDTO, selectedDay: Date): boolean {
+// function isTodo(task: TaskDetailDTO, selectedDay: Date): boolean {
+function isTodo(task: TaskDetailDTO): boolean {
   if (task.isDone) return false;
-  const selectedStart = startOfDay(selectedDay).getTime();
+  const nowTime = Date.now();
 
-  if (task.endTime && new Date(task.endTime).getTime() < selectedStart) return false;
-  if (task.startTime && new Date(task.startTime).getTime() <= selectedStart) return false;
-
+  if (task.endTime && new Date(task.endTime).getTime() <= nowTime) return false;
+  if (task.startTime && new Date(task.startTime).getTime() <= nowTime) return false;
   return true;
 }
 
@@ -74,11 +73,7 @@ const isInProgress = (task: TaskDetailDTO) => {
   return !task.isDone && start <= new Date() && end > new Date();
 };
 
-const isOverdue = (task: TaskDetailDTO, selectedDay: Date) => {
+const isOverdue = (task: TaskDetailDTO) => {
   if (!task.endTime) return false;
-  if (task.isDone) return false;
-  const due = parseISO(task.endTime);
-  const selectedStart = startOfDay(selectedDay);
-  // return !task.isDone && isBefore(new Date(task.endTime), new Date());
-  return isBefore(due, selectedStart);
+  return !task.isDone && isBefore(new Date(task.endTime), new Date());
 };
