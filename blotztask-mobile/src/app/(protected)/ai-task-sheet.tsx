@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Pressable, Text, Platform } from "react-native";
+import * as Localization from "expo-localization";
 import { router } from "expo-router";
 import { Dropdown } from "react-native-element-dropdown";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
@@ -27,8 +28,11 @@ export default function AiTaskSheetScreen() {
     return "zh-CN";
   });
 
+  const userRegion = Localization.getLocales()[0]?.regionCode?.toUpperCase();
+  const isAndroidInMainlandChina = Platform.OS === "android" && userRegion === "CN";
+
   useEffect(() => {
-    if (Platform.OS === "android") {
+    if (isAndroidInMainlandChina) {
       return;
     }
 
@@ -51,7 +55,7 @@ export default function AiTaskSheetScreen() {
           }`}
         >
           <View className="flex-row justify-between items-center px-2 mb-4">
-            {Platform.OS !== "android" && (
+            {!isAndroidInMainlandChina && (
               <Dropdown
                 data={LANGUAGE_OPTIONS}
                 labelField="label"

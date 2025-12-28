@@ -8,6 +8,7 @@ import { TaskAddedSuccess } from "./task-added-success";
 import { WriteInput } from "./write-input";
 import { AiInput } from "./ai-input";
 import { Platform } from "react-native";
+import * as Localization from "expo-localization";
 
 export const AiModalContent = ({
   modalType,
@@ -32,6 +33,9 @@ export const AiModalContent = ({
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
   );
 
+  const userRegion = Localization.getLocales()[0]?.regionCode?.toUpperCase();
+  const isAndroidInMainlandChina = Platform.OS === "android" && userRegion === "CN";
+
   switch (modalType) {
     case "task-preview":
       return (
@@ -48,7 +52,7 @@ export const AiModalContent = ({
 
     case "input":
     default:
-      return Platform.OS !== "android" ? (
+      return !isAndroidInMainlandChina ? (
         <AiInput
           text={text}
           setText={setText}
