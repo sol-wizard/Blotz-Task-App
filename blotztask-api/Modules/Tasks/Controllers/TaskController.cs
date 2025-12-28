@@ -28,7 +28,10 @@ public class TaskController(
     [HttpGet("{id}")]
     public async Task<TaskByIdItemDto> GetTaskById(int id, CancellationToken ct)
     {
-        var query = new GetTasksByIdQuery { TaskId = id };
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        var query = new GetTasksByIdQuery { TaskId = id, UserId = userId };
         return await getTaskByIdQueryHandler.Handle(query, ct);
     }
 
@@ -162,7 +165,10 @@ public class TaskController(
     [HttpPut("{id}")]
     public async Task<string> EditTask(int id, [FromBody] EditTaskItemDto editTaskItem, CancellationToken ct)
     {
-        var command = new EditTaskCommand { TaskId = id, TaskDetails = editTaskItem };
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        var command = new EditTaskCommand { TaskId = id, TaskDetails = editTaskItem, UserId = userId };
 
         return await editTaskCommandHandler.Handle(command, ct);
     }

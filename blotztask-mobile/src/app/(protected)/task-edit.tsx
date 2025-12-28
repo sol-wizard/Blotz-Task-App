@@ -22,7 +22,6 @@ const TaskEditScreen = () => {
   }
 
   const taskEditData: EditTaskItemDTO = {
-    id: selectedTask.id,
     title: selectedTask.title,
     description: selectedTask.description,
     startTime: selectedTask.startTime,
@@ -36,8 +35,8 @@ const TaskEditScreen = () => {
   const handleTaskSubmit = async (formValues: AddTaskItemDTO) => {
     try {
       await updateTask({
-        id: selectedTask.id,
-        ...formValues,
+        taskId: selectedTask.id,
+        dto: formValues,
       });
 
       router.back();

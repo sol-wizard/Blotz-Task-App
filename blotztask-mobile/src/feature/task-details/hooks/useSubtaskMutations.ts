@@ -7,7 +7,7 @@ import {
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
-import { subtaskKeys, taskKeys } from "@/shared/util/query-key-factory";
+import { subtaskKeys, taskKeys } from "@/shared/constants/query-key-factory";
 
 export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();

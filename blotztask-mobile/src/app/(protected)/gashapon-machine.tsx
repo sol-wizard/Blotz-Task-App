@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Image } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,6 +17,7 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { endOfDay } from "date-fns";
 import { router } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 
 export default function GashaponMachine() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
@@ -27,8 +28,15 @@ export default function GashaponMachine() {
   const [starLabelName, setStarLabelName] = useState("");
   const [randomTask, setRandomTask] = useState<FloatingTaskDTO | null>(null);
   const { updateTask } = useTaskMutations();
+  const posthog = usePostHog();
 
   const { floatingTasks, isLoading } = useFloatingTasks();
+
+  useEffect(() => {
+    posthog.capture("screen_viewed", {
+      screen_name: "GashaponMachine",
+    });
+  }, []);
 
   const MAX_STARS = 30;
 
@@ -36,17 +44,17 @@ export default function GashaponMachine() {
 
   const handleDoNow = () => {
     if (!randomTask) return;
-    const actionableTask = {
-      id: randomTask.id,
-      title: randomTask.title,
-      descprition: randomTask.description,
-      isDone: false,
-      startTime: convertToDateTimeOffset(new Date()),
-      endTime: convertToDateTimeOffset(endOfDay(new Date())),
-      labelId: randomTask.label?.labelId,
-      timeType: 1,
-    };
-    updateTask(actionableTask);
+    updateTask({
+      taskId: randomTask.id,
+      dto: {
+        title: randomTask.title,
+        description: randomTask.description,
+        startTime: convertToDateTimeOffset(new Date()),
+        endTime: convertToDateTimeOffset(endOfDay(new Date())),
+        labelId: randomTask.label?.labelId,
+        timeType: 1,
+      },
+    });
     router.push("/(protected)");
     setModalVisible(false);
   };

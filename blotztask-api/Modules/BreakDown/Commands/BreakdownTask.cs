@@ -13,6 +13,9 @@ public class BreakdownTaskCommand
 {
     [Required]
     public required int TaskId { get; init; }
+
+    [Required]
+    public required Guid UserId { get; init; }
 }
 
 public class BreakdownTaskCommandHandler(
@@ -24,7 +27,7 @@ public class BreakdownTaskCommandHandler(
     {
         logger.LogInformation("Breaking down task {TaskId}", command.TaskId);
 
-        var query = new GetTasksByIdQuery { TaskId = command.TaskId };
+        var query = new GetTasksByIdQuery { TaskId = command.TaskId, UserId = command.UserId };
         var task = await getTaskByIdQueryHandler.Handle(query, ct);
 
         if (task == null)

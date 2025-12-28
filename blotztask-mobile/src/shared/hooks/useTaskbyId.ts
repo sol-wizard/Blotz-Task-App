@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchTaskById } from "../services/task-service";
-import { taskKeys } from "../util/query-key-factory";
+import { taskKeys } from "../constants/query-key-factory";
 
 export const useTaskById = ({ taskId }: { taskId: number }) => {
   const qc = useQueryClient();

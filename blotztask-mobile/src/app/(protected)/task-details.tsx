@@ -29,21 +29,24 @@ export default function TaskDetailsScreen() {
     }
   }, [selectedTask]);
 
-  const handleUpdateDescription = (newDescription: string) => {
+  const handleUpdateDescription = async (newDescription: string) => {
     if (!selectedTask) return;
+    if (newDescription === (selectedTask.description ?? "")) return;
 
-    updateTask({
-      id: selectedTask.id,
-      title: selectedTask.title,
-      description: newDescription,
-      startTime: selectedTask.startTime
-        ? convertToDateTimeOffset(new Date(selectedTask.startTime))
-        : undefined,
-      endTime: selectedTask.endTime
-        ? convertToDateTimeOffset(new Date(selectedTask.endTime))
-        : undefined,
-      labelId: selectedTask.label?.labelId,
-      timeType: selectedTask.timeType ?? null,
+    await updateTask({
+      taskId: selectedTask.id,
+      dto: {
+        title: selectedTask.title,
+        description: newDescription,
+        startTime: selectedTask.startTime
+          ? convertToDateTimeOffset(new Date(selectedTask.startTime))
+          : undefined,
+        endTime: selectedTask.endTime
+          ? convertToDateTimeOffset(new Date(selectedTask.endTime))
+          : undefined,
+        labelId: selectedTask.label?.labelId,
+        timeType: selectedTask.timeType ?? null,
+      },
     });
   };
 
