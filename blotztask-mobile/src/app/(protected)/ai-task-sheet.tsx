@@ -4,21 +4,12 @@ import { router } from "expo-router";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { AiModalContent } from "@/feature/ai-task-generate/component/ai-modal-content";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { installAndroidLanguagePackage } from "@/feature/ai-task-generate/utils/install-android-language-package";
-import { requestMicrophonePermission } from "@/feature/ai-task-generate/utils/request-microphone-permission";
-import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
+
 
 export default function AiTaskSheetScreen() {
   const [modalType, setModalType] = useState<BottomSheetType>("input");
 
-  useEffect(() => {
-    if (!ExpoSpeechRecognitionModule.isRecognitionAvailable()) {
-      return;
-    }
-
-    requestMicrophonePermission();
-    installAndroidLanguagePackage(["en-US", "cmn-Hans-CN"]);
-  }, []);
+  
 
   return (
     <View className="flex-1 bg-transparent">
@@ -29,8 +20,6 @@ export default function AiTaskSheetScreen() {
             modalType === "add-task-success" ? "bg-background" : "bg-white"
           }`}
         >
-          <View className="flex-row justify-between items-center px-2 mb-4">
-          </View>
           <AiModalContent modalType={modalType} setModalType={setModalType} />
         </View>
       </KeyboardAvoidingView>

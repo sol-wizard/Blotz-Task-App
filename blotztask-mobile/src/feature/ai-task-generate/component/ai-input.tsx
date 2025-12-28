@@ -11,7 +11,7 @@ import { requestMicrophonePermission } from "../utils/request-microphone-permiss
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
 import { AiLanguagePicker } from "./ai-language-picker";
-
+import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 export const AiInput = ({
   text,
   setText,
@@ -35,6 +35,10 @@ export const AiInput = ({
   });
 
   useEffect(() => {
+    if (!ExpoSpeechRecognitionModule.isRecognitionAvailable()) {
+      return;
+    }
+
     requestMicrophonePermission();
     installAndroidLanguagePackage(["en-US", "cmn-Hans-CN"]);
   }, []);
@@ -111,7 +115,9 @@ export const AiInput = ({
           )}
         </View>
         <View className="flex-row items-center justify-between mb-6">
-          <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
+          {ExpoSpeechRecognitionModule.isRecognitionAvailable() && (
+            <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
+          )}
           {!isAiGenerating ? (
             <VoiceButton
               isRecognizing={recognizing}
