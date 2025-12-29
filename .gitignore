@@ -6,3 +6,4 @@
 *.ps1
 .DS_Store
 .idea/
+package-lock.json

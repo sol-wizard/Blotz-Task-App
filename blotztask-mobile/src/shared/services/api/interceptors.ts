@@ -8,8 +8,10 @@ export function setupRequestInterceptor(api: AxiosInstance): void {
       const token = await getAuthToken();
 
       if (token) {
+        // 确保 headers 存在（有些 axios config 里可能是 undefined）
         config.headers.Authorization = `Bearer ${token}`;
       }
+
       return config;
     },
     (error) => Promise.reject(error),
@@ -22,13 +24,9 @@ export function setupResponseInterceptor(api: AxiosInstance): void {
     async (error: AxiosError) => {
       const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-      // Try auth refresh logic first
       const retryResult = await handleAuthError(error, api, originalRequest);
-      if (retryResult) {
-        return retryResult;
-      }
+      if (retryResult) return retryResult;
 
-      // Handle other status / network errors
       return handleOtherErrors(error);
     },
   );
