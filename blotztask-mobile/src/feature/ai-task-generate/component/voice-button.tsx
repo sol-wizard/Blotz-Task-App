@@ -7,9 +7,7 @@ import { Text } from "react-native";
 export const VoiceButton = ({
   isRecognizing,
   toggleListening,
-  text,
 }: {
-  text: string;
   isRecognizing: boolean;
   toggleListening: () => Promise<void>;
 }) => {
@@ -25,16 +23,16 @@ export const VoiceButton = ({
 
   return (
     <Pressable onPress={toggleListening} style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}>
-      <GradientCircle width={120} height={40}>
+      <GradientCircle width={100} height={40}>
         <View className="flex-row items-center justify-center">
           <LottieView
             ref={lottieRef}
             source={ASSETS.voiceBar}
             loop={true}
             autoPlay={false}
-            style={{ width: 50, height: 50 }}
+            style={{ width: 40, height: 40 }}
           />
-          <Text className="text-white text-m font-bold">Speak</Text>
+          <Text className="text-white text-sm font-bold">Speak</Text>
         </View>
       </GradientCircle>
     </Pressable>

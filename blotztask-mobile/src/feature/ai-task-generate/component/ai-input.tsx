@@ -1,4 +1,4 @@
-import { View, Vibration, TextInput, Keyboard } from "react-native";
+import { View, Vibration, TextInput } from "react-native";
 import { useEffect, useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
@@ -77,14 +77,7 @@ export const AiInput = ({
     setText("");
   };
 
-  const sendWriteInput = (msg: string) => {
-    const val = msg.trim();
-    if (!val) return;
-    sendMessage(val);
-    setText(val);
-    Keyboard.dismiss();
-  };
-
+  const showSendButton = text.trim() !== "" || recognizing;
   return (
     <View className="pt-2">
       <View className="items-center">
@@ -92,13 +85,6 @@ export const AiInput = ({
           <TextInput
             value={text}
             onChangeText={(v: string) => setText(v)}
-            onKeyPress={({ nativeEvent: { key } }) => {
-              if (key === "Enter") {
-                const cleaned = text.replace(/\n$/, "").trim();
-                if (!cleaned) return;
-                sendWriteInput(cleaned);
-              }
-            }}
             enablesReturnKeyAutomatically
             placeholder="Hold to speak or tap to write..."
             placeholderTextColor={theme.colors.secondary}
@@ -114,25 +100,16 @@ export const AiInput = ({
           {Platform.OS !== "android" && (
             <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
           )}
-          {recognizing ? (
-            <VoiceButton
-              text={text}
-              isRecognizing={recognizing}
-              toggleListening={toggleListening}
-            />
-          ) : text.trim() ? (
+          {showSendButton ? (
             <SendButton
               text={text}
+              isRecognizing={recognizing}
               isGenerating={isAiGenerating}
               abortListening={handleAbortListening}
               sendMessage={sendMessage}
             />
           ) : (
-            <VoiceButton
-              text={text}
-              isRecognizing={recognizing}
-              toggleListening={toggleListening}
-            />
+            <VoiceButton isRecognizing={recognizing} toggleListening={toggleListening} />
           )}
         </View>
       </View>

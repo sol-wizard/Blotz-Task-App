@@ -24,10 +24,10 @@ export function AiLanguagePicker({ value, onChange }: AiLanguageProps) {
       onChange={(item) => onChange(item.value)}
       style={{
         backgroundColor: "#F0F4FF",
-        paddingHorizontal: 16,
+        paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 24,
-        minWidth: 120,
+        minWidth: 100,
         borderWidth: 0,
       }}
       selectedTextStyle={{
@@ -71,7 +71,7 @@ export function AiLanguagePicker({ value, onChange }: AiLanguageProps) {
               </Text>
             </View>
 
-            {LANGUAGE_OPTIONS.indexOf(item) < LANGUAGE_OPTIONS.length - 1 && (
+            {LANGUAGE_OPTIONS.indexOf(item) > 0 && (
               <View className="px-4">
                 <FormDivider marginVertical={0} />
               </View>

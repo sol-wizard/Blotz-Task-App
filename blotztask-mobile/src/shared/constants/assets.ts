@@ -13,7 +13,6 @@ export const LOTTIE_ANIMATIONS = {
   emptyBox: require("../../../assets/animations/empty-box.json"),
   spinner: require("../../../assets/animations/spinner.json"),
   voiceBar: require("../../../assets/animations/voice-bar.json"),
-  loading: require("../../../assets/animations/loading.json"),
 } as const;
 
 // Images
