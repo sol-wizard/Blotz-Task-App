@@ -12,6 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
 import { AiLanguagePicker } from "./ai-language-picker";
 import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
+import { Platform } from "react-native";
 export const AiInput = ({
   text,
   setText,
@@ -38,11 +39,13 @@ export const AiInput = ({
     if (!ExpoSpeechRecognitionModule.isRecognitionAvailable()) {
       return;
     }
+    if (Platform.OS === "android") {
+      return;
+    }
 
     requestMicrophonePermission();
     installAndroidLanguagePackage(["en-US", "cmn-Hans-CN"]);
   }, []);
-
   const handleSelectLanguage = (lang: "en-US" | "zh-CN") => {
     setLanguage(lang);
     AsyncStorage.setItem("ai_language_preference", lang);
