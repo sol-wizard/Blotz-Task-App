@@ -11,7 +11,6 @@ import { requestMicrophonePermission } from "../utils/request-microphone-permiss
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
 import { AiLanguagePicker } from "./ai-language-picker";
-import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 import { Platform } from "react-native";
 export const AiInput = ({
   text,
@@ -36,9 +35,6 @@ export const AiInput = ({
   });
 
   useEffect(() => {
-    if (!ExpoSpeechRecognitionModule.isRecognitionAvailable()) {
-      return;
-    }
     if (Platform.OS === "android") {
       return;
     }
@@ -66,10 +62,6 @@ export const AiInput = ({
       stopListening();
       return;
     }
-    // if (transcript?.trim()) {
-    //   sendMessage(transcript.trim());
-    //   return;
-    // }
 
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -119,7 +111,7 @@ export const AiInput = ({
           )}
         </View>
         <View className="flex-row items-center justify-between mb-6 w-96">
-          {ExpoSpeechRecognitionModule.isRecognitionAvailable() && (
+          {Platform.OS !== "android" && (
             <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
           )}
           {recognizing ? (
