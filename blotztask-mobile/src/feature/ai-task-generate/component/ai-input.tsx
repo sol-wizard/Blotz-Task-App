@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import * as Haptics from "expo-haptics";
-import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
 import { VoiceButton } from "./voice-button";
+import { SendButton } from "./send-button";
 import { requestMicrophonePermission } from "../utils/request-microphone-permission";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
@@ -61,11 +61,12 @@ export const AiInput = ({
   const toggleListening = async () => {
     if (recognizing) {
       stopListening();
-      if (transcript?.trim()) {
-        sendMessage(transcript.trim());
-      }
       return;
     }
+    // if (transcript?.trim()) {
+    //   sendMessage(transcript.trim());
+    //   return;
+    // }
 
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -77,8 +78,8 @@ export const AiInput = ({
   };
 
   const handleAbortListening = () => {
-    setText("");
     abortListening();
+    setText("");
   };
 
   const sendWriteInput = (msg: string) => {
@@ -114,22 +115,29 @@ export const AiInput = ({
             <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
           )}
         </View>
-        <View className="flex-row items-center justify-between mb-6">
-          {!isAiGenerating ? (
-            <>
-              {ExpoSpeechRecognitionModule.isRecognitionAvailable() && (
-                <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
-              )}
-              <VoiceButton
-                isRecognizing={recognizing}
-                toggleListening={toggleListening}
-                abortListening={handleAbortListening}
-              />
-            </>
+        <View className="flex-row items-center justify-between mb-6 w-96">
+          {ExpoSpeechRecognitionModule.isRecognitionAvailable() && (
+            <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
+          )}
+          {recognizing ? (
+            <VoiceButton
+              text={text}
+              isRecognizing={recognizing}
+              toggleListening={toggleListening}
+            />
+          ) : text.trim() ? (
+            <SendButton
+              text={text}
+              isGenerating={isAiGenerating}
+              abortListening={handleAbortListening}
+              sendMessage={sendMessage}
+            />
           ) : (
-            <View className="flex-row items-center mt-4 mb-8 w-full px-2 justify-center">
-              <CustomSpinner size={60} style={{ marginRight: 10 }} />
-            </View>
+            <VoiceButton
+              text={text}
+              isRecognizing={recognizing}
+              toggleListening={toggleListening}
+            />
           )}
         </View>
       </View>
