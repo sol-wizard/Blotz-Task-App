@@ -115,15 +115,17 @@ export const AiInput = ({
           )}
         </View>
         <View className="flex-row items-center justify-between mb-6">
-          {ExpoSpeechRecognitionModule.isRecognitionAvailable() && (
-            <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
-          )}
           {!isAiGenerating ? (
-            <VoiceButton
-              isRecognizing={recognizing}
-              toggleListening={toggleListening}
-              abortListening={handleAbortListening}
-            />
+            <>
+              {ExpoSpeechRecognitionModule.isRecognitionAvailable() && (
+                <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
+              )}
+              <VoiceButton
+                isRecognizing={recognizing}
+                toggleListening={toggleListening}
+                abortListening={handleAbortListening}
+              />
+            </>
           ) : (
             <View className="flex-row items-center mt-4 mb-8 w-full px-2 justify-center">
               <CustomSpinner size={60} style={{ marginRight: 10 }} />
