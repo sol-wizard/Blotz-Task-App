@@ -5,11 +5,8 @@ import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-
 import { AiModalContent } from "@/feature/ai-task-generate/component/ai-modal-content";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
-
 export default function AiTaskSheetScreen() {
   const [modalType, setModalType] = useState<BottomSheetType>("input");
-
-  
 
   return (
     <View className="flex-1 bg-transparent">
