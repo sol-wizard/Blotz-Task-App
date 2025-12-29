@@ -9,33 +9,13 @@ export function setupRequestInterceptor(api: AxiosInstance): void {
 
       if (token) {
         // 确保 headers 存在（有些 axios config 里可能是 undefined）
-        const payload = decodeJwtPayload(token);
-        console.log("JWT payload:", payload);
-
-        config.headers = config.headers ?? {};
         config.headers.Authorization = `Bearer ${token}`;
-        config.headers = config.headers ?? {};
-        config.headers.Authorization = `Bearer ${token}`;
-
-        console.log("auth-full:", `Bearer ${token}`);
-      } else {
-        console.log("auth: NO TOKEN");
       }
 
       return config;
     },
     (error) => Promise.reject(error),
   );
-}
-
-function decodeJwtPayload(token: string) {
-  try {
-    const payload = token.split(".")[1];
-    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
 }
 
 export function setupResponseInterceptor(api: AxiosInstance): void {

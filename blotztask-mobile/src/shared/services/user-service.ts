@@ -4,7 +4,6 @@ import { apiClient } from "./api/client";
 import { UpdateUserProfileDTO } from "@/feature/settings/modals/update-user-profile-dto";
 
 export const fetchUserProfile = async (): Promise<UserProfileDTO> => {
-  // const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/User`;
   const url = `/User`;
   try {
     return await apiClient.get(url);

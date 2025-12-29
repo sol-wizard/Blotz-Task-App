@@ -19,11 +19,7 @@ export default function TaskHandlingScreen() {
       dailyPlanningNotification: userPreferences.dailyPlanningNotification,
       eveningWrapUpNotification: userPreferences.eveningWrapUpNotification,
     };
-    try {
-      await updateUserPreferences(newUserPreferences);
-    } catch (error) {
-      console.log("Failed to updateUserPreferences:", error);
-    }
+    updateUserPreferences(newUserPreferences);
   };
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
