@@ -29,18 +29,19 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
 {
     public async Task<List<TaskByDateItemDto>> Handle(GetTasksByDateQuery query, CancellationToken ct = default)
     {
-        bool? autoRolloverEnabled = await db.UserPreferences
-            .AsNoTracking()
-            .Where(p => p.UserId == query.UserId)
-            .Select(p => p.AutoRollover)
-            .FirstOrDefaultAsync(ct);
 
-        var autoRollover = autoRolloverEnabled ?? true;
 
         var stopwatch = Stopwatch.StartNew();
         logger.LogInformation(
             "Fetching tasks by end time for user {UserId} up to {StartDate}. Whether including floating tasks for today is {IncludeFloatingForToday}",
             query.UserId, query.StartDate, query.IncludeFloatingForToday);
+
+        bool? autoRolloverEnabled = await db.UserPreferences
+            .AsNoTracking()
+            .Where(p => p.UserId == query.UserId)
+            .Select(p => p.AutoRollover)
+            .FirstOrDefaultAsync(ct);
+        var autoRollover = autoRolloverEnabled ?? true;
         var selectedDayStart = query.StartDate;
         var selectedDayEnd = query.StartDate.AddDays(1);
         var overdueWindowStart = selectedDayStart.AddDays(-7);

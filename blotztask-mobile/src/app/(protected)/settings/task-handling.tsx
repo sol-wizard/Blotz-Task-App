@@ -42,7 +42,6 @@ export default function TaskHandlingScreen() {
           </Text>
         </View>
 
-        {/* <ToggleSwitch value={isAutoRolloverEnabled} onChange={toggleAutoRollover} /> */}
         <ToggleSwitch
           value={userPreferences?.autoRollover ?? false}
           disabled={isUpdatingUserPreferences}
