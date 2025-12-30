@@ -107,6 +107,7 @@ export const AiInput = ({
               isGenerating={isAiGenerating}
               abortListening={handleAbortListening}
               sendMessage={sendMessage}
+              stopListening={stopListening}
             />
           ) : (
             <VoiceButton isRecognizing={recognizing} toggleListening={toggleListening} />

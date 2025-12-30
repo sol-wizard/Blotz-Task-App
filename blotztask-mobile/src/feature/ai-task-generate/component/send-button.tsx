@@ -11,6 +11,7 @@ export const SendButton = ({
   isRecognizing,
   isGenerating,
   abortListening: handleAbortListening,
+  stopListening,
   text,
   sendMessage,
 }: {
@@ -18,6 +19,7 @@ export const SendButton = ({
   isGenerating: boolean;
   isRecognizing: boolean;
   abortListening: () => void;
+  stopListening: () => void;
   sendMessage: (message: string) => void;
 }) => {
   const lottieRef = useRef<LottieView>(null);
@@ -30,13 +32,18 @@ export const SendButton = ({
     }
   }, [isRecognizing]);
 
+  const handleSendMessage = () => {
+    sendMessage(text);
+    stopListening();
+  };
+
   return (
     <View className="flex-row items-center justify-center gap-2">
       <Pressable onPress={handleAbortListening}>
         <MaterialCommunityIcons name="close" size={18} color={theme.colors.primary} />
       </Pressable>
       <Pressable
-        onPress={() => sendMessage(text)}
+        onPress={handleSendMessage}
         style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
       >
         <GradientCircle width={100} height={40}>
@@ -44,13 +51,15 @@ export const SendButton = ({
             {isGenerating ? (
               <ActivityIndicator size="small" color={"white"} className="mr-4" />
             ) : (
-              <LottieView
-                ref={lottieRef}
-                source={ASSETS.voiceBar}
-                loop={true}
-                autoPlay={false}
-                style={{ width: 40, height: 40 }}
-              />
+              isRecognizing && (
+                <LottieView
+                  ref={lottieRef}
+                  source={ASSETS.voiceBar}
+                  loop={true}
+                  autoPlay={false}
+                  style={{ width: 40, height: 40 }}
+                />
+              )
             )}
 
             <Text className="text-white text-sm font-bold">Send</Text>
