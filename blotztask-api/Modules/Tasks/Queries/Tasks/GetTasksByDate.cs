@@ -40,8 +40,6 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
         var endDateUtc = query.StartDate.AddDays(1);
 
         var userToday = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
-        var isFutureDay = query.StartDate > userToday.Date;
-
 
         var queryStopwatch = Stopwatch.StartNew();
         var tasks = await db.TaskItems
@@ -58,11 +56,11 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                              t.CreatedAt < endDateUtc)
                             ||
                             // Overdue tasks within 7 days but not in selected day
-                            (t.EndTime != null
+                            (t.StartTime != null && t.EndTime != null
                              && !t.IsDone
-                             && !isFutureDay
-                             && t.EndTime < DateTime.UtcNow && t.EndTime >= sevenDayWindowStartUtc &&
-                             t.StartTime <= endDateUtc
+                             && t.StartTime <= query.StartDate
+                             && t.EndTime < DateTime.UtcNow
+                             && t.EndTime >= sevenDayWindowStartUtc
                             )
                         ))
             .OrderBy(t => t.StartTime).ThenBy(t => t.EndTime).ThenBy(t => t.Title)
