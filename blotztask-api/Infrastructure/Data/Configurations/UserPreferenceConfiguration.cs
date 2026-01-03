@@ -1,4 +1,5 @@
 using BlotzTask.Modules.Users.Domain;
+using BlotzTask.Modules.Users.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -29,6 +30,11 @@ namespace BlotzTask.Infrastructure.Data.Configurations
 
             builder.Property(x => x.EveningWrapUpNotification)
                    .HasDefaultValue(false);
+
+            // Store Language enum as string in database
+            builder.Property(x => x.PreferredLanguage)
+                   .HasConversion<string>()
+                   .HasDefaultValue(Language.En);
         }
     }
 }

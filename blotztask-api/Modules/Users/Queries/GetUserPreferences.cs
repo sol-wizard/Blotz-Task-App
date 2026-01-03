@@ -1,4 +1,5 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Shared.Exceptions;
 
 namespace BlotzTask.Modules.Users.Queries;
@@ -30,7 +31,8 @@ public class GetUserPreferencesQueryHandler(BlotzTaskDbContext db, ILogger<GetUs
             UpcomingNotification = preference.UpcomingNotification,
             OverdueNotification = preference.OverdueNotification,
             DailyPlanningNotification = preference.DailyPlanningNotification,
-            EveningWrapUpNotification = preference.EveningWrapUpNotification
+            EveningWrapUpNotification = preference.EveningWrapUpNotification,
+            PreferredLanguage = preference.PreferredLanguage
         };
     }
 
@@ -43,4 +45,5 @@ public class GetUserPreferencesDTO
     public bool OverdueNotification { get; set; }
     public bool DailyPlanningNotification { get; set; }
     public bool EveningWrapUpNotification { get; set; }
+    public Language PreferredLanguage { get; set; }
 }
