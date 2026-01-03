@@ -11,7 +11,6 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
-import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { Text } from "react-native";
 
 export function AiTasksPreview({
