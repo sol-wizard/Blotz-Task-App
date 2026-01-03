@@ -147,6 +147,11 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
               placeholder="New Task"
               control={control}
               className="font-balooBold text-4xl leading-normal"
+              inputProps={{
+                multiline: false, 
+                blurOnSubmit: true, 
+                returnKeyType: "done",
+              }}
             />
           </View>
 
