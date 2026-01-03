@@ -40,7 +40,7 @@ export const SendButton = ({
   return (
     <View className="flex-row items-center justify-center gap-2">
       <Pressable onPress={handleAbortListening}>
-        <View className="w-8 h-8 rounded-full bg-[#E3EEFF] items-center justify-center">
+        <View className="w-8 h-8 rounded-full bg-[#f4f8f9] items-center justify-center">
           <MaterialCommunityIcons name="close" size={12} color={theme.colors.primary} />
         </View>
       </Pressable>

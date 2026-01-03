@@ -23,7 +23,7 @@ export function AiLanguagePicker({ value, onChange }: AiLanguageProps) {
       value={value}
       onChange={(item) => onChange(item.value)}
       style={{
-        backgroundColor: "#F0F4FF",
+        backgroundColor: "#f4f8f9",
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 24,

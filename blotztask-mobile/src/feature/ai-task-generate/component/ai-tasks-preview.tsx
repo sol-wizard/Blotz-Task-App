@@ -3,7 +3,7 @@ import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
 import { View, Pressable, ActivityIndicator, ScrollView } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { usePostHog } from "posthog-react-native";
@@ -11,6 +11,8 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
+import { GradientCircle } from "@/shared/components/common/gradient-circle";
+import { Text } from "react-native";
 
 export function AiTasksPreview({
   aiTasks,
@@ -120,8 +122,8 @@ export function AiTasksPreview({
         <Pressable
           onPress={handleAddTasks}
           disabled={createDisabled}
-          className={`w-12 h-12 rounded-full items-center justify-center mx-8 ${
-            createDisabled ? "bg-gray-300" : "bg-blue-50"
+          className={`w-[100px] h-12 rounded-full items-center justify-center mx-8 ${
+            createDisabled ? "bg-gray-300" : "bg-[#a6d445]"
           }`}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityRole="button"
@@ -130,7 +132,7 @@ export function AiTasksPreview({
           {isAdding ? (
             <ActivityIndicator size="small" />
           ) : (
-            <Ionicons name="arrow-up" size={20} color="#528bda" />
+            <Text className="font-baloo text-sm">Add to tasks</Text>
           )}
         </Pressable>
       </View>
