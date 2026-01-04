@@ -27,6 +27,12 @@ const menuItems: SettingsMenuItem[] = [
     route: "/(protected)/settings/notifications",
   },
   {
+    key: "language",
+    label: "Language",
+    icon: "translate",
+    route: "/(protected)/settings/language",
+  },
+  {
     key: "under-development",
     label: "All tasks page (beta)",
     icon: "cog-outline",

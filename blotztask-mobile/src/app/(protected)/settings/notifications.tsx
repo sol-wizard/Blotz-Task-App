@@ -23,6 +23,7 @@ export default function NotificationScreen() {
       overdueNotification: userPreferences.overdueNotification,
       dailyPlanningNotification: userPreferences.dailyPlanningNotification,
       eveningWrapUpNotification: userPreferences.eveningWrapUpNotification,
+      preferredLanguage: userPreferences.preferredLanguage,
     };
 
     try {

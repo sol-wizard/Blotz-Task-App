@@ -1,4 +1,7 @@
-export type Language = "En" | "Zh";
+export enum Language {
+  En = "En",
+  Zh = "Zh",
+}
 
 export interface UserPreferencesDTO {
   autoRollover: boolean;
