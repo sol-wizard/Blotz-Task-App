@@ -1,0 +1,13 @@
+{
+  "header": {
+    "today": "Today"
+  },
+  "status": {
+    "all": "All",
+    "toDo": "To Do",
+    "inProgress": "In Progress",
+    "done": "Done",
+    "overdue": "Overdue"
+  }
+}
+

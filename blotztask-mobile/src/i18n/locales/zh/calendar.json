@@ -1,0 +1,13 @@
+{
+  "header": {
+    "today": "今天"
+  },
+  "status": {
+    "all": "全部",
+    "toDo": "待办",
+    "inProgress": "进行中",
+    "done": "已完成",
+    "overdue": "逾期"
+  }
+}
+
