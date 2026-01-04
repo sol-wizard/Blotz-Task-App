@@ -8,6 +8,24 @@
     "inProgress": "In Progress",
     "done": "Done",
     "overdue": "Overdue"
+  },
+  "emptyState": {
+    "all": {
+      "title": "No tasks for this day",
+      "description": "Your task list is empty. Wanna create a new task?"
+    },
+    "todo": {
+      "title": "No tasks to do",
+      "description": "All caught up! Add a new task to get started."
+    },
+    "done": {
+      "title": "No completed tasks",
+      "description": "Complete some tasks to see them here."
+    },
+    "default": {
+      "title": "No tasks found",
+      "description": "Try adjusting your filter or add a new task."
+    }
   }
 }
 
