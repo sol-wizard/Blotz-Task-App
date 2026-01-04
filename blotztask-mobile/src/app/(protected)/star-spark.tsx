@@ -13,12 +13,14 @@ import { router, useFocusEffect } from "expo-router";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { usePostHog } from "posthog-react-native";
+import { useTranslation } from "react-i18next";
 
 export default function StarSparkScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const { floatingTasks, isLoading } = useFloatingTasks();
   const { deleteTask, isDeleting } = useTaskMutations();
   const posthog = usePostHog();
+  const { t } = useTranslation("starSpark");
 
   useFocusEffect(
     useCallback(() => {
@@ -54,7 +56,7 @@ export default function StarSparkScreen() {
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
       <View className="flex-row justify-between items-center mt-10">
-        <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4 px-10">Star Spark</Text>
+        <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4 px-10">{t("title")}</Text>
         <Pressable onPress={() => router.push("/(protected)/gashapon-machine")}>
           <Image source={ASSETS.starSpark} className="w-12 h-12 mr-8"></Image>
         </Pressable>
@@ -76,7 +78,7 @@ export default function StarSparkScreen() {
           }}
         />
         <Text className="font-baloo text-xl text-secondary mt-5 mb-4 mx-4 text-onSurface">
-          Ready to turn a spark into action?
+          {t("banner")}
         </Text>
 
         <Searchbar

@@ -11,7 +11,7 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 export default function LanguageScreen() {
   const router = useRouter();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation("settings");
   const { isUserPreferencesLoading, userPreferences } = useUserPreferencesQuery();
   const { updateUserPreferencesAsync, isUpdatingUserPreferences } = useUserPreferencesMutation();
 
@@ -53,7 +53,7 @@ export default function LanguageScreen() {
         <Pressable onPress={() => router.back()} className="mr-4">
           <MaterialCommunityIcons name="arrow-left" size={24} color="#363853" />
         </Pressable>
-        <Text className="text-2xl font-balooBold text-secondary">Language / 语言</Text>
+        <Text className="text-2xl font-balooBold text-secondary">{t("language.title")}</Text>
       </View>
 
       {/* Language Options */}
@@ -70,8 +70,8 @@ export default function LanguageScreen() {
                 <Text className="text-xl">🇺🇸</Text>
               </View>
               <View className="flex-1">
-                <Text className="text-lg font-baloo text-secondary">English</Text>
-                <Text className="text-sm font-baloo text-gray-500">Default language</Text>
+                <Text className="text-lg font-baloo text-secondary">{t("language.english")}</Text>
+                <Text className="text-sm font-baloo text-gray-500">{t("language.englishDescription")}</Text>
               </View>
             </View>
             {currentLanguage === Language.En && (
@@ -90,8 +90,8 @@ export default function LanguageScreen() {
                 <Text className="text-xl">🇨🇳</Text>
               </View>
               <View className="flex-1">
-                <Text className="text-lg font-baloo text-secondary">中文</Text>
-                <Text className="text-sm font-baloo text-gray-500">简体中文</Text>
+                <Text className="text-lg font-baloo text-secondary">{t("language.chinese")}</Text>
+                <Text className="text-sm font-baloo text-gray-500">{t("language.chineseDescription")}</Text>
               </View>
             </View>
             {currentLanguage === Language.Zh && (
@@ -103,8 +103,8 @@ export default function LanguageScreen() {
         {/* Info Text */}
         <Text className="text-sm font-baloo text-gray-500 mt-4 px-2">
           {currentLanguage === Language.En
-            ? "Your language preference will be saved and synced across all your devices."
-            : "您的语言偏好将被保存并在所有设备上同步。"}
+            ? t("language.infoText")
+            : t("language.infoTextChinese")}
         </Text>
       </View>
     </SafeAreaView>
