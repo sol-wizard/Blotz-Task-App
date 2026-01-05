@@ -1,11 +1,9 @@
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import LottieView from "lottie-react-native";
 import { useEffect, useRef } from "react";
-import { Pressable, View } from "react-native";
-import { Text } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { theme } from "@/shared/constants/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { ActivityIndicator } from "react-native";
 import { ASSETS } from "@/shared/constants/assets";
 export const SendButton = ({
   isRecognizing,
