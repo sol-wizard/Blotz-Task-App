@@ -1,6 +1,5 @@
 import { Pressable, Text, View } from "react-native";
 import { Hanging } from "../common/hanging";
-import { TaskStatusType } from "@/feature/calendar/models/task-status-type";
 
 export const TaskStatusButton = ({
   isSelected,
@@ -9,14 +8,14 @@ export const TaskStatusButton = ({
   taskCount,
 }: {
   isSelected: boolean;
-  onChange: (v: TaskStatusType) => void;
-  statusName: TaskStatusType;
+  onChange: () => void;
+  statusName: string;
   taskCount: number;
 }) => {
   return (
     <Hanging active={isSelected}>
       <Pressable
-        onPress={() => onChange(statusName)}
+        onPress={onChange}
         className={`flex-row items-center gap-2 px-4 py-2 rounded-xl border ${
           isSelected ? "bg-black" : "bg-white border-gray-300"
         }`}
