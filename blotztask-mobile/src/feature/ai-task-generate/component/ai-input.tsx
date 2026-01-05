@@ -42,9 +42,13 @@ export const AiInput = ({
     requestMicrophonePermission();
     installAndroidLanguagePackage(["en-US", "cmn-Hans-CN"]);
   }, []);
-  const handleSelectLanguage = (lang: "en-US" | "zh-CN") => {
+  const handleSelectLanguage = async (lang: "en-US" | "zh-CN") => {
     setLanguage(lang);
-    AsyncStorage.setItem("ai_language_preference", lang);
+    try {
+      await AsyncStorage.setItem("ai_language_preference", lang);
+    } catch (error) {
+      console.error("Failed to save AI language preference:", error);
+    }
   };
   const { handleStartListening, recognizing, transcript, stopListening, abortListening } =
     useSpeechRecognition({
