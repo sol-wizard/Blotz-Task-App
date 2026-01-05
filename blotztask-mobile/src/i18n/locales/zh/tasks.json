@@ -1,0 +1,32 @@
+{
+  "form": {
+    "newTask": "新任务",
+    "addNote": "添加备注",
+    "createTask": "创建任务",
+    "updateTask": "更新任务",
+    "reminder": "提醒",
+    "event": "事件",
+    "alert": "提醒",
+    "category": "分类",
+    "noCategory": "无分类"
+  },
+  "details": {
+    "notFound": "未找到选定的任务。",
+    "addDetails": "添加任务详情 — 人员、地点、链接、笔记…",
+    "subtasks": "子任务",
+    "description": "描述"
+  },
+  "alerts": {
+    "none": "无",
+    "atTime": "事件开始时",
+    "5min": "提前5分钟",
+    "10min": "提前10分钟",
+    "15min": "提前15分钟",
+    "30min": "提前30分钟",
+    "1hour": "提前1小时",
+    "2hours": "提前2小时",
+    "1day": "提前1天",
+    "2days": "提前2天"
+  }
+}
+

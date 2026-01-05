@@ -1,4 +1,5 @@
 import { isSameDay } from "date-fns";
+import i18n from "@/i18n";
 
 /**
  * Formats a date string for calendar display
@@ -15,6 +16,6 @@ export const formatCalendarDate = (dateString: string) => {
   const day = dateObj.getDate();
 
   return {
-    dayOfWeek: isToday ? "Today" : `${day} ${month}`,
+    dayOfWeek: isToday ? i18n.t("calendar:header.today") : `${day} ${month}`,
   };
 };

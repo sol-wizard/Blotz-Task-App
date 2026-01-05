@@ -4,6 +4,7 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260104115102_AddLanguageInUserPreference")]
+    partial class AddLanguageInUserPreference
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -305,29 +308,6 @@ namespace BlotzTask.Migrations
                         });
                 });
 
-            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.PomodoroSetting", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsCountdown")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Sound")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Timing")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(25);
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("PomodoroSettings", (string)null);
-                });
-
             modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserPreference", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -436,17 +416,6 @@ namespace BlotzTask.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.PomodoroSetting", b =>
-                {
-                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
-                        .WithOne("PomodoroSetting")
-                        .HasForeignKey("BlotzTask.Modules.Users.Domain.PomodoroSetting", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
                     b.Navigation("TaskItems");
@@ -455,12 +424,6 @@ namespace BlotzTask.Migrations
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
                 {
                     b.Navigation("Subtasks");
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.AppUser", b =>
-                {
-                    b.Navigation("PomodoroSetting")
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
