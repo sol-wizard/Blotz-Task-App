@@ -31,7 +31,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         var endDateUtcExclusive = query.MondayUtc.AddDays(7);
 
         var todayEndUtc = DateTime.UtcNow.Date.AddDays(1);
-        var sevenDayWindowStartUtc = todayEndUtc.AddDays(-6);
+        var sevenDayWindowStartUtc = todayEndUtc.AddDays(-7);
         var userToday = DateTimeOffset.UtcNow.ToOffset(query.MondayUtc.Offset);
 
         logger.LogInformation(
@@ -86,10 +86,11 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
             {
                 if (t.StartTime.HasValue && t.EndTime.HasValue)
                 {
-                    var isInDateRange = t.StartTime < dayEnd && t.EndTime >= dayStart;
-                    if (isInDateRange) return true;
+                    // Tasks in date range
+                    if (t.StartTime < dayEnd && t.EndTime >= dayStart) return true;
 
-                    if (!isFutureDay && !t.IsDone && t.EndTime < DateTime.UtcNow && t.StartTime <= dayEnd)
+                    // Overdue tasks within 7 days
+                    if (!isFutureDay && !t.IsDone && t.EndTime < DateTime.UtcNow && t.EndTime >= sevenDayWindowStartUtc)
                     {
                         return true;
                     }
@@ -99,7 +100,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
 
                 var createdAtUtc = DateTime.SpecifyKind(t.CreatedAt, DateTimeKind.Utc);
                 var createdAtUtcOffset = new DateTimeOffset(createdAtUtc, TimeSpan.Zero);
-
                 return createdAtUtcOffset >= dayStart && createdAtUtcOffset < dayEnd;
             });
 
@@ -109,6 +109,9 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                 HasTask = hasTask
             });
         }
+
+        Console.WriteLine($"Result: {string.Join(", ", result.Select(r => r.Date))}");
+        Console.WriteLine($"Result: {string.Join(", ", result.Select(r => r.HasTask))}");
 
         logger.LogInformation(
             "Computed weekly task availability for user {UserId} in {ElapsedMs}ms",
