@@ -1,5 +1,6 @@
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
+import "@/i18n"; // Initialize i18n
 /* eslint-disable camelcase */
 import {
   Baloo2_400Regular,

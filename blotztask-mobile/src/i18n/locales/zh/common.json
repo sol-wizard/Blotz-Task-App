@@ -1,0 +1,28 @@
+{
+  "buttons": {
+    "cancel": "取消",
+    "done": "完成",
+    "save": "保存",
+    "saving": "保存中...",
+    "goBack": "返回",
+    "signOut": "退出登录"
+  },
+  "status": {
+    "todo": "待办",
+    "done": "已完成"
+  },
+  "loading": {
+    "general": "加载中...",
+    "categories": "加载分类中..."
+  },
+  "validation": {
+    "nameEmpty": "名字不能为空。",
+    "nameTooLong": "名字不能超过20个字符。"
+  },
+  "bottomNav": {
+    "calendar": "日历",
+    "starSpark": "星火",
+    "settings": "设置"
+  }
+}
+

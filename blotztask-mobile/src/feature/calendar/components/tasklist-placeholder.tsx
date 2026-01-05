@@ -2,37 +2,31 @@ import React from "react";
 import { View, Text } from "react-native";
 import LottieView from "lottie-react-native";
 import { ASSETS } from "@/shared/constants/assets";
+import { useTranslation } from "react-i18next";
 
 interface TaskListPlaceholderProps {
   selectedStatus: string;
 }
-interface EmptyStateContent {
-  title: string;
-  description: string;
-}
-
-const EMPTY_STATES: Record<string, EmptyStateContent> = {
-  all: {
-    title: "No tasks for this day",
-    description: "Your task list is empty. Wanna create a new task?",
-  },
-  todo: {
-    title: "No tasks to do",
-    description: "All caught up! Add a new task to get started.",
-  },
-  done: {
-    title: "No completed tasks",
-    description: "Complete some tasks to see them here.",
-  },
-};
-
-const DEFAULT_STATE: EmptyStateContent = {
-  title: "No tasks found",
-  description: "Try adjusting your filter or add a new task.",
-};
 
 export function TaskListPlaceholder({ selectedStatus }: TaskListPlaceholderProps) {
-  const content = EMPTY_STATES[selectedStatus] || DEFAULT_STATE;
+  const { t } = useTranslation("calendar");
+  
+  // Map status to translation keys
+  const getEmptyStateKey = (status: string): string => {
+    switch (status) {
+      case "all":
+        return "all";
+      case "todo":
+        return "todo";
+      case "done":
+        return "done";
+      default:
+        return "default";
+    }
+  };
+
+  const stateKey = getEmptyStateKey(selectedStatus);
+  
   return (
     <View className="flex-1 items-center justify-center px-4">
       <LottieView
@@ -41,8 +35,12 @@ export function TaskListPlaceholder({ selectedStatus }: TaskListPlaceholderProps
         loop
         style={{ width: 160, height: 160, marginBottom: 16 }}
       />
-      <Text className="text-lg font-semibold text-gray-900 mb-2 text-center">{content.title}</Text>
-      <Text className="text-gray-500 text-center max-w-xs">{content.description}</Text>
+      <Text className="text-lg font-semibold text-gray-900 mb-2 text-center">
+        {t(`emptyState.${stateKey}.title`)}
+      </Text>
+      <Text className="text-gray-500 text-center max-w-xs">
+        {t(`emptyState.${stateKey}.description`)}
+      </Text>
     </View>
   );
 }

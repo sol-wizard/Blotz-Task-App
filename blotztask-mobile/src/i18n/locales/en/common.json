@@ -1,0 +1,28 @@
+{
+  "buttons": {
+    "cancel": "Cancel",
+    "done": "Done",
+    "save": "Save",
+    "saving": "Saving...",
+    "goBack": "Go back",
+    "signOut": "Sign Out"
+  },
+  "status": {
+    "todo": "To Do",
+    "done": "Done"
+  },
+  "loading": {
+    "general": "Loading...",
+    "categories": "Loading categories..."
+  },
+  "validation": {
+    "nameEmpty": "Name cannot be empty.",
+    "nameTooLong": "Name cannot be longer than 20 characters."
+  },
+  "bottomNav": {
+    "calendar": "Calendar",
+    "starSpark": "StarSpark",
+    "settings": "Setting"
+  }
+}
+

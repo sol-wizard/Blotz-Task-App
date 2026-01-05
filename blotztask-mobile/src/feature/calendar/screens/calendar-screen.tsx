@@ -7,6 +7,7 @@ import { FilteredTaskList } from "../components/filtered-task-list";
 import { useTaskDays } from "../hooks/useTaskDays";
 import { getMarkedDates, getSelectedDates } from "../util/get-marked-dates";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
+import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Define the theme object outside the component to prevent re-renders
@@ -27,6 +28,7 @@ export default function CalendarScreen() {
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const { weeklyTaskAvability, isLoading } = useTaskDays({ selectedDay });
   usePushNotificationSetup();
+  useLanguageInit(); // Initialize language from backend
 
   let markedDates;
   if (!isLoading) {

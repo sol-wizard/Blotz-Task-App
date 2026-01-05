@@ -25,6 +25,7 @@ import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { endOfDay } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 type TaskFormProps =
   | {
@@ -42,6 +43,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const hasEventTimes = dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime;
   const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
   const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
+  const { t } = useTranslation("tasks");
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
 
@@ -144,7 +146,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           <View className="mb-4 bg-white">
             <FormTextInput
               name="title"
-              placeholder="New Task"
+              placeholder={t("form.newTask")}
               control={control}
               className="font-balooBold text-4xl leading-normal"
               inputProps={{
@@ -158,7 +160,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           <View className="py-3 bg-background rounded-2xl px-4">
             <FormTextInput
               name="description"
-              placeholder="Add a note"
+              placeholder={t("form.addNote")}
               control={control}
               className="font-baloo text-lg text-primary"
             />
@@ -177,7 +179,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           {/* Label Select */}
           <View className="mb-8">
             {isLoading ? (
-              <Text className="font-baloo text-lg text-primary mt-3">Loading categories...</Text>
+              <Text className="font-baloo text-lg text-primary mt-3">{t("common:loading.categories")}</Text>
             ) : (
               <LabelSelect control={control} labels={labels} />
             )}
@@ -194,7 +196,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             }`}
           >
             <Text className="font-balooBold text-xl text-black">
-              {mode === "create" ? "Create Task" : "Update Task"}
+              {mode === "create" ? t("form.createTask") : t("form.updateTask")}
             </Text>
           </Pressable>
         </View>

@@ -4,11 +4,13 @@ import { useRouter } from "expo-router";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { useState } from "react";
 import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
+import { useTranslation } from "react-i18next";
 
 export default function UpdateUserNameScreen() {
   const router = useRouter();
   const { userProfile } = useUserProfile();
   const [name, setName] = useState(userProfile?.displayName ?? "");
+  const { t } = useTranslation();
 
   const enableDoneButton = name.trim().length > 0 && name.trim().length <= 20;
 
@@ -28,11 +30,11 @@ export default function UpdateUserNameScreen() {
     <SafeAreaView className="flex-1 bg-background px-6 py-8">
       <View className="flex-row items-center">
         <Pressable onPress={() => router.back()}>
-          <Text className="text-base font-baloo text-secondary">Cancel</Text>
+          <Text className="text-base font-baloo text-secondary">{t("common:buttons.cancel")}</Text>
         </Pressable>
 
         <View className="flex-1 items-center">
-          <Text className="text-3xl font-balooExtraBold text-secondary">Name</Text>
+          <Text className="text-3xl font-balooExtraBold text-secondary">{t("settings:updateName.title")}</Text>
         </View>
 
         <Pressable
@@ -45,7 +47,7 @@ export default function UpdateUserNameScreen() {
           <Text
             className={`text-sm font-baloo ${enableDoneButton ? "text-black" : "text-gray-500"}`}
           >
-            {isUserUpdating ? "Saving..." : "Done"}
+            {isUserUpdating ? t("common:buttons.saving") : t("common:buttons.done")}
           </Text>
         </Pressable>
       </View>
@@ -60,11 +62,11 @@ export default function UpdateUserNameScreen() {
       />
       {name.trim().length > 20 && (
         <Text className="mt-2 text-sm text-red-500 font-baloo">
-          Name cannot be longer than 20 characters.
+          {t("common:validation.nameTooLong")}
         </Text>
       )}
       {name.trim().length === 0 && (
-        <Text className="mt-2 text-sm text-red-500 font-baloo">Name cannot be empty.</Text>
+        <Text className="mt-2 text-sm text-red-500 font-baloo">{t("common:validation.nameEmpty")}</Text>
       )}
     </SafeAreaView>
   );
