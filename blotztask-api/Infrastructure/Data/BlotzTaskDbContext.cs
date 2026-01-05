@@ -20,6 +20,7 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<Subtask> Subtasks => Set<Subtask>();
     public DbSet<AppUser> AppUsers { get; set; }
     public DbSet<UserPreference> UserPreferences { get; set; }
+    public DbSet<PomodoroSetting> PomodoroSetting { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
