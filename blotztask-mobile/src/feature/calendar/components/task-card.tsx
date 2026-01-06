@@ -137,7 +137,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           }}
           disabled={isLoading}
           android_ripple={{ color: "#FEE2E2", borderless: false }}
-          className={`flex-1 w-[56px] rounded-2xl bg-[#F567671A] items-center justify-center ${
+          className={`flex-1 w-[56px] rounded-2xl bg-[#F56767]/10 items-center justify-center ${
             isDeleting ? "opacity-50" : ""
           }`}
         >
