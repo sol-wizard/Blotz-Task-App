@@ -1,5 +1,5 @@
 import { isSameDay, format } from "date-fns";
-import { zhCN, enUS } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import i18n from "@/i18n";
 
 /**
