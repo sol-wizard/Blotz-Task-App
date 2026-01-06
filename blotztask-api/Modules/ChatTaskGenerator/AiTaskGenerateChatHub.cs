@@ -62,7 +62,7 @@ public class AiTaskGenerateChatHub : Hub
         _chatHistoryManagerService.RemoveConversation();
         await base.OnDisconnectedAsync(exception);
     }
-
+    //TODO: Do we need this user paramter in this function? check and test frontend after clean up
     public async Task SendMessage(string user, string message)
     {
         try

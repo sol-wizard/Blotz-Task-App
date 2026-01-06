@@ -14,6 +14,7 @@ import {
   TaskRangeTimeCard,
   TaskSingleTimeCard,
 } from "@/feature/task-details/components/task-time-card";
+import { useTranslation } from "react-i18next";
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function TaskDetailsScreen() {
   const { selectedTask, isLoading } = useTaskById({ taskId });
   const { updateTask, isUpdating } = useTaskMutations();
   const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (selectedTask) {
@@ -54,14 +56,14 @@ export default function TaskDetailsScreen() {
     console.warn("No selected task found");
     return (
       <View className="flex-1 items-center justify-center">
-        <Text className="text-lg text-gray-600">Selected Task not found.</Text>
+        <Text className="text-lg text-gray-600">{t("tasks:details.notFound")}</Text>
         <TouchableOpacity
           onPress={() => {
             handleUpdateDescription(descriptionText);
             router.back();
           }}
         >
-          <Text className="text-blue-500 mt-2">Go back</Text>
+          <Text className="text-blue-500 mt-2">{t("common:buttons.goBack")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -88,7 +90,7 @@ export default function TaskDetailsScreen() {
           <View className="flex-row items-center mb-4 mt-6">
             <View className="px-3 py-1 rounded-xl border border-black">
               <Text className={`text-sm font-medium text-black`}>
-                {selectedTask.isDone ? "Done" : "To Do"}
+                {selectedTask.isDone ? t("common:status.done") : t("common:status.todo")}
               </Text>
             </View>
             {selectedTask.label && (

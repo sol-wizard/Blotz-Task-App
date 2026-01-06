@@ -1,0 +1,41 @@
+{
+  "title": "设置",
+  "version": "Beta 1.0",
+  "menu": {
+    "account": "账户",
+    "taskHandling": "任务处理",
+    "notifications": "通知",
+    "language": "语言",
+    "allTasks": "所有任务页面 (测试版)"
+  },
+  "account": {
+    "title": "账户",
+    "name": "名字",
+    "nameDescription": "此名字将显示在您的账户中。",
+    "email": "邮箱",
+    "emailDescription": "用于登录和通知。"
+  },
+  "taskHandling": {
+    "title": "任务处理",
+    "autoRollover": "自动滚动",
+    "autoRolloverDescription": "自动将过期任务移动到今天。"
+  },
+  "notifications": {
+    "title": "通知",
+    "taskNotifications": "任务通知",
+    "upcomingDueTasks": "即将到期的任务"
+  },
+  "language": {
+    "title": "Language / 语言",
+    "english": "English",
+    "englishDescription": "默认语言",
+    "chinese": "中文",
+    "chineseDescription": "简体中文",
+    "infoText": "Your language preference will be saved and synced across all your devices.",
+    "infoTextChinese": "您的语言偏好将被保存并在所有设备上同步。"
+  },
+  "updateName": {
+    "title": "名字"
+  }
+}
+
