@@ -8,7 +8,13 @@
     "event": "事件",
     "alert": "提醒",
     "category": "分类",
-    "noCategory": "无分类"
+    "noCategory": "无分类",
+    "date": "日期",
+    "time": "时间",
+    "selectDate": "选择日期",
+    "selectTime": "选择时间",
+    "start": "开始",
+    "end": "结束"
   },
   "details": {
     "notFound": "未找到选定的任务。",
@@ -27,6 +33,11 @@
     "2hours": "提前2小时",
     "1day": "提前1天",
     "2days": "提前2天"
+  },
+  "categories": {
+    "work": "工作",
+    "life": "生活",
+    "learning": "学习",
+    "health": "健康"
   }
 }
-

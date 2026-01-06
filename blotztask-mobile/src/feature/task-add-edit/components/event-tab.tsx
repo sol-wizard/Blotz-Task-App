@@ -5,8 +5,10 @@ import { addDays, differenceInCalendarDays, format, isAfter } from "date-fns";
 import { useController } from "react-hook-form";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
+import { useTranslation } from "react-i18next";
 
 export const EventTab = ({ control }: { control: any }) => {
+  const { t } = useTranslation("tasks");
   const [activeSelector, setActiveSelector] = useState<
     "startDate" | "startTime" | "endDate" | "endTime" | null
   >(null);
@@ -56,7 +58,7 @@ export const EventTab = ({ control }: { control: any }) => {
     <View className="mb-4">
       <View className="mb-4">
         <View className="flex-row justify-between">
-          <Text className="font-baloo text-secondary text-2xl mt-1">Start</Text>
+          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.start")}</Text>
 
           <View className="flex-row">
             <Pressable
@@ -66,7 +68,7 @@ export const EventTab = ({ control }: { control: any }) => {
               className="bg-background px-4 py-2 rounded-xl mr-2"
             >
               <Text className="text-xl font-balooThin text-secondary">
-                {startDateValue ? format(startDateValue, "MMM dd, yyyy") : "Select Date"}
+                {startDateValue ? format(startDateValue, "MMM dd, yyyy") : t("form.selectDate")}
               </Text>
             </Pressable>
 
@@ -77,7 +79,7 @@ export const EventTab = ({ control }: { control: any }) => {
               className="bg-background px-4 py-2 rounded-xl"
             >
               <Text className="text-xl font-balooThin text-secondary ">
-                {startTimeValue ? format(startTimeValue, "hh:mm a") : "Select Time"}
+                {startTimeValue ? format(startTimeValue, "hh:mm a") : t("form.selectTime")}
               </Text>
             </Pressable>
           </View>
@@ -96,7 +98,7 @@ export const EventTab = ({ control }: { control: any }) => {
 
       <View>
         <View className="flex-row justify-between">
-          <Text className="font-baloo text-secondary text-2xl mt-1">End</Text>
+          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.end")}</Text>
 
           <View className="flex-row">
             <Pressable
@@ -104,7 +106,7 @@ export const EventTab = ({ control }: { control: any }) => {
               className="bg-background px-4 py-2 rounded-xl mr-2"
             >
               <Text className="text-xl font-balooThin text-secondary">
-                {endDateValue ? format(endDateValue, "MMM dd, yyyy") : "Select Date"}
+                {endDateValue ? format(endDateValue, "MMM dd, yyyy") : t("form.selectDate")}
               </Text>
             </Pressable>
 
@@ -113,7 +115,7 @@ export const EventTab = ({ control }: { control: any }) => {
               className="bg-background px-4 py-2 rounded-xl"
             >
               <Text className="text-xl font-balooThin text-secondary ">
-                {endTimeValue ? format(endTimeValue, "hh:mm a") : "Select Time"}
+                {endTimeValue ? format(endTimeValue, "hh:mm a") : t("form.selectTime")}
               </Text>
             </Pressable>
           </View>

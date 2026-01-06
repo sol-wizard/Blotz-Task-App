@@ -8,7 +8,13 @@
     "event": "Event",
     "alert": "Alert",
     "category": "Category",
-    "noCategory": "No Category"
+    "noCategory": "No Category",
+    "date": "Date",
+    "time": "Time",
+    "selectDate": "Select Date",
+    "selectTime": "Select Time",
+    "start": "Start",
+    "end": "End"
   },
   "details": {
     "notFound": "Selected Task not found.",
@@ -27,6 +33,11 @@
     "2hours": "2 hours before",
     "1day": "1 day before",
     "2days": "2 days before"
+  },
+  "categories": {
+    "work": "Work",
+    "life": "Life",
+    "learning": "Learning",
+    "health": "Health"
   }
 }
-
