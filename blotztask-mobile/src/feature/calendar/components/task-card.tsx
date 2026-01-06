@@ -122,7 +122,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
       <Animated.View
         style={rightActionStyle}
         pointerEvents={actionsEnabled ? "auto" : "none"}
-        className="absolute right-0 top-0 bottom-0 w-[56px] items-stretch z-0"
+        className="absolute right-0 top-0 bottom-0 w-[56px] items-stretch z-10"
       >
         <Pressable
           onPress={async () => {
