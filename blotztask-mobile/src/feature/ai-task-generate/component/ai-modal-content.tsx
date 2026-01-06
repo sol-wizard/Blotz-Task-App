@@ -12,11 +12,9 @@ import { Platform } from "react-native";
 export const AiModalContent = ({
   modalType,
   setModalType,
-  language,
 }: {
   modalType: BottomSheetType;
   setModalType: (type: BottomSheetType) => void;
-  language: string;
 }) => {
   const [text, setText] = useState("");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
@@ -55,7 +53,6 @@ export const AiModalContent = ({
           sendMessage={sendMessage}
           isAiGenerating={isAiGenerating}
           aiGeneratedMessage={aiGeneratedMessage}
-          language={language}
         />
       ) : (
         <WriteInput
