@@ -24,7 +24,7 @@ import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
 import { convertDurationToText } from "@/shared/util/convert-duration";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 
-const ACTION_WIDTH = 64;
+const ACTION_WIDTH = 56;
 const OPEN_X = -ACTION_WIDTH;
 const OPEN_THRESHOLD = ACTION_WIDTH * 0.55;
 
