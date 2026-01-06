@@ -101,12 +101,6 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
     };
   });
 
-  // Dividing line is visible and hidden with the action area
-  const dividerStyle = useAnimatedStyle(() => {
-    const progress = interpolate(-translateX.value, [0, ACTION_WIDTH], [0, 1], Extrapolation.CLAMP);
-    return { opacity: progress };
-  });
-
   // Create a sense of being pushed away
   const leftExtrasStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value * 1.25 }],
@@ -123,19 +117,13 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
   const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
 
   return (
-    <View className="relative mx-4 my-2 rounded-2xl bg-white overflow-hidden">
+    <View className="relative mx-4 my-2 overflow-visible">
       {/* Right action area with delete button */}
       <Animated.View
         style={rightActionStyle}
         pointerEvents={actionsEnabled ? "auto" : "none"}
-        className="absolute right-0 top-0 bottom-0 w-[64px] flex-row items-center justify-start z-10 px-2"
+        className="absolute right-0 top-0 bottom-0 w-[56px] items-stretch z-0"
       >
-        <Animated.View
-          pointerEvents="none"
-          style={dividerStyle}
-          className="w-[6px] h-[30px] bg-neutral-300 rounded-[3px] mr-1.5"
-        />
-
         <Pressable
           onPress={async () => {
             if (isLoading) return;
@@ -148,15 +136,15 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
             runOnJS(setActionsEnabled)(false);
           }}
           disabled={isLoading}
-          android_ripple={{ color: "#e5e7eb", borderless: true }}
-          className={`w-[30px] h-[30px] rounded-full border-2 border-neutral-300 items-center justify-center ${
+          android_ripple={{ color: "#FEE2E2", borderless: false }}
+          className={`flex-1 w-[56px] rounded-2xl bg-[#F567671A] items-center justify-center ${
             isDeleting ? "opacity-50" : ""
           }`}
         >
           {isDeleting ? (
             <ActivityIndicator size="small" color="#6B7280" />
           ) : (
-            <MaterialCommunityIcons name="trash-can-outline" size={22} color="#6B7280" />
+            <MaterialCommunityIcons name="trash-can-outline" size={22} color="#EF4444" />
           )}
         </Pressable>
       </Animated.View>
