@@ -3,7 +3,6 @@ import { EditTaskItemDTO } from "../../feature/task-add-edit/models/edit-task-it
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { apiClient } from "./api/client";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
-import { DailyTaskIndicatorDTO } from "@/feature/calendar/models/daily-task-indicator-dto";
 import { startOfDay } from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 
@@ -19,18 +18,6 @@ export async function fetchTasksForDate(
     return await apiClient.get(url);
   } catch {
     throw new Error("Failed to fetch tasks for selected day");
-  }
-}
-
-export async function fetchWeeklyTaskAvailability(date: Date): Promise<DailyTaskIndicatorDTO[]> {
-  const mondayUtc = startOfDay(date).toISOString();
-
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/weekly-task-availability?mondayUtc=${mondayUtc}`;
-
-  try {
-    return await apiClient.get(url);
-  } catch {
-    throw new Error("Failed to fetch weekly task availability.");
   }
 }
 

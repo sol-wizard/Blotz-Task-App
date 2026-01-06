@@ -18,7 +18,6 @@ public class TaskController(
     DeleteTaskCommandHandler deleteTaskCommandHandler,
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
-    GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler,
     GetFloatingTasksByQueryHandler getFloatingTasksByQueryHandler,
     ILogger<TaskController> logger
 ) : ControllerBase
@@ -102,38 +101,6 @@ public class TaskController(
         var result = await getFloatingTasksByQueryHandler.Handle(searchQuery, ct);
         return result;
     }
-
-    [HttpGet("weekly-task-availability")]
-    public async Task<IEnumerable<DailyTaskIndicatorDto>> GetWeeklyTaskAvailability(
-        [FromQuery] GetWeeklyTaskAvailabilityRequest getWeeklyTaskAvailabilityRequest,
-        CancellationToken ct)
-    {
-        var stopwatch = Stopwatch.StartNew();
-
-        _logger.LogInformation("Resolving UserId from HttpContext for GetWeeklyTaskAvailability");
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
-
-        var query = new GetWeeklyTaskAvailabilityQuery
-        {
-            UserId = userId,
-            MondayUtc = getWeeklyTaskAvailabilityRequest.MondayUtc
-        };
-
-        _logger.LogInformation(
-            "Timing GetWeeklyTaskAvailability for user {UserId} at MondayUtc {MondayUtc}; elapsed so far {ElapsedMs}ms",
-            userId,
-            getWeeklyTaskAvailabilityRequest.MondayUtc,
-            stopwatch.ElapsedMilliseconds);
-
-        var result = await getWeeklyTaskAvailabilityQueryHandler.Handle(query, ct);
-        _logger.LogInformation(
-            "GetWeeklyTaskAvailability finished for user {UserId} in {ElapsedMs}ms",
-            userId,
-            stopwatch.ElapsedMilliseconds);
-        return result;
-    }
-
 
     [HttpGet("all")]
     public async Task<IEnumerable<AllTaskItemDto>> GetAllTasks(CancellationToken ct)
