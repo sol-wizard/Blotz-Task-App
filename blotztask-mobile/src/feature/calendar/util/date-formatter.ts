@@ -1,4 +1,5 @@
-import { isSameDay } from "date-fns";
+import { isSameDay, format } from "date-fns";
+import { zhCN, enUS } from "date-fns/locale";
 import i18n from "@/i18n";
 
 /**
@@ -12,10 +13,29 @@ export const formatCalendarDate = (dateString: string) => {
 
   const isToday = isSameDay(dateObj, today);
 
-  const month = dateObj.toLocaleString("default", { month: "short" });
+  if (isToday) {
+    return {
+      dayOfWeek: i18n.t("calendar:header.today"),
+    };
+  }
+
+  const isChinese = i18n.language === "zh";
+
+  if (isChinese) {
+    // Chinese format: M月d日 (e.g., "1月9日")
+    const month = dateObj.getMonth() + 1; // getMonth() returns 0-11
+    const day = dateObj.getDate();
+    return {
+      dayOfWeek: `${month}月${day}日`,
+    };
+  }
+
+  // English format: day month (e.g., "7 Jan")
+  const locale = enUS;
+  const month = format(dateObj, "MMM", { locale });
   const day = dateObj.getDate();
 
   return {
-    dayOfWeek: isToday ? i18n.t("calendar:header.today") : `${day} ${month}`,
+    dayOfWeek: `${day} ${month}`,
   };
 };
