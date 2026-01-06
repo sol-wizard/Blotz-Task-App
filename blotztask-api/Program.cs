@@ -25,6 +25,7 @@ builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddLabelModule();
 builder.Services.AddTaskBreakdownModule();
 builder.Services.AddTimeEstimateModule();
+builder.Services.AddOnboardingModule();
 
 builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 

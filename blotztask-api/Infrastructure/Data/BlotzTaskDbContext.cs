@@ -1,6 +1,7 @@
 using BlotzTask.Infrastructure.Data.Configurations;
 using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Labels.Enums;
+using BlotzTask.Modules.Onboarding.Domain;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -79,7 +80,10 @@ public class BlotzTaskDbContext : DbContext
                     "https://s.gravatar.com/avatar/d7eee1179900d1154cf2b3a64f7f91dd?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbl.png",
                 CreationAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
                 SignUpAt = new DateTime(2025, 9, 9, 14, 33, 27, 955, DateTimeKind.Utc),
-                UpdatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc)
+                UpdatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
+                OnboardingStatus = OnboardingStatus.NotStarted,
+                OnboardingStep = OnboardingStep.Welcome,
+                OnboardingCompletedAt = null
             });
         
         modelBuilder.Entity<UserPreference>()

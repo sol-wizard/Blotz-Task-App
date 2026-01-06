@@ -1,3 +1,5 @@
+using BlotzTask.Modules.Onboarding.Domain;
+
 namespace BlotzTask.Modules.Users.Domain;
 
 public class AppUser
@@ -10,4 +12,8 @@ public class AppUser
     public DateTime SignUpAt { get; set; }
     public DateTime CreationAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    public OnboardingStatus OnboardingStatus { get; set; } = OnboardingStatus.NotStarted;
+    public OnboardingStep OnboardingStep { get; set; } = OnboardingStep.Welcome;
+    public DateTime? OnboardingCompletedAt { get; set; }
 }

@@ -1,3 +1,4 @@
+using BlotzTask.Modules.Onboarding.Domain;
 using BlotzTask.Modules.Users.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -12,5 +13,14 @@ public class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
 
         builder.HasIndex(u => u.Auth0UserId)
             .IsUnique();
+
+        builder.Property(u => u.OnboardingStatus)
+            .HasConversion<int>();
+
+        builder.Property(u => u.OnboardingStep)
+            .HasConversion<int>();
+
+        builder.Property(u => u.OnboardingCompletedAt)
+            .IsRequired(false);
     }
 }
