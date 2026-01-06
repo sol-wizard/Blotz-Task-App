@@ -144,7 +144,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           {isDeleting ? (
             <ActivityIndicator size="small" color="#6B7280" />
           ) : (
-            <MaterialCommunityIcons name="trash-can-outline" size={22} color="#EF4444" />
+            <MaterialCommunityIcons name="trash-can-outline" size={24} color="#EF4444" />
           )}
         </Pressable>
       </Animated.View>
