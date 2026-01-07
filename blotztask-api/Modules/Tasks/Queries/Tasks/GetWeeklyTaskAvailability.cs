@@ -97,10 +97,13 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                         Console.WriteLine($"Overdue task: {t.Title} {t.StartTime} {t.EndTime} {isFutureDay} {dayStart} {dayEnd} {sevenDayWindowStart}");
                         return true;
                     }
-
+                    return false;
                 }
 
-                return false;
+                var createdAtUtc = DateTime.SpecifyKind(t.CreatedAt, DateTimeKind.Utc);
+                var createdAtLocal = new DateTimeOffset(createdAtUtc, TimeSpan.Zero).ToOffset(dayStart.Offset);
+
+                return createdAtLocal >= dayStart && createdAtLocal < dayEnd;
             });
 
             result.Add(new DailyTaskIndicatorDto
