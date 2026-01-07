@@ -117,13 +117,13 @@ public class TaskController(
         var query = new GetWeeklyTaskAvailabilityQuery
         {
             UserId = userId,
-            MondayUtc = getWeeklyTaskAvailabilityRequest.MondayUtc
+            Monday = getWeeklyTaskAvailabilityRequest.Monday
         };
 
         _logger.LogInformation(
-            "Timing GetWeeklyTaskAvailability for user {UserId} at MondayUtc {MondayUtc}; elapsed so far {ElapsedMs}ms",
+            "Timing GetWeeklyTaskAvailability for user {UserId} at Monday {Monday}; elapsed so far {ElapsedMs}ms",
             userId,
-            getWeeklyTaskAvailabilityRequest.MondayUtc,
+            getWeeklyTaskAvailabilityRequest.Monday,
             stopwatch.ElapsedMilliseconds);
 
         var result = await getWeeklyTaskAvailabilityQueryHandler.Handle(query, ct);
