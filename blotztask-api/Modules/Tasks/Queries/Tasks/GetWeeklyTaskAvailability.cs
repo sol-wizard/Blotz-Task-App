@@ -82,7 +82,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         for (var dayStart = weekStart; dayStart < weekEndExclusive; dayStart = dayStart.AddDays(1))
         {
             var dayEnd = dayStart.AddDays(1);
-            var isFutureDay = dayStart > userNow.Date;
+            var isFutureDay = dayStart >= userTodayEnd;
 
             var hasTask = tasks.Any(t =>
             {
