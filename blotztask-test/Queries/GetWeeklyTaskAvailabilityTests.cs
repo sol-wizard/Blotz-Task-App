@@ -25,25 +25,25 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
-        var mondayUtc = new DateTimeOffset(2024, 12, 9, 0, 0, 0, TimeSpan.Zero);
+        var monday = new DateTimeOffset(2024, 12, 9, 0, 0, 0, TimeSpan.Zero);
 
         // 1. Completed Task on Monday
-        var completedTask = await _seeder.CreateTaskAsync(userId, "Completed Task", mondayUtc.AddHours(9), mondayUtc.AddHours(10));
+        var completedTask = await _seeder.CreateTaskAsync(userId, "Completed Task", monday.AddHours(9), monday.AddHours(10));
         completedTask.IsDone = true;
         await _context.SaveChangesAsync(); // Update the IsDone status
 
         // 2. Incomplete Task on Tuesday
-        await _seeder.CreateTaskAsync(userId, "Incomplete Task", mondayUtc.AddDays(1).AddHours(10), mondayUtc.AddDays(1).AddHours(11));
+        await _seeder.CreateTaskAsync(userId, "Incomplete Task", monday.AddDays(1).AddHours(10), monday.AddDays(1).AddHours(11));
 
         // 3. Floating Task Created on Wednesday
         // This task has NO start/end time, but its CreatedAt matches Wednesday.
         // The green dot SHOULD appear on Wednesday because this task will appear on Wednesday's calendar page.
-        await _seeder.CreateTaskAsync(userId, "Floating Task Wednesday", null, null, createdAt: mondayUtc.AddDays(2).AddHours(12));
+        await _seeder.CreateTaskAsync(userId, "Floating Task Wednesday", null, null, createdAt: monday.AddDays(2).AddHours(12));
 
         var query = new GetWeeklyTaskAvailabilityQuery
         {
             UserId = userId,
-            MondayUtc = mondayUtc
+            Monday = monday
         };
 
         // Act
