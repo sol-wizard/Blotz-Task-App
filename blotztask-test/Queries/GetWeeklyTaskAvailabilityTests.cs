@@ -36,8 +36,7 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         await _seeder.CreateTaskAsync(userId, "Incomplete Task", monday.AddDays(1).AddHours(10), monday.AddDays(1).AddHours(11));
 
         // 3. Floating Task Created on Wednesday
-        // This task has NO start/end time, but its CreatedAt matches Wednesday.
-        // The green dot SHOULD appear on Wednesday because this task will appear on Wednesday's calendar page.
+        // This task has NO start/end time, so it should only be fetched for today
         await _seeder.CreateTaskAsync(userId, "Floating Task Wednesday", null, null, createdAt: monday.AddDays(2).AddHours(12));
 
         var query = new GetWeeklyTaskAvailabilityQuery
@@ -56,8 +55,8 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         // Tuesday (Index 1) - Has an INCOMPLETE task -> Should show dot (True)
         result[1].HasTask.Should().BeTrue("An incomplete task exists on Tuesday, so the green dot should appear below the date.");
         
-        // Wednesday (Index 2) - Has a FLOATING task created that day -> Should show dot (True)
-        result[2].HasTask.Should().BeTrue("A floating task was created on Wednesday (visible in All section), so the green dot should appear below the date.");
+        // Wednesday (Index 2) - Has a FLOATING task created that day -> No dot (False)
+        result[2].HasTask.Should().BeFalse("A floating task was created on Wednesday, but no green dot should appear below the date.");
 
         // Thursday (Index 3) - No task -> No dot (False)
         result[3].HasTask.Should().BeFalse("No tasks exist for Thursday, so no green dot should appear.");
