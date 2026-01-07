@@ -1,10 +1,8 @@
 import { theme } from "@/shared/constants/theme";
-import { parseISO, format } from "date-fns";
-import { zhCN, enUS } from "date-fns/locale";
+import { parseISO } from "date-fns";
 import { useState } from "react";
 import { Calendar, DateData } from "react-native-calendars";
-import { Text } from "react-native";
-import { useTranslation } from "react-i18next";
+import { renderCalendarHeader } from "@/feature/calendar/util/date-formatter";
 
 export const SingleDateCalendar = ({
   defaultStartDate,
@@ -14,26 +12,6 @@ export const SingleDateCalendar = ({
   onStartDateChange: (...event: any[]) => void;
 }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(defaultStartDate);
-  const { i18n } = useTranslation();
-  const isChinese = i18n.language === "zh";
-  const locale = isChinese ? zhCN : enUS;
-
-  const renderHeader = (date?: any) => {
-    if (!date) return null;
-    const dateObj = date instanceof Date ? date : new Date(date.toString());
-    const monthText = format(dateObj, "MMMM yyyy", { locale });
-    return (
-      <Text
-        style={{
-          fontFamily: "BalooBold",
-          fontSize: 18,
-          color: "#333",
-        }}
-      >
-        {monthText}
-      </Text>
-    );
-  };
 
   return (
     <Calendar
@@ -63,7 +41,7 @@ export const SingleDateCalendar = ({
         dayTextColor: "#333",
         textDisabledColor: "#bbb",
       }}
-      renderHeader={renderHeader}
+      renderHeader={renderCalendarHeader}
       enableSwipeMonths
     />
   );

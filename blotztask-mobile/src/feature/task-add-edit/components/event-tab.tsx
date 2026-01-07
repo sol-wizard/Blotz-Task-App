@@ -12,7 +12,7 @@ export const EventTab = ({ control }: { control: any }) => {
   const { t, i18n } = useTranslation("tasks");
   const isChinese = i18n.language === "zh";
   const locale = isChinese ? zhCN : enUS;
-  const dateFormat = isChinese ? "yyyy年M月d号" : "MMM d, yyyy";
+  const dateFormat = isChinese ? "yyyy年M月d日" : "MMM d, yyyy";
   const [activeSelector, setActiveSelector] = useState<
     "startDate" | "startTime" | "endDate" | "endTime" | null
   >(null);

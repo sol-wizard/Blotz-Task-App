@@ -1,6 +1,7 @@
 import { isSameDay, format } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { enUS, zhCN } from "date-fns/locale";
 import i18n from "@/i18n";
+import { Text } from "react-native";
 
 /**
  * Formats a date string for calendar display
@@ -38,4 +39,28 @@ export const formatCalendarDate = (dateString: string) => {
   return {
     dayOfWeek: `${day} ${month}`,
   };
+};
+
+/**
+ * Renders a calendar header with localized month and year
+ * @param date - Date object or date string
+ * @returns React component displaying the formatted month and year
+ */
+export const renderCalendarHeader = (date?: any) => {
+  if (!date) return null;
+  const dateObj = date instanceof Date ? date : new Date(date.toString());
+  const isChinese = i18n.language === "zh";
+  const locale = isChinese ? zhCN : enUS;
+  const dateText = format(dateObj, "MMMM yyyy", { locale });
+  return (
+    <Text
+      style={{
+        fontFamily: "BalooBold",
+        fontSize: 18,
+        color: "#333",
+      }}
+    >
+      {dateText}
+    </Text>
+  );
 };

@@ -1,9 +1,8 @@
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
 import { eachDayOfInterval, format, isBefore, isSameDay, parseISO } from "date-fns";
-import { zhCN, enUS } from "date-fns/locale";
 import { theme } from "@/shared/constants/theme";
-import { useTranslation } from "react-i18next";
+import { renderCalendarHeader } from "@/feature/calendar/util/date-formatter";
 
 type MarkedDate = {
   color?: string;
@@ -28,27 +27,6 @@ const DoubleDatesCalendar = ({
   endDate: Date;
   setEndDate: (v: Date) => void;
 }) => {
-  const { i18n } = useTranslation();
-  const isChinese = i18n.language === "zh";
-  const locale = isChinese ? zhCN : enUS;
-
-  const renderHeader = (date?: any) => {
-    if (!date) return null;
-    const dateObj = date instanceof Date ? date : new Date(date.toString());
-    const monthText = format(dateObj, "MMMM yyyy", { locale });
-    return (
-      <Text
-        style={{
-          fontFamily: "BalooBold",
-          fontSize: 18,
-          color: "#333",
-        }}
-      >
-        {monthText}
-      </Text>
-    );
-  };
-
   const getDatesInRange = (start: Date, end: Date): MarkedDates => {
     const days = eachDayOfInterval({ start, end });
     const dates: MarkedDates = {};
@@ -108,7 +86,7 @@ const DoubleDatesCalendar = ({
           textDayHeaderFontFamily: "BalooBold",
           textMonthFontFamily: "BalooBold",
         }}
-        renderHeader={renderHeader}
+        renderHeader={renderCalendarHeader}
         enableSwipeMonths
       />
     </View>
