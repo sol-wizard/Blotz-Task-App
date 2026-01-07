@@ -70,7 +70,7 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         var userId = await _seeder.CreateUserAsync();
         
         // Use current week's Monday to properly test overdue rollover
-        var userNow = DateTimeOffset.UtcNow;
+        var userNow = DateTimeOffset.Now;
         var daysSinceMonday = ((int)userNow.DayOfWeek + 6) % 7; // Monday = 0
         var monday = new DateTimeOffset(userNow.Date.AddDays(-daysSinceMonday), TimeSpan.Zero);
         var lastMonday = monday.AddDays(-7);
@@ -80,6 +80,12 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         await _seeder.CreateTaskAsync(userId, "Overdue Task", 
             new DateTimeOffset(twoDaysAgo.Date.AddHours(9), TimeSpan.Zero), 
             new DateTimeOffset(twoDaysAgo.Date.AddHours(10), TimeSpan.Zero));
+        
+        // Create another overdue task (out of the 7-day window)
+        var nineDaysAgo = userNow.AddDays(-9);
+        await _seeder.CreateTaskAsync(userId, "Overdue Task out of 7-day window", 
+            new DateTimeOffset(nineDaysAgo.Date.AddHours(9), TimeSpan.Zero), 
+            new DateTimeOffset(nineDaysAgo.Date.AddHours(10), TimeSpan.Zero));
         
         // Query both current week and last week (7-day window can span both)
         var query = new GetWeeklyTaskAvailabilityQuery
