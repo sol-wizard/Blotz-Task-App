@@ -94,7 +94,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                     // Overdue tasks within 7 days
                     if (!isFutureDay && !t.IsDone && t.EndTime < userNow && t.StartTime < dayEnd && t.EndTime >= sevenDayWindowStart && dayStart >= sevenDayWindowStart)
                     {
-                        Console.WriteLine($"Overdue task: {t.Title} {t.StartTime} {t.EndTime} {isFutureDay} {dayStart} {dayEnd} {sevenDayWindowStart}");
                         return true;
                     }
                     return false;
