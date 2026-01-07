@@ -108,8 +108,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                 Date = dayStart,
                 HasTask = hasTask
             });
-            // Console.WriteLine($"results are: {string.Join(", ", result.Select(r => r.Date))}");
-            // Console.WriteLine($"results are: {string.Join(", ", result.Select(r => r.HasTask))}");
         }
 
         logger.LogInformation(
