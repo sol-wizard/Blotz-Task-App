@@ -30,7 +30,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
 
         var weekEndExclusive = query.Monday.AddDays(7);
 
-        // 用户时区的"今天"
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.Monday.Offset);
         var userTodayStart = new DateTimeOffset(userNow.Date, query.Monday.Offset);
         var userTodayEnd = userTodayStart.AddDays(1);
