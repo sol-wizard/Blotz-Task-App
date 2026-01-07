@@ -13,6 +13,8 @@ import enTasks from "./locales/en/tasks.json";
 import zhTasks from "./locales/zh/tasks.json";
 import enStarSpark from "./locales/en/star-spark.json";
 import zhStarSpark from "./locales/zh/star-spark.json";
+import enAiTaskGenerate from "./locales/en/ai-task-generate.json";
+import zhAiTaskGenerate from "./locales/zh/ai-task-generate.json";
 
 // Get device language code (e.g., 'en', 'zh')
 const getDeviceLanguage = (): string => {
@@ -37,6 +39,7 @@ i18n.use(initReactI18next).init({
       settings: enSettings,
       tasks: enTasks,
       starSpark: enStarSpark,
+      "ai-task-generate": enAiTaskGenerate,
     },
     zh: {
       common: zhCommon,
@@ -44,6 +47,7 @@ i18n.use(initReactI18next).init({
       settings: zhSettings,
       tasks: zhTasks,
       starSpark: zhStarSpark,
+      "ai-task-generate": zhAiTaskGenerate,
     },
   },
   lng: getDeviceLanguage(), // Will be overridden by user preference from backend

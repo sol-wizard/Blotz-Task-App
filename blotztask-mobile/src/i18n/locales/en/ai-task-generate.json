@@ -1,0 +1,13 @@
+{
+  "input": {
+    "placeholder": "Hold to speak or tap to write..."
+  },
+  "buttons": {
+    "speak": "Speak",
+    "send": "Send",
+    "addToTasks": "Add to tasks"
+  },
+  "success": {
+    "taskAdded": "Yay! Task added!"
+  }
+}

@@ -12,6 +12,7 @@ import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { Text } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export function AiTasksPreview({
   aiTasks,
@@ -24,6 +25,7 @@ export function AiTasksPreview({
   userInput: string;
   setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) {
+  const { t } = useTranslation("ai-task-generate");
   const { addTask, isAdding } = useTaskMutations();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
 
@@ -126,12 +128,12 @@ export function AiTasksPreview({
           }`}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityRole="button"
-          accessibilityLabel="Add all remaining AI tasks"
+          accessibilityLabel={t("buttons.addToTasks")}
         >
           {isAdding ? (
             <ActivityIndicator size="small" />
           ) : (
-            <Text className="font-baloo text-sm">Add to tasks</Text>
+            <Text className="font-baloo text-sm">{t("buttons.addToTasks")}</Text>
           )}
         </Pressable>
       </View>

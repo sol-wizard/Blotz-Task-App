@@ -12,6 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
 import { AiLanguagePicker } from "./ai-language-picker";
 import { Platform } from "react-native";
+import { useTranslation } from "react-i18next";
 export const AiInput = ({
   text,
   setText,
@@ -25,6 +26,8 @@ export const AiInput = ({
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
 }) => {
+  const { t } = useTranslation("ai-task-generate");
+
   const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
     AsyncStorage.getItem("ai_language_preference").then((saved: string | null) => {
       if (saved === "en-US" || saved === "zh-CN") {
@@ -90,7 +93,7 @@ export const AiInput = ({
             value={text}
             onChangeText={(v: string) => setText(v)}
             enablesReturnKeyAutomatically
-            placeholder="Hold to speak or tap to write..."
+            placeholder={t("input.placeholder")}
             placeholderTextColor={theme.colors.secondary}
             multiline
             className="w-11/12 bg-white text-xl text-gray-800 font-baloo"
