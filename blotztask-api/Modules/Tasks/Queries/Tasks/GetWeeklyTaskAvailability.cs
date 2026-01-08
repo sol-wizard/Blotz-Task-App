@@ -64,7 +64,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                         ))
             .Select(t => new
             {
-                t.Title,
                 t.StartTime,
                 t.EndTime,
                 t.CreatedAt,
