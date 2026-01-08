@@ -95,10 +95,7 @@ export default function ProtectedIndex() {
 
   const { isUserOnboardedAi } = useAiOnboardingStatus();
 
-  const aiButtonSize = 58;
-  const aiButtonRadius = aiButtonSize / 2;
-  const aiButtonCenterX = width / 2;
-  const aiButtonCenterY = height - (insets.bottom + 6) - aiButtonRadius;
+  const aiButtonRadius = 29;
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
@@ -157,7 +154,12 @@ export default function ProtectedIndex() {
             <Defs>
               <Mask id="ai-spotlight-mask" maskUnits="userSpaceOnUse">
                 <Rect width={width} height={height} fill="white" />
-                <Circle cx={aiButtonCenterX} cy={aiButtonCenterY} r={aiButtonRadius} fill="black" />
+                <Circle
+                  cx={width / 2}
+                  cy={height - (insets.bottom + 6) - aiButtonRadius}
+                  r={aiButtonRadius}
+                  fill="black"
+                />
               </Mask>
             </Defs>
             <Rect
@@ -170,7 +172,7 @@ export default function ProtectedIndex() {
         </View>
       ) : null}
 
-      {!isUserOnboardedAi ? (
+      {!isUserOnboardedAi && (
         <OnboardingHintCard
           title="Tap to begin✨"
           subtitle="Let AI set up your task"
@@ -182,7 +184,7 @@ export default function ProtectedIndex() {
             zIndex: 10,
           }}
         />
-      ) : null}
+      )}
 
       <View
         className="absolute left-4 right-4 items-center"
