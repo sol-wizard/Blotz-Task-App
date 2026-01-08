@@ -35,7 +35,7 @@ export default function AiTaskSheetScreen() {
               position: "absolute",
               left: 24,
               right: 24,
-              top: -80,
+              top: -100,
             }}
           />
         ) : null}
