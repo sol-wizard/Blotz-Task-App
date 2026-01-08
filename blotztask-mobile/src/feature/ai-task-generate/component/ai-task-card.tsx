@@ -42,7 +42,7 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
           onSubmitEditing={handleEdit}
           returnKeyType="done"
           multiline
-          className="flex-1 mr-3 text-lg font-semibold leading-5"
+          className="flex-1 mr-3 text-lg font-baloo leading-5"
           style={{ color: theme.colors.onSurface }}
           placeholder="Task title"
           placeholderTextColor={theme.colors.disabled}
@@ -54,10 +54,10 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
         {task.startTime || task.endTime ? (
           <View className="items-center ml-2 flex-shrink-0">
             {formatTime && (
-              <Text className="text-sm font-medium ml-1 text-primary">{formatTime}</Text>
+              <Text className="text-sm font-balooThin ml-1 text-primary">{formatTime}</Text>
             )}
             {formatDate && (
-              <Text className="text-sm font-medium ml-1 text-primary">{formatDate}</Text>
+              <Text className="text-sm font-balooThin ml-1 text-primary">{formatDate}</Text>
             )}
           </View>
         ) : null}
