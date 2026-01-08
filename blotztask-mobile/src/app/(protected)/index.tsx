@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Pressable, View, Image, Text, useWindowDimensions } from "react-native";
 import Svg, { Defs, Mask, Rect, Circle } from "react-native-svg";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
@@ -90,7 +91,19 @@ export default function ProtectedIndex() {
   const insets = useSafeAreaInsets();
   const posthog = usePostHog();
   const { width, height } = useWindowDimensions();
-  const showAiOnboarding = true;
+  const [isUserOnboarded, setIsUserOnboarded] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem("is_user_onboarded")
+      .then((value) => {
+        if (value === "true") {
+          setIsUserOnboarded(true);
+        }
+      })
+      .catch(() => {});
+
+    return () => {};
+  }, []);
 
   const aiButtonSize = 58;
   const aiButtonRadius = aiButtonSize / 2;
@@ -134,7 +147,7 @@ export default function ProtectedIndex() {
         renderIcon={({ route, focused }) => getTabIcon(route.key, focused)}
       />
 
-      {showAiOnboarding ? (
+      {!isUserOnboarded ? (
         <View
           style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 10 }}
           pointerEvents="box-none"
@@ -167,7 +180,7 @@ export default function ProtectedIndex() {
         </View>
       ) : null}
 
-      {showAiOnboarding ? (
+      {!isUserOnboarded ? (
         <View
           pointerEvents="none"
           className="absolute left-6 right-6 flex-row items-center bg-white rounded-3xl px-4 py-3.5"
