@@ -12,6 +12,7 @@ import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { Text } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export function AiTasksPreview({
   aiTasks,
@@ -74,6 +75,13 @@ export function AiTasksPreview({
       });
 
       setModalType("add-task-success");
+      AsyncStorage.getItem("is_user_onboarded_ai")
+        .then((value) => {
+          if (value !== "true") {
+            AsyncStorage.setItem("is_user_onboarded_ai", "true").catch(() => {});
+          }
+        })
+        .catch(() => {});
 
       setLocalTasks([]);
     } catch (error) {
@@ -131,7 +139,7 @@ export function AiTasksPreview({
           {isAdding ? (
             <ActivityIndicator size="small" />
           ) : (
-            <Text className="font-baloo text-sm">Add to tasks</Text>
+            <Text className="font-baloo">Add to tasks</Text>
           )}
         </Pressable>
       </View>

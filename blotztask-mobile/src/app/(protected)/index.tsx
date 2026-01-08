@@ -96,7 +96,7 @@ export default function ProtectedIndex() {
   const [isUserOnboarded, setIsUserOnboarded] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem("is_user_onboarded")
+    AsyncStorage.getItem("is_user_onboarded_ai")
       .then((value) => {
         if (value === "true") {
           setIsUserOnboarded(true);

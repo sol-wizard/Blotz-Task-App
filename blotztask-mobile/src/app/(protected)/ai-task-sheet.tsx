@@ -10,9 +10,10 @@ import { OnboardingHintCard } from "@/shared/components/ui/onboarding-hint-card"
 export default function AiTaskSheetScreen() {
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [isUserOnboarded, setIsUserOnboarded] = useState(false);
+  const [sheetLayoutY, setSheetLayoutY] = useState(0);
 
   useEffect(() => {
-    AsyncStorage.getItem("is_user_onboarded")
+    AsyncStorage.getItem("is_user_onboarded_ai")
       .then((value) => {
         if (value === "true") {
           setIsUserOnboarded(true);
@@ -38,13 +39,15 @@ export default function AiTaskSheetScreen() {
               position: "absolute",
               left: 24,
               right: 24,
-              top: -100,
+              top: sheetLayoutY - 100,
+              zIndex: 10,
             }}
           />
         )}
 
         <KeyboardAvoidingView behavior={"padding"}>
           <View
+            onLayout={(event) => setSheetLayoutY(event.nativeEvent.layout.y)}
             className={`rounded-t-3xl px-4 pt-4 min-h-[200px] ${
               modalType === "add-task-success" ? "bg-background" : "bg-white"
             }`}
