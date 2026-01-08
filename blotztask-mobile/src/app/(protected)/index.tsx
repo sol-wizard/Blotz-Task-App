@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Pressable, View, Image, Text, StyleSheet, useWindowDimensions } from "react-native";
+import { Pressable, View, Image, Text, useWindowDimensions } from "react-native";
 import Svg, { Defs, Mask, Rect, Circle } from "react-native-svg";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import { ASSETS } from "@/shared/constants/assets";
@@ -135,14 +135,22 @@ export default function ProtectedIndex() {
       />
 
       {showAiOnboarding ? (
-        <View style={[StyleSheet.absoluteFill, styles.onboardingLayer]} pointerEvents="box-none">
+        <View
+          style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 10 }}
+          pointerEvents="box-none"
+        >
           <Pressable
-            style={StyleSheet.absoluteFill}
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
             onPress={() => {}}
             android_disableSound
             accessible={false}
           />
-          <Svg width={width} height={height} pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <Svg
+            width={width}
+            height={height}
+            pointerEvents="none"
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
+          >
             <Defs>
               <Mask id="ai-spotlight-mask" maskUnits="userSpaceOnUse">
                 <Rect width={width} height={height} fill="white" />
@@ -162,14 +170,19 @@ export default function ProtectedIndex() {
       {showAiOnboarding ? (
         <View
           pointerEvents="none"
-          style={[styles.tipCard, { bottom: insets.bottom + 90 }]}
+          className="absolute left-6 right-6 flex-row items-center bg-white rounded-3xl px-4 py-3.5"
+          style={{
+            bottom: insets.bottom + 90,
+            zIndex: 15,
+            elevation: 6,
+          }}
         >
-          <View style={styles.tipIconWrap}>
-            <Image source={ASSETS.greenBun} style={styles.tipIcon} />
+          <View className="rounded-full items-center justify-center mr-3">
+            <Image source={ASSETS.greenBun} className="w-13 h-13" />
           </View>
-          <View style={styles.tipTextWrap}>
-            <Text style={styles.tipTitle}>Tap to begin</Text>
-            <Text style={styles.tipSubtitle}>Let AI set up your task</Text>
+          <View className="flex-1">
+            <Text className="text-lg font-balooBold text-[#3D8DE0]">Tap to begin</Text>
+            <Text className="mt-0.5 text-[#3D8DE0] font-baloo">Let AI set up your task</Text>
           </View>
         </View>
       ) : null}
@@ -191,52 +204,3 @@ export default function ProtectedIndex() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  onboardingLayer: {
-    zIndex: 10,
-  },
-  tipCard: {
-    position: "absolute",
-    left: 24,
-    right: 24,
-    zIndex: 15,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#000000",
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
-  },
-  tipIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#E9F7E4",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  tipIcon: {
-    width: 20,
-    height: 20,
-  },
-  tipTextWrap: {
-    flex: 1,
-  },
-  tipTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#2E6AE6",
-  },
-  tipSubtitle: {
-    marginTop: 2,
-    fontSize: 12,
-    color: "#6B7280",
-  },
-});
