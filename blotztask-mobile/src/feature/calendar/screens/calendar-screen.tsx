@@ -26,13 +26,13 @@ const calendarTheme = {
 export default function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
-  const { weeklyTaskAvability, isLoading } = useTaskDays({ selectedDay });
+  const { weeklyTaskAvailability, isLoading } = useTaskDays({ selectedDay });
   usePushNotificationSetup();
   useLanguageInit(); // Initialize language from backend
 
   let markedDates;
   if (!isLoading) {
-    markedDates = getMarkedDates({ selectedDay, weeklyTaskAvability });
+    markedDates = getMarkedDates({ selectedDay, weeklyTaskAvailability });
   } else {
     markedDates = getSelectedDates({ selectedDay });
   }
