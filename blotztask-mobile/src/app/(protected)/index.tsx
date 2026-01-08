@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Pressable, View, Image, StyleSheet, useWindowDimensions } from "react-native";
+import { Pressable, View, Image, Text, StyleSheet, useWindowDimensions } from "react-native";
 import Svg, { Defs, Mask, Rect, Circle } from "react-native-svg";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import { ASSETS } from "@/shared/constants/assets";
@@ -159,6 +159,21 @@ export default function ProtectedIndex() {
         </View>
       ) : null}
 
+      {showAiOnboarding ? (
+        <View
+          pointerEvents="none"
+          style={[styles.tipCard, { bottom: insets.bottom + 90 }]}
+        >
+          <View style={styles.tipIconWrap}>
+            <Image source={ASSETS.greenBun} style={styles.tipIcon} />
+          </View>
+          <View style={styles.tipTextWrap}>
+            <Text style={styles.tipTitle}>Tap to begin</Text>
+            <Text style={styles.tipSubtitle}>Let AI set up your task</Text>
+          </View>
+        </View>
+      ) : null}
+
       <View
         className="absolute left-4 right-4 items-center"
         style={{ bottom: insets.bottom + 6, zIndex: 20 }}
@@ -180,5 +195,48 @@ export default function ProtectedIndex() {
 const styles = StyleSheet.create({
   onboardingLayer: {
     zIndex: 10,
+  },
+  tipCard: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+    zIndex: 15,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000000",
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
+  tipIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#E9F7E4",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  tipIcon: {
+    width: 20,
+    height: 20,
+  },
+  tipTextWrap: {
+    flex: 1,
+  },
+  tipTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#2E6AE6",
+  },
+  tipSubtitle: {
+    marginTop: 2,
+    fontSize: 12,
+    color: "#6B7280",
   },
 });
