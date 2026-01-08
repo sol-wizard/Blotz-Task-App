@@ -2,15 +2,15 @@ import { format } from "date-fns";
 import { DailyTaskIndicatorDTO } from "../models/daily-task-indicator-dto";
 
 export const getMarkedDates = ({
-  weeklyTaskAvability,
+  weeklyTaskAvailability,
   selectedDay,
 }: {
-  weeklyTaskAvability: DailyTaskIndicatorDTO[];
+  weeklyTaskAvailability: DailyTaskIndicatorDTO[];
   selectedDay: Date;
 }) => {
   const result: Record<string, any> = {};
   // day with tasks
-  weeklyTaskAvability.forEach((item) => {
+  weeklyTaskAvailability.forEach((item) => {
     const dateStr = format(new Date(item.date), "yyyy-MM-dd");
 
     if (!result[dateStr]) {

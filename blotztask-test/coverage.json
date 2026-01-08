@@ -1980,31 +1980,31 @@
         }
       }
     },
-    "/Users/benjaminneoh/Desktop/Blotz-Task-App-Main/Blotz-Task-App/blotztask-api/Modules/Tasks/Queries/Tasks/GetWeeklyTaskAvability.cs": {
-      "BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityRequest": {
-        "System.DateTimeOffset BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityRequest::get_MondayUtc()": {
+    "/Users/benjaminneoh/Desktop/Blotz-Task-App-Main/Blotz-Task-App/blotztask-api/Modules/Tasks/Queries/Tasks/GetWeeklyTaskAvailability.cs": {
+      "BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityRequest": {
+        "System.DateTimeOffset BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityRequest::get_MondayUtc()": {
           "Lines": {
             "10": 0
           },
           "Branches": []
         }
       },
-      "BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityQuery": {
-        "System.Guid BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityQuery::get_UserId()": {
+      "BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityQuery": {
+        "System.Guid BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityQuery::get_UserId()": {
           "Lines": {
             "15": 0
           },
           "Branches": []
         },
-        "System.DateTimeOffset BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityQuery::get_MondayUtc()": {
+        "System.DateTimeOffset BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityQuery::get_MondayUtc()": {
           "Lines": {
             "17": 0
           },
           "Branches": []
         }
       },
-      "BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityQueryHandler": {
-        "System.Void BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityQueryHandler::.ctor(BlotzTask.Infrastructure.Data.BlotzTaskDbContext,Microsoft.Extensions.Logging.ILogger`1<BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityQueryHandler>)": {
+      "BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityQueryHandler": {
+        "System.Void BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityQueryHandler::.ctor(BlotzTask.Infrastructure.Data.BlotzTaskDbContext,Microsoft.Extensions.Logging.ILogger`1<BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityQueryHandler>)": {
           "Lines": {
             "20": 0,
             "21": 0,
@@ -2013,8 +2013,8 @@
           "Branches": []
         }
       },
-      "BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityQueryHandler/<>c__DisplayClass3_2": {
-        "System.Boolean BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityQueryHandler/<>c__DisplayClass3_2::<Handle>b__1(BlotzTask.Modules.Tasks.Domain.Entities.TaskItem)": {
+      "BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityQueryHandler/<>c__DisplayClass3_2": {
+        "System.Boolean BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityQueryHandler/<>c__DisplayClass3_2::<Handle>b__1(BlotzTask.Modules.Tasks.Domain.Entities.TaskItem)": {
           "Lines": {
             "54": 0,
             "55": 0,
@@ -2121,8 +2121,8 @@
           ]
         }
       },
-      "BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityQueryHandler/<Handle>d__3": {
-        "System.Void BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityQueryHandler/<Handle>d__3::MoveNext()": {
+      "BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityQueryHandler/<Handle>d__3": {
+        "System.Void BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityQueryHandler/<Handle>d__3::MoveNext()": {
           "Lines": {
             "26": 0,
             "27": 0,
@@ -2678,7 +2678,7 @@
     },
     "/Users/benjaminneoh/Desktop/Blotz-Task-App-Main/Blotz-Task-App/blotztask-api/Modules/Tasks/Controllers/TaskController.cs": {
       "BlotzTask.Modules.Tasks.Controllers.TaskController": {
-        "System.Void BlotzTask.Modules.Tasks.Controllers.TaskController::.ctor(BlotzTask.Modules.Tasks.Queries.Tasks.GetTasksByDateQueryHandler,BlotzTask.Modules.Tasks.Commands.Tasks.TaskStatusUpdateCommandHandler,BlotzTask.Modules.Tasks.Commands.Tasks.AddTaskCommandHandler,BlotzTask.Modules.Tasks.Queries.Tasks.GetTaskByIdQueryHandler,BlotzTask.Modules.Tasks.Queries.Tasks.GetFloatingTasksQueryHandler,BlotzTask.Modules.Tasks.Commands.Tasks.DeleteTaskCommandHandler,BlotzTask.Modules.Tasks.Commands.Tasks.EditTaskCommandHandler,BlotzTask.Modules.Tasks.Queries.Tasks.GetAllTasksQueryHandler,BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvabilityQueryHandler)": {
+        "System.Void BlotzTask.Modules.Tasks.Controllers.TaskController::.ctor(BlotzTask.Modules.Tasks.Queries.Tasks.GetTasksByDateQueryHandler,BlotzTask.Modules.Tasks.Commands.Tasks.TaskStatusUpdateCommandHandler,BlotzTask.Modules.Tasks.Commands.Tasks.AddTaskCommandHandler,BlotzTask.Modules.Tasks.Queries.Tasks.GetTaskByIdQueryHandler,BlotzTask.Modules.Tasks.Queries.Tasks.GetFloatingTasksQueryHandler,BlotzTask.Modules.Tasks.Commands.Tasks.DeleteTaskCommandHandler,BlotzTask.Modules.Tasks.Commands.Tasks.EditTaskCommandHandler,BlotzTask.Modules.Tasks.Queries.Tasks.GetAllTasksQueryHandler,BlotzTask.Modules.Tasks.Queries.Tasks.GetWeeklyTaskAvailabilityQueryHandler)": {
           "Lines": {
             "11": 0,
             "12": 0,
