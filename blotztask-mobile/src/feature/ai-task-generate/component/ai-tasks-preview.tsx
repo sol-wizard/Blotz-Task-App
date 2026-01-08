@@ -12,7 +12,7 @@ import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { Text } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAiOnboardingStatus } from "../hooks/useAiOnboardingStatus";
 import { router } from "expo-router";
 
 export function AiTasksPreview({
@@ -20,16 +20,15 @@ export function AiTasksPreview({
   setModalType,
   userInput,
   setAiGeneratedMessage,
-  setIsUserOnboardedAi,
 }: {
   aiTasks?: AiTaskDTO[];
   setModalType: (v: BottomSheetType) => void;
   userInput: string;
   setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
-  setIsUserOnboardedAi?: (v: boolean) => void;
 }) {
   const { addTask, isAdding } = useTaskMutations();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
+  const { setUserOnboardedAi } = useAiOnboardingStatus();
 
   const posthog = usePostHog();
 
@@ -78,14 +77,7 @@ export function AiTasksPreview({
       });
 
       setModalType("add-task-success");
-      setIsUserOnboardedAi?.(true);
-      AsyncStorage.getItem("is_user_onboarded_ai")
-        .then((value) => {
-          if (value !== "true") {
-            AsyncStorage.setItem("is_user_onboarded_ai", "true").catch(() => {});
-          }
-        })
-        .catch(() => {});
+      setUserOnboardedAi.mutate(true);
 
       setLocalTasks([]);
       router.back();

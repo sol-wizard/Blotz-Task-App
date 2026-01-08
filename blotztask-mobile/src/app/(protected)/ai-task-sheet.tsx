@@ -4,23 +4,13 @@ import { router } from "expo-router";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { AiModalContent } from "@/feature/ai-task-generate/component/ai-modal-content";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { OnboardingHintCard } from "@/shared/components/ui/onboarding-hint-card";
+import { useAiOnboardingStatus } from "@/feature/ai-task-generate/hooks/useAiOnboardingStatus";
 
 export default function AiTaskSheetScreen() {
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [sheetLayoutY, setSheetLayoutY] = useState(0);
-
-  const [isUserOnboardedAi, setIsUserOnboardedAi] = useState<boolean>(() => {
-    AsyncStorage.getItem("is_user_onboarded_ai")
-      .then((value) => {
-        if (value === "true") {
-          setIsUserOnboardedAi(true);
-        }
-      })
-      .catch(() => {});
-    return false;
-  });
+  const { isUserOnboardedAi } = useAiOnboardingStatus();
 
   return (
     <View className="flex-1 bg-transparent">
@@ -50,11 +40,7 @@ export default function AiTaskSheetScreen() {
               modalType === "add-task-success" ? "bg-background" : "bg-white"
             }`}
           >
-            <AiModalContent
-              modalType={modalType}
-              setModalType={setModalType}
-              setIsUserOnboardedAi={setIsUserOnboardedAi}
-            />
+            <AiModalContent modalType={modalType} setModalType={setModalType} />
           </View>
         </KeyboardAvoidingView>
       </View>
