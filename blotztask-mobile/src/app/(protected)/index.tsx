@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Pressable, View, Image, Text, useWindowDimensions } from "react-native";
+import { Pressable, View, Image, useWindowDimensions } from "react-native";
 import Svg, { Defs, Mask, Rect, Circle } from "react-native-svg";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
@@ -14,6 +14,7 @@ import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import SettingsScreen from "./settings";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { usePostHog } from "posthog-react-native";
+import { OnboardingHintCard } from "@/shared/components/ui/onboarding-hint-card";
 
 const routes = [
   {
@@ -181,23 +182,16 @@ export default function ProtectedIndex() {
       ) : null}
 
       {!isUserOnboarded ? (
-        <View
-          pointerEvents="none"
-          className="absolute left-6 right-6 flex-row items-center bg-white rounded-3xl px-4 py-3.5"
+        <OnboardingHintCard
+          title="Tap to begin✨"
+          subtitle="Let AI set up your task"
           style={{
+            position: "absolute",
+            left: 24,
+            right: 24,
             bottom: insets.bottom + 90,
-            zIndex: 15,
-            elevation: 6,
           }}
-        >
-          <View className="rounded-full items-center justify-center mr-3">
-            <Image source={ASSETS.greenBun} className="w-13 h-13" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-lg font-balooBold text-[#3D8DE0]">Tap to begin✨</Text>
-            <Text className="mt-0.5 text-[#3D8DE0] font-baloo">Let AI set up your task</Text>
-          </View>
-        </View>
+        />
       ) : null}
 
       <View
