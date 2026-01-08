@@ -15,6 +15,7 @@ import SettingsScreen from "./settings";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { usePostHog } from "posthog-react-native";
 import { OnboardingHintCard } from "@/shared/components/ui/onboarding-hint-card";
+import z from "zod";
 
 const routes = [
   {
@@ -190,6 +191,7 @@ export default function ProtectedIndex() {
             left: 24,
             right: 24,
             bottom: insets.bottom + 90,
+            zIndex: 10,
           }}
         />
       ) : null}

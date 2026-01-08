@@ -19,8 +19,8 @@ export const OnboardingHintCard = ({ title, subtitle, style }: OnboardingHintCar
         <Image source={ASSETS.greenBun} className="w-13 h-13" />
       </View>
       <View className="flex-1">
-        <Text className="text-lg font-balooBold text-[#3D8DE0]">{title}</Text>
-        <Text className="text-[#3D8DE0] font-baloo">{subtitle}</Text>
+        <Text className="text-lg font-balooBold text-info">{title}</Text>
+        <Text className="text-info font-baloo">{subtitle}</Text>
       </View>
     </View>
   );

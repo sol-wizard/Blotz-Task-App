@@ -29,8 +29,10 @@ export default function AiTaskSheetScreen() {
       <View className="relative">
         {!isUserOnboarded ? (
           <OnboardingHintCard
-            title="Speak your task"
-            subtitle="or tap anywhere to type"
+            title={modalType === "add-task-success" ? "Happy with this? ✨" : "Speak your task"}
+            subtitle={
+              modalType === "add-task-success" ? "Add to your task list" : "or tap anywhere to type"
+            }
             style={{
               position: "absolute",
               left: 24,
