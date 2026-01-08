@@ -45,8 +45,8 @@ export default function AiTaskSheetScreen() {
               <Image source={ASSETS.greenBun} className="w-5 h-5" />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-bold text-[#2E6AE6]">Speak your task</Text>
-              <Text className="text-xs text-[#2E6AE6]">or tap anywhere to type</Text>
+              <Text className="text-lg font-balooBold text-[#3D8DE0]">Speak your task</Text>
+              <Text className="mt-0.5 text-[#3D8DE0] font-baloo">or tap anywhere to type</Text>
             </View>
           </View>
         ) : null}
