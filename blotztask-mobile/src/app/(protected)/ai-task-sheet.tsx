@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Pressable } from "react-native";
 import { router } from "expo-router";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
@@ -9,26 +9,24 @@ import { OnboardingHintCard } from "@/shared/components/ui/onboarding-hint-card"
 
 export default function AiTaskSheetScreen() {
   const [modalType, setModalType] = useState<BottomSheetType>("input");
-  const [isUserOnboarded, setIsUserOnboarded] = useState(false);
   const [sheetLayoutY, setSheetLayoutY] = useState(0);
 
-  useEffect(() => {
+  const [isUserOnboardedAi, setIsUserOnboardedAi] = useState<boolean>(() => {
     AsyncStorage.getItem("is_user_onboarded_ai")
       .then((value) => {
         if (value === "true") {
-          setIsUserOnboarded(true);
+          setIsUserOnboardedAi(true);
         }
       })
       .catch(() => {});
-
-    return () => {};
-  }, []);
+    return false;
+  });
 
   return (
     <View className="flex-1 bg-transparent">
-      <Pressable className="flex-1" onPress={() => router.back()} disabled={!isUserOnboarded} />
+      <Pressable className="flex-1" onPress={() => router.back()} disabled={!isUserOnboardedAi} />
       <View className="relative">
-        {!isUserOnboarded && (
+        {!isUserOnboardedAi && (
           <OnboardingHintCard
             key={modalType}
             title={modalType === "task-preview" ? "Happy with this? ✨" : "Speak your task"}
@@ -52,7 +50,11 @@ export default function AiTaskSheetScreen() {
               modalType === "add-task-success" ? "bg-background" : "bg-white"
             }`}
           >
-            <AiModalContent modalType={modalType} setModalType={setModalType} />
+            <AiModalContent
+              modalType={modalType}
+              setModalType={setModalType}
+              setIsUserOnboardedAi={setIsUserOnboardedAi}
+            />
           </View>
         </KeyboardAvoidingView>
       </View>

@@ -12,9 +12,11 @@ import { Platform } from "react-native";
 export const AiModalContent = ({
   modalType,
   setModalType,
+  setIsUserOnboardedAi,
 }: {
   modalType: BottomSheetType;
   setModalType: (type: BottomSheetType) => void;
+  setIsUserOnboardedAi?: (v: boolean) => void;
 }) => {
   const [text, setText] = useState("");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
@@ -38,6 +40,7 @@ export const AiModalContent = ({
           userInput={text}
           setModalType={setModalType}
           setAiGeneratedMessage={setAiGeneratedMessage}
+          setIsUserOnboardedAi={setIsUserOnboardedAi}
         />
       );
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Pressable, View, Image, useWindowDimensions } from "react-native";
@@ -93,9 +93,8 @@ export default function ProtectedIndex() {
   const insets = useSafeAreaInsets();
   const posthog = usePostHog();
   const { width, height } = useWindowDimensions();
-  const [isUserOnboarded, setIsUserOnboarded] = useState(false);
 
-  useEffect(() => {
+  const [isUserOnboarded, setIsUserOnboarded] = useState<boolean>(() => {
     AsyncStorage.getItem("is_user_onboarded_ai")
       .then((value) => {
         if (value === "true") {
@@ -103,9 +102,8 @@ export default function ProtectedIndex() {
         }
       })
       .catch(() => {});
-
-    return () => {};
-  }, []);
+    return false;
+  });
 
   const aiButtonSize = 58;
   const aiButtonRadius = aiButtonSize / 2;

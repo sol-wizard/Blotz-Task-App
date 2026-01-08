@@ -13,17 +13,20 @@ import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 
 export function AiTasksPreview({
   aiTasks,
   setModalType,
   userInput,
   setAiGeneratedMessage,
+  setIsUserOnboardedAi,
 }: {
   aiTasks?: AiTaskDTO[];
   setModalType: (v: BottomSheetType) => void;
   userInput: string;
   setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
+  setIsUserOnboardedAi?: (v: boolean) => void;
 }) {
   const { addTask, isAdding } = useTaskMutations();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
@@ -75,6 +78,7 @@ export function AiTasksPreview({
       });
 
       setModalType("add-task-success");
+      setIsUserOnboardedAi?.(true);
       AsyncStorage.getItem("is_user_onboarded_ai")
         .then((value) => {
           if (value !== "true") {
@@ -84,6 +88,7 @@ export function AiTasksPreview({
         .catch(() => {});
 
       setLocalTasks([]);
+      router.back();
     } catch (error) {
       console.log("Add tasks failed", error);
     }
