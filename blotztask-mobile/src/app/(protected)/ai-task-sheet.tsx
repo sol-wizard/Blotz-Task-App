@@ -27,11 +27,12 @@ export default function AiTaskSheetScreen() {
     <View className="flex-1 bg-transparent">
       <Pressable className="flex-1" onPress={() => router.back()} disabled={!isUserOnboarded} />
       <View className="relative">
-        {!isUserOnboarded ? (
+        {!isUserOnboarded && (
           <OnboardingHintCard
-            title={modalType === "add-task-success" ? "Happy with this? ✨" : "Speak your task"}
+            key={modalType}
+            title={modalType === "task-preview" ? "Happy with this? ✨" : "Speak your task"}
             subtitle={
-              modalType === "add-task-success" ? "Add to your task list" : "or tap anywhere to type"
+              modalType === "task-preview" ? "Add to your task list" : "or tap anywhere to type"
             }
             style={{
               position: "absolute",
@@ -40,7 +41,8 @@ export default function AiTaskSheetScreen() {
               top: -100,
             }}
           />
-        ) : null}
+        )}
+
         <KeyboardAvoidingView behavior={"padding"}>
           <View
             className={`rounded-t-3xl px-4 pt-4 min-h-[200px] ${
