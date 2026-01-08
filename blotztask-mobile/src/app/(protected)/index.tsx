@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Pressable, View, Image } from "react-native";
+import { Pressable, View, Image, StyleSheet, useWindowDimensions } from "react-native";
+import Svg, { Defs, Mask, Rect, Circle } from "react-native-svg";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
@@ -88,6 +89,13 @@ export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
   const insets = useSafeAreaInsets();
   const posthog = usePostHog();
+  const { width, height } = useWindowDimensions();
+  const showAiOnboarding = true;
+
+  const aiButtonSize = 58;
+  const aiButtonRadius = aiButtonSize / 2;
+  const aiButtonCenterX = width / 2;
+  const aiButtonCenterY = height - (insets.bottom + 6) - aiButtonRadius;
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
@@ -126,7 +134,35 @@ export default function ProtectedIndex() {
         renderIcon={({ route, focused }) => getTabIcon(route.key, focused)}
       />
 
-      <View className="absolute left-4 right-4 items-center" style={{ bottom: insets.bottom + 6 }}>
+      {showAiOnboarding ? (
+        <View style={[StyleSheet.absoluteFill, styles.onboardingLayer]} pointerEvents="box-none">
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => {}}
+            android_disableSound
+            accessible={false}
+          />
+          <Svg width={width} height={height} pointerEvents="none" style={StyleSheet.absoluteFill}>
+            <Defs>
+              <Mask id="ai-spotlight-mask" maskUnits="userSpaceOnUse">
+                <Rect width={width} height={height} fill="white" />
+                <Circle cx={aiButtonCenterX} cy={aiButtonCenterY} r={aiButtonRadius} fill="black" />
+              </Mask>
+            </Defs>
+            <Rect
+              width={width}
+              height={height}
+              fill="rgba(0,0,0,0.35)"
+              mask="url(#ai-spotlight-mask)"
+            />
+          </Svg>
+        </View>
+      ) : null}
+
+      <View
+        className="absolute left-4 right-4 items-center"
+        style={{ bottom: insets.bottom + 6, zIndex: 20 }}
+      >
         <Pressable onPress={() => router.push("/ai-task-sheet")}>
           <GradientCircle size={58}>
             <Image
@@ -140,3 +176,9 @@ export default function ProtectedIndex() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  onboardingLayer: {
+    zIndex: 10,
+  },
+});
