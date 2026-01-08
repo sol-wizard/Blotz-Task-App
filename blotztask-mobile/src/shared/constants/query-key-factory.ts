@@ -26,3 +26,7 @@ export const subtaskKeys = {
 export const estimateKeys = {
   taskTime: (task: FloatingTaskDTO) => ["taskTime", task] as const,
 } as const;
+
+export const onboardingKeys = {
+  aiOnboardingStatus: () => ["aiOnboardingStatus"] as const,
+} as const;
