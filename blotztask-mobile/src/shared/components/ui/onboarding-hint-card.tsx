@@ -15,7 +15,7 @@ export const OnboardingHintCard = ({ title, subtitle, style }: OnboardingHintCar
       className="flex-row items-center bg-white rounded-[24px] px-4 py-3.5"
       style={style}
     >
-      <View className="w-[38px] h-[38px] rounded-full items-center justify-center mr-3">
+      <View className="rounded-full items-center justify-center mr-3">
         <Image source={ASSETS.greenBun} className="w-13 h-13" />
       </View>
       <View className="flex-1">
