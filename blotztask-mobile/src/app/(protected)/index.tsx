@@ -181,7 +181,7 @@ export default function ProtectedIndex() {
             <Image source={ASSETS.greenBun} className="w-13 h-13" />
           </View>
           <View className="flex-1">
-            <Text className="text-lg font-balooBold text-[#3D8DE0]">Tap to begin</Text>
+            <Text className="text-lg font-balooBold text-[#3D8DE0]">Tap to begin✨</Text>
             <Text className="mt-0.5 text-[#3D8DE0] font-baloo">Let AI set up your task</Text>
           </View>
         </View>
