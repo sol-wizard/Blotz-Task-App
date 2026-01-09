@@ -24,7 +24,7 @@ export async function fetchTasksForDate(
 export async function fetchWeeklyTaskAvailability(date: Date): Promise<DailyTaskIndicatorDTO[]> {
   const monday = convertToDateTimeOffset(startOfDay(date));
 
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/weekly-task-availability?monday=${encodeURIComponent(monday)}`;
+  const url = `/Task/weekly-task-availability?monday=${encodeURIComponent(monday)}`;
 
   try {
     return await apiClient.get(url);
