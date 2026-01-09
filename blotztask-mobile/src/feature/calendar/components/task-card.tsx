@@ -225,10 +225,10 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
             </Pressable>
           </View>
 
-          <View className="w-[8px]" />
+          <View className="w-2" />
 
           {/* 3 Delete Button */}
-          <View className="w-[56px]" pointerEvents={actionsEnabled ? "auto" : "none"}>
+          <View className="w-14" pointerEvents={actionsEnabled ? "auto" : "none"}>
             <Pressable
               onPress={async () => {
                 if (isLoading) return;
@@ -242,7 +242,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
               }}
               disabled={isLoading}
               android_ripple={{ color: "#FEE2E2", borderless: false }}
-              className={`h-[59px] rounded-[10px] bg-[#F567671A] items-center justify-center ${
+              className={`w-14 h-20 rounded-xl bg-red-500/10 items-center justify-center ${
                 isDeleting ? "opacity-50" : ""
               }`}
             >
