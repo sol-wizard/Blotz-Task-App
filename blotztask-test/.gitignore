@@ -17,3 +17,5 @@ TestResults/
 .idea/
 .vs/
 
+coverage.json
+
