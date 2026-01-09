@@ -75,9 +75,7 @@ export const FloatingTaskCard = ({
           onPressCard(floatingTask);
         }}
       >
-        <View
-          className={`bg-white rounded-3xl p-4 ${isToggled ? "border-2 border-[#3D8DE0]" : ""}`}
-        >
+        <View className={`bg-white rounded-3xl p-4 ${isToggled ? "border-2 border-info" : ""}`}>
           <Text className="text-xl font-semibold text-black font-baloo">{floatingTask.title}</Text>
 
           <Text className="mt-2 text-[13px] text-[#9CA3AF] leading-snug font-balooThin">
