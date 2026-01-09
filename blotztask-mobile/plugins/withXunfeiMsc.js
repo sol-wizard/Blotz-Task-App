@@ -109,8 +109,8 @@ function withXunfeiMsc(config) {
   config = withAppBuildGradle(config, (c) => {
     let gradle = c.modResults.contents;
 
-    const depCodec = "implementation(name: 'Codec', ext: 'aar')";
-    const depSpark = "implementation(name: 'SparkChain', ext: 'aar')";
+    const depCodec = "implementation(files('libs/Codec.aar'))";
+    const depSpark = "implementation(files('libs/SparkChain.aar'))";
 
     if (!gradle.includes(depCodec) || !gradle.includes(depSpark)) {
       gradle = gradle.replace(/dependencies\s*\{/, (m) => {
