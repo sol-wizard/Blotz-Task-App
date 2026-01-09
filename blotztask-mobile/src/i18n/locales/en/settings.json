@@ -26,7 +26,7 @@
     "upcomingDueTasks": "Upcoming due tasks"
   },
   "language": {
-    "title": "Language / 语言",
+    "title": "Language",
     "english": "English",
     "englishDescription": "Default language",
     "chinese": "中文",
@@ -38,4 +38,3 @@
     "title": "Name"
   }
 }
-

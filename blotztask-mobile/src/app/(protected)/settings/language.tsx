@@ -66,16 +66,12 @@ export default function LanguageScreen() {
             className="flex-row items-center justify-between px-6 py-4 border-b border-gray-100"
           >
             <View className="flex-row items-center flex-1">
-              <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-4">
-                <Text className="text-xl">🇺🇸</Text>
-              </View>
               <View className="flex-1">
                 <Text className="text-lg font-baloo text-secondary">{t("language.english")}</Text>
-                <Text className="text-sm font-baloo text-gray-500">{t("language.englishDescription")}</Text>
               </View>
             </View>
             {currentLanguage === Language.En && (
-              <MaterialCommunityIcons name="check-circle" size={24} color="#4F46E5" />
+              <MaterialCommunityIcons name="check" size={24} color="8d8d8d" />
             )}
           </Pressable>
 
@@ -86,25 +82,19 @@ export default function LanguageScreen() {
             className="flex-row items-center justify-between px-6 py-4"
           >
             <View className="flex-row items-center flex-1">
-              <View className="w-10 h-10 rounded-full bg-red-50 items-center justify-center mr-4">
-                <Text className="text-xl">🇨🇳</Text>
-              </View>
               <View className="flex-1">
                 <Text className="text-lg font-baloo text-secondary">{t("language.chinese")}</Text>
-                <Text className="text-sm font-baloo text-gray-500">{t("language.chineseDescription")}</Text>
               </View>
             </View>
             {currentLanguage === Language.Zh && (
-              <MaterialCommunityIcons name="check-circle" size={24} color="#4F46E5" />
+              <MaterialCommunityIcons name="check" size={24} color="8d8d8d" />
             )}
           </Pressable>
         </View>
 
         {/* Info Text */}
         <Text className="text-sm font-baloo text-gray-500 mt-4 px-2">
-          {currentLanguage === Language.En
-            ? t("language.infoText")
-            : t("language.infoTextChinese")}
+          {currentLanguage === Language.En ? t("language.infoText") : t("language.infoTextChinese")}
         </Text>
       </View>
     </SafeAreaView>
