@@ -11,7 +11,7 @@ export const toastConfig = {
       className="flex-row items-center bg-gray-900 rounded-xl h-10 px-3 w-96 shadow-none"
     >
       <View className="flex-1 justify-center">
-        <Text numberOfLines={1} className="text-white text-[14px] font-['BalooRegular'] pl-2">
+        <Text numberOfLines={1} className="text-white font-baloo pl-2">
           {props.text1}
         </Text>
       </View>
