@@ -7,16 +7,14 @@ import { AiTasksPreview } from "./ai-tasks-preview";
 import { TaskAddedSuccess } from "./task-added-success";
 import { WriteInput } from "./write-input";
 import { AiInput } from "./ai-input";
-import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
+import { Platform } from "react-native";
 
 export const AiModalContent = ({
   modalType,
   setModalType,
-  language,
 }: {
   modalType: BottomSheetType;
   setModalType: (type: BottomSheetType) => void;
-  language: string;
 }) => {
   const [text, setText] = useState("");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
@@ -48,14 +46,13 @@ export const AiModalContent = ({
 
     case "input":
     default:
-      return ExpoSpeechRecognitionModule.isRecognitionAvailable() ? (
+      return Platform.OS !== "android" ? (
         <AiInput
           text={text}
           setText={setText}
           sendMessage={sendMessage}
           isAiGenerating={isAiGenerating}
           aiGeneratedMessage={aiGeneratedMessage}
-          language={language}
         />
       ) : (
         <WriteInput

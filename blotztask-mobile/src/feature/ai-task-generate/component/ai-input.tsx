@@ -1,28 +1,55 @@
-import { View, Vibration, TextInput, Keyboard } from "react-native";
-import { useEffect } from "react";
+import { View, Vibration, TextInput } from "react-native";
+import { useEffect, useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import * as Haptics from "expo-haptics";
-import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
 import { VoiceButton } from "./voice-button";
-
+import { SendButton } from "./send-button";
+import { requestMicrophonePermission } from "../utils/request-microphone-permission";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
+import { AiLanguagePicker } from "./ai-language-picker";
+import { Platform } from "react-native";
 export const AiInput = ({
   text,
   setText,
   sendMessage,
   isAiGenerating,
   aiGeneratedMessage,
-  language,
 }: {
   text: string;
   setText: (v: string) => void;
   sendMessage: (v: string) => void;
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
-  language: string;
 }) => {
+  const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
+    AsyncStorage.getItem("ai_language_preference").then((saved: string | null) => {
+      if (saved === "en-US" || saved === "zh-CN") {
+        setLanguage(saved as "en-US" | "zh-CN");
+      }
+    });
+    return "zh-CN";
+  });
+
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      return;
+    }
+
+    requestMicrophonePermission();
+    installAndroidLanguagePackage(["en-US", "cmn-Hans-CN"]);
+  }, []);
+  const handleSelectLanguage = async (lang: "en-US" | "zh-CN") => {
+    setLanguage(lang);
+    try {
+      await AsyncStorage.setItem("ai_language_preference", lang);
+    } catch (error) {
+      console.error("Failed to save AI language preference:", error);
+    }
+  };
   const { handleStartListening, recognizing, transcript, stopListening, abortListening } =
     useSpeechRecognition({
       language,
@@ -37,9 +64,6 @@ export const AiInput = ({
   const toggleListening = async () => {
     if (recognizing) {
       stopListening();
-      if (transcript?.trim()) {
-        sendMessage(transcript.trim());
-      }
       return;
     }
 
@@ -53,18 +77,11 @@ export const AiInput = ({
   };
 
   const handleAbortListening = () => {
-    setText("");
     abortListening();
+    setText("");
   };
 
-  const sendWriteInput = (msg: string) => {
-    const val = msg.trim();
-    if (!val) return;
-    sendMessage(val);
-    setText(val);
-    Keyboard.dismiss();
-  };
-
+  const showSendButton = text.trim() !== "" || recognizing;
   return (
     <View className="pt-2">
       <View className="items-center">
@@ -72,14 +89,8 @@ export const AiInput = ({
           <TextInput
             value={text}
             onChangeText={(v: string) => setText(v)}
-            onKeyPress={({ nativeEvent: { key } }) => {
-              if (key === "Enter") {
-                const cleaned = text.replace(/\n$/, "").trim();
-                if (!cleaned) return;
-                sendWriteInput(cleaned);
-              }
-            }}
             enablesReturnKeyAutomatically
+            autoFocus
             placeholder="Hold to speak or tap to write..."
             placeholderTextColor={theme.colors.secondary}
             multiline
@@ -90,18 +101,23 @@ export const AiInput = ({
             <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
           )}
         </View>
-
-        {!isAiGenerating ? (
-          <VoiceButton
-            isRecognizing={recognizing}
-            toggleListening={toggleListening}
-            abortListening={handleAbortListening}
-          />
-        ) : (
-          <View className="flex-row items-center mt-4 mb-8 w-full px-2 justify-center">
-            <CustomSpinner size={60} style={{ marginRight: 10 }} />
-          </View>
-        )}
+        <View className="flex-row items-center justify-between mb-6 w-96">
+          {Platform.OS !== "android" && (
+            <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
+          )}
+          {showSendButton ? (
+            <SendButton
+              text={text}
+              isRecognizing={recognizing}
+              isGenerating={isAiGenerating}
+              abortListening={handleAbortListening}
+              sendMessage={sendMessage}
+              stopListening={stopListening}
+            />
+          ) : (
+            <VoiceButton isRecognizing={recognizing} toggleListening={toggleListening} />
+          )}
+        </View>
       </View>
     </View>
   );

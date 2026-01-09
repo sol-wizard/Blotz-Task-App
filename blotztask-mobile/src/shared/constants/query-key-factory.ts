@@ -14,7 +14,7 @@ export const taskKeys = {
   all: ["tasks"] as const,
   selectedDay: (date: string) => [...taskKeys.all, "selectedDay", date] as const,
   byId: (id: number) => [...taskKeys.all, "Id", id] as const,
-  avability: (monday: string) => [...taskKeys.all, "avability", monday] as const,
+  availability: (monday: string) => [...taskKeys.all, "availability", monday] as const,
   floating: () => [...taskKeys.all, "floating"] as const,
   floatingSearch: (keyword: string) => [...taskKeys.all, "floating", "search", keyword] as const,
 } as const;
@@ -25,4 +25,8 @@ export const subtaskKeys = {
 
 export const estimateKeys = {
   taskTime: (task: FloatingTaskDTO) => ["taskTime", task] as const,
+} as const;
+
+export const onboardingKeys = {
+  aiOnboardingStatus: () => ["aiOnboardingStatus"] as const,
 } as const;

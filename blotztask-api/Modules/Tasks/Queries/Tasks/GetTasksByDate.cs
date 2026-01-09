@@ -34,13 +34,13 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
             "Fetching tasks by end time for user {UserId} up to {StartDate}. Whether including floating tasks for today is {IncludeFloatingForToday}",
             query.UserId, query.StartDate, query.IncludeFloatingForToday);
 
-        var todayStartUtc = DateTime.UtcNow.Date;
-        var todayEndUtc = todayStartUtc.AddDays(1);
-        var sevenDayWindowStartUtc = todayEndUtc.AddDays(-6);
-        var endDateUtc = query.StartDate.AddDays(1);
+        var endDate = query.StartDate.AddDays(1);
 
-        var userToday = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
-        var isFutureDay = query.StartDate > userToday.Date;
+        var userNow = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
+        var userTodayStart = new DateTimeOffset(userNow.Date, query.StartDate.Offset);
+        var userTodayEnd = userTodayStart.AddDays(1);
+        var sevenDayWindowStart = userTodayEnd.AddDays(-7);
+        var isFutureDay = query.StartDate > userNow.Date;
 
 
         var queryStopwatch = Stopwatch.StartNew();
@@ -50,19 +50,19 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                         (
                             // Tasks in date range
                             (t.StartTime != null && t.EndTime != null &&
-                             t.StartTime < endDateUtc && t.EndTime >= query.StartDate)
+                             t.StartTime < endDate && t.EndTime >= query.StartDate)
                             ||
                             // Floating tasks
                             (query.IncludeFloatingForToday && t.StartTime == null && t.EndTime == null &&
                              t.CreatedAt >= query.StartDate &&
-                             t.CreatedAt < endDateUtc)
+                             t.CreatedAt < endDate)
                             ||
                             // Overdue tasks within 7 days but not in selected day
                             (t.EndTime != null
                              && !t.IsDone
                              && !isFutureDay
-                             && t.EndTime < DateTime.UtcNow && t.EndTime >= sevenDayWindowStartUtc &&
-                             t.StartTime <= endDateUtc
+                             && t.EndTime < userNow && t.EndTime >= sevenDayWindowStart &&
+                             t.StartTime < endDate
                             )
                         ))
             .OrderBy(t => t.StartTime).ThenBy(t => t.EndTime).ThenBy(t => t.Title)

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Shared.Exceptions;
 
 namespace BlotzTask.Modules.Users.Commands;
@@ -29,6 +30,7 @@ public class UpdateUserPreferenceCommandHandler(
         preference.OverdueNotification = command.UserPreferences.OverdueNotification;
         preference.DailyPlanningNotification = command.UserPreferences.DailyPlanningNotification;
         preference.EveningWrapUpNotification = command.UserPreferences.EveningWrapUpNotification;
+        preference.PreferredLanguage = command.UserPreferences.PreferredLanguage;
 
         db.UserPreferences.Update(preference);
         await db.SaveChangesAsync(ct);
@@ -46,4 +48,5 @@ public class UpdateUserPreferenceDto
     public bool OverdueNotification { get; set; }
     public bool DailyPlanningNotification { get; set; }
     public bool EveningWrapUpNotification { get; set; }
+    public Language PreferredLanguage { get; set; }
 }

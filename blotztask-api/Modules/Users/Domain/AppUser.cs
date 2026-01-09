@@ -16,4 +16,5 @@ public class AppUser
     public OnboardingStatus OnboardingStatus { get; set; } = OnboardingStatus.NotStarted;
     public OnboardingStep OnboardingStep { get; set; } = OnboardingStep.Welcome;
     public DateTime? OnboardingCompletedAt { get; set; }
+    public PomodoroSetting PomodoroSetting { get; set; } = null!;
 }

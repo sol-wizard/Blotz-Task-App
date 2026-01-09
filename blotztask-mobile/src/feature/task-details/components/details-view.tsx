@@ -1,4 +1,5 @@
 import { View, TextInput, TouchableOpacity, Text } from "react-native";
+import { useTranslation } from "react-i18next";
 
 type DetailsViewProps = {
   taskDescription: string;
@@ -14,12 +15,14 @@ const DetailsView = ({
   canSave,
   isUpdating
 }: DetailsViewProps) => {
+  const { t } = useTranslation();
+  
   return (
     <View className="bg-gray-100 rounded-xl p-4 h-[190px] w-full">
       <TextInput
         value={taskDescription}
         onChangeText={setDescription}
-        placeholder="Add any task details — people, places, links, notes…"
+        placeholder={t("tasks:details.addDetails")}
         multiline
         textAlignVertical="top"
         className="font-baloo text-[#3E4A5A] text-base"
@@ -39,7 +42,7 @@ const DetailsView = ({
           <Text
             className={`text-xs font-balooBold`}
           >
-            {isUpdating ? "Saving..." : "Save"}
+            {isUpdating ? t("common:buttons.saving") : t("common:buttons.save")}
           </Text>
         </TouchableOpacity>
       </View>

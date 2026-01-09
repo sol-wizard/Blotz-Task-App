@@ -1,5 +1,6 @@
 import React from "react";
 import { View, ScrollView } from "react-native";
+import { useTranslation } from "react-i18next";
 import { TaskStatusType } from "../../../feature/calendar/models/task-status-type";
 import { TaskStatusButton } from "@/shared/components/ui/task-status-button";
 import { startOfDay, isBefore, isAfter } from "date-fns";
@@ -23,6 +24,8 @@ export function TaskStatusRow({
   onChange: (value: TaskStatusType) => void;
   selectedDay?: Date;
 }) {
+  const { t } = useTranslation("calendar");
+  
   // Determine if the selected day is past, today, or future
   const today = startOfDay(new Date());
   const selectedDate = selectedDay ? startOfDay(selectedDay) : today;
@@ -42,28 +45,28 @@ export function TaskStatusRow({
         <TaskStatusButton
           isSelected={selectedStatus === "All"}
           onChange={() => onChange("All")}
-          statusName="All"
+          statusName={t("status.all")}
           taskCount={allTaskCount}
         />
 
         <TaskStatusButton
           isSelected={selectedStatus === "To Do"}
           onChange={() => onChange("To Do")}
-          statusName="To Do"
+          statusName={t("status.toDo")}
           taskCount={todoTaskCount}
         />
 
         <TaskStatusButton
           isSelected={selectedStatus === "In Progress"}
           onChange={() => onChange("In Progress")}
-          statusName="In Progress"
+          statusName={t("status.inProgress")}
           taskCount={inProgressTaskCount}
         />
 
         <TaskStatusButton
           isSelected={selectedStatus === "Done"}
           onChange={() => onChange("Done")}
-          statusName="Done"
+          statusName={t("status.done")}
           taskCount={doneTaskCount}
         />
 
@@ -71,7 +74,7 @@ export function TaskStatusRow({
           <TaskStatusButton
             isSelected={selectedStatus === "Overdue"}
             onChange={() => onChange("Overdue")}
-            statusName="Overdue"
+            statusName={t("status.overdue")}
             taskCount={overdueTaskCount}
           />
         )}
