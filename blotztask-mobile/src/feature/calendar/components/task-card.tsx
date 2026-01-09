@@ -24,9 +24,9 @@ import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
 import { convertDurationToText } from "@/shared/util/convert-duration";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 
-const ACTION_WIDTH = 56;
+const ACTION_WIDTH = 180;
 const OPEN_X = -ACTION_WIDTH;
-const OPEN_THRESHOLD = ACTION_WIDTH * 0.55;
+const OPEN_THRESHOLD = ACTION_WIDTH * 0.4;
 
 interface TaskCardProps {
   task: TaskDetailDTO;
@@ -120,10 +120,23 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
     <View className="relative mx-4 my-2 overflow-visible">
       {/* Right action area with delete button */}
       <Animated.View
-        style={rightActionStyle}
+        style={[rightActionStyle, { flexDirection: "row" }]}
         pointerEvents={actionsEnabled ? "auto" : "none"}
-        className="absolute right-0 top-0 bottom-0 w-[56px] items-stretch z-10"
+        className="absolute right-0 top-0 bottom-0 w-[180px] items-stretch z-10"
       >
+        {/* Breakdown Task */}
+        <Pressable
+          onPress={() => {
+            if (isLoading) return;
+            // TODO: Implement breakdown functionality
+          }}
+          disabled={isLoading}
+          android_ripple={{ color: "#E0EAFF", borderless: false }}
+          className="w-[120px] bg-[#EEF2FF] items-center justify-center rounded-2xl mx-2"
+        >
+          <Text className="text-[#3D8DE0] font-baloo font-semibold text-lg">Breakdown</Text>
+        </Pressable>
+
         <Pressable
           onPress={async () => {
             if (isLoading) return;
@@ -137,7 +150,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           }}
           disabled={isLoading}
           android_ripple={{ color: "#FEE2E2", borderless: false }}
-          className={`flex-1 w-[56px] rounded-2xl bg-[#F56767]/10 items-center justify-center ${
+          className={`w-[56px] rounded-2xl bg-[#F56767]/10 items-center justify-center ${
             isDeleting ? "opacity-50" : ""
           }`}
         >
