@@ -8,7 +8,7 @@ type OnboardingHintCardProps = {
   style?: object;
 };
 
-export const OnboardingHintCard = ({ title, subtitle, style }: OnboardingHintCardProps) => {
+export const OnboardingCard = ({ title, subtitle, style }: OnboardingHintCardProps) => {
   return (
     <View
       pointerEvents="none"

@@ -13,7 +13,7 @@ import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import SettingsScreen from "./settings";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { usePostHog } from "posthog-react-native";
-import { OnboardingHintCard } from "@/shared/components/ui/onboarding-hint-card";
+import { OnboardingCard } from "@/shared/components/ui/onboarding-card";
 import { useAiOnboardingStatus } from "@/feature/ai-task-generate/hooks/useAiOnboardingStatus";
 
 const routes = [
@@ -173,7 +173,7 @@ export default function ProtectedIndex() {
       )}
 
       {!isUserOnboardedAi && (
-        <OnboardingHintCard
+        <OnboardingCard
           title="Tap to begin✨"
           subtitle="Let AI set up your task"
           style={{
