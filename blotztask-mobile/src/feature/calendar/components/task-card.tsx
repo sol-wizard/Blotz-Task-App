@@ -5,8 +5,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  interpolate,
-  Extrapolation,
   runOnJS,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -41,7 +39,6 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
   const { width: screenWidth } = useWindowDimensions();
-  const taskCardWidth = screenWidth - 32;
 
   const hasSubtasks = task.subtasks && task.subtasks.length > 0;
 
@@ -94,15 +91,6 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
     transform: [{ translateX: translateX.value }],
   }));
 
-  // Right action area follows gesture movement
-  const rightActionStyle = useAnimatedStyle(() => {
-    const progress = interpolate(-translateX.value, [0, ACTION_WIDTH], [0, 1], Extrapolation.CLAMP);
-    return {
-      transform: [{ translateX: interpolate(progress, [0, 1], [ACTION_WIDTH, 0]) }],
-      opacity: progress,
-    };
-  });
-
   // Create a sense of being pushed away
   const leftExtrasStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value * 1.25 }],
@@ -123,7 +111,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
       <GestureDetector gesture={pan}>
         <Animated.View style={cardStyle} className="flex-row items-stretch">
           {/* 1. Task Card */}
-          <View style={{ width: taskCardWidth }}>
+          <View style={{ width: screenWidth - 32 }}>
             <Pressable
               onPress={() => navigateToTaskDetails(task)}
               disabled={isLoading}
@@ -240,7 +228,11 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           <View className="w-[8px]" />
 
           {/* 3 Delete Button */}
-          <View className="w-[56px]">
+          <View
+            className="w-[56px]"
+            // 使用 actionsEnabled 控制点击事件，解决 lint 报错并增加安全性
+            pointerEvents={actionsEnabled ? "auto" : "none"}
+          >
             <Pressable
               onPress={async () => {
                 if (isLoading) return;
