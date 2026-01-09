@@ -20,7 +20,18 @@
     "notFound": "Selected Task not found.",
     "addDetails": "Add any task details — people, places, links, notes…",
     "subtasks": "Subtasks",
-    "description": "Description"
+    "description": "Description",
+    "time": "Time",
+    "startFrom": "Start from",
+    "endAt": "End at",
+    "breakdownTask": "Breakdown Task",
+    "loadingSubtasks": "Loading subtasks...",
+    "noSubtasksYet": "No subtasks yet",
+    "complete": "Complete",
+    "dragToReorder": "Drag to reorder~",
+    "error": "Error",
+    "failedToRefreshSubtasks": "Failed to refresh subtasks. Please try again.",
+    "failedToDeleteSubtask": "Failed to delete subtask."
   },
   "alerts": {
     "none": "None",

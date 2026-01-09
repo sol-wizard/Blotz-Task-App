@@ -20,7 +20,18 @@
     "notFound": "未找到选定的任务。",
     "addDetails": "添加任务详情 — 人员、地点、链接、笔记…",
     "subtasks": "子任务",
-    "description": "描述"
+    "description": "描述",
+    "time": "时间",
+    "startFrom": "从",
+    "endAt": "结束于",
+    "breakdownTask": "分解任务",
+    "loadingSubtasks": "正在加载子任务...",
+    "noSubtasksYet": "还没有子任务",
+    "complete": "完成",
+    "dragToReorder": "拖拽重新排序~",
+    "error": "错误",
+    "failedToRefreshSubtasks": "刷新子任务失败。请重试。",
+    "failedToDeleteSubtask": "删除子任务失败。"
   },
   "alerts": {
     "none": "无",
