@@ -1,21 +1,21 @@
-const {
-  withAppBuildGradle,
-  withProjectBuildGradle,
-  withDangerousMod,
-} = require("@expo/config-plugins");
+const { withAppBuildGradle, withDangerousMod } = require("@expo/config-plugins");
 const fs = require("fs");
 const path = require("path");
 
-/* ---------------- config ---------------- */
+/* ============================================================
+ * 基础配置
+ * ============================================================ */
 
-const SDK_DIR = "keys/xunfei-android";
+const SDK_DIR = "keys/xunfei-android"; // 你放 Codec.aar / SparkChain.aar 的地方
 const ANDROID_LIBS_REL = ["android", "app", "libs"];
 const APP_PROGUARD = ["android", "app", "proguard-rules.pro"];
 
 const PACKAGE_NAME = "com.blotz.blotztask";
 const JAVA_DST_DIR = ["android", "app", "src", "main", "java", ...PACKAGE_NAME.split("."), "xfyun"];
 
-/* ---------------- utils ---------------- */
+/* ============================================================
+ * utils
+ * ============================================================ */
 
 function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true });
@@ -33,17 +33,20 @@ function appendIfMissing(filePath, marker, contentToAppend) {
   fs.writeFileSync(filePath, `${current}\n\n${contentToAppend}\n`);
 }
 
-/* ---------------- patch MainApplication ---------------- */
+/* ============================================================
+ * patch MainApplication.kt (Expo New Architecture)
+ * ============================================================ */
 
 function patchMainApplication(mainAppPath) {
   let content = fs.readFileSync(mainAppPath, "utf8");
 
+  // 1) import XfIatPackage
   const importLine = `import ${PACKAGE_NAME}.xfyun.XfIatPackage`;
   if (!content.includes(importLine)) {
     content = content.replace(/(import[^\n]*\n)+/m, (m) => m + importLine + "\n");
   }
 
-  // Expo New Architecture 稳定锚点
+  // 2) 在 Expo 模板的稳定锚点插入 packages.add(...)
   const anchor = "val packages = PackageList(this).packages";
   if (content.includes(anchor) && !content.includes("packages.add(XfIatPackage())")) {
     content = content.replace(anchor, `${anchor}\n            packages.add(XfIatPackage())`);
@@ -52,46 +55,56 @@ function patchMainApplication(mainAppPath) {
   fs.writeFileSync(mainAppPath, content);
 }
 
-/* ---------------- plugin ---------------- */
+/* ============================================================
+ * patch settings.gradle  —— ★ 关键中的关键 ★
+ * （Version Catalog 模式下，AAR 仓库只能在这里生效）
+ * ============================================================ */
 
-function withXunfeiMsc(config) {
-  /**
-   * ✅ 1️⃣ 注入 flatDir 到 android/build.gradle（project-level）
-   * 这是解决 AAR 找不到的关键
-   */
-  config = withProjectBuildGradle(config, (c) => {
-    let gradle = c.modResults.contents;
-    const marker = "// XUNFEI_FLATDIR";
+function patchSettingsGradle(settingsPath) {
+  let content = fs.readFileSync(settingsPath, "utf8");
 
-    if (!gradle.includes(marker)) {
-      const repoBlock = /allprojects\s*\{\s*repositories\s*\{/m;
+  // 幂等：已经处理过就不再处理
+  if (content.includes("XUNFEI_FLATDIR")) return;
 
-      if (repoBlock.test(gradle)) {
-        gradle = gradle.replace(
-          repoBlock,
-          (m) => `${m}\n        flatDir { dirs("app/libs") }\n        ${marker}`,
-        );
-      } else {
-        // 兜底（极少见）
-        gradle += `
+  const flatDirBlock = `
+    // XUNFEI_FLATDIR
+    flatDir { dirs("app/libs") }
+`;
 
-allprojects {
+  // case 1：已经存在 dependencyResolutionManagement
+  const drmRegex = /dependencyResolutionManagement\s*\{[\s\S]*?repositories\s*\{([\s\S]*?)\n\s*\}/m;
+
+  if (drmRegex.test(content)) {
+    content = content.replace(drmRegex, (m) =>
+      m.replace(/repositories\s*\{\n/, (x) => x + flatDirBlock),
+    );
+    fs.writeFileSync(settingsPath, content);
+    return;
+  }
+
+  // case 2：不存在 DRM（你的项目就是这种）→ 追加一个
+  content += `
+
+dependencyResolutionManagement {
   repositories {
-    flatDir { dirs("app/libs") } ${marker}
+${flatDirBlock}
     google()
     mavenCentral()
   }
 }
 `;
-      }
-    }
 
-    c.modResults.contents = gradle;
-    return c;
-  });
+  fs.writeFileSync(settingsPath, content);
+}
 
+/* ============================================================
+ * plugin 主体
+ * ============================================================ */
+
+function withXunfeiMsc(config) {
   /**
-   * ✅ 2️⃣ 在 android/app/build.gradle 注入 AAR dependency
+   * 1️⃣ 在 app/build.gradle 注入 AAR 依赖声明
+   *   implementation(name: 'Codec', ext: 'aar')
    */
   config = withAppBuildGradle(config, (c) => {
     let gradle = c.modResults.contents;
@@ -113,14 +126,14 @@ allprojects {
   });
 
   /**
-   * ✅ 3️⃣ copy AAR / Kotlin / proguard + patch MainApplication
+   * 2️⃣ Dangerous mod：文件系统级操作
    */
   config = withDangerousMod(config, [
     "android",
     async (c) => {
       const projectRoot = c.modRequest.projectRoot;
 
-      /* ---- copy AAR ---- */
+      /* ---- copy AAR 到 android/app/libs ---- */
       const libsDst = path.join(projectRoot, ...ANDROID_LIBS_REL);
       ensureDir(libsDst);
 
@@ -136,6 +149,7 @@ allprojects {
       /* ---- merge proguard ---- */
       const proguardSrc = path.join(projectRoot, SDK_DIR, "proguard-rules.pro");
       const proguardDst = path.join(projectRoot, ...APP_PROGUARD);
+
       const marker = "### XFYUN_SPARKCHAIN_RULES ###";
       const sdkRules = fs.readFileSync(proguardSrc, "utf8");
 
@@ -173,6 +187,13 @@ allprojects {
       }
 
       patchMainApplication(mainAppKt);
+
+      /* ---- ★ patch settings.gradle（AAR 能否被找到的生死线） ---- */
+      const settingsGradle = path.join(projectRoot, "android", "settings.gradle");
+      if (fs.existsSync(settingsGradle)) {
+        patchSettingsGradle(settingsGradle);
+      }
+
       return c;
     },
   ]);
