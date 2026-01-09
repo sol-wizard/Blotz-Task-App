@@ -134,7 +134,7 @@ export default function ProtectedIndex() {
         renderIcon={({ route, focused }) => getTabIcon(route.key, focused)}
       />
 
-      {!isUserOnboardedAi ? (
+      {!isUserOnboardedAi && (
         <View
           style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 10 }}
           pointerEvents="box-none"
@@ -170,7 +170,7 @@ export default function ProtectedIndex() {
             />
           </Svg>
         </View>
-      ) : null}
+      )}
 
       {!isUserOnboardedAi && (
         <OnboardingHintCard
@@ -189,6 +189,7 @@ export default function ProtectedIndex() {
       <View
         className="absolute left-4 right-4 items-center"
         style={{ bottom: insets.bottom + 6, zIndex: 20 }}
+        pointerEvents="box-none"
       >
         <Pressable onPress={() => router.push("/ai-task-sheet")}>
           <GradientCircle size={58}>
