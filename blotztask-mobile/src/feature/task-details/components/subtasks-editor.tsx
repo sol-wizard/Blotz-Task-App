@@ -90,31 +90,29 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     <View className="flex-1">
       {/* Top Action Bar */}
       <View className="flex-row justify-between items-center mb-4">
-        <Text className="font-balooBold text-xl text-[#3E4A5A]">
-          Subtasks
-        </Text>
+        <Text className="font-balooBold text-xl text-[#3E4A5A]">Subtasks</Text>
         <View className="flex-row items-center mr-1">
-        {isEditMode ? (
-          <TouchableOpacity onPress={onBack} className="p-2">
-            <MaterialIcons name="arrow-back" size={28} />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={handleRefresh} className="p-2">
-            <MaterialIcons name="sync" size={24} />
-          </TouchableOpacity>
-        )}
-        {isEditMode ? (
-          <TouchableOpacity
-            onPress={handleEdit}
-            className="px-6 py-2 rounded-lg items-center justify-center"
-          >
-            <Text className="font-balooSemiBold text-base text-[#3d8de0]">Complete</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={handleEdit}>
-            <MaterialIcons name="reorder" size={24} />
-          </TouchableOpacity>
-        )}
+          {isEditMode ? (
+            <TouchableOpacity onPress={onBack} className="p-2">
+              <MaterialIcons name="arrow-back" size={28} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={handleRefresh} className="p-2">
+              <MaterialIcons name="sync" size={24} />
+            </TouchableOpacity>
+          )}
+          {isEditMode ? (
+            <TouchableOpacity
+              onPress={handleEdit}
+              className="px-6 py-2 rounded-lg items-center justify-center"
+            >
+              <Text className="font-balooSemiBold text-base text-info">Complete</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={handleEdit}>
+              <MaterialIcons name="reorder" size={24} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 

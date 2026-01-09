@@ -12,6 +12,8 @@ import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { Text } from "react-native";
+import { useAiOnboardingStatus } from "../hooks/useAiOnboardingStatus";
+import { router } from "expo-router";
 
 export function AiTasksPreview({
   aiTasks,
@@ -26,6 +28,7 @@ export function AiTasksPreview({
 }) {
   const { addTask, isAdding } = useTaskMutations();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
+  const { setUserOnboardedAi } = useAiOnboardingStatus();
 
   const posthog = usePostHog();
 
@@ -74,8 +77,10 @@ export function AiTasksPreview({
       });
 
       setModalType("add-task-success");
+      setUserOnboardedAi.mutate(true);
 
       setLocalTasks([]);
+      router.back();
     } catch (error) {
       console.log("Add tasks failed", error);
     }
@@ -131,7 +136,7 @@ export function AiTasksPreview({
           {isAdding ? (
             <ActivityIndicator size="small" />
           ) : (
-            <Text className="font-baloo text-sm">Add to tasks</Text>
+            <Text className="font-baloo">Add to tasks</Text>
           )}
         </Pressable>
       </View>

@@ -40,6 +40,7 @@ export const WriteInput = ({
               }
             }}
             enablesReturnKeyAutomatically
+            autoFocus
             placeholder="What's in your mind?"
             placeholderTextColor={theme.colors.secondary}
             multiline
