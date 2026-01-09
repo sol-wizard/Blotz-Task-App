@@ -12,7 +12,7 @@ import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { CustomSpinner } from "@/shared/components/ui/custom-spinner";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
-import { addXfIatListener, parseXfIatJson, XfIatApi } from "../services/xfIat";
+import { addXfIatListener, XfIatApi } from "../services/xfIat";
 
 export const WriteInput = ({
   text,
@@ -43,20 +43,13 @@ export const WriteInput = ({
   useEffect(() => {
     // 监听原生事件：打印 + 拼接识别文本
     const sub = addXfIatListener((e) => {
-      // 统一打印所有事件，方便你排查
       console.log("[XFYUN EVENT]", e);
 
       if (e.type === "result") {
-        const text = parseXfIatJson(e.json);
+        const text = e.text;
         if (text) {
-          // 简单累计（注意：不同 SDK 可能会重复回传，需要你后续优化增量逻辑）
           bufferRef.current += text;
           console.log("[XFYUN TEXT]", bufferRef.current);
-        }
-
-        // 最后一包（如果 SDK 有给 isLast）
-        if ((e as any).isLast) {
-          console.log("[XFYUN FINAL]", bufferRef.current);
         }
       }
 
@@ -86,9 +79,18 @@ export const WriteInput = ({
     }
 
     const appId = process.env.EXPO_PUBLIC_XFYUN_APPID;
-    if (!appId) throw new Error("Missing EXPO_PUBLIC_XFYUN_APPID");
+    const apiKey = process.env.EXPO_PUBLIC_XFYUN_API_KEY;
+    const apiSecret = process.env.EXPO_PUBLIC_XFYUN_API_SECRET;
 
-    await XfIatApi.init(appId);
+    if (!appId || !apiKey || !apiSecret) {
+      throw new Error("Missing XFYUN credentials");
+    }
+
+    await XfIatApi.initSdk(appId, apiKey, apiSecret);
+
+    // 可选：再 init ASR（幂等）
+    await XfIatApi.init();
+
     initedRef.current = true;
   };
 
@@ -96,7 +98,7 @@ export const WriteInput = ({
     try {
       if (isListening) {
         console.log("[XFYUN] stop");
-        await XfIatApi.stop();
+        await XfIatApi.stop(false);
         setIsListening(false);
         return;
       }
