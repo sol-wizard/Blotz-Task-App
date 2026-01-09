@@ -3,6 +3,7 @@ using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Labels.Enums;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
+using BlotzTask.Modules.Users.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Infrastructure.Data;
@@ -19,6 +20,7 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<Subtask> Subtasks => Set<Subtask>();
     public DbSet<AppUser> AppUsers { get; set; }
     public DbSet<UserPreference> UserPreferences { get; set; }
+    public DbSet<PomodoroSetting> PomodoroSetting { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -90,7 +92,8 @@ public class BlotzTaskDbContext : DbContext
                 UpcomingNotification = true,
                 OverdueNotification = true,
                 DailyPlanningNotification = false,
-                EveningWrapUpNotification = false
+                EveningWrapUpNotification = false,
+                PreferredLanguage = Language.Zh
             });
     }
 }

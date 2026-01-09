@@ -22,10 +22,10 @@ export async function fetchTasksForDate(
 }
 
 export async function fetchWeeklyTaskAvailability(date: Date): Promise<DailyTaskIndicatorDTO[]> {
-  const mondayUtc = startOfDay(date).toISOString();
+  const monday = convertToDateTimeOffset(startOfDay(date));
 
-  // const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/weekly-task-availability?mondayUtc=${mondayUtc}`;
-  const url = `/Task/weekly-task-availability?mondayUtc=${encodeURIComponent(mondayUtc)}`;
+  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/weekly-task-availability?monday=${encodeURIComponent(monday)}`;
+
   try {
     return await apiClient.get(url);
   } catch {

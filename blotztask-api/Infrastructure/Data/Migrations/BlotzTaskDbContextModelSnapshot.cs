@@ -305,6 +305,29 @@ namespace BlotzTask.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.PomodoroSetting", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsCountdown")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Sound")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Timing")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(25);
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("PomodoroSettings", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserPreference", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -331,6 +354,12 @@ namespace BlotzTask.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<string>("PreferredLanguage")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("En");
+
                     b.Property<bool>("UpcomingNotification")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -348,6 +377,7 @@ namespace BlotzTask.Migrations
                             DailyPlanningNotification = false,
                             EveningWrapUpNotification = false,
                             OverdueNotification = true,
+                            PreferredLanguage = "Zh",
                             UpcomingNotification = true
                         });
                 });
@@ -406,6 +436,17 @@ namespace BlotzTask.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.PomodoroSetting", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
+                        .WithOne("PomodoroSetting")
+                        .HasForeignKey("BlotzTask.Modules.Users.Domain.PomodoroSetting", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
                     b.Navigation("TaskItems");
@@ -414,6 +455,12 @@ namespace BlotzTask.Migrations
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
                 {
                     b.Navigation("Subtasks");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.AppUser", b =>
+                {
+                    b.Navigation("PomodoroSetting")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

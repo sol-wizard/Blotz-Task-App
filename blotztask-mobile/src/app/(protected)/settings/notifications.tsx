@@ -6,11 +6,12 @@ import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPrefere
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
 import { UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
+import { useTranslation } from "react-i18next";
 
 export default function NotificationScreen() {
   const { isUserPreferencesLoading, userPreferences } = useUserPreferencesQuery();
-
   const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
+  const { t } = useTranslation("settings");
 
   const handleUpdateUserPreferences = async () => {
     if (!userPreferences) return;
@@ -23,6 +24,7 @@ export default function NotificationScreen() {
       overdueNotification: userPreferences.overdueNotification,
       dailyPlanningNotification: userPreferences.dailyPlanningNotification,
       eveningWrapUpNotification: userPreferences.eveningWrapUpNotification,
+      preferredLanguage: userPreferences.preferredLanguage,
     };
 
     updateUserPreferences(newUserPreferences);
@@ -37,16 +39,22 @@ export default function NotificationScreen() {
       <View className="flex-row px-6 pt-6">
         <ReturnButton />
         <View className="flex-1 items-center">
-          <Text className="text-3xl font-balooExtraBold text-secondary">Notifications</Text>
+          <Text className="text-3xl font-balooExtraBold text-secondary">
+            {t("notifications.title")}
+          </Text>
         </View>
       </View>
 
       <View className="mx-6 mt-8 rounded-2xl bg-white px-6 pt-4">
-        <Text className="text-xl font-balooExtraBold text-secondary">Task notifications</Text>
+        <Text className="text-xl font-balooExtraBold text-secondary">
+          {t("notifications.taskNotifications")}
+        </Text>
 
         <View className="mt-1">
           <View className="flex-row items-center justify-between py-3">
-            <Text className="text-base font-baloo text-secondary">Upcoming due tasks</Text>
+            <Text className="text-base font-baloo text-secondary">
+              {t("notifications.upcomingDueTasks")}
+            </Text>
             <ToggleSwitch
               value={userPreferences?.upcomingNotification ?? true}
               disabled={isUpdatingUserPreferences}

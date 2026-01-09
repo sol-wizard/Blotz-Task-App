@@ -10,4 +10,5 @@ public class AppUser
     public DateTime SignUpAt { get; set; }
     public DateTime CreationAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public PomodoroSetting PomodoroSetting { get; set; } = null!;
 }
