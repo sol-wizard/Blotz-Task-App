@@ -90,6 +90,7 @@ export const AiInput = ({
             value={text}
             onChangeText={(v: string) => setText(v)}
             enablesReturnKeyAutomatically
+            autoFocus
             placeholder="Hold to speak or tap to write..."
             placeholderTextColor={theme.colors.secondary}
             multiline
