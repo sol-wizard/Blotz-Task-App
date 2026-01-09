@@ -109,7 +109,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
   return (
     <View className="mx-4 my-2 overflow-hidden">
       <GestureDetector gesture={pan}>
-        <Animated.View style={cardStyle} className="flex-row items-stretch">
+        <Animated.View style={cardStyle} className="flex-row items-start">
           {/* 1. Task Card */}
           <View style={{ width: screenWidth - 32 }}>
             <Pressable
@@ -228,11 +228,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           <View className="w-[8px]" />
 
           {/* 3 Delete Button */}
-          <View
-            className="w-[56px]"
-            // 使用 actionsEnabled 控制点击事件，解决 lint 报错并增加安全性
-            pointerEvents={actionsEnabled ? "auto" : "none"}
-          >
+          <View className="w-[56px]" pointerEvents={actionsEnabled ? "auto" : "none"}>
             <Pressable
               onPress={async () => {
                 if (isLoading) return;
@@ -246,7 +242,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
               }}
               disabled={isLoading}
               android_ripple={{ color: "#FEE2E2", borderless: false }}
-              className={`flex-1 rounded-[10px] bg-[#F567671A] items-center justify-center ${
+              className={`h-[59px] rounded-[10px] bg-[#F567671A] items-center justify-center ${
                 isDeleting ? "opacity-50" : ""
               }`}
             >
