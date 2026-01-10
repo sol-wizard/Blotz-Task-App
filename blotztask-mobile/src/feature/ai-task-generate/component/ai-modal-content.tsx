@@ -5,7 +5,7 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { TaskAddedSuccess } from "./task-added-success";
-import { WriteInput } from "./write-input";
+import { AndroidInput } from "./android-input";
 import { AiInput } from "./ai-input";
 import { Platform } from "react-native";
 
@@ -55,7 +55,7 @@ export const AiModalContent = ({
           aiGeneratedMessage={aiGeneratedMessage}
         />
       ) : (
-        <WriteInput
+        <AndroidInput
           text={text}
           setText={setText}
           sendMessage={sendMessage}
