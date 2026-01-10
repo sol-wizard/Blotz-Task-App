@@ -3,7 +3,7 @@ import { fetchAzureSpeechToken } from "../services/azure-speech-token-service";
 import { azureSpeechKeys } from "@/shared/constants/query-key-factory";
 
 export const useAzureSpeechToken = () => {
-  const { data: token, isLoading: isFetchingAzureToken } = useQuery({
+  const { data: tokenItem, isLoading: isFetchingAzureToken } = useQuery({
     queryKey: azureSpeechKeys.azureSpeech(),
     queryFn: () => fetchAzureSpeechToken(),
     staleTime: 9 * 60 * 1000,
@@ -12,7 +12,7 @@ export const useAzureSpeechToken = () => {
   });
 
   return {
-    token,
+    tokenItem,
     isFetchingAzureToken,
   };
 };

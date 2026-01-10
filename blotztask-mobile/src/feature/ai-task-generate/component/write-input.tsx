@@ -21,10 +21,8 @@ export const WriteInput = ({
   aiGeneratedMessage?: AiResultMessageDTO;
 }) => {
   const [isListening, setIsListening] = useState(false);
-  const { token, isFetchingAzureToken } = useAzureSpeechToken();
+  const { tokenItem, isFetchingAzureToken } = useAzureSpeechToken();
   const subscriptions = useRef<{ remove: () => void }[]>([]);
-  const AZURE_SPEECH_TOKEN =
-    "eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleTEiLCJ0eXAiOiJKV1QifQ.eyJyZWdpb24iOiJhdXN0cmFsaWFlYXN0Iiwic3Vic2NyaXB0aW9uLWlkIjoiZThiNTZiNzgzZWRmNGMxY2IzN2UwYmNmMzhkMmU2ZjgiLCJwcm9kdWN0LWlkIjoiU3BlZWNoU2VydmljZXMuRjAiLCJjb2duaXRpdmUtc2VydmljZXMtZW5kcG9pbnQiOiJodHRwczovL2FwaS5jb2duaXRpdmUubWljcm9zb2Z0LmNvbS9pbnRlcm5hbC92MS4wLyIsImF6dXJlLXJlc291cmNlLWlkIjoiL3N1YnNjcmlwdGlvbnMvMDljMzExNmMtNTJkYy00YzFhLThjODQtY2JiZjNiMjNhMjJhL3Jlc291cmNlR3JvdXBzL2Nsb3VkLWxlYXJuaW5nL3Byb3ZpZGVycy9NaWNyb3NvZnQuQ29nbml0aXZlU2VydmljZXMvYWNjb3VudHMvYmxvdHotdGVzdC1zcGVlY2giLCJzY29wZSI6InNwZWVjaHNlcnZpY2VzIiwiYXVkIjoidXJuOm1zLnNwZWVjaHNlcnZpY2VzLmF1c3RyYWxpYWVhc3QiLCJleHAiOjE3NjgwMjQ0OTMsImlzcyI6InVybjptcy5jb2duaXRpdmVzZXJ2aWNlcyJ9.ejX-4Rux6s9pGLv3SSvtt7WsLPV8INpQcY_sjn5yHKmA6Gi1-Kucp5qxSi-3QhICxKjFMQQByz-ogE-KMB5qdA";
   const AZURE_SPEECH_REGION = "australiaeast";
 
   useEffect(() => {
@@ -47,9 +45,14 @@ export const WriteInput = ({
       return;
     }
 
+    if (isFetchingAzureToken || !tokenItem) {
+      console.log("Azure speech token not ready");
+      return;
+    }
+
     AzureSpeechAPI.startListen({
-      token: AZURE_SPEECH_TOKEN,
-      region: AZURE_SPEECH_REGION,
+      token: tokenItem.token,
+      region: tokenItem.region,
     });
     setIsListening(true);
   };
