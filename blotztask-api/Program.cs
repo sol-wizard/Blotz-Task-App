@@ -26,7 +26,7 @@ builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddLabelModule();
 builder.Services.AddTaskBreakdownModule();
 builder.Services.AddTimeEstimateModule();
-builder.Services.AddSpeechToTextModule();
+builder.Services.AddSpeechToTextModule(builder.Configuration);
 
 
 builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
