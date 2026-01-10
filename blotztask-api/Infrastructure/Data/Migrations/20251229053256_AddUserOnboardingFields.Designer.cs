@@ -4,16 +4,19 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace BlotzTask.Migrations
+namespace BlotzTask.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251229053256_AddUserOnboardingFields")]
+    partial class AddUserOnboardingFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -275,14 +278,15 @@ namespace BlotzTask.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("OnboardingCompletedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<bool>("OnboardingCompleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
-                    b.Property<int>("OnboardingStatus")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OnboardingStep")
-                        .HasColumnType("int");
+                    b.Property<string>("OnboardingCurrentStepKey")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("tap_to_begin");
 
                     b.Property<string>("PictureUrl")
                         .HasColumnType("nvarchar(max)");
@@ -308,35 +312,12 @@ namespace BlotzTask.Migrations
                             CreationAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
                             DisplayName = "blotztest1@gmail.com",
                             Email = "blotztest1@gmail.com",
-                            OnboardingStatus = 0,
-                            OnboardingStep = 0,
+                            OnboardingCompleted = false,
+                            OnboardingCurrentStepKey = "tap_to_begin",
                             PictureUrl = "https://s.gravatar.com/avatar/d7eee1179900d1154cf2b3a64f7f91dd?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbl.png",
                             SignUpAt = new DateTime(2025, 9, 9, 14, 33, 27, 955, DateTimeKind.Utc),
                             UpdatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc)
                         });
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.PomodoroSetting", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsCountdown")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Sound")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Timing")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(25);
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("PomodoroSettings", (string)null);
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserPreference", b =>
@@ -365,12 +346,6 @@ namespace BlotzTask.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<string>("PreferredLanguage")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("En");
-
                     b.Property<bool>("UpcomingNotification")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -388,7 +363,6 @@ namespace BlotzTask.Migrations
                             DailyPlanningNotification = false,
                             EveningWrapUpNotification = false,
                             OverdueNotification = true,
-                            PreferredLanguage = "Zh",
                             UpcomingNotification = true
                         });
                 });
@@ -447,17 +421,6 @@ namespace BlotzTask.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.PomodoroSetting", b =>
-                {
-                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
-                        .WithOne("PomodoroSetting")
-                        .HasForeignKey("BlotzTask.Modules.Users.Domain.PomodoroSetting", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
                     b.Navigation("TaskItems");
@@ -466,12 +429,6 @@ namespace BlotzTask.Migrations
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
                 {
                     b.Navigation("Subtasks");
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.AppUser", b =>
-                {
-                    b.Navigation("PomodoroSetting")
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
