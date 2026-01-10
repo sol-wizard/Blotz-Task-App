@@ -25,26 +25,6 @@ import * as Sentry from "@sentry/react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/ui/toast-config";
-import * as Crypto from "expo-crypto";
-
-// 在任何 azure speech / uuid import 之前执行
-if (typeof globalThis.crypto === "undefined") {
-  // @ts-expect-error - we are polyfilling WebCrypto partially
-  globalThis.crypto = {};
-}
-
-if (typeof globalThis.crypto.getRandomValues !== "function") {
-  globalThis.crypto.getRandomValues = <T extends ArrayBufferView>(array: T): T => {
-    // expo-crypto returns Uint8Array
-    const bytes = Crypto.getRandomBytes(array.byteLength);
-
-    // 把随机 bytes 写进传入的 array 的底层 buffer
-    new Uint8Array(array.buffer, array.byteOffset, array.byteLength).set(bytes);
-
-    // 必须原样返回同一个 array（满足 WebCrypto contract）
-    return array;
-  };
-}
 
 export default function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
