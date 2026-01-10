@@ -32,7 +32,7 @@ export const VoiceButton = ({
             autoPlay={false}
             style={{ width: 40, height: 40 }}
           />
-          <Text className="text-baloo text-white text-sm">Speak</Text>
+          <Text className="font-baloo text-white">Speak</Text>
         </View>
       </GradientCircle>
     </Pressable>

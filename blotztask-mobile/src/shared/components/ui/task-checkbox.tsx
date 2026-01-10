@@ -15,7 +15,7 @@ export const TaskCheckbox = ({
   onPress,
   disabled = false,
   haptic = false,
-  size=32,
+  size = 32,
 }: TaskCheckboxProps) => {
   const handlePress = () => {
     if (disabled) return;

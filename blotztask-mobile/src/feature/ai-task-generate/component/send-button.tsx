@@ -62,7 +62,7 @@ export const SendButton = ({
               )
             )}
 
-            <Text className="text-baloo text-white text-sm">Send</Text>
+            <Text className="font-baloo text-white text-lg">Send</Text>
           </View>
         </GradientCircle>
       </Pressable>
