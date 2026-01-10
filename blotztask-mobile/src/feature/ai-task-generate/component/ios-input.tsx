@@ -12,7 +12,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
 import { AiLanguagePicker } from "./ai-language-picker";
 import { Platform } from "react-native";
-export const AiInput = ({
+
+export const IOSInput = ({
   text,
   setText,
   sendMessage,

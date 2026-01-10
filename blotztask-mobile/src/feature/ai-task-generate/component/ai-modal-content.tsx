@@ -6,7 +6,7 @@ import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-d
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { TaskAddedSuccess } from "./task-added-success";
 import { AndroidInput } from "./android-input";
-import { AiInput } from "./ai-input";
+import { IOSInput } from "./ios-input";
 import { Platform } from "react-native";
 
 export const AiModalContent = ({
@@ -47,7 +47,7 @@ export const AiModalContent = ({
     case "input":
     default:
       return Platform.OS !== "android" ? (
-        <AiInput
+        <IOSInput
           text={text}
           setText={setText}
           sendMessage={sendMessage}
