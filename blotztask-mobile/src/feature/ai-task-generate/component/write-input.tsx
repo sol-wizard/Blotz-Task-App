@@ -23,7 +23,6 @@ export const WriteInput = ({
   const [isListening, setIsListening] = useState(false);
   const { tokenItem, isFetchingAzureToken } = useAzureSpeechToken();
   const subscriptions = useRef<{ remove: () => void }[]>([]);
-  const AZURE_SPEECH_REGION = "australiaeast";
 
   useEffect(() => {
     subscriptions.current = [
