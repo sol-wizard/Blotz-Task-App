@@ -44,7 +44,6 @@ class AzureSpeechModule(private val reactContext: ReactApplicationContext)
       if (r != null) {
         emitDebug("stopInternal begin. reason=$reason")
         try {
-          // 等待停止完成：避免并发 session / 4429
           r.stopContinuousRecognitionAsync().get()
           emitDebug("stopContinuousRecognitionAsync finished. reason=$reason")
         } catch (e: Exception) {
