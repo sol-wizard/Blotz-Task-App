@@ -7,7 +7,7 @@ export async function fetchAzureSpeechToken(): Promise<AzureSpeechTokenDTO> {
   try {
     const res = await apiClient.get<AzureSpeechTokenDTO>(url);
     return res;
-  } catch (e) {
+  } catch {
     throw new Error("Failed to fetch Azure Speech token.");
   }
 }
