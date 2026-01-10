@@ -1,13 +1,12 @@
-import {
-  withAppBuildGradle,
-  withProjectBuildGradle,
-  withDangerousMod,
-} from "@expo/config-plugins";
+import configPlugins from "@expo/config-plugins";
 import fs from "fs";
 import path from "path";
 
+const { withAppBuildGradle, withProjectBuildGradle, withDangerousMod } =
+  configPlugins?.default ?? configPlugins;
+
 const APP_PACKAGE = "com.blotz.blotztask";
-const APP_PACKAGE_PATH = APP_PACKAGE.split("."); // ["com","blotz","blotztask"]
+const APP_PACKAGE_PATH = APP_PACKAGE.split(".");
 
 const SPEECH_DEP = `implementation "com.microsoft.cognitiveservices.speech:client-sdk:1.37.0"`;
 
