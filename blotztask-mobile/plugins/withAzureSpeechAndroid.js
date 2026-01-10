@@ -1,13 +1,10 @@
-const {
-  AndroidConfig,
-  withAndroidManifest,
+import {
   withAppBuildGradle,
   withProjectBuildGradle,
   withDangerousMod,
-} = require("@expo/config-plugins");
-
-const fs = require("fs");
-const path = require("path");
+} from "@expo/config-plugins";
+import fs from "fs";
+import path from "path";
 
 const APP_PACKAGE = "com.blotz.blotztask";
 const APP_PACKAGE_PATH = APP_PACKAGE.split("."); // ["com","blotz","blotztask"]
@@ -67,7 +64,7 @@ function ensurePackagesAddLine(mainAppText, addLine) {
 }
 
 // ---------- plugin ----------
-module.exports = function withAzureSpeechAndroid(config) {
+export default function withAzureSpeechAndroid(config) {
   // 2) Ensure mavenCentral in root project build.gradle
   config = withProjectBuildGradle(config, (cfg) => {
     let content = cfg.modResults.contents;
@@ -149,4 +146,4 @@ module.exports = function withAzureSpeechAndroid(config) {
   ]);
 
   return config;
-};
+}
