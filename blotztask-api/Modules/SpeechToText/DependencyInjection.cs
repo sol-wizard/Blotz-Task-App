@@ -4,6 +4,7 @@ namespace BlotzTask.Modules.SpeechToText;
 
 public static class DependencyInjection
 {
+    // Required to register Speech-to-Text services for token management.
     public static IServiceCollection AddSpeechToTextModule(
         this IServiceCollection services,
         IConfiguration configuration)
