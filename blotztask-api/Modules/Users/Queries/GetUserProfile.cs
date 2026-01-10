@@ -8,7 +8,8 @@ public class UserProfileDTO
 {
     public string? PictureUrl { get; set; }
     public string? DisplayName { get; set; }
-    public required string Email { get; set; } 
+    public required string Email { get; set; }
+    public bool IsOnBoarded { get; set; }
 
 }
 
@@ -20,10 +21,10 @@ public class GetUserProfileQuery
 
 public class GetUserProfileQueryHandler(BlotzTaskDbContext db, ILogger<GetUserProfileQueryHandler> logger)
 {
-    public async Task<UserProfileDTO> Handle( GetUserProfileQuery query, CancellationToken ct = default)
+    public async Task<UserProfileDTO> Handle(GetUserProfileQuery query, CancellationToken ct = default)
     {
         logger.LogInformation("Get profile image for user {UserId}.", query.UserId);
-        
+
         var user = await db.AppUsers.FindAsync(query.UserId, ct);
 
         if (user == null)
@@ -36,7 +37,8 @@ public class GetUserProfileQueryHandler(BlotzTaskDbContext db, ILogger<GetUserPr
         {
             PictureUrl = user.PictureUrl,
             DisplayName = user.DisplayName,
-            Email = user.Email
+            Email = user.Email,
+            IsOnBoarded = user.IsOnboarded
         };
 
 
