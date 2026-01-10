@@ -1,5 +1,5 @@
 import { View, TextInput, Keyboard } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { ErrorMessageCard } from "./error-message-card";
@@ -9,6 +9,7 @@ import { useAzureSpeechToken } from "../hooks/useAzureSpeechToken";
 import { AiLanguagePicker } from "./ai-language-picker";
 import { SendButton } from "./send-button";
 import { VoiceButton } from "./voice-button";
+import { ca } from "zod/v4/locales";
 
 export const AndroidInput = ({
   text,
@@ -33,11 +34,34 @@ export const AndroidInput = ({
     return "zh-CN";
   });
 
+  const finalBufferRef = useRef<string>("");
+
+  const composeDisplay = (partial: string) => {
+    const final = finalBufferRef.current.trim();
+    const p = (partial ?? "").trim();
+
+    if (!final && !p) return "";
+    if (final && !p) return final;
+    if (!final && p) return p;
+    return `${final} ${p}`.replace(/\s+/g, " ").trim();
+  };
+
   useEffect(() => {
     const subPartial = AzureSpeechAPI.onPartial((value) => {
       const v = (value ?? "").trim();
       if (!v) return;
-      setText(v);
+
+      console.log("Azure partial:", v);
+      setText(composeDisplay(v));
+    });
+
+    const subFinal = AzureSpeechAPI.onFinal?.((value) => {
+      const v = (value ?? "").trim();
+      if (!v) return;
+
+      console.log("Azure final:", v);
+      finalBufferRef.current = composeDisplay(v);
+      setText(finalBufferRef.current);
     });
 
     const subCanceled = AzureSpeechAPI.onCanceled((err) => {
@@ -47,9 +71,10 @@ export const AndroidInput = ({
 
     return () => {
       subPartial.remove();
+      subFinal?.remove?.();
       subCanceled.remove();
     };
-  }, []);
+  }, [setText]);
 
   const handleSelectLanguage = async (lang: "en-US" | "zh-CN") => {
     setLanguage(lang);
@@ -65,24 +90,37 @@ export const AndroidInput = ({
       console.log("Azure speech token not ready");
       return;
     }
+
+    finalBufferRef.current = "";
     setText("");
 
-    AzureSpeechAPI.startListen({
+    await AzureSpeechAPI.startListen({
       token: tokenItem.token,
       region: tokenItem.region,
       language,
     });
+
+    console.log("Started listening with language:", language);
     setIsListening(true);
   };
 
-  const stopListening = () => {
-    AzureSpeechAPI.stopListen();
+  const stopListening = async () => {
+    try {
+      await AzureSpeechAPI.stopListen();
+    } catch (err) {
+      console.error("Error stopping Azure Speech listening:", err);
+    }
+
     setIsListening(false);
+
+    const final = finalBufferRef.current.trim();
+    if (final) setText(final);
   };
 
   const abortListening = () => {
     AzureSpeechAPI.stopListen();
     setIsListening(false);
+    finalBufferRef.current = "";
     setText("");
   };
 
@@ -92,11 +130,15 @@ export const AndroidInput = ({
     sendMessage(val);
     Keyboard.dismiss();
     setText("");
+    finalBufferRef.current = "";
   };
 
   const onPressSend = () => {
     if (isListening) stopListening();
-    sendMessage(text);
+    const toSend = text.trim();
+    if (!toSend) return;
+    sendMessage(toSend);
+    finalBufferRef.current = "";
   };
 
   const toggleListening = async () => {
