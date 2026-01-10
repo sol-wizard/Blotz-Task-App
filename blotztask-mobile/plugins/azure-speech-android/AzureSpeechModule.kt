@@ -30,11 +30,7 @@ class AzureSpeechModule(private val reactContext: ReactApplicationContext)
     emit("AzureSpeechDebug", map)
   }
 
-  /**
-   * ✅ IMPORTANT:
-   * - 必须 stop 完成再 close，否则 Azure 端仍可能认为会话存在
-   * - 用 .get() 等待 async 结束（先在工程里稳定下来，后续可改成后台线程）
-   */
+  
   private fun stopInternal(reason: String) {
     if (isStopping.getAndSet(true)) {
       emitDebug("stopInternal ignored (already stopping). reason=$reason")
@@ -68,6 +64,17 @@ class AzureSpeechModule(private val reactContext: ReactApplicationContext)
   }
 
   @ReactMethod
+  fun addListener(eventName: String) {
+    // Required for RN built-in EventEmitter
+  }
+
+  @ReactMethod
+  fun removeListeners(count: Int) {
+    // Required for RN built-in EventEmitter
+  }
+
+
+  @ReactMethod
   fun startListen(token: String, region: String, language: String, promise: Promise) {
     if (isStarting.getAndSet(true)) {
       promise.reject("AZURE_SPEECH_START_IN_PROGRESS", "startListen is already in progress")
@@ -75,7 +82,6 @@ class AzureSpeechModule(private val reactContext: ReactApplicationContext)
     }
 
     try {
-      // 先强制停掉旧的（并等待完全停止）
       stopInternal("startListen")
 
       emitDebug("startListen called. lang=$language region=$region tokenLen=${token.length}")
@@ -101,7 +107,6 @@ class AzureSpeechModule(private val reactContext: ReactApplicationContext)
         map.putString("sessionId", e.sessionId)
         emit("AzureSpeechSessionStopped", map)
 
-        // ✅ 通知前端：会话真的停了（否则你会以为还在 listening）
         val stopped = Arguments.createMap()
         stopped.putString("reason", "sessionStopped")
         stopped.putString("sessionId", e.sessionId)
@@ -124,7 +129,6 @@ class AzureSpeechModule(private val reactContext: ReactApplicationContext)
         val text = e.result.text ?: ""
         Log.d("AzureSpeech", "recognized reason=$reason text=$text")
 
-        // ✅ 只在真正识别到语音时发 final，避免 NoMatch 等噪音
         if (reason == ResultReason.RecognizedSpeech) {
           val map = Arguments.createMap()
           map.putString("text", text)
@@ -148,14 +152,12 @@ class AzureSpeechModule(private val reactContext: ReactApplicationContext)
         Log.e("AzureSpeech", "canceled reason=${e.reason} code=${e.errorCode} details=${e.errorDetails}")
         emit("AzureSpeechCanceled", map)
 
-        // ✅ canceled 也算“停止”，通知前端复位 UI
         val stopped = Arguments.createMap()
         stopped.putString("reason", "canceled")
         stopped.putString("sessionId", e.sessionId ?: "")
         emit("AzureSpeechStopped", stopped)
       }
 
-      // ✅ 等待 start 的 Future 完成更稳（否则 promise 先 resolve，实际还没起来）
       try {
         r.startContinuousRecognitionAsync().get()
         emitDebug("startContinuousRecognitionAsync finished")
@@ -176,7 +178,6 @@ class AzureSpeechModule(private val reactContext: ReactApplicationContext)
   fun stopListen(promise: Promise) {
     try {
       stopInternal("stopListen")
-      // 统一给前端一个 stopped 事件（可选）
       val map = Arguments.createMap()
       map.putString("reason", "stopListen")
       emit("AzureSpeechStopped", map)
