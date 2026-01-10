@@ -1,9 +1,11 @@
 using BlotzTask.Modules.SpeechToText.Dtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 [ApiController]
 [Route("api/speech")]
+[Authorize]
 public class SpeechController : ControllerBase
 {
     private readonly SpeechTokenSettings _settings;
@@ -25,7 +27,6 @@ public class SpeechController : ControllerBase
         {
             token,
             region = _settings.Region,
-            expiresInSeconds = 600
         });
     }
 }
