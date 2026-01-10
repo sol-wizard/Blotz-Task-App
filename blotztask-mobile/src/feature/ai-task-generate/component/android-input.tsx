@@ -9,7 +9,6 @@ import { useAzureSpeechToken } from "../hooks/useAzureSpeechToken";
 import { AiLanguagePicker } from "./ai-language-picker";
 import { SendButton } from "./send-button";
 import { VoiceButton } from "./voice-button";
-import { ca } from "zod/v4/locales";
 
 export const AndroidInput = ({
   text,
