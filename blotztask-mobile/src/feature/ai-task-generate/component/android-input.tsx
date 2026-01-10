@@ -96,7 +96,7 @@ export const AndroidInput = ({
 
   const onPressSend = () => {
     if (isListening) stopListening();
-    sendWriteInput(text);
+    sendMessage(text);
   };
 
   const toggleListening = async () => {
@@ -139,7 +139,7 @@ export const AndroidInput = ({
         <View className="flex-row items-center justify-between mb-6 w-96">
           <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
 
-          {text.trim() !== "" || isListening ? (
+          {text.trim() !== "" || isListening || isAiGenerating ? (
             <SendButton
               text={text}
               isRecognizing={isListening}
