@@ -1,17 +1,21 @@
+using BlotzTask.Modules.SpeechToText.Dtos;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 [ApiController]
 [Route("api/speech")]
 public class SpeechController : ControllerBase
 {
+    private readonly SpeechTokenSettings _settings;
     private readonly SpeechTokenService _speech;
 
-    public SpeechController(SpeechTokenService speech)
+    public SpeechController(SpeechTokenService speech, IOptions<SpeechTokenSettings> settings)
     {
         _speech = speech;
+        _settings = settings.Value;
     }
 
-    // 建议加 [Authorize]（看你项目是否需要登录后才能用 STT）
+
     [HttpGet("token")]
     public async Task<IActionResult> GetToken(CancellationToken ct)
     {
@@ -20,8 +24,7 @@ public class SpeechController : ControllerBase
         return Ok(new
         {
             token,
-            region = _speech.Region,
-            // 前端可用来判断什么时候刷新
+            region = _settings.Region,
             expiresInSeconds = 600
         });
     }
