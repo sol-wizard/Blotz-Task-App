@@ -61,7 +61,8 @@ public class UserController(
         {
             Id = userId,
             DisplayName = updateUserProfileDto.DisplayName,
-            PictureUrl = updateUserProfileDto.PictureUrl
+            PictureUrl = updateUserProfileDto.PictureUrl,
+            IsOnboarded = updateUserProfileDto.IsOnboarded
         };
         return await updateUserProfileCommandHandler.Handle(command, ct);
     }
