@@ -10,7 +10,13 @@ import { useAiOnboardingStatus } from "@/feature/ai-task-generate/hooks/useAiOnb
 export default function AiTaskSheetScreen() {
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [sheetLayoutY, setSheetLayoutY] = useState(0);
-  const { isUserOnboardedAi } = useAiOnboardingStatus();
+  const { isUserOnboardedAi, setUserOnboardedAi } = useAiOnboardingStatus();
+
+  const updateOnboarded = () => {
+    if (!isUserOnboardedAi && !setUserOnboardedAi.isPending) {
+      setUserOnboardedAi.mutate(true);
+    }
+  };
 
   return (
     <View className="flex-1 bg-transparent">
@@ -39,7 +45,16 @@ export default function AiTaskSheetScreen() {
               modalType === "add-task-success" ? "bg-background" : "bg-white"
             }`}
           >
-            <AiModalContent modalType={modalType} setModalType={setModalType} />
+            <AiModalContent
+              modalType={modalType}
+              setModalType={(next) => {
+                setModalType(next);
+                if (next === "add-task-success") {
+                  updateOnboarded();
+                }
+              }}
+            />
+            {/* <AiModalContent modalType={modalType} setModalType={setModalType} /> */}
           </View>
         </KeyboardAvoidingView>
       </View>
