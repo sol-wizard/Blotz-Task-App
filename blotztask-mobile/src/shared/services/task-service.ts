@@ -13,8 +13,7 @@ export async function fetchTasksForDate(
 ): Promise<TaskDetailDTO[]> {
   const startDate = convertToDateTimeOffset(startOfDay(date));
 
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/by-date?startDate=${encodeURIComponent(startDate)}&includeFloatingForToday=${includeFloatingForToday}`;
-
+  const url = `/Task/by-date?startDate=${encodeURIComponent(startDate)}&includeFloatingForToday=${includeFloatingForToday}`;
   try {
     return await apiClient.get(url);
   } catch {
@@ -25,7 +24,7 @@ export async function fetchTasksForDate(
 export async function fetchWeeklyTaskAvailability(date: Date): Promise<DailyTaskIndicatorDTO[]> {
   const monday = convertToDateTimeOffset(startOfDay(date));
 
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/weekly-task-availability?monday=${encodeURIComponent(monday)}`;
+  const url = `/Task/weekly-task-availability?monday=${encodeURIComponent(monday)}`;
 
   try {
     return await apiClient.get(url);
@@ -35,7 +34,7 @@ export async function fetchWeeklyTaskAvailability(date: Date): Promise<DailyTask
 }
 
 export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`;
+  const url = `/Task/${taskId}`;
   try {
     return await apiClient.get(url);
   } catch {
@@ -44,7 +43,7 @@ export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
 }
 
 export async function fetchFloatingTasks(): Promise<FloatingTaskDTO[]> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/floating`;
+  const url = `/Task/floating`;
   try {
     return await apiClient.get(url);
   } catch {
@@ -53,7 +52,7 @@ export async function fetchFloatingTasks(): Promise<FloatingTaskDTO[]> {
 }
 
 export async function fetchFloatingTasksByQuery(query: string): Promise<FloatingTaskDTO[]> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/search`;
+  const url = `/Task/search`;
   try {
     const data: FloatingTaskDTO[] = await apiClient.get(url, { params: { query } });
     return data;
@@ -63,7 +62,7 @@ export async function fetchFloatingTasksByQuery(query: string): Promise<Floating
 }
 
 export async function toggleTaskCompletion(taskId: number): Promise<void> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/task-completion-status/${taskId}`;
+  const url = `/Task/task-completion-status/${taskId}`;
 
   try {
     await apiClient.put(url);
@@ -74,8 +73,7 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
 
 export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<number> => {
   try {
-    const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task`;
-
+    const url = `/Task`;
     const newTaskId: number = await apiClient.post(url, addTaskForm);
     return newTaskId;
   } catch {
@@ -85,7 +83,7 @@ export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<number> 
 
 export async function updateTaskItem(taskId: number, updatedTask: EditTaskItemDTO): Promise<void> {
   try {
-    const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`;
+    const url = `/Task/${taskId}`;
     await apiClient.put(url, updatedTask);
   } catch {
     throw new Error("Failed to update task.");
@@ -93,7 +91,7 @@ export async function updateTaskItem(taskId: number, updatedTask: EditTaskItemDT
 }
 
 export async function deleteTask(taskId: number): Promise<void> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/${taskId}`;
+  const url = `/Task/${taskId}`;
   try {
     await apiClient.delete(url);
   } catch {
@@ -102,7 +100,7 @@ export async function deleteTask(taskId: number): Promise<void> {
 }
 
 export async function getAllTasks(): Promise<TaskDetailDTO[]> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Task/all`;
+  const url = `/Task/all`;
   try {
     const data: TaskDetailDTO[] = await apiClient.get(url);
     return data;
