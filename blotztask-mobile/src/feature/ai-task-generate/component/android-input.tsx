@@ -35,14 +35,14 @@ export const AndroidInput = ({
 
   const finalBufferRef = useRef<string>("");
 
-  const composeDisplay = (partial: string) => {
+  const mergeDisplayText = (partial: string) => {
     const final = finalBufferRef.current.trim();
-    const p = (partial ?? "").trim();
+    const partialText = (partial ?? "").trim();
 
-    if (!final && !p) return "";
-    if (final && !p) return final;
-    if (!final && p) return p;
-    return `${final} ${p}`.replace(/\s+/g, " ").trim();
+    if (!final && !partialText) return "";
+    if (final && !partialText) return final;
+    if (!final && partialText) return partialText;
+    return `${final} ${partialText}`.replace(/\s+/g, " ").trim();
   };
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export const AndroidInput = ({
       if (!v) return;
 
       console.log("Azure partial:", v);
-      setText(composeDisplay(v));
+      setText(mergeDisplayText(v));
     });
 
     const subFinal = AzureSpeechAPI.onFinal?.((value) => {
@@ -59,7 +59,7 @@ export const AndroidInput = ({
       if (!v) return;
 
       console.log("Azure final:", v);
-      finalBufferRef.current = composeDisplay(v);
+      finalBufferRef.current = mergeDisplayText(v);
       setText(finalBufferRef.current);
     });
 
@@ -73,7 +73,7 @@ export const AndroidInput = ({
       subFinal?.remove?.();
       subCanceled.remove();
     };
-  }, [setText]);
+  }, []);
 
   const handleSelectLanguage = async (lang: "en-US" | "zh-CN") => {
     setLanguage(lang);
@@ -134,9 +134,9 @@ export const AndroidInput = ({
 
   const onPressSend = () => {
     if (isListening) stopListening();
-    const toSend = text.trim();
-    if (!toSend) return;
-    sendMessage(toSend);
+    const finalUserText = text.trim();
+    if (!finalUserText) return;
+    sendMessage(finalUserText);
     finalBufferRef.current = "";
   };
 
