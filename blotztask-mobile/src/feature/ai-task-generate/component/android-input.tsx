@@ -35,8 +35,6 @@ export const AndroidInput = ({
     return "zh-CN";
   });
 
-  const subscriptions = useRef<{ remove: () => void }[]>([]);
-
   // ✅ 只用一个 text：用 baseIndex 记录“这次语音从 text 的哪里开始写”
   const baseIndexRef = useRef<number>(0);
   const lastFinalRef = useRef<string>("");
@@ -70,7 +68,7 @@ export const AndroidInput = ({
   };
 
   useEffect(() => {
-    subscriptions.current = [
+    const subs = [
       AzureSpeechAPI.onPartial((value) => {
         if (!isListeningRef.current) return;
 
@@ -108,8 +106,7 @@ export const AndroidInput = ({
     ];
 
     return () => {
-      subscriptions.current.forEach((sub) => sub.remove());
-      subscriptions.current = [];
+      subs.forEach((sub) => sub.remove());
     };
   }, []);
 
