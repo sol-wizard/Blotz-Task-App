@@ -55,14 +55,13 @@ export function filterSelectedTask({
   ];
 }
 
+// function isTodo(task: TaskDetailDTO, selectedDay: Date): boolean {
 function isTodo(task: TaskDetailDTO): boolean {
   if (task.isDone) return false;
-
   const nowTime = Date.now();
 
   if (task.endTime && new Date(task.endTime).getTime() <= nowTime) return false;
   if (task.startTime && new Date(task.startTime).getTime() <= nowTime) return false;
-
   return true;
 }
 

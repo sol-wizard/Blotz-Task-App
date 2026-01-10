@@ -10,11 +10,13 @@ export function useUserPreferencesMutation() {
     mutationFn: (preferences: UserPreferencesDTO) => updateUserPreferences(preferences),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userKeys.preferences() });
+      queryClient.invalidateQueries({ queryKey: ["tasks", "selectedDay"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks", "avability"] });
     },
   });
 
   return {
-    updateUserPreferencesAsync: mutation.mutateAsync,
+    updateUserPreferences: mutation.mutate,
     isUpdatingUserPreferences: mutation.isPending,
   };
 }
