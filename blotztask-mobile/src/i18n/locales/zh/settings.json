@@ -36,5 +36,9 @@
   },
   "updateName": {
     "title": "名字"
+  },
+  "profile": {
+    "title": "个人资料",
+    "editProfile": "编辑个人资料"
   }
 }

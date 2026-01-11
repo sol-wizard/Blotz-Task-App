@@ -36,5 +36,9 @@
   },
   "updateName": {
     "title": "Name"
+  },
+  "profile": {
+    "title": "Profile",
+    "editProfile": "Edit Profile"
   }
 }
