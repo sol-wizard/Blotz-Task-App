@@ -94,6 +94,7 @@ export const AiInput = ({
             onChangeText={(v: string) => setText(v)}
             enablesReturnKeyAutomatically
             placeholder={t("input.placeholder")}
+            autoFocus
             placeholderTextColor={theme.colors.secondary}
             multiline
             className="w-11/12 bg-white text-xl text-gray-800 font-baloo"

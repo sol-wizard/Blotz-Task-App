@@ -13,6 +13,8 @@ import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { Text } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useAiOnboardingStatus } from "../hooks/useAiOnboardingStatus";
+import { router } from "expo-router";
 
 export function AiTasksPreview({
   aiTasks,
@@ -28,6 +30,7 @@ export function AiTasksPreview({
   const { t } = useTranslation("aiTaskGenerate");
   const { addTask, isAdding } = useTaskMutations();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
+  const { setUserOnboardedAi } = useAiOnboardingStatus();
 
   const posthog = usePostHog();
 
@@ -76,8 +79,10 @@ export function AiTasksPreview({
       });
 
       setModalType("add-task-success");
+      setUserOnboardedAi.mutate(true);
 
       setLocalTasks([]);
+      router.back();
     } catch (error) {
       console.log("Add tasks failed", error);
     }

@@ -97,6 +97,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
       {/* Top Action Bar */}
       <View className="flex-row justify-between items-center mb-4">
         <Text className="font-balooBold text-xl text-[#3E4A5A]">{t("tasks:details.subtasks")}</Text>
+
         <View className="flex-row items-center mr-1">
           {isEditMode ? (
             <TouchableOpacity onPress={onBack} className="p-2">

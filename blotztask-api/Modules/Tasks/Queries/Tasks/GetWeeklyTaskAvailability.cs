@@ -8,14 +8,14 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
 public class GetWeeklyTaskAvailabilityRequest
 {
-    [BindRequired] public DateTimeOffset MondayUtc { get; set; }
+    [BindRequired] public DateTimeOffset Monday { get; set; }
 }
 
 public class GetWeeklyTaskAvailabilityQuery
 {
     [Required] public required Guid UserId { get; init; }
 
-    [BindRequired] public DateTimeOffset MondayUtc { get; set; }
+    [BindRequired] public DateTimeOffset Monday { get; set; }
 }
 
 public class GetWeeklyTaskAvailabilityQueryHandler(
@@ -26,15 +26,20 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         CancellationToken ct = default)
     {
         var stopwatch = Stopwatch.StartNew();
-        var startDateUtc = query.MondayUtc;
+        var weekStart = query.Monday;
 
-        var endDateUtcExclusive = query.MondayUtc.AddDays(7);
+        var weekEndExclusive = query.Monday.AddDays(7);
+
+        var userNow = DateTimeOffset.UtcNow.ToOffset(query.Monday.Offset);
+        var userTodayStart = new DateTimeOffset(userNow.Date, query.Monday.Offset);
+        var userTodayEnd = userTodayStart.AddDays(1);
+        var sevenDayWindowStart = userTodayEnd.AddDays(-7);
 
         logger.LogInformation(
-            "Fetching weekly task availability for user {UserId} from {startDateUtc} to {endDateUtcExclusive}",
+            "Fetching weekly task availability for user {UserId} from {weekStart} to {weekEndExclusive}",
             query.UserId,
-            startDateUtc,
-            endDateUtcExclusive);
+            weekStart,
+            weekEndExclusive);
 
         var queryStopwatch = Stopwatch.StartNew();
         var tasks = await db.TaskItems
@@ -43,17 +48,26 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                         (
                             // Tasks in date range
                             (t.StartTime != null && t.EndTime != null &&
-                             t.StartTime < endDateUtcExclusive && t.EndTime > startDateUtc)
+                             t.StartTime < weekEndExclusive && t.EndTime > weekStart)
                             ||
                             // Floating tasks
                             (t.StartTime == null && t.EndTime == null &&
-                             t.CreatedAt >= startDateUtc &&
-                             t.CreatedAt < endDateUtcExclusive)))
+                             t.CreatedAt >= weekStart &&
+                             t.CreatedAt < weekEndExclusive)
+                            ||
+                            // Overdue tasks within 7 days (matching GetTasksByDateQuery)
+                            (t.StartTime != null &&t.EndTime != null
+                             && !t.IsDone
+                             && t.EndTime < userNow
+                             && t.EndTime >= sevenDayWindowStart
+                            )
+                        ))
             .Select(t => new
             {
                 t.StartTime,
                 t.EndTime,
-                t.CreatedAt
+                t.CreatedAt,
+                t.IsDone
             })
             .ToListAsync(ct);
         logger.LogInformation(
@@ -64,18 +78,30 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
 
         var result = new List<DailyTaskIndicatorDto>();
 
-        for (var dayStart = startDateUtc; dayStart < endDateUtcExclusive; dayStart = dayStart.AddDays(1))
+        for (var dayStart = weekStart; dayStart < weekEndExclusive; dayStart = dayStart.AddDays(1))
         {
             var dayEnd = dayStart.AddDays(1);
+            var isFutureDay = dayStart >= userTodayEnd;
 
             var hasTask = tasks.Any(t =>
             {
-                if (t.StartTime.HasValue && t.EndTime.HasValue) return t.StartTime < dayEnd && t.EndTime >= dayStart;
+                if (t.StartTime.HasValue && t.EndTime.HasValue)
+                {
+                    // Tasks in date range
+                    if (t.StartTime < dayEnd && t.EndTime >= dayStart) return true;
+
+                    // Overdue tasks within 7 days
+                    if (!isFutureDay && !t.IsDone && t.EndTime < userNow && t.StartTime < dayEnd && t.EndTime >= sevenDayWindowStart && dayStart >= sevenDayWindowStart)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
 
                 var createdAtUtc = DateTime.SpecifyKind(t.CreatedAt, DateTimeKind.Utc);
-                var createdAtUtcOffset = new DateTimeOffset(createdAtUtc, TimeSpan.Zero);
+                var createdAtLocal = new DateTimeOffset(createdAtUtc, TimeSpan.Zero).ToOffset(dayStart.Offset);
 
-                return createdAtUtcOffset >= dayStart && createdAtUtcOffset < dayEnd;
+                return createdAtLocal >= dayStart && createdAtLocal < dayEnd;
             });
 
             result.Add(new DailyTaskIndicatorDto

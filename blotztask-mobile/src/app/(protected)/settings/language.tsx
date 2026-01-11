@@ -13,7 +13,7 @@ export default function LanguageScreen() {
   const router = useRouter();
   const { i18n, t } = useTranslation("settings");
   const { isUserPreferencesLoading, userPreferences } = useUserPreferencesQuery();
-  const { updateUserPreferencesAsync, isUpdatingUserPreferences } = useUserPreferencesMutation();
+  const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
 
   const handleLanguageChange = async (language: Language) => {
     if (!userPreferences) return;
@@ -33,7 +33,7 @@ export default function LanguageScreen() {
     };
 
     try {
-      await updateUserPreferencesAsync(newUserPreferences);
+      await updateUserPreferences(newUserPreferences);
       console.log(`Language updated to: ${language}`);
     } catch (error) {
       console.log("Failed to update language:", error);
@@ -68,6 +68,10 @@ export default function LanguageScreen() {
             <View className="flex-row items-center flex-1">
               <View className="flex-1">
                 <Text className="text-lg font-baloo text-secondary">{t("language.english")}</Text>
+
+                <Text className="text-sm font-baloo text-gray-500">
+                  {t("language.englishDescription")}
+                </Text>
               </View>
             </View>
             {currentLanguage === Language.En && (
@@ -84,6 +88,10 @@ export default function LanguageScreen() {
             <View className="flex-row items-center flex-1">
               <View className="flex-1">
                 <Text className="text-lg font-baloo text-secondary">{t("language.chinese")}</Text>
+
+                <Text className="text-sm font-baloo text-gray-500">
+                  {t("language.chineseDescription")}
+                </Text>
               </View>
             </View>
             {currentLanguage === Language.Zh && (
