@@ -94,6 +94,12 @@ export default function ProtectedIndex() {
   const { width, height } = useWindowDimensions();
 
   const { isUserOnboardedAi } = useAiOnboardingStatus();
+  const [aiLayout, setAiLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
 
   const aiButtonRadius = 29;
 
@@ -155,8 +161,8 @@ export default function ProtectedIndex() {
               <Mask id="ai-spotlight-mask" maskUnits="userSpaceOnUse">
                 <Rect width={width} height={height} fill="white" />
                 <Circle
-                  cx={width / 2}
-                  cy={height - (insets.bottom + 6) - aiButtonRadius}
+                  cx={aiLayout ? aiLayout.x + aiLayout.width / 2 : width / 2}
+                  cy={aiLayout ? aiLayout.y + aiLayout.height / 2 : height}
                   r={aiButtonRadius}
                   fill="black"
                 />
@@ -190,6 +196,7 @@ export default function ProtectedIndex() {
         className="absolute left-4 right-4 items-center"
         style={{ bottom: insets.bottom + 6, zIndex: 20 }}
         pointerEvents="box-none"
+        onLayout={(e) => setAiLayout(e.nativeEvent.layout)}
       >
         <Pressable onPress={() => router.push("/ai-task-sheet")}>
           <GradientCircle size={58}>
