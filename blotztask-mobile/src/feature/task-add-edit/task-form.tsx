@@ -73,7 +73,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   });
 
   const { handleSubmit, formState, control, setValue } = form;
-  const { isValid, isSubmitting } = formState;
+  const { isValid, isSubmitting, errors } = formState;
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -150,11 +150,16 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
               control={control}
               className="font-balooBold text-4xl leading-normal"
               inputProps={{
-                multiline: false, 
-                blurOnSubmit: true, 
+                multiline: false,
+                blurOnSubmit: true,
                 returnKeyType: "done",
               }}
             />
+            {errors.title && (
+              <Text className="font-balooBold text-red-300 mt-1 text-m">
+                {errors.title.message?.toString() || "Task title is required"}
+              </Text>
+            )}
           </View>
 
           <View className="py-3 bg-background rounded-2xl px-4">
@@ -179,7 +184,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           {/* Label Select */}
           <View className="mb-8">
             {isLoading ? (
-              <Text className="font-baloo text-lg text-primary mt-3">{t("common:loading.categories")}</Text>
+              <Text className="font-baloo text-lg text-primary mt-3">
+                {t("common:loading.categories")}
+              </Text>
             ) : (
               <LabelSelect control={control} labels={labels} />
             )}
@@ -190,10 +197,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         <View className="px-8 py-6">
           <Pressable
             onPress={handleSubmit(handleFormSubmit)}
-            disabled={!isValid || isSubmitting}
-            className={`w-full py-4 rounded-lg items-center justify-center ${
-              !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
-            }`}
+            disabled={isSubmitting}
+            className={`w-full py-4 rounded-lg items-center justify-center "bg-lime-300"
+              ${isSubmitting ? "bg-gray-300" : "bg-highlight active:bg-gray-100"}`}
           >
             <Text className="font-balooBold text-xl text-black">
               {mode === "create" ? t("form.createTask") : t("form.updateTask")}
