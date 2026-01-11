@@ -1,4 +1,6 @@
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
+import { zhCN, enUS } from "date-fns/locale";
+import i18n from "@/i18n";
 
 export function formatTaskTime(utcString: string): string {
   const date = parseISO(utcString);
@@ -7,13 +9,21 @@ export function formatTaskTime(utcString: string): string {
     throw new Error(`Invalid date string: ${utcString}`);
   }
 
+  const isChinese = i18n.language === "zh";
+  const locale = isChinese ? zhCN : enUS;
+  const timeFormat = "HH:mm";
+
   if (isToday(date)) {
-    return `Today ${format(date, "HH:mm")}`;
+    const todayText = i18n.t("calendar:header.today");
+    return `${todayText} ${format(date, timeFormat)}`;
   }
 
   if (isTomorrow(date)) {
-    return `Tomorrow ${format(date, "HH:mm")}`;
+    const tomorrowText = i18n.t("calendar:header.tomorrow");
+    return `${tomorrowText} ${format(date, timeFormat)}`;
   }
 
-  return format(date, "MMM d HH:mm");
+  // Format date based on locale
+  const dateFormat = isChinese ? "M月d日 HH:mm" : "MMM d HH:mm";
+  return format(date, dateFormat, { locale });
 }

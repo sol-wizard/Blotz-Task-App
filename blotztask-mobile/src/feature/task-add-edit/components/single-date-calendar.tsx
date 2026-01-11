@@ -2,6 +2,7 @@ import { theme } from "@/shared/constants/theme";
 import { parseISO } from "date-fns";
 import { useState } from "react";
 import { Calendar, DateData } from "react-native-calendars";
+import { renderCalendarHeader } from "@/feature/calendar/util/date-formatter";
 
 export const SingleDateCalendar = ({
   defaultStartDate,
@@ -40,6 +41,7 @@ export const SingleDateCalendar = ({
         dayTextColor: "#333",
         textDisabledColor: "#bbb",
       }}
+      renderHeader={renderCalendarHeader}
       enableSwipeMonths
     />
   );

@@ -1,9 +1,11 @@
 import { useController } from "react-hook-form";
 import { View, Text, Pressable } from "react-native";
 import { format } from "date-fns";
+import { zhCN, enUS } from "date-fns/locale";
 import { useState } from "react";
 import TimePicker from "./time-picker";
 import { SingleDateCalendar } from "./single-date-calendar";
+import { useTranslation } from "react-i18next";
 
 export const ReminderTab = ({ control }: { control: any }) => {
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
@@ -36,15 +38,21 @@ export const ReminderTab = ({ control }: { control: any }) => {
     name: "endTime",
   });
 
-  const dateDisplayText = startDate ? format(startDate, "MMM dd, yyyy") : "Select Date";
-  const timeDisplayText = startTime ? format(startTime, "hh:mm a") : "Select Time";
+  const { t, i18n } = useTranslation("tasks");
+  const isChinese = i18n.language === "zh";
+  const locale = isChinese ? zhCN : enUS;
+  const dateFormat = isChinese ? "yyyy年M月d日" : "MMM d, yyyy";
+  const dateDisplayText = startDate
+    ? format(startDate, dateFormat, { locale })
+    : t("form.selectDate");
+  const timeDisplayText = startTime ? format(startTime, "hh:mm a") : t("form.selectTime");
 
   return (
     <View className="mb-4">
       {/* Date  */}
       <View className="mb-4">
         <View className="flex-row justify-between">
-          <Text className="font-baloo text-secondary text-2xl mt-1">Date</Text>
+          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.date")}</Text>
           <Pressable
             onPress={() => setActiveSelector((prev) => (prev === "date" ? null : "date"))}
             className="bg-background px-4 py-2 rounded-xl"
@@ -67,7 +75,7 @@ export const ReminderTab = ({ control }: { control: any }) => {
       {/* Time  */}
       <View className="justify-center">
         <View className="flex-row justify-between">
-          <Text className="font-baloo text-secondary text-2xl mt-1">Time</Text>
+          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.time")}</Text>
 
           <Pressable
             onPress={() => setActiveSelector((prev) => (prev === "time" ? null : "time"))}

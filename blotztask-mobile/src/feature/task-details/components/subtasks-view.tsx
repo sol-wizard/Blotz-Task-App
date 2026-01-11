@@ -1,5 +1,6 @@
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
@@ -14,6 +15,7 @@ type SubtaskViewProps = {
 };
 
 const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
+  const { t } = useTranslation("tasks");
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
     useSubtaskMutations();
   const posthog = usePostHog();
@@ -50,7 +52,7 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="mt-4 text-gray-500 font-baloo">Loading subtasks...</Text>
+        <Text className="mt-4 text-gray-500 font-baloo">{t("details.loadingSubtasks")}</Text>
       </View>
     );
   }
@@ -75,7 +77,9 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
         ) : (
           <>
             <MaterialCommunityIcons name="format-list-checkbox" size={24} color="#3b82f6" />
-            <Text className="ml-2 text-blue-500 text-xl font-balooBold">Breakdown Task</Text>
+            <Text className="ml-2 text-blue-500 text-xl font-balooBold">
+              {t("details.breakdownTask")}
+            </Text>
           </>
         )}
       </Pressable>

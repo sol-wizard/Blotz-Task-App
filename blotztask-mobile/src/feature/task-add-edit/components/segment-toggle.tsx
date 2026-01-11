@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, Pressable } from "react-native";
+import { useTranslation } from "react-i18next";
 import { SegmentButtonValue } from "../models/segment-button-value";
 
 type Props = {
@@ -8,6 +9,7 @@ type Props = {
 };
 
 export function SegmentToggle({ value, setValue }: Props) {
+  const { t } = useTranslation("tasks");
   return (
     <View className="flex-row bg-[#F4F6FA] p-1 rounded-xl mb-6 w-56">
       <Pressable
@@ -32,7 +34,7 @@ export function SegmentToggle({ value, setValue }: Props) {
             value === "reminder" ? "text-[#1A2433]" : "text-[#6B768A]"
           }`}
         >
-          Reminder
+          {t("form.reminder")}
         </Text>
       </Pressable>
 
@@ -59,7 +61,7 @@ export function SegmentToggle({ value, setValue }: Props) {
             value === "event" ? "text-[#1A2433]" : "text-[#6B768A]"
           }`}
         >
-          Event
+          {t("form.event")}
         </Text>
       </Pressable>
     </View>
