@@ -10,7 +10,7 @@ import { SendButton } from "./send-button";
 import { requestIOSMicrophonePermission } from "../utils/request-microphone-permission";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AiLanguagePicker } from "./ai-language-picker";
-
+import { useTranslation } from "react-i18next";
 export const IOSInput = ({
   text,
   setText,
@@ -24,6 +24,8 @@ export const IOSInput = ({
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
 }) => {
+  const { t } = useTranslation("aiTaskGenerate");
+
   const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
     AsyncStorage.getItem("ai_language_preference").then((saved: string | null) => {
       if (saved === "en-US" || saved === "zh-CN") {
@@ -85,8 +87,8 @@ export const IOSInput = ({
             value={text}
             onChangeText={(v: string) => setText(v)}
             enablesReturnKeyAutomatically
+            placeholder={t("input.placeholder")}
             autoFocus
-            placeholder="Hold to speak or tap to write..."
             placeholderTextColor={theme.colors.secondary}
             multiline
             className="w-11/12 bg-white text-xl text-gray-800 font-baloo"
