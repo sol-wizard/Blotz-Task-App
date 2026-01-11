@@ -25,7 +25,7 @@ export function AiTasksPreview({
   userInput: string;
   setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) {
-  const { t } = useTranslation("ai-task-generate");
+  const { t } = useTranslation("aiTaskGenerate");
   const { addTask, isAdding } = useTaskMutations();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
 

@@ -4,7 +4,7 @@ import { View, Image, Text } from "react-native";
 import { useTranslation } from "react-i18next";
 
 export const TaskAddedSuccess = () => {
-  const { t } = useTranslation("ai-task-generate");
+  const { t } = useTranslation("aiTaskGenerate");
 
   return (
     <View className="items-center justify-center min-h-96">

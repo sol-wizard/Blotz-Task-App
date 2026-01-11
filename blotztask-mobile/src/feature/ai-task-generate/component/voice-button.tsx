@@ -12,7 +12,7 @@ export const VoiceButton = ({
   isRecognizing: boolean;
   toggleListening: () => Promise<void>;
 }) => {
-  const { t } = useTranslation("ai-task-generate");
+  const { t } = useTranslation("aiTaskGenerate");
   const lottieRef = useRef<LottieView>(null);
 
   useEffect(() => {

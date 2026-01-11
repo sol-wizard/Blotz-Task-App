@@ -26,7 +26,7 @@ export const AiInput = ({
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
 }) => {
-  const { t } = useTranslation("ai-task-generate");
+  const { t } = useTranslation("aiTaskGenerate");
 
   const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
     AsyncStorage.getItem("ai_language_preference").then((saved: string | null) => {

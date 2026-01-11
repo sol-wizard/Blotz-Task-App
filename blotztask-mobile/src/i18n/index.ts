@@ -39,7 +39,7 @@ i18n.use(initReactI18next).init({
       settings: enSettings,
       tasks: enTasks,
       starSpark: enStarSpark,
-      "ai-task-generate": enAiTaskGenerate,
+      aiTaskGenerate: enAiTaskGenerate,
     },
     zh: {
       common: zhCommon,
@@ -47,7 +47,7 @@ i18n.use(initReactI18next).init({
       settings: zhSettings,
       tasks: zhTasks,
       starSpark: zhStarSpark,
-      "ai-task-generate": zhAiTaskGenerate,
+      aiTaskGenerate: zhAiTaskGenerate,
     },
   },
   lng: getDeviceLanguage(), // Will be overridden by user preference from backend
@@ -63,4 +63,3 @@ i18n.use(initReactI18next).init({
 } as any);
 
 export default i18n;
-

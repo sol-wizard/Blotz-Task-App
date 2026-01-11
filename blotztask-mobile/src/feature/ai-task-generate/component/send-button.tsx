@@ -21,7 +21,7 @@ export const SendButton = ({
   stopListening: () => void;
   sendMessage: (message: string) => void;
 }) => {
-  const { t } = useTranslation("ai-task-generate");
+  const { t } = useTranslation("aiTaskGenerate");
   const lottieRef = useRef<LottieView>(null);
 
   useEffect(() => {
