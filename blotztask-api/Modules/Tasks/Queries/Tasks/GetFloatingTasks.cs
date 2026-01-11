@@ -20,8 +20,8 @@ public class GetFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetFloa
             .Where(t => t.UserId == query.UserId
                         && t.StartTime == null
                         && t.EndTime == null
-                        && t.IsDone == false
                         && t.CreatedAt < DateTime.UtcNow.Date
+                        && t.IsDone == false
             )
             .Select(task => new FloatingTaskItemDto
             {
