@@ -73,7 +73,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   });
 
   const { handleSubmit, formState, control, setValue } = form;
-  const { isValid, isSubmitting, errors } = formState;
+  const { isSubmitting, errors } = formState;
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
