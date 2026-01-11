@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
+// TODO: Rename this handler/query — it doesn’t return all floating tasks.
+// It returns only past floating tasks (unfinished) for the Star Spark page.
+// Maybe something like GetStarSparkFloatingTasksQuery?
 public class GetFloatingTasksQuery
 {
     [Required] public required Guid UserId { get; init; }
@@ -20,8 +23,8 @@ public class GetFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetFloa
             .Where(t => t.UserId == query.UserId
                         && t.StartTime == null
                         && t.EndTime == null
-                        && t.IsDone == false
                         && t.CreatedAt < DateTime.UtcNow.Date
+                        && t.IsDone == false
             )
             .Select(task => new FloatingTaskItemDto
             {
