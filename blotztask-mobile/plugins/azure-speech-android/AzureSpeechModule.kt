@@ -133,6 +133,11 @@ class AzureSpeechModule(private val reactContext: ReactApplicationContext)
           map.putString("text", text)
           map.putString("sessionId", e.sessionId ?: "")
           emit("AzureSpeechRecognized", map)
+          if (!isStopping.get()) {
+            emitDebug("Restarting recognizer after final")
+            stopInternal("auto-restart-after-final")
+            // 重新 startListen（new recognizer）
+          }
         } else if (reason == ResultReason.NoMatch) {
           val map = Arguments.createMap()
           map.putString("reason", "NoMatch")

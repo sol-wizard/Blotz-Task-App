@@ -59,7 +59,6 @@ export const AndroidInput = ({
       const v = (value ?? "").trim();
       if (!v) return;
 
-      console.log("Azure partial:", v);
       setText(mergeDisplayText(v));
     });
 
@@ -67,9 +66,13 @@ export const AndroidInput = ({
       const v = (value ?? "").trim();
       if (!v) return;
 
-      console.log("Azure final:", v);
       finalBufferRef.current = mergeDisplayText(v);
       setText(finalBufferRef.current);
+    });
+
+    const subNoMatch = AzureSpeechAPI.onNoMatch?.(() => {
+      console.log("Azure no match (silence or unrecognized)");
+      setIsListening(false);
     });
 
     const subCanceled = AzureSpeechAPI.onCanceled((err) => {
@@ -77,10 +80,27 @@ export const AndroidInput = ({
       setIsListening(false);
     });
 
+    const subDebug = AzureSpeechAPI.onDebug?.((msg) => {
+      console.log("[Azure DEBUG]", msg);
+    });
+
+    const subStopped = AzureSpeechAPI.onStopped?.((info) => {
+      console.log("[Azure STOPPED]", info);
+      setIsListening(false); // 关键：避免 UI 还以为在 listening
+    });
+
+    const subSessionStopped = AzureSpeechAPI.onSessionStopped?.((info) => {
+      console.log("[Azure SessionStopped]", info);
+    });
+
     return () => {
-      subPartial.remove();
+      subPartial?.remove?.();
       subFinal?.remove?.();
-      subCanceled.remove();
+      subCanceled?.remove?.();
+      subDebug?.remove?.();
+      subStopped?.remove?.();
+      subSessionStopped?.remove?.();
+      subNoMatch?.remove?.();
     };
   }, []);
 
@@ -107,7 +127,6 @@ export const AndroidInput = ({
       region: tokenItem.region,
       language,
     });
-    console.log("tokenItem:", tokenItem);
 
     console.log("Started listening with language:", language);
     setIsListening(true);

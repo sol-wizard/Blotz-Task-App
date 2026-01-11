@@ -25,7 +25,7 @@ export const requestAndroidMicPermission = async () => {
     });
 
     const ok = result === PermissionsAndroid.RESULTS.GRANTED;
-    console.log("[Mic] permission result:", result);
+
     return ok;
   } catch (err) {
     console.error("[Mic] permission error:", err);
