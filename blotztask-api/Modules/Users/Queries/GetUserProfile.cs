@@ -1,8 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
-using BlotzTask.Modules.Users.Commands;
 using BlotzTask.Shared.Exceptions;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace BlotzTask.Modules.Users.Queries;
 
