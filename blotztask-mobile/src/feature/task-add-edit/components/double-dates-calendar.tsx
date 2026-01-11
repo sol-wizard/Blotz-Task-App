@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
 import { eachDayOfInterval, format, isBefore, isSameDay, parseISO } from "date-fns";
 import { theme } from "@/shared/constants/theme";
+import { renderCalendarHeader } from "@/feature/calendar/util/date-formatter";
 
 type MarkedDate = {
   color?: string;
@@ -85,6 +86,7 @@ const DoubleDatesCalendar = ({
           textDayHeaderFontFamily: "BalooBold",
           textMonthFontFamily: "BalooBold",
         }}
+        renderHeader={renderCalendarHeader}
         enableSwipeMonths
       />
     </View>

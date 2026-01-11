@@ -8,13 +8,30 @@
     "event": "Event",
     "alert": "Alert",
     "category": "Category",
-    "noCategory": "No Category"
+    "noCategory": "No Category",
+    "date": "Date",
+    "time": "Time",
+    "selectDate": "Select Date",
+    "selectTime": "Select Time",
+    "start": "Start",
+    "end": "End"
   },
   "details": {
     "notFound": "Selected Task not found.",
     "addDetails": "Add any task details — people, places, links, notes…",
     "subtasks": "Subtasks",
-    "description": "Description"
+    "description": "Description",
+    "time": "Time",
+    "startFrom": "Start from",
+    "endAt": "End at",
+    "breakdownTask": "Breakdown Task",
+    "loadingSubtasks": "Loading subtasks...",
+    "noSubtasksYet": "No subtasks yet",
+    "complete": "Complete",
+    "dragToReorder": "Drag to reorder~",
+    "error": "Error",
+    "failedToRefreshSubtasks": "Failed to refresh subtasks. Please try again.",
+    "failedToDeleteSubtask": "Failed to delete subtask."
   },
   "alerts": {
     "none": "None",
@@ -27,6 +44,11 @@
     "2hours": "2 hours before",
     "1day": "1 day before",
     "2days": "2 days before"
+  },
+  "categories": {
+    "work": "Work",
+    "life": "Life",
+    "learning": "Learning",
+    "health": "Health"
   }
 }
-

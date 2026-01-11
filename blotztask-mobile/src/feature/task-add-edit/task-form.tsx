@@ -150,8 +150,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
               control={control}
               className="font-balooBold text-4xl leading-normal"
               inputProps={{
-                multiline: false, 
-                blurOnSubmit: true, 
+                multiline: false,
+                blurOnSubmit: true,
                 returnKeyType: "done",
               }}
             />
@@ -179,7 +179,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           {/* Label Select */}
           <View className="mb-8">
             {isLoading ? (
-              <Text className="font-baloo text-lg text-primary mt-3">{t("common:loading.categories")}</Text>
+              <Text className="font-baloo text-lg text-primary mt-3">
+                {t("common:loading.categories")}
+              </Text>
             ) : (
               <LabelSelect control={control} labels={labels} />
             )}

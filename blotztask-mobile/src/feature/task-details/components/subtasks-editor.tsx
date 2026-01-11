@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, Alert } from "react-native";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { theme } from "@/shared/constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
@@ -12,6 +13,7 @@ type SubtasksEditorProps = {
 };
 
 const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
+  const { t } = useTranslation(["tasks", "common"]);
   const { data: fetchedSubtasks, isLoading } = useSubtasksByParentId(parentTask.id);
 
   const {
@@ -44,7 +46,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     } catch (error) {
       console.error("Failed to refresh subtasks:", error);
       // TODO: Implement error screen
-      Alert.alert("Error", "Failed to refresh subtasks. Please try again.");
+      Alert.alert(t("tasks:details.error"), t("tasks:details.failedToRefreshSubtasks"));
     }
   };
 
@@ -57,7 +59,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
       await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id });
     } catch (error) {
       console.error("Failed to delete subtask:", error);
-      Alert.alert("Error", "Failed to delete subtask.");
+      Alert.alert(t("tasks:details.error"), t("tasks:details.failedToDeleteSubtask"));
     }
   };
 
@@ -70,7 +72,9 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
   ) {
     return (
       <View className="flex-1 items-center justify-center">
-        <Text className="text-base font-baloo text-primary">Loading subtasks...</Text>
+        <Text className="text-base font-baloo text-primary">
+          {t("tasks:details.loadingSubtasks")}
+        </Text>
       </View>
     );
   }
@@ -78,9 +82,11 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
   if (!fetchedSubtasks || fetchedSubtasks.length === 0) {
     return (
       <View className="flex-1 items-center justify-center">
-        <Text className="text-base font-baloo text-primary">No subtasks yet</Text>
+        <Text className="text-base font-baloo text-primary">
+          {t("tasks:details.noSubtasksYet")}
+        </Text>
         <TouchableOpacity onPress={onBack} className="mt-4">
-          <Text className="text-blue-500 font-balooSemiBold">Go Back</Text>
+          <Text className="text-blue-500 font-balooSemiBold">{t("common:buttons.goBack")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -90,7 +96,8 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     <View className="flex-1">
       {/* Top Action Bar */}
       <View className="flex-row justify-between items-center mb-4">
-        <Text className="font-balooBold text-xl text-[#3E4A5A]">Subtasks</Text>
+        <Text className="font-balooBold text-xl text-[#3E4A5A]">{t("tasks:details.subtasks")}</Text>
+
         <View className="flex-row items-center mr-1">
           {isEditMode ? (
             <TouchableOpacity onPress={onBack} className="p-2">
@@ -106,7 +113,9 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
               onPress={handleEdit}
               className="px-6 py-2 rounded-lg items-center justify-center"
             >
-              <Text className="font-balooSemiBold text-base text-info">Complete</Text>
+              <Text className="font-balooSemiBold text-base text-[#3d8de0]">
+                {t("tasks:details.complete")}
+              </Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity onPress={handleEdit}>
@@ -130,7 +139,9 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
       {/* Add More Subtasks Button / Drag to Reorder - Fixed at bottom */}
       {isEditMode ?? (
         <View className="mx-0 mb-10 mt-4 rounded-2xl py-2.5 items-center justify-center">
-          <Text className="font-baloo text-[#8BC34A] text-lg text-center">Drag to reorder~</Text>
+          <Text className="font-baloo text-[#8BC34A] text-lg text-center">
+            {t("tasks:details.dragToReorder")}
+          </Text>
         </View>
       )}
     </View>

@@ -1,0 +1,13 @@
+{
+  "input": {
+    "placeholder": "按住说话或点按输入文字..."
+  },
+  "buttons": {
+    "speak": "说话",
+    "send": "发送",
+    "addToTasks": "添加到任务"
+  },
+  "success": {
+    "taskAdded": "太棒了！任务已添加！"
+  }
+}

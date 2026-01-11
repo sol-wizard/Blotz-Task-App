@@ -75,6 +75,14 @@ export default function TaskDetailsScreen() {
 
   const canSaveDescription = descriptionText.trim() !== (selectedTask.description ?? "").trim();
 
+  const getTranslatedLabelName = (labelName: string): string => {
+    const lowerName = labelName.toLowerCase();
+    const translationKey = `tasks:categories.${lowerName}`;
+    const translated = t(translationKey);
+    // If translation key doesn't exist, return original name
+    return translated !== translationKey ? translated : labelName;
+  };
+
   return (
     <SafeAreaView
       edges={["top"]}
@@ -95,7 +103,9 @@ export default function TaskDetailsScreen() {
             </View>
             {selectedTask.label && (
               <View className="ml-2 px-3 py-1 rounded-xl border border-black">
-                <Text className="text-sm font-medium text-black">{selectedTask.label?.name}</Text>
+                <Text className="text-sm font-medium text-black">
+                  {getTranslatedLabelName(selectedTask.label.name)}
+                </Text>
               </View>
             )}
           </View>
