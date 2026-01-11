@@ -7,12 +7,11 @@ import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
 import { VoiceButton } from "./voice-button";
 import { SendButton } from "./send-button";
-import { requestMicrophonePermission } from "../utils/request-microphone-permission";
+import { requestIOSMicrophonePermission } from "../utils/request-microphone-permission";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
 import { AiLanguagePicker } from "./ai-language-picker";
-import { Platform } from "react-native";
-export const AiInput = ({
+
+export const IOSInput = ({
   text,
   setText,
   sendMessage,
@@ -35,13 +34,9 @@ export const AiInput = ({
   });
 
   useEffect(() => {
-    if (Platform.OS === "android") {
-      return;
-    }
-
-    requestMicrophonePermission();
-    installAndroidLanguagePackage(["en-US", "cmn-Hans-CN"]);
+    requestIOSMicrophonePermission();
   }, []);
+
   const handleSelectLanguage = async (lang: "en-US" | "zh-CN") => {
     setLanguage(lang);
     try {
@@ -102,9 +97,8 @@ export const AiInput = ({
           )}
         </View>
         <View className="flex-row items-center justify-between mb-6 w-96">
-          {Platform.OS !== "android" && (
-            <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
-          )}
+          <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
+
           {showSendButton ? (
             <SendButton
               text={text}
