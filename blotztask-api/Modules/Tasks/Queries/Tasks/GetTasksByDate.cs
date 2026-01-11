@@ -29,8 +29,6 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
 {
     public async Task<List<TaskByDateItemDto>> Handle(GetTasksByDateQuery query, CancellationToken ct = default)
     {
-
-
         var stopwatch = Stopwatch.StartNew();
         logger.LogInformation(
             "Fetching tasks by end time for user {UserId} up to {StartDate}. Whether including floating tasks for today is {IncludeFloatingForToday}",
@@ -42,15 +40,20 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
             .Select(p => p.AutoRollover)
             .FirstOrDefaultAsync(ct);
         var autoRollover = autoRolloverEnabled ?? true;
+
         var selectedDayStart = query.StartDate;
         var selectedDayEnd = query.StartDate.AddDays(1);
-        var overdueWindowStart = selectedDayStart.AddDays(-7);
+
+        var userNow = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
+        var userTodayStart = new DateTimeOffset(userNow.Date, query.StartDate.Offset);
+        var userTodayEnd = userTodayStart.AddDays(1);
+        var sevenDayWindowStart = userTodayEnd.AddDays(-7);
+        var isFutureDay = query.StartDate.Date > userNow.Date;
+
         logger.LogInformation("StartDate received: {StartDate} (Offset={Offset})", query.StartDate, query.StartDate.Offset);
         logger.LogInformation("Computed window: selectedDayStart={Start}, selectedDayEnd={End}, overdueWindowStart={OverdueStart}",
-            selectedDayStart, selectedDayEnd, overdueWindowStart);
-
-        var userToday = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
-        var isFutureDay = query.StartDate.Date > userToday.Date;
+            selectedDayStart, selectedDayEnd, sevenDayWindowStart);
+        
 
 
         var queryStopwatch = Stopwatch.StartNew();
@@ -61,7 +64,6 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                             // 1) Tasks that overlap selected day
                             (
                                 t.StartTime != null
-                                && t.EndTime != null
                                 && t.StartTime < selectedDayEnd
                                 && t.EndTime >= selectedDayStart
                             )
@@ -70,7 +72,6 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                             (
                                 query.IncludeFloatingForToday
                                 && t.StartTime == null
-                                && t.EndTime == null
                                 && t.CreatedAt >= selectedDayStart
                                 && t.CreatedAt < selectedDayEnd
                             )
@@ -79,10 +80,10 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                             (
                                 autoRollover
                                 && !isFutureDay
-                                && t.EndTime != null
+                                && t.StartTime != null
                                 && !t.IsDone
-                                && t.EndTime.Value.Date >= overdueWindowStart.Date
-                                && t.EndTime.Value.Date < selectedDayStart.Date
+                                && t.EndTime < userNow
+                                && t.EndTime >= sevenDayWindowStart
                             )
                         ))
             .OrderBy(t => t.StartTime).ThenBy(t => t.EndTime).ThenBy(t => t.Title)

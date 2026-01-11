@@ -35,6 +35,11 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         var userTodayEnd = userTodayStart.AddDays(1);
         var sevenDayWindowStart = userTodayEnd.AddDays(-7);
 
+        logger.LogInformation($"userNow: {userNow}");
+        logger.LogInformation($"userTodayStart: {userTodayStart}");
+        logger.LogInformation($"userTodayEnd: {userTodayEnd}");
+        logger.LogInformation($"sevenDayWindowStart: {sevenDayWindowStart}");
+
         logger.LogInformation(
             "Fetching weekly task availability for user {UserId} from {weekStart} to {weekEndExclusive}",
             query.UserId,
@@ -49,7 +54,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                             // Tasks in date range
                             (
                                 t.StartTime != null
-                                && t.EndTime != null 
                                 && t.StartTime < weekEndExclusive 
                                 && t.EndTime > weekStart
                             )
@@ -57,7 +61,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                             // Floating tasks
                             (
                                 t.StartTime == null
-                                && t.EndTime == null 
                                 && t.CreatedAt >= weekStart 
                                 && t.CreatedAt < weekEndExclusive
                             )
@@ -65,7 +68,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                             // Overdue tasks within 7 days (matching GetTasksByDateQuery)
                             (
                                 t.StartTime != null
-                                && t.EndTime != null
                                 && !t.IsDone
                                 && t.EndTime < userNow
                                 && t.EndTime >= sevenDayWindowStart
