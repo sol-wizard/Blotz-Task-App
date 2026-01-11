@@ -7,7 +7,7 @@ import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
 import { VoiceButton } from "./voice-button";
 import { SendButton } from "./send-button";
-import { requestMicrophonePermission } from "../utils/request-microphone-permission";
+import { requestIOSMicrophonePermission } from "../utils/request-microphone-permission";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { installAndroidLanguagePackage } from "../utils/install-android-language-package";
 import { AiLanguagePicker } from "./ai-language-picker";
@@ -40,7 +40,7 @@ export const IOSInput = ({
       return;
     }
 
-    requestMicrophonePermission();
+    requestIOSMicrophonePermission();
     installAndroidLanguagePackage(["en-US", "cmn-Hans-CN"]);
   }, []);
   const handleSelectLanguage = async (lang: "en-US" | "zh-CN") => {

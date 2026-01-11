@@ -9,6 +9,7 @@ import { useAzureSpeechToken } from "../hooks/useAzureSpeechToken";
 import { AiLanguagePicker } from "./ai-language-picker";
 import { SendButton } from "./send-button";
 import { VoiceButton } from "./voice-button";
+import { requestAndroidMicPermission } from "../utils/request-microphone-permission";
 
 export const AndroidInput = ({
   text,
@@ -44,6 +45,14 @@ export const AndroidInput = ({
     if (!final && partialText) return partialText;
     return `${final} ${partialText}`.replace(/\s+/g, " ").trim();
   };
+
+  useEffect(() => {
+    requestAndroidMicPermission().then((granted) => {
+      if (!granted) {
+        console.warn("[Mic] Microphone permission not granted. Voice input will not work.");
+      }
+    });
+  }, []);
 
   useEffect(() => {
     const subPartial = AzureSpeechAPI.onPartial((value) => {
@@ -98,6 +107,7 @@ export const AndroidInput = ({
       region: tokenItem.region,
       language,
     });
+    console.log("tokenItem:", tokenItem);
 
     console.log("Started listening with language:", language);
     setIsListening(true);
