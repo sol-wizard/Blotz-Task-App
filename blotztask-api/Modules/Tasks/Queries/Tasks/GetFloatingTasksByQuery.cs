@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
+//TODO: Rename the handler, file and query to "SearchFloatingTasks"
+//TODO: This can be merge with the get all  floating task query handler by adding an optional query parameter
 public class GetFloatingTasksByQuery
 {
     [Required]
