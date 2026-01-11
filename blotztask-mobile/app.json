@@ -62,7 +62,8 @@
         }
       ],
       "expo-audio",
-      ["./plugins/withCustomGradleProperties"]
+      ["./plugins/withCustomGradleProperties"],
+      ["./plugins/withAzureSpeechAndroid"]
     ],
     "experiments": {
       "typedRoutes": true

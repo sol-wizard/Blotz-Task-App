@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { View, Pressable } from "react-native";
 import { router } from "expo-router";
-import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
+import type { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { AiModalContent } from "@/feature/ai-task-generate/component/ai-modal-content";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { OnboardingCard } from "@/shared/components/ui/onboarding-card";
 import { useAiOnboardingStatus } from "@/feature/ai-task-generate/hooks/useAiOnboardingStatus";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 export default function AiTaskSheetScreen() {
   const [modalType, setModalType] = useState<BottomSheetType>("input");
