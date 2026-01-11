@@ -59,26 +59,30 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
             .Where(t => t.UserId == query.UserId &&
                         (
                             // 1) Tasks that overlap selected day
-                            (t.StartTime != null && t.EndTime != null &&
-                             t.StartTime < selectedDayEnd && t.EndTime >= selectedDayStart)
-
+                            (
+                                t.StartTime != null
+                                && t.EndTime != null
+                                && t.StartTime < selectedDayEnd
+                                && t.EndTime >= selectedDayStart
+                            )
                             ||
-
                             // 2) Floating tasks (unchanged)
-                            (query.IncludeFloatingForToday &&
-                             t.StartTime == null && t.EndTime == null &&
-                             t.CreatedAt >= selectedDayStart &&
-                             t.CreatedAt < selectedDayEnd)
-
+                            (
+                                query.IncludeFloatingForToday
+                                && t.StartTime == null
+                                && t.EndTime == null
+                                && t.CreatedAt >= selectedDayStart
+                                && t.CreatedAt < selectedDayEnd
+                            )
                             ||
-
                             // 3) Overdue tasks from [selectedDay-7, selectedDay) ONLY if AutoRollover == true
-                            (autoRollover
-                             && !isFutureDay
-                             && t.EndTime != null
-                             && !t.IsDone
-                             && t.EndTime.Value.Date >= overdueWindowStart.Date
-                             && t.EndTime.Value.Date < selectedDayStart.Date
+                            (
+                                autoRollover
+                                && !isFutureDay
+                                && t.EndTime != null
+                                && !t.IsDone
+                                && t.EndTime.Value.Date >= overdueWindowStart.Date
+                                && t.EndTime.Value.Date < selectedDayStart.Date
                             )
                         ))
             .OrderBy(t => t.StartTime).ThenBy(t => t.EndTime).ThenBy(t => t.Title)

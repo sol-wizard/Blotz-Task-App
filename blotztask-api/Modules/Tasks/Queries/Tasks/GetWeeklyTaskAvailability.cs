@@ -47,19 +47,28 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
             .Where(t => t.UserId == query.UserId &&
                         (
                             // Tasks in date range
-                            (t.StartTime != null && t.EndTime != null &&
-                             t.StartTime < weekEndExclusive && t.EndTime > weekStart)
+                            (
+                                t.StartTime != null
+                                && t.EndTime != null 
+                                && t.StartTime < weekEndExclusive 
+                                && t.EndTime > weekStart
+                            )
                             ||
                             // Floating tasks
-                            (t.StartTime == null && t.EndTime == null &&
-                             t.CreatedAt >= weekStart &&
-                             t.CreatedAt < weekEndExclusive)
+                            (
+                                t.StartTime == null
+                                && t.EndTime == null 
+                                && t.CreatedAt >= weekStart 
+                                && t.CreatedAt < weekEndExclusive
+                            )
                             ||
                             // Overdue tasks within 7 days (matching GetTasksByDateQuery)
-                            (t.StartTime != null &&t.EndTime != null
-                             && !t.IsDone
-                             && t.EndTime < userNow
-                             && t.EndTime >= sevenDayWindowStart
+                            (
+                                t.StartTime != null
+                                && t.EndTime != null
+                                && !t.IsDone
+                                && t.EndTime < userNow
+                                && t.EndTime >= sevenDayWindowStart
                             )
                         ))
             .Select(t => new
@@ -81,7 +90,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         for (var dayStart = weekStart; dayStart < weekEndExclusive; dayStart = dayStart.AddDays(1))
         {
             var dayEnd = dayStart.AddDays(1);
-            var isFutureDay = dayStart >= userTodayEnd;
 
             var hasTask = tasks.Any(t =>
             {
@@ -91,7 +99,11 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                     if (t.StartTime < dayEnd && t.EndTime >= dayStart) return true;
 
                     // Overdue tasks within 7 days
-                    if (!isFutureDay && !t.IsDone && t.EndTime < userNow && t.StartTime < dayEnd && t.EndTime >= sevenDayWindowStart && dayStart >= sevenDayWindowStart)
+                    if (
+                        dayStart < userTodayEnd && dayStart >= sevenDayWindowStart
+                        && t.StartTime < dayEnd && t.EndTime >= sevenDayWindowStart
+                        && !t.IsDone && t.EndTime < userNow
+                        )
                     {
                         return true;
                     }
