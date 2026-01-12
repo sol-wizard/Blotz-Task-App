@@ -48,7 +48,7 @@ public class GetFloatingTasksByQueryTests : IClassFixture<DatabaseFixture>
         var userId = await _seeder.CreateUserAsync();
         var yesterday = DateTime.UtcNow.Date.AddDays(-1);
 
-        // ✅ 符合条件：floating + keyword in title
+        // ✅ Matches: floating + keyword in title
         await _seeder.CreateTaskAsync(
             userId,
             title: "Buy milk",
@@ -57,7 +57,7 @@ public class GetFloatingTasksByQueryTests : IClassFixture<DatabaseFixture>
             createdAt: yesterday
         );
 
-        // ✅ 符合条件：floating + keyword in description
+        // ✅ Matches: floating + keyword in description
         var taskWithDescription = await _seeder.CreateTaskAsync(
             userId,
             title: "Shopping",
@@ -68,7 +68,7 @@ public class GetFloatingTasksByQueryTests : IClassFixture<DatabaseFixture>
         taskWithDescription.Description = "Need to buy bread and milk";
         await _context.SaveChangesAsync();
 
-        // ❌ 不匹配 keyword
+        // ❌ Does not match keyword
         await _seeder.CreateTaskAsync(
             userId,
             title: "Read book",
@@ -77,7 +77,7 @@ public class GetFloatingTasksByQueryTests : IClassFixture<DatabaseFixture>
             createdAt: yesterday
         );
 
-        // ❌ 非 floating（有时间）
+        // ❌ Not floating (has time)
         await _seeder.CreateTaskAsync(
             userId,
             title: "Buy milk at 9am",
@@ -86,7 +86,7 @@ public class GetFloatingTasksByQueryTests : IClassFixture<DatabaseFixture>
             createdAt: yesterday
         );
 
-        // ❌ 已完成
+        // ❌ Completed
         var doneTask = await _seeder.CreateTaskAsync(
             userId,
             title: "Buy milk done",
@@ -97,7 +97,7 @@ public class GetFloatingTasksByQueryTests : IClassFixture<DatabaseFixture>
         doneTask.IsDone = true;
         await _context.SaveChangesAsync();
 
-        // ❌ 今天创建的 floating task
+        // ❌ Floating task created today
         await _seeder.CreateTaskAsync(
             userId,
             title: "Buy milk today",
@@ -116,15 +116,22 @@ public class GetFloatingTasksByQueryTests : IClassFixture<DatabaseFixture>
         var result = await _handler.Handle(query);
 
         // Assert
-        result.Should().HaveCount(2);
+        result.Should().HaveCount(2,
+            because: "Only two floating tasks match the query and filters");
 
-        result.Should().Contain(t => t.Title == "Buy milk");
-        result.Should().Contain(t => t.Title == "Shopping");
+        result.Should().Contain(t => t.Title == "Buy milk",
+            because: "Floating tasks with matching titles should be included");
+        result.Should().Contain(t => t.Title == "Shopping",
+            because: "Floating tasks with matching descriptions should be included");
 
-        result.Should().NotContain(t => t.Title == "Read book");
-        result.Should().NotContain(t => t.Title == "Buy milk at 9am");
-        result.Should().NotContain(t => t.Title == "Buy milk done");
-        result.Should().NotContain(t => t.Title == "Buy milk today");
+        result.Should().NotContain(t => t.Title == "Read book",
+            because: "Tasks without the keyword should be excluded");
+        result.Should().NotContain(t => t.Title == "Buy milk at 9am",
+            because: "Non-floating tasks should be excluded");
+        result.Should().NotContain(t => t.Title == "Buy milk done",
+            because: "Completed tasks should be excluded");
+        result.Should().NotContain(t => t.Title == "Buy milk today",
+            because: "Tasks created today should be excluded");
     }
 
 
