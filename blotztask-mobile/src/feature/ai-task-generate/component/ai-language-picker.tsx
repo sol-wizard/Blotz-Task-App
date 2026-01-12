@@ -27,7 +27,7 @@ export function AiLanguagePicker({ value, onChange }: AiLanguageProps) {
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 24,
-        minWidth: 100,
+        minWidth: 110,
         borderWidth: 0,
       }}
       selectedTextStyle={{
