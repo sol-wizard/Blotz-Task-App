@@ -1,4 +1,5 @@
-using System.Text.Json; using BlotzTask.Modules.ChatTaskGenerator.Constants;
+using System.Text.Json;
+using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
@@ -30,7 +31,7 @@ public class AiTaskGenerateService(
                 Temperature = 0.2, // Low temperature for more deterministic, consistent breakdowns
                 ResponseFormat = typeof(AiGenerateMessage) // Enforces structured output via JSON Schema
             };
-            
+
             var chatResults = await chatCompletionService.GetChatMessageContentsAsync(
                 chatHistory,
                 executionSettings,
@@ -39,7 +40,7 @@ public class AiTaskGenerateService(
             );
 
             var functionResultMessage = chatResults.LastOrDefault();
-            
+
             logger.LogInformation(functionResultMessage?.Content);
 
             if (functionResultMessage == null)

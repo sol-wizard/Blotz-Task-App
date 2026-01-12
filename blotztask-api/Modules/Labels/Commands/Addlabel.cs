@@ -7,9 +7,9 @@ namespace BlotzTask.Modules.Labels.Commands;
 public class AddLabelCommand
 {
     [Required]
-    public string Name { get; set; } 
+    public string Name { get; set; }
     [Required]
-    public string Color { get; set; } 
+    public string Color { get; set; }
     public string Description { get; set; }
     public LabelScope Scope { get; set; }
     public Guid? UserId { get; set; }
@@ -17,7 +17,7 @@ public class AddLabelCommand
 
 public class AddLabelCommandHandler(BlotzTaskDbContext db, ILogger<AddLabelCommandHandler> logger)
 {
-    public async Task<String> Handle(AddLabelCommand command, CancellationToken ct = default )
+    public async Task<String> Handle(AddLabelCommand command, CancellationToken ct = default)
     {
         logger.LogInformation("Adding {Scope} label {Name}", command.Scope, command.Name);
 

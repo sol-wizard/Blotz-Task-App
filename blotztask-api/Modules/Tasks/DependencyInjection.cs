@@ -24,11 +24,11 @@ public static class DependencyInjection
         // Manual registration of query handlers 
         services.AddScoped<GetTasksByDateQueryHandler>();
         services.AddScoped<GetTaskByIdQueryHandler>();
-        services.AddScoped<GetFloatingTasksQueryHandler>();
+        services.AddScoped<GetStarSparkFloatingTasksQueryHandler>();
         services.AddScoped<GetAllTasksQueryHandler>();
         services.AddScoped<GetSubtasksByTaskIdQueryHandler>();
         services.AddScoped<GetWeeklyTaskAvailabilityQueryHandler>();
-        services.AddScoped<GetFloatingTasksByQueryHandler>();
+        services.AddScoped<GetStarSparkFloatingTasksByQueryHandler>();
 
         return services;
     }

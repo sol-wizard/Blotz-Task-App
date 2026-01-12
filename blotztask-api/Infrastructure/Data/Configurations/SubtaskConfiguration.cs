@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BlotzTask.Infrastructure.Data.Configurations;
+
 public class SubtaskConfiguration : IEntityTypeConfiguration<Subtask>
 {
     public void Configure(EntityTypeBuilder<Subtask> b)
@@ -26,7 +27,7 @@ public class SubtaskConfiguration : IEntityTypeConfiguration<Subtask>
 
         b.Property(x => x.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
-        
+
         b.Property(x => x.UpdatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
     }
