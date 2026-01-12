@@ -64,7 +64,8 @@ public class SyncUserCommandHandler(
                 PictureUrl = pictureUrl,
                 SignUpAt = signUpAt,
                 CreationAt = now,
-                UpdatedAt = now
+                UpdatedAt = now,
+                IsOnboarded = false
             };
             db.AppUsers.Add(row);
             await db.SaveChangesAsync(ct);
