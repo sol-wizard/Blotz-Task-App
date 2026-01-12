@@ -6,13 +6,13 @@ using FluentAssertions;
 
 namespace BlotzTask.Tests.Queries;
 
-public class GetFloatingTasksByQueryTests : IClassFixture<DatabaseFixture>
+public class SearchStarSparkFloatingTasksTests : IClassFixture<DatabaseFixture>
 {
     private readonly BlotzTaskDbContext _context;
     private readonly DataSeeder _seeder;
     private readonly SearchStarSparkFloatingTasksHandler _handler;
 
-    public GetFloatingTasksByQueryTests(DatabaseFixture fixture)
+    public SearchStarSparkFloatingTasksTests(DatabaseFixture fixture)
     {
         _context = new BlotzTaskDbContext(fixture.Options);
         _seeder = new DataSeeder(_context);
