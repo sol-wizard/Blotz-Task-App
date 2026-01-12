@@ -10,15 +10,15 @@ public class GetFloatingTasksByQueryTests : IClassFixture<DatabaseFixture>
 {
     private readonly BlotzTaskDbContext _context;
     private readonly DataSeeder _seeder;
-    private readonly GetFloatingTasksByQueryHandler _handler;
+    private readonly SearchStarSparkFloatingTasksHandler _handler;
 
     public GetFloatingTasksByQueryTests(DatabaseFixture fixture)
     {
         _context = new BlotzTaskDbContext(fixture.Options);
         _seeder = new DataSeeder(_context);
 
-        var logger = TestDbContextFactory.CreateLogger<GetFloatingTasksByQueryHandler>();
-        _handler = new GetFloatingTasksByQueryHandler(_context, logger);
+        var logger = TestDbContextFactory.CreateLogger<SearchStarSparkFloatingTasksHandler>();
+        _handler = new SearchStarSparkFloatingTasksHandler(_context, logger);
     }
     
     [Fact]
@@ -27,10 +27,10 @@ public class GetFloatingTasksByQueryTests : IClassFixture<DatabaseFixture>
         // Arrange
         var userId = await _seeder.CreateUserAsync();
 
-        var query = new GetFloatingTasksByQuery
+        var query = new SearchStarSparkFloatingTasks
         {
             UserId = userId,
-            Query = "   " 
+            QueryString = "   " 
         };
 
         // Act
@@ -106,10 +106,10 @@ public class GetFloatingTasksByQueryTests : IClassFixture<DatabaseFixture>
             createdAt: DateTime.UtcNow
         );
 
-        var query = new GetFloatingTasksByQuery
+        var query = new SearchStarSparkFloatingTasks
         {
             UserId = userId,
-            Query = "milk"
+            QueryString = "milk"
         };
 
         // Act
