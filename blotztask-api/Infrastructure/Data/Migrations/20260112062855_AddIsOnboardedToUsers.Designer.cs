@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    [Migration("20260110094455_AddIsOnboardedToUsers")]
+    [Migration("20260112062855_AddIsOnboardedToUsers")]
     partial class AddIsOnboardedToUsers
     {
         /// <inheritdoc />
