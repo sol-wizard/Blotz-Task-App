@@ -4,8 +4,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { CardIdentityView } from "@/feature/user-details/components/card-identity-view";
+import { useTranslation } from "react-i18next";
 
 export default function UserDetailsScreen() {
+  const { t } = useTranslation("settings");
+  
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 justify-center items-center">
@@ -23,7 +26,7 @@ export default function UserDetailsScreen() {
               }}
             />
           </TouchableOpacity>
-          <Text className="flex-1 ml-2 mt-2 font-balooBold text-4xl leading-normal">Profile</Text>
+          <Text className="flex-1 ml-2 mt-2 font-balooBold text-4xl leading-normal">{t("profile.title")}</Text>
         </View>
         <CardIdentityView />
         <CardEditButton onPress={() => {}} />

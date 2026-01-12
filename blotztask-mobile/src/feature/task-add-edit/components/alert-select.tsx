@@ -4,25 +4,28 @@ import { Controller, Control } from "react-hook-form";
 import { Dropdown } from "react-native-element-dropdown";
 import { Ionicons } from "@expo/vector-icons";
 import { FormDivider } from "@/shared/components/ui/form-divider";
+import { useTranslation } from "react-i18next";
 
 type AlertSelectProps = {
   control: Control<any>;
   name?: string;
 };
 
-const ALERT_OPTIONS = [
-  { label: "None", value: null },
-  { label: "At the start of the event", value: 0 },
-  { label: "5 mins before", value: 300 },
-  { label: "10 mins before", value: 600 },
-  { label: "30 mins before", value: 1800 },
-  { label: "1 hour before", value: 3600 },
-  { label: "2 hours before", value: 7200 },
-  { label: "1 day before", value: 86400 },
-  { label: "1 week before", value: 604800 },
-];
-
 export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "alert" }) => {
+  const { t } = useTranslation("tasks");
+
+  const ALERT_OPTIONS = [
+    { label: t("alerts.none"), value: null },
+    { label: t("alerts.atTime"), value: 0 },
+    { label: t("alerts.5min"), value: 300 },
+    { label: t("alerts.10min"), value: 600 },
+    { label: t("alerts.30min"), value: 1800 },
+    { label: t("alerts.1hour"), value: 3600 },
+    { label: t("alerts.2hours"), value: 7200 },
+    { label: t("alerts.1day"), value: 86400 },
+    { label: t("alerts.2days"), value: 172800 },
+  ];
+
   return (
     <Controller
       control={control}
@@ -30,13 +33,13 @@ export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "alert
       defaultValue={300}
       render={({ field: { value, onChange } }) => (
         <View className="flex-row items-center justify-between">
-          <Text className="font-baloo text-secondary text-2xl mt-1">Alert</Text>
+          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.alert")}</Text>
 
           <Dropdown
             data={ALERT_OPTIONS}
             labelField="label"
             valueField="value"
-            placeholder="None"
+            placeholder={t("alerts.none")}
             placeholderStyle={{
               fontSize: 16,
               color: "#444964",
