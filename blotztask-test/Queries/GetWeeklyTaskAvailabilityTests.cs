@@ -71,8 +71,9 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         
         // Use current week's Monday to properly test overdue rollover
         var userNow = DateTimeOffset.Now;
+        var localOffset = userNow.Offset; // Use local timezone consistently
         var daysSinceMonday = ((int)userNow.DayOfWeek + 6) % 7; // Monday = 0
-        var monday = new DateTimeOffset(userNow.Date.AddDays(-daysSinceMonday), TimeSpan.Zero);
+        var monday = new DateTimeOffset(userNow.Date.AddDays(-daysSinceMonday), localOffset);
         var lastMonday = monday.AddDays(-7);
         
         // Create an overdue task (ended 2 days ago, within 7-day window, NOT done)

@@ -22,7 +22,7 @@ public class GetLabelTaskCountQueryHandler(BlotzTaskDbContext db, ILogger<GetLab
 
         if (!labelExists)
         {
-			throw new NotFoundException($"Label with ID {query.LabelId} not found.");
+            throw new NotFoundException($"Label with ID {query.LabelId} not found.");
         }
 
         var taskCount = await db.TaskItems

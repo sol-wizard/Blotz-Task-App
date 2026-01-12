@@ -17,8 +17,8 @@ namespace BlotzTask.Modules.Labels.Commands
         [Required]
         public required Guid UserId { get; set; }
     }
-    
-    public class DeleteCustomLabelCommandHandler(BlotzTaskDbContext _blotzTaskDbContext,ILogger<DeleteCustomLabelCommandHandler> logger)
+
+    public class DeleteCustomLabelCommandHandler(BlotzTaskDbContext _blotzTaskDbContext, ILogger<DeleteCustomLabelCommandHandler> logger)
     {
 
         public async Task<string> Handle(DeleteCustomLabelCommand command, CancellationToken ct)
@@ -27,7 +27,7 @@ namespace BlotzTask.Modules.Labels.Commands
                 .FirstOrDefaultAsync(l => l.LabelId == command.LabelId
                                    && l.Scope == LabelScope.Custom
                                    && l.UserId == command.UserId, ct);
-            
+
             if (label == null)
                 throw new NotFoundException("Label not found or no permission to delete.");
             var taskUsingLabel = await _blotzTaskDbContext.TaskItems
@@ -41,11 +41,11 @@ namespace BlotzTask.Modules.Labels.Commands
 
             _blotzTaskDbContext.Labels.Remove(label);
             await _blotzTaskDbContext.SaveChangesAsync(ct);
-            logger.LogInformation("Delete label {id}:{labelName}",label.LabelId,label.Name);
+            logger.LogInformation("Delete label {id}:{labelName}", label.LabelId, label.Name);
             return $"Label {command.LabelId} deleted successfully.";
-                
-            
-        
+
+
+
         }
 
 

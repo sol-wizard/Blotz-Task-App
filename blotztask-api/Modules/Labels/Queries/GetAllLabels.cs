@@ -28,7 +28,7 @@ public class GetAllLabelsQueryHandler(BlotzTaskDbContext db, ILogger<AddLabelCom
         logger.LogInformation("Fetching all labels (Global + Custom for user {UserId}) from database...", query.UserId);
 
         return await db.Labels
-            .Where(l => l.Scope == LabelScope.Global 
+            .Where(l => l.Scope == LabelScope.Global
                      || (l.Scope == LabelScope.Custom && l.UserId == query.UserId))
             .Select(l => new LabelDTO
             {

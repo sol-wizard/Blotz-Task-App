@@ -83,7 +83,7 @@ public class BlotzTaskDbContext : DbContext
                 SignUpAt = new DateTime(2025, 9, 9, 14, 33, 27, 955, DateTimeKind.Utc),
                 UpdatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc)
             });
-        
+
         modelBuilder.Entity<UserPreference>()
             .HasData(new UserPreference
             {

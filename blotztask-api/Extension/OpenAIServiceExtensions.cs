@@ -7,36 +7,36 @@ using OpenAI.Chat;
 
 public static class OpenAiServiceExtensions
 {
-        public static IServiceCollection AddAzureOpenAi(this IServiceCollection services)
+    public static IServiceCollection AddAzureOpenAi(this IServiceCollection services)
+    {
+        services.AddSingleton<ChatClient>(sp =>
         {
-            services.AddSingleton<ChatClient>(sp =>
+            var config = sp.GetRequiredService<IConfiguration>();
+            var secretClient = sp.GetService<SecretClient>();
+
+            var endpoint = config["AzureOpenAI:Endpoint"];
+            var deploymentId = config["AzureOpenAI:DeploymentId"];
+            string? apiKey;
+
+            if (secretClient != null)
             {
-                var config = sp.GetRequiredService<IConfiguration>();
-                var secretClient = sp.GetService<SecretClient>(); 
+                apiKey = secretClient.GetSecret("azureopenai-apikey").Value.Value;
+            }
+            else
+            {
+                apiKey = config["AzureOpenAI:ApiKey"];
+            }
 
-                var endpoint = config["AzureOpenAI:Endpoint"];
-                var deploymentId = config["AzureOpenAI:DeploymentId"];
-                string? apiKey;
+            if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new ArgumentException("Endpoint or API Key is missing!");
+            }
 
-                if (secretClient != null)
-                {
-                    apiKey = secretClient.GetSecret("azureopenai-apikey").Value.Value;
-                }
-                else
-                {
-                    apiKey = config["AzureOpenAI:ApiKey"];
-                }
+            var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
+            return client.GetChatClient(deploymentId);
+        });
 
-                if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
-                {
-                    throw new ArgumentException("Endpoint or API Key is missing!");
-                }
-
-                var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
-                return client.GetChatClient(deploymentId);
-            });
-
-            return services;
-        }
+        return services;
+    }
 
 }

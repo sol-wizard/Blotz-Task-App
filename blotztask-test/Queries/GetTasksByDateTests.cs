@@ -1,5 +1,6 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
 using FluentAssertions;
@@ -196,5 +197,86 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
             
         resultWithoutFloatingTasks.Should().Contain(t => t.Title == "Scheduled Task For Today",
             because: "Scheduled tasks should still appear even when floating tasks are hidden.");
+    }
+
+    [Fact]
+    public async Task Handle_ShouldShowOverdueTask_WithinSevenDayWindow()
+    {
+        // Arrange
+        var userId = await _seeder.CreateUserAsync();
+        
+        // Create UserPreferences with AutoRollover enabled (required for overdue task rollover)
+        _context.UserPreferences.Add(new UserPreference { UserId = userId, AutoRollover = true });
+        await _context.SaveChangesAsync();
+        
+        // Use current time with local timezone to properly test overdue rollover
+        var userNow = DateTimeOffset.Now;
+        var localOffset = userNow.Offset;
+        var userTodayStart = new DateTimeOffset(userNow.Date, localOffset);
+        var threeDaysAgo = userNow.AddDays(-3);
+        
+        // 1. Overdue task within 7-day window (ended 2 days ago, NOT done) -> SHOULD appear
+        var fourDaysAgo = userTodayStart.AddDays(-4);
+        await _seeder.CreateTaskAsync(userId, "Overdue Task Within Window",
+            new DateTimeOffset(fourDaysAgo.Date.AddHours(9), localOffset),
+            new DateTimeOffset(fourDaysAgo.Date.AddHours(10), localOffset));
+        
+        // 2. Overdue task outside 7-day window (ended 9 days ago) -> should NOT appear
+        var nineDaysAgo = userTodayStart.AddDays(-9);
+        await _seeder.CreateTaskAsync(userId, "Overdue Task Outside Window",
+            new DateTimeOffset(nineDaysAgo.Date.AddHours(9), localOffset),
+            new DateTimeOffset(nineDaysAgo.Date.AddHours(10), localOffset));
+        
+        // 3. Completed overdue task within window -> should NOT appear (IsDone = true)
+        var completedTask = await _seeder.CreateTaskAsync(userId, "Completed Overdue Task",
+            new DateTimeOffset(fourDaysAgo.Date.AddHours(11), localOffset),
+            new DateTimeOffset(fourDaysAgo.Date.AddHours(12), localOffset));
+        completedTask.IsDone = true;
+        await _context.SaveChangesAsync();
+
+        var query = new GetTasksByDateQuery
+        {
+            UserId = userId,
+            StartDate = userNow,
+            IncludeFloatingForToday = false
+        };
+
+        var threeDaysAgoQuery = new GetTasksByDateQuery
+        {
+            UserId = userId,
+            StartDate = threeDaysAgo,
+            IncludeFloatingForToday = false
+        };
+
+        // Act
+        var result = await _handler.Handle(query);
+        var threeDaysAgoResult = await _handler.Handle(threeDaysAgoQuery);
+
+        // Debug output
+        Console.WriteLine("Result tasks:");
+        foreach (var task in result)
+        {   
+            Console.WriteLine("this is the result");
+            Console.WriteLine($"  - {task.Title}");
+        }
+
+        // Assert
+        result.Should().Contain(t => t.Title == "Overdue Task Within Window",
+            because: "Overdue task within 7-day window should appear on today's date.");
+        
+        result.Should().NotContain(t => t.Title == "Overdue Task Outside Window",
+            because: "Overdue task outside the 7-day window should NOT appear.");
+        
+        result.Should().NotContain(t => t.Title == "Completed Overdue Task",
+            because: "Completed overdue tasks should NOT roll over.");
+
+        threeDaysAgoResult.Should().Contain(t => t.Title == "Overdue Task Within Window",
+            because: "Overdue task within 7-day window should appear on three days ago's date.");
+
+        threeDaysAgoResult.Should().NotContain(t => t.Title == "Overdue Task Outside Window",
+            because: "Overdue task outside the 7-day window should NOT appear.");
+
+        threeDaysAgoResult.Should().NotContain(t => t.Title == "Completed Overdue Task",
+            because: "Completed overdue tasks should NOT roll over three days ago.");
     }
 }
