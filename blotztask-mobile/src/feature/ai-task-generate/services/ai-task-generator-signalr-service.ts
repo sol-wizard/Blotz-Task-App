@@ -5,8 +5,7 @@ import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
 const config = {
   API_BASE_URL: process.env.EXPO_PUBLIC_URL,
 };
-const baseUrl = config.API_BASE_URL?.replace(/\/+$/, "");
-const SIGNALR_HUBS_CHAT = `${baseUrl}/ai-task-generate-chathub`;
+const SIGNALR_HUBS_CHAT = `${config.API_BASE_URL}/ai-task-generate-chathub`;
 
 export const signalRService = {
   createConnection: async () => {
