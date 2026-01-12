@@ -9,27 +9,27 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 //TODO: This can be merge with the get all  floating task query handler by adding an optional query parameter
 public class GetFloatingTasksByQuery
 {
-    [Required]
-    public required Guid UserId { get; init; }
-    [Required]
-    public required string Query { get; init; }
+    [Required] public required Guid UserId { get; init; }
+
+    [Required] public required string Query { get; init; }
 }
 
-public class GetFloatingTasksByQueryHandler(BlotzTaskDbContext db, ILogger<GetFloatingTasksQueryHandler> logger)
+public class GetFloatingTasksByQueryHandler(BlotzTaskDbContext db, ILogger<GetFloatingTasksByQueryHandler> logger)
 {
-    public async Task<List<FloatingTaskItemByQueryDto>> Handle(GetFloatingTasksByQuery request, CancellationToken ct = default)
+    public async Task<List<FloatingTaskItemByQueryDto>> Handle(GetFloatingTasksByQuery request,
+        CancellationToken ct = default)
     {
-        
         var rawQuery = request.Query?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(rawQuery))
         {
             logger.LogInformation("Empty query string for user {UserId}", request.UserId);
             return [];
         }
-        
+
         var keyword = rawQuery.ToLower();
-        logger.LogInformation("Searching floating tasks for user {UserId} with query {Query}", request.UserId, rawQuery);
-        
+        logger.LogInformation("Searching floating tasks for user {UserId} with query {Query}", request.UserId,
+            rawQuery);
+
         var tasks = await db.TaskItems
             .Where(t => t.UserId == request.UserId
                         && t.StartTime == null
