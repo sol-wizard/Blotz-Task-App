@@ -31,18 +31,18 @@ public class ChatHistoryStore : IDisposable
     {
         _expiration = expiration;
         _cleanupInterval = cleanupInterval ?? TimeSpan.FromMinutes(5);
-        
+
         _cleanupTimer = new Timer(_ => Cleanup(), null,
             _cleanupInterval, _cleanupInterval);
     }
-    
+
     public ChatHistory GetOrCreate(string connectionId)
     {
         var entry = _histories.GetOrAdd(connectionId, _ => new ChatHistoryEntry(new ChatHistory()));
         entry.Touch();
         return entry.History;
     }
-    
+
     public bool TryGet(string connectionId, out ChatHistory history)
     {
         if (_histories.TryGetValue(connectionId, out var entry))
@@ -55,12 +55,12 @@ public class ChatHistoryStore : IDisposable
         history = null;
         return false;
     }
-    
+
     public bool Remove(string connectionId)
     {
         return _histories.TryRemove(connectionId, out _);
     }
-    
+
     private void Cleanup()
     {
         var now = DateTime.UtcNow;

@@ -53,7 +53,7 @@ public class LabelController(
 
         return Ok(result);
     }
-    
+
     [HttpDelete("{id}")]
     public async Task<string> DeleteCustomLabel(int id, CancellationToken ct)
     {
