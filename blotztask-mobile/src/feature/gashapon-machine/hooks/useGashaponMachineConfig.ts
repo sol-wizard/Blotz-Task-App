@@ -7,6 +7,7 @@ import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
+import { Platform } from "react-native";
 
 export const useGashaponMachineConfig = ({
   starRadius = 15,
@@ -262,7 +263,11 @@ export const useGashaponMachineConfig = ({
           if (starExists) {
             const gravityStrength = 1.5;
             engine.gravity.x = x * gravityStrength;
-            engine.gravity.y = -y * gravityStrength;
+            if (Platform.OS === "ios") {
+              engine.gravity.y = 0.6 + -y * gravityStrength;
+            } else {
+              engine.gravity.y = 0.6 + y * gravityStrength;
+            }
           }
         }
       });

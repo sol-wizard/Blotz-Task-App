@@ -28,7 +28,7 @@ public static class DependencyInjection
         services.AddScoped<GetAllTasksQueryHandler>();
         services.AddScoped<GetSubtasksByTaskIdQueryHandler>();
         services.AddScoped<GetWeeklyTaskAvailabilityQueryHandler>();
-        services.AddScoped<GetStarSparkFloatingTasksByQueryHandler>();
+        services.AddScoped<SearchStarSparkFloatingTasksHandler>();
 
         return services;
     }
