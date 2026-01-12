@@ -14,12 +14,12 @@ public class TaskController(
     TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
     AddTaskCommandHandler addTaskCommandHandler,
     GetTaskByIdQueryHandler getTaskByIdQueryHandler,
-    GetFloatingTasksQueryHandler getFloatingTasksQueryHandler,
+    GetStarSparkFloatingTasksQueryHandler getStarSparkFloatingTasksQueryHandler,
     DeleteTaskCommandHandler deleteTaskCommandHandler,
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
     GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler,
-    GetFloatingTasksByQueryHandler getFloatingTasksByQueryHandler,
+    GetStarSparkFloatingTasksByQueryHandler getFloatingTasksByQueryHandler,
     ILogger<TaskController> logger
 ) : ControllerBase
 {
@@ -74,12 +74,12 @@ public class TaskController(
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
-        var query = new GetFloatingTasksQuery
+        var query = new GetStarSparkFloatingTasksQuery
         {
             UserId = userId
         };
 
-        var result = await getFloatingTasksQueryHandler.Handle(query, ct);
+        var result = await getStarSparkFloatingTasksQueryHandler.Handle(query, ct);
         return result;
     }
 
@@ -93,12 +93,12 @@ public class TaskController(
             return [];
         }
 
-        var searchQuery = new GetFloatingTasksByQuery
+        var searchQuery = new SearchStarSparkFloatingTasks
         {
             UserId = userId,
-            Query = query
+            QueryString = query
         };
-        
+
         var result = await getFloatingTasksByQueryHandler.Handle(searchQuery, ct);
         return result;
     }

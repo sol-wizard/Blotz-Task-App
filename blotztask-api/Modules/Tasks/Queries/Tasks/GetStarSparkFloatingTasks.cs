@@ -5,40 +5,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
-//TODO: Rename the handler, file and query to "SearchFloatingTasks"
-//TODO: This can be merge with the get all  floating task query handler by adding an optional query parameter
-public class GetFloatingTasksByQuery
+public class GetStarSparkFloatingTasksQuery
 {
     [Required] public required Guid UserId { get; init; }
-
-    [Required] public required string Query { get; init; }
 }
 
-public class GetFloatingTasksByQueryHandler(BlotzTaskDbContext db, ILogger<GetFloatingTasksByQueryHandler> logger)
+public class GetStarSparkFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetStarSparkFloatingTasksQueryHandler> logger)
 {
-    public async Task<List<FloatingTaskItemByQueryDto>> Handle(GetFloatingTasksByQuery request,
-        CancellationToken ct = default)
+    public async Task<List<FloatingTaskItemDto>> Handle(GetStarSparkFloatingTasksQuery query, CancellationToken ct = default)
     {
-        var rawQuery = request.Query?.Trim() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(rawQuery))
-        {
-            logger.LogInformation("Empty query string for user {UserId}", request.UserId);
-            return [];
-        }
-
-        var keyword = rawQuery.ToLower();
-        logger.LogInformation("Searching floating tasks for user {UserId} with query {Query}", request.UserId,
-            rawQuery);
+        logger.LogInformation("Fetching floating tasks of user {UserId} for StarSpark", query.UserId);
 
         var tasks = await db.TaskItems
-            .Where(t => t.UserId == request.UserId
+            .Where(t => t.UserId == query.UserId
                         && t.StartTime == null
                         && t.EndTime == null
-                        && t.IsDone == false
                         && t.CreatedAt < DateTime.UtcNow.Date
-                        && (t.Title.ToLower().Contains(keyword)
-                            || (t.Description != null && t.Description.ToLower().Contains(keyword)))
-            ).Select(task => new FloatingTaskItemByQueryDto
+                        && t.IsDone == false
+            )
+            .Select(task => new FloatingTaskItemDto
             {
                 Id = task.Id,
                 Title = task.Title,
@@ -58,11 +43,13 @@ public class GetFloatingTasksByQueryHandler(BlotzTaskDbContext db, ILogger<GetFl
             })
             .ToListAsync(ct);
 
+        logger.LogInformation("Successfully fetched {TaskCount} floating tasks of user {UserId} for StarSpark", tasks.Count,
+            query.UserId);
         return tasks;
     }
 }
 
-public class FloatingTaskItemByQueryDto
+public class FloatingTaskItemDto
 {
     public int Id { get; set; }
     public required string Title { get; set; }
