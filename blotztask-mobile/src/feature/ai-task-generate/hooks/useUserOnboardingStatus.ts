@@ -3,29 +3,29 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { onboardingKeys } from "@/shared/constants/query-key-factory";
 import { fetchUserProfile, updateUserProfile } from "@/shared/services/user-service";
 
-export function useAiOnboardingStatus() {
+export function useUserOnboardingStatus() {
   const queryClient = useQueryClient();
-  const { data: isUserOnboardedAi = false, isLoading } = useQuery({
-    queryKey: onboardingKeys.aiOnboardingStatus(),
+  const { data: isUserOnboarded = false, isLoading } = useQuery({
+    queryKey: onboardingKeys.OnboardingStatus(),
     queryFn: async () => {
       const profile: any = await fetchUserProfile();
       return Boolean(profile?.isOnBoarded ?? false);
     },
   });
 
-  const setUserOnboardedAi = useMutation({
+  const setUserOnboarded = useMutation({
     mutationFn: async (nextValue: boolean) => {
       await updateUserProfile({ isOnBoarded: nextValue } as any);
       return nextValue;
     },
     onSuccess: (nextValue) => {
-      queryClient.setQueryData(onboardingKeys.aiOnboardingStatus(), nextValue);
+      queryClient.setQueryData(onboardingKeys.OnboardingStatus(), nextValue);
     },
   });
 
   return {
-    isUserOnboardedAi,
+    isUserOnboarded,
     isLoading,
-    setUserOnboardedAi,
+    setUserOnboarded,
   };
 }

@@ -4,25 +4,25 @@ import { router } from "expo-router";
 import type { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { AiModalContent } from "@/feature/ai-task-generate/component/ai-modal-content";
 import { OnboardingCard } from "@/shared/components/ui/onboarding-card";
-import { useAiOnboardingStatus } from "@/feature/ai-task-generate/hooks/useAiOnboardingStatus";
+import { useUserOnboardingStatus } from "@/feature/ai-task-generate/hooks/useUserOnboardingStatus";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 export default function AiTaskSheetScreen() {
   const [modalType, setModalType] = useState<BottomSheetType>("input");
   const [sheetLayoutY, setSheetLayoutY] = useState(0);
-  const { isUserOnboardedAi, setUserOnboardedAi } = useAiOnboardingStatus();
+  const { isUserOnboarded, setUserOnboarded } = useUserOnboardingStatus();
 
   const updateOnboarded = () => {
-    if (!isUserOnboardedAi && !setUserOnboardedAi.isPending) {
-      setUserOnboardedAi.mutate(true);
+    if (!isUserOnboarded && !setUserOnboarded.isPending) {
+      setUserOnboarded.mutate(true);
     }
   };
 
   return (
     <View className="flex-1 bg-transparent">
-      <Pressable className="flex-1" onPress={() => router.back()} disabled={!isUserOnboardedAi} />
+      <Pressable className="flex-1" onPress={() => router.back()} disabled={!isUserOnboarded} />
       <View className="relative">
-        {!isUserOnboardedAi && (
+        {!isUserOnboarded && (
           <OnboardingCard
             title={modalType === "task-preview" ? "Happy with this? ✨" : "Speak your task"}
             subtitle={
@@ -54,7 +54,6 @@ export default function AiTaskSheetScreen() {
                 }
               }}
             />
-            {/* <AiModalContent modalType={modalType} setModalType={setModalType} /> */}
           </View>
         </KeyboardAvoidingView>
       </View>
