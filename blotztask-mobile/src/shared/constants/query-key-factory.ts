@@ -26,3 +26,11 @@ export const subtaskKeys = {
 export const estimateKeys = {
   taskTime: (task: FloatingTaskDTO) => ["taskTime", task] as const,
 } as const;
+
+export const onboardingKeys = {
+  OnboardingStatus: () => ["OnboardingStatus"] as const,
+} as const;
+
+export const azureSpeechKeys = {
+  azureSpeech: () => ["azureSpeechToken"] as const,
+} as const;

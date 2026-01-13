@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { theme } from "@/shared/constants/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ASSETS } from "@/shared/constants/assets";
+import { useTranslation } from "react-i18next";
 export const SendButton = ({
   isRecognizing,
   isGenerating,
@@ -20,6 +21,7 @@ export const SendButton = ({
   stopListening: () => void;
   sendMessage: (message: string) => void;
 }) => {
+  const { t } = useTranslation("aiTaskGenerate");
   const lottieRef = useRef<LottieView>(null);
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export const SendButton = ({
               )
             )}
 
-            <Text className="text-baloo text-white text-sm">Send</Text>
+            <Text className="text-baloo text-white text-sm">{t("buttons.send")}</Text>
           </View>
         </GradientCircle>
       </Pressable>

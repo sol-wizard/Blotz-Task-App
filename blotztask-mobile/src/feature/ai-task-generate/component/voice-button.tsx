@@ -4,6 +4,7 @@ import LottieView from "lottie-react-native";
 import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 import { Text } from "react-native";
+import { useTranslation } from "react-i18next";
 export const VoiceButton = ({
   isRecognizing,
   toggleListening,
@@ -11,6 +12,7 @@ export const VoiceButton = ({
   isRecognizing: boolean;
   toggleListening: () => Promise<void>;
 }) => {
+  const { t } = useTranslation("aiTaskGenerate");
   const lottieRef = useRef<LottieView>(null);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export const VoiceButton = ({
             autoPlay={false}
             style={{ width: 40, height: 40 }}
           />
-          <Text className="text-baloo text-white text-sm">Speak</Text>
+          <Text className="text-baloo text-white text-sm">{t("buttons.speak")}</Text>
         </View>
       </GradientCircle>
     </Pressable>
