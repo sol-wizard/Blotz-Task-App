@@ -27,8 +27,9 @@ export function AiLanguagePicker({ value, onChange }: AiLanguageProps) {
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 24,
-        minWidth: 100,
         borderWidth: 0,
+        minWidth: 100,
+        maxWidth: "50%",
       }}
       selectedTextStyle={{
         color: "#444964",
@@ -36,6 +37,8 @@ export function AiLanguagePicker({ value, onChange }: AiLanguageProps) {
         fontSize: 12,
         textAlign: "left",
         marginLeft: 4,
+        flex: 0,
+        flexShrink: 0,
       }}
       containerStyle={{
         borderRadius: 16,
