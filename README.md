@@ -1,6 +1,6 @@
 # 📝 **BlotzTaskApp**
 
-https://blotztaskapp.webflow.io/
+Check out our [website](https://blotz-website.vercel.app/) for more
 
 ⭐ Star us on GitHub — it motivates us a lot!
 
