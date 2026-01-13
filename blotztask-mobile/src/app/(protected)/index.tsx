@@ -14,7 +14,7 @@ import SettingsScreen from "./settings";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { usePostHog } from "posthog-react-native";
 import { OnboardingCard } from "@/shared/components/ui/onboarding-card";
-import { useAiOnboardingStatus } from "@/feature/ai-task-generate/hooks/useAiOnboardingStatus";
+import { useUserOnboardingStatus } from "@/feature/ai-task-generate/hooks/useUserOnboardingStatus";
 
 const routes = [
   {
@@ -93,7 +93,7 @@ export default function ProtectedIndex() {
   const posthog = usePostHog();
   const { width, height } = useWindowDimensions();
 
-  const { isUserOnboardedAi } = useAiOnboardingStatus();
+  const { isUserOnboarded } = useUserOnboardingStatus();
   const [aiLayout, setAiLayout] = useState<{
     x: number;
     y: number;
@@ -140,7 +140,7 @@ export default function ProtectedIndex() {
         renderIcon={({ route, focused }) => getTabIcon(route.key, focused)}
       />
 
-      {!isUserOnboardedAi && (
+      {!isUserOnboarded && (
         <View
           style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 10 }}
           pointerEvents="box-none"
@@ -178,7 +178,7 @@ export default function ProtectedIndex() {
         </View>
       )}
 
-      {!isUserOnboardedAi && (
+      {!isUserOnboarded && (
         <OnboardingCard
           title="Tap to begin✨"
           subtitle="Let AI set up your task"

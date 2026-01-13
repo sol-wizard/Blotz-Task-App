@@ -9,6 +9,7 @@ public class UserProfileDTO
     public string? PictureUrl { get; set; }
     public string? DisplayName { get; set; }
     public required string Email { get; set; }
+    public bool IsOnBoarded { get; set; }
 
 }
 
@@ -36,7 +37,8 @@ public class GetUserProfileQueryHandler(BlotzTaskDbContext db, ILogger<GetUserPr
         {
             PictureUrl = user.PictureUrl,
             DisplayName = user.DisplayName,
-            Email = user.Email
+            Email = user.Email,
+            IsOnBoarded = user.IsOnboarded
         };
 
 

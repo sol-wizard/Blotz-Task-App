@@ -11,4 +11,5 @@ public class AppUser
     public DateTime CreationAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public PomodoroSetting PomodoroSetting { get; set; } = null!;
+    public bool IsOnboarded { get; set; } = false;
 }
