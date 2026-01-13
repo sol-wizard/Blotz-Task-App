@@ -19,7 +19,7 @@ public class TaskController(
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
     GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler,
-    GetStarSparkFloatingTasksByQueryHandler getFloatingTasksByQueryHandler,
+    SearchStarSparkFloatingTasksHandler searchFloatingTasksHandler,
     ILogger<TaskController> logger
 ) : ControllerBase
 {
@@ -99,7 +99,7 @@ public class TaskController(
             QueryString = query
         };
 
-        var result = await getFloatingTasksByQueryHandler.Handle(searchQuery, ct);
+        var result = await searchFloatingTasksHandler.Handle(searchQuery, ct);
         return result;
     }
 

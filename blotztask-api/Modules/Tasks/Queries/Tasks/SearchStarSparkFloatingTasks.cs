@@ -15,7 +15,7 @@ public class SearchStarSparkFloatingTasks
     public required string QueryString { get; init; }
 }
 
-public class GetStarSparkFloatingTasksByQueryHandler(BlotzTaskDbContext db, ILogger<GetStarSparkFloatingTasksByQueryHandler> logger)
+public class SearchStarSparkFloatingTasksHandler(BlotzTaskDbContext db, ILogger<SearchStarSparkFloatingTasksHandler> logger)
 {
     public async Task<List<FloatingTaskItemByQueryDto>> Handle(SearchStarSparkFloatingTasks request, CancellationToken ct = default)
     {
