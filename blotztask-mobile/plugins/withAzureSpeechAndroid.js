@@ -10,7 +10,6 @@ const path = require("path");
 
 const APP_PACKAGE = "com.blotz.blotztask";
 const APP_PACKAGE_PATH = APP_PACKAGE.split(".");
-
 const SPEECH_DEP = 'implementation "com.microsoft.cognitiveservices.speech:client-sdk:1.37.0"';
 
 // ---------- utils ----------
@@ -45,20 +44,64 @@ function ensureImport(mainAppText, importLine) {
   return `${importLine}\n${mainAppText}`;
 }
 
-function ensurePackagesAddLine(mainAppText, addLine) {
-  if (mainAppText.includes(addLine)) return mainAppText;
+/**
+ * ✅ Expo 54 Kotlin MainApplication 模板：
+ * override fun getPackages(): List<ReactPackage> =
+ *   PackageList(this).packages.apply { ... }
+ *
+ * 我们要在 apply block 内插入： add(AzureSpeechPackage())
+ */
+function ensureKotlinApplyAdd(mainAppText, addExpr /* e.g. add(AzureSpeechPackage()) */) {
+  if (mainAppText.includes(addExpr)) return mainAppText;
 
-  const xfLine = "packages.add(XfIatPackage())";
-  if (mainAppText.includes(xfLine)) {
-    return mainAppText.replace(xfLine, `${xfLine}\n            ${addLine}`);
+  const lines = mainAppText.split("\n");
+
+  // 找到 "PackageList(this).packages.apply {" 这一行
+  const applyLineIndex = lines.findIndex((l) =>
+    /PackageList\(this\)\.packages\.apply\s*\{\s*$/.test(l),
+  );
+
+  if (applyLineIndex === -1) {
+    throw new Error("Could not find `PackageList(this).packages.apply {` in MainApplication.kt");
   }
 
-  const returnRegex = /return packages/;
-  if (returnRegex.test(mainAppText)) {
-    return mainAppText.replace(returnRegex, `            ${addLine}\n            return packages`);
+  const applyLine = lines[applyLineIndex];
+  const baseIndentMatch = applyLine.match(/^(\s*)/);
+  const baseIndent = baseIndentMatch ? baseIndentMatch[1] : "";
+  const innerIndent = baseIndent + "  "; // apply block 内缩进两格（与模板注释一致）
+
+  // 找到对应 apply block 的关闭 "}"（同一缩进级别）
+  const closeRegex = new RegExp(`^${escapeRegExp(baseIndent)}\\}\\s*$`);
+  let closeIndex = -1;
+  for (let i = applyLineIndex + 1; i < lines.length; i++) {
+    if (closeRegex.test(lines[i])) {
+      closeIndex = i;
+      break;
+    }
+  }
+  if (closeIndex === -1) {
+    throw new Error("Could not find closing `}` for apply block in MainApplication.kt");
   }
 
-  throw new Error("Could not find insertion point in getPackages() to add AzureSpeechPackage()");
+  // 插入位置：尽量放在注释块之后（保持模板注释在顶部）
+  let insertIndex = closeIndex; // 默认插在 block 结束前
+  for (let i = applyLineIndex + 1; i < closeIndex; i++) {
+    if (lines[i].startsWith(innerIndent + "//")) {
+      insertIndex = i + 1; // 放到最后一行注释之后
+    }
+  }
+
+  // 如果注释块后面还有空行，可以跳过空行，保持紧凑
+  while (insertIndex < closeIndex && lines[insertIndex].trim() === "") {
+    insertIndex++;
+  }
+
+  lines.splice(insertIndex, 0, `${innerIndent}${addExpr}`);
+  return lines.join("\n");
+}
+
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 // ---------- plugin ----------
@@ -103,7 +146,6 @@ function withAzureSpeechAndroid(config) {
 
       const srcNative = path.join(projectRoot, "plugins", "azure-speech-android");
       const destNative = path.join(androidMainJava, ...APP_PACKAGE_PATH, "azurespeech");
-
       copyDir(srcNative, destNative);
 
       const proguardSrc = path.join(srcNative, "proguard-rules.pro");
@@ -123,14 +165,14 @@ function withAzureSpeechAndroid(config) {
 
       let mainAppText = fs.readFileSync(mainApplicationPath, "utf8");
 
+      // ✅ import
       const importLine = `import ${APP_PACKAGE}.azurespeech.AzureSpeechPackage`;
       mainAppText = ensureImport(mainAppText, importLine);
 
-      const addLine = "packages.add(AzureSpeechPackage())";
-      mainAppText = ensurePackagesAddLine(mainAppText, addLine);
+      // ✅ Kotlin apply block 内插入 add(...)
+      mainAppText = ensureKotlinApplyAdd(mainAppText, "add(AzureSpeechPackage())");
 
       fs.writeFileSync(mainApplicationPath, mainAppText, "utf8");
-
       return cfg;
     },
   ]);
