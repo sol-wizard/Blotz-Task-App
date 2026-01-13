@@ -39,7 +39,10 @@ public class AiTaskGenerateChatHub : Hub
         var timeZoneId = httpContext?.Request.Query["timeZone"].ToString();
         try
         {
-            timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            if (!string.IsNullOrWhiteSpace(timeZoneId))
+            {
+                timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            }
         }
         catch (Exception ex)
         {
