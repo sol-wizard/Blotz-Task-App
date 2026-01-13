@@ -6,7 +6,7 @@ import { UpdateUserProfileDTO } from "@/feature/settings/modals/update-user-prof
 export const fetchUserProfile = async (): Promise<UserProfileDTO> => {
   const url = `/User`;
   try {
-    return await apiClient.get(url);
+    return await apiClient.get<UserProfileDTO>(url);
   } catch (err: any) {
     console.error("Fetch user profile failed:", err);
     throw new Error("Failed to load user profile data");
@@ -16,7 +16,7 @@ export const fetchUserProfile = async (): Promise<UserProfileDTO> => {
 export const updateUserProfile = async (userProfile: UpdateUserProfileDTO): Promise<string> => {
   const url = `/User`;
   try {
-    return await apiClient.put(url, userProfile);
+    return await apiClient.put<string>(url, userProfile);
   } catch (err: any) {
     console.error("Update user profile failed:", err);
     throw new Error("Failed to update user profile data");

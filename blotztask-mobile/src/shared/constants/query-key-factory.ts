@@ -28,7 +28,7 @@ export const estimateKeys = {
 } as const;
 
 export const onboardingKeys = {
-  aiOnboardingStatus: () => ["aiOnboardingStatus"] as const,
+  OnboardingStatus: () => ["OnboardingStatus"] as const,
 } as const;
 
 export const azureSpeechKeys = {
