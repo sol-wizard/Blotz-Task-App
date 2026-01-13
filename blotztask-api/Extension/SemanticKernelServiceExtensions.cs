@@ -29,6 +29,14 @@ public static class SemanticKernelServiceExtensions
                 }
             }
 
+            if (string.IsNullOrWhiteSpace(endpoint) ||
+                string.IsNullOrWhiteSpace(deploymentId) ||
+                string.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new InvalidOperationException(
+                    "Missing Azure OpenAI configuration. Please set AzureOpenAI:Endpoint, AzureOpenAI:DeploymentId, and AzureOpenAI:ApiKey (or ensure Key Vault contains 'azureopenai-apikey' in production).");
+            }
+
             var kernelBuilder = Kernel.CreateBuilder();
 
             kernelBuilder.AddAzureOpenAIChatCompletion(

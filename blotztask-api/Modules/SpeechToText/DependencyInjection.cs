@@ -9,8 +9,6 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddMemoryCache();
-
         services.Configure<SpeechTokenSettings>(options =>
         {
             configuration.GetSection("AzureSpeech").Bind(options);

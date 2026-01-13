@@ -6,6 +6,7 @@ public static class CoreServiceExtensions
 {
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
+        services.AddMemoryCache();
         services.AddSignalR();
         services.AddControllers()
             .AddJsonOptions(options =>

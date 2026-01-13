@@ -42,7 +42,8 @@ public class AddCustomLabelCommandHandler(BlotzTaskDbContext db, ILogger<AddCust
             Scope = LabelScope.Custom,
             UserId = command.UserId
         };
-        db.Labels.AddAsync(label);
+        // Fire-and-forget is intentional here; SaveChangesAsync will still persist the added entity.
+        _ = db.Labels.AddAsync(label, ct);
         await db.SaveChangesAsync(ct);
         return $"Created label {command.Name} for {command.UserId} successfully.";
 

@@ -18,6 +18,10 @@ public static class DatabaseServiceExtensions
         if (environment.IsProduction())
         {
             var keyVaultEndpoint = configuration["KeyVault:VaultURI"];
+            if (string.IsNullOrWhiteSpace(keyVaultEndpoint))
+            {
+                throw new InvalidOperationException("Missing KeyVault configuration. Please set KeyVault:VaultURI.");
+            }
             var secretClient = new SecretClient(new Uri(keyVaultEndpoint), new DefaultAzureCredential());
             services.AddSingleton(secretClient);
 
