@@ -5,7 +5,6 @@ import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
 const config = {
   API_BASE_URL: process.env.EXPO_PUBLIC_URL,
 };
-
 const SIGNALR_HUBS_CHAT = `${config.API_BASE_URL}/ai-task-generate-chathub`;
 
 export const signalRService = {

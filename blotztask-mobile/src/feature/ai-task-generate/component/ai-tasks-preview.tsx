@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
-import { View, Pressable, ActivityIndicator, ScrollView } from "react-native";
+import { View, Pressable, ActivityIndicator, ScrollView, Text } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
@@ -11,8 +11,9 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
-import { Text } from "react-native";
-import { useAiOnboardingStatus } from "../hooks/useAiOnboardingStatus";
+
+import { useTranslation } from "react-i18next";
+import { useUserOnboardingStatus } from "../hooks/useUserOnboardingStatus";
 import { router } from "expo-router";
 
 export function AiTasksPreview({
@@ -26,9 +27,10 @@ export function AiTasksPreview({
   userInput: string;
   setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) {
+  const { t } = useTranslation("aiTaskGenerate");
   const { addTask, isAdding } = useTaskMutations();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
-  const { setUserOnboardedAi } = useAiOnboardingStatus();
+  const { setUserOnboarded } = useUserOnboardingStatus();
 
   const posthog = usePostHog();
 
@@ -77,7 +79,7 @@ export function AiTasksPreview({
       });
 
       setModalType("add-task-success");
-      setUserOnboardedAi.mutate(true);
+      setUserOnboarded.mutate(true);
 
       setLocalTasks([]);
       router.back();
@@ -131,12 +133,12 @@ export function AiTasksPreview({
           }`}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityRole="button"
-          accessibilityLabel="Add all remaining AI tasks"
+          accessibilityLabel={t("buttons.addToTasks")}
         >
           {isAdding ? (
             <ActivityIndicator size="small" />
           ) : (
-            <Text className="font-baloo">Add to tasks</Text>
+            <Text className="font-baloo text-sm">{t("buttons.addToTasks")}</Text>
           )}
         </Pressable>
       </View>

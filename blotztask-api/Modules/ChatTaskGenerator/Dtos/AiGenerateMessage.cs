@@ -14,7 +14,7 @@ public class AiGenerateMessage
     [Description("Indicates whether task extraction was successful. True if at least one actionable task was extracted, false otherwise.")]
     public bool IsSuccess { get; set; }
 
-    [JsonPropertyName("extractedTasks")] 
+    [JsonPropertyName("extractedTasks")]
     [Description("Array of tasks extracted from user input. Must contain at least one task when isSuccess is true. Empty array when isSuccess is false.")]
     public List<ExtractedTask> ExtractedTasks { get; set; } = new();
 
