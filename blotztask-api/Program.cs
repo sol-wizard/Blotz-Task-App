@@ -1,4 +1,3 @@
-using Auth0.AspNetCore.Authentication.Api;
 using BlotzTask.Extension;
 using BlotzTask.Middleware;
 using BlotzTask.Modules.BreakDown;
@@ -7,7 +6,6 @@ using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.TimeEstimate;
 using BlotzTask.Modules.Users;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,15 +26,7 @@ builder.Services.AddTimeEstimateModule();
 
 builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 
-builder.Services.AddAuth0ApiAuthentication(options =>
-{
-    options.Domain = builder.Configuration["Auth0:Domain"];
-    options.JwtBearerOptions = new JwtBearerOptions
-    {
-        Audience = builder.Configuration["Auth0:Audience"],
-        AutomaticRefreshInterval = TimeSpan.FromHours(72)
-    };
-});
+builder.Services.AddAuth0JwtBearerAuthentication(builder.Configuration);
 builder.Services.AddAzureOpenAi();
 builder.Services.AddSemanticKernelServices(builder.Configuration, builder.Environment);
 builder.Services.AddCustomCors();
