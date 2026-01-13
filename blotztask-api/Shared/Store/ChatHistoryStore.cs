@@ -43,7 +43,7 @@ public class ChatHistoryStore : IDisposable
         return entry.History;
     }
 
-    public bool TryGet(string connectionId, out ChatHistory history)
+    public bool TryGet(string connectionId, out ChatHistory? history)
     {
         if (_histories.TryGetValue(connectionId, out var entry))
         {
