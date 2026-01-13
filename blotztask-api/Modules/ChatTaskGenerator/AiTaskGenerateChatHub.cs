@@ -52,7 +52,7 @@ public class AiTaskGenerateChatHub : Hub
 
         var userLocalNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
 
-        await _chatHistoryManagerService.InitializeNewConversation(userId, userLocalNow);
+        await _chatHistoryManagerService.InitializeNewConversation(Context.ConnectionId, userId, userLocalNow);
         await base.OnConnectedAsync();
     }
 
@@ -62,7 +62,7 @@ public class AiTaskGenerateChatHub : Hub
         _logger.LogInformation(
             $"User disconnected: {connectionId}. Exception: {exception?.Message}"
         );
-        _chatHistoryManagerService.RemoveConversation();
+        _chatHistoryManagerService.RemoveConversation(connectionId);
         await base.OnDisconnectedAsync(exception);
     }
     //TODO: Do we need this user paramter in this function? check and test frontend after clean up
@@ -71,10 +71,10 @@ public class AiTaskGenerateChatHub : Hub
         try
         {
             var ct = Context.ConnectionAborted;
-            var chatHistory = _chatHistoryManagerService.GetChatHistory();
+            var chatHistory = _chatHistoryManagerService.GetChatHistory(Context.ConnectionId);
 
             chatHistory.AddUserMessage(message);
-            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
+            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
 
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
         }

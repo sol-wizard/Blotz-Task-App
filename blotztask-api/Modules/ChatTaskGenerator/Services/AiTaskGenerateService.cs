@@ -10,20 +10,19 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct);
+    Task<AiGenerateMessage> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct);
 }
 
 public class AiTaskGenerateService(
-    IChatHistoryManagerService chatHistoryManagerService,
     IChatCompletionService chatCompletionService,
     ILogger<AiTaskGenerateService> logger,
     Kernel kernel)
     : IAiTaskGenerateService
 {
-    public async Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct)
-    {
-        var chatHistory = chatHistoryManagerService.GetChatHistory();
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
+    public async Task<AiGenerateMessage> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct)
+    {
         try
         {
             var executionSettings = new OpenAIPromptExecutionSettings
@@ -40,8 +39,6 @@ public class AiTaskGenerateService(
             );
 
             var functionResultMessage = chatResults.LastOrDefault();
-
-            logger.LogInformation(functionResultMessage?.Content);
 
             if (functionResultMessage == null)
             {
@@ -63,7 +60,7 @@ public class AiTaskGenerateService(
             {
                 var aiGenerateMessage = JsonSerializer.Deserialize<AiGenerateMessage>(
                     functionResultMessage.Content,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    JsonOptions
                 );
 
                 if (aiGenerateMessage == null)
@@ -100,7 +97,7 @@ public class AiTaskGenerateService(
         }
         catch (Exception ex)
         {
-            logger.LogWarning("FULL EXCEPTION DETAILS: {ExceptionMessage}", ex.ToString());
+            logger.LogError(ex, "Unhandled exception during AI task generation.");
             throw new AiTaskGenerationException(AiErrorCode.Unknown,
                 "An unhandled exception occurred during AI task generation.", ex);
         }

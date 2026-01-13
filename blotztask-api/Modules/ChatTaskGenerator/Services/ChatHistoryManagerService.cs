@@ -1,58 +1,52 @@
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
-using BlotzTask.Modules.Labels.Queries;
 using Microsoft.SemanticKernel.ChatCompletion;
+using BlotzTask.Shared.Store;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IChatHistoryManagerService
 {
-    void RemoveConversation();
-    Task<ChatHistory> InitializeNewConversation(Guid userId, DateTimeOffset userLocalNow);
-    ChatHistory GetChatHistory();
+    void RemoveConversation(string connectionId);
+    Task<ChatHistory> InitializeNewConversation(string connectionId, Guid userId, DateTimeOffset userLocalNow);
+    ChatHistory GetChatHistory(string connectionId);
 }
 
 public class ChatHistoryManagerService(
-    ILogger<ChatHistoryManagerService> logger,
-    GetAllLabelsQueryHandler getAllLabelsQueryHandler
+    ChatHistoryStore chatHistoryStore
 )
     : IChatHistoryManagerService
 {
-    private static ChatHistory? _chatHistory;
-
-    public ChatHistory GetChatHistory()
+    public ChatHistory GetChatHistory(string connectionId)
     {
-        if (_chatHistory == null)
-            throw new InvalidOperationException("Chat history has not been initialized.");
-        return _chatHistory;
+        if (!chatHistoryStore.TryGet(connectionId, out var history) || history is null)
+        {
+            throw new InvalidOperationException("Chat history has not been initialized for this connection.");
+        }
+
+        return history;
     }
 
-    public void RemoveConversation()
+    public void RemoveConversation(string connectionId)
     {
-        _chatHistory = null;
+        chatHistoryStore.Remove(connectionId);
     }
 
-    public async Task<ChatHistory> InitializeNewConversation(Guid userId, DateTimeOffset userLocalNow)
+    public async Task<ChatHistory> InitializeNewConversation(string connectionId, Guid userId, DateTimeOffset userLocalNow)
     {
-        if (_chatHistory != null) return await Task.FromResult(_chatHistory);
+        // Ensure per-connection isolation (SignalR ConnectionId).
+        var chatHistory = chatHistoryStore.GetOrCreate(connectionId);
 
-        var chatHistory = new ChatHistory();
-
-
-        chatHistory.AddSystemMessage(
-            AiTaskGeneratorPrompts.GetSystemMessage(
-                userLocalNow.DateTime,
-                userLocalNow.DayOfWeek
-            )
-        );
-
-        SetChatHistory(chatHistory);
+        // Only add the system message once per new chat history.
+        if (chatHistory.Count == 0)
+        {
+            chatHistory.AddSystemMessage(
+                AiTaskGeneratorPrompts.GetSystemMessage(
+                    userLocalNow.DateTime,
+                    userLocalNow.DayOfWeek
+                )
+            );
+        }
 
         return await Task.FromResult(chatHistory);
-    }
-
-
-    public void SetChatHistory(ChatHistory chatHistory)
-    {
-        _chatHistory = chatHistory;
     }
 }
