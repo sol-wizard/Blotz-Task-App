@@ -69,9 +69,16 @@ export const FloatingTaskCard = ({
   return (
     <View className="mb-4">
       <Pressable
-        onLongPress={onToggle}
-        onPress={() => {
-          if (isToggled) return;
+        onLongPress={(event) => {
+          event.stopPropagation();
+          onToggle();
+        }}
+        onPress={(event) => {
+          event.stopPropagation();
+          if (isToggled) {
+            onToggle();
+            return;
+          }
           onPressCard(floatingTask);
         }}
       >
@@ -97,7 +104,13 @@ export const FloatingTaskCard = ({
 
       {isToggled && (
         <View className="flex-row justify-end mt-3">
-          <Pressable onPress={() => onDelete(floatingTask)} disabled={isDeleting}>
+          <Pressable
+            onPress={(event) => {
+              event.stopPropagation();
+              onDelete(floatingTask);
+            }}
+            disabled={isDeleting}
+          >
             <View className="w-8 h-8 bg-warning rounded-xl items-center justify-center">
               {isDeleting ? (
                 <ActivityIndicator size="small" color="#fff" />
@@ -107,7 +120,12 @@ export const FloatingTaskCard = ({
             </View>
           </Pressable>
 
-          <Pressable onPress={() => handleEstimateTime(floatingTask)}>
+          <Pressable
+            onPress={(event) => {
+              event.stopPropagation();
+              handleEstimateTime(floatingTask);
+            }}
+          >
             <View className="w-8 h-8 bg-[#E3EFFE] rounded-xl items-center justify-center ml-2">
               <MaterialCommunityIcons name="plus" color="#3D8DE0" size={18} />
             </View>
