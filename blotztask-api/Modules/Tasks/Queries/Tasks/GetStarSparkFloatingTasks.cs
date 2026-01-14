@@ -8,21 +8,42 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 public class GetStarSparkFloatingTasksQuery
 {
     [Required] public required Guid UserId { get; init; }
+    public string? QueryString { get; init; }
 }
 
 public class GetStarSparkFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetStarSparkFloatingTasksQueryHandler> logger)
 {
     public async Task<List<FloatingTaskItemDto>> Handle(GetStarSparkFloatingTasksQuery query, CancellationToken ct = default)
     {
-        logger.LogInformation("Fetching floating tasks of user {UserId} for StarSpark", query.UserId);
+        var rawQueryString = query.QueryString?.Trim() ?? string.Empty;
+        var hasSearchQuery = !string.IsNullOrWhiteSpace(rawQueryString);
+        var keyword = rawQueryString.ToLower();
 
-        var tasks = await db.TaskItems
+        if (hasSearchQuery)
+        {
+            logger.LogInformation("Searching floating tasks for user {UserId} with query {Query}", query.UserId, rawQueryString);
+        }
+        else
+        {
+            logger.LogInformation("Fetching floating tasks of user {UserId} for StarSpark", query.UserId);
+        }
+
+        var baseQuery = db.TaskItems
             .Where(t => t.UserId == query.UserId
                         && t.StartTime == null
                         && t.EndTime == null
                         && t.CreatedAt < DateTime.UtcNow.Date
                         && t.IsDone == false
-            )
+            );
+
+        if (hasSearchQuery)
+        {
+            baseQuery = baseQuery.Where(t =>
+                t.Title.ToLower().Contains(keyword)
+                || (t.Description != null && t.Description.ToLower().Contains(keyword)));
+        }
+
+        var tasks = await baseQuery
             .Select(task => new FloatingTaskItemDto
             {
                 Id = task.Id,
