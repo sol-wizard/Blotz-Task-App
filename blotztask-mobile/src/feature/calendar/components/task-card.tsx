@@ -22,7 +22,7 @@ import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
 import { convertDurationToText } from "@/shared/util/convert-duration";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 
-const ACTION_WIDTH = 64;
+const ACTION_WIDTH = 160;
 const OPEN_X = -ACTION_WIDTH;
 const OPEN_THRESHOLD = ACTION_WIDTH * 0.5;
 
@@ -225,10 +225,27 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
             </Pressable>
           </View>
 
-          <View className="w-2" />
+          {/* Actions */}
+          <View
+            style={{ width: ACTION_WIDTH }}
+            pointerEvents={actionsEnabled ? "auto" : "none"}
+            className="flex-row items-center"
+          >
+            <Pressable
+              onPress={() => {
+                if (isLoading) return;
+                navigateToTaskDetails(task);
+                translateX.value = withTiming(0);
+              }}
+              disabled={isLoading}
+              android_ripple={{ color: "#DCE7FF", borderless: false }}
+              className="w-24 h-20 rounded-xl bg-[#EEF3FF] items-center justify-center"
+            >
+              <Text className="text-[13px] font-semibold text-[#6A8CFF]">Breakdown</Text>
+            </Pressable>
 
-          {/* 3 Delete Button */}
-          <View className="w-14" pointerEvents={actionsEnabled ? "auto" : "none"}>
+            <View className="w-2" />
+
             <Pressable
               onPress={async () => {
                 if (isLoading) return;
