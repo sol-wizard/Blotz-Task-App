@@ -12,12 +12,14 @@ export const FloatingTaskDualView = ({
   isDeleting,
   onPressTask,
   onFirstItemLayout,
+  isOnboarding,
 }: {
   tasks: FloatingTaskDTO[];
   onDeleteTask: (t: FloatingTaskDTO) => void;
   isDeleting: boolean;
   onPressTask: (task: FloatingTaskDTO) => void;
   onFirstItemLayout?: (layout: LayoutInfo) => void;
+  isOnboarding?: boolean;
 }) => {
   const [toggledMap, setToggledMap] = useState<ToggledMap>({});
   const firstItemRef = useRef<View>(null);
@@ -55,6 +57,7 @@ export const FloatingTaskDualView = ({
                   key={item.id} // <--- 必须在这里！
                   ref={isFirst ? firstItemRef : null}
                   onLayout={isFirst ? measureFirstItem : undefined}
+                  style={{ zIndex: isFirst && isOnboarding ? 20 : 1 }}
                 >
                   <FloatingTaskCard
                     key={item.id}

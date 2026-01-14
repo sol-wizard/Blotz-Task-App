@@ -1,60 +1,24 @@
+// src/feature/star-spark/components/StarSparkOnboardingOverlay.tsx
+
 import React from "react";
-import { View, Text, Pressable, Image, StyleSheet, useWindowDimensions } from "react-native";
+import { View, StyleSheet, useWindowDimensions } from "react-native";
 import Svg, { Defs, Mask, Rect } from "react-native-svg";
-import { ASSETS } from "@/shared/constants/assets";
+import { OnboardingCard } from "@/shared/components/ui/onboarding-card";
 
 interface Props {
   targetLayout: { x: number; y: number; width: number; height: number };
-  onNext: () => void;
 }
 
-export const StarSparkOnboardingOverlay = ({ targetLayout, onNext }: Props) => {
+export const StarSparkOnboardingOverlay = ({ targetLayout }: Props) => {
   const { width, height } = useWindowDimensions();
 
-  console.log("Onboarding overlay dims", { width, height, targetLayout });
-
   return (
-    <View style={[StyleSheet.absoluteFill, { zIndex: 999 }]} pointerEvents="box-none">
-      {/* 拦截洞外区域的四块透明层 */}
-      <Pressable
-        style={{ position: "absolute", top: 0, left: 0, right: 0, height: targetLayout.y }}
-        onPress={() => {}}
-      />
-      <Pressable
-        style={{
-          position: "absolute",
-          top: targetLayout.y + targetLayout.height,
-          left: 0,
-          right: 0,
-          bottom: 0,
-        }}
-        onPress={() => {}}
-      />
-      <Pressable
-        style={{
-          position: "absolute",
-          top: targetLayout.y,
-          left: 0,
-          width: targetLayout.x,
-          height: targetLayout.height,
-        }}
-        onPress={() => {}}
-      />
-      <Pressable
-        style={{
-          position: "absolute",
-          top: targetLayout.y,
-          left: targetLayout.x + targetLayout.width,
-          right: 0,
-          height: targetLayout.height,
-        }}
-        onPress={() => {}}
-      />
-
-      {/* 视觉遮罩 */}
+    // zIndex 适中，容器 box-none 保证洞口和洞内区域可穿透；仅遮罩自身不拦截触摸
+    <View style={[StyleSheet.absoluteFill, { zIndex: 10 }]} pointerEvents="box-none">
+      {/* 视觉遮罩（pointerEvents 关闭，保证下层可点击） */}
       <Svg width={width} height={height} pointerEvents="none" style={StyleSheet.absoluteFill}>
         <Defs>
-          <Mask id="starspark-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+          <Mask id="starspark-mask" maskUnits="userSpaceOnUse">
             <Rect width={width} height={height} fill="white" />
             <Rect
               x={targetLayout.x}
@@ -69,35 +33,18 @@ export const StarSparkOnboardingOverlay = ({ targetLayout, onNext }: Props) => {
         <Rect width={width} height={height} fill="rgba(0,0,0,0.4)" mask="url(#starspark-mask)" />
       </Svg>
 
-      {/* 文案卡片 */}
-      <View
+      {/* 复用现有的 OnboardingCard 组件，移除 Next 按钮 */}
+      <OnboardingCard
+        title="Long-press a task ✨"
+        subtitle="Add it to today's list"
         style={{
           position: "absolute",
           top: targetLayout.y + targetLayout.height + 20,
           left: 20,
           right: 20,
+          zIndex: 11,
         }}
-        pointerEvents="box-none"
-      >
-        <View className="flex-row items-center bg-white rounded-[24px] px-5 py-4 shadow-xl">
-          <View className="mr-3">
-            <Image source={ASSETS.greenBun} className="w-12 h-12" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-[17px] font-balooBold text-info">Long-press a task ✨</Text>
-            <Text className="text-[14px] font-baloo text-info opacity-80">
-              Add it to today's list
-            </Text>
-          </View>
-        </View>
-
-        <Pressable
-          onPress={onNext}
-          className="self-end mt-4 bg-[#CDF79A] px-10 py-3 rounded-full shadow-lg active:opacity-70"
-        >
-          <Text className="font-balooBold text-secondary text-[18px]">Next</Text>
-        </Pressable>
-      </View>
+      />
     </View>
   );
 };

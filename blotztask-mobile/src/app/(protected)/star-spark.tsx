@@ -2,7 +2,7 @@ import { theme } from "@/shared/constants/theme";
 import { useCallback, useEffect, useState } from "react";
 import { View, Text, Image, Pressable, useWindowDimensions } from "react-native";
 import Svg, { Defs, Mask, Rect } from "react-native-svg";
-import { Searchbar } from "react-native-paper";
+import { Portal, Searchbar } from "react-native-paper";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { ASSETS } from "@/shared/constants/assets";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
@@ -58,6 +58,7 @@ export default function StarSparkScreen() {
     floatingTasks,
     isLoadingAll: isLoading,
   });
+  const showOnboarding = !isCompleted && targetLayout && !showLoading;
 
   const handlePressTask = (task: any) => {
     router.push({
@@ -138,6 +139,7 @@ export default function StarSparkScreen() {
               tasks={floatingTasksResult}
               onDeleteTask={handleDelete}
               isDeleting={isDeleting}
+              isOnboarding={!!showOnboarding}
               onPressTask={handlePressTask}
               onFirstItemLayout={(layout) => {
                 if (!targetLayout) setTargetLayout(layout);
@@ -145,11 +147,12 @@ export default function StarSparkScreen() {
             />
           </View>
         )}
-
-        {!isCompleted && targetLayout && (
-          <StarSparkOnboardingOverlay targetLayout={targetLayout} onNext={handleNext} />
-        )}
       </SafeAreaView>
+      {showOnboarding && (
+        <Portal>
+          <StarSparkOnboardingOverlay targetLayout={targetLayout} />
+        </Portal>
+      )}
     </View>
   );
 }
