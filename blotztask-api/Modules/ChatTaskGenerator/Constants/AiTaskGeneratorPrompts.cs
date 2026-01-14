@@ -7,8 +7,6 @@ public static class AiTaskGeneratorPrompts
     public static string GetSystemMessage(DateTime currentTime, DayOfWeek dayOfWeek)
     {
         var formattedTime = currentTime.ToString("yyyy-MM-dd'T'HH:mm", CultureInfo.InvariantCulture);
-        Console.WriteLine($"AiTaskGeneratorPrompts currentTime: {formattedTime}");
-
 
         return $"""
                        You are a task extraction assistant. Extract actionable tasks from user input.
