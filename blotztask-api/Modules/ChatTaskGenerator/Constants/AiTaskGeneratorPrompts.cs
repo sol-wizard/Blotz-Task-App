@@ -34,8 +34,7 @@ public static class AiTaskGeneratorPrompts
                           - Use the provided date and time directly.
                         
                         - If the user mentions a DATE but does NOT mention a time:
-                          - You MUST still assign a time.
-                          - Infer a reasonable default time based on the task content.
+                          - You MUST still assign a time based on the task content.
                         
                         - Relative dates (e.g. "tomorrow", "next Monday", "下周一"):
                           - MUST be calculated relative to currentTime and dayOfWeek.
