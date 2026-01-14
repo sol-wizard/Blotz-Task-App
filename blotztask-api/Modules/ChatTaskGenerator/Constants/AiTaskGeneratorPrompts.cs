@@ -37,20 +37,12 @@ public static class AiTaskGeneratorPrompts
                           - You MUST still assign a time.
                           - Infer a reasonable default time based on the task content.
                         
-                        - If the user mentions neither date nor time:
-                          - Set start_time = end_time = null (Floating Task).
-                        
-                        - If only one of start_time or end_time can be inferred:
-                          - Set them equal.
-                        
                         - Relative dates (e.g. "tomorrow", "next Monday", "下周一"):
                           - MUST be calculated relative to currentTime and dayOfWeek.
-
-                       
+                          
                        TASK LABEL RULES (STRICT):
                         - Every generated task MUST include a `task_label` field.
                         - task_label MUST be one of: "Work", "Life", "Learning", "Health" (always in English, even for Chinese input).
-                        - The task label categorizes the type of activity and must NOT replace the task title.
                         
                        
                        OUTPUT LANGUAGE RULE:
