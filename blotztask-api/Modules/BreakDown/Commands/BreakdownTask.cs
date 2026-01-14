@@ -42,7 +42,6 @@ public class BreakdownTaskCommandHandler(
             // This uses OpenAI's JSON Schema feature to enforce the response structure at the model level
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                Temperature = 0.2, // Low temperature for more deterministic, consistent breakdowns
                 ResponseFormat = typeof(GeneratedSubTaskList) // Enforces structured output via JSON Schema
             };
 

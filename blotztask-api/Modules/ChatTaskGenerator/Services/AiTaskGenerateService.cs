@@ -28,7 +28,6 @@ public class AiTaskGenerateService(
         {
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                Temperature = 0.2, // Low temperature for more deterministic, consistent breakdowns
                 ResponseFormat = typeof(AiGenerateMessage) // Enforces structured output via JSON Schema
             };
 
