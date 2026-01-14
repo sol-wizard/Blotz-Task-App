@@ -6,28 +6,45 @@ using FluentAssertions;
 
 namespace BlotzTask.Tests.Queries;
 
-public class SearchStarSparkFloatingTasksTests : IClassFixture<DatabaseFixture>
+public class GetStarSparkFloatingTasksTests : IClassFixture<DatabaseFixture>
 {
     private readonly BlotzTaskDbContext _context;
     private readonly DataSeeder _seeder;
-    private readonly SearchStarSparkFloatingTasksHandler _handler;
+    private readonly GetStarSparkFloatingTasksQueryHandler _handler;
 
-    public SearchStarSparkFloatingTasksTests(DatabaseFixture fixture)
+    public GetStarSparkFloatingTasksTests(DatabaseFixture fixture)
     {
         _context = new BlotzTaskDbContext(fixture.Options);
         _seeder = new DataSeeder(_context);
 
-        var logger = TestDbContextFactory.CreateLogger<SearchStarSparkFloatingTasksHandler>();
-        _handler = new SearchStarSparkFloatingTasksHandler(_context, logger);
+        var logger = TestDbContextFactory.CreateLogger<GetStarSparkFloatingTasksQueryHandler>();
+        _handler = new GetStarSparkFloatingTasksQueryHandler(_context, logger);
     }
     
     [Fact]
-    public async Task Handle_ShouldReturnEmptyList_WhenQueryIsEmpty()
+    public async Task Handle_ShouldReturnAllFloatingTasks_WhenQueryIsEmpty()
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
+        var yesterday = DateTime.UtcNow.Date.AddDays(-1);
 
-        var query = new SearchStarSparkFloatingTasks
+        await _seeder.CreateTaskAsync(
+            userId,
+            title: "Floating task 1",
+            start: null,
+            end: null,
+            createdAt: yesterday
+        );
+
+        await _seeder.CreateTaskAsync(
+            userId,
+            title: "Floating task 2",
+            start: null,
+            end: null,
+            createdAt: yesterday
+        );
+
+        var query = new GetStarSparkFloatingTasksQuery
         {
             UserId = userId,
             QueryString = "   " 
@@ -37,8 +54,8 @@ public class SearchStarSparkFloatingTasksTests : IClassFixture<DatabaseFixture>
         var result = await _handler.Handle(query);
 
         // Assert
-        result.Should().BeEmpty(
-            because: "Empty or whitespace query should return no floating tasks");
+        result.Should().HaveCount(2,
+            because: "Empty or whitespace query should return all floating tasks");
     }
     
     [Fact]
@@ -106,7 +123,7 @@ public class SearchStarSparkFloatingTasksTests : IClassFixture<DatabaseFixture>
             createdAt: DateTime.UtcNow
         );
 
-        var query = new SearchStarSparkFloatingTasks
+        var query = new GetStarSparkFloatingTasksQuery
         {
             UserId = userId,
             QueryString = "milk"

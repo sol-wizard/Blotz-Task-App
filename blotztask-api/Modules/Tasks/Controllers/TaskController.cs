@@ -19,7 +19,6 @@ public class TaskController(
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
     GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler,
-    SearchStarSparkFloatingTasksHandler searchFloatingTasksHandler,
     ILogger<TaskController> logger
 ) : ControllerBase
 {
@@ -67,39 +66,20 @@ public class TaskController(
         return result;
     }
 
-    [HttpGet("floating")]
-    public async Task<IEnumerable<FloatingTaskItemDto>> GetFloatingTasks(
-        CancellationToken ct)
+    [HttpGet("star-spark-floating-tasks")]
+    public async Task<IEnumerable<FloatingTaskItemDto>> GetStarSparkFloatingTasks(
+        [FromQuery] string? query, CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
-        var query = new GetStarSparkFloatingTasksQuery
-        {
-            UserId = userId
-        };
-
-        var result = await getStarSparkFloatingTasksQueryHandler.Handle(query, ct);
-        return result;
-    }
-
-    [HttpGet("search")]
-    public async Task<IEnumerable<FloatingTaskItemByQueryDto>> GetFloatingTasksByQuery([FromQuery] string query, CancellationToken ct)
-    {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return [];
-        }
-
-        var searchQuery = new SearchStarSparkFloatingTasks
+        var floatingTasksQuery = new GetStarSparkFloatingTasksQuery
         {
             UserId = userId,
             QueryString = query
         };
 
-        var result = await searchFloatingTasksHandler.Handle(searchQuery, ct);
+        var result = await getStarSparkFloatingTasksQueryHandler.Handle(floatingTasksQuery, ct);
         return result;
     }
 

@@ -42,22 +42,13 @@ export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
   }
 }
 
-export async function fetchFloatingTasks(): Promise<FloatingTaskDTO[]> {
-  const url = `/Task/floating`;
+export async function fetchStarSparkFloatingTasks(query?: string): Promise<FloatingTaskDTO[]> {
+  const url = `/Task/star-spark-floating-tasks`;
   try {
-    return await apiClient.get(url);
-  } catch {
-    throw new Error("Failed to fetch floating task.");
-  }
-}
-
-export async function fetchFloatingTasksByQuery(query: string): Promise<FloatingTaskDTO[]> {
-  const url = `/Task/search`;
-  try {
-    const data: FloatingTaskDTO[] = await apiClient.get(url, { params: { query } });
+    const data: FloatingTaskDTO[] = await apiClient.get(url, { params: query ? { query } : undefined });
     return data;
   } catch {
-    throw new Error("Failed search tasks.");
+    throw new Error("Failed to fetch floating tasks for StarSpark.");
   }
 }
 
