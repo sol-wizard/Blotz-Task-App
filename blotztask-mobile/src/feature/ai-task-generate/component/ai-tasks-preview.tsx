@@ -15,6 +15,7 @@ import { EVENTS } from "@/shared/constants/posthog-events";
 import { useTranslation } from "react-i18next";
 import { useUserOnboardingStatus } from "../hooks/useUserOnboardingStatus";
 import { router } from "expo-router";
+import { setLocalOnboardingStep } from "@/shared/onboarding/local-onboarding";
 
 export function AiTasksPreview({
   aiTasks,
@@ -80,6 +81,7 @@ export function AiTasksPreview({
 
       setModalType("add-task-success");
       setUserOnboarded.mutate(true);
+      await setLocalOnboardingStep(5);
 
       setLocalTasks([]);
       router.back();

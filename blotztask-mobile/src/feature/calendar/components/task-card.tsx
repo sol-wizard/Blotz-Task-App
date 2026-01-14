@@ -31,9 +31,18 @@ interface TaskCardProps {
   deleteTask: (task: TaskDetailDTO) => void;
   isDeleting: boolean;
   selectedDay?: Date;
+  onSwipeActionsOpen?: () => void;
+  onBreakdownPress?: (task: TaskDetailDTO) => void;
 }
 
-export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) {
+export default function TaskCard({
+  task,
+  deleteTask,
+  isDeleting,
+  selectedDay,
+  onSwipeActionsOpen,
+  onBreakdownPress,
+}: TaskCardProps) {
   const { toggleTask, isToggling } = useTaskMutations();
   const { toggleSubtaskStatus, isTogglingSubtaskStatus } = useSubtaskMutations();
   const queryClient = useQueryClient();
@@ -68,6 +77,10 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
 
   const dividerColor = task.label?.color ?? theme.colors.disabled;
 
+  const handleSwipeActionsOpen = () => {
+    onSwipeActionsOpen?.();
+  };
+
   // Gesture: only allow left swipe, snap to 0 or OPEN_X on release
   const pan = Gesture.Pan()
     .enabled(!isLoading)
@@ -84,6 +97,9 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
       const open = Math.abs(translateX.value) > OPEN_THRESHOLD;
       translateX.value = withTiming(open ? OPEN_X : 0, { duration: 160 });
       runOnJS(setActionsEnabled)(open);
+      if (open) {
+        runOnJS(handleSwipeActionsOpen)();
+      }
     });
 
   // Content layer follows gesture movement
@@ -234,8 +250,10 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
             <Pressable
               onPress={() => {
                 if (isLoading) return;
+                onBreakdownPress?.(task);
                 navigateToTaskDetails(task);
                 translateX.value = withTiming(0);
+                runOnJS(setActionsEnabled)(false);
               }}
               disabled={isLoading}
               android_ripple={{ color: "#DCE7FF", borderless: false }}
