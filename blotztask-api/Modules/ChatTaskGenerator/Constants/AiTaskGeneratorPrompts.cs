@@ -18,29 +18,28 @@ public static class AiTaskGeneratorPrompts
                        Task Generation Guidelines:
                        - Generate one task per action mentioned by the user.
                        - A task's *title* must summarize the user's action in a short, meaningful sentence. 
-                       - Do NOT create subtasks such as planning or preparation unless explicitly stated.
                        - If no clear description is provided or implied, leave the description field empty.
                        - Always return tasks, even if the user's input is extremely short or only contains a verb or noun.
 
                        TASK TIME RULES (STRICT):
-                       - You may create time for the task if you can infer a specific time frame from the context, but do not assume a time if none is mentioned.
-                       - Take currentTime and dayOfWeek into consideration when you create date
-                       - There can only be three type of task:
-                         1. Floating Task: start_time = end_time = null
-                         2. Single Time Task: start_time = end_time, start_time != null
-                         3. Range Time Task: start_time < end_time, start_time != null, end_time != null
-                       - If an end time or time frame is implied, set a reasonable start_time. 
-                       - If a start time or time frame is implied, set a reasonable end_time. 
-                       - If only start time or end time is provided and the other one cannot be reasonably inferred, set them to be equal.
-                       - When the user uses relative expressions like "next Monday", "this Friday", "下周一":
-                        * Always compute the date RELATIVE to currentTime.
-                        * Example: if currentTime is 2025-11-24T20:58 and dayOfWeek is Monday,
-                          then "next Monday" MUST be 2025-12-01 (7 days later).
-                       
+
+                        - There are only three valid task types:
+                          1. Floating Task: start_time = end_time = null
+                          2. Single Time Task: start_time = end_time, both not null
+                          3. Range Time Task: start_time < end_time, both not null
+                        
+                        - If the user mentions BOTH date and time:
+                          - Use the provided date and time directly.
+                        
+                        - If the user mentions a DATE but does NOT mention a time:
+                          - You MUST still assign a time based on the task content.
+                        
+                        - Relative dates (e.g. "tomorrow", "next Monday", "下周一"):
+                          - MUST be calculated relative to currentTime and dayOfWeek.
+                          
                        TASK LABEL RULES (STRICT):
                         - Every generated task MUST include a `task_label` field.
                         - task_label MUST be one of: "Work", "Life", "Learning", "Health" (always in English, even for Chinese input).
-                        - The task label categorizes the type of activity and must NOT replace the task title.
                         
                        
                        OUTPUT LANGUAGE RULE:

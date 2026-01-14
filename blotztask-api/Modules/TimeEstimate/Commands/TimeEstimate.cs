@@ -23,7 +23,6 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
         {
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                Temperature = 0.2,
                 ResponseFormat = typeof(AITimeEstimation)
             };
 
