@@ -52,6 +52,10 @@ export default function TaskDetailsScreen() {
     });
   };
 
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
   if (!selectedTask) {
     console.warn("No selected task found");
     return (
@@ -67,10 +71,6 @@ export default function TaskDetailsScreen() {
         </TouchableOpacity>
       </View>
     );
-  }
-
-  if (isLoading) {
-    return <LoadingScreen />;
   }
 
   const canSaveDescription = descriptionText.trim() !== (selectedTask.description ?? "").trim();
