@@ -3,6 +3,7 @@ const {
   withAppBuildGradle,
   withProjectBuildGradle,
   withDangerousMod,
+  withAndroidManifest, // ✅ NEW
 } = require("@expo/config-plugins");
 
 const fs = require("fs");
@@ -11,6 +12,9 @@ const path = require("path");
 const APP_PACKAGE = "com.blotz.blotztask";
 const APP_PACKAGE_PATH = APP_PACKAGE.split(".");
 const SPEECH_DEP = 'implementation "com.microsoft.cognitiveservices.speech:client-sdk:1.37.0"';
+
+// Azure Speech SDK internal provider name (the class)
+const AZURE_PROVIDER_NAME = "com.microsoft.cognitiveservices.speech.util.InternalContentProvider";
 
 // ---------- utils ----------
 function copyDir(srcDir, destDir) {
@@ -106,6 +110,57 @@ function escapeRegExp(s) {
 
 // ---------- plugin ----------
 function withAzureSpeechAndroid(config) {
+  /**
+   * 0) ✅ Fix Google Play ContentProvider authority conflict
+   * Azure Speech SDK ships a provider with a hard-coded authority:
+   *   com.microsoft.cognitiveservices.speech.util.InternalContentProvider
+   * This is NOT globally unique, so Google Play rejects the AAB.
+   *
+   * We override it to: ${applicationId}.microsoftSpeechInternalProvider
+   */
+  config = withAndroidManifest(config, (cfg) => {
+    const manifest = cfg.modResults;
+
+    // ✅ Ensure tools namespace exists on <manifest>
+    manifest.manifest.$ = manifest.manifest.$ ?? {};
+    if (!manifest.manifest.$["xmlns:tools"]) {
+      manifest.manifest.$["xmlns:tools"] = "http://schemas.android.com/tools";
+    }
+
+    const app = manifest.manifest.application?.[0];
+    if (!app) return cfg;
+
+    app.provider = app.provider ?? [];
+
+    const uniqueAuthority = "${applicationId}.microsoftSpeechInternalProvider";
+
+    const existing = app.provider.find((p) => p?.$?.["android:name"] === AZURE_PROVIDER_NAME);
+
+    const patchProviderAttrs = (provider) => {
+      provider.$["android:authorities"] = uniqueAuthority;
+      provider.$["android:exported"] = provider.$["android:exported"] ?? "false";
+
+      // ✅ Tell manifest merger we intentionally override this attribute
+      provider.$["tools:replace"] = "android:authorities";
+    };
+
+    if (existing) {
+      patchProviderAttrs(existing);
+    } else {
+      const newProvider = {
+        $: {
+          "android:name": AZURE_PROVIDER_NAME,
+          "android:authorities": uniqueAuthority,
+          "android:exported": "false",
+          "tools:replace": "android:authorities",
+        },
+      };
+      app.provider.push(newProvider);
+    }
+
+    return cfg;
+  });
+
   // 1) Ensure mavenCentral() in root project build.gradle
   config = withProjectBuildGradle(config, (cfg) => {
     let content = cfg.modResults.contents;
