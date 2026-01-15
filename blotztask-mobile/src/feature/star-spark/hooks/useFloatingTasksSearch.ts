@@ -1,5 +1,5 @@
 import { FloatingTaskDTO } from "../models/floating-task-dto";
-import { fetchFloatingTasksByQuery } from "@/shared/services/task-service";
+import { fetchStarSparkFloatingTasks } from "@/shared/services/task-service";
 import { taskKeys } from "@/shared/constants/query-key-factory";
 import { useQuery } from "@tanstack/react-query";
 
@@ -9,6 +9,6 @@ export const useFloatingTasksSearch = (keyword: string) => {
   return useQuery<FloatingTaskDTO[]>({
     queryKey: taskKeys.floatingSearch(trimmedKeyword),
     enabled: trimmedKeyword.length > 0,
-    queryFn: () => fetchFloatingTasksByQuery(trimmedKeyword),
+    queryFn: () => fetchStarSparkFloatingTasks(trimmedKeyword),
   });
 };
