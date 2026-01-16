@@ -7,13 +7,23 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
+
+type OnboardingSection = "intro" | "ai" | "breakdown" | "gashapon";
 
 export default function OnboardingScreen() {
   const { setUserOnboarded } = useUserOnboardingStatus();
-  const sections = ["intro", "ai", "breakdown", "gashapon"];
+  const { t } = useTranslation("onboarding");
+  const [sections, setSections] = useState<OnboardingSection[]>([
+    "intro",
+    "ai",
+    "breakdown",
+    "gashapon",
+  ]);
   const [activeOnboardingIndex, setActiveOnboardingIndex] = useState(0);
 
   const handleFinish = () => {
+    setSections(["intro", "ai", "breakdown", "gashapon"]);
     setUserOnboarded.mutate(true);
     router.replace("/(protected)");
   };
@@ -60,7 +70,9 @@ export default function OnboardingScreen() {
           })}
         </View>
         <Pressable onPress={handleNext} className="w-full bg-black rounded-full py-4">
-          <Text className="text-white text-lg font-baloo text-center">Continue</Text>
+          <Text className="text-white text-lg font-baloo text-center">
+            {t("actions.continue")}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
