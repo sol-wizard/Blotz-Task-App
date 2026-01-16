@@ -2,10 +2,10 @@ import { ASSETS } from "@/shared/constants/assets";
 import { useUserOnboardingStatus } from "@/feature/ai-task-generate/hooks/useUserOnboardingStatus";
 import { router } from "expo-router";
 import React from "react";
-import { Image, Pressable, StatusBar, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function OnboardingScreen() {
+export default function OnboardingIndexScreen() {
   const { setUserOnboarded } = useUserOnboardingStatus();
 
   const handleFinish = () => {
