@@ -1,0 +1,32 @@
+import { ASSETS } from "@/shared/constants/assets";
+import React from "react";
+import { Image, Pressable, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+
+type OnboardingAiSectionProps = {
+  onSkip: () => void;
+  onBack: () => void;
+};
+
+export function OnboardingAiSection({ onSkip, onBack }: OnboardingAiSectionProps) {
+  return (
+    <View className="flex-1 px-6">
+      <View className="flex-row items-center justify-between pt-2">
+        <Pressable onPress={onBack} hitSlop={10}>
+          <Ionicons name="chevron-back" size={22} color="#8C8C8C" />
+        </Pressable>
+        <Pressable onPress={onSkip} hitSlop={10}>
+          <Text className="text-xl font-baloo text-secondary">Skip</Text>
+        </Pressable>
+      </View>
+
+      <View className="flex-1 items-center justify-center">
+        <Image source={ASSETS.greenHouse} className="w-40 h-40 mb-6" resizeMode="contain" />
+        <Text className="text-3xl font-balooBold text-black text-center">Plan on the calendar</Text>
+        <Text className="text-base font-baloo text-secondary text-center mt-2">
+          Drag tasks into your day, or let AI generate a schedule in seconds.
+        </Text>
+      </View>
+    </View>
+  );
+}
