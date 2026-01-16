@@ -23,13 +23,12 @@ export default function OnboardingScreen() {
   };
 
   const handleNext = () => {
-    setActiveOnboardingIndex((prev) => {
-      if (prev >= sections.length - 1) {
-        handleFinish();
-        return prev;
-      }
-      return prev + 1;
-    });
+    if (activeOnboardingIndex >= sections.length - 1) {
+      handleFinish();
+      return;
+    }
+
+    setActiveOnboardingIndex((prev) => prev + 1);
   };
 
   const handleBack = () => {
