@@ -3,11 +3,7 @@ import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
-type OnboardingIntroSectionProps = {
-  onSkip: () => void;
-};
-
-export function OnboardingIntroSection({ onSkip }: OnboardingIntroSectionProps) {
+export function OnboardingIntroSection({ onSkip }: { onSkip: () => void }) {
   const { t } = useTranslation("onboarding");
 
   return (
@@ -20,9 +16,7 @@ export function OnboardingIntroSection({ onSkip }: OnboardingIntroSectionProps) 
 
       <View className="flex-1 items-center justify-center">
         <Image source={ASSETS.blotzIcon} className="w-24 h-24 mb-6" resizeMode="contain" />
-        <Text className="text-3xl font-balooBold text-black text-center">
-          {t("intro.title")}
-        </Text>
+        <Text className="text-3xl font-balooBold text-black text-center">{t("intro.title")}</Text>
         <Text className="text-base font-baloo text-secondary text-center mt-2">
           {t("intro.subtitle")}
         </Text>
