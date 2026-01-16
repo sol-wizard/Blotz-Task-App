@@ -14,31 +14,28 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-1 px-6">
-          <View className="items-end pt-2">
-            <Pressable onPress={handleFinish} hitSlop={10}>
-              <Text className="text-base font-baloo text-secondary">Skip</Text>
-            </Pressable>
-          </View>
-
-          <View className="flex-1 items-center justify-center">
-            <Image source={ASSETS.blotzIcon} className="w-24 h-24 mb-6" resizeMode="contain" />
-            <Text className="text-3xl font-balooBold text-black text-center">
-              Welcome to Blotz Tasks
-            </Text>
-            <Text className="text-base font-baloo text-secondary text-center mt-2">
-              Keep planning light, tidy, and easy.
-            </Text>
-          </View>
-
-          <Pressable onPress={handleFinish} className="w-full bg-black rounded-full py-4">
-            <Text className="text-white text-lg font-balooSemiBold text-center">Continue</Text>
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 px-6">
+        <View className="items-end pt-2">
+          <Pressable onPress={handleFinish} hitSlop={10}>
+            <Text className="text-xl font-baloo text-secondary">Skip</Text>
           </Pressable>
         </View>
-      </SafeAreaView>
-    </>
+
+        <View className="flex-1 items-center justify-center">
+          <Image source={ASSETS.blotzIcon} className="w-24 h-24 mb-6" resizeMode="contain" />
+          <Text className="text-3xl font-balooBold text-black text-center">
+            Welcome to Blotz Tasks
+          </Text>
+          <Text className="text-base font-baloo text-secondary text-center mt-2">
+            Keep planning light, tidy, and easy.
+          </Text>
+        </View>
+
+        <Pressable onPress={handleFinish} className="w-full bg-black rounded-full py-4">
+          <Text className="text-white text-lg font-baloo text-center">Continue</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
   );
 }
