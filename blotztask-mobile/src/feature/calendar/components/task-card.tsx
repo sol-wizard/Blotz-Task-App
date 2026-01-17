@@ -39,6 +39,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
   const { width: screenWidth } = useWindowDimensions();
+  const translateX = useSharedValue(0);
 
   const hasSubtasks = task.subtasks && task.subtasks.length > 0;
 
@@ -60,15 +61,8 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
 
   const [actionsEnabled, setActionsEnabled] = useState(false);
 
-  // negative value indicates left swipe
-  const translateX = useSharedValue(0);
-
-  // Disable interactions when loading
   const isLoading = isToggling || isDeleting;
 
-  const dividerColor = task.label?.color ?? theme.colors.disabled;
-
-  // Gesture: only allow left swipe, snap to 0 or OPEN_X on release
   const pan = Gesture.Pan()
     .enabled(!isLoading)
     .activeOffsetX([-10, 10])
@@ -136,7 +130,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
 
                     <View
                       className="w-[6px] h-[30px] rounded-[3px] mr-3"
-                      style={{ backgroundColor: dividerColor }}
+                      style={{ backgroundColor: task.label?.color ?? theme.colors.disabled }}
                     />
                   </Animated.View>
 
