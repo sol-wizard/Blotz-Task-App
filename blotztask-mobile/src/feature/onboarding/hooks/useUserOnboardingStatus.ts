@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 // import AsyncStorage from "@react-native-async-storage/async-storage";
-import { onboardingKeys } from "@/shared/constants/query-key-factory";
+import { onboardingKeys, userKeys } from "@/shared/constants/query-key-factory";
 import { fetchUserProfile, updateUserProfile } from "@/shared/services/user-service";
 
 export function useUserOnboardingStatus() {
@@ -18,8 +18,9 @@ export function useUserOnboardingStatus() {
       await updateUserProfile({ isOnBoarded: nextValue } as any);
       return nextValue;
     },
-    onSuccess: (nextValue) => {
-      queryClient.setQueryData(onboardingKeys.OnboardingStatus(), nextValue);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: onboardingKeys.OnboardingStatus() });
+      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
     },
   });
 
