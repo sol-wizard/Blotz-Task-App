@@ -11,6 +11,8 @@ import { requestIOSMicrophonePermission } from "../utils/request-microphone-perm
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AiLanguagePicker } from "./ai-language-picker";
 import { useTranslation } from "react-i18next";
+import { KeyboardStickyView } from "react-native-keyboard-controller";
+
 export const IOSInput = ({
   text,
   setText,
@@ -80,7 +82,7 @@ export const IOSInput = ({
 
   const showSendButton = text.trim() !== "" || recognizing;
   return (
-    <View className="pt-2">
+    <KeyboardStickyView className="pt-2">
       <View className="items-center">
         <View className="w-96 mb-10" style={{ minHeight: 60 }}>
           <TextInput
@@ -115,6 +117,6 @@ export const IOSInput = ({
           )}
         </View>
       </View>
-    </View>
+    </KeyboardStickyView>
   );
 };
