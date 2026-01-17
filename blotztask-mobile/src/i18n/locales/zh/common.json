@@ -2,6 +2,7 @@
   "buttons": {
     "cancel": "取消",
     "done": "完成",
+    "getStarted": "开始",
     "save": "保存",
     "saving": "保存中...",
     "goBack": "返回",
@@ -25,4 +26,3 @@
     "settings": "设置"
   }
 }
-
