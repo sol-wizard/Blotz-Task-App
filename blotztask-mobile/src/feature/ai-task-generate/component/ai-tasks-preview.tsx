@@ -99,52 +99,46 @@ export function AiTasksPreview({
   };
 
   return (
-    <KeyboardStickyView>
-      <View className="items-center max-h-[600px]">
-        <ScrollView className="w-full mt-4 mb-8">
-          {localTasks?.map((task) => (
-            <AiTaskCard
-              key={task.id}
-              task={task}
-              handleTaskDelete={onDeleteTask}
-              onTitleChange={onTitleChange}
-            />
-          ))}
-        </ScrollView>
+    <View className="items-center max-h-[600px]">
+      <ScrollView className="w-full mt-4 mb-8">
+        {localTasks?.map((task) => (
+          <AiTaskCard
+            key={task.id}
+            task={task}
+            handleTaskDelete={onDeleteTask}
+            onTitleChange={onTitleChange}
+          />
+        ))}
+      </ScrollView>
 
-        <View className="flex-row justify-center items-center mt-4 mb-10">
-          <Pressable
-            onPress={handleGoBack}
-            className="w-12 h-12 rounded-full items-center justify-center bg-background mx-8 font-bold"
-            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <MaterialCommunityIcons
-              name="arrow-u-left-top"
-              size={20}
-              color={theme.colors.primary}
-            />
-          </Pressable>
+      <View className="flex-row justify-center items-center mt-4 mb-10">
+        <Pressable
+          onPress={handleGoBack}
+          className="w-12 h-12 rounded-full items-center justify-center bg-background mx-8 font-bold"
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <MaterialCommunityIcons name="arrow-u-left-top" size={20} color={theme.colors.primary} />
+        </Pressable>
 
-          <Pressable
-            onPress={handleAddTasks}
-            disabled={createDisabled}
-            className={`w-[100px] h-12 rounded-full items-center justify-center mx-8 ${
-              createDisabled ? "bg-gray-300" : "bg-[#a6d445]"
-            }`}
-            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t("buttons.addToTasks")}
-          >
-            {isAdding ? (
-              <ActivityIndicator size="small" />
-            ) : (
-              <Text className="font-baloo text-sm">{t("buttons.addToTasks")}</Text>
-            )}
-          </Pressable>
-        </View>
+        <Pressable
+          onPress={handleAddTasks}
+          disabled={createDisabled}
+          className={`w-[100px] h-12 rounded-full items-center justify-center mx-8 ${
+            createDisabled ? "bg-gray-300" : "bg-[#a6d445]"
+          }`}
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+          accessibilityRole="button"
+          accessibilityLabel={t("buttons.addToTasks")}
+        >
+          {isAdding ? (
+            <ActivityIndicator size="small" />
+          ) : (
+            <Text className="font-baloo text-sm">{t("buttons.addToTasks")}</Text>
+          )}
+        </Pressable>
       </View>
-    </KeyboardStickyView>
+    </View>
   );
 }

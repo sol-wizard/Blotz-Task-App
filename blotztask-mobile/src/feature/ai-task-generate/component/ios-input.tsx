@@ -11,7 +11,6 @@ import { requestIOSMicrophonePermission } from "../utils/request-microphone-perm
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AiLanguagePicker } from "./ai-language-picker";
 import { useTranslation } from "react-i18next";
-import { KeyboardStickyView } from "react-native-keyboard-controller";
 
 export const IOSInput = ({
   text,
@@ -82,41 +81,39 @@ export const IOSInput = ({
 
   const showSendButton = text.trim() !== "" || recognizing;
   return (
-    <KeyboardStickyView className="pt-2">
-      <View className="items-center">
-        <View className="w-96 mb-10" style={{ minHeight: 60 }}>
-          <TextInput
-            value={text}
-            onChangeText={(v: string) => setText(v)}
-            enablesReturnKeyAutomatically
-            placeholder={t("input.placeholder")}
-            autoFocus
-            placeholderTextColor={theme.colors.secondary}
-            multiline
-            className="w-11/12 bg-white text-xl text-gray-800 font-baloo"
-            style={{ textAlignVertical: "top", textAlign: "left" }}
-          />
-          {aiGeneratedMessage?.errorMessage && (
-            <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
-          )}
-        </View>
-        <View className="flex-row items-center justify-between mb-6 w-96">
-          <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
-
-          {showSendButton ? (
-            <SendButton
-              text={text}
-              isRecognizing={recognizing}
-              isGenerating={isAiGenerating}
-              abortListening={handleAbortListening}
-              sendMessage={sendMessage}
-              stopListening={stopListening}
-            />
-          ) : (
-            <VoiceButton isRecognizing={recognizing} toggleListening={toggleListening} />
-          )}
-        </View>
+    <View className="items-center">
+      <View className="w-96 mb-10" style={{ minHeight: 60 }}>
+        <TextInput
+          value={text}
+          onChangeText={(v: string) => setText(v)}
+          enablesReturnKeyAutomatically
+          placeholder={t("input.placeholder")}
+          autoFocus
+          placeholderTextColor={theme.colors.secondary}
+          multiline
+          className="w-11/12 bg-white text-xl text-gray-800 font-baloo"
+          style={{ textAlignVertical: "top", textAlign: "left" }}
+        />
+        {aiGeneratedMessage?.errorMessage && (
+          <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
+        )}
       </View>
-    </KeyboardStickyView>
+      <View className="flex-row items-center justify-between w-96">
+        <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
+
+        {showSendButton ? (
+          <SendButton
+            text={text}
+            isRecognizing={recognizing}
+            isGenerating={isAiGenerating}
+            abortListening={handleAbortListening}
+            sendMessage={sendMessage}
+            stopListening={stopListening}
+          />
+        ) : (
+          <VoiceButton isRecognizing={recognizing} toggleListening={toggleListening} />
+        )}
+      </View>
+    </View>
   );
 };
