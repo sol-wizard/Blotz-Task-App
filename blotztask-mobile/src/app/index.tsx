@@ -5,6 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
+import { useUserProfile } from "@/shared/hooks/useUserProfile";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -29,6 +30,7 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const queryClient = useQueryClient();
+  const { userProfile } = useUserProfile();
 
   useEffect(() => {
     const initialize = async () => {
@@ -60,5 +62,11 @@ export default function Index() {
     );
   }
 
-  return <Redirect href={isAuthenticated ? "/(protected)" : "/(auth)/onboarding"} />;
+  if (isAuthenticated) {
+    return (
+      <Redirect href={userProfile?.isOnboarded ? "/(protected)" : "/(protected)/onboarding"} />
+    );
+  }
+
+  return <Redirect href={"/(auth)/onboarding"} />;
 }
