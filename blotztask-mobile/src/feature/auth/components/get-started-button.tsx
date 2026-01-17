@@ -11,12 +11,12 @@ export default function GetStartedButton() {
   const { authorize, user } = useAuth0();
   const router = useRouter();
   const posthog = usePostHog();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation("common");
 
   const onPress = async () => {
     try {
       const language = i18n.language?.startsWith("zh") ? "zh-CN" : "en";
-      console.log("Starting Auth0 authorization with language:", language);
+
       const result = await authorize({
         audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
         scope: "openid profile email offline_access",
@@ -48,7 +48,7 @@ export default function GetStartedButton() {
 
   return (
     <Button onPress={onPress} mode="contained">
-      Get Started
+      {t("buttons.getStarted")}
     </Button>
   );
 }
