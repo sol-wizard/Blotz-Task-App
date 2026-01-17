@@ -11,9 +11,7 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
-
 import { useTranslation } from "react-i18next";
-import { useUserOnboardingStatus } from "../hooks/useUserOnboardingStatus";
 import { router } from "expo-router";
 
 export function AiTasksPreview({
@@ -30,7 +28,6 @@ export function AiTasksPreview({
   const { t } = useTranslation("aiTaskGenerate");
   const { addTask, isAdding } = useTaskMutations();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
-  const { setUserOnboarded } = useUserOnboardingStatus();
 
   const posthog = usePostHog();
 
@@ -79,7 +76,6 @@ export function AiTasksPreview({
       });
 
       setModalType("add-task-success");
-      setUserOnboarded.mutate(true);
 
       setLocalTasks([]);
       router.back();
