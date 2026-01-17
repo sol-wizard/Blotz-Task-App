@@ -1,4 +1,4 @@
-import { useUserOnboardingStatus } from "@/feature/ai-task-generate/hooks/useUserOnboardingStatus";
+import { useUserOnboardingStatus } from "@/feature/onboarding/hooks/useUserOnboardingStatus";
 import { OnboardingAiSection } from "@/feature/onboarding/components/onboarding-ai-section";
 import { OnboardingBreakdownSection } from "@/feature/onboarding/components/onboarding-breakdown-section";
 import { OnboardingGashaponSection } from "@/feature/onboarding/components/onboarding-gashapon-section";

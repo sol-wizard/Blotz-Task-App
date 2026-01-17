@@ -18,8 +18,8 @@ export function useUserOnboardingStatus() {
       await updateUserProfile({ isOnBoarded: nextValue } as any);
       return nextValue;
     },
-    onSuccess: (nextValue) => {
-      queryClient.setQueryData(onboardingKeys.OnboardingStatus(), nextValue);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: onboardingKeys.OnboardingStatus() });
       queryClient.invalidateQueries({ queryKey: userKeys.profile() });
     },
   });

@@ -3,7 +3,11 @@ import { fetchUserProfile } from "../services/user-service";
 import { userKeys } from "../constants/query-key-factory";
 
 export const useUserProfile = () => {
-  const { data: userProfile, isLoading: isUserProfileLoading } = useQuery({
+  const {
+    data: userProfile,
+    isLoading: isUserProfileLoading,
+    isFetching: isUserProfileFetching,
+  } = useQuery({
     queryKey: userKeys.profile(),
     queryFn: () => fetchUserProfile(),
   });
@@ -11,5 +15,6 @@ export const useUserProfile = () => {
   return {
     userProfile,
     isUserProfileLoading,
+    isUserProfileFetching,
   };
 };
