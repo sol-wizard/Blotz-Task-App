@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Pressable, View, Image, useWindowDimensions } from "react-native";
-import Svg, { Defs, Mask, Rect, Circle } from "react-native-svg";
+import { Pressable, View, Image } from "react-native";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
@@ -13,8 +12,6 @@ import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import SettingsScreen from "./settings";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { usePostHog } from "posthog-react-native";
-import { OnboardingCard } from "@/shared/components/ui/onboarding-card";
-import { useUserOnboardingStatus } from "@/feature/ai-task-generate/hooks/useUserOnboardingStatus";
 
 const routes = [
   {
@@ -91,17 +88,6 @@ export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
   const insets = useSafeAreaInsets();
   const posthog = usePostHog();
-  const { width, height } = useWindowDimensions();
-
-  const { isUserOnboarded } = useUserOnboardingStatus();
-  const [aiLayout, setAiLayout] = useState<{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } | null>(null);
-
-  const aiButtonRadius = 29;
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
@@ -140,63 +126,10 @@ export default function ProtectedIndex() {
         renderIcon={({ route, focused }) => getTabIcon(route.key, focused)}
       />
 
-      {!isUserOnboarded && (
-        <View
-          style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 10 }}
-          pointerEvents="box-none"
-        >
-          <Pressable
-            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
-            onPress={() => {}}
-            android_disableSound
-            accessible={false}
-          />
-          <Svg
-            width={width}
-            height={height}
-            pointerEvents="none"
-            style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
-          >
-            <Defs>
-              <Mask id="ai-spotlight-mask" maskUnits="userSpaceOnUse">
-                <Rect width={width} height={height} fill="white" />
-                <Circle
-                  cx={aiLayout ? aiLayout.x + aiLayout.width / 2 : width / 2}
-                  cy={aiLayout ? aiLayout.y + aiLayout.height / 2 : height}
-                  r={aiButtonRadius}
-                  fill="black"
-                />
-              </Mask>
-            </Defs>
-            <Rect
-              width={width}
-              height={height}
-              fill="rgba(0,0,0,0.35)"
-              mask="url(#ai-spotlight-mask)"
-            />
-          </Svg>
-        </View>
-      )}
-
-      {!isUserOnboarded && (
-        <OnboardingCard
-          title="Tap to begin✨"
-          subtitle="Let AI set up your task"
-          style={{
-            position: "absolute",
-            left: 24,
-            right: 24,
-            bottom: insets.bottom + 90,
-            zIndex: 10,
-          }}
-        />
-      )}
-
       <View
         className="absolute left-4 right-4 items-center"
         style={{ bottom: insets.bottom + 6, zIndex: 20 }}
         pointerEvents="box-none"
-        onLayout={(e) => setAiLayout(e.nativeEvent.layout)}
       >
         <Pressable onPress={() => router.push("/ai-task-sheet")}>
           <GradientCircle size={58}>

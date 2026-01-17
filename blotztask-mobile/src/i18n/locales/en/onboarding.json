@@ -1,0 +1,22 @@
+{
+  "actions": {
+    "skip": "Skip",
+    "continue": "Continue"
+  },
+  "intro": {
+    "title": "Welcome to Blotz Tasks",
+    "subtitle": "Keep planning light, tidy, and easy."
+  },
+  "ai": {
+    "title": "Plan on the calendar",
+    "subtitle": "Drag tasks into your day, or let AI generate a schedule in seconds."
+  },
+  "breakdown": {
+    "title": "Break tasks down",
+    "subtitle": "Turn big goals into bite-sized steps you can finish fast."
+  },
+  "gashapon": {
+    "title": "Earn sparks and gashapon",
+    "subtitle": "Finish tasks to collect Star Sparks and spin the gashapon machine."
+  }
+}

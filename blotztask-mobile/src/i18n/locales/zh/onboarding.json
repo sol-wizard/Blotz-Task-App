@@ -1,0 +1,22 @@
+{
+  "actions": {
+    "skip": "跳过",
+    "continue": "继续"
+  },
+  "intro": {
+    "title": "欢迎使用 Blotz Tasks",
+    "subtitle": "让计划更轻松、更整洁、更简单。"
+  },
+  "ai": {
+    "title": "在日历里轻松安排",
+    "subtitle": "把任务拖进日程，或交给 AI 秒生成安排。"
+  },
+  "breakdown": {
+    "title": "把任务拆成小步骤",
+    "subtitle": "把大目标变成易完成的小步。"
+  },
+  "gashapon": {
+    "title": "完成任务，赚星火扭蛋",
+    "subtitle": "完成任务收集星火，转动扭蛋机赢奖励。"
+  }
+}
