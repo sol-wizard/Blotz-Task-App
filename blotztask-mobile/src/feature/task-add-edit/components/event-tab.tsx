@@ -7,6 +7,13 @@ import { useController } from "react-hook-form";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
+import Animated, { FadeInUp, FadeOut, LinearTransition } from "react-native-reanimated";
+
+const _damping = 60;
+const _stiffness = 400;
+const _entering = FadeInUp.springify().damping(_damping);
+const _exiting = FadeOut.springify().damping(_damping);
+const _layout = LinearTransition.springify().stiffness(_stiffness).damping(_damping);
 
 export const EventTab = ({ control }: { control: any }) => {
   const { t, i18n } = useTranslation("tasks");
@@ -59,9 +66,9 @@ export const EventTab = ({ control }: { control: any }) => {
   };
 
   return (
-    <View className="mb-4">
-      <View className="mb-4">
-        <View className="flex-row justify-between">
+    <Animated.View className="mb-4" layout={_layout}>
+      <Animated.View className="mb-4" layout={_layout}>
+        <Animated.View className="flex-row justify-between" layout={_layout}>
           <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.start")}</Text>
 
           <View className="flex-row">
@@ -89,21 +96,25 @@ export const EventTab = ({ control }: { control: any }) => {
               </Text>
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
 
         {activeSelector === "startDate" && (
-          <SingleDateCalendar
-            onStartDateChange={handleStartDateChange}
-            defaultStartDate={format(new Date(startDateValue), "yyyy-MM-dd")}
-          />
+          <Animated.View entering={_entering} exiting={_exiting}>
+            <SingleDateCalendar
+              onStartDateChange={handleStartDateChange}
+              defaultStartDate={format(new Date(startDateValue), "yyyy-MM-dd")}
+            />
+          </Animated.View>
         )}
         {activeSelector === "startTime" && (
-          <TimePicker value={startTimeValue} onChange={(v: Date) => startTimeOnChange(v)} />
+          <Animated.View entering={_entering} exiting={_exiting}>
+            <TimePicker value={startTimeValue} onChange={(v: Date) => startTimeOnChange(v)} />
+          </Animated.View>
         )}
-      </View>
+      </Animated.View>
 
-      <View>
-        <View className="flex-row justify-between">
+      <Animated.View layout={_layout}>
+        <Animated.View className="flex-row justify-between" layout={_layout}>
           <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.end")}</Text>
 
           <View className="flex-row">
@@ -125,18 +136,22 @@ export const EventTab = ({ control }: { control: any }) => {
               </Text>
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
         {activeSelector === "endDate" && (
-          <DoubleDatesCalendar
-            startDate={startDateValue}
-            endDate={endDateValue}
-            setEndDate={endDateOnChange}
-          />
+          <Animated.View entering={_entering} exiting={_exiting}>
+            <DoubleDatesCalendar
+              startDate={startDateValue}
+              endDate={endDateValue}
+              setEndDate={endDateOnChange}
+            />
+          </Animated.View>
         )}
         {activeSelector === "endTime" && (
-          <TimePicker value={endTimeValue} onChange={(v: Date) => endTimeOnChange(v)} />
+          <Animated.View entering={_entering} exiting={_exiting}>
+            <TimePicker value={endTimeValue} onChange={(v: Date) => endTimeOnChange(v)} />
+          </Animated.View>
         )}
-      </View>
-    </View>
+      </Animated.View>
+    </Animated.View>
   );
 };
