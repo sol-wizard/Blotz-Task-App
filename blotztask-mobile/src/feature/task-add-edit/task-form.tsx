@@ -26,6 +26,8 @@ import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQue
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { endOfDay } from "date-fns";
 import { useTranslation } from "react-i18next";
+import Animated from "react-native-reanimated";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 type TaskFormProps =
   | {
@@ -177,7 +179,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           <FormDivider />
 
           {/* Label Select */}
-          <View className="mb-8">
+          <Animated.View className="mb-8" layout={MotionAnimations.layout}>
             {isLoading ? (
               <Text className="font-baloo text-lg text-primary mt-3">
                 {t("common:loading.categories")}
@@ -185,7 +187,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             ) : (
               <LabelSelect control={control} labels={labels} />
             )}
-          </View>
+          </Animated.View>
         </ScrollView>
 
         {/* Submit */}

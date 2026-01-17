@@ -5,6 +5,8 @@ import { Dropdown } from "react-native-element-dropdown";
 import { Ionicons } from "@expo/vector-icons";
 import { FormDivider } from "@/shared/components/ui/form-divider";
 import { useTranslation } from "react-i18next";
+import Animated from "react-native-reanimated";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 type AlertSelectProps = {
   control: Control<any>;
@@ -32,7 +34,10 @@ export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "alert
       name={name}
       defaultValue={300}
       render={({ field: { value, onChange } }) => (
-        <View className="flex-row items-center justify-between">
+        <Animated.View
+          className="flex-row items-center justify-between"
+          layout={MotionAnimations.layout}
+        >
           <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.alert")}</Text>
 
           <Dropdown
@@ -78,7 +83,7 @@ export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "alert
               </View>
             )}
           />
-        </View>
+        </Animated.View>
       )}
     />
   );
