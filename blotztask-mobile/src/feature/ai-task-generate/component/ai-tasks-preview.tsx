@@ -13,7 +13,6 @@ import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
-import { KeyboardStickyView, KeyboardToolbar } from "react-native-keyboard-controller";
 
 export function AiTasksPreview({
   aiTasks,
