@@ -2,6 +2,7 @@
   "buttons": {
     "cancel": "Cancel",
     "done": "Done",
+    "getStarted": "Get Started",
     "save": "Save",
     "saving": "Saving...",
     "goBack": "Go back",
@@ -25,4 +26,3 @@
     "settings": "Setting"
   }
 }
-
