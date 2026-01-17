@@ -7,7 +7,7 @@ import { useController } from "react-hook-form";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
-import Animated, { FadeInUp, FadeOut, LinearTransition } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 export const EventTab = ({ control }: { control: any }) => {
@@ -61,7 +61,11 @@ export const EventTab = ({ control }: { control: any }) => {
   };
 
   return (
-    <Animated.View className="mb-4" layout={MotionAnimations.layout}>
+    <Animated.View
+      className="mb-4"
+      layout={MotionAnimations.layout}
+      exiting={MotionAnimations.rightExiting}
+    >
       <Animated.View className="mb-4" layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
           <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.start")}</Text>
@@ -94,7 +98,10 @@ export const EventTab = ({ control }: { control: any }) => {
         </Animated.View>
 
         {activeSelector === "startDate" && (
-          <Animated.View entering={MotionAnimations.entering} exiting={MotionAnimations.exiting}>
+          <Animated.View
+            entering={MotionAnimations.upEntering}
+            exiting={MotionAnimations.outExiting}
+          >
             <SingleDateCalendar
               onStartDateChange={handleStartDateChange}
               defaultStartDate={format(new Date(startDateValue), "yyyy-MM-dd")}
@@ -102,7 +109,10 @@ export const EventTab = ({ control }: { control: any }) => {
           </Animated.View>
         )}
         {activeSelector === "startTime" && (
-          <Animated.View entering={MotionAnimations.entering} exiting={MotionAnimations.exiting}>
+          <Animated.View
+            entering={MotionAnimations.upEntering}
+            exiting={MotionAnimations.outExiting}
+          >
             <TimePicker value={startTimeValue} onChange={(v: Date) => startTimeOnChange(v)} />
           </Animated.View>
         )}
@@ -133,7 +143,10 @@ export const EventTab = ({ control }: { control: any }) => {
           </View>
         </Animated.View>
         {activeSelector === "endDate" && (
-          <Animated.View entering={MotionAnimations.entering} exiting={MotionAnimations.exiting}>
+          <Animated.View
+            entering={MotionAnimations.upEntering}
+            exiting={MotionAnimations.outExiting}
+          >
             <DoubleDatesCalendar
               startDate={startDateValue}
               endDate={endDateValue}
@@ -142,7 +155,10 @@ export const EventTab = ({ control }: { control: any }) => {
           </Animated.View>
         )}
         {activeSelector === "endTime" && (
-          <Animated.View entering={MotionAnimations.entering} exiting={MotionAnimations.exiting}>
+          <Animated.View
+            entering={MotionAnimations.upEntering}
+            exiting={MotionAnimations.outExiting}
+          >
             <TimePicker value={endTimeValue} onChange={(v: Date) => endTimeOnChange(v)} />
           </Animated.View>
         )}

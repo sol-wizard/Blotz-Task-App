@@ -2,17 +2,24 @@ import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { SegmentButtonValue } from "../models/segment-button-value";
+import Animated from "react-native-reanimated";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 type Props = {
   value: SegmentButtonValue;
   setValue: (next: SegmentButtonValue) => void;
 };
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export function SegmentToggle({ value, setValue }: Props) {
   const { t } = useTranslation("tasks");
   return (
-    <View className="flex-row bg-[#F4F6FA] p-1 rounded-xl mb-6 w-56">
-      <Pressable
+    <Animated.View
+      className="flex-row bg-[#F4F6FA] p-1 rounded-xl mb-6 w-56"
+      layout={MotionAnimations.layout}
+    >
+      <AnimatedPressable
         className={`flex-1 justify-center items-center py-2 px-3 rounded-[10px] ${
           value === "reminder" ? "bg-white" : ""
         }`}
@@ -36,10 +43,10 @@ export function SegmentToggle({ value, setValue }: Props) {
         >
           {t("form.reminder")}
         </Text>
-      </Pressable>
+      </AnimatedPressable>
 
       {/* Event tab */}
-      <Pressable
+      <AnimatedPressable
         className={`flex-1 justify-center items-center py-2 px-3 rounded-[10px] ${
           value === "event" ? "bg-white" : ""
         }`}
@@ -63,7 +70,7 @@ export function SegmentToggle({ value, setValue }: Props) {
         >
           {t("form.event")}
         </Text>
-      </Pressable>
-    </View>
+      </AnimatedPressable>
+    </Animated.View>
   );
 }

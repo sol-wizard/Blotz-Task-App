@@ -50,7 +50,11 @@ export const ReminderTab = ({ control }: { control: any }) => {
   const timeDisplayText = startTime ? format(startTime, "hh:mm a") : t("form.selectTime");
 
   return (
-    <Animated.View className="mb-4" layout={MotionAnimations.layout}>
+    <Animated.View
+      className="mb-4"
+      layout={MotionAnimations.layout}
+      exiting={MotionAnimations.leftExiting}
+    >
       {/* Date  */}
       <Animated.View className="mb-4" layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
@@ -64,7 +68,10 @@ export const ReminderTab = ({ control }: { control: any }) => {
         </Animated.View>
 
         {activeSelector === "date" && (
-          <Animated.View entering={MotionAnimations.entering} exiting={MotionAnimations.exiting}>
+          <Animated.View
+            entering={MotionAnimations.upEntering}
+            exiting={MotionAnimations.outExiting}
+          >
             <SingleDateCalendar
               defaultStartDate={format(startDate, "yyyy-MM-dd")}
               onStartDateChange={(nextDate: Date) => {
@@ -91,7 +98,10 @@ export const ReminderTab = ({ control }: { control: any }) => {
 
         <View className="items-center">
           {activeSelector === "time" && (
-            <Animated.View entering={MotionAnimations.entering} exiting={MotionAnimations.exiting}>
+            <Animated.View
+              entering={MotionAnimations.upEntering}
+              exiting={MotionAnimations.outExiting}
+            >
               <TimePicker
                 value={startTime}
                 onChange={(nextTime: Date) => {

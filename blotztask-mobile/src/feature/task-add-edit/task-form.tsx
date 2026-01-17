@@ -145,7 +145,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       <FormProvider {...form}>
         <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Title */}
-          <View className="mb-4 bg-white">
+          <Animated.View className="mb-4 bg-white" layout={MotionAnimations.layout}>
             <FormTextInput
               name="title"
               placeholder={t("form.newTask")}
@@ -157,16 +157,19 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 returnKeyType: "done",
               }}
             />
-          </View>
+          </Animated.View>
 
-          <View className="py-3 bg-background rounded-2xl px-4">
+          <Animated.View
+            className="py-3 bg-background rounded-2xl px-4"
+            layout={MotionAnimations.layout}
+          >
             <FormTextInput
               name="description"
               placeholder={t("form.addNote")}
               control={control}
               className="font-baloo text-lg text-primary"
             />
-          </View>
+          </Animated.View>
 
           <FormDivider />
           <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
