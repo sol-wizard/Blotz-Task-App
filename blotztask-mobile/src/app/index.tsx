@@ -27,10 +27,10 @@ Notifications.setNotificationCategoryAsync("task-reminder", [
 ]);
 
 export default function Index() {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticateLoading, setIsAuthenticateLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const queryClient = useQueryClient();
-  const { userProfile } = useUserProfile();
+  const { userProfile, isUserProfileLoading, isUserProfileFetching } = useUserProfile();
 
   useEffect(() => {
     const initialize = async () => {
@@ -47,12 +47,14 @@ export default function Index() {
         console.error("Error during initialization:", error);
         setIsAuthenticated(false);
       } finally {
-        setIsLoading(false);
+        setIsAuthenticateLoading(false);
       }
     };
 
     initialize();
   }, [queryClient]);
+
+  const isLoading = isAuthenticateLoading || isUserProfileLoading || isUserProfileFetching;
 
   if (isLoading) {
     return (
@@ -62,9 +64,9 @@ export default function Index() {
     );
   }
 
-  if (isAuthenticated) {
+  if (isAuthenticated && userProfile) {
     return (
-      <Redirect href={userProfile?.isOnboarded ? "/(protected)" : "/(protected)/onboarding"} />
+      <Redirect href={userProfile?.isOnBoarded ? "/(protected)" : "/(protected)/onboarding"} />
     );
   }
 
