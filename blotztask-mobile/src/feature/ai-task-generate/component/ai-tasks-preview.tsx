@@ -13,7 +13,7 @@ import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
-import { KeyboardToolbar } from "react-native-keyboard-controller";
+import { KeyboardStickyView, KeyboardToolbar } from "react-native-keyboard-controller";
 
 export function AiTasksPreview({
   aiTasks,
@@ -99,7 +99,7 @@ export function AiTasksPreview({
   };
 
   return (
-    <KeyboardToolbar>
+    <KeyboardStickyView>
       <View className="items-center max-h-[600px]">
         <ScrollView className="w-full mt-4 mb-8">
           {localTasks?.map((task) => (
@@ -145,6 +145,6 @@ export function AiTasksPreview({
           </Pressable>
         </View>
       </View>
-    </KeyboardToolbar>
+    </KeyboardStickyView>
   );
 }
