@@ -121,7 +121,6 @@ export const AndroidInput = ({
       language: currentLanguage,
     });
 
-    console.log("Started listening with language:", currentLanguage);
     setIsListening(true);
   };
 
