@@ -33,7 +33,6 @@ const SubtaskList = ({ task, progress }: Props) => {
 
   const onSubtaskContentLayout = (e: any) => {
     const h = e?.nativeEvent?.layout?.height ?? 0;
-    // keep it updated in case dynamic content changes
     if (h > 0 && contentHeight.value !== h) {
       contentHeight.value = h;
     }

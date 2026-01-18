@@ -21,6 +21,7 @@ import { SubtaskProgressBar } from "./subtask-progress-bar";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { AnimatedChevron } from "@/shared/components/ui/chevron";
 import SubtaskList from "./subtask-list";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 const ACTION_WIDTH = 64;
 const OPEN_X = -ACTION_WIDTH;
@@ -101,7 +102,11 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
   const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
 
   return (
-    <View className="mx-4 my-2 overflow-hidden">
+    <Animated.View
+      className="mx-4 my-2 overflow-hidden"
+      layout={MotionAnimations.layout}
+      exiting={MotionAnimations.rightExiting}
+    >
       <GestureDetector gesture={pan}>
         <Animated.View style={cardStyle} className="flex-row items-start">
           {/* 1) Card */}
@@ -218,6 +223,6 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           </View>
         </Animated.View>
       </GestureDetector>
-    </View>
+    </Animated.View>
   );
 }
