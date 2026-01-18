@@ -198,7 +198,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           <Pressable
             onPress={handleSubmit(handleFormSubmit)}
             disabled={!isValid || isSubmitting}
-            className={`w-full py-4 rounded-lg items-center justify-center ${
+            className={`w-full py-4 rounded-xl items-center justify-center ${
               !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
             }`}
           >
