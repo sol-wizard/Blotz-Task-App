@@ -8,9 +8,9 @@ import { theme } from "@/shared/constants/theme";
 import { VoiceButton } from "./voice-button";
 import { SendButton } from "./send-button";
 import { requestIOSMicrophonePermission } from "../utils/request-microphone-permission";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AiLanguagePicker } from "./ai-language-picker";
 import { useTranslation } from "react-i18next";
+import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
+import { Language } from "@/shared/models/user-preferences-dto";
 
 export const IOSInput = ({
   text,
@@ -27,30 +27,22 @@ export const IOSInput = ({
 }) => {
   const { t } = useTranslation("aiTaskGenerate");
 
-  const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
-    AsyncStorage.getItem("ai_language_preference").then((saved: string | null) => {
-      if (saved === "en-US" || saved === "zh-CN") {
-        setLanguage(saved as "en-US" | "zh-CN");
-      }
-    });
-    return "zh-CN";
-  });
+  const { userPreferences } = useUserPreferencesQuery();
+  const getSttLanguage = () => {
+    if (userPreferences?.preferredLanguage === Language.En) return "en-AU";
+    if (userPreferences?.preferredLanguage === Language.Zh) return "zh-CN";
+    return "en-AU";
+  };
+
+  const currentLanguage = getSttLanguage();
 
   useEffect(() => {
     requestIOSMicrophonePermission();
   }, []);
 
-  const handleSelectLanguage = async (lang: "en-US" | "zh-CN") => {
-    setLanguage(lang);
-    try {
-      await AsyncStorage.setItem("ai_language_preference", lang);
-    } catch (error) {
-      console.error("Failed to save AI language preference:", error);
-    }
-  };
   const { handleStartListening, recognizing, transcript, stopListening, abortListening } =
     useSpeechRecognition({
-      language,
+      language: currentLanguage,
     });
 
   useEffect(() => {
@@ -98,9 +90,7 @@ export const IOSInput = ({
           <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
         )}
       </View>
-      <View className="flex-row items-center justify-between w-96">
-        <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
-
+      <View className="flex-row items-center justify-end w-96">
         {showSendButton ? (
           <SendButton
             text={text}
