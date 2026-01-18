@@ -6,7 +6,7 @@ import { useState } from "react";
 import TimePicker from "./time-picker";
 import { SingleDateCalendar } from "./single-date-calendar";
 import { useTranslation } from "react-i18next";
-import Animated, { FadeInUp, FadeOut, LinearTransition } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 export const ReminderTab = ({ control }: { control: any }) => {

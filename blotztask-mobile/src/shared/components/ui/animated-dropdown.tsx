@@ -67,10 +67,6 @@ export function AnimatedDropdown<T>({
 
   const visibleCount = Math.min(options.length, maxVisibleItems);
 
-  const arrowSpinStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${interpolate(animationProgress.value, [0, 1], [0, Math.PI])}rad` }],
-  }));
-
   const openDropdown = (ref: any) => {
     if (!ref?.measureInWindow) {
       setOpen(true);

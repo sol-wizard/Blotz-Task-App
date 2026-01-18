@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { SegmentButtonValue } from "../models/segment-button-value";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
