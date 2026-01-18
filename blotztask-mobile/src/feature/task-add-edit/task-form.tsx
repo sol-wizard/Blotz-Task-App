@@ -26,6 +26,8 @@ import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQue
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { endOfDay } from "date-fns";
 import { useTranslation } from "react-i18next";
+import Animated from "react-native-reanimated";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 type TaskFormProps =
   | {
@@ -143,7 +145,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       <FormProvider {...form}>
         <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Title */}
-          <View className="mb-4 bg-white">
+          <Animated.View className="mb-4 bg-white" layout={MotionAnimations.layout}>
             <FormTextInput
               name="title"
               placeholder={t("form.newTask")}
@@ -155,16 +157,19 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 returnKeyType: "done",
               }}
             />
-          </View>
+          </Animated.View>
 
-          <View className="py-3 bg-background rounded-2xl px-4">
+          <Animated.View
+            className="py-3 bg-background rounded-2xl px-4"
+            layout={MotionAnimations.layout}
+          >
             <FormTextInput
               name="description"
               placeholder={t("form.addNote")}
               control={control}
               className="font-baloo text-lg text-primary"
             />
-          </View>
+          </Animated.View>
 
           <FormDivider />
           <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
@@ -177,7 +182,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           <FormDivider />
 
           {/* Label Select */}
-          <View className="mb-8">
+          <Animated.View className="mb-8" layout={MotionAnimations.layout}>
             {isLoading ? (
               <Text className="font-baloo text-lg text-primary mt-3">
                 {t("common:loading.categories")}
@@ -185,7 +190,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             ) : (
               <LabelSelect control={control} labels={labels} />
             )}
-          </View>
+          </Animated.View>
         </ScrollView>
 
         {/* Submit */}
@@ -193,7 +198,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           <Pressable
             onPress={handleSubmit(handleFormSubmit)}
             disabled={!isValid || isSubmitting}
-            className={`w-full py-4 rounded-lg items-center justify-center ${
+            className={`w-full py-4 rounded-xl items-center justify-center ${
               !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
             }`}
           >

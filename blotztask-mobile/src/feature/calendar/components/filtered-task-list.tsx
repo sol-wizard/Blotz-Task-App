@@ -9,6 +9,8 @@ import { TaskStatusType } from "../models/task-status-type";
 import { filterSelectedTask } from "../util/task-counts";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
+import Animated from "react-native-reanimated";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
@@ -40,17 +42,19 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   );
 
   return (
-    <View className="flex-1">
-      <TaskStatusRow
-        allTaskCount={findStatusCount("All")}
-        todoTaskCount={findStatusCount("To Do")}
-        inProgressTaskCount={findStatusCount("In Progress")}
-        overdueTaskCount={findStatusCount("Overdue")}
-        doneTaskCount={findStatusCount("Done")}
-        selectedStatus={selectedStatus}
-        onChange={setSelectedStatus}
-        selectedDay={selectedDay}
-      />
+    <Animated.View className="flex-1" layout={MotionAnimations.layout}>
+      <Animated.View layout={MotionAnimations.layout}>
+        <TaskStatusRow
+          allTaskCount={findStatusCount("All")}
+          todoTaskCount={findStatusCount("To Do")}
+          inProgressTaskCount={findStatusCount("In Progress")}
+          overdueTaskCount={findStatusCount("Overdue")}
+          doneTaskCount={findStatusCount("Done")}
+          selectedStatus={selectedStatus}
+          onChange={setSelectedStatus}
+          selectedDay={selectedDay}
+        />
+      </Animated.View>
 
       {isLoading ? (
         <LoadingScreen />
@@ -64,6 +68,6 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
       ) : (
         <TaskListPlaceholder selectedStatus={selectedStatus} />
       )}
-    </View>
+    </Animated.View>
   );
 };

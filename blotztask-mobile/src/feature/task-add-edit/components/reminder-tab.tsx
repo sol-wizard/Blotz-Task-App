@@ -6,6 +6,8 @@ import { useState } from "react";
 import TimePicker from "./time-picker";
 import { SingleDateCalendar } from "./single-date-calendar";
 import { useTranslation } from "react-i18next";
+import Animated from "react-native-reanimated";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 export const ReminderTab = ({ control }: { control: any }) => {
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
@@ -48,10 +50,15 @@ export const ReminderTab = ({ control }: { control: any }) => {
   const timeDisplayText = startTime ? format(startTime, "hh:mm a") : t("form.selectTime");
 
   return (
-    <View className="mb-4">
+    <Animated.View
+      className="mb-4"
+      layout={MotionAnimations.layout}
+      entering={MotionAnimations.rightEntering}
+      exiting={MotionAnimations.leftExiting}
+    >
       {/* Date  */}
-      <View className="mb-4">
-        <View className="flex-row justify-between">
+      <Animated.View className="mb-4" layout={MotionAnimations.layout}>
+        <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
           <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.date")}</Text>
           <Pressable
             onPress={() => setActiveSelector((prev) => (prev === "date" ? null : "date"))}
@@ -59,22 +66,27 @@ export const ReminderTab = ({ control }: { control: any }) => {
           >
             <Text className="text-xl font-balooThin text-secondary">{dateDisplayText}</Text>
           </Pressable>
-        </View>
+        </Animated.View>
 
         {activeSelector === "date" && (
-          <SingleDateCalendar
-            defaultStartDate={format(startDate, "yyyy-MM-dd")}
-            onStartDateChange={(nextDate: Date) => {
-              onStartDateChange(nextDate);
-              onEndDateChange(nextDate);
-            }}
-          />
+          <Animated.View
+            entering={MotionAnimations.upEntering}
+            exiting={MotionAnimations.outExiting}
+          >
+            <SingleDateCalendar
+              defaultStartDate={format(startDate, "yyyy-MM-dd")}
+              onStartDateChange={(nextDate: Date) => {
+                onStartDateChange(nextDate);
+                onEndDateChange(nextDate);
+              }}
+            />
+          </Animated.View>
         )}
-      </View>
+      </Animated.View>
 
       {/* Time  */}
-      <View className="justify-center">
-        <View className="flex-row justify-between">
+      <Animated.View className="justify-center" layout={MotionAnimations.layout}>
+        <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
           <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.time")}</Text>
 
           <Pressable
@@ -83,20 +95,25 @@ export const ReminderTab = ({ control }: { control: any }) => {
           >
             <Text className="text-xl font-balooThin text-secondary ">{timeDisplayText}</Text>
           </Pressable>
-        </View>
+        </Animated.View>
 
         <View className="items-center">
           {activeSelector === "time" && (
-            <TimePicker
-              value={startTime}
-              onChange={(nextTime: Date) => {
-                onStartTimeChange(nextTime);
-                onEndTimeChange(nextTime);
-              }}
-            />
+            <Animated.View
+              entering={MotionAnimations.upEntering}
+              exiting={MotionAnimations.outExiting}
+            >
+              <TimePicker
+                value={startTime}
+                onChange={(nextTime: Date) => {
+                  onStartTimeChange(nextTime);
+                  onEndTimeChange(nextTime);
+                }}
+              />
+            </Animated.View>
           )}
         </View>
-      </View>
-    </View>
+      </Animated.View>
+    </Animated.View>
   );
 };
