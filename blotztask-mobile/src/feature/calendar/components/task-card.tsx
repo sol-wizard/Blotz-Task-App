@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Pressable, Text, ActivityIndicator, useWindowDimensions } from "react-native";
 import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
 import Animated, {
-  runOnJS,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
@@ -10,7 +9,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "@/shared/constants/theme";
 import { format, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
