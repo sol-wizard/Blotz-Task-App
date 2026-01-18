@@ -15,6 +15,7 @@ function TaskCreateScreen() {
   const handleTaskSubmit = async (submitTask: AddTaskItemDTO) => {
     try {
       await addTask(submitTask);
+
       posthog.capture(EVENTS.CREATE_TASK_MANUALLY);
 
       router.back();
