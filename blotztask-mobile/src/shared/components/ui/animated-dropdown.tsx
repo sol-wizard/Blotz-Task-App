@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Modal, Pressable, Text, View, FlatList, LayoutChangeEvent } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Pressable, Text, View, FlatList } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -7,7 +7,9 @@ import Animated, {
   withTiming,
   interpolate,
 } from "react-native-reanimated";
+import Modal from "react-native-modal";
 import { Ionicons } from "@expo/vector-icons";
+import { FormDivider } from "./form-divider";
 
 export type DropdownOption<T> = {
   label: string;
@@ -34,11 +36,6 @@ type Props<T> = {
   renderItemLabel?: (opt: DropdownOption<T>) => React.ReactNode;
 };
 
-function isEqual<T>(a: T, b: T) {
-  // works for primitives (string/number/null). If you later store objects, replace this with id comparison.
-  return a === b;
-}
-
 export function AnimatedDropdown<T>({
   value,
   onChange,
@@ -49,13 +46,11 @@ export function AnimatedDropdown<T>({
   maxVisibleItems = 6,
   itemHeight = 48,
 
-  triggerClassName,
-  labelClassName,
   renderItemLabel,
 }: Props<T>) {
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
-
+  console.log("Rendered AnimatedDropdown with value:", value);
   // animation progress: 0 -> closed, 1 -> open
   const animationProgress = useSharedValue(0);
 
@@ -66,10 +61,8 @@ export function AnimatedDropdown<T>({
     });
   }, [open, animationProgress]);
 
-  const selectedLabel = useMemo(() => {
-    const found = options.find((o) => isEqual(o.value, value));
-    return found?.label ?? placeholder;
-  }, [options, value, placeholder]);
+  const foundOption = options.find((option) => option.value === value);
+  const selectedLabel = foundOption?.label ?? placeholder;
 
   const visibleCount = Math.min(options.length, maxVisibleItems);
 
@@ -110,12 +103,9 @@ export function AnimatedDropdown<T>({
         ref={setTriggerRef}
         onPress={() => openDropdown(triggerRef)}
         style={{ minWidth }}
-        className={triggerClassName ?? "flex-row items-center justify-end"}
+        className={"flex-row items-center justify-end"}
       >
-        <Text
-          className={labelClassName ?? "text-lg text-[#444964] font-baloo text-right"}
-          numberOfLines={1}
-        >
+        <Text className={"text-lg text-[#444964] font-baloo text-right"} numberOfLines={1}>
           {selectedLabel}
         </Text>
 
@@ -125,44 +115,36 @@ export function AnimatedDropdown<T>({
       </Pressable>
 
       {/* Overlay + Panel */}
-      <Modal visible={open} transparent animationType="none" onRequestClose={closeDropdown}>
-        {/* Backdrop */}
-        <Pressable className="flex-1 bg-[rgba(0,0,0,0.08)]" onPress={closeDropdown} />
-
+      <Modal
+        isVisible={open}
+        onBackdropPress={closeDropdown}
+        onBackButtonPress={closeDropdown}
+        backdropOpacity={0.08}
+        animationIn="fadeIn"
+        animationOut="fadeOut"
+        style={{ margin: 0 }}
+      >
         {/* Panel container (absolute) */}
         {anchor && (
-          <View
-            pointerEvents="box-none"
-            style={{
-              position: "absolute",
-              left: panelLeft,
-              top: panelTop,
-              width: panelWidth,
-            }}
-          >
-            {/* Clip wrapper for height animation */}
-            <Animated.View className="overflow-hidden rounded-xl">
+          <View style={{ flex: 1 }}>
+            <View
+              pointerEvents="box-none"
+              style={{
+                position: "absolute",
+                left: panelLeft,
+                top: panelTop,
+                width: panelWidth,
+              }}
+            >
               {/* Actual panel */}
-              <Animated.View
-                style={[
-                  {
-                    // shadow (iOS) + elevation (Android)
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: 0.12,
-                    shadowRadius: 14,
-                    elevation: 6,
-                  },
-                ]}
-                className="rounded-[24px] bg-white py-2 px-3"
-              >
+              <Animated.View className="bg-white py-2 px-3 overflow-hidden rounded-xl">
                 <FlatList
                   data={options}
                   keyExtractor={(item, idx) => `${item.label}-${idx}`}
                   bounces={false}
                   style={{ maxHeight: visibleCount * itemHeight }}
                   renderItem={({ item }) => {
-                    const selected = isEqual(item.value, value);
+                    const selected = item.value === value;
                     return (
                       <Pressable
                         onPress={() => onSelect(item.value)}
@@ -183,10 +165,10 @@ export function AnimatedDropdown<T>({
                       </Pressable>
                     );
                   }}
-                  ItemSeparatorComponent={() => <View className="h-px bg-[rgba(62,65,92,0.08)]" />}
+                  ItemSeparatorComponent={() => <FormDivider marginVertical={0} />}
                 />
               </Animated.View>
-            </Animated.View>
+            </View>
           </View>
         )}
       </Modal>
