@@ -44,7 +44,7 @@ export function AnimatedDropdown<T>({
 
   minWidth = 230,
   maxVisibleItems = 6,
-  itemHeight = 48,
+  itemHeight = 44,
 
   renderItemLabel,
 }: Props<T>) {
@@ -124,51 +124,49 @@ export function AnimatedDropdown<T>({
         animationOut="fadeOut"
         style={{ margin: 0 }}
       >
-        {/* Panel container (absolute) */}
         {anchor && (
-          <View style={{ flex: 1 }}>
-            <View
-              pointerEvents="box-none"
-              style={{
-                position: "absolute",
-                left: panelLeft,
-                top: panelTop,
-                width: panelWidth,
-              }}
-            >
-              {/* Actual panel */}
-              <Animated.View className="bg-white py-2 px-3 overflow-hidden rounded-xl">
-                <FlatList
-                  data={options}
-                  keyExtractor={(item, idx) => `${item.label}-${idx}`}
-                  bounces={false}
-                  style={{ maxHeight: visibleCount * itemHeight }}
-                  renderItem={({ item }) => {
-                    const selected = item.value === value;
-                    return (
-                      <Pressable
-                        onPress={() => onSelect(item.value)}
-                        className="flex-row items-center"
-                        style={{ height: itemHeight }}
-                      >
-                        <View className="mr-1.5 w-6 items-center">
-                          {selected && <Ionicons name="checkmark" size={18} color="#3E415C" />}
-                        </View>
+          <View
+            pointerEvents="box-none"
+            style={{
+              position: "absolute",
+              left: panelLeft,
+              top: panelTop,
+              width: panelWidth,
+            }}
+            className="flex-1"
+          >
+            {/* Actual panel */}
+            <Animated.View className="bg-white py-2 px-3 overflow-hidden rounded-xl">
+              <FlatList
+                data={options}
+                keyExtractor={(item, idx) => `${item.label}-${idx}`}
+                bounces={false}
+                style={{ maxHeight: visibleCount * itemHeight }}
+                renderItem={({ item }) => {
+                  const selected = item.value === value;
+                  return (
+                    <Pressable
+                      onPress={() => onSelect(item.value)}
+                      className="flex-row items-center"
+                      style={{ height: itemHeight }}
+                    >
+                      <View className="mr-1.5 w-6 items-center">
+                        {selected && <Ionicons name="checkmark" size={18} color="#3E415C" />}
+                      </View>
 
-                        <View className="flex-1">
-                          {renderItemLabel ? (
-                            renderItemLabel(item)
-                          ) : (
-                            <Text className="text-secondary font-baloo text-lg">{item.label}</Text>
-                          )}
-                        </View>
-                      </Pressable>
-                    );
-                  }}
-                  ItemSeparatorComponent={() => <FormDivider marginVertical={0} />}
-                />
-              </Animated.View>
-            </View>
+                      <View className="flex-1">
+                        {renderItemLabel ? (
+                          renderItemLabel(item)
+                        ) : (
+                          <Text className="text-secondary font-baloo text-lg">{item.label}</Text>
+                        )}
+                      </View>
+                    </Pressable>
+                  );
+                }}
+                ItemSeparatorComponent={() => <FormDivider marginVertical={0} />}
+              />
+            </Animated.View>
           </View>
         )}
       </Modal>
