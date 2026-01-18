@@ -50,7 +50,7 @@ export function AnimatedDropdown<T>({
 }: Props<T>) {
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
-  console.log("Rendered AnimatedDropdown with value:", value);
+
   // animation progress: 0 -> closed, 1 -> open
   const animationProgress = useSharedValue(0);
 
