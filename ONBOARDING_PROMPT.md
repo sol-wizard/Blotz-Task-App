@@ -28,7 +28,7 @@ Please write a beginner-friendly onboarding guide in the exact order below.
 ### 1) Start from the mobile app (frontend) — where does it begin?
 Show me:
 - **Entry point**: where the app boots up (example files like `blotztask-mobile/src/app/...`, `blotztask-mobile/App...`, etc.)
-- **Navigation / routing**: where scre ns/routes are defined, and how you add a new screen
+- **Navigation / routing**: where screens/routes are defined, and how you add a new screen
 - **Folder structure**: what the key folders under `blotztask-mobile/src/` are for (what to edit vs what to avoid)
 - **API calls**: where the mobile app talks to the backend (services/api clients), and how auth tokens/headers are added (if any)
 
