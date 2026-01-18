@@ -64,6 +64,7 @@ export const EventTab = ({ control }: { control: any }) => {
     <Animated.View
       className="mb-4"
       layout={MotionAnimations.layout}
+      entering={MotionAnimations.leftEntering}
       exiting={MotionAnimations.rightExiting}
     >
       <Animated.View className="mb-4" layout={MotionAnimations.layout}>

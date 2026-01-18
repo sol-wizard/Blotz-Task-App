@@ -53,6 +53,7 @@ export const ReminderTab = ({ control }: { control: any }) => {
     <Animated.View
       className="mb-4"
       layout={MotionAnimations.layout}
+      entering={MotionAnimations.rightEntering}
       exiting={MotionAnimations.leftExiting}
     >
       {/* Date  */}
