@@ -10,6 +10,7 @@ import Animated, {
 import Modal from "react-native-modal";
 import { Ionicons } from "@expo/vector-icons";
 import { FormDivider } from "./form-divider";
+import { AnimatedChevron } from "./chevron";
 
 export type DropdownOption<T> = {
   label: string;
@@ -105,13 +106,10 @@ export function AnimatedDropdown<T>({
         style={{ minWidth }}
         className={"flex-row items-center justify-end"}
       >
-        <Text className={"text-lg text-[#444964] font-baloo text-right"} numberOfLines={1}>
+        <Text className={"text-lg text-[#444964] font-baloo text-right mr-2"} numberOfLines={1}>
           {selectedLabel}
         </Text>
-
-        <Animated.View className="ml-2" style={arrowSpinStyle}>
-          <Ionicons name="chevron-down" size={18} color="#3E415C" />
-        </Animated.View>
+        <AnimatedChevron color="#3E415C" progress={animationProgress} />
       </Pressable>
 
       {/* Overlay + Panel */}
