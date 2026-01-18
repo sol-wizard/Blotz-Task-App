@@ -1,5 +1,5 @@
 import { View, Vibration, TextInput } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import * as Haptics from "expo-haptics";
