@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { View, Pressable, Text, ActivityIndicator, LayoutChangeEvent } from "react-native";
 import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+  withSpring,
   withTiming,
-  runOnJS,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "@/shared/constants/theme";
 import { format, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
@@ -17,13 +18,25 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
-import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
-import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
-import { convertDurationToText } from "@/shared/util/convert-duration";
 import { cancelNotification } from "@/shared/util/cancel-notification";
+import { AnimatedChevron } from "@/shared/components/ui/chevron";
+import SubtaskList from "./subtask-list";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 const ACTION_WIDTH = 180;
 const OPEN_X = -ACTION_WIDTH;
+const OPEN_THRESHOLD = ACTION_WIDTH * 0.5;
+
+const rubberBand = (x: number, limit: number) => {
+  "worklet";
+  if (x >= 0) return 0;
+  if (x < limit) {
+    const extra = x - limit;
+    return limit + extra * 0.25;
+  }
+
+  return x;
+};
 const OPEN_THRESHOLD = ACTION_WIDTH * 0.4;
 
 interface TaskCardProps {
@@ -35,11 +48,20 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) {
   const { toggleTask, isToggling } = useTaskMutations();
-  const { toggleSubtaskStatus, isTogglingSubtaskStatus } = useSubtaskMutations();
+
   const queryClient = useQueryClient();
-  const [isExpanded, setIsExpanded] = useState(false);
+
   const { width: screenWidth } = useWindowDimensions();
 
+  // Swipe-to-delete
+  const taskCardTranslateX = useSharedValue(0);
+
+  // Expand / collapse
+  const [isExpanded, setIsExpanded] = useState(false);
+  // measured full height of subtask content
+  const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
+
+  const hasSubtasks = !!task.subtasks?.length;
   const hasSubtasks = task.subtasks && task.subtasks.length > 0;
 
   const handleToggleSubtask = async (subtaskId: number) => {
@@ -67,34 +89,33 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
   // Disable interactions when loading
   const isLoading = isToggling || isDeleting;
 
-  const dividerColor = task.label?.color ?? theme.colors.disabled;
+  const navigateToTaskDetails = (t: TaskDetailDTO) => {
+    queryClient.setQueryData(["taskId", t.id], t);
+    router.push({ pathname: "/(protected)/task-details", params: { taskId: t.id } });
+  };
 
-  // Gesture: only allow left swipe, snap to 0 or OPEN_X on release
   const pan = Gesture.Pan()
     .enabled(!isLoading)
     .activeOffsetX([-10, 10])
     .failOffsetY([-10, 10])
     .onUpdate((e) => {
-      if (e.translationX < 0) {
-        translateX.value = Math.max(OPEN_X, e.translationX);
-      } else {
-        translateX.value = 0;
-      }
+      taskCardTranslateX.value = rubberBand(e.translationX, OPEN_X);
     })
     .onEnd(() => {
-      const open = Math.abs(translateX.value) > OPEN_THRESHOLD;
-      translateX.value = withTiming(open ? OPEN_X : 0, { duration: 160 });
-      runOnJS(setActionsEnabled)(open);
+      const open = Math.abs(taskCardTranslateX.value) > OPEN_THRESHOLD;
+      taskCardTranslateX.value = withSpring(open ? OPEN_X : 0, {
+        damping: 16,
+        stiffness: 220,
+        mass: 0.9,
+      });
     });
 
-  // Content layer follows gesture movement
   const cardStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
+    transform: [{ translateX: taskCardTranslateX.value }],
   }));
 
-  // Create a sense of being pushed away
   const leftExtrasStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value * 1.25 }],
+    transform: [{ translateX: taskCardTranslateX.value * 1.25 }],
   }));
 
   const timePeriod = formatDateRange({
@@ -104,10 +125,14 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
   });
 
   const endDate = task.endTime ? parseISO(task.endTime) : null;
-
   const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
 
   return (
+    <Animated.View
+      className="mx-4 my-2 overflow-hidden"
+      layout={MotionAnimations.layout}
+      exiting={MotionAnimations.rightExiting}
+    >
     <View className="relative mx-4 my-2 overflow-visible">
       {/* Right action area with delete button */}
       <Animated.View
@@ -157,6 +182,30 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
       </Animated.View>
 
       <GestureDetector gesture={pan}>
+        <Animated.View style={cardStyle} className="flex-row items-start">
+          {/* 1) Card */}
+          <View style={{ width: screenWidth - 32 }}>
+            <Pressable
+              onPress={() => navigateToTaskDetails(task)}
+              disabled={isLoading}
+              className="bg-white rounded-2xl shadow-sm overflow-hidden"
+            >
+              <View className="flex-col">
+                {/* Header row */}
+                <View className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}>
+                  <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
+                    <TaskCheckbox
+                      checked={task.isDone}
+                      onPress={async () => {
+                        toggleTask({ taskId: task.id, selectedDay });
+                        if (task.alertTime && new Date(task.alertTime) > new Date()) {
+                          await cancelNotification({ notificationId: task?.notificationId });
+                        }
+                      }}
+                      disabled={isLoading}
+                      haptic={!task.isDone}
+                      size={32}
+                    />
         <Animated.View style={cardStyle} className="bg-white rounded-2xl">
           <Pressable onPress={() => navigateToTaskDetails(task)} disabled={isLoading}>
             <View className="flex-col">
@@ -184,7 +233,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
 
                     <View
                       className="w-[6px] h-[30px] rounded-[3px] mr-3"
-                      style={{ backgroundColor: dividerColor }}
+                      style={{ backgroundColor: task.label?.color ?? theme.colors.disabled }}
                     />
                   </Animated.View>
 
@@ -192,12 +241,15 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                     <View className="justify-start pt-0 flex-1">
                       <View className="flex-row items-center">
                         <Text
-                          className={`text-xl font-baloo ${task.isDone ? "text-neutral-400 line-through" : "text-black"}`}
+                          className={`text-xl font-baloo ${
+                            task.isDone ? "text-neutral-400 line-through" : "text-black"
+                          }`}
                           numberOfLines={1}
                         >
                           {task.title}
                         </Text>
                       </View>
+
                       {timePeriod && (
                         <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
                           {timePeriod}
@@ -208,85 +260,51 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                     <View className="flex-row items-center">
                       {endDate ? (
                         <Text
-                          className={`${isOverdue ? "text-warning" : "text-primary"} font-baloo text-lg`}
+                          className={`${
+                            isOverdue ? "text-warning" : "text-primary"
+                          } font-baloo text-lg`}
                         >
                           {format(endDate, "H:mm")}
                         </Text>
                       ) : null}
+
                       {hasSubtasks && (
                         <Pressable
-                          onPress={toggleExpand}
+                          onPress={() => setIsExpanded((v) => !v)}
                           className="ml-2 p-1"
                           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          disabled={isLoading}
                         >
-                          <MaterialIcons
-                            name={isExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-                            size={24}
-                            color="#9CA3AF"
-                          />
+                          <AnimatedChevron color="#9CA3AF" progress={progress} />
                         </Pressable>
                       )}
                     </View>
                   </View>
                 </View>
 
-                {!isExpanded && <SubtaskProgressBar subtasks={task.subtasks} />}
+                {/* Progress bar shown only when collapsed */}
+                {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
 
-                {/* Expanded Subtask List */}
-                {isExpanded && hasSubtasks && (
-                  <View className="px-5 pb-4">
-                    {task.subtasks?.map((subtask: SubtaskDTO) => (
-                      <Pressable
-                        key={subtask.subTaskId}
-                        onPress={() => handleToggleSubtask(subtask.subTaskId)}
-                        disabled={isTogglingSubtaskStatus}
-                        className={`flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
-                      >
-                        <View
-                          className={`w-6 h-6 rounded-lg mr-3 items-center justify-center border-2 ${
-                            subtask.isDone
-                              ? "bg-[#4CAF50] border-[#4CAF50]"
-                              : "bg-white border-gray-300"
-                          }`}
-                        >
-                          {subtask.isDone && <MaterialIcons name="check" size={16} color="white" />}
-                        </View>
-                        <Text
-                          className={`flex-1 text-base font-baloo ${
-                            subtask.isDone
-                              ? "text-gray-400 line-through opacity-60"
-                              : "text-gray-700"
-                          }`}
-                        >
-                          {subtask.title}
-                        </Text>
-                        {subtask.duration && (
-                          <Text className="text-sm text-gray-400 font-baloo ml-2">
-                            {convertDurationToText(subtask.duration)}
-                          </Text>
-                        )}
-                      </Pressable>
-                    ))}
-                  </View>
-                )}
+                {/* Subtask list */}
+                {hasSubtasks && <SubtaskList task={task} progress={progress} />}
               </View>
             </Pressable>
           </View>
 
           <View className="w-2" />
 
-          {/* 3 Delete Button */}
-          <View className="w-14" pointerEvents={actionsEnabled ? "auto" : "none"}>
+          {/* 2) Delete action */}
+          <View className="w-14" pointerEvents={"auto"}>
             <Pressable
               onPress={async () => {
                 if (isLoading) return;
                 await deleteTask(task);
-                if (task.alertTime && new Date(task.alertTime) > new Date())
-                  await cancelNotification({
-                    notificationId: task?.notificationId,
-                  });
-                translateX.value = withTiming(0);
-                runOnJS(setActionsEnabled)(false);
+
+                if (task.alertTime && new Date(task.alertTime) > new Date()) {
+                  await cancelNotification({ notificationId: task?.notificationId });
+                }
+
+                taskCardTranslateX.value = withTiming(0, { duration: 160 });
               }}
               disabled={isLoading}
               android_ripple={{ color: "#FEE2E2", borderless: false }}
@@ -303,6 +321,6 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           </View>
         </Animated.View>
       </GestureDetector>
-    </View>
+    </Animated.View>
   );
 }
