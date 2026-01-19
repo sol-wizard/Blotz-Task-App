@@ -1,15 +1,15 @@
 import { View, TextInput, Keyboard } from "react-native";
 import { useEffect, useRef, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
 import { AzureSpeechAPI } from "../services/azure-speech-android-apis";
 import { useAzureSpeechToken } from "../hooks/useAzureSpeechToken";
-import { AiLanguagePicker } from "./ai-language-picker";
 import { SendButton } from "./send-button";
 import { VoiceButton } from "./voice-button";
 import { requestAndroidMicPermission } from "../utils/request-microphone-permission";
+import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
+import { Language } from "@/shared/models/user-preferences-dto";
 
 export const AndroidInput = ({
   text,
@@ -26,13 +26,15 @@ export const AndroidInput = ({
 }) => {
   const [isListening, setIsListening] = useState(false);
   const { tokenItem, isFetchingAzureToken } = useAzureSpeechToken();
+  const { userPreferences } = useUserPreferencesQuery();
 
-  const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
-    AsyncStorage.getItem("ai_language_preference").then((saved) => {
-      if (saved === "en-US" || saved === "zh-CN") setLanguage(saved);
-    });
-    return "zh-CN";
-  });
+  const getSttLanguage = () => {
+    if (userPreferences?.preferredLanguage === Language.En) return "en-AU";
+    if (userPreferences?.preferredLanguage === Language.Zh) return "zh-CN";
+    return "en-AU";
+  };
+
+  const currentLanguage = getSttLanguage();
 
   const finalBufferRef = useRef<string>("");
 
@@ -86,7 +88,7 @@ export const AndroidInput = ({
 
     const subStopped = AzureSpeechAPI.onStopped?.((info) => {
       console.log("[Azure STOPPED]", info);
-      setIsListening(false); // 关键：避免 UI 还以为在 listening
+      setIsListening(false);
     });
 
     const subSessionStopped = AzureSpeechAPI.onSessionStopped?.((info) => {
@@ -104,15 +106,6 @@ export const AndroidInput = ({
     };
   }, []);
 
-  const handleSelectLanguage = async (lang: "en-US" | "zh-CN") => {
-    setLanguage(lang);
-    try {
-      await AsyncStorage.setItem("ai_language_preference", lang);
-    } catch (error) {
-      console.error("Failed to save AI language preference:", error);
-    }
-  };
-
   const startListening = async () => {
     if (isFetchingAzureToken || !tokenItem) {
       console.log("Azure speech token not ready");
@@ -125,10 +118,9 @@ export const AndroidInput = ({
     await AzureSpeechAPI.startListen({
       token: tokenItem.token,
       region: tokenItem.region,
-      language,
+      language: currentLanguage,
     });
 
-    console.log("Started listening with language:", language);
     setIsListening(true);
   };
 
@@ -206,9 +198,7 @@ export const AndroidInput = ({
           )}
         </View>
 
-        <View className="flex-row items-center justify-between mb-6 w-96">
-          <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
-
+        <View className="flex-row items-center justify-end mb-6 w-96">
           {text.trim() !== "" || isListening || isAiGenerating ? (
             <SendButton
               text={text}
