@@ -4,7 +4,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Constants;
 
 public static class AiTaskGeneratorPrompts
 {
-    public static string GetSystemMessage(DateTime currentTime, DayOfWeek dayOfWeek)
+    public static string GetSystemMessage(DateTime currentTime, DayOfWeek dayOfWeek, string preferredLanguage)
     {
         var formattedTime = currentTime.ToString("yyyy-MM-dd'T'HH:mm", CultureInfo.InvariantCulture);
 
@@ -43,8 +43,8 @@ public static class AiTaskGeneratorPrompts
                         
                        
                        OUTPUT LANGUAGE RULE:
-                       - If the user's input is in Chinese (Mandarin), you MUST output in Chinese.
-                       - Otherwise, keep the output in the user's input language. 
+                       - The TARGET OUTPUT LANGUAGE is specified as: {preferredLanguage}
+                       - Always respond in {preferredLanguage}, regardless of the input language.
 
                        SUCCESS CRITERIA:
                        - isSuccess = true: At least one actionable task extracted
