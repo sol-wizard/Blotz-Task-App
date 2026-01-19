@@ -9,6 +9,8 @@ import { getMarkedDates, getSelectedDates } from "../util/get-marked-dates";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 // Define the theme object outside the component to prevent re-renders
 const calendarTheme = {
@@ -27,6 +29,7 @@ export default function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const { weeklyTaskAvailability, isLoading } = useTaskDays({ selectedDay });
+  const progress = useSharedValue(isCalendarVisible ? 1 : 0);
   usePushNotificationSetup();
   useLanguageInit(); // Initialize language from backend
 
@@ -41,8 +44,12 @@ export default function CalendarScreen() {
     <SafeAreaView className="flex-1" edges={["top"]}>
       <CalendarHeader
         date={format(selectedDay, "yyyy-MM-dd")}
-        isCalendarVisible={isCalendarVisible}
-        onToggleCalendar={() => setIsCalendarVisible(!isCalendarVisible)}
+        progress={progress}
+        onToggleCalendar={() => {
+          const next = !isCalendarVisible;
+          setIsCalendarVisible(next);
+          progress.value = withTiming(next ? 1 : 0, { duration: 220 });
+        }}
       />
       <CalendarProvider
         date={format(selectedDay, "yyyy-MM-dd")}
@@ -50,14 +57,19 @@ export default function CalendarScreen() {
         showTodayButton={false}
       >
         {isCalendarVisible && (
-          <WeekCalendar
-            onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
-            current={format(selectedDay, "yyyy-MM-dd")}
-            theme={calendarTheme}
-            markedDates={markedDates}
-            allowShadow={false}
-            firstDay={1}
-          />
+          <Animated.View
+            entering={MotionAnimations.upEntering}
+            exiting={MotionAnimations.outExiting}
+          >
+            <WeekCalendar
+              onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
+              current={format(selectedDay, "yyyy-MM-dd")}
+              theme={calendarTheme}
+              markedDates={markedDates}
+              allowShadow={false}
+              firstDay={1}
+            />
+          </Animated.View>
         )}
 
         <FilteredTaskList selectedDay={selectedDay} />

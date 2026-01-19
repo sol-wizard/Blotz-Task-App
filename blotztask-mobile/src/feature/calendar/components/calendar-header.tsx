@@ -1,20 +1,16 @@
 import UserProfile from "./user-profile";
-import { View, Text, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, Text, Pressable } from "react-native";
 import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
+import { AnimatedChevron } from "@/shared/components/ui/chevron";
 
 interface CalendarHeaderProps {
   date: string;
-  isCalendarVisible: boolean;
+  progress: any;
   onToggleCalendar: () => void;
 }
 
-export default function CalendarHeader({
-  date,
-  isCalendarVisible,
-  onToggleCalendar,
-}: CalendarHeaderProps) {
+export default function CalendarHeader({ date, progress, onToggleCalendar }: CalendarHeaderProps) {
   const { dayOfWeek } = formatCalendarDate(date);
   const { userProfile } = useUserProfile();
 
@@ -25,19 +21,13 @@ export default function CalendarHeader({
           {dayOfWeek}
         </Text>
 
-        <TouchableOpacity onPress={onToggleCalendar} className="pt-5" activeOpacity={0.7}>
-          <Ionicons
-            name={isCalendarVisible ? "chevron-up" : "chevron-down"}
-            size={22}
-            className="text-gray-800"
-            style={{
-              fontWeight: "800",
-              textShadowColor: "#1F2937",
-              textShadowOffset: { width: 0.7, height: 0.7 },
-              textShadowRadius: 0.7,
-            }}
-          />
-        </TouchableOpacity>
+        <Pressable
+          onPress={onToggleCalendar}
+          className="ml-2 p-1"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <AnimatedChevron color="#1F2937" progress={progress} />
+        </Pressable>
       </View>
 
       <UserProfile profile={userProfile} />
