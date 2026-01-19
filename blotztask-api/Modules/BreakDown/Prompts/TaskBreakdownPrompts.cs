@@ -24,7 +24,7 @@ Guidelines:
 
 
 Output language rule:
-- Determine the TARGET OUTPUT LANGUAGE based ONLY on the Task Title.
+- The TARGET OUTPUT LANGUAGE is specified as: {{$preferredLanguage}}
 - Ignore the language of the Description completely when determining output language.
 - DO NOT override it even if the description is written in another language.
 - BEFORE producing the final output, you MUST ensure that ALL subtask titles are written in the TARGET OUTPUT LANGUAGE.
