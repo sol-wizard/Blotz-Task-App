@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Pressable, Text, ActivityIndicator } from "react-native";
+import { View, Pressable, Text, ActivityIndicator, LayoutChangeEvent } from "react-native";
 import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
 import Animated, {
   useSharedValue,
@@ -60,6 +60,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
   };
 
   const [actionsEnabled, setActionsEnabled] = useState(false);
+  const [titleHeight, setTitleHeight] = useState<number | null>(null);
 
   // negative value indicates left swipe
   const translateX = useSharedValue(0);
@@ -120,9 +121,12 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
     <View className="relative mx-4 my-2 overflow-visible">
       {/* Right action area with delete button */}
       <Animated.View
-        style={[rightActionStyle, { flexDirection: "row" }]}
+        style={[
+          rightActionStyle,
+          { flexDirection: "row", height: titleHeight || undefined },
+        ]}
         pointerEvents={actionsEnabled ? "auto" : "none"}
-        className="absolute right-0 top-0 bottom-0 w-[180px] items-stretch z-10"
+        className="absolute right-0 top-0 w-[180px] z-10"
       >
         {/* Breakdown Task */}
         <Pressable
@@ -131,10 +135,10 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
             // TODO: Implement breakdown functionality
           }}
           disabled={isLoading}
-          android_ripple={{ color: "#E0EAFF", borderless: false }}
+          android_ripple={{ color: "#FEE2E2", borderless: false }}
           className="w-[120px] bg-[#EEF2FF] items-center justify-center rounded-2xl mx-2"
         >
-          <Text className="text-[#3D8DE0] font-baloo font-semibold text-lg">Breakdown</Text>
+          <Text className="text-info font-baloo font-semibold text-lg">Breakdown</Text>
         </Pressable>
 
         <Pressable
@@ -166,7 +170,13 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
         <Animated.View style={cardStyle} className="bg-white rounded-2xl">
           <Pressable onPress={() => navigateToTaskDetails(task)} disabled={isLoading}>
             <View className="flex-col">
-              <View className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}>
+              <View
+                className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}
+                onLayout={(event: LayoutChangeEvent) => {
+                  const { height } = event.nativeEvent.layout;
+                  setTitleHeight(height);
+                }}
+              >
                 <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
                   <TaskCheckbox
                     checked={task.isDone}
