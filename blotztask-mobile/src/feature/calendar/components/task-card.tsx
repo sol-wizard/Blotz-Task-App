@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Pressable, Text, ActivityIndicator, LayoutChangeEvent } from "react-native";
+import { View, Pressable, Text, ActivityIndicator, useWindowDimensions,LayoutChangeEvent } from "react-native";
 import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
 import Animated, {
   useAnimatedStyle,
@@ -62,24 +62,6 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
 
   const hasSubtasks = !!task.subtasks?.length;
-  const hasSubtasks = task.subtasks && task.subtasks.length > 0;
-
-  const handleToggleSubtask = async (subtaskId: number) => {
-    await toggleSubtaskStatus({ subtaskId, parentTaskId: task.id });
-  };
-
-  const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  const navigateToTaskDetails = (task: TaskDetailDTO) => {
-    queryClient.setQueryData(["taskId", task.id], task);
-    router.push({
-      pathname: "/(protected)/task-details",
-      params: { taskId: task.id },
-    });
-  };
-
   const [actionsEnabled, setActionsEnabled] = useState(false);
   const [titleHeight, setTitleHeight] = useState<number | null>(null);
 
@@ -140,7 +122,12 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           rightActionStyle,
           { flexDirection: "row", height: titleHeight || undefined },
         ]}
+        style={[
+          rightActionStyle,
+          { flexDirection: "row", height: titleHeight || undefined },
+        ]}
         pointerEvents={actionsEnabled ? "auto" : "none"}
+        className="absolute right-0 top-0 w-[180px] z-10"
         className="absolute right-0 top-0 w-[180px] z-10"
       >
         {/* Breakdown Task */}
@@ -151,8 +138,10 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           }}
           disabled={isLoading}
           android_ripple={{ color: "#FEE2E2", borderless: false }}
+          android_ripple={{ color: "#FEE2E2", borderless: false }}
           className="w-[120px] bg-[#EEF2FF] items-center justify-center rounded-2xl mx-2"
         >
+          <Text className="text-info font-baloo font-semibold text-lg">Breakdown</Text>
           <Text className="text-info font-baloo font-semibold text-lg">Breakdown</Text>
         </Pressable>
 
@@ -201,6 +190,35 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                         if (task.alertTime && new Date(task.alertTime) > new Date()) {
                           await cancelNotification({ notificationId: task?.notificationId });
                         }
+                      }}
+                      disabled={isLoading}
+                      haptic={!task.isDone}
+                      size={32}
+                    />
+        <Animated.View style={cardStyle} className="bg-white rounded-2xl">
+          <Pressable onPress={() => navigateToTaskDetails(task)} disabled={isLoading}>
+            <View className="flex-col">
+              <View
+                className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}
+                onLayout={(event: LayoutChangeEvent) => {
+                  const { height } = event.nativeEvent.layout;
+                  setTitleHeight(height);
+                }}
+              >
+                <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
+                  <TaskCheckbox
+                    checked={task.isDone}
+                    onPress={async () => {
+                      toggleTask({ taskId: task.id, selectedDay });
+                      if (task.alertTime && new Date(task.alertTime) > new Date())
+                        await cancelNotification({
+                          notificationId: task?.notificationId,
+                        });
+                    }}
+                    disabled={isLoading}
+                    haptic={!task.isDone}
+                    size={32}
+                  />
                       }}
                       disabled={isLoading}
                       haptic={!task.isDone}
