@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Pressable, Text, ActivityIndicator, useWindowDimensions,LayoutChangeEvent } from "react-native";
+import { View, Pressable, Text, ActivityIndicator, useWindowDimensions } from "react-native";
 import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
 import Animated, {
   useAnimatedStyle,
@@ -22,8 +22,11 @@ import { cancelNotification } from "@/shared/util/cancel-notification";
 import { AnimatedChevron } from "@/shared/components/ui/chevron";
 import SubtaskList from "./subtask-list";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
 
-const ACTION_WIDTH = 180;
+const ACTION_WIDTH = 208; // ACTION_WIDTH must equal the total width of all action buttons + spacers exposed by the swipe.
+// Current sum: Breakdown(128px) + Spacer(4px) + Spacer(4px) + Delete(56px) = 192px.
+// Users set 208, which reveals a bit more.
 const OPEN_X = -ACTION_WIDTH;
 const OPEN_THRESHOLD = ACTION_WIDTH * 0.5;
 
@@ -38,6 +41,18 @@ const rubberBand = (x: number, limit: number) => {
   return x;
 };
 const OPEN_THRESHOLD = ACTION_WIDTH * 0.4;
+const OPEN_THRESHOLD = ACTION_WIDTH * 0.5;
+
+const rubberBand = (x: number, limit: number) => {
+  "worklet";
+  if (x >= 0) return 0;
+  if (x < limit) {
+    const extra = x - limit;
+    return limit + extra * 0.25;
+  }
+
+  return x;
+};
 
 interface TaskCardProps {
   task: TaskDetailDTO;
@@ -48,6 +63,7 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) {
   const { toggleTask, isToggling } = useTaskMutations();
+  const { breakDownTask, isBreakingDown } = useSubtaskMutations();
 
   const queryClient = useQueryClient();
 
@@ -58,18 +74,12 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
 
   // Expand / collapse
   const [isExpanded, setIsExpanded] = useState(false);
+  
   // measured full height of subtask content
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
 
   const hasSubtasks = !!task.subtasks?.length;
-  const [actionsEnabled, setActionsEnabled] = useState(false);
-  const [titleHeight, setTitleHeight] = useState<number | null>(null);
-
-  // negative value indicates left swipe
-  const translateX = useSharedValue(0);
-
-  // Disable interactions when loading
-  const isLoading = isToggling || isDeleting;
+  const isLoading = isToggling || isDeleting || isBreakingDown;
 
   const navigateToTaskDetails = (t: TaskDetailDTO) => {
     queryClient.setQueryData(["taskId", t.id], t);
@@ -170,6 +180,11 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
         </Pressable>
       </Animated.View>
 
+    <Animated.View
+      className="mx-4 my-2 overflow-hidden"
+      layout={MotionAnimations.layout}
+      exiting={MotionAnimations.rightExiting}
+    >
       <GestureDetector gesture={pan}>
         <Animated.View style={cardStyle} className="flex-row items-start">
           {/* 1) Card */}
@@ -248,6 +263,11 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                     haptic={!task.isDone}
                     size={32}
                   />
+                      }}
+                      disabled={isLoading}
+                      haptic={!task.isDone}
+                      size={32}
+                    />
 
                     <View
                       className="w-[6px] h-[30px] rounded-[3px] mr-3"
@@ -309,9 +329,39 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
             </Pressable>
           </View>
 
-          <View className="w-2" />
+          <View className="w-3" />
 
-          {/* 2) Delete action */}
+          {/* 2) Actions */}
+          {/* Breakdown Action */}
+          <View className="w-32" pointerEvents={"auto"}>
+            <Pressable
+              onPress={async () => {
+                if (isLoading) return;
+                try {
+                  await breakDownTask(task.id);
+                  setIsExpanded(true);
+                  taskCardTranslateX.value = withTiming(0);
+                } catch (e) {
+                  // Error handled in hook
+                }
+              }}
+              disabled={isLoading}
+              android_ripple={{ color: "#FEE2E2", borderless: false }}
+              className={`w-32 h-20 rounded-xl bg-indigo-50 items-center justify-center ${
+                isLoading ? "opacity-50" : ""
+              }`}
+            >
+              {isBreakingDown ? (
+                <ActivityIndicator size="small" color="#9CA3AF" />
+              ) : (
+                <Text className="text-info font-baloo font-bold text-lg">Breakdown</Text>
+              )}
+            </Pressable>
+          </View>
+
+          <View className="w-3" />
+
+          {/* Delete action */}
           <View className="w-14" pointerEvents={"auto"}>
             <Pressable
               onPress={async () => {
