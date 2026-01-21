@@ -5,9 +5,18 @@
   "buttons": {
     "speak": "Speak",
     "send": "Send",
-    "addToTasks": "Add to tasks"
+    "addToTasks": "Add to tasks",
+    "goBack": "Go back"
   },
   "success": {
     "taskAdded": "Yay! Task added!"
+  },
+  "errors": {
+    "default": "Oops something went over my head. Please try again."
+  },
+  "taskCard": {
+    "titlePlaceholder": "Task title",
+    "editTitleLabel": "Edit task title",
+    "editTitleHint": "Double tap to edit task title"
   }
 }

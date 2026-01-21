@@ -3,6 +3,21 @@
   "banner": "准备好将想法付诸行动了吗？",
   "search": "搜索任务...",
   "noTasks": "未找到浮动任务",
-  "createTask": "创建您的第一个任务"
+  "createTask": "创建您的第一个任务",
+  "gashapon": {
+    "revealTitle": "揭示新任务",
+    "cancel": "取消",
+    "doItNow": "立即执行"
+  },
+  "timeEstimate": {
+    "estimating": "正在估算时间...",
+    "estimatedMessage": "我们估算这个任务大约需要",
+    "youCanDoItNow": "您可以立即开始！",
+    "pickATime": "选择时间",
+    "startNow": "立即开始",
+    "oops": "哎呀！",
+    "errorMessage": "无法估算时间，请稍后再试。",
+    "dismiss": "关闭"
+  }
 }
 
