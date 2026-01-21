@@ -2,8 +2,10 @@ import { ASSETS } from "@/shared/constants/assets";
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, View, Text, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 export default function LoadingScreen() {
+  const { t } = useTranslation("common");
   const bounceAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function LoadingScreen() {
           resizeMode="contain"
         />
       </View>
-      <Text className="font-balooBold text-2xl mt-4">Loading...</Text>
+      <Text className="font-balooBold text-2xl mt-4">{t("loading.general")}</Text>
     </SafeAreaView>
   );
 }

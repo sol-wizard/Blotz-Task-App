@@ -10,6 +10,7 @@ import { VoiceButton } from "./voice-button";
 import { requestAndroidMicPermission } from "../utils/request-microphone-permission";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import { Language } from "@/shared/models/user-preferences-dto";
+import { useTranslation } from "react-i18next";
 
 export const AndroidInput = ({
   text,
@@ -24,6 +25,7 @@ export const AndroidInput = ({
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
 }) => {
+  const { t } = useTranslation();
   const [isListening, setIsListening] = useState(false);
   const { tokenItem, isFetchingAzureToken } = useAzureSpeechToken();
   const { userPreferences } = useUserPreferencesQuery();
@@ -49,12 +51,17 @@ export const AndroidInput = ({
   };
 
   useEffect(() => {
-    requestAndroidMicPermission().then((granted) => {
+    requestAndroidMicPermission({
+      title: t("common:permissions.microphone.title"),
+      message: t("common:permissions.microphone.message"),
+      ok: t("common:buttons.ok"),
+      cancel: t("common:buttons.cancel"),
+    }).then((granted) => {
       if (!granted) {
         console.warn("[Mic] Microphone permission not granted. Voice input will not work.");
       }
     });
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const subPartial = AzureSpeechAPI.onPartial((value) => {

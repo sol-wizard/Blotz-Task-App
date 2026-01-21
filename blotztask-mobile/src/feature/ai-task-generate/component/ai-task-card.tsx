@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import { theme } from "@/shared/constants/theme";
 import { formatAiTaskCardDate, formatAiTaskCardTime } from "../utils/format-ai-task-card-time";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   task: AiTaskDTO;
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
+  const { t } = useTranslation("aiTaskGenerate");
   const [draftTitle, setDraftTitle] = useState(task.title);
 
   const handleEdit = () => {
@@ -44,10 +46,10 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
           multiline
           className="flex-1 mr-3 text-lg font-baloo leading-5"
           style={{ color: theme.colors.onSurface }}
-          placeholder="Task title"
+          placeholder={t("taskCard.titlePlaceholder")}
           placeholderTextColor={theme.colors.disabled}
-          accessibilityLabel="Edit task title"
-          accessibilityHint="Double tap to edit task title"
+          accessibilityLabel={t("taskCard.editTitleLabel")}
+          accessibilityHint={t("taskCard.editTitleHint")}
           autoFocus={false}
         />
 

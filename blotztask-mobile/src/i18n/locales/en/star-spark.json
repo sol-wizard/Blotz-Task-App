@@ -3,6 +3,21 @@
   "banner": "Ready to turn a spark into action?",
   "search": "Search tasks...",
   "noTasks": "No floating tasks found",
-  "createTask": "Create your first task"
+  "createTask": "Create your first task",
+  "gashapon": {
+    "revealTitle": "Reveal A New Task",
+    "cancel": "Cancel",
+    "doItNow": "Do it now"
+  },
+  "timeEstimate": {
+    "estimating": "Estimating time...",
+    "estimatedMessage": "We've estimated this task will take around",
+    "youCanDoItNow": "You can do it now!",
+    "pickATime": "Pick a time",
+    "startNow": "Start now",
+    "oops": "Oops!",
+    "errorMessage": "Could not estimate time, please try again later.",
+    "dismiss": "Dismiss"
+  }
 }
 

@@ -1,5 +1,6 @@
 import { Pressable, View, Text, ActivityIndicator } from "react-native";
 import Modal from "react-native-modal";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   visible: boolean;
@@ -20,6 +21,7 @@ export const FloatingTaskTimeEstimateModal = ({
   error,
   isEstimating,
 }: Props) => {
+  const { t } = useTranslation("starSpark");
   const handlePickTime = () => {
     setIsModalVisible(false);
     pickTime();
@@ -40,27 +42,27 @@ export const FloatingTaskTimeEstimateModal = ({
           {isEstimating && (
             <View className="items-center py-4">
               <ActivityIndicator size="large" />
-              <Text className="mt-4 text-lg text-gray-600 font-balooBold">Estimating time...</Text>
+              <Text className="mt-4 text-lg text-gray-600 font-balooBold">{t("timeEstimate.estimating")}</Text>
             </View>
           )}
 
           {!isEstimating && !error && durationText && (
             <>
               <Text className="text-xl leading-6 text-onSurface font-baloo">
-                We&apos;ve estimated this task will take around{" "}
-                <Text className="text-highlight">{durationText}</Text>. You can do it now!
+                {t("timeEstimate.estimatedMessage")}{" "}
+                <Text className="text-highlight">{durationText}</Text>. {t("timeEstimate.youCanDoItNow")}
               </Text>
 
               <View className="mt-8 flex-row items-center justify-end">
                 <Pressable onPress={handlePickTime}>
-                  <Text className="text-sm text-primary font-baloo">Pick a time</Text>
+                  <Text className="text-sm text-primary font-baloo">{t("timeEstimate.pickATime")}</Text>
                 </Pressable>
 
                 <Pressable
                   onPress={handleStartNow}
                   className="h-9 px-6 rounded-xl bg-highlight items-center justify-center ml-6"
                 >
-                  <Text className="text-sm text-onSurface font-baloo">Start now</Text>
+                  <Text className="text-sm text-onSurface font-baloo">{t("timeEstimate.startNow")}</Text>
                 </Pressable>
               </View>
             </>
@@ -68,14 +70,14 @@ export const FloatingTaskTimeEstimateModal = ({
 
           {!isEstimating && error && (
             <>
-              <Text className="text-lg text-gray-800 font-balooExtraBold mb-2">Oops!</Text>
+              <Text className="text-lg text-gray-800 font-balooExtraBold mb-2">{t("timeEstimate.oops")}</Text>
 
               <Text className="text-gray-600 font-baloo mb-6">
-                Could not estimate time, please try again later.
+                {t("timeEstimate.errorMessage")}
               </Text>
 
               <Pressable onPress={() => setIsModalVisible(false)} className="items-center">
-                <Text className="text-sm text-gray-400 font-balooThin">Dismiss</Text>
+                <Text className="text-sm text-gray-400 font-balooThin">{t("timeEstimate.dismiss")}</Text>
               </Pressable>
             </>
           )}

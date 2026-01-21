@@ -116,7 +116,7 @@ export function AiTasksPreview({
           className="w-12 h-12 rounded-full items-center justify-center bg-background mx-8 font-bold"
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t("buttons.goBack")}
         >
           <MaterialCommunityIcons name="arrow-u-left-top" size={20} color={theme.colors.primary} />
         </Pressable>

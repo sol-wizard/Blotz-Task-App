@@ -6,7 +6,12 @@ export const requestIOSMicrophonePermission = async () => {
   return perm.status;
 };
 
-export const requestAndroidMicPermission = async () => {
+export const requestAndroidMicPermission = async (translations?: {
+  title: string;
+  message: string;
+  ok: string;
+  cancel: string;
+}) => {
   if (Platform.OS !== "android") return true;
 
   try {
@@ -18,10 +23,10 @@ export const requestAndroidMicPermission = async () => {
     }
 
     const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.RECORD_AUDIO, {
-      title: "Microphone Permission",
-      message: "We need access to your microphone for voice input.",
-      buttonPositive: "OK",
-      buttonNegative: "Cancel",
+      title: translations?.title ?? "Microphone Permission",
+      message: translations?.message ?? "We need access to your microphone for voice input.",
+      buttonPositive: translations?.ok ?? "OK",
+      buttonNegative: translations?.cancel ?? "Cancel",
     });
 
     const ok = result === PermissionsAndroid.RESULTS.GRANTED;
