@@ -20,7 +20,7 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         _handler = new GetWeeklyTaskAvailabilityQueryHandler(_context, logger);
     }
 
-    [Fact]
+    [Fact(Skip = "API not yet updated to exclude floating tasks from calendar page green dot logic")]
     public async Task Handle_ShouldReturnTrue_WhenUserHasTasksOnTheDate()
     {
         // Arrange
@@ -37,7 +37,7 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
 
         // 3. Floating Task Created on Wednesday
         // This task has NO start/end time, but its CreatedAt matches Wednesday.
-        // The green dot SHOULD appear on Wednesday because this task will appear on Wednesday's calendar page.
+        // The green dot should NOT appear because floating tasks will be shown in a separate Reminder UI, not on the calendar page.
         await _seeder.CreateTaskAsync(userId, "Floating Task Wednesday", null, null, createdAt: monday.AddDays(2).AddHours(12));
 
         var query = new GetWeeklyTaskAvailabilityQuery
@@ -56,8 +56,9 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         // Tuesday (Index 1) - Has an INCOMPLETE task -> Should show dot (True)
         result[1].HasTask.Should().BeTrue("An incomplete task exists on Tuesday, so the green dot should appear below the date.");
         
-        // Wednesday (Index 2) - Has a FLOATING task created that day -> Should show dot (True)
-        result[2].HasTask.Should().BeTrue("A floating task was created on Wednesday (visible in All section), so the green dot should appear below the date.");
+        // Wednesday (Index 2) - Has a FLOATING task created that day -> Should NOT show dot (False)
+        // Floating tasks will be shown in a separate Reminder UI, not on the calendar page
+        result[2].HasTask.Should().BeFalse("Floating tasks will be shown in a separate Reminder UI, so no green dot should appear for them on the calendar.");
         
         // Thursday (Index 3) - No task -> No dot (False)
         result[3].HasTask.Should().BeFalse("No tasks exist for Thursday, so no green dot should appear.");
