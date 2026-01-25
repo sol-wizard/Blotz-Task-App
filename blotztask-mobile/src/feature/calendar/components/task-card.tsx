@@ -263,8 +263,6 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                   )}
                 </Pressable>
               </View>
-                </Pressable>
-              </View>
               <View className="w-2" />
             </>
           )}
