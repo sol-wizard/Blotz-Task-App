@@ -259,10 +259,10 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
                   {isBreakingDown || isReplacingSubtasks ? (
                     <ActivityIndicator size="small" color="#3b82f6" />
                   ) : (
-                    <>
-                      <Text className="text-info font-baloo font-semibold text-lg">Breakdown</Text>
-                    </>
+                    <Text className="text-info font-baloo font-semibold text-lg">Breakdown</Text>
                   )}
+                </Pressable>
+              </View>
                 </Pressable>
               </View>
               <View className="w-2" />
