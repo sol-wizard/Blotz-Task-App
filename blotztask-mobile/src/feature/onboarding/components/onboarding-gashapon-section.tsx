@@ -9,10 +9,7 @@ type OnboardingGashaponSectionProps = {
   onBack: () => void;
 };
 
-export function OnboardingGashaponSection({
-  onSkip,
-  onBack,
-}: OnboardingGashaponSectionProps) {
+export function OnboardingGashaponSection({ onSkip, onBack }: OnboardingGashaponSectionProps) {
   const { t } = useTranslation("onboarding");
 
   return (
@@ -28,8 +25,8 @@ export function OnboardingGashaponSection({
 
       <View className="flex-1 items-center justify-center">
         <Image
-          source={ASSETS.gashaponMachineBase}
-          className="w-44 h-44 mb-6"
+          source={require("../../../../assets/images-png/onboarding-note.png")}
+          className="w-96 h-96 mb-6"
           resizeMode="contain"
         />
         <Text className="text-3xl font-balooBold text-black text-center">

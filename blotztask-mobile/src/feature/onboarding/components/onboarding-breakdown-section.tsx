@@ -9,10 +9,7 @@ type OnboardingBreakdownSectionProps = {
   onBack: () => void;
 };
 
-export function OnboardingBreakdownSection({
-  onSkip,
-  onBack,
-}: OnboardingBreakdownSectionProps) {
+export function OnboardingBreakdownSection({ onSkip, onBack }: OnboardingBreakdownSectionProps) {
   const { t } = useTranslation("onboarding");
 
   return (
@@ -27,7 +24,11 @@ export function OnboardingBreakdownSection({
       </View>
 
       <View className="flex-1 items-center justify-center">
-        <Image source={ASSETS.yellowStar} className="w-32 h-32 mb-6" resizeMode="contain" />
+        <Image
+          source={require("../../../../assets/images-png/onboarding-breakdown.png")}
+          className="w-96 h-96 mb-6"
+          resizeMode="contain"
+        />
         <Text className="text-3xl font-balooBold text-black text-center">
           {t("breakdown.title")}
         </Text>
