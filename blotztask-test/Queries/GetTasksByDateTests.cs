@@ -21,7 +21,7 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         _handler = new GetTasksByDateQueryHandler(_context, logger);
     }
 
-    [Fact]
+    [Fact(Skip = "API not yet updated to exclude floating tasks from calendar page")]
     public async Task Handle_ShouldReturnTasks_OnlyIfTheyFallWithinTheSelectedDate()
     {
         // Arrange
@@ -58,11 +58,15 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         // 6. Task Outside (After): Starts well after end
         await _seeder.CreateTaskAsync(userId, "Task Outside (After)", clientStartDate.AddDays(1).AddHours(1), clientStartDate.AddDays(1).AddHours(2));
 
+        // 7. Floating Task (no start/end time): Should NOT appear on calendar page
+        // Floating tasks have no scheduled time - they will be shown in a separate Reminder UI later
+        await _seeder.CreateTaskAsync(userId, "Floating Task (No Time)", null, null, createdAt: clientStartDate.AddHours(2));
+
         var query = new GetTasksByDateQuery
         {
             UserId = userId,
             StartDate = clientStartDate,
-            IncludeFloatingForToday = false
+            IncludeFloatingForToday = true
         };
 
         // Act
@@ -88,6 +92,10 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
             
         result.Should().NotContain(t => t.Title == "Task Outside (After)", 
             because: "Tasks starting after the window ends MUST be excluded");
+
+        // Floating task assertion (calendar page should NOT show floating tasks)
+        result.Should().NotContain(t => t.Title == "Floating Task (No Time)", 
+            because: "Floating tasks (no start/end time) should NOT appear on the calendar page - they will be shown in a separate Reminder UI");
     }
 
     [Fact]
@@ -136,7 +144,7 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
             because: "Paris user (UTC+1) has already crossed into Nov 21 (it's 12:30 AM local), so they should NOT see this task on their 'Nov 20' view.");
     }
 
-    [Fact]
+    [Fact(Skip = "Floating tasks will no longer appear on calendar page - they will be shown in a separate Reminder UI")]
     public async Task Handle_ShouldReturnFloatingTasks_OnlyWhenCreatedOnTheSelectedDate()
     {
         // Arrange

@@ -6,12 +6,14 @@ import * as SecureStore from "expo-secure-store";
 import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/shared/constants/token-key";
 import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/shared/hooks/useAuth";
 
 export default function GetStartedButton() {
   const { authorize, user } = useAuth0();
   const router = useRouter();
   const posthog = usePostHog();
   const { i18n, t } = useTranslation("common");
+  const { refreshAuthState } = useAuth();
 
   const onPress = async () => {
     try {
@@ -32,6 +34,9 @@ export default function GetStartedButton() {
         console.log("Access token saved to storage");
         await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
         console.log("Refresh token saved to storage");
+
+        // Refresh auth state cache so dependent queries can start
+        refreshAuthState();
 
         if (user) {
           posthog.identify(user.sub);
