@@ -4,14 +4,14 @@ import { View, Text, Pressable } from "react-native";
 import { Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
-import { NotesDualView } from "@/feature/star-spark/components/notes-dual-view";
+import { NotesDualView } from "@/feature/notes/components/notes-dual-view";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { useNotesSearch as useNotesSearch } from "@/feature/star-spark/hooks/useNotesSearch";
+import { useNotesSearch as useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { router, useFocusEffect } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
-import { NoteDTO } from "@/feature/star-spark/models/note-dto";
+import { NoteDTO } from "@/feature/notes/models/note-dto";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");

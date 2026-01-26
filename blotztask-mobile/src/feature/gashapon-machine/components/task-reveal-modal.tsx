@@ -1,5 +1,5 @@
-import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
-import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
+import { FloatingTaskDTO } from "@/feature/notes/models/floating-task-dto";
+import { getLabelIcon } from "@/feature/notes/utils/get-label-icon";
 import React from "react";
 import { Modal, View, Text, Pressable, Image } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -30,7 +30,9 @@ export const TaskRevealModal = ({ visible, task, onCancel, onDoNow }: TaskReveal
           <View className="items-center mb-4">
             <Image source={imageSource} className="w-16 h-16 mb-3" resizeMode="contain" />
 
-            <Text className="text-gray-500 text-sm font-balooThin">{t("gashapon.revealTitle")}</Text>
+            <Text className="text-gray-500 text-sm font-balooThin">
+              {t("gashapon.revealTitle")}
+            </Text>
             <Text className="text-slate-800 text-2xl font-bold mt-1 text-center font-baloo">
               {task?.title}
             </Text>
@@ -48,7 +50,9 @@ export const TaskRevealModal = ({ visible, task, onCancel, onDoNow }: TaskReveal
               onPress={onDoNow}
               className="flex-1 ml-2 rounded-full h-11 items-center justify-center bg-[#99D612]"
             >
-              <Text className="text-slate-900 font-semibold font-baloo">{t("gashapon.doItNow")}</Text>
+              <Text className="text-slate-900 font-semibold font-baloo">
+                {t("gashapon.doItNow")}
+              </Text>
             </Pressable>
           </View>
         </View>

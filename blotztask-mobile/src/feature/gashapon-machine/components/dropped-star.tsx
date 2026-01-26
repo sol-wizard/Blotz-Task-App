@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, StyleSheet, Image, Easing } from "react-native";
-import { getLabelIcon } from "@/feature/star-spark/utils/get-label-icon";
+import { getLabelIcon } from "@/feature/notes/utils/get-label-icon";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 

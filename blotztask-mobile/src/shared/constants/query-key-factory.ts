@@ -1,4 +1,4 @@
-import { NoteDTO } from "@/feature/star-spark/models/note-dto";
+import { NoteDTO } from "@/feature/notes/models/note-dto";
 
 export const userKeys = {
   all: ["user"] as const,

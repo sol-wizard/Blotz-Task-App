@@ -6,7 +6,7 @@ import { apiClient } from "./api/client";
 import { DailyTaskIndicatorDTO } from "@/feature/calendar/models/daily-task-indicator-dto";
 import { startOfDay } from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
-import { NoteDTO } from "@/feature/star-spark/models/note-dto";
+import { NoteDTO } from "@/feature/notes/models/note-dto";
 
 export async function fetchTasksForDate(
   date: Date,
