@@ -1,12 +1,11 @@
-import { View, TextInput, Keyboard } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
 import { AzureSpeechAPI } from "../services/azure-speech-android-apis";
 import { useAzureSpeechToken } from "../hooks/useAzureSpeechToken";
-import { SendButton } from "./send-button";
-import { VoiceButton } from "./voice-button";
+import VoiceInputButton from "./voice-input-button";
 import { requestAndroidMicPermission } from "../utils/request-microphone-permission";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import { Language } from "@/shared/models/user-preferences-dto";
@@ -25,7 +24,7 @@ export const AndroidInput = ({
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(["aiTaskGenerate", "common"]);
   const [isListening, setIsListening] = useState(false);
   const { tokenItem, isFetchingAzureToken } = useAzureSpeechToken();
   const { userPreferences } = useUserPreferencesQuery();
@@ -129,15 +128,6 @@ export const AndroidInput = ({
     setText("");
   };
 
-  const sendWriteInput = (msg: string) => {
-    const val = msg.trim();
-    if (!val) return;
-    sendMessage(val);
-    Keyboard.dismiss();
-    setText("");
-    finalBufferRef.current = "";
-  };
-
   const onPressSend = () => {
     if (isListening) stopListening();
     const finalUserText = text.trim();
@@ -154,50 +144,46 @@ export const AndroidInput = ({
     await startListening();
   };
 
+  const showSendButton = text.trim() !== "" && !isListening;
+
   return (
-    <View className="pt-2">
-      <View className="items-center">
-        <View className="w-96 mb-10" style={{ minHeight: 60 }}>
-          <TextInput
-            value={text}
-            onChangeText={setText}
-            onKeyPress={({ nativeEvent: { key } }) => {
-              if (key === "Enter") {
-                const cleaned = text.replace(/\n$/, "").trim();
-                if (!cleaned) return;
-                if (isListening) stopListening();
-                sendWriteInput(cleaned);
-              }
-            }}
-            enablesReturnKeyAutomatically
-            autoFocus
-            placeholder="Hold to speak or tap to write..."
-            placeholderTextColor={theme.colors.secondary}
-            multiline
-            className="w-11/12 bg-white text-xl text-gray-800 font-baloo"
-            style={{ textAlignVertical: "top", textAlign: "left" }}
-          />
-
-          {aiGeneratedMessage?.errorMessage && (
-            <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
-          )}
-        </View>
-
-        <View className="flex-row items-center justify-end mb-6 w-96">
-          {text.trim() !== "" || isListening || isAiGenerating ? (
-            <SendButton
-              text={text}
-              isRecognizing={isListening}
-              isGenerating={isAiGenerating}
-              abortListening={abortListening}
-              sendMessage={() => onPressSend()}
-              stopListening={stopListening}
-            />
-          ) : (
-            <VoiceButton isRecognizing={isListening} toggleListening={toggleListening} />
-          )}
-        </View>
-      </View>
+    <View className="mb-8 ">
+      <Text className="font-baloo text-lg mb-2">{t("aiTaskGenerate:labels.newTask")}</Text>
+      <TextInput
+        value={text}
+        onChangeText={setText}
+        placeholder={t("aiTaskGenerate:input.placeholder")}
+        autoFocus
+        placeholderTextColor={theme.colors.secondary}
+        multiline
+        className="bg-[#F2F2F2] rounded-xl h-40 p-4"
+        style={{ textAlignVertical: "top", textAlign: "left" }}
+      />
+      {aiGeneratedMessage?.errorMessage && (
+        <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
+      )}
+      {showSendButton ? (
+        isAiGenerating ? (
+          <View className="mt-4 h-14 rounded-full bg-[#F2F2F2] items-center justify-center">
+            <ActivityIndicator size={10} color="#2F80ED" />
+          </View>
+        ) : (
+          <Pressable
+            className="bg-[#F2F2F2] rounded-full mt-4 p-4 items-center"
+            onPress={onPressSend}
+          >
+            <Text className="font-bold">{t("aiTaskGenerate:buttons.generateTask")}</Text>
+          </Pressable>
+        )
+      ) : (
+        <VoiceInputButton
+          isListening={isListening}
+          startListening={toggleListening}
+          abortListening={abortListening}
+          sendMessage={stopListening}
+          isAiGenerating={isAiGenerating}
+        />
+      )}
     </View>
   );
 };
