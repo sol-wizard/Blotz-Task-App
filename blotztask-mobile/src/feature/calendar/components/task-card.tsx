@@ -67,20 +67,17 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
   // measured full height of subtask content
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
 
-  const hasSubtasks = !!task.subtasks?.length;
   /* Always allow breakdown / subtask generation */
-  const showBreakdown = true;
+  const hasSubtasks = !!task.subtasks?.length;
 
   const widthInfo = React.useMemo(() => {
     const deleteWidth = 56; // w-14
-    const breakdownWidth = 112; // w-28
+    const breakdownWidth = 128; // w-32
     const spacerWidth = 8; // w-2
 
     // Structure: [Card] [Spacer] ([Breakdown] [Spacer]) [Delete]
-    let totalWidth = spacerWidth + deleteWidth;
-    if (showBreakdown) {
-      totalWidth += breakdownWidth + spacerWidth;
-    }
+    let totalWidth = spacerWidth + deleteWidth + breakdownWidth + spacerWidth;
+
     return {
       actionWidth: totalWidth,
       openX: -totalWidth,
@@ -88,7 +85,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
       breakdownWidth,
       deleteWidth,
     };
-  }, [showBreakdown]);
+  }, []);
 
   const isLoading = isToggling || isDeleting || isBreakingDown || isReplacingSubtasks;
 
@@ -245,27 +242,23 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
           <View className="w-2" />
 
           {/* Breakdown Action */}
-          {showBreakdown && (
-            <>
-              <View className="w-28" pointerEvents="auto">
-                <Pressable
-                  onPress={handleBreakdown}
-                  disabled={isLoading}
-                  android_ripple={{ color: "#DBEAFE", borderless: false }}
-                  className={`w-28 h-20 rounded-xl bg-blue-500/10 items-center justify-center ${
-                    isBreakingDown || isReplacingSubtasks ? "opacity-50" : ""
-                  }`}
-                >
-                  {isBreakingDown || isReplacingSubtasks ? (
-                    <ActivityIndicator size="small" color="#3b82f6" />
-                  ) : (
-                    <Text className="text-info font-baloo font-semibold text-lg">Breakdown</Text>
-                  )}
-                </Pressable>
-              </View>
-              <View className="w-2" />
-            </>
-          )}
+          <View className="w-32" pointerEvents="auto">
+            <Pressable
+              onPress={handleBreakdown}
+              disabled={isLoading}
+              android_ripple={{ color: "#DBEAFE", borderless: false }}
+              className={`w-32 h-20 rounded-xl bg-blue-500/10 items-center justify-center ${
+                isBreakingDown || isReplacingSubtasks ? "opacity-50" : ""
+              }`}
+            >
+              {isBreakingDown || isReplacingSubtasks ? (
+                <ActivityIndicator size="small" color="#3b82f6" />
+              ) : (
+                <Text className="text-info font-baloo font-semibold text-lg">Breakdown</Text>
+              )}
+            </Pressable>
+          </View>
+          <View className="w-2" />
 
           {/* 2) Delete action */}
           <View className="w-14" pointerEvents={"auto"}>
