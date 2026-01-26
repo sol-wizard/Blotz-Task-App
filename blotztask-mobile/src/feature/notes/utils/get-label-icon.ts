@@ -1,18 +1,16 @@
 import { ASSETS } from "@/shared/constants/assets";
 
-export const getLabelIcon = (labelName?: string) => {
-  switch (labelName) {
-    case "Work":
-      return ASSETS.purpleStar;
-    case "Learning":
-      return ASSETS.greenStar;
-    case "Life":
-      return ASSETS.yellowStar;
-    case "Health":
-      return ASSETS.blueStar;
-    default:
-      return ASSETS.rainbowStar;
-  }
+const STAR_ICONS = [
+  ASSETS.purpleStar,
+  ASSETS.greenStar,
+  ASSETS.yellowStar,
+  ASSETS.blueStar,
+  ASSETS.rainbowStar,
+];
+
+export const getLabelIcon = () => {
+  const randomIndex = Math.floor(Math.random() * STAR_ICONS.length);
+  return STAR_ICONS[randomIndex];
 };
 
 export const getLabelNameFromStarLabel = (starLabel: string): string => {

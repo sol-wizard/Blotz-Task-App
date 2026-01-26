@@ -10,27 +10,27 @@ import { LinearGradient } from "expo-linear-gradient";
 import { TaskRevealModal } from "@/feature/gashapon-machine/components/task-reveal-modal";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
-import { useAllNotes } from "@/feature/notes/hooks/useAllNotes";
-import { pickRandomTask } from "@/feature/gashapon-machine/utils/pick-random-task";
+import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
+import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
 import { FloatingTaskDTO } from "@/feature/notes/models/floating-task-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { endOfDay } from "date-fns";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
+import { NoteDTO } from "@/feature/notes/models/note-dto";
 
-export default function GashaponMachine() {
+export default function GashaponMachineScreen() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
   const [eyesPicLoaded, setEyesPicLoaded] = useState(false);
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
-  const [starLabelName, setStarLabelName] = useState("");
-  const [randomTask, setRandomTask] = useState<FloatingTaskDTO | null>(null);
-  const { updateTask } = useTaskMutations();
+  const [randomTask, setRandomTask] = useState<NoteDTO | null>(null);
+  const { addTask } = useTaskMutations();
   const posthog = usePostHog();
 
-  const { floatingTasks, isLoading } = useAllNotes();
+  const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
 
   useEffect(() => {
     posthog.capture("screen_viewed", {
@@ -40,35 +40,30 @@ export default function GashaponMachine() {
 
   const MAX_STARS = 30;
 
-  const limitedFloatingTasks = floatingTasks ?? [].slice(0, MAX_STARS);
+  const limitedNotes = notesSearchResult.slice(0, MAX_STARS);
 
   const handleDoNow = () => {
     if (!randomTask) return;
-    updateTask({
-      taskId: randomTask.id,
-      dto: {
-        title: randomTask.title,
-        description: randomTask.description,
-        startTime: convertToDateTimeOffset(new Date()),
-        endTime: convertToDateTimeOffset(endOfDay(new Date())),
-        labelId: randomTask.label?.labelId,
-        timeType: 1,
-      },
+    addTask({
+      title: randomTask.text,
+      description: "",
+      startTime: convertToDateTimeOffset(new Date()),
+      endTime: convertToDateTimeOffset(endOfDay(new Date())),
+      timeType: 1,
     });
     router.push("/(protected)");
     setModalVisible(false);
   };
 
-  const handleStarDropped = (starLabelName: string) => {
-    setStarLabelName(starLabelName);
-    const randomTask = pickRandomTask(floatingTasks ?? [], starLabelName);
-    setRandomTask(randomTask);
+  const handleStarDropped = (_starLabelName: string) => {
+    const randomNote = pickRandomNote();
+    setRandomTask(randomNote);
     setDropStarTrigger((prev) => prev + 1);
   };
 
   const { entities, handleRelease, resetStarsPhysics } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
-    floatingTasks: limitedFloatingTasks,
+    notes: limitedNotes,
   });
 
   const handleCancel = () => {
@@ -78,7 +73,7 @@ export default function GashaponMachine() {
 
   const gameEngineReady = !!entities.physics;
   const isAllLoaded =
-    basePicLoaded && eyesPicLoaded && buttonPicLoaded && gameEngineReady && !isLoading;
+    basePicLoaded && eyesPicLoaded && buttonPicLoaded && gameEngineReady && !showLoading;
 
   return (
     <LinearGradient
@@ -149,7 +144,6 @@ export default function GashaponMachine() {
         </View>
 
         <DroppedStar
-          starLabelName={starLabelName}
           trigger={dropStarTrigger}
           setTaskRevealModalVisible={() => {
             setModalVisible(true);

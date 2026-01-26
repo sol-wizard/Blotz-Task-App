@@ -1,19 +1,19 @@
-import { FloatingTaskDTO } from "@/feature/notes/models/floating-task-dto";
 import { getLabelIcon } from "@/feature/notes/utils/get-label-icon";
 import React from "react";
 import { Modal, View, Text, Pressable, Image } from "react-native";
 import { useTranslation } from "react-i18next";
+import { NoteDTO } from "@/feature/notes/models/note-dto";
 
 type TaskRevealModalProps = {
   visible: boolean;
-  task: FloatingTaskDTO | null;
+  task: NoteDTO | null;
   onDoNow: () => void;
   onCancel?: () => void;
 };
 
 export const TaskRevealModal = ({ visible, task, onCancel, onDoNow }: TaskRevealModalProps) => {
   const { t } = useTranslation("starSpark");
-  const imageSource = getLabelIcon(task?.label?.name);
+  const imageSource = getLabelIcon();
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
       <View className="flex-1 bg-black/40 items-center justify-center">
@@ -34,7 +34,7 @@ export const TaskRevealModal = ({ visible, task, onCancel, onDoNow }: TaskReveal
               {t("gashapon.revealTitle")}
             </Text>
             <Text className="text-slate-800 text-2xl font-bold mt-1 text-center font-baloo">
-              {task?.title}
+              {task?.text}
             </Text>
           </View>
 

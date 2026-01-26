@@ -5,20 +5,18 @@ import { EntityMap } from "../models/entity-map";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
-import { FloatingTaskDTO } from "@/feature/notes/models/floating-task-dto";
 import { getLabelIcon } from "@/feature/notes/utils/get-label-icon";
 import { Platform } from "react-native";
+import { NoteDTO } from "@/feature/notes/models/note-dto";
 
 export const useGashaponMachineConfig = ({
   starRadius = 15,
   onStarDropped,
-  floatingTasks,
+  notes,
 }: {
   starRadius?: number;
   onStarDropped: (labelName: string) => void;
-  floatingTasks: FloatingTaskDTO[];
-  getPendingDrop?: () => { taskId: number; labelName: string } | null;
-  clearPendingDrop?: () => void;
+  notes: NoteDTO[];
 }) => {
   const [entities, setEntities] = useState<EntityMap>({});
   const gateRef = useRef<Matter.Body | null>(null);
@@ -27,23 +25,16 @@ export const useGashaponMachineConfig = ({
   const isGateOpenRef = useRef(false);
   const droppedStarIndexRef = useRef<number>(-1); // save the original index of the dropped star
   const droppedStarLabelRef = useRef<string>(""); // save the label of the dropped star for return animation
-  const floatingTasksRef = useRef<FloatingTaskDTO[]>([]);
+  const noteRef = useRef<NoteDTO[]>([]);
 
   const getLabelNameByIndex = (idx: number) => {
-    const task = floatingTasksRef.current[idx];
+    const task = noteRef.current[idx];
     // Handle both camelCase (label.name) and PascalCase (Label.Name) from API
     const label = (task as any)?.label ?? (task as any)?.Label;
     const labelName = label?.name ?? label?.Name ?? "no-label";
     return labelName;
   };
 
-  const getLabelNameByDroppedStarIndex = () => {
-    // Use the saved label instead of looking it up, since floatingTasksRef may have changed
-    if (!droppedStarLabelRef.current) {
-      return "no-label";
-    }
-    return droppedStarLabelRef.current;
-  };
   const getStarEntityKey = (idx: number) => `star-${idx}`;
 
   const handleRelease = (deltaThisTurn: number) => {
@@ -75,12 +66,8 @@ export const useGashaponMachineConfig = ({
     const world = worldRef.current;
     const starRadius = 15;
 
-    // Directly mutate entities instead of creating new object
-    // GameEngine holds reference to entities, so mutation updates it
-
     if (droppedStarIndexRef.current >= 0) {
       const idx = droppedStarIndexRef.current;
-      const labelToRestore = getLabelNameByDroppedStarIndex();
       let star = starsRef.current[idx];
       const entityKey = getStarEntityKey(idx);
       const x = 140;
@@ -109,7 +96,7 @@ export const useGashaponMachineConfig = ({
       setEntities((prevEntities) => {
         prevEntities[entityKey] = {
           body: star,
-          texture: getLabelIcon(labelToRestore),
+          texture: getLabelIcon(),
           renderer: CapsuleToyRenderer,
         };
         return prevEntities;
@@ -120,8 +107,8 @@ export const useGashaponMachineConfig = ({
   };
 
   useEffect(() => {
-    const tasks = floatingTasks || [];
-    floatingTasksRef.current = tasks;
+    const tasks = notes || [];
+    noteRef.current = tasks;
 
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
@@ -181,7 +168,7 @@ export const useGashaponMachineConfig = ({
     const gapX = starRadius * 2 + 5;
     const gapY = starRadius * 2 + 5;
 
-    for (let i = 0; i < floatingTasks.length; i++) {
+    for (let i = 0; i < notes.length; i++) {
       const col = i % 6;
       const row = Math.floor(i / 6);
 
@@ -208,12 +195,11 @@ export const useGashaponMachineConfig = ({
     };
 
     stars.forEach((star, idx) => {
-      const labelName = getLabelNameByIndex(idx);
       const entityKey = getStarEntityKey(idx);
 
       newEntities[entityKey] = {
         body: star,
-        texture: getLabelIcon(labelName),
+        texture: getLabelIcon(),
         renderer: CapsuleToyRenderer,
       };
     });
@@ -279,7 +265,7 @@ export const useGashaponMachineConfig = ({
       Matter.World.clear(world, false);
       Matter.Engine.clear(engine);
     };
-  }, [floatingTasks]);
+  }, [notes]);
 
   return { entities, handleRelease, resetStarsPhysics };
 };

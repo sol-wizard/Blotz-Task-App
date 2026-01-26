@@ -8,17 +8,12 @@ const DROPOUT_X = SCREEN_WIDTH / 2 - 40;
 const DROPOUT_Y = SCREEN_HEIGHT / 2 + 200;
 
 interface DroppedStarProps {
-  starLabelName: string;
   trigger: number;
   setTaskRevealModalVisible: (v: boolean) => void;
 }
 
-export const DroppedStar: React.FC<DroppedStarProps> = ({
-  starLabelName,
-  trigger,
-  setTaskRevealModalVisible,
-}) => {
-  const imageSource = getLabelIcon(starLabelName);
+export const DroppedStar: React.FC<DroppedStarProps> = ({ trigger, setTaskRevealModalVisible }) => {
+  const imageSource = getLabelIcon();
   const [visible, setVisible] = useState(false);
 
   const dimOpacity = useRef(new Animated.Value(0)).current;
