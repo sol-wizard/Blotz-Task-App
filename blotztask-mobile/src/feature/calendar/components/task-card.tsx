@@ -76,7 +76,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
     const spacerWidth = 8; // w-2
 
     // Structure: [Card] [Spacer] ([Breakdown] [Spacer]) [Delete]
-    let totalWidth = spacerWidth + deleteWidth + breakdownWidth + spacerWidth;
+    const totalWidth = spacerWidth + deleteWidth + breakdownWidth + spacerWidth;
 
     return {
       actionWidth: totalWidth,
