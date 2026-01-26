@@ -53,6 +53,11 @@ export default function StarSparkScreen() {
     };
     deleteTask(taskDetail);
   };
+
+  const handleAddSparkPress = () => {
+    console.log("Star Spark button clicked");
+  };
+  
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
       <View className="flex-row justify-between items-center mt-10">
@@ -104,6 +109,23 @@ export default function StarSparkScreen() {
           }}
         />
       </View>
+
+      <Pressable
+        onPress={handleAddSparkPress}
+        className="mx-8 mb-2"
+        style={{
+          borderWidth: 2,
+          borderStyle: "dashed",
+          borderColor: theme.colors.disabled,
+          borderRadius: 16,
+          height: 56,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: theme.colors.background,
+        }}
+      >
+        <Text className="font-baloo text-base text-secondary">{t("addSpark")}</Text>
+      </Pressable>
 
       {showLoading && <LoadingScreen />}
       {!showLoading && floatingTasksResult.length > 0 && (
