@@ -18,7 +18,7 @@ type Props = {
   aiGeneratedMessage?: any;
 };
 
-const AiInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessage }: Props) => {
+const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessage }: Props) => {
   const { t } = useTranslation("aiTaskGenerate");
   const { userPreferences } = useUserPreferencesQuery();
   const getSttLanguage = () => {
@@ -108,4 +108,4 @@ const AiInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessag
   );
 };
 
-export default AiInput;
+export default IOSInput;

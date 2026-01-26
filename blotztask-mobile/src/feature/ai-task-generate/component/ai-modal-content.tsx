@@ -4,10 +4,9 @@ import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { AiTasksPreview } from "./ai-tasks-preview";
-import { TaskAddedSuccess } from "./task-added-success";
 import { AndroidInput } from "./android-input";
 import { Platform } from "react-native";
-import AiInput from "./ai-input";
+import IOSInput from "./ai-input";
 
 export const AiModalContent = ({
   modalType,
@@ -41,13 +40,10 @@ export const AiModalContent = ({
         />
       );
 
-    case "add-task-success":
-      return <TaskAddedSuccess />;
-
     case "input":
     default:
       return Platform.OS !== "android" ? (
-        <AiInput
+        <IOSInput
           text={text}
           setText={setText}
           sendMessage={sendMessage}

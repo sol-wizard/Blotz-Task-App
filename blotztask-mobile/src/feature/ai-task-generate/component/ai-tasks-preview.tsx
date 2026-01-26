@@ -75,8 +75,6 @@ export function AiTasksPreview({
         outcome: "accepted",
       });
 
-      setModalType("add-task-success");
-
       setLocalTasks([]);
       router.back();
     } catch (error) {
