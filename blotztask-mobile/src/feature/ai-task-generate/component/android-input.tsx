@@ -79,37 +79,15 @@ export const AndroidInput = ({
       setText(finalBufferRef.current);
     });
 
-    const subNoMatch = AzureSpeechAPI.onNoMatch?.(() => {
-      console.log("Azure no match (silence or unrecognized)");
-      setIsListening(false);
-    });
-
     const subCanceled = AzureSpeechAPI.onCanceled((err) => {
       console.log("Azure error:", err);
       setIsListening(false);
-    });
-
-    const subDebug = AzureSpeechAPI.onDebug?.((msg) => {
-      console.log("[Azure DEBUG]", msg);
-    });
-
-    const subStopped = AzureSpeechAPI.onStopped?.((info) => {
-      console.log("[Azure STOPPED]", info);
-      setIsListening(false);
-    });
-
-    const subSessionStopped = AzureSpeechAPI.onSessionStopped?.((info) => {
-      console.log("[Azure SessionStopped]", info);
     });
 
     return () => {
       subPartial?.remove?.();
       subFinal?.remove?.();
       subCanceled?.remove?.();
-      subDebug?.remove?.();
-      subStopped?.remove?.();
-      subSessionStopped?.remove?.();
-      subNoMatch?.remove?.();
     };
   }, []);
 
