@@ -1,5 +1,5 @@
 {
-  "title": "Star Spark",
+  "title": "Notes",
   "banner": "Ready to turn a spark into action?",
   "search": "Search tasks...",
   "noTasks": "No floating tasks found",
@@ -20,4 +20,3 @@
     "dismiss": "Dismiss"
   }
 }
-

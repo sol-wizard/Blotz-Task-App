@@ -15,17 +15,17 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
 
-export default function StarSparkScreen() {
+export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const { floatingTasks, isLoading } = useFloatingTasks();
   const { deleteTask, isDeleting } = useTaskMutations();
   const posthog = usePostHog();
-  const { t } = useTranslation("starSpark");
+  const { t } = useTranslation("notes");
 
   useFocusEffect(
     useCallback(() => {
       posthog.capture("screen_viewed", {
-        screen_name: "StarSpark",
+        screen_name: "Notes",
       });
     }, []),
   );
@@ -62,25 +62,7 @@ export default function StarSparkScreen() {
         </Pressable>
       </View>
 
-      <View
-        className="bg-[#CDF79A] mx-8 my-6 rounded-3xl"
-        style={{ minHeight: 110, position: "relative", overflow: "hidden" }}
-      >
-        <Image
-          source={ASSETS.transparentStar}
-          style={{
-            position: "absolute",
-            top: 5,
-            right: -5,
-            width: 100,
-            height: 100,
-            opacity: 1,
-          }}
-        />
-        <Text className="font-baloo text-xl text-secondary mt-5 mb-4 mx-4 text-onSurface">
-          {t("banner")}
-        </Text>
-
+      <View className="mb-6 mt-4 mx-1">
         <Searchbar
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -89,11 +71,8 @@ export default function StarSparkScreen() {
           clearIcon={searchQuery ? "close" : undefined}
           iconColor={theme.colors.disabled}
           style={{
-            backgroundColor: theme.colors.background,
-            borderTopLeftRadius: 8,
-            borderTopRightRadius: 8,
-            borderBottomLeftRadius: 20,
-            borderBottomRightRadius: 20,
+            backgroundColor: "#E9EEF0",
+            borderRadius: 20,
             height: 40,
             marginHorizontal: 12,
           }}
