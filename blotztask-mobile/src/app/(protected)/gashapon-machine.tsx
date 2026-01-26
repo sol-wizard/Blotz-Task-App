@@ -10,7 +10,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { TaskRevealModal } from "@/feature/gashapon-machine/components/task-reveal-modal";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
-import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
+import { useAllNotes } from "@/feature/star-spark/hooks/useAllNotes";
 import { pickRandomTask } from "@/feature/gashapon-machine/utils/pick-random-task";
 import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -30,7 +30,7 @@ export default function GashaponMachine() {
   const { updateTask } = useTaskMutations();
   const posthog = usePostHog();
 
-  const { floatingTasks, isLoading } = useFloatingTasks();
+  const { floatingTasks, isLoading } = useAllNotes();
 
   useEffect(() => {
     posthog.capture("screen_viewed", {

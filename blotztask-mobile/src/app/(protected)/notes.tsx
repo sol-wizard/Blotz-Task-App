@@ -1,24 +1,21 @@
 import { theme } from "@/shared/constants/theme";
 import { useCallback, useState } from "react";
-import { View, Text, Image, Pressable } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ASSETS } from "@/shared/constants/assets";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
-import { FloatingTaskDualView } from "@/feature/star-spark/components/floating-task-dual-view";
-import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
+import { NotesDualView } from "@/feature/star-spark/components/notes-dual-view";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { useStarSparkSearchEffects } from "@/feature/star-spark/hooks/useStarSparkSearchEffects";
+import { useNotesSearch as useNotesSearch } from "@/feature/star-spark/hooks/useNotesSearch";
 import { router, useFocusEffect } from "expo-router";
-import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
-import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
+import { LinearGradient } from "expo-linear-gradient";
+import { NoteDTO } from "@/feature/star-spark/models/note-dto";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
-  const { floatingTasks, isLoading } = useFloatingTasks();
-  const { deleteTask, isDeleting } = useTaskMutations();
+  const { isDeleting } = useTaskMutations();
   const posthog = usePostHog();
   const { t } = useTranslation("notes");
 
@@ -30,10 +27,8 @@ export default function NotesScreen() {
     }, []),
   );
 
-  const { floatingTasksResult, showLoading } = useStarSparkSearchEffects({
+  const { notesSearchResult, showLoading } = useNotesSearch({
     searchQuery,
-    floatingTasks,
-    isLoadingAll: isLoading,
   });
 
   const handlePressTask = (task: any) => {
@@ -43,23 +38,33 @@ export default function NotesScreen() {
     });
   };
 
-  const handleDelete = (task: FloatingTaskDTO) => {
-    const taskDetail: TaskDetailDTO = {
-      id: task.id,
-      title: task.title,
-      isDone: task.isDone,
-      timeType: 0,
-      notificationId: null,
-    };
-    deleteTask(taskDetail);
+  const handleDelete = (note: NoteDTO) => {
+    console.log("Test Deleting task", note);
   };
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
       <View className="flex-row justify-between items-center mt-10">
         <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4 px-10">{t("title")}</Text>
-        <Pressable onPress={() => router.push("/(protected)/gashapon-machine")}>
-          <Image source={ASSETS.starSpark} className="w-12 h-12 mr-8"></Image>
-        </Pressable>
+        <LinearGradient
+          colors={["#9AD513", "#60B000", "#9AD513"]}
+          start={{ x: 0.8, y: 0 }}
+          end={{ x: 0, y: 0.5 }}
+          style={{
+            width: 125,
+            height: 35,
+            borderRadius: 20,
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: 16,
+          }}
+        >
+          <Pressable
+            onPress={() => router.push("/(protected)/gashapon-machine")}
+            className="rounded-full px-4 items-center justify-center"
+          >
+            <Text className="text-white font-baloo text-lg">Pick a note✨</Text>
+          </Pressable>
+        </LinearGradient>
       </View>
 
       <View className="mb-6 mt-4 mx-1">
@@ -85,9 +90,9 @@ export default function NotesScreen() {
       </View>
 
       {showLoading && <LoadingScreen />}
-      {!showLoading && floatingTasksResult.length > 0 && (
-        <FloatingTaskDualView
-          tasks={floatingTasksResult}
+      {!showLoading && notesSearchResult.length > 0 && (
+        <NotesDualView
+          notes={notesSearchResult}
           onDeleteTask={handleDelete}
           isDeleting={isDeleting}
           onPressTask={handlePressTask}

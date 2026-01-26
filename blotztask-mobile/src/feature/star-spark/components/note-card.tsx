@@ -1,48 +1,44 @@
-import { View, Text, Pressable, Image, ActivityIndicator } from "react-native";
-import { FloatingTaskDTO } from "../models/floating-task-dto";
+import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { addMinutes, format } from "date-fns";
-import { getLabelIcon } from "../utils/get-label-icon";
 import { useState } from "react";
-import { FloatingTaskTimeEstimateModal } from "./floating-task-time-estimate-modal";
+import { useTranslation } from "react-i18next";
+import { NoteTimeEstimateModal } from "./note-time-estimate-modal";
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
-import { router } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { TaskTimeType } from "@/shared/models/task-detail-dto";
 import { convertDurationToMinutes, convertDurationToText } from "@/shared/util/convert-duration";
+import { NoteDTO } from "../models/note-dto";
 
-export const FloatingTaskCard = ({
-  floatingTask,
+export const NoteCard = ({
+  note,
   isToggled,
   onToggle,
   isDeleting,
   onDelete,
   onPressCard,
 }: {
-  floatingTask: FloatingTaskDTO;
+  note: NoteDTO;
   isToggled: boolean;
   onToggle: () => void;
   isDeleting: boolean;
-  onDelete: (t: FloatingTaskDTO) => void;
-  onPressCard: (task: FloatingTaskDTO) => void;
+  onDelete: (t: NoteDTO) => void;
+  onPressCard: (task: NoteDTO) => void;
 }) => {
-  const iconSource = getLabelIcon(floatingTask.label?.name);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const { t } = useTranslation("notes");
 
-  const { updateTask } = useTaskMutations();
+  const { addTask } = useTaskMutations();
   const { estimateTime, isEstimating, timeResult, estimateError } = useEstimateTaskTime();
 
   const pickTime = () => {
-    router.push({
-      pathname: "/task-edit",
-      params: { taskId: String(floatingTask.id) },
-    });
+    console.log("Pick time pressed");
   };
 
-  const handleEstimateTime = (task: FloatingTaskDTO) => {
+  const handleEstimateTime = (note: NoteDTO) => {
     setIsModalVisible(true);
-    estimateTime(task);
+    estimateTime(note);
   };
 
   const handleStartNow = async () => {
@@ -52,16 +48,12 @@ export const FloatingTaskCard = ({
     const startTime = new Date();
     const endTime = addMinutes(startTime, durationMinutes);
 
-    await updateTask({
-      taskId: floatingTask.id,
-      dto: {
-        title: floatingTask.title,
-        description: floatingTask.description,
-        startTime: convertToDateTimeOffset(startTime),
-        endTime: convertToDateTimeOffset(endTime),
-        labelId: floatingTask.label?.labelId,
-        timeType: TaskTimeType.Range,
-      },
+    await addTask({
+      title: note.text,
+      description: "",
+      startTime: convertToDateTimeOffset(startTime),
+      endTime: convertToDateTimeOffset(endTime),
+      timeType: TaskTimeType.Range,
     });
 
     setIsModalVisible(false);
@@ -72,32 +64,23 @@ export const FloatingTaskCard = ({
         onLongPress={onToggle}
         onPress={() => {
           if (isToggled) return;
-          onPressCard(floatingTask);
+          onPressCard(note);
         }}
       >
         <View className={`bg-white rounded-3xl p-4 ${isToggled ? "border-2 border-info" : ""}`}>
-          <Text className="text-xl font-semibold text-black font-baloo">{floatingTask.title}</Text>
-
-          <Text className="mt-2 text-[13px] text-[#9CA3AF] leading-snug font-balooThin">
-            {floatingTask.description}
-          </Text>
+          <Text className="text-xl font-semibold text-black font-baloo">{note.text}</Text>
 
           <View className="mt-4 flex-row items-center justify-between">
             <Text className="text-xs text-[#6B7280] font-balooThin">
-              {floatingTask.createdAt &&
-                format(new Date(floatingTask.createdAt + "Z"), "dd MMM HH:mm")}
+              {note.createdAt && format(new Date(note.createdAt + "Z"), "dd MMM HH:mm")}
             </Text>
-
-            <View className="w-6 h-6 items-center justify-center">
-              <Image source={iconSource} className="w-8 h-8" />
-            </View>
           </View>
         </View>
       </Pressable>
 
       {isToggled && (
         <View className="flex-row justify-end mt-3">
-          <Pressable onPress={() => onDelete(floatingTask)} disabled={isDeleting}>
+          <Pressable onPress={() => onDelete(note)} disabled={isDeleting}>
             <View className="w-8 h-8 bg-warning rounded-xl items-center justify-center">
               {isDeleting ? (
                 <ActivityIndicator size="small" color="#fff" />
@@ -107,21 +90,21 @@ export const FloatingTaskCard = ({
             </View>
           </Pressable>
 
-          <Pressable onPress={() => handleEstimateTime(floatingTask)}>
+          <Pressable onPress={() => handleEstimateTime(note)}>
             <View className="w-8 h-8 bg-[#E3EFFE] rounded-xl items-center justify-center ml-2">
               <MaterialCommunityIcons name="plus" color="#3D8DE0" size={18} />
             </View>
           </Pressable>
         </View>
       )}
-      <FloatingTaskTimeEstimateModal
+      <NoteTimeEstimateModal
         visible={isModalVisible}
         pickTime={pickTime}
         handleStartNow={handleStartNow}
         setIsModalVisible={setIsModalVisible}
         durationText={convertDurationToText(timeResult ?? "")}
         isEstimating={isEstimating}
-        error={estimateError ? "Failed to estimate task time." : null}
+        error={estimateError ? t("timeEstimate.errorMessage") : null}
       />
     </View>
   );
