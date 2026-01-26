@@ -6,7 +6,7 @@ import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-d
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AndroidInput } from "./android-input";
 import { Platform } from "react-native";
-import IOSInput from "./ai-input";
+import IOSInput from "./ios-input";
 
 export const AiModalContent = ({
   modalType,
