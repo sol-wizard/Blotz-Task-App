@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import LottieView from "lottie-react-native";
 import { ASSETS } from "@/shared/constants/assets";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   isListening: boolean;
@@ -20,6 +21,8 @@ const VoiceInputButton = ({
   sendMessage,
   isAiGenerating,
 }: Props) => {
+  const { t } = useTranslation("aiTaskGenerate");
+
   return (
     <View className="mt-4 h-14">
       {!isListening ? (
@@ -28,7 +31,7 @@ const VoiceInputButton = ({
           onPress={startListening}
         >
           <MaterialCommunityIcons name="microphone-outline" size={20} color="black" />
-          <Text className="font-bold ml-2">Tap to speak</Text>
+          <Text className="font-bold ml-2">{t("buttons.tapToSpeak")}</Text>
         </Pressable>
       ) : (
         <View

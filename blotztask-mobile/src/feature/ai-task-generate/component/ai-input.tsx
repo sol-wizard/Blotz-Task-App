@@ -68,7 +68,7 @@ const AiInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessag
 
   return (
     <View className="mb-8 ">
-      <Text className="font-baloo text-lg mb-2">New Task</Text>
+      <Text className="font-baloo text-lg mb-2">{t("labels.newTask")}</Text>
       <TextInput
         value={text}
         onChangeText={setText}
@@ -92,7 +92,7 @@ const AiInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessag
             className="bg-[#F2F2F2] rounded-full mt-4 p-4 items-center"
             onPress={() => sendMessage(text)}
           >
-            <Text className="font-bold">+ Generate Task</Text>
+            <Text className="font-bold">{t("buttons.generateTask")}</Text>
           </Pressable>
         )
       ) : (
