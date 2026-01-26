@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import React from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -22,7 +22,7 @@ const VoiceInputButton = ({
 }: Props) => {
   return (
     <View className="mt-4 h-14">
-      {!isListening ? (
+      {isListening ? (
         <Pressable
           className="bg-[#F2F2F2] rounded-full p-4 items-center flex-row justify-center"
           onPress={startListening}
@@ -43,35 +43,29 @@ const VoiceInputButton = ({
             end={{ x: 1, y: 0.5 }}
             style={{ flex: 1, alignItems: "center" }}
           >
-            {isAiGenerating ? (
+            <View className="rounded-full flex-row px-2 py-1 items-center">
+              <Pressable
+                className="rounded-full bg-white p-2 items-center justify-center"
+                onPress={abortListening}
+              >
+                <MaterialCommunityIcons name="trash-can-outline" size={22} color="#A3DC2F" />
+              </Pressable>
               <View className="flex-1 items-center justify-center">
-                <ActivityIndicator size="small" color="white" />
+                <LottieView
+                  source={ASSETS.voiceWave}
+                  loop={true}
+                  autoPlay={true}
+                  style={{ width: 200, height: 40 }}
+                ></LottieView>
               </View>
-            ) : (
-              <View className="rounded-full flex-row px-2 py-1 items-center">
-                <Pressable
-                  className="rounded-full bg-white p-2 items-center justify-center"
-                  onPress={abortListening}
-                >
-                  <MaterialCommunityIcons name="trash-can-outline" size={22} color="#A3DC2F" />
-                </Pressable>
-                <View className="flex-1 items-center justify-center">
-                  <LottieView
-                    source={ASSETS.voiceWave}
-                    loop={true}
-                    autoPlay={true}
-                    style={{ width: 200, height: 40 }}
-                  ></LottieView>
-                </View>
-                <Pressable
-                  className="rounded-full bg-white items-center justify-center px-2 w-20 h-10"
-                  disabled={isAiGenerating}
-                  onPress={sendMessage}
-                >
-                  <Text className="text-[#2F80ED] font-baloo text-lg">Send</Text>
-                </Pressable>
-              </View>
-            )}
+              <Pressable
+                className="rounded-full bg-white items-center justify-center px-2 w-20 h-10"
+                disabled={isAiGenerating}
+                onPress={sendMessage}
+              >
+                <MaterialCommunityIcons name="check-bold" size={22} color="#2F80ED" />
+              </Pressable>
+            </View>
           </LinearGradient>
         </View>
       )}

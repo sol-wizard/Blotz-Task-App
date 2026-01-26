@@ -6,7 +6,6 @@ import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-d
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { TaskAddedSuccess } from "./task-added-success";
 import { AndroidInput } from "./android-input";
-import { IOSInput } from "./ios-input";
 import { Platform } from "react-native";
 import AiInput from "./ai-input";
 

@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, Vibration } from "react-native";
+import { View, Text, TextInput, Pressable, Vibration, ActivityIndicator } from "react-native";
 import React, { useEffect } from "react";
 import { theme } from "@/shared/constants/theme";
 import { useTranslation } from "react-i18next";
@@ -8,6 +8,7 @@ import { Language } from "@/shared/models/user-preferences-dto";
 import VoiceInputButton from "./voice-input-button";
 import * as Haptics from "expo-haptics";
 import { requestIOSMicrophonePermission } from "../utils/request-microphone-permission";
+import { ErrorMessageCard } from "./error-message-card";
 
 type Props = {
   text: string;
@@ -17,7 +18,7 @@ type Props = {
   aiGeneratedMessage?: any;
 };
 
-const AiInput = ({ text, setText, sendMessage, isAiGenerating }: Props) => {
+const AiInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessage }: Props) => {
   const { t } = useTranslation("aiTaskGenerate");
   const { userPreferences } = useUserPreferencesQuery();
   const getSttLanguage = () => {
@@ -43,7 +44,7 @@ const AiInput = ({ text, setText, sendMessage, isAiGenerating }: Props) => {
     }
   }, [transcript]);
 
-  const showSendButton = text.trim() !== "" || recognizing;
+  const showSendButton = text.trim() !== "" && !recognizing;
 
   const toggleListening = async () => {
     if (recognizing) {
@@ -60,8 +61,13 @@ const AiInput = ({ text, setText, sendMessage, isAiGenerating }: Props) => {
     await handleStartListening();
   };
 
+  const abortListeningMessage = () => {
+    abortListening();
+    setText("");
+  };
+
   return (
-    <View>
+    <View className="mb-8 ">
       <Text className="font-baloo text-lg mb-2">New Task</Text>
       <TextInput
         value={text}
@@ -73,16 +79,28 @@ const AiInput = ({ text, setText, sendMessage, isAiGenerating }: Props) => {
         className="bg-[#F2F2F2] rounded-xl h-40 p-4"
         style={{ textAlignVertical: "top", textAlign: "left" }}
       />
+      {aiGeneratedMessage?.errorMessage && (
+        <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
+      )}
       {showSendButton ? (
-        <Pressable className="bg-[#F2F2F2] rounded-full mt-4 p-4 items-center">
-          <Text className="font-bold">+ Generate Task</Text>
-        </Pressable>
+        isAiGenerating ? (
+          <View className="mt-4 h-14 rounded-full bg-[#F2F2F2] items-center justify-center">
+            <ActivityIndicator size={10} color="#2F80ED" />
+          </View>
+        ) : (
+          <Pressable
+            className="bg-[#F2F2F2] rounded-full mt-4 p-4 items-center"
+            onPress={() => sendMessage(text)}
+          >
+            <Text className="font-bold">+ Generate Task</Text>
+          </Pressable>
+        )
       ) : (
         <VoiceInputButton
           isListening={recognizing}
           startListening={toggleListening}
-          abortListening={abortListening}
-          sendMessage={() => sendMessage(text)}
+          abortListening={abortListeningMessage}
+          sendMessage={stopListening}
           isAiGenerating={isAiGenerating}
         />
       )}
