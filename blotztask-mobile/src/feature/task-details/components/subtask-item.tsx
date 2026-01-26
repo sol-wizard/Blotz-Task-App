@@ -38,13 +38,7 @@ export default function SubtaskItem({
   const textColor = isChecked ? theme.colors.disabled : theme.colors.onSurface;
 
   return (
-    <View
-      className="relative flex-row items-center py-2.5 px-3 mb-2"
-      style={{
-        backgroundColor: theme.colors.background,
-        borderRadius: 10,
-      }}
-    >
+    <View className="relative w-full flex-row items-start justify-between py-2.5 px-3 mb-2">
       {isEditMode ? (
         <TouchableOpacity
           onPress={handleDelete}
@@ -61,19 +55,20 @@ export default function SubtaskItem({
           size={28}
         />
       )}
-
-      <View className="text-sm min-w-[50px] px-2 py-1 rounded bg-blue-100 items-center justify-center">
-        <Text className="text-sm font-baloo font-bold text-black">
-          {subtask.duration ? convertDurationToText(subtask.duration) : ""}
+      <View className="flex-1 ml-3">
+        <Text
+          className={`text-[15px] font-baloo ml-3 ${isChecked ? "line-through" : ""}`}
+          style={{ color: textColor }}
+        >
+          {subtask?.title}
         </Text>
       </View>
 
-      <Text
-        className={`flex-1 text-[15px] font-baloo ml-3 ${isChecked ? "line-through" : ""}`}
-        style={{ color: textColor }}
-      >
-        {subtask?.title}
-      </Text>
+      <View className="text-sm w-[60px] items-end ml-2">
+        <Text className="text-right font-baloo font-bold text-black">
+          {subtask.duration ? convertDurationToText(subtask.duration) : ""}
+        </Text>
+      </View>
     </View>
   );
 }

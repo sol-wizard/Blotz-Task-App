@@ -9,9 +9,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { MaterialIcons } from "@expo/vector-icons";
-import { convertDurationToText } from "@/shared/util/convert-duration";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
+import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
 
 type Props = {
   task: TaskDetailDTO;
@@ -47,30 +46,23 @@ const SubtaskList = ({ task, progress }: Props) => {
             key={subtask.subTaskId}
             onPress={() => handleToggleSubtask(subtask.subTaskId)}
             disabled={isTogglingSubtaskStatus}
-            className={`flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
+            className={`justify-between flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
           >
-            <View
-              className={`w-6 h-6 rounded-lg mr-3 items-center justify-center border-2 ${
-                subtask.isDone ? "bg-[#4CAF50] border-[#4CAF50]" : "bg-white border-gray-300"
-              }`}
-            >
-              {subtask.isDone && <MaterialIcons name="check" size={16} color="white" />}
-            </View>
-
-            <Text
-              className={`flex-1 text-base font-baloo ${
-                subtask.isDone ? "text-gray-400 line-through opacity-60" : "text-gray-700"
-              }`}
-              numberOfLines={1}
-            >
-              {subtask.title}
-            </Text>
-
-            {subtask.duration && (
-              <Text className="text-sm text-gray-400 font-baloo ml-2">
-                {convertDurationToText(subtask.duration)}
+            <TaskCheckbox
+              checked={subtask.isDone}
+              onPress={() => handleToggleSubtask(subtask.subTaskId)}
+              haptic={!subtask.isDone}
+              size={32}
+            />
+            <View className="flex-1">
+              <Text
+                className={`text-base font-baloo ${
+                  subtask.isDone ? "text-gray-400 line-through opacity-60" : "text-gray-700"
+                }`}
+              >
+                {subtask.title}
               </Text>
-            )}
+            </View>
           </Pressable>
         ))}
       </View>
