@@ -7,6 +7,7 @@ import {
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
+import { SubtaskDTO } from "../models/subtask-dto";
 import { subtaskKeys, taskKeys } from "@/shared/constants/query-key-factory";
 
 export const useSubtaskMutations = () => {
@@ -35,12 +36,21 @@ export const useSubtaskMutations = () => {
   const deleteSubtaskMutation = useMutation({
     mutationFn: ({ subtaskId, parentTaskId }: { subtaskId: number; parentTaskId: number }) =>
       deleteSubtask(subtaskId),
-    onSuccess: (_, variables) => {
-      console.log("Deleted subtask", variables.subtaskId);
-      queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
-      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
+      const previous = queryClient.getQueryData<SubtaskDTO[]>(
+        subtaskKeys.all(variables.parentTaskId),
+      );
+      queryClient.setQueryData<SubtaskDTO[]>(
+        subtaskKeys.all(variables.parentTaskId),
+        (current) => (current ?? []).filter((s) => s.subTaskId !== variables.subtaskId),
+      );
+      return { previous };
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(subtaskKeys.all(variables.parentTaskId), context.previous);
+      }
       console.error("Failed to delete subtask:", error);
     },
   });
@@ -54,6 +64,29 @@ export const useSubtaskMutations = () => {
     onError: (error) => {
       console.error("Failed to update subtask:", error);
     },
+  });
+
+  const updateSubtasksOrderMutation = useMutation({
+    mutationFn: async ({ subtasks }: { parentTaskId: number; subtasks: SubtaskDTO[] }) => {
+      for (const subtask of subtasks) {
+        await updateSubtask(subtask);
+      }
+    },
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
+      const previous = queryClient.getQueryData<SubtaskDTO[]>(
+        subtaskKeys.all(variables.parentTaskId),
+      );
+      queryClient.setQueryData(subtaskKeys.all(variables.parentTaskId), variables.subtasks);
+      return { previous };
+    },
+    onError: (error, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(subtaskKeys.all(variables.parentTaskId), context.previous);
+      }
+      console.error("Failed to update subtasks order:", error);
+    },
+    // Avoid forcing a refetch; we already updated cache optimistically.
   });
 
   const toggleSubtaskStatusMutation = useMutation({
@@ -84,6 +117,10 @@ export const useSubtaskMutations = () => {
     //Update subtask
     updateSubtask: updateSubtaskMutation.mutateAsync,
     isUpdatingSubtask: updateSubtaskMutation.isPending,
+
+    // Update subtask orders (batched)
+    updateSubtasksOrder: updateSubtasksOrderMutation.mutateAsync,
+    isUpdatingSubtasksOrder: updateSubtasksOrderMutation.isPending,
 
     // Toggle subtask status
     toggleSubtaskStatus: toggleSubtaskStatusMutation.mutateAsync,

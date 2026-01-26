@@ -39,10 +39,11 @@ export default function SubtaskItem({
 
   return (
     <View
-      className="relative flex-row items-center py-2.5 px-3 mb-2"
+      className="relative flex-row items-center px-3 mb-2"
       style={{
         backgroundColor: theme.colors.background,
         borderRadius: 10,
+        height: 52,
       }}
     >
       {isEditMode ? (
@@ -71,6 +72,8 @@ export default function SubtaskItem({
       <Text
         className={`flex-1 text-[15px] font-baloo ml-3 ${isChecked ? "line-through" : ""}`}
         style={{ color: textColor }}
+        numberOfLines={1}
+        ellipsizeMode="tail"
       >
         {subtask?.title}
       </Text>

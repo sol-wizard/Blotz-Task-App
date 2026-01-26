@@ -24,6 +24,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     deleteSubtask,
     isDeletingSubtask,
     isUpdatingSubtask,
+    updateSubtasksOrder,
     toggleSubtaskStatus,
   } = useSubtaskMutations();
 
@@ -67,7 +68,6 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
     isLoading ||
     isBreakingDown ||
     isReplacingSubtasks ||
-    isDeletingSubtask ||
     isUpdatingSubtask
   ) {
     return (
@@ -133,11 +133,14 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
           onDelete={handleDelete}
           onToggle={(subtaskId) => toggleSubtaskStatus({ subtaskId, parentTaskId: parentTask.id })}
           color={taskColor}
+          onReorder={(orderedSubtasks) =>
+            updateSubtasksOrder({ parentTaskId: parentTask.id, subtasks: orderedSubtasks })
+          }
         />
       </View>
 
       {/* Add More Subtasks Button / Drag to Reorder - Fixed at bottom */}
-      {isEditMode ?? (
+      {isEditMode && (
         <View className="mx-0 mb-10 mt-4 rounded-2xl py-2.5 items-center justify-center">
           <Text className="font-baloo text-[#8BC34A] text-lg text-center">
             {t("tasks:details.dragToReorder")}
