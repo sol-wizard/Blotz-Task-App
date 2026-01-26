@@ -13,7 +13,7 @@ export default function AiTaskSheetScreen() {
       <Pressable className="flex-1" onPress={() => router.back()} />
       <KeyboardStickyView className="pt-2">
         <View
-          className={`rounded-t-3xl px-4 pt-4 min-h-[200px] ${
+          className={`rounded-t-3xl px-4 pt-4 min-h-[280px] ${
             modalType === "add-task-success" ? "bg-background" : "bg-white"
           }`}
         >

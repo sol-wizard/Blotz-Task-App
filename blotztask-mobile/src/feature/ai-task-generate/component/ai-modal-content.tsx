@@ -8,6 +8,7 @@ import { TaskAddedSuccess } from "./task-added-success";
 import { AndroidInput } from "./android-input";
 import { IOSInput } from "./ios-input";
 import { Platform } from "react-native";
+import AiInput from "./ai-input";
 
 export const AiModalContent = ({
   modalType,
@@ -47,7 +48,7 @@ export const AiModalContent = ({
     case "input":
     default:
       return Platform.OS !== "android" ? (
-        <IOSInput
+        <AiInput
           text={text}
           setText={setText}
           sendMessage={sendMessage}
