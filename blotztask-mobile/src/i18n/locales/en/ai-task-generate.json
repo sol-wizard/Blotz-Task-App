@@ -5,8 +5,13 @@
   "buttons": {
     "speak": "Speak",
     "send": "Send",
+    "tapToSpeak": "Tap to speak",
+    "generateTask": "+ Generate Task",
     "addToTasks": "Add to tasks",
     "goBack": "Go back"
+  },
+  "labels": {
+    "newTask": "New Task"
   },
   "success": {
     "taskAdded": "Yay! Task added!"

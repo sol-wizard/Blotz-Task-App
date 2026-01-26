@@ -12,7 +12,7 @@ import DashedSettings from "../../../assets/images-svg/settings-dashed.svg";
 export const LOTTIE_ANIMATIONS = {
   emptyBox: require("../../../assets/animations/empty-box.json"),
   spinner: require("../../../assets/animations/spinner.json"),
-  voiceBar: require("../../../assets/animations/voice-bar.json"),
+  voiceWave: require("../../../assets/animations/voice-wave.json"),
 } as const;
 
 // Images
