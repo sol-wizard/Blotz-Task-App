@@ -22,7 +22,7 @@ const VoiceInputButton = ({
 }: Props) => {
   return (
     <View className="mt-4 h-14">
-      {isListening ? (
+      {!isListening ? (
         <Pressable
           className="bg-[#F2F2F2] rounded-full p-4 items-center flex-row justify-center"
           onPress={startListening}
