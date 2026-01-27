@@ -26,7 +26,7 @@ export default function GashaponMachineScreen() {
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
-  const [randomTask, setRandomTask] = useState<NoteDTO | null>(null);
+  const [randomNote, setRandomTask] = useState<NoteDTO | null>(null);
   const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
   const { addTask } = useTaskMutations();
   const posthog = usePostHog();
@@ -44,10 +44,15 @@ export default function GashaponMachineScreen() {
   const limitedNotes = useMemo(() => notesSearchResult.slice(0, MAX_STARS), [notesSearchResult]);
 
   const handleDoNow = () => {
-    if (!randomTask) return;
+    if (!randomNote) return;
+    const text = randomNote.text ?? "";
+
+    const title = text.length > 50 ? text.slice(0, 50) : text;
+    const description = text.length > 50 ? text : "";
+
     addTask({
-      title: randomTask.text,
-      description: "",
+      title: title,
+      description: description,
       startTime: convertToDateTimeOffset(new Date()),
       endTime: convertToDateTimeOffset(endOfDay(new Date())),
       timeType: 1,
@@ -87,7 +92,7 @@ export default function GashaponMachineScreen() {
       <SafeAreaView className="flex-1 items-center justify-center">
         <NoteRevealModal
           visible={isModalVisible}
-          task={randomTask}
+          task={randomNote}
           onDoNow={handleDoNow}
           onCancel={handleCancel}
         />

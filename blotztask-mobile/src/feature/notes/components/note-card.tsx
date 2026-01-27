@@ -48,9 +48,15 @@ export const NoteCard = ({
     const startTime = new Date();
     const endTime = addMinutes(startTime, durationMinutes);
 
+    const text = note.text ?? "";
+
+    const title = text.length > 50 ? text.slice(0, 50) : text;
+
+    const description = text.length > 50 ? text : "";
+
     await addTask({
-      title: note.text,
-      description: "",
+      title,
+      description,
       startTime: convertToDateTimeOffset(startTime),
       endTime: convertToDateTimeOffset(endTime),
       timeType: TaskTimeType.Range,
