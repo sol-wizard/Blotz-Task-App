@@ -45,26 +45,25 @@ export default function NotesScreen() {
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
       <View className="flex-row justify-between items-center mt-10">
         <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4 px-10">{t("title")}</Text>
-        <LinearGradient
-          colors={["#9AD513", "#60B000", "#9AD513"]}
-          start={{ x: 0.8, y: 0 }}
-          end={{ x: 0, y: 0.5 }}
-          style={{
-            width: 125,
-            height: 35,
-            borderRadius: 20,
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 16,
-          }}
+        <Pressable
+          onPress={() => router.push("/(protected)/gashapon-machine")}
+          className="rounded-full mr-4"
         >
-          <Pressable
-            onPress={() => router.push("/(protected)/gashapon-machine")}
-            className="rounded-full px-4 items-center justify-center"
+          <LinearGradient
+            colors={["#9AD513", "#60B000", "#9AD513"]}
+            start={{ x: 0.8, y: 0 }}
+            end={{ x: 0, y: 0.5 }}
+            style={{
+              borderRadius: 20,
+              paddingHorizontal: 16,
+              paddingVertical: 6,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <Text className="text-white font-baloo text-lg">Pick a note✨</Text>
-          </Pressable>
-        </LinearGradient>
+            <Text className="text-white font-baloo text-lg">{t("gashapon.pickNote")}</Text>
+          </LinearGradient>
+        </Pressable>
       </View>
 
       <View className="mb-6 mt-4 mx-1">
