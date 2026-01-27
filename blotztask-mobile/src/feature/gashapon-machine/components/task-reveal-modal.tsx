@@ -12,7 +12,7 @@ type TaskRevealModalProps = {
 };
 
 export const TaskRevealModal = ({ visible, task, onCancel, onDoNow }: TaskRevealModalProps) => {
-  const { t } = useTranslation("starSpark");
+  const { t } = useTranslation("notes");
   const imageSource = getLabelIcon();
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
