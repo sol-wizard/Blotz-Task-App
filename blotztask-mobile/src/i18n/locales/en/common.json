@@ -2,10 +2,12 @@
   "buttons": {
     "cancel": "Cancel",
     "done": "Done",
+    "getStarted": "Get Started",
     "save": "Save",
     "saving": "Saving...",
     "goBack": "Go back",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "ok": "OK"
   },
   "status": {
     "todo": "To Do",
@@ -23,6 +25,11 @@
     "calendar": "Calendar",
     "starSpark": "StarSpark",
     "settings": "Setting"
+  },
+  "permissions": {
+    "microphone": {
+      "title": "Microphone Permission",
+      "message": "We need access to your microphone for voice input."
+    }
   }
 }
-

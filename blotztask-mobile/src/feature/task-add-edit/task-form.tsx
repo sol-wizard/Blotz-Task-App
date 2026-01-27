@@ -26,6 +26,8 @@ import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQue
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { endOfDay } from "date-fns";
 import { useTranslation } from "react-i18next";
+import Animated from "react-native-reanimated";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 type TaskFormProps =
   | {
@@ -143,7 +145,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       <FormProvider {...form}>
         <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Title */}
-          <View className="mb-4 bg-white">
+          <Animated.View className="mb-4 bg-white" layout={MotionAnimations.layout}>
             <FormTextInput
               name="title"
               placeholder={t("form.newTask")}
@@ -160,16 +162,19 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 {errors.title.message?.toString() || "Task title is required"}
               </Text>
             )}
-          </View>
+          </Animated.View>
 
-          <View className="py-3 bg-background rounded-2xl px-4">
+          <Animated.View
+            className="py-3 bg-background rounded-2xl px-4"
+            layout={MotionAnimations.layout}
+          >
             <FormTextInput
               name="description"
               placeholder={t("form.addNote")}
               control={control}
               className="font-baloo text-lg text-primary"
             />
-          </View>
+          </Animated.View>
 
           <FormDivider />
           <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
@@ -182,7 +187,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           <FormDivider />
 
           {/* Label Select */}
-          <View className="mb-8">
+          <Animated.View className="mb-8" layout={MotionAnimations.layout}>
             {isLoading ? (
               <Text className="font-baloo text-lg text-primary mt-3">
                 {t("common:loading.categories")}
@@ -190,7 +195,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             ) : (
               <LabelSelect control={control} labels={labels} />
             )}
-          </View>
+          </Animated.View>
         </ScrollView>
 
         {/* Submit */}
@@ -198,8 +203,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           <Pressable
             onPress={handleSubmit(handleFormSubmit)}
             disabled={isSubmitting}
-            className={`w-full py-4 rounded-lg items-center justify-center "bg-lime-300"
-              ${isSubmitting ? "bg-gray-300" : "bg-highlight active:bg-gray-100"}`}
+            className={`w-full py-4 rounded-xl items-center justify-center ${
+              isSubmitting ? "bg-gray-300" : "bg-lime-300"
+            }`}
           >
             <Text className="font-balooBold text-xl text-black">
               {mode === "create" ? t("form.createTask") : t("form.updateTask")}
@@ -212,3 +218,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 };
 
 export default TaskForm;
+function handleSubmit(handleFormSubmit: any): ((event: import("react-native").GestureResponderEvent) => void) | null | undefined {
+  throw new Error("Function not implemented.");
+}
+

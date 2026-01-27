@@ -2,10 +2,12 @@
   "buttons": {
     "cancel": "取消",
     "done": "完成",
+    "getStarted": "开始",
     "save": "保存",
     "saving": "保存中...",
     "goBack": "返回",
-    "signOut": "退出登录"
+    "signOut": "退出登录",
+    "ok": "确定"
   },
   "status": {
     "todo": "待办",
@@ -23,6 +25,11 @@
     "calendar": "日历",
     "starSpark": "星火",
     "settings": "设置"
+  },
+  "permissions": {
+    "microphone": {
+      "title": "麦克风权限",
+      "message": "我们需要访问您的麦克风以进行语音输入。"
+    }
   }
 }
-

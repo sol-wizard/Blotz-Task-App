@@ -1,15 +1,15 @@
-import { View, TextInput, Keyboard } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
 import { useEffect, useRef, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
 import { AzureSpeechAPI } from "../services/azure-speech-android-apis";
 import { useAzureSpeechToken } from "../hooks/useAzureSpeechToken";
-import { AiLanguagePicker } from "./ai-language-picker";
-import { SendButton } from "./send-button";
-import { VoiceButton } from "./voice-button";
+import VoiceInputButton from "./voice-input-button";
 import { requestAndroidMicPermission } from "../utils/request-microphone-permission";
+import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
+import { Language } from "@/shared/models/user-preferences-dto";
+import { useTranslation } from "react-i18next";
 
 export const AndroidInput = ({
   text,
@@ -24,15 +24,18 @@ export const AndroidInput = ({
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
 }) => {
+  const { t } = useTranslation(["aiTaskGenerate", "common"]);
   const [isListening, setIsListening] = useState(false);
   const { tokenItem, isFetchingAzureToken } = useAzureSpeechToken();
+  const { userPreferences } = useUserPreferencesQuery();
 
-  const [language, setLanguage] = useState<"en-US" | "zh-CN">(() => {
-    AsyncStorage.getItem("ai_language_preference").then((saved) => {
-      if (saved === "en-US" || saved === "zh-CN") setLanguage(saved);
-    });
-    return "zh-CN";
-  });
+  const getSttLanguage = () => {
+    if (userPreferences?.preferredLanguage === Language.En) return "en-AU";
+    if (userPreferences?.preferredLanguage === Language.Zh) return "zh-CN";
+    return "en-AU";
+  };
+
+  const currentLanguage = getSttLanguage();
 
   const finalBufferRef = useRef<string>("");
 
@@ -47,12 +50,17 @@ export const AndroidInput = ({
   };
 
   useEffect(() => {
-    requestAndroidMicPermission().then((granted) => {
+    requestAndroidMicPermission({
+      title: t("common:permissions.microphone.title"),
+      message: t("common:permissions.microphone.message"),
+      ok: t("common:buttons.ok"),
+      cancel: t("common:buttons.cancel"),
+    }).then((granted) => {
       if (!granted) {
         console.warn("[Mic] Microphone permission not granted. Voice input will not work.");
       }
     });
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const subPartial = AzureSpeechAPI.onPartial((value) => {
@@ -70,48 +78,17 @@ export const AndroidInput = ({
       setText(finalBufferRef.current);
     });
 
-    const subNoMatch = AzureSpeechAPI.onNoMatch?.(() => {
-      console.log("Azure no match (silence or unrecognized)");
-      setIsListening(false);
-    });
-
     const subCanceled = AzureSpeechAPI.onCanceled((err) => {
       console.log("Azure error:", err);
       setIsListening(false);
-    });
-
-    const subDebug = AzureSpeechAPI.onDebug?.((msg) => {
-      console.log("[Azure DEBUG]", msg);
-    });
-
-    const subStopped = AzureSpeechAPI.onStopped?.((info) => {
-      console.log("[Azure STOPPED]", info);
-      setIsListening(false); // 关键：避免 UI 还以为在 listening
-    });
-
-    const subSessionStopped = AzureSpeechAPI.onSessionStopped?.((info) => {
-      console.log("[Azure SessionStopped]", info);
     });
 
     return () => {
       subPartial?.remove?.();
       subFinal?.remove?.();
       subCanceled?.remove?.();
-      subDebug?.remove?.();
-      subStopped?.remove?.();
-      subSessionStopped?.remove?.();
-      subNoMatch?.remove?.();
     };
   }, []);
-
-  const handleSelectLanguage = async (lang: "en-US" | "zh-CN") => {
-    setLanguage(lang);
-    try {
-      await AsyncStorage.setItem("ai_language_preference", lang);
-    } catch (error) {
-      console.error("Failed to save AI language preference:", error);
-    }
-  };
 
   const startListening = async () => {
     if (isFetchingAzureToken || !tokenItem) {
@@ -125,10 +102,9 @@ export const AndroidInput = ({
     await AzureSpeechAPI.startListen({
       token: tokenItem.token,
       region: tokenItem.region,
-      language,
+      language: currentLanguage,
     });
 
-    console.log("Started listening with language:", language);
     setIsListening(true);
   };
 
@@ -152,15 +128,6 @@ export const AndroidInput = ({
     setText("");
   };
 
-  const sendWriteInput = (msg: string) => {
-    const val = msg.trim();
-    if (!val) return;
-    sendMessage(val);
-    Keyboard.dismiss();
-    setText("");
-    finalBufferRef.current = "";
-  };
-
   const onPressSend = () => {
     if (isListening) stopListening();
     const finalUserText = text.trim();
@@ -177,52 +144,46 @@ export const AndroidInput = ({
     await startListening();
   };
 
+  const showSendButton = text.trim() !== "" && !isListening;
+
   return (
-    <View className="pt-2">
-      <View className="items-center">
-        <View className="w-96 mb-10" style={{ minHeight: 60 }}>
-          <TextInput
-            value={text}
-            onChangeText={setText}
-            onKeyPress={({ nativeEvent: { key } }) => {
-              if (key === "Enter") {
-                const cleaned = text.replace(/\n$/, "").trim();
-                if (!cleaned) return;
-                if (isListening) stopListening();
-                sendWriteInput(cleaned);
-              }
-            }}
-            enablesReturnKeyAutomatically
-            autoFocus
-            placeholder="Hold to speak or tap to write..."
-            placeholderTextColor={theme.colors.secondary}
-            multiline
-            className="w-11/12 bg-white text-xl text-gray-800 font-baloo"
-            style={{ textAlignVertical: "top", textAlign: "left" }}
-          />
-
-          {aiGeneratedMessage?.errorMessage && (
-            <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
-          )}
-        </View>
-
-        <View className="flex-row items-center justify-between mb-6 w-96">
-          <AiLanguagePicker value={language} onChange={handleSelectLanguage} />
-
-          {text.trim() !== "" || isListening || isAiGenerating ? (
-            <SendButton
-              text={text}
-              isRecognizing={isListening}
-              isGenerating={isAiGenerating}
-              abortListening={abortListening}
-              sendMessage={() => onPressSend()}
-              stopListening={stopListening}
-            />
-          ) : (
-            <VoiceButton isRecognizing={isListening} toggleListening={toggleListening} />
-          )}
-        </View>
-      </View>
+    <View className="mb-8 ">
+      <Text className="font-baloo text-lg mb-2">{t("aiTaskGenerate:labels.newTask")}</Text>
+      <TextInput
+        value={text}
+        onChangeText={setText}
+        placeholder={t("aiTaskGenerate:input.placeholder")}
+        autoFocus
+        placeholderTextColor={theme.colors.secondary}
+        multiline
+        className="bg-[#F2F2F2] rounded-xl h-40 p-4"
+        style={{ textAlignVertical: "top", textAlign: "left" }}
+      />
+      {aiGeneratedMessage?.errorMessage && (
+        <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
+      )}
+      {showSendButton ? (
+        isAiGenerating ? (
+          <View className="mt-4 h-14 rounded-full bg-[#F2F2F2] items-center justify-center">
+            <ActivityIndicator size={10} color="#2F80ED" />
+          </View>
+        ) : (
+          <Pressable
+            className="bg-[#F2F2F2] rounded-full mt-4 p-4 items-center"
+            onPress={onPressSend}
+          >
+            <Text className="font-bold">{t("aiTaskGenerate:buttons.generateTask")}</Text>
+          </Pressable>
+        )
+      ) : (
+        <VoiceInputButton
+          isListening={isListening}
+          startListening={toggleListening}
+          abortListening={abortListening}
+          sendMessage={stopListening}
+          isAiGenerating={isAiGenerating}
+        />
+      )}
     </View>
   );
 };

@@ -1,13 +1,27 @@
 {
   "input": {
-    "placeholder": "按住说话或点按输入文字..."
+    "placeholder": "点击说话或输入文字..."
   },
   "buttons": {
     "speak": "说话",
     "send": "发送",
-    "addToTasks": "添加到任务"
+    "tapToSpeak": "点击说话",
+    "generateTask": "+ 生成任务",
+    "addToTasks": "添加到任务",
+    "goBack": "返回"
+  },
+  "labels": {
+    "newTask": "新任务"
   },
   "success": {
     "taskAdded": "太棒了！任务已添加！"
+  },
+  "errors": {
+    "default": "哎呀，我有点搞不定了。请再试一次。"
+  },
+  "taskCard": {
+    "titlePlaceholder": "任务标题",
+    "editTitleLabel": "编辑任务标题",
+    "editTitleHint": "双击编辑任务标题"
   }
 }

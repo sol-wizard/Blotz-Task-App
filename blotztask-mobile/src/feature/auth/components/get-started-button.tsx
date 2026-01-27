@@ -5,17 +5,26 @@ import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/shared/constants/token-key";
 import { usePostHog } from "posthog-react-native";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "@/shared/hooks/useAuth";
 
 export default function GetStartedButton() {
   const { authorize, user } = useAuth0();
   const router = useRouter();
   const posthog = usePostHog();
+  const { i18n, t } = useTranslation("common");
+  const { refreshAuthState } = useAuth();
 
   const onPress = async () => {
     try {
+      const language = i18n.language?.startsWith("zh") ? "zh-CN" : "en";
+
       const result = await authorize({
         audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
         scope: "openid profile email offline_access",
+        additionalParameters: {
+          ui_locales: language,
+        },
       });
 
       // Check if we have a valid result with access token
@@ -25,6 +34,9 @@ export default function GetStartedButton() {
         console.log("Access token saved to storage");
         await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, result.refreshToken);
         console.log("Refresh token saved to storage");
+
+        // Refresh auth state cache so dependent queries can start
+        refreshAuthState();
 
         if (user) {
           posthog.identify(user.sub);
@@ -41,7 +53,7 @@ export default function GetStartedButton() {
 
   return (
     <Button onPress={onPress} mode="contained">
-      Get Started
+      {t("buttons.getStarted")}
     </Button>
   );
 }

@@ -1,11 +1,10 @@
 import { Redirect } from "expo-router";
-import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
-import * as SecureStore from "expo-secure-store";
-import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
-import { useQueryClient } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
+import { useAuth } from "@/shared/hooks/useAuth";
+import { useUserProfile } from "@/shared/hooks/useUserProfile";
 
+// Configure notification handling
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: false,
@@ -25,40 +24,41 @@ Notifications.setNotificationCategoryAsync("task-reminder", [
   },
 ]);
 
+/**
+ * Root index route - handles initial navigation based on auth state.
+ * 
+ * Flow:
+ * 1. Check authentication status (via useAuth)
+ * 2. If authenticated, fetch user profile (via useUserProfile - auto-waits for auth)
+ * 3. Route to appropriate screen based on auth + onboarding status
+ */
 export default function Index() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const queryClient = useQueryClient();
+  const { isAuthenticated, isAuthLoading } = useAuth();
+  const { userProfile, isUserProfileLoading } = useUserProfile();
 
-  useEffect(() => {
-    const initialize = async () => {
-      try {
-        const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
-
-        if (!token) {
-          setIsAuthenticated(false);
-          return;
-        }
-
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error("Error during initialization:", error);
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initialize();
-  }, [queryClient]);
+  // Determine overall loading state
+  const isLoading = isAuthLoading || (isAuthenticated && isUserProfileLoading);
 
   if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#667eea" />
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
-  return <Redirect href={isAuthenticated ? "/(protected)" : "/(auth)/onboarding"} />;
+  // Authenticated users go to protected routes
+  if (isAuthenticated && userProfile) {
+    const destination = userProfile.isOnBoarded 
+      ? "/(protected)" 
+      : "/(protected)/onboarding";
+    return <Redirect href={destination} />;
+  }
+
+  // Unauthenticated users go to auth flow
+  return <Redirect href="/(auth)/onboarding" />;
+}
+
+function LoadingScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <ActivityIndicator size="large" color="#667eea" />
+    </View>
+  );
 }

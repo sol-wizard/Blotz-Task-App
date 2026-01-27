@@ -45,7 +45,7 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
         var selectedDayEnd = query.StartDate.AddDays(1);
 
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
-        var userTodayStart = new DateTimeOffset(userNow.Date, query.StartDate.Offset);
+        var userTodayStart = userNow.Date;
         var userTodayEnd = userTodayStart.AddDays(1);
         var sevenDayWindowStart = userTodayEnd.AddDays(-7);
         var isFutureDay = query.StartDate.Date > userNow.Date;
@@ -53,8 +53,6 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
         logger.LogInformation("StartDate received: {StartDate} (Offset={Offset})", query.StartDate, query.StartDate.Offset);
         logger.LogInformation("Computed window: selectedDayStart={Start}, selectedDayEnd={End}, overdueWindowStart={OverdueStart}",
             selectedDayStart, selectedDayEnd, sevenDayWindowStart);
-        
-
 
         var queryStopwatch = Stopwatch.StartNew();
         var tasks = await db.TaskItems
@@ -81,8 +79,9 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                                 autoRollover
                                 && !isFutureDay
                                 && t.StartTime != null
-                                && !t.IsDone
                                 && t.EndTime < userNow
+                                && !t.IsDone
+                                && t.StartTime < selectedDayEnd
                                 && t.EndTime >= sevenDayWindowStart
                             )
                         ))

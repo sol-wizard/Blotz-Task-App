@@ -4,6 +4,8 @@ using System.Xml;
 using BlotzTask.Modules.BreakDown.DTOs;
 using BlotzTask.Modules.BreakDown.Prompts;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Modules.Users.Enums;
+using BlotzTask.Modules.Users.Queries;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
@@ -21,6 +23,7 @@ public class BreakdownTaskCommand
 public class BreakdownTaskCommandHandler(
     ILogger<BreakdownTaskCommandHandler> logger,
     GetTaskByIdQueryHandler getTaskByIdQueryHandler,
+    GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     Kernel kernel)
 {
     public async Task<List<SubTask>> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
@@ -35,6 +38,18 @@ public class BreakdownTaskCommandHandler(
             throw new ArgumentException($"Task with ID {command.TaskId} not found.");
         }
 
+        // Fetch user preferences to get preferred language
+        var userPreferencesQuery = new GetUserPreferencesQuery { UserId = command.UserId };
+        var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, ct);
+        
+        // Convert Language enum to a readable string for the AI
+        var preferredLanguageString = userPreferences.PreferredLanguage switch
+        {
+            Language.En => "English",
+            Language.Zh => "Chinese (Simplified)",
+            _ => "English" // Default fallback
+        };
+
         try
         {
             // Configure OpenAI execution settings with structured output
@@ -42,7 +57,6 @@ public class BreakdownTaskCommandHandler(
             // This uses OpenAI's JSON Schema feature to enforce the response structure at the model level
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                Temperature = 0.2, // Low temperature for more deterministic, consistent breakdowns
                 ResponseFormat = typeof(GeneratedSubTaskList) // Enforces structured output via JSON Schema
             };
 
@@ -53,7 +67,8 @@ public class BreakdownTaskCommandHandler(
                 ["title"] = task.Title,
                 ["description"] = task.Description ?? "No description provided",
                 ["startTime"] = task.StartTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null",
-                ["endTime"] = task.EndTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null"
+                ["endTime"] = task.EndTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null",
+                ["preferredLanguage"] = preferredLanguageString
             };
 
             // InvokePromptAsync: SK's method for executing a prompt template with variable substitution

@@ -15,15 +15,25 @@ public class DatabaseFixture : IAsyncLifetime
 
     public DatabaseFixture()
     {
-        _container = new MsSqlBuilder()
-            .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
-            .WithPassword("yourStrong(!)Password")
-            .WithEnvironment("ACCEPT_EULA", "Y")
-            .WithCreateParameterModifier(parameters =>
-            {
-                parameters.Platform = "linux/amd64"; // Force x86_64 emulation on ARM
-            })
-            .Build();
+        try
+        {
+            _container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest")
+                .WithPassword("yourStrong(!)Password")
+                .WithEnvironment("ACCEPT_EULA", "Y")
+                .WithCreateParameterModifier(parameters =>
+                {
+                    parameters.Platform = "linux/amd64"; // Force x86_64 emulation on ARM
+                })
+                .Build();
+        }
+        catch (DockerUnavailableException ex)
+        {
+            Console.Error.WriteLine(
+                "Docker is not available. Start Docker Desktop (or ensure the Docker daemon is running) to run integration tests.");
+            throw new InvalidOperationException(
+                "Docker is required to run BlotzTask integration tests. Start Docker Desktop and re-run the tests.",
+                ex);
+        }
     }
 
     public async Task InitializeAsync()
