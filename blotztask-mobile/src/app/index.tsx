@@ -7,7 +7,8 @@ import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPrefere
 import * as Localization from "expo-localization";
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
 import { Language } from "@/shared/models/user-preferences-dto";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
+import { systemPreferredLanguage } from "@/feature/auth/utils/system-preferred-language";
 
 // Configure notification handling
 Notifications.setNotificationHandler({
@@ -45,11 +46,6 @@ export default function Index() {
 
   const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
 
-  const systemPreferredLanguage: Language = useMemo(() => {
-    const primary = Localization.getLocales()[0];
-    return primary?.languageTag?.toLowerCase().startsWith("zh") ? Language.Zh : Language.En;
-  }, []);
-
   useEffect(() => {
     if (!isAuthenticated) return;
     if (!userProfile || !userPreferences) return;
@@ -59,7 +55,13 @@ export default function Index() {
       ...userPreferences,
       preferredLanguage: systemPreferredLanguage,
     });
-  }, [isAuthenticated, userPreferences]);
+  }, [
+    isAuthenticated,
+    userPreferences,
+    userProfile,
+    systemPreferredLanguage,
+    updateUserPreferences,
+  ]);
 
   // Determine overall loading state
   const isLoading =
