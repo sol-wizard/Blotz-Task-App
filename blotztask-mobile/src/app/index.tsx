@@ -6,7 +6,7 @@ import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import * as Localization from "expo-localization";
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
-import { Language, UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
+import { Language } from "@/shared/models/user-preferences-dto";
 import { useEffect, useMemo } from "react";
 
 // Configure notification handling
@@ -40,8 +40,6 @@ Notifications.setNotificationCategoryAsync("task-reminder", [
 export default function Index() {
   const { isAuthenticated, isAuthLoading } = useAuth();
 
-  console.log("[Index render]", { isAuthenticated, isAuthLoading });
-
   const { userProfile, isUserProfileLoading } = useUserProfile();
   const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
 
@@ -53,7 +51,6 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
-    console.log("isAuthenticated:", isAuthenticated);
     if (!isAuthenticated) return;
     if (!userProfile || !userPreferences) return;
     if (userPreferences.preferredLanguage === systemPreferredLanguage) return;
@@ -62,8 +59,7 @@ export default function Index() {
       ...userPreferences,
       preferredLanguage: systemPreferredLanguage,
     });
-    console.log(`Synchronized preferred language to: ${systemPreferredLanguage}`);
-  }, []);
+  }, [isAuthenticated, userPreferences]);
 
   // Determine overall loading state
   const isLoading =

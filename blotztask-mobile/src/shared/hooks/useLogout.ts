@@ -14,7 +14,7 @@ export function useLogout() {
     // Clear auth cache immediately so dependent queries stop
     clearAuthState();
     qc.clear();
-    router.replace("/");
+    router.replace("/(auth)/signin");
 
     try {
       await Promise.allSettled([
