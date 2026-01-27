@@ -25,6 +25,7 @@ import * as Sentry from "@sentry/react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/ui/toast-config";
+import { useAuth } from "@/shared/hooks/useAuth";
 
 export default function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
@@ -65,11 +66,7 @@ export default function RootLayout() {
               <Portal.Host>
                 <SafeAreaProvider>
                   <KeyboardProvider>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="index" options={{ headerShown: false }} />
-                      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                      <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-                    </Stack>
+                    <RootStack />
                     <Toast config={toastConfig} position="bottom" bottomOffset={110} />
                   </KeyboardProvider>
                 </SafeAreaProvider>
@@ -79,5 +76,24 @@ export default function RootLayout() {
         </GestureHandlerRootView>
       </PostHogProvider>
     </Auth0Provider>
+  );
+}
+
+function RootStack() {
+  // ✅ 现在 useAuth 在 QueryClientProvider 里面了
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+
+      <Stack.Protected guard={!isAuthenticated}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      </Stack.Protected>
+
+      <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+      </Stack.Protected>
+    </Stack>
   );
 }
