@@ -1,7 +1,11 @@
 import Matter from "matter-js";
 import { EntityMap, GameLoopArgs } from "../models/entity-map";
 import { PhysicsEntity } from "../models/physics-entity";
-import { isGameEntity } from "./entity-map";
+import { GameEntity } from "../models/game-entity";
+
+export function isGameEntity(entity: GameEntity | PhysicsEntity | undefined): entity is GameEntity {
+  return !!entity && "body" in entity;
+}
 
 export const physicsSystem = (entities: EntityMap, { time }: GameLoopArgs) => {
   const physics = entities.physics as PhysicsEntity | undefined;
