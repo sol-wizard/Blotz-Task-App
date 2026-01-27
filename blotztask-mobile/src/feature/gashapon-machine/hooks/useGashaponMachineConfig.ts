@@ -5,7 +5,7 @@ import { EntityMap } from "../models/entity-map";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
-import { getStarIconBySeed } from "@/feature/notes/utils/get-label-icon";
+import { getStarIconAsBefore } from "@/feature/notes/utils/get-label-icon";
 import { Platform } from "react-native";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 
@@ -87,7 +87,7 @@ export const useGashaponMachineConfig = ({
         const note = notes[idx];
         prevEntities[entityKey] = {
           body: star,
-          texture: getStarIconBySeed(note?.id ?? idx),
+          texture: getStarIconAsBefore(note?.id ?? idx),
           renderer: CapsuleToyRenderer,
         };
         return prevEntities;
@@ -187,7 +187,7 @@ export const useGashaponMachineConfig = ({
 
       newEntities[entityKey] = {
         body: star,
-        texture: getStarIconBySeed(note?.id ?? idx),
+        texture: getStarIconAsBefore(note?.id ?? idx),
         renderer: CapsuleToyRenderer,
       };
     });

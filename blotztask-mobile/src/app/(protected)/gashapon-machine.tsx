@@ -18,7 +18,7 @@ import { endOfDay } from "date-fns";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
-import { getStarIconBySeed } from "@/feature/notes/utils/get-label-icon";
+import { getStarIconAsBefore } from "@/feature/notes/utils/get-label-icon";
 
 export default function GashaponMachineScreen() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
@@ -27,7 +27,7 @@ export default function GashaponMachineScreen() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
   const [randomTask, setRandomTask] = useState<NoteDTO | null>(null);
-  const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconBySeed(0));
+  const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
   const { addTask } = useTaskMutations();
   const posthog = usePostHog();
 
@@ -41,10 +41,7 @@ export default function GashaponMachineScreen() {
 
   const MAX_STARS = 30;
 
-  const limitedNotes = useMemo(
-    () => notesSearchResult.slice(0, MAX_STARS),
-    [notesSearchResult],
-  );
+  const limitedNotes = useMemo(() => notesSearchResult.slice(0, MAX_STARS), [notesSearchResult]);
 
   const handleDoNow = () => {
     if (!randomTask) return;
@@ -62,7 +59,7 @@ export default function GashaponMachineScreen() {
   const handleStarDropped = (starIndex: number) => {
     const droppedNote = limitedNotes[starIndex] ?? pickRandomNote();
     setRandomTask(droppedNote);
-    setDroppedStarIcon(getStarIconBySeed(droppedNote?.id ?? starIndex));
+    setDroppedStarIcon(getStarIconAsBefore(droppedNote?.id ?? starIndex));
     setDropStarTrigger((prev) => prev + 1);
   };
 

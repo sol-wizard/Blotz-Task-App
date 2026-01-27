@@ -8,12 +8,7 @@ const STAR_ICONS = [
   ASSETS.rainbowStar,
 ];
 
-export const getLabelIcon = () => {
-  const randomIndex = Math.floor(Math.random() * STAR_ICONS.length);
-  return STAR_ICONS[randomIndex];
-};
-
-export const getStarIconBySeed = (seed: number) => {
+export const getStarIconAsBefore = (seed: number) => {
   const normalizedSeed = Math.abs(seed) % STAR_ICONS.length;
   return STAR_ICONS[normalizedSeed];
 };
