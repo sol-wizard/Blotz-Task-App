@@ -4,9 +4,7 @@ import * as Notifications from "expo-notifications";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
-import * as Localization from "expo-localization";
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
-import { Language } from "@/shared/models/user-preferences-dto";
 import { useEffect } from "react";
 import { systemPreferredLanguage } from "@/feature/auth/utils/system-preferred-language";
 
