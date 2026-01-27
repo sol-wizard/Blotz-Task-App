@@ -1,7 +1,12 @@
 import { theme } from "@/shared/constants/theme";
-import { Stack } from "expo-router";
+import { useAuth } from "@/shared/hooks/useAuth";
+import { Redirect, Stack } from "expo-router";
 
 export default function ProtectedLayout() {
+  const { isAuthenticated, isAuthLoading } = useAuth();
+
+  if (isAuthLoading) return null;
+  if (!isAuthenticated) return <Redirect href="/(auth)/signin" />;
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />

@@ -4,7 +4,7 @@ import GetStartedButton from "@/feature/auth/components/get-started-button";
 import { ASSETS } from "@/shared/constants/assets";
 import { Image } from "expo-image";
 
-export default function OnboardingScreen() {
+export default function SigninScreen() {
   return (
     <>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />

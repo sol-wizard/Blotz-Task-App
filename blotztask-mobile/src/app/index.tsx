@@ -3,6 +3,11 @@ import { View, ActivityIndicator } from "react-native";
 import * as Notifications from "expo-notifications";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
+import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
+import * as Localization from "expo-localization";
+import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
+import { Language, UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
+import { useEffect, useMemo } from "react";
 
 // Configure notification handling
 Notifications.setNotificationHandler({
@@ -26,7 +31,7 @@ Notifications.setNotificationCategoryAsync("task-reminder", [
 
 /**
  * Root index route - handles initial navigation based on auth state.
- * 
+ *
  * Flow:
  * 1. Check authentication status (via useAuth)
  * 2. If authenticated, fetch user profile (via useUserProfile - auto-waits for auth)
@@ -34,25 +39,50 @@ Notifications.setNotificationCategoryAsync("task-reminder", [
  */
 export default function Index() {
   const { isAuthenticated, isAuthLoading } = useAuth();
+
+  console.log("[Index render]", { isAuthenticated, isAuthLoading });
+
   const { userProfile, isUserProfileLoading } = useUserProfile();
+  const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
+
+  const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
+
+  const systemPreferredLanguage: Language = useMemo(() => {
+    const primary = Localization.getLocales()[0];
+    return primary?.languageTag?.toLowerCase().startsWith("zh") ? Language.Zh : Language.En;
+  }, []);
+
+  useEffect(() => {
+    console.log("isAuthenticated:", isAuthenticated);
+    if (!isAuthenticated) return;
+    if (!userProfile || !userPreferences) return;
+    if (userPreferences.preferredLanguage === systemPreferredLanguage) return;
+
+    updateUserPreferences({
+      ...userPreferences,
+      preferredLanguage: systemPreferredLanguage,
+    });
+    console.log(`Synchronized preferred language to: ${systemPreferredLanguage}`);
+  }, []);
 
   // Determine overall loading state
-  const isLoading = isAuthLoading || (isAuthenticated && isUserProfileLoading);
+  const isLoading =
+    isAuthLoading ||
+    (isAuthenticated &&
+      (isUserProfileLoading || isUserPreferencesLoading || isUpdatingUserPreferences));
 
   if (isLoading) {
     return <LoadingScreen />;
   }
 
   // Authenticated users go to protected routes
-  if (isAuthenticated && userProfile) {
-    const destination = userProfile.isOnBoarded 
-      ? "/(protected)" 
-      : "/(protected)/onboarding";
+  if (isAuthenticated && userProfile && userPreferences) {
+    const destination = userProfile.isOnBoarded ? "/(protected)" : "/(protected)/onboarding";
     return <Redirect href={destination} />;
   }
 
   // Unauthenticated users go to auth flow
-  return <Redirect href="/(auth)/onboarding" />;
+  return <Redirect href="/(auth)/signin" />;
 }
 
 function LoadingScreen() {
