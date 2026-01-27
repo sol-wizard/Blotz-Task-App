@@ -18,7 +18,7 @@ import { endOfDay } from "date-fns";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
-import { getStarIconAsBefore } from "@/feature/notes/utils/get-label-icon";
+import { getStarIconAsBefore } from "@/feature/notes/utils/get-star-icon";
 
 export default function GashaponMachineScreen() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);

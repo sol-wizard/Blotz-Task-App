@@ -1,4 +1,4 @@
-import { getStarIconAsBefore } from "@/feature/notes/utils/get-label-icon";
+import { getStarIconAsBefore } from "@/feature/notes/utils/get-star-icon";
 import React from "react";
 import { Modal, View, Text, Pressable, Image } from "react-native";
 import { useTranslation } from "react-i18next";
