@@ -1,6 +1,5 @@
 import Matter from "matter-js";
-import { EntityMap } from "../models/entity-map";
-import { GameLoopArgs } from "../models/game-loop-args";
+import { EntityMap, GameLoopArgs } from "../models/entity-map";
 import { PhysicsEntity } from "../models/physics-entity";
 import { isGameEntity } from "./entity-map";
 

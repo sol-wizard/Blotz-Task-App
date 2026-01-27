@@ -4,14 +4,14 @@ import { Modal, View, Text, Pressable, Image } from "react-native";
 import { useTranslation } from "react-i18next";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 
-type TaskRevealModalProps = {
+type NoteRevealModalProps = {
   visible: boolean;
   task: NoteDTO | null;
   onDoNow: () => void;
   onCancel?: () => void;
 };
 
-export const TaskRevealModal = ({ visible, task, onCancel, onDoNow }: TaskRevealModalProps) => {
+export const NoteRevealModal = ({ visible, task, onCancel, onDoNow }: NoteRevealModalProps) => {
   const { t } = useTranslation("notes");
   const imageSource = task ? getStarIconAsBefore(task.id) : undefined;
   return (

@@ -7,7 +7,7 @@ import { ASSETS } from "@/shared/constants/assets";
 import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
 import { cleanupSystem, physicsSystem } from "@/feature/gashapon-machine/utils/game-systems";
 import { LinearGradient } from "expo-linear-gradient";
-import { TaskRevealModal } from "@/feature/gashapon-machine/components/task-reveal-modal";
+import { NoteRevealModal } from "@/feature/gashapon-machine/components/note-reveal-modal";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
@@ -85,7 +85,7 @@ export default function GashaponMachineScreen() {
       style={{ flex: 1 }}
     >
       <SafeAreaView className="flex-1 items-center justify-center">
-        <TaskRevealModal
+        <NoteRevealModal
           visible={isModalVisible}
           task={randomTask}
           onDoNow={handleDoNow}
