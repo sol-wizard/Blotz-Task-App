@@ -80,7 +80,6 @@ export default function RootLayout() {
 }
 
 function RootStack() {
-  // ✅ 现在 useAuth 在 QueryClientProvider 里面了
   const { isAuthenticated } = useAuth();
 
   return (
