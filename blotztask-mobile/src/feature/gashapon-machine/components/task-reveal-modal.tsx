@@ -1,4 +1,4 @@
-import { getLabelIcon } from "@/feature/notes/utils/get-label-icon";
+import { getStarIconBySeed } from "@/feature/notes/utils/get-label-icon";
 import React from "react";
 import { Modal, View, Text, Pressable, Image } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -13,7 +13,7 @@ type TaskRevealModalProps = {
 
 export const TaskRevealModal = ({ visible, task, onCancel, onDoNow }: TaskRevealModalProps) => {
   const { t } = useTranslation("notes");
-  const imageSource = getLabelIcon();
+  const imageSource = task ? getStarIconBySeed(task.id) : undefined;
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
       <View className="flex-1 bg-black/40 items-center justify-center">

@@ -5,7 +5,7 @@ import { EntityMap } from "../models/entity-map";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
-import { getLabelIcon } from "@/feature/notes/utils/get-label-icon";
+import { getStarIconBySeed } from "@/feature/notes/utils/get-label-icon";
 import { Platform } from "react-native";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 
@@ -15,7 +15,7 @@ export const useGashaponMachineConfig = ({
   notes,
 }: {
   starRadius?: number;
-  onStarDropped: (labelName: string) => void;
+  onStarDropped: (starIndex: number) => void;
   notes: NoteDTO[];
 }) => {
   const [entities, setEntities] = useState<EntityMap>({});
@@ -84,9 +84,10 @@ export const useGashaponMachineConfig = ({
       Matter.Body.setVelocity(star, { x: 0, y: 0 });
 
       setEntities((prevEntities) => {
+        const note = notes[idx];
         prevEntities[entityKey] = {
           body: star,
-          texture: getLabelIcon(),
+          texture: getStarIconBySeed(note?.id ?? idx),
           renderer: CapsuleToyRenderer,
         };
         return prevEntities;
@@ -182,10 +183,11 @@ export const useGashaponMachineConfig = ({
 
     stars.forEach((star, idx) => {
       const entityKey = getStarEntityKey(idx);
+      const note = notes[idx];
 
       newEntities[entityKey] = {
         body: star,
-        texture: getLabelIcon(),
+        texture: getStarIconBySeed(note?.id ?? idx),
         renderer: CapsuleToyRenderer,
       };
     });
@@ -209,7 +211,7 @@ export const useGashaponMachineConfig = ({
           droppedStarIndexRef.current = starIndex;
 
           closeGate();
-          onStarDropped("no-label");
+          onStarDropped(starIndex);
           // Remove the star from physics world
           if (worldRef.current && starsRef.current.includes(star)) {
             Matter.World.remove(worldRef.current, star);

@@ -13,6 +13,11 @@ export const getLabelIcon = () => {
   return STAR_ICONS[randomIndex];
 };
 
+export const getStarIconBySeed = (seed: number) => {
+  const normalizedSeed = Math.abs(seed) % STAR_ICONS.length;
+  return STAR_ICONS[normalizedSeed];
+};
+
 export const getLabelNameFromStarLabel = (starLabel: string): string => {
   const match = /^star-\d+-label-(.+)$/.exec(starLabel);
   return match ? match[1] : "";

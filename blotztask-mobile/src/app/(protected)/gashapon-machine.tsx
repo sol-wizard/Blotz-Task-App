@@ -12,13 +12,13 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
-import { FloatingTaskDTO } from "@/feature/notes/models/floating-task-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { endOfDay } from "date-fns";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
+import { getStarIconBySeed } from "@/feature/notes/utils/get-label-icon";
 
 export default function GashaponMachineScreen() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
@@ -27,6 +27,7 @@ export default function GashaponMachineScreen() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
   const [randomTask, setRandomTask] = useState<NoteDTO | null>(null);
+  const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconBySeed(0));
   const { addTask } = useTaskMutations();
   const posthog = usePostHog();
 
@@ -58,9 +59,10 @@ export default function GashaponMachineScreen() {
     setModalVisible(false);
   };
 
-  const handleStarDropped = (_starLabelName: string) => {
-    const randomNote = pickRandomNote();
-    setRandomTask(randomNote);
+  const handleStarDropped = (starIndex: number) => {
+    const droppedNote = limitedNotes[starIndex] ?? pickRandomNote();
+    setRandomTask(droppedNote);
+    setDroppedStarIcon(getStarIconBySeed(droppedNote?.id ?? starIndex));
     setDropStarTrigger((prev) => prev + 1);
   };
 
@@ -148,6 +150,7 @@ export default function GashaponMachineScreen() {
 
         <DroppedStar
           trigger={dropStarTrigger}
+          imageSource={droppedStarIcon}
           setTaskRevealModalVisible={() => {
             setModalVisible(true);
           }}
