@@ -27,6 +27,16 @@ import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/ui/toast-config";
 import { useAuth } from "@/shared/hooks/useAuth";
 
+Sentry.init({
+  dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
+  sendDefaultPii: true,
+  enableNative: true,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  enableAutoSessionTracking: true,
+  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+});
+
 export default function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
   const clientId = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
@@ -39,15 +49,6 @@ export default function RootLayout() {
     BalooExtraBold: Baloo2_800ExtraBold,
     InterThin: Inter_300Light,
     InterBold: Inter_700Bold,
-  });
-  Sentry.init({
-    dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
-    sendDefaultPii: true,
-    enableNative: true,
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1,
-    enableAutoSessionTracking: true,
-    integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
   });
 
   return (
