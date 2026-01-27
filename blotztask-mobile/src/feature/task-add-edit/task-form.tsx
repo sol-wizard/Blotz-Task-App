@@ -218,7 +218,5 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 };
 
 export default TaskForm;
-function handleSubmit(handleFormSubmit: any): ((event: import("react-native").GestureResponderEvent) => void) | null | undefined {
-  throw new Error("Function not implemented.");
-}
+
 
