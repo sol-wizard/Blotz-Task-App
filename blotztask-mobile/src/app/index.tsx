@@ -55,13 +55,7 @@ export default function Index() {
       ...userPreferences,
       preferredLanguage: systemPreferredLanguage,
     });
-  }, [
-    isAuthenticated,
-    userPreferences,
-    userProfile,
-    systemPreferredLanguage,
-    updateUserPreferences,
-  ]);
+  }, [isAuthenticated, userPreferences, userProfile]);
 
   // Determine overall loading state
   const isLoading =
