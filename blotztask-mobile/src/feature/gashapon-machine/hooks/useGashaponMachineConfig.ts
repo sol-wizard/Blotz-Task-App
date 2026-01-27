@@ -24,16 +24,6 @@ export const useGashaponMachineConfig = ({
   const starsRef = useRef<Matter.Body[]>([]);
   const isGateOpenRef = useRef(false);
   const droppedStarIndexRef = useRef<number>(-1); // save the original index of the dropped star
-  const droppedStarLabelRef = useRef<string>(""); // save the label of the dropped star for return animation
-  const noteRef = useRef<NoteDTO[]>([]);
-
-  const getLabelNameByIndex = (idx: number) => {
-    const task = noteRef.current[idx];
-    // Handle both camelCase (label.name) and PascalCase (Label.Name) from API
-    const label = (task as any)?.label ?? (task as any)?.Label;
-    const labelName = label?.name ?? label?.Name ?? "no-label";
-    return labelName;
-  };
 
   const getStarEntityKey = (idx: number) => `star-${idx}`;
 
@@ -103,13 +93,9 @@ export const useGashaponMachineConfig = ({
       });
     }
     droppedStarIndexRef.current = -1;
-    droppedStarLabelRef.current = "";
   };
 
   useEffect(() => {
-    const tasks = notes || [];
-    noteRef.current = tasks;
-
     const engine = Matter.Engine.create({ enableSleeping: false });
     const world = engine.world;
     worldRef.current = world;
@@ -218,15 +204,12 @@ export const useGashaponMachineConfig = ({
         if (star && sensor) {
           console.log(`⚡ Star ${star.label} passed sensor, removing`);
           const starIndex = starsRef.current.indexOf(star);
-          const labelName = getLabelNameByIndex(starIndex);
 
           // Save the index of the star for later reset
           droppedStarIndexRef.current = starIndex;
-          // Save the label for return animation (even if task list changes)
-          droppedStarLabelRef.current = labelName;
 
           closeGate();
-          onStarDropped(labelName);
+          onStarDropped("no-label");
           // Remove the star from physics world
           if (worldRef.current && starsRef.current.includes(star)) {
             Matter.World.remove(worldRef.current, star);

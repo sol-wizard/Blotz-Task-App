@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Image } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -40,7 +40,10 @@ export default function GashaponMachineScreen() {
 
   const MAX_STARS = 30;
 
-  const limitedNotes = notesSearchResult.slice(0, MAX_STARS);
+  const limitedNotes = useMemo(
+    () => notesSearchResult.slice(0, MAX_STARS),
+    [notesSearchResult],
+  );
 
   const handleDoNow = () => {
     if (!randomTask) return;
