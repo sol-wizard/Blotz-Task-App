@@ -116,7 +116,7 @@ export default function StarSparkScreen() {
         style={{
           borderWidth: 2,
           borderStyle: "dashed",
-          borderColor: theme.colors.disabled,
+          borderColor: "#8C8C8C",
           borderRadius: 16,
           height: 56,
           alignItems: "center",
@@ -124,7 +124,7 @@ export default function StarSparkScreen() {
           backgroundColor: theme.colors.background,
         }}
       >
-        <Text className="font-baloo text-base text-secondary">{t("addSpark")}</Text>
+        <Text className="font-baloo text-base " style = {{ color: "#8C8C8C" }} >{t("addSpark")}</Text>
       </Pressable>
 
       {showLoading && <LoadingScreen />}
