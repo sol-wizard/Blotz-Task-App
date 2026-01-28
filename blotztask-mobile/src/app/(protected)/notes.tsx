@@ -71,7 +71,7 @@ export default function NotesScreen() {
         </Pressable>
       </View>
 
-      <View className="mb-6 mt-4 mx-1">
+      <View className="my-4 mx-1">
         <Searchbar
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -95,7 +95,7 @@ export default function NotesScreen() {
 
       <Pressable
         onPress={handleAddSparkPress}
-        className="mx-8 mb-2"
+        className="mx-6 mb-4"
         style={{
           borderWidth: 2,
           borderStyle: "dashed",
@@ -107,7 +107,7 @@ export default function NotesScreen() {
           backgroundColor: theme.colors.background,
         }}
       >
-        <Text className="font-baloo text-base " style={{ color: "#8C8C8C" }}>
+        <Text className="font-baloo text-lg " style={{ color: "#8C8C8C" }}>
           {t("addNote")}
         </Text>
       </Pressable>
