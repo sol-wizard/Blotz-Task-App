@@ -1,4 +1,5 @@
-import { View, Text, Pressable, Image } from "react-native";
+import { View, Text, Pressable } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -56,7 +57,9 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background py-4">
-      <Text className="text-center text-4xl font-balooExtraBold text-secondary pt-2">{t("title")}</Text>
+      <Text className="text-center text-4xl font-balooExtraBold text-secondary pt-2">
+        {t("title")}
+      </Text>
 
       <View className="px-8 mt-2 w-full items-center">
         <View>

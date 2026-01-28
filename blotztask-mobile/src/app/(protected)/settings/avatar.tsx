@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { ReturnButton } from "@/shared/components/ui/return-button";
 import avatarData from "@/shared/constants/avatar.json";
 import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AvatarDTO } from "@/feature/settings/modals/avatar-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Image } from "expo-image";
 
 export default function AvatarScreen() {
   const avatars = avatarData.avatars;
@@ -29,6 +30,7 @@ export default function AvatarScreen() {
       await updateUserProfile({
         displayName: userProfile?.displayName ?? "",
         pictureUrl: avatar.url,
+        isOnBoarded: userProfile?.isOnBoarded ?? false,
       });
     } catch {
       console.log("Failed to update avatar.");
