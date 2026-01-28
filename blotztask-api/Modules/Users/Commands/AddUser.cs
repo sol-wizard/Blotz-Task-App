@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text.Json;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Notes.Domain;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Users.Domain;
@@ -130,6 +131,46 @@ public class SyncUserCommandHandler(
             logger.LogInformation(
                 "Seeded {Count} default tasks for new user (Id: {Id})",
                 defaultTasks.Count, row.Id);
+
+            // Seed default notes for new user
+            var defaultNotes = new List<Note>
+            {
+                new Note
+                {
+                    Text = "Welcome to BlotzTask! This is your first note.",
+                    UserId = row.Id,
+                    CreatedAt = utcNow,
+                    UpdatedAt = utcNow
+                },
+                new Note
+                {
+                    Text = "You can use notes to capture quick thoughts and ideas.",
+                    UserId = row.Id,
+                    CreatedAt = utcNow,
+                    UpdatedAt = utcNow
+                },
+                new Note
+                {
+                    Text = "Notes are perfect for things that don't need a due date.",
+                    UserId = row.Id,
+                    CreatedAt = utcNow,
+                    UpdatedAt = utcNow
+                },
+                new Note
+                {
+                    Text = "Try creating your own note!",
+                    UserId = row.Id,
+                    CreatedAt = utcNow,
+                    UpdatedAt = utcNow
+                }
+            };
+
+            db.Notes.AddRange(defaultNotes);
+            await db.SaveChangesAsync(ct);
+
+            logger.LogInformation(
+                "Seeded {Count} default notes for new user (Id: {Id})",
+                defaultNotes.Count, row.Id);
 
             logger.LogInformation(
                 "Created new AppUser (Id: {Id}, Auth0Id: {Auth0UserId})",
