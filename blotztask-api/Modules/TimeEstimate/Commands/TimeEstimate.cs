@@ -6,18 +6,17 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace BlotzTask.Modules.TimeEstimate.Commands;
 
-public class FloatingTaskForEstimation
+public class NoteForEstimation
 {
     public int Id { get; set; }
-    public string Title { get; set; }
-    public string Description { get; set; }
+    public string Text { get; set; }
 }
 
 public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logger, Kernel kernel)
 {
-    public async Task<TaskTimeEstimation> Handle(FloatingTaskForEstimation floatingTask, CancellationToken ct = default)
+    public async Task<NoteTimeEstimation> Handle(NoteForEstimation note, CancellationToken ct = default)
     {
-        logger.LogInformation("AI is estimating time for floating task: {TaskId}", floatingTask.Id);
+        logger.LogInformation("AI is estimating time for floating task: {TaskId}", note.Id);
 
         try
         {
@@ -28,8 +27,7 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
 
             var arguments = new KernelArguments(executionSettings)
             {
-                ["title"] = floatingTask.Title,
-                ["description"] = floatingTask.Description ?? "No description provided"
+                ["title"] = note.Text
             };
 
             var result = await kernel.InvokePromptAsync(
@@ -58,9 +56,9 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
                 return null;
             }
 
-            var timeEstimationResult = new TaskTimeEstimation
+            var timeEstimationResult = new NoteTimeEstimation
             {
-                TaskId = floatingTask.Id,
+                NoteId = note.Id,
                 Duration = parsedResult.Duration
             };
             return timeEstimationResult;
@@ -83,7 +81,7 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
             logger.LogError(
                 ex,
                 "Unexpected error during task time estimate. TaskId: {TaskId}, Exception: {Exception}",
-                floatingTask.Id,
+                note.Id,
                 ex.Message
             );
             return null;
@@ -91,8 +89,8 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
     }
 }
 
-public class TaskTimeEstimation
+public class NoteTimeEstimation
 {
-    public int TaskId { get; set; }
+    public int NoteId { get; set; }
     public TimeSpan Duration { get; set; }
 }

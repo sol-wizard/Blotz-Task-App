@@ -1,20 +1,20 @@
-import { FloatingTaskDTO } from "../models/floating-task-dto";
 import { View, ScrollView, Pressable } from "react-native";
 import { useState } from "react";
-import { FloatingTaskCard } from "./floating-task-card";
+import { NoteCard } from "./note-card";
+import { NoteDTO } from "../models/note-dto";
 
 type ToggledMap = Record<number, boolean>;
 
-export const FloatingTaskDualView = ({
-  tasks,
+export const NotesDualView = ({
+  notes,
   onDeleteTask,
   isDeleting,
   onPressTask,
 }: {
-  tasks: FloatingTaskDTO[];
-  onDeleteTask: (t: FloatingTaskDTO) => void;
+  notes: NoteDTO[];
+  onDeleteTask: (t: NoteDTO) => void;
   isDeleting: boolean;
-  onPressTask: (task: FloatingTaskDTO) => void;
+  onPressTask: (note: NoteDTO) => void;
 }) => {
   const [toggledMap, setToggledMap] = useState<ToggledMap>({});
 
@@ -28,8 +28,8 @@ export const FloatingTaskDualView = ({
 
   const dismissAll = () => setToggledMap({});
 
-  const leftColumn = tasks.filter((_, index) => index % 2 === 0);
-  const rightColumn = tasks.filter((_, index) => index % 2 === 1);
+  const leftColumn = notes.filter((_, index) => index % 2 === 0);
+  const rightColumn = notes.filter((_, index) => index % 2 === 1);
 
   return (
     <Pressable onPress={dismissAll} style={{ flex: 1 }}>
@@ -38,9 +38,9 @@ export const FloatingTaskDualView = ({
           <View className="flex-1 mr-1.5">
             {leftColumn.map((item) => {
               return (
-                <FloatingTaskCard
+                <NoteCard
                   key={item.id}
-                  floatingTask={item}
+                  note={item}
                   isToggled={!!toggledMap[item.id]}
                   onToggle={() => handleToggle(item.id)}
                   onDelete={onDeleteTask}
@@ -54,9 +54,9 @@ export const FloatingTaskDualView = ({
           <View className="flex-1 ml-1.5">
             {rightColumn.map((item) => {
               return (
-                <FloatingTaskCard
+                <NoteCard
                   key={item.id}
-                  floatingTask={item}
+                  note={item}
                   isToggled={!!toggledMap[item.id]}
                   onToggle={() => handleToggle(item.id)}
                   onDelete={onDeleteTask}
