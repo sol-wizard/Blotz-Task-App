@@ -4,6 +4,7 @@
   "search": "Search tasks...",
   "noTasks": "No floating tasks found",
   "createTask": "Create your first task",
+   "addSpark": "Add a Spark",
   "gashapon": {
     "revealTitle": "Reveal A New Task",
     "cancel": "Cancel",
@@ -19,5 +20,5 @@
     "errorMessage": "Could not estimate time, please try again later.",
     "dismiss": "Dismiss"
   }
-}
 
+}
