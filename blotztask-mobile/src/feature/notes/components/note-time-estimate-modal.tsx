@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 interface Props {
   visible: boolean;
   setIsModalVisible: (v: boolean) => void;
-  pickTime: () => void;
   handleStartNow: () => void;
   durationText?: string;
   error?: string | null;
@@ -15,17 +14,12 @@ interface Props {
 export const NoteTimeEstimateModal = ({
   visible,
   setIsModalVisible,
-  pickTime,
   durationText,
   handleStartNow,
   error,
   isEstimating,
 }: Props) => {
   const { t } = useTranslation("notes");
-  const handlePickTime = () => {
-    setIsModalVisible(false);
-    pickTime();
-  };
 
   return (
     <Modal
