@@ -1,14 +1,7 @@
 import { useDebounce } from "use-debounce";
 import { taskKeys } from "@/shared/constants/query-key-factory";
 import { useQuery } from "@tanstack/react-query";
-import { NoteDTO } from "../models/note-dto";
-
-const mockNotes: NoteDTO[] = [
-  { id: 1, text: "Draft weekly plan", createdAt: "2024-03-18T09:30:00" },
-  { id: 2, text: "Review pull request #214", createdAt: "2024-03-18T11:05:00" },
-  { id: 3, text: "Prep for design sync", createdAt: "2024-03-19T08:10:00" },
-  { id: 4, text: "Send status update", createdAt: "2024-03-19T15:45:00" },
-];
+import { searchNotes } from "../services/search-notes-service";
 
 export const useNotesSearch = ({
   searchQuery,
@@ -21,15 +14,12 @@ export const useNotesSearch = ({
   const hasKeyword = trimmedKeyword.length > 0;
   const [debouncedQuery] = useDebounce(hasKeyword ? trimmedKeyword : "", debouncedMs);
 
-  const { data: allNotes, isLoading } = useQuery<NoteDTO[]>({
+  const { data: allNotes, isLoading } = useQuery({
     queryKey: taskKeys.floating(),
-    queryFn: async () => mockNotes,
+    queryFn: () => searchNotes(debouncedQuery),
   });
 
-  const normalizedQuery = debouncedQuery.toLowerCase();
-  const notesSearchResult = hasKeyword
-    ? (allNotes ?? []).filter((note) => note.text.toLowerCase().includes(normalizedQuery))
-    : (allNotes ?? []);
+  const notesSearchResult = allNotes ?? [];
   const showLoading = isLoading;
 
   return {
