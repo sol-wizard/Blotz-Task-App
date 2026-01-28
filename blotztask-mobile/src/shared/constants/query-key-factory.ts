@@ -1,4 +1,4 @@
-import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
+import { NoteDTO } from "@/feature/notes/models/note-dto";
 
 export const userKeys = {
   all: ["user"] as const,
@@ -24,7 +24,7 @@ export const subtaskKeys = {
 };
 
 export const estimateKeys = {
-  taskTime: (task: FloatingTaskDTO) => ["taskTime", task] as const,
+  noteTime: (note: NoteDTO) => ["taskTime", note] as const,
 } as const;
 
 export const onboardingKeys = {

@@ -22,10 +22,10 @@ import { cancelNotification } from "@/shared/util/cancel-notification";
 import { AnimatedChevron } from "@/shared/components/ui/chevron";
 import SubtaskList from "./subtask-list";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
-
-const ACTION_WIDTH = 64;
-const OPEN_X = -ACTION_WIDTH;
-const OPEN_THRESHOLD = ACTION_WIDTH * 0.5;
+import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
+import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
+import { usePostHog } from "posthog-react-native";
+import { EVENTS } from "@/shared/constants/posthog-events";
 
 const rubberBand = (x: number, limit: number) => {
   "worklet";
@@ -47,6 +47,9 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) {
   const { toggleTask, isToggling } = useTaskMutations();
+  const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
+    useSubtaskMutations();
+  const posthog = usePostHog();
 
   const queryClient = useQueryClient();
 
@@ -60,12 +63,51 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
   // measured full height of subtask content
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
 
+  /* Always allow breakdown / subtask generation */
   const hasSubtasks = !!task.subtasks?.length;
-  const isLoading = isToggling || isDeleting;
+
+  const widthInfo = React.useMemo(() => {
+    const deleteWidth = 56; // w-14
+    const breakdownWidth = 128; // w-32
+    const spacerWidth = 8; // w-2
+
+    // Structure: [Card] [Spacer] ([Breakdown] [Spacer]) [Delete]
+    const totalWidth = spacerWidth + deleteWidth + breakdownWidth + spacerWidth;
+
+    return {
+      actionWidth: totalWidth,
+      openX: -totalWidth,
+      openThreshold: totalWidth * 0.5,
+      breakdownWidth,
+      deleteWidth,
+    };
+  }, []);
+
+  const isLoading = isToggling || isDeleting || isBreakingDown || isReplacingSubtasks;
 
   const navigateToTaskDetails = (t: TaskDetailDTO) => {
     queryClient.setQueryData(["taskId", t.id], t);
     router.push({ pathname: "/(protected)/task-details", params: { taskId: t.id } });
+  };
+
+  const handleBreakdown = async () => {
+    if (isLoading) return;
+
+    posthog.capture(EVENTS.BREAKDOWN_TASK);
+
+    try {
+      const subtasks = (await breakDownTask(task.id)) ?? [];
+      if (subtasks.length > 0) {
+        await replaceSubtasks({
+          taskId: task.id,
+          subtasks: subtasks.map((subtask: AddSubtaskDTO) => ({ ...subtask })),
+        });
+        setIsExpanded(true);
+        taskCardTranslateX.value = withTiming(0, { duration: 160 });
+      }
+    } catch (e) {
+      console.error("Breakdown error:", e);
+    }
   };
 
   const pan = Gesture.Pan()
@@ -73,11 +115,11 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
     .activeOffsetX([-10, 10])
     .failOffsetY([-10, 10])
     .onUpdate((e) => {
-      taskCardTranslateX.value = rubberBand(e.translationX, OPEN_X);
+      taskCardTranslateX.value = rubberBand(e.translationX, widthInfo.openX);
     })
     .onEnd(() => {
-      const open = Math.abs(taskCardTranslateX.value) > OPEN_THRESHOLD;
-      taskCardTranslateX.value = withSpring(open ? OPEN_X : 0, {
+      const open = Math.abs(taskCardTranslateX.value) > widthInfo.openThreshold;
+      taskCardTranslateX.value = withSpring(open ? widthInfo.openX : 0, {
         damping: 16,
         stiffness: 220,
         mass: 0.9,
@@ -106,6 +148,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
       className="mx-4 my-2 overflow-hidden"
       layout={MotionAnimations.layout}
       exiting={MotionAnimations.rightExiting}
+      entering={MotionAnimations.upEntering}
     >
       <GestureDetector gesture={pan}>
         <Animated.View style={cardStyle} className="flex-row items-start">
@@ -193,6 +236,25 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
             </Pressable>
           </View>
 
+          <View className="w-2" />
+
+          {/* Breakdown Action */}
+          <View className="w-32" pointerEvents="auto">
+            <Pressable
+              onPress={handleBreakdown}
+              disabled={isLoading}
+              android_ripple={{ color: "#DBEAFE", borderless: false }}
+              className={`w-32 h-20 rounded-xl bg-blue-500/10 items-center justify-center ${
+                isBreakingDown || isReplacingSubtasks ? "opacity-50" : ""
+              }`}
+            >
+              {isBreakingDown || isReplacingSubtasks ? (
+                <ActivityIndicator size="small" color="#3b82f6" />
+              ) : (
+                <Text className="text-info font-baloo font-semibold text-lg">Breakdown</Text>
+              )}
+            </Pressable>
+          </View>
           <View className="w-2" />
 
           {/* 2) Delete action */}
