@@ -46,7 +46,6 @@ interface TaskCardProps {
 }
 
 const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) => {
-  console.log("🍳 Rendering TaskCard for task");
   const { toggleTask, isToggling } = useTaskMutations();
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
     useSubtaskMutations();

@@ -4,8 +4,6 @@ import { PNGIMAGES } from "@/shared/constants/assets";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 
-const DEFAULT_IMAGE_URL = PNGIMAGES.blotzIcon;
-
 export default function UserProfile({ profile }: { profile?: UserProfileDTO }) {
   const router = useRouter();
   if (!profile) {
@@ -24,12 +22,16 @@ export default function UserProfile({ profile }: { profile?: UserProfileDTO }) {
         }
       >
         {showPlaceholder ? (
-          <Image source={DEFAULT_IMAGE_URL} className="w-14 h-14 rounded-full" resizeMode="cover" />
+          <Image
+            source={PNGIMAGES.blotzIcon}
+            style={{ width: 56, height: 56, borderRadius: 28 }}
+            contentFit="cover"
+          />
         ) : (
           <Image
             source={{ uri: profile.pictureUrl! }}
-            className="w-14 h-14 rounded-full"
-            resizeMode="cover"
+            style={{ width: 56, height: 56, borderRadius: 28 }}
+            contentFit="cover"
           />
         )}
       </TouchableOpacity>

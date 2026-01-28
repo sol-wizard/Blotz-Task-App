@@ -1,5 +1,4 @@
-import { View, Text, Pressable } from "react-native";
-import { Image } from "expo-image";
+import { View, Text, Pressable, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -63,7 +62,11 @@ export default function SettingsScreen() {
 
       <View className="px-8 mt-2 w-full items-center">
         <View>
-          <Image source={avatarSource} className="w-24 h-24 rounded-full" resizeMode="cover" />
+          <Image
+            source={avatarSource}
+            style={{ width: 96, height: 96, borderRadius: 48 }}
+            resizeMode="cover"
+          />
           <Pressable
             onPress={handleProfileEdit}
             className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-white items-center justify-center"

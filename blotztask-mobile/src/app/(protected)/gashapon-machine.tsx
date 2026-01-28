@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
+import { View, Image } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
@@ -17,7 +17,6 @@ import { usePostHog } from "posthog-react-native";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
 import { getStarIconAsBefore } from "@/feature/notes/utils/get-star-icon";
-import { Image } from "expo-image";
 
 export default function GashaponMachineScreen() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
