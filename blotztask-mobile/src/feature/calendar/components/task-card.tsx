@@ -47,12 +47,8 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) {
   const { toggleTask, isToggling } = useTaskMutations();
-  const {
-    breakDownTask,
-    isBreakingDown,
-    replaceSubtasks,
-    isReplacingSubtasks,
-  } = useSubtaskMutations();
+  const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
+    useSubtaskMutations();
   const posthog = usePostHog();
 
   const queryClient = useQueryClient();
@@ -152,6 +148,7 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
       className="mx-4 my-2 overflow-hidden"
       layout={MotionAnimations.layout}
       exiting={MotionAnimations.rightExiting}
+      entering={MotionAnimations.upEntering}
     >
       <GestureDetector gesture={pan}>
         <Animated.View style={cardStyle} className="flex-row items-start">
