@@ -30,7 +30,7 @@ export default function Index() {
   const [isAuthenticateLoading, setIsAuthenticateLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const queryClient = useQueryClient();
-  const { userProfile, isUserProfileLoading, isUserProfileFetching } = useUserProfile(isAuthenticated);
+  const { userProfile, isUserProfileLoading, isUserProfileFetching } = useUserProfile();
 
   useEffect(() => {
     const initialize = async () => {
