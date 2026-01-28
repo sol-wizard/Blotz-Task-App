@@ -1,4 +1,5 @@
-import { View, Image, Text } from "react-native";
+import { View, Text } from "react-native";
+import { Image } from "expo-image";
 import { PNGIMAGES } from "@/shared/constants/assets";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { MaterialIcons } from "@expo/vector-icons";

@@ -1,6 +1,7 @@
 import { ASSETS } from "@/shared/constants/assets";
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, View, Text, Image } from "react-native";
+import { Animated, Easing, View, Text } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 

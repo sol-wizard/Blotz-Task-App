@@ -1,6 +1,7 @@
 import { ASSETS } from "@/shared/constants/assets";
 import React from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 
 export function OnboardingIntroSection({ onSkip }: { onSkip: () => void }) {

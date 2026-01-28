@@ -1,4 +1,4 @@
-import { Image } from "react-native";
+import { Image } from "expo-image";
 
 export const CapsuleToyRenderer = (props: any) => {
   const BALL_RADIUS = 20;

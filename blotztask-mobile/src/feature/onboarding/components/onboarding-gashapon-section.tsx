@@ -1,6 +1,7 @@
 import { ASSETS } from "@/shared/constants/assets";
 import React from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 
@@ -9,10 +10,7 @@ type OnboardingGashaponSectionProps = {
   onBack: () => void;
 };
 
-export function OnboardingGashaponSection({
-  onSkip,
-  onBack,
-}: OnboardingGashaponSectionProps) {
+export function OnboardingGashaponSection({ onSkip, onBack }: OnboardingGashaponSectionProps) {
   const { t } = useTranslation("onboarding");
 
   return (

@@ -1,7 +1,8 @@
-import { View, Image, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import { UserProfileDTO } from "@/shared/models/user-profile-dto";
 import { PNGIMAGES } from "@/shared/constants/assets";
 import { useRouter } from "expo-router";
+import { Image } from "expo-image";
 
 const DEFAULT_IMAGE_URL = PNGIMAGES.blotzIcon;
 
