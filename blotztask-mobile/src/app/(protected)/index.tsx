@@ -136,7 +136,7 @@ export default function ProtectedIndex() {
           <GradientCircle size={58}>
             <Image
               source={ASSETS.whiteBun}
-              resizeMode="contain"
+              contentFit="cover"
               style={[{ width: 28, height: 28, position: "absolute" }]}
             />
           </GradientCircle>

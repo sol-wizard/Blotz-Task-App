@@ -25,7 +25,7 @@ export function OnboardingBreakdownSection({ onSkip, onBack }: OnboardingBreakdo
       </View>
 
       <View className="flex-1 items-center justify-center">
-        <Image source={ASSETS.yellowStar} className="w-32 h-32 mb-6" resizeMode="contain" />
+        <Image source={ASSETS.yellowStar} className="w-32 h-32 mb-6" contentFit="cover" />
         <Text className="text-3xl font-balooBold text-black text-center">
           {t("breakdown.title")}
         </Text>

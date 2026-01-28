@@ -54,7 +54,7 @@ export default function LoadingScreen() {
         <Image
           source={ASSETS.loadingShadow}
           className="w-[120px] h-[24px] -mt-[10px] opacity-80"
-          resizeMode="contain"
+          contentFit="cover"
         />
       </View>
       <Text className="font-balooBold text-2xl mt-4">{t("loading.general")}</Text>

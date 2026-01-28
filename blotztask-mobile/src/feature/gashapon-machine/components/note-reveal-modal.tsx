@@ -29,7 +29,7 @@ export const NoteRevealModal = ({ visible, task, onCancel, onDoNow }: NoteReveal
           }}
         >
           <View className="items-center mb-4">
-            <Image source={imageSource} className="w-16 h-16 mb-3" resizeMode="contain" />
+            <Image source={imageSource} className="w-16 h-16 mb-3" contentFit="cover" />
 
             <Text className="text-gray-500 text-sm font-balooThin">
               {t("gashapon.revealTitle")}
