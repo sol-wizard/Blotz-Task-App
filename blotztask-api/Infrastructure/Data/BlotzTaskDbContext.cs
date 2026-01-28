@@ -4,6 +4,7 @@ using BlotzTask.Modules.Labels.Enums;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Enums;
+using BlotzTask.Modules.Notes.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Infrastructure.Data;
@@ -21,6 +22,7 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<AppUser> AppUsers { get; set; }
     public DbSet<UserPreference> UserPreferences { get; set; }
     public DbSet<PomodoroSetting> PomodoroSetting { get; set; }
+    public DbSet<Note> Notes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,6 +32,7 @@ public class BlotzTaskDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DeletedTaskItemConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LabelConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppUserConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(NoteConfiguration).Assembly);
 
         modelBuilder.Entity<Label>().HasData(
             new Label
