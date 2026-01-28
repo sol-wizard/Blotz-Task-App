@@ -41,6 +41,11 @@ export default function NotesScreen() {
   const handleDelete = (note: NoteDTO) => {
     console.log("Test Deleting task", note);
   };
+
+  const handleAddSparkPress = () => {
+    console.log("Star Spark button clicked");
+  };
+
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
       <View className="flex-row justify-between items-center mt-10">
@@ -87,6 +92,25 @@ export default function NotesScreen() {
           }}
         />
       </View>
+
+      <Pressable
+        onPress={handleAddSparkPress}
+        className="mx-8 mb-2"
+        style={{
+          borderWidth: 2,
+          borderStyle: "dashed",
+          borderColor: "#8C8C8C",
+          borderRadius: 16,
+          height: 56,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: theme.colors.background,
+        }}
+      >
+        <Text className="font-baloo text-base " style={{ color: "#8C8C8C" }}>
+          {t("addNote")}
+        </Text>
+      </Pressable>
 
       {showLoading && <LoadingScreen />}
       {!showLoading && notesSearchResult.length > 0 && (

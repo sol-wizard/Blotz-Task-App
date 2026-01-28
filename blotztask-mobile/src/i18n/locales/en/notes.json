@@ -4,6 +4,7 @@
   "search": "Search tasks...",
   "noTasks": "No floating tasks found",
   "createTask": "Create your first task",
+  "addNote": "Add a Note",
   "gashapon": {
     "revealTitle": "Reveal A New Task",
     "cancel": "Cancel",
