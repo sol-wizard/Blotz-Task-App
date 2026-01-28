@@ -1,13 +1,15 @@
 {
-  "title": "Star Spark",
+  "title": "Notes",
   "banner": "Ready to turn a spark into action?",
   "search": "Search tasks...",
   "noTasks": "No floating tasks found",
   "createTask": "Create your first task",
+  "addNote": "Add a Note",
   "gashapon": {
     "revealTitle": "Reveal A New Task",
     "cancel": "Cancel",
-    "doItNow": "Do it now"
+    "doItNow": "Do it now",
+    "pickNote": "Let fate decide✨"
   },
   "timeEstimate": {
     "estimating": "Estimating time...",
@@ -20,4 +22,3 @@
     "dismiss": "Dismiss"
   }
 }
-
