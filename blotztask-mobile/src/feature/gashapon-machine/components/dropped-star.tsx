@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, StyleSheet, Image, Easing } from "react-native";
+import { Animated, Dimensions, StyleSheet, Image, Easing, ImageSourcePropType } from "react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -9,7 +9,7 @@ const DROPOUT_Y = SCREEN_HEIGHT / 2 + 200;
 interface DroppedStarProps {
   trigger: number;
   setTaskRevealModalVisible: (v: boolean) => void;
-  imageSource: any;
+  imageSource: ImageSourcePropType;
 }
 
 export const DroppedStar: React.FC<DroppedStarProps> = ({
