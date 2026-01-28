@@ -2,10 +2,11 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskItemDTO } from "../../feature/task-add-edit/models/edit-task-item-dto";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { apiClient } from "./api/client";
-import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
+
 import { DailyTaskIndicatorDTO } from "@/feature/calendar/models/daily-task-indicator-dto";
 import { startOfDay } from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
+import { NoteDTO } from "@/feature/notes/models/note-dto";
 
 export async function fetchTasksForDate(
   date: Date,
@@ -42,10 +43,12 @@ export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
   }
 }
 
-export async function fetchStarSparkFloatingTasks(query?: string): Promise<FloatingTaskDTO[]> {
+export async function fetchNotes(query?: string): Promise<NoteDTO[]> {
   const url = `/Task/star-spark-floating-tasks`;
   try {
-    const data: FloatingTaskDTO[] = await apiClient.get(url, { params: query ? { query } : undefined });
+    const data: NoteDTO[] = await apiClient.get(url, {
+      params: query ? { query } : undefined,
+    });
     return data;
   } catch {
     throw new Error("Failed to fetch floating tasks for StarSpark.");

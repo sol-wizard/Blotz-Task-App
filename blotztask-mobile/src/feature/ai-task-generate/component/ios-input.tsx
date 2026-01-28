@@ -1,32 +1,25 @@
-import { View, Vibration, TextInput } from "react-native";
-import { useEffect } from "react";
-import { AiResultMessageDTO } from "../models/ai-result-message-dto";
-import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
-import * as Haptics from "expo-haptics";
-import { ErrorMessageCard } from "./error-message-card";
+import { View, Text, TextInput, Pressable, Vibration, ActivityIndicator } from "react-native";
+import React, { useEffect } from "react";
 import { theme } from "@/shared/constants/theme";
-import { VoiceButton } from "./voice-button";
-import { SendButton } from "./send-button";
-import { requestIOSMicrophonePermission } from "../utils/request-microphone-permission";
 import { useTranslation } from "react-i18next";
+import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import { Language } from "@/shared/models/user-preferences-dto";
+import VoiceInputButton from "./voice-input-button";
+import * as Haptics from "expo-haptics";
+import { requestIOSMicrophonePermission } from "../utils/request-microphone-permission";
+import { ErrorMessageCard } from "./error-message-card";
 
-export const IOSInput = ({
-  text,
-  setText,
-  sendMessage,
-  isAiGenerating,
-  aiGeneratedMessage,
-}: {
+type Props = {
   text: string;
   setText: (v: string) => void;
   sendMessage: (v: string) => void;
   isAiGenerating: boolean;
-  aiGeneratedMessage?: AiResultMessageDTO;
-}) => {
-  const { t } = useTranslation("aiTaskGenerate");
+  aiGeneratedMessage?: any;
+};
 
+const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessage }: Props) => {
+  const { t } = useTranslation("aiTaskGenerate");
   const { userPreferences } = useUserPreferencesQuery();
   const getSttLanguage = () => {
     if (userPreferences?.preferredLanguage === Language.En) return "en-AU";
@@ -51,6 +44,8 @@ export const IOSInput = ({
     }
   }, [transcript]);
 
+  const showSendButton = text.trim() !== "" && !recognizing;
+
   const toggleListening = async () => {
     if (recognizing) {
       stopListening();
@@ -66,44 +61,51 @@ export const IOSInput = ({
     await handleStartListening();
   };
 
-  const handleAbortListening = () => {
+  const abortListeningMessage = () => {
     abortListening();
     setText("");
   };
 
-  const showSendButton = text.trim() !== "" || recognizing;
   return (
-    <View className="items-center">
-      <View className="w-96 mb-10" style={{ minHeight: 60 }}>
-        <TextInput
-          value={text}
-          onChangeText={(v: string) => setText(v)}
-          enablesReturnKeyAutomatically
-          placeholder={t("input.placeholder")}
-          autoFocus
-          placeholderTextColor={theme.colors.secondary}
-          multiline
-          className="w-11/12 bg-white text-xl text-gray-800 font-baloo"
-          style={{ textAlignVertical: "top", textAlign: "left" }}
-        />
-        {aiGeneratedMessage?.errorMessage && (
-          <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
-        )}
-      </View>
-      <View className="flex-row items-center justify-end w-96">
-        {showSendButton ? (
-          <SendButton
-            text={text}
-            isRecognizing={recognizing}
-            isGenerating={isAiGenerating}
-            abortListening={handleAbortListening}
-            sendMessage={sendMessage}
-            stopListening={stopListening}
-          />
+    <View className="mb-8 ">
+      <Text className="font-baloo text-lg mb-2">{t("labels.newTask")}</Text>
+      <TextInput
+        value={text}
+        onChangeText={setText}
+        placeholder={t("input.placeholder")}
+        autoFocus
+        placeholderTextColor={theme.colors.secondary}
+        multiline
+        className="bg-[#F2F2F2] rounded-xl h-40 p-4"
+        style={{ textAlignVertical: "top", textAlign: "left" }}
+      />
+      {aiGeneratedMessage?.errorMessage && (
+        <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
+      )}
+      {showSendButton ? (
+        isAiGenerating ? (
+          <View className="mt-4 h-14 rounded-full bg-[#F2F2F2] items-center justify-center">
+            <ActivityIndicator size={10} color="#2F80ED" />
+          </View>
         ) : (
-          <VoiceButton isRecognizing={recognizing} toggleListening={toggleListening} />
-        )}
-      </View>
+          <Pressable
+            className="bg-[#F2F2F2] rounded-full mt-4 p-4 items-center"
+            onPress={() => sendMessage(text)}
+          >
+            <Text className="font-bold">{t("buttons.generateTask")}</Text>
+          </Pressable>
+        )
+      ) : (
+        <VoiceInputButton
+          isListening={recognizing}
+          startListening={toggleListening}
+          abortListening={abortListeningMessage}
+          sendMessage={stopListening}
+          isAiGenerating={isAiGenerating}
+        />
+      )}
     </View>
   );
 };
+
+export default IOSInput;

@@ -49,7 +49,7 @@ export default function ProtectedLayout() {
         }}
       />
       <Stack.Screen
-        name="star-spark"
+        name="notes"
         options={{
           headerShown: true,
           headerShadowVisible: false,
