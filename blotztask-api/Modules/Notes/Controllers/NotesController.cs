@@ -10,7 +10,7 @@ namespace BlotzTask.Modules.Notes;
 [Authorize]
 [ApiController]
 [Route("api/[controller]")]
-public class NoteController
+public class NotesController
 (
   CreateNoteCommandHandler createNoteCommandHandler,
   GetNotesQueryHandler GetNotesQueryHandler,
@@ -31,8 +31,17 @@ public class NoteController
     return await createNoteCommandHandler.Handle(command, ct);
 
   }
-  [HttpPut]
-  public async Task<NoteDto> UpdateNote(Guid id, [FromBody] UpdateNoteCommand request, CancellationToken ct)
+  [HttpGet]
+  public async Task<List<NoteDto>> Search([FromQuery] string? q, CancellationToken ct)
+  {
+    if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+      throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+    var query = new GetNotes { UserId = userId, QueryString = q };
+    return await GetNotesQueryHandler.Handle(query, ct);
+  }
+
+  [HttpPut("{id:guid}")]
+  public async Task<NoteDto> UpdateNote(Guid id, [FromBody] UpdateNoteCommand dto, CancellationToken ct)
   {
     if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
       throw new UnauthorizedAccessException("Counld not find valid user id from Http Context");
@@ -40,10 +49,11 @@ public class NoteController
     {
       NoteId = id,
       UserId = userId,
-      Text = request.Text
+      Text = dto.Text
     };
     return await updateNoteCommandHandler.Handle(command, ct);
   }
+
   [HttpDelete("{id:guid}")]
   public async Task<IActionResult> DeleteNote(Guid id, CancellationToken ct)
   {

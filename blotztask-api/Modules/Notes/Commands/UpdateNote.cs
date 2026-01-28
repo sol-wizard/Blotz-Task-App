@@ -21,7 +21,7 @@ public class UpdateNoteCommandHandler(BlotzTaskDbContext db, ILogger<UpdateNoteC
   {
     logger.LogInformation("Updating note {Id} for user {UserId}", command.NoteId, command.UserId);
     var note = await db.Notes
-        .FirstOrDefaultAsync(n => n.Id == command.NoteId && n.UserId == command.UserId);
+        .FirstOrDefaultAsync(n => n.Id == command.NoteId && n.UserId == command.UserId, ct);
     if (note == null)
       throw new NotFoundException("Note not found or no permission");
     var text = (command.Text ?? string.Empty).Trim();
