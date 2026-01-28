@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text.Json;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Tasks.Domain.Entities;
+using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Users.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,7 +27,6 @@ public class SyncUserCommandHandler(
 
         var user = command.User;
 
-
         var auth0UserId = GetFromUser(user, "user_id");
         var email =
             GetFromUser(user, "email") ??
@@ -48,7 +49,7 @@ public class SyncUserCommandHandler(
             throw new ValidationException("user_id and email are required");
         }
 
-        var now = DateTime.UtcNow;
+        var utcNow = DateTime.UtcNow;
 
         logger.LogInformation("Looking up existing AppUser for Auth0UserId: {Auth0UserId}", auth0UserId);
 
@@ -63,8 +64,8 @@ public class SyncUserCommandHandler(
                 DisplayName = displayName,
                 PictureUrl = pictureUrl,
                 SignUpAt = signUpAt,
-                CreationAt = now,
-                UpdatedAt = now,
+                CreationAt = utcNow,
+                UpdatedAt = utcNow,
                 IsOnboarded = false
             };
             db.AppUsers.Add(row);
@@ -77,6 +78,59 @@ public class SyncUserCommandHandler(
             db.UserPreferences.Add(userPreference);
             await db.SaveChangesAsync(ct);
 
+            // Seed default tasks for new user
+            var utcNowWithOffset = DateTimeOffset.UtcNow;
+            var singleTime = utcNowWithOffset;
+            var rangeStart = utcNowWithOffset;
+            var rangeEnd = utcNowWithOffset.AddHours(2);
+
+            var defaultTasks = new List<TaskItem>
+            {
+                new TaskItem
+                {
+                    Title = "Welcome to Blotz!",
+                    Description = "This is a single-time task example",
+                    StartTime = singleTime,
+                    EndTime = singleTime,
+                    TimeType = TaskTimeType.SingleTime,
+                    UserId = row.Id,
+                    IsDone = false,
+                    CreatedAt = utcNow,
+                    UpdatedAt = utcNow
+                },
+                new TaskItem
+                {
+                    Title = "Explore the app",
+                    Description = "This is a range-time task example",
+                    StartTime = rangeStart,
+                    EndTime = rangeEnd,
+                    TimeType = TaskTimeType.RangeTime,
+                    UserId = row.Id,
+                    IsDone = false,
+                    CreatedAt = utcNow,
+                    UpdatedAt = utcNow
+                },
+                new TaskItem
+                {
+                    Title = "Plan your first task",
+                    Description = "This is a floating task example",
+                    StartTime = null,
+                    EndTime = null,
+                    TimeType = null,
+                    UserId = row.Id,
+                    IsDone = false,
+                    CreatedAt = utcNow,
+                    UpdatedAt = utcNow
+                }
+            };
+
+            db.TaskItems.AddRange(defaultTasks);
+            await db.SaveChangesAsync(ct);
+
+            logger.LogInformation(
+                "Seeded {Count} default tasks for new user (Id: {Id})",
+                defaultTasks.Count, row.Id);
+
             logger.LogInformation(
                 "Created new AppUser (Id: {Id}, Auth0Id: {Auth0UserId})",
                 row.Id, row.Auth0UserId);
@@ -87,7 +141,7 @@ public class SyncUserCommandHandler(
         existing.Email = email;
         existing.DisplayName = displayName;
         existing.PictureUrl = pictureUrl;
-        existing.UpdatedAt = now;
+        existing.UpdatedAt = utcNow;
 
         logger.LogInformation(
             "Persisting updates to AppUser (Id: {Id}, Auth0Id: {Auth0UserId})",
