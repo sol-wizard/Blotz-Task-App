@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { BottomNavigation } from "react-native-paper";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Pressable, View, Image } from "react-native";
+import { Pressable, View } from "react-native";
+import { Image } from "expo-image";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
@@ -135,7 +136,7 @@ export default function ProtectedIndex() {
           <GradientCircle size={58}>
             <Image
               source={ASSETS.whiteBun}
-              resizeMode="contain"
+              contentFit="cover"
               style={[{ width: 28, height: 28, position: "absolute" }]}
             />
           </GradientCircle>

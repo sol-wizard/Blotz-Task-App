@@ -47,7 +47,6 @@ const useTaskMutations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
-      queryClient.invalidateQueries({ queryKey: taskKeys.floating() });
     },
   });
 
@@ -55,7 +54,6 @@ const useTaskMutations = () => {
     mutationFn: (task: TaskDetailDTO) => deleteTask(task.id),
     onSuccess: (_data, task) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
-      queryClient.invalidateQueries({ queryKey: taskKeys.floating() });
       invalidateSelectedDayTask(queryClient, task.startTime, task.endTime);
     },
   });
@@ -65,7 +63,6 @@ const useTaskMutations = () => {
     onSuccess: (_data, task) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: taskKeys.byId(task.taskId) });
-      queryClient.invalidateQueries({ queryKey: taskKeys.floating() });
       invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime);
     },
   });

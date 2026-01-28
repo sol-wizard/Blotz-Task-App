@@ -1,4 +1,4 @@
-import { Image } from "react-native";
+import { Image } from "expo-image";
 
 export const CapsuleToyRenderer = (props: any) => {
   const BALL_RADIUS = 20;
@@ -19,7 +19,7 @@ export const CapsuleToyRenderer = (props: any) => {
         zIndex: Math.round(body.position.y),
         transform: [{ rotate: `${angle}rad` }],
       }}
-      resizeMode="cover"
+      contentFit="cover"
     />
   );
 };

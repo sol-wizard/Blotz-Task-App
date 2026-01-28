@@ -100,7 +100,6 @@ export default function GashaponMachineScreen() {
         >
           <Image
             source={ASSETS.gashaponMachineBase}
-            resizeMode="contain"
             className="absolute z-0"
             style={{
               alignSelf: "center",
