@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Pressable, Text, View, Image } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { ReturnButton } from "@/shared/components/ui/return-button";
 import avatarData from "@/shared/constants/avatar.json";
 import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AvatarDTO } from "@/feature/settings/modals/avatar-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Image } from "expo-image";
 
 export default function AvatarScreen() {
   const avatars = avatarData.avatars;
@@ -64,8 +65,8 @@ export default function AvatarScreen() {
               >
                 <Image
                   source={{ uri: avatar.url }}
-                  className="h-20 w-20 rounded-full"
-                  resizeMode="cover"
+                  style={{ width: 80, height: 80, borderRadius: 48 }}
+                  contentFit="cover"
                 />
               </View>
             </Pressable>

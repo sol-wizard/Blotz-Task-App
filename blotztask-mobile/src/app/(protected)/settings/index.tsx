@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Image } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -7,6 +7,7 @@ import { PNGIMAGES } from "@/shared/constants/assets";
 import { FormDivider } from "@/shared/components/ui/form-divider";
 import { SettingsMenuItem } from "@/feature/settings/modals/settings-menu-item";
 import { useTranslation } from "react-i18next";
+import { Image } from "expo-image";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -65,7 +66,7 @@ export default function SettingsScreen() {
           <Image
             source={avatarSource}
             style={{ width: 96, height: 96, borderRadius: 48 }}
-            resizeMode="cover"
+            contentFit="cover"
           />
           <Pressable
             onPress={handleProfileEdit}
