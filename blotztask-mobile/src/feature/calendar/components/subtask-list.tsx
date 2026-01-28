@@ -58,7 +58,7 @@ const SubtaskList = ({ task, progress }: Props) => {
 
           const isWarmup = index === 0 && minutes !== null && minutes < 5;
 
-          console.log("DEBUG:", { index, raw, minutes, isWarmup, subtaskTitle: subtask.title });
+          //console.log("DEBUG:", { index, raw, minutes, isWarmup, subtaskTitle: subtask.title });
 
           return (
             <SubtaskItem
