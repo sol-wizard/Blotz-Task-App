@@ -17,6 +17,7 @@ type SubtaskItemProps = {
   color?: string;
   isEditMode?: boolean;
   onDelete?: (id: number) => void;
+  isWarmup?: boolean;
 };
 
 export default function SubtaskItem({
@@ -25,6 +26,7 @@ export default function SubtaskItem({
   color,
   isEditMode = false,
   onDelete,
+  isWarmup = false,
 }: SubtaskItemProps) {
   const isChecked = subtask?.isDone;
   const handleToggle = () => {
@@ -46,7 +48,7 @@ export default function SubtaskItem({
         >
           <MaterialIcons name="delete-outline" size={20} color={"#3D8DE0"} />
         </TouchableOpacity>
-      ) : (
+      ) : isWarmup ? null : (
         <TaskCheckbox
           checked={isChecked}
           onPress={handleToggle}
@@ -55,7 +57,13 @@ export default function SubtaskItem({
           size={28}
         />
       )}
-      <View className="flex-1 ml-3">
+      <View className="flex-1 min-w-0 ml-3">
+        {isWarmup ? (
+          <View className="self-start rounded-full bg-orange-100 px-3 py-1 mb-1">
+            <Text className="text-orange-500 font-baloo text-sm">Warmup</Text>
+          </View>
+        ) : null}
+
         <Text
           className={`text-[15px] font-baloo ml-3 ${isChecked ? "line-through" : ""}`}
           style={{ color: textColor }}

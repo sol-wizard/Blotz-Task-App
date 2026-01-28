@@ -10,7 +10,7 @@ import Animated, {
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
-import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
+import SubtaskItem from "@/feature/task-details/components/subtask-item";
 
 type Props = {
   task: TaskDetailDTO;
@@ -41,30 +41,39 @@ const SubtaskList = ({ task, progress }: Props) => {
     <Animated.View style={[{ overflow: "hidden" }, subtaskClipStyle]}>
       {/* This inner content is what we measure */}
       <View className="px-5 pb-4" onLayout={onSubtaskContentLayout}>
-        {task.subtasks?.map((subtask: SubtaskDTO) => (
-          <Pressable
-            key={subtask.subTaskId}
-            onPress={() => handleToggleSubtask(subtask.subTaskId)}
-            disabled={isTogglingSubtaskStatus}
-            className={`justify-between flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
-          >
-            <TaskCheckbox
-              checked={subtask.isDone}
-              onPress={() => handleToggleSubtask(subtask.subTaskId)}
-              haptic={!subtask.isDone}
-              size={32}
+        {task.subtasks?.map((subtask: SubtaskDTO, index: number) => {
+          const raw = subtask?.duration;
+          const minutes =
+            typeof raw === "string" && raw.includes(":")
+              ? (() => {
+                  const [hh, mm, ss] = raw.split(":").map((x) => Number(x));
+                  if ([hh, mm, ss].some((n) => Number.isNaN(n))) return null;
+                  return hh * 60 + mm + Math.floor(ss / 60);
+                })()
+              : typeof raw === "string" && raw.includes("min")
+                ? parseInt(raw.replace("min", ""))
+                : typeof raw === "string" && raw.includes("h")
+                  ? parseInt(raw.replace("h", "")) * 60
+                  : null;
+
+          const isWarmup = index === 0 && minutes !== null && minutes < 5;
+
+          console.log("DEBUG:", { index, raw, minutes, isWarmup, subtaskTitle: subtask.title });
+
+          return (
+            <SubtaskItem
+              key={subtask.subTaskId}
+              item={{
+                id: subtask.subTaskId,
+                title: subtask.title,
+                duration: subtask.duration,
+                isDone: subtask.isDone,
+              }}
+              isWarmup={isWarmup}
+              onToggle={() => handleToggleSubtask(subtask.subTaskId)}
             />
-            <View className="flex-1">
-              <Text
-                className={`text-base font-baloo ${
-                  subtask.isDone ? "text-gray-400 line-through opacity-60" : "text-gray-700"
-                }`}
-              >
-                {subtask.title}
-              </Text>
-            </View>
-          </Pressable>
-        ))}
+          );
+        })}
       </View>
     </Animated.View>
   );
