@@ -30,6 +30,7 @@ export function OnboardingAiSection({ onSkip, onBack }: OnboardingAiSectionProps
           style={{ width: 384, height: 384, marginBottom: 24 }}
           contentFit="contain"
         />
+
         <Text className="text-3xl font-balooBold text-black text-center">{t("ai.title")}</Text>
         <Text className="text-base font-baloo text-secondary text-center mt-2">
           {t("ai.subtitle")}

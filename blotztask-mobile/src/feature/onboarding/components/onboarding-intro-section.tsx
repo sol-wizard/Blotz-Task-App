@@ -16,12 +16,9 @@ export function OnboardingIntroSection({ onSkip }: { onSkip: () => void }) {
       </View>
 
       <View className="flex-1 items-center justify-center">
-        <Image 
-          source={ASSETS.blotzIcon} 
-          style={{ width: 256, height: 256 }}
-          contentFit="contain"
-        />
-        <Text className="text-3xl font-balooBold text-black text-center pt-1">
+        <Image source={ASSETS.blotzIcon} style={{ width: 256, height: 256 }} contentFit="contain" />
+
+        <Text className="text-3xl font-balooBold text-black text-center pt-2">
           {t("intro.title")}
         </Text>
         <Text className="text-base font-baloo text-secondary text-center mt-2">

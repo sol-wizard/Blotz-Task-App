@@ -30,6 +30,7 @@ export function OnboardingBreakdownSection({ onSkip, onBack }: OnboardingBreakdo
           style={{ width: 384, height: 384, marginBottom: 24 }}
           contentFit="contain"
         />
+
         <Text className="text-3xl font-balooBold text-black text-center">
           {t("breakdown.title")}
         </Text>
