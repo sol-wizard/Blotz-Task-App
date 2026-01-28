@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Image } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -7,30 +7,29 @@ import { ASSETS } from "@/shared/constants/assets";
 import { MachineButton } from "@/feature/gashapon-machine/components/machine-button";
 import { cleanupSystem, physicsSystem } from "@/feature/gashapon-machine/utils/game-systems";
 import { LinearGradient } from "expo-linear-gradient";
-import { TaskRevealModal } from "@/feature/gashapon-machine/components/task-reveal-modal";
+import { NoteRevealModal } from "@/feature/gashapon-machine/components/note-reveal-modal";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
-import { useFloatingTasks } from "@/feature/star-spark/hooks/useFloatingTasks";
-import { pickRandomTask } from "@/feature/gashapon-machine/utils/pick-random-task";
-import { FloatingTaskDTO } from "@/feature/star-spark/models/floating-task-dto";
-import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
-import { endOfDay } from "date-fns";
+import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
+import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
+import { NoteDTO } from "@/feature/notes/models/note-dto";
+import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
+import { getStarIconAsBefore } from "@/feature/notes/utils/get-star-icon";
 
-export default function GashaponMachine() {
+export default function GashaponMachineScreen() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
   const [eyesPicLoaded, setEyesPicLoaded] = useState(false);
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
-  const [starLabelName, setStarLabelName] = useState("");
-  const [randomTask, setRandomTask] = useState<FloatingTaskDTO | null>(null);
-  const { updateTask } = useTaskMutations();
+  const [randomNote, setRandomTask] = useState<NoteDTO | null>(null);
+  const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
+  const addNoteToTask = useAddNoteToTask();
   const posthog = usePostHog();
 
-  const { floatingTasks, isLoading } = useFloatingTasks();
+  const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
 
   useEffect(() => {
     posthog.capture("screen_viewed", {
@@ -40,35 +39,28 @@ export default function GashaponMachine() {
 
   const MAX_STARS = 30;
 
-  const limitedFloatingTasks = floatingTasks ?? [].slice(0, MAX_STARS);
+  const limitedNotes = useMemo(() => notesSearchResult.slice(0, MAX_STARS), [notesSearchResult]);
 
   const handleDoNow = () => {
-    if (!randomTask) return;
-    updateTask({
-      taskId: randomTask.id,
-      dto: {
-        title: randomTask.title,
-        description: randomTask.description,
-        startTime: convertToDateTimeOffset(new Date()),
-        endTime: convertToDateTimeOffset(endOfDay(new Date())),
-        labelId: randomTask.label?.labelId,
-        timeType: 1,
+    addNoteToTask({
+      note: randomNote,
+      onSuccess: () => {
+        router.push("/(protected)");
+        setModalVisible(false);
       },
     });
-    router.push("/(protected)");
-    setModalVisible(false);
   };
 
-  const handleStarDropped = (starLabelName: string) => {
-    setStarLabelName(starLabelName);
-    const randomTask = pickRandomTask(floatingTasks ?? [], starLabelName);
-    setRandomTask(randomTask);
+  const handleStarDropped = (starIndex: number) => {
+    const droppedNote = limitedNotes[starIndex] ?? pickRandomNote();
+    setRandomTask(droppedNote);
+    setDroppedStarIcon(getStarIconAsBefore(droppedNote?.id ?? starIndex));
     setDropStarTrigger((prev) => prev + 1);
   };
 
   const { entities, handleRelease, resetStarsPhysics } = useGashaponMachineConfig({
     onStarDropped: handleStarDropped,
-    floatingTasks: limitedFloatingTasks,
+    notes: limitedNotes,
   });
 
   const handleCancel = () => {
@@ -78,7 +70,7 @@ export default function GashaponMachine() {
 
   const gameEngineReady = !!entities.physics;
   const isAllLoaded =
-    basePicLoaded && eyesPicLoaded && buttonPicLoaded && gameEngineReady && !isLoading;
+    basePicLoaded && eyesPicLoaded && buttonPicLoaded && gameEngineReady && !showLoading;
 
   return (
     <LinearGradient
@@ -88,9 +80,9 @@ export default function GashaponMachine() {
       style={{ flex: 1 }}
     >
       <SafeAreaView className="flex-1 items-center justify-center">
-        <TaskRevealModal
+        <NoteRevealModal
           visible={isModalVisible}
-          task={randomTask}
+          task={randomNote}
           onDoNow={handleDoNow}
           onCancel={handleCancel}
         />
@@ -149,8 +141,8 @@ export default function GashaponMachine() {
         </View>
 
         <DroppedStar
-          starLabelName={starLabelName}
           trigger={dropStarTrigger}
+          imageSource={droppedStarIcon}
           setTaskRevealModalVisible={() => {
             setModalVisible(true);
           }}

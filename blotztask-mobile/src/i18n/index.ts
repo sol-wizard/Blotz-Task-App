@@ -11,8 +11,8 @@ import enSettings from "./locales/en/settings.json";
 import zhSettings from "./locales/zh/settings.json";
 import enTasks from "./locales/en/tasks.json";
 import zhTasks from "./locales/zh/tasks.json";
-import enStarSpark from "./locales/en/star-spark.json";
-import zhStarSpark from "./locales/zh/star-spark.json";
+import enNotes from "./locales/en/notes.json";
+import zhNotes from "./locales/zh/notes.json";
 import enAiTaskGenerate from "./locales/en/ai-task-generate.json";
 import zhAiTaskGenerate from "./locales/zh/ai-task-generate.json";
 import enOnboarding from "./locales/en/onboarding.json";
@@ -40,7 +40,7 @@ i18n.use(initReactI18next).init({
       calendar: enCalendar,
       settings: enSettings,
       tasks: enTasks,
-      starSpark: enStarSpark,
+      notes: enNotes,
       aiTaskGenerate: enAiTaskGenerate,
       onboarding: enOnboarding,
     },
@@ -49,7 +49,7 @@ i18n.use(initReactI18next).init({
       calendar: zhCalendar,
       settings: zhSettings,
       tasks: zhTasks,
-      starSpark: zhStarSpark,
+      notes: zhNotes,
       aiTaskGenerate: zhAiTaskGenerate,
       onboarding: zhOnboarding,
     },
