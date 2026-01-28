@@ -1,6 +1,7 @@
 import { ASSETS } from "@/shared/constants/assets";
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, View, Text, Image } from "react-native";
+import { Animated, Easing, View, Text } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
@@ -53,7 +54,7 @@ export default function LoadingScreen() {
         <Image
           source={ASSETS.loadingShadow}
           className="w-[120px] h-[24px] -mt-[10px] opacity-80"
-          resizeMode="contain"
+          contentFit="cover"
         />
       </View>
       <Text className="font-balooBold text-2xl mt-4">{t("loading.general")}</Text>

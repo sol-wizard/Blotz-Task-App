@@ -1,6 +1,7 @@
 import { ASSETS } from "@/shared/constants/assets";
 import React from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 
@@ -9,10 +10,7 @@ type OnboardingGashaponSectionProps = {
   onBack: () => void;
 };
 
-export function OnboardingGashaponSection({
-  onSkip,
-  onBack,
-}: OnboardingGashaponSectionProps) {
+export function OnboardingGashaponSection({ onSkip, onBack }: OnboardingGashaponSectionProps) {
   const { t } = useTranslation("onboarding");
 
   return (
@@ -27,11 +25,7 @@ export function OnboardingGashaponSection({
       </View>
 
       <View className="flex-1 items-center justify-center">
-        <Image
-          source={ASSETS.gashaponMachineBase}
-          className="w-44 h-44 mb-6"
-          resizeMode="contain"
-        />
+        <Image source={ASSETS.gashaponMachineBase} className="w-44 h-44 mb-6" contentFit="cover" />
         <Text className="text-3xl font-balooBold text-black text-center">
           {t("gashapon.title")}
         </Text>

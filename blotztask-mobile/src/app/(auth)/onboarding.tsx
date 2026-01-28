@@ -1,7 +1,8 @@
 import React from "react";
-import { View, StatusBar, Image } from "react-native";
+import { View, StatusBar } from "react-native";
 import GetStartedButton from "@/feature/auth/components/get-started-button";
 import { ASSETS } from "@/shared/constants/assets";
+import { Image } from "expo-image";
 
 export default function OnboardingScreen() {
   return (
@@ -17,11 +18,7 @@ export default function OnboardingScreen() {
         }}
       >
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <Image
-            source={ASSETS.blotzLogo}
-            style={{ width: 240, height: 240 }}
-            resizeMode="contain"
-          />
+          <Image source={ASSETS.blotzLogo} style={{ width: 240, height: 240 }} contentFit="cover" />
         </View>
 
         <View

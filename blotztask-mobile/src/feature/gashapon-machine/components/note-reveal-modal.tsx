@@ -1,6 +1,7 @@
 import { getStarIconAsBefore } from "@/feature/notes/utils/get-star-icon";
 import React from "react";
-import { Modal, View, Text, Pressable, Image } from "react-native";
+import { Modal, View, Text, Pressable } from "react-native";
+import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 
@@ -28,7 +29,7 @@ export const NoteRevealModal = ({ visible, task, onCancel, onDoNow }: NoteReveal
           }}
         >
           <View className="items-center mb-4">
-            <Image source={imageSource} className="w-16 h-16 mb-3" resizeMode="contain" />
+            <Image source={imageSource} className="w-16 h-16 mb-3" contentFit="cover" />
 
             <Text className="text-gray-500 text-sm font-balooThin">
               {t("gashapon.revealTitle")}
