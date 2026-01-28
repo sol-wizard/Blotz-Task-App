@@ -1,15 +1,13 @@
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { addMinutes, format } from "date-fns";
+import { format } from "date-fns";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NoteTimeEstimateModal } from "./note-time-estimate-modal";
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
-import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
-import { TaskTimeType } from "@/shared/models/task-detail-dto";
 import { convertDurationToMinutes, convertDurationToText } from "@/shared/util/convert-duration";
 import { NoteDTO } from "../models/note-dto";
+import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
 
 export const NoteCard = ({
   note,
@@ -29,7 +27,7 @@ export const NoteCard = ({
   const [isModalVisible, setIsModalVisible] = useState(false);
   const { t } = useTranslation("notes");
 
-  const { addTask } = useTaskMutations();
+  const addNoteToTask = useAddNoteToTask();
   const { estimateTime, isEstimating, timeResult, estimateError } = useEstimateTaskTime();
 
   const pickTime = () => {
@@ -41,28 +39,15 @@ export const NoteCard = ({
     estimateTime(note);
   };
 
-  const handleStartNow = async () => {
+  const handleStartNow = () => {
     const durationMinutes = convertDurationToMinutes(timeResult ?? "");
     if (durationMinutes === undefined) return;
 
-    const startTime = new Date();
-    const endTime = addMinutes(startTime, durationMinutes);
-
-    const text = note.text ?? "";
-
-    const title = text.length > 50 ? text.slice(0, 50) : text;
-
-    const description = text.length > 50 ? text : "";
-
-    await addTask({
-      title,
-      description,
-      startTime: convertToDateTimeOffset(startTime),
-      endTime: convertToDateTimeOffset(endTime),
-      timeType: TaskTimeType.Range,
+    addNoteToTask({
+      note,
+      durationMinutes,
+      onSuccess: () => setIsModalVisible(false),
     });
-
-    setIsModalVisible(false);
   };
   return (
     <View className="mb-4">

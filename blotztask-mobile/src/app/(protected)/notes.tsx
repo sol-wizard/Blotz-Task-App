@@ -32,10 +32,7 @@ export default function NotesScreen() {
   });
 
   const handlePressTask = (task: any) => {
-    router.push({
-      pathname: "/task-edit",
-      params: { taskId: String(task.id) },
-    });
+    console.log("Test Pressing task", task);
   };
 
   const handleDelete = (note: NoteDTO) => {

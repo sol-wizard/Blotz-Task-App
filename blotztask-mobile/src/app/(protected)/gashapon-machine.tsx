@@ -12,12 +12,10 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
-import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
-import { endOfDay } from "date-fns";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
+import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
 import { getStarIconAsBefore } from "@/feature/notes/utils/get-star-icon";
 
 export default function GashaponMachineScreen() {
@@ -28,7 +26,7 @@ export default function GashaponMachineScreen() {
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
   const [randomNote, setRandomTask] = useState<NoteDTO | null>(null);
   const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
-  const { addTask } = useTaskMutations();
+  const addNoteToTask = useAddNoteToTask();
   const posthog = usePostHog();
 
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
@@ -44,21 +42,13 @@ export default function GashaponMachineScreen() {
   const limitedNotes = useMemo(() => notesSearchResult.slice(0, MAX_STARS), [notesSearchResult]);
 
   const handleDoNow = () => {
-    if (!randomNote) return;
-    const text = randomNote.text ?? "";
-
-    const title = text.length > 50 ? text.slice(0, 50) : text;
-    const description = text.length > 50 ? text : "";
-
-    addTask({
-      title: title,
-      description: description,
-      startTime: convertToDateTimeOffset(new Date()),
-      endTime: convertToDateTimeOffset(endOfDay(new Date())),
-      timeType: 1,
+    addNoteToTask({
+      note: randomNote,
+      onSuccess: () => {
+        router.push("/(protected)");
+        setModalVisible(false);
+      },
     });
-    router.push("/(protected)");
-    setModalVisible(false);
   };
 
   const handleStarDropped = (starIndex: number) => {
