@@ -5,12 +5,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { ASSETS } from "@/shared/constants/assets";
 
-type OnboardingGashaponSectionProps = {
+type OnboardingNoteSectionProps = {
   onSkip: () => void;
   onBack: () => void;
 };
 
-export function OnboardingGashaponSection({ onSkip, onBack }: OnboardingGashaponSectionProps) {
+export function OnboardingNoteSection({ onSkip, onBack }: OnboardingNoteSectionProps) {
   const { t } = useTranslation("onboarding");
 
   return (
