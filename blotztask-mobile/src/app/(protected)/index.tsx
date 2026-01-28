@@ -5,7 +5,7 @@ import { Pressable, View, Image } from "react-native";
 import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
-import StarSparkScreen from "./star-spark";
+import NotesScreen from "./notes";
 import { router } from "expo-router";
 import { theme } from "@/shared/constants/theme";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
@@ -34,7 +34,7 @@ const routes = [
 
 const CalendarRoute = () => <CalendarScreen />;
 const SettingsRoute = () => <SettingsScreen />;
-const StarSparkRoute = () => <StarSparkScreen />;
+const StarSparkRoute = () => <NotesScreen />;
 
 function getTabIcon(routeKey: string, focused: boolean) {
   const DashedStar = ASSETS.dashedStar;

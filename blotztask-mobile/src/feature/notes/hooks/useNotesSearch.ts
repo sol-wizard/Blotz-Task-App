@@ -1,0 +1,29 @@
+import { useDebounce } from "use-debounce";
+import { taskKeys } from "@/shared/constants/query-key-factory";
+import { useQuery } from "@tanstack/react-query";
+import { searchNotes } from "../services/search-notes-service";
+
+export const useNotesSearch = ({
+  searchQuery,
+  debouncedMs = 300,
+}: {
+  searchQuery: string;
+  debouncedMs?: number;
+}) => {
+  const trimmedKeyword = searchQuery.trim();
+  const hasKeyword = trimmedKeyword.length > 0;
+  const [debouncedQuery] = useDebounce(hasKeyword ? trimmedKeyword : "", debouncedMs);
+
+  const { data: allNotes, isLoading } = useQuery({
+    queryKey: taskKeys.floating(),
+    queryFn: () => searchNotes(debouncedQuery),
+  });
+
+  const notesSearchResult = allNotes ?? [];
+  const showLoading = isLoading;
+
+  return {
+    notesSearchResult,
+    showLoading,
+  };
+};

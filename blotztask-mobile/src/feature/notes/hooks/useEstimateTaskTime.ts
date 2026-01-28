@@ -1,9 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { FloatingTaskDTO } from "../models/floating-task-dto";
-import { estimateTaskTime } from "../services/task-time-estimate-service";
+import { estimateNoteTime } from "../services/note-time-estimate-service";
 import { useState } from "react";
 import { estimateKeys } from "@/shared/constants/query-key-factory";
-import { TaskTimeEstimation } from "../models/task-time-estimation";
+import { NoteTimeEstimation } from "../models/note-time-estimation";
+import { NoteDTO } from "../models/note-dto";
 
 export const useEstimateTaskTime = () => {
   const queryClient = useQueryClient();
@@ -12,14 +12,14 @@ export const useEstimateTaskTime = () => {
   const [timeResult, setTimeResult] = useState<string | undefined>(undefined);
   const [estimateError, setEstimateError] = useState<unknown>(null);
 
-  const estimateTime = async (task: FloatingTaskDTO) => {
+  const estimateTime = async (note: NoteDTO) => {
     setIsEstimating(true);
     setEstimateError(null);
 
     try {
-      const data = await queryClient.fetchQuery<TaskTimeEstimation>({
-        queryKey: estimateKeys.taskTime(task),
-        queryFn: () => estimateTaskTime(task),
+      const data = await queryClient.fetchQuery<NoteTimeEstimation>({
+        queryKey: estimateKeys.noteTime(note),
+        queryFn: () => estimateNoteTime(note),
         meta: { silent: true },
       });
 

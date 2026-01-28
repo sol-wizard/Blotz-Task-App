@@ -10,10 +10,10 @@ namespace BlotzTask.Modules.TimeEstimate.Controllers;
 public class TimeEstimateController(TimeEstimateCommandHandler timeEstimateCommandHandler) : ControllerBase
 {
     [HttpPost]
-    public async Task<TaskTimeEstimation> EstimateTaskTime([FromBody] FloatingTaskForEstimation floatingtask,
+    public async Task<NoteTimeEstimation> EstimateNoteTime([FromBody] NoteForEstimation note,
         CancellationToken ct)
     {
-        var newTaskId = await timeEstimateCommandHandler.Handle(floatingtask, ct);
-        return newTaskId;
+        var newNoteId = await timeEstimateCommandHandler.Handle(note, ct);
+        return newNoteId;
     }
 }
