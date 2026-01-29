@@ -1,11 +1,6 @@
 import { Redirect } from "expo-router";
 import * as Notifications from "expo-notifications";
 import { useAuth } from "@/shared/hooks/useAuth";
-import { useUserProfile } from "@/shared/hooks/useUserProfile";
-import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
-import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
-import { useEffect } from "react";
-import { systemPreferredLanguage } from "@/feature/auth/utils/system-preferred-language";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 // Configure notification handling
