@@ -8,10 +8,12 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 
 export default function OnboardingScreen() {
   const { setUserOnboarded } = useUserProfileMutation();
   const { t } = useTranslation("onboarding");
+  useLanguageInit();
 
   const sections = ["intro", "ai", "breakdown", "gashapon"];
   const [activeOnboardingIndex, setActiveOnboardingIndex] = useState(0);
