@@ -57,7 +57,7 @@ export const useAuth = () => {
   /**
    * Call this after logout to clear auth state immediately
    */
-  const clearAuthState = async () => {
+  const clearAuthState = () => {
     queryClient.setQueryData(AUTH_QUERY_KEY, false);
   };
 
