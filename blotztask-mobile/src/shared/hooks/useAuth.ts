@@ -4,14 +4,14 @@ import { AUTH_TOKEN_KEY } from "@/shared/constants/token-key";
 
 /**
  * Authentication state hook that provides a single source of truth for auth status.
- * 
+ *
  * Uses React Query to cache the auth state and provide consistent loading states.
  * Other hooks can depend on this to conditionally enable their queries.
- * 
+ *
  * @example
  * // Basic usage
  * const { isAuthenticated, isLoading } = useAuth();
- * 
+ *
  * // In dependent hooks
  * const { isAuthenticated } = useAuth();
  * useQuery({

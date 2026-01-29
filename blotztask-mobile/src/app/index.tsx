@@ -1,8 +1,7 @@
 import { Redirect } from "expo-router";
-import { View, ActivityIndicator } from "react-native";
 import * as Notifications from "expo-notifications";
 import { useAuth } from "@/shared/hooks/useAuth";
-import { useUserProfile } from "@/shared/hooks/useUserProfile";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 // Configure notification handling
 Notifications.setNotificationHandler({
@@ -26,7 +25,7 @@ Notifications.setNotificationCategoryAsync("task-reminder", [
 
 /**
  * Root index route - handles initial navigation based on auth state.
- * 
+ *
  * Flow:
  * 1. Check authentication status (via useAuth)
  * 2. If authenticated, fetch user profile (via useUserProfile - auto-waits for auth)
@@ -34,31 +33,14 @@ Notifications.setNotificationCategoryAsync("task-reminder", [
  */
 export default function Index() {
   const { isAuthenticated, isAuthLoading } = useAuth();
-  const { userProfile, isUserProfileLoading } = useUserProfile();
 
-  // Determine overall loading state
-  const isLoading = isAuthLoading || (isAuthenticated && isUserProfileLoading);
-
-  if (isLoading) {
+  if (isAuthLoading) {
     return <LoadingScreen />;
   }
 
-  // Authenticated users go to protected routes
-  if (isAuthenticated && userProfile) {
-    const destination = userProfile.isOnBoarded 
-      ? "/(protected)" 
-      : "/(protected)/onboarding";
-    return <Redirect href={destination} />;
+  if (isAuthenticated) {
+    return <Redirect href="/(protected)" />;
   }
 
-  // Unauthenticated users go to auth flow
-  return <Redirect href="/(auth)/onboarding" />;
-}
-
-function LoadingScreen() {
-  return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <ActivityIndicator size="large" color="#667eea" />
-    </View>
-  );
+  return <Redirect href="/(auth)/signin" />;
 }

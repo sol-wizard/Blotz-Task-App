@@ -13,9 +13,7 @@
   },
   "timeEstimate": {
     "estimating": "Estimating time...",
-    "estimatedMessage": "We've estimated this task will take around",
-    "youCanDoItNow": "You can do it now!",
-    "pickATime": "Pick a time",
+    "estimatedMessage": "This task will take around ",
     "startNow": "Start now",
     "oops": "Oops!",
     "errorMessage": "Could not estimate time, please try again later.",

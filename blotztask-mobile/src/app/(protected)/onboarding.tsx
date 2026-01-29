@@ -1,25 +1,26 @@
-import { useUserOnboardingStatus } from "@/feature/onboarding/hooks/useUserOnboardingStatus";
+import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 import { OnboardingAiSection } from "@/feature/onboarding/components/onboarding-ai-section";
 import { OnboardingBreakdownSection } from "@/feature/onboarding/components/onboarding-breakdown-section";
 import { OnboardingNoteSection } from "@/feature/onboarding/components/onboarding-note-section";
 import { OnboardingIntroSection } from "@/feature/onboarding/components/onboarding-intro-section";
-import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
+import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 
 export default function OnboardingScreen() {
-  const { setUserOnboarded } = useUserOnboardingStatus();
+  const { setUserOnboarded } = useUserProfileMutation();
   const { t } = useTranslation("onboarding");
   useLanguageInit();
+
   const sections = ["intro", "ai", "breakdown", "gashapon"];
   const [activeOnboardingIndex, setActiveOnboardingIndex] = useState(0);
 
-  const handleFinish = () => {
-    setUserOnboarded.mutate(true);
-    router.replace("/(protected)");
+  const handleFinish = async () => {
+    await setUserOnboarded(true);
+    router.replace("/(protected)/(tabs)");
   };
 
   const handleNext = () => {

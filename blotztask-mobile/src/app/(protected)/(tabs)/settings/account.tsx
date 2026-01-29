@@ -30,7 +30,6 @@ export default function AccountScreen() {
   const handleSignOut = async () => {
     await logout();
     posthog.reset();
-    router.replace("/(auth)/onboarding");
   };
   if (isUserProfileLoading) {
     return <LoadingScreen />;
@@ -49,7 +48,7 @@ export default function AccountScreen() {
         <View className="w-11/12">
           <Pressable
             className="px-4 ml-3"
-            onPress={() => router.push("/(protected)/settings/update-user-name")}
+            onPress={() => router.push("/(protected)/(tabs)/settings/update-user-name")}
           >
             <View className="flex-row items-center justify-between pt-4 pb">
               <Text className="text-lg font-baloo text-secondary ">{t("account.name")}</Text>
@@ -83,7 +82,9 @@ export default function AccountScreen() {
         onPress={handleSignOut}
         className="bg-white rounded-xl w-96 py-4 items-center justify-center pr-4 shadow mt-12"
       >
-        <Text className="text-red-500 font-baloo text-xl ml-4">{t("common:buttons.signOut", "Sign Out")}</Text>
+        <Text className="text-red-500 font-baloo text-xl ml-4">
+          {t("common:buttons.signOut", "Sign Out")}
+        </Text>
       </Pressable>
     </SafeAreaView>
   );
