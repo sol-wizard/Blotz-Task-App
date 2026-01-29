@@ -1,7 +1,7 @@
 import { useUserOnboardingStatus } from "@/feature/onboarding/hooks/useUserOnboardingStatus";
 import { OnboardingAiSection } from "@/feature/onboarding/components/onboarding-ai-section";
 import { OnboardingBreakdownSection } from "@/feature/onboarding/components/onboarding-breakdown-section";
-import { OnboardingGashaponSection } from "@/feature/onboarding/components/onboarding-gashapon-section";
+import { OnboardingNoteSection } from "@/feature/onboarding/components/onboarding-note-section";
 import { OnboardingIntroSection } from "@/feature/onboarding/components/onboarding-intro-section";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { router } from "expo-router";
@@ -45,7 +45,7 @@ export default function OnboardingScreen() {
         <OnboardingBreakdownSection onSkip={handleFinish} onBack={handleBack} />
       )}
       {activeSection === "gashapon" && (
-        <OnboardingGashaponSection onSkip={handleFinish} onBack={handleBack} />
+        <OnboardingNoteSection onSkip={handleFinish} onBack={handleBack} />
       )}
       <View className="items-center pb-6 px-6">
         <View className="flex-row items-center mb-4">

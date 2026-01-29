@@ -37,6 +37,9 @@ export const PNGIMAGES = {
   machineEyes: require("../../../assets/images-png/machine-eyes.png"),
   successBun: require("../../../assets/images-png/success-bun.png"),
   transparentStar: require("../../../assets/images-png/transparent-star.png"),
+  onboardingCalendar: require("../../../assets/images-png/onboarding-calendar.png"),
+  onboardingBreakdown: require("../../../assets/images-png/onboarding-breakdown.png"),
+  onboardingNote: require("../../../assets/images-png/onboarding-note.png"),
 } as const;
 
 export const SVGIMAGES = {

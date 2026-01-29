@@ -1,9 +1,9 @@
-import { ASSETS } from "@/shared/constants/assets";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import { ASSETS } from "@/shared/constants/assets";
 
 type OnboardingBreakdownSectionProps = {
   onSkip: () => void;
@@ -25,7 +25,12 @@ export function OnboardingBreakdownSection({ onSkip, onBack }: OnboardingBreakdo
       </View>
 
       <View className="flex-1 items-center justify-center">
-        <Image source={ASSETS.yellowStar} className="w-32 h-32 mb-6" contentFit="cover" />
+        <Image
+          source={ASSETS.onboardingBreakdown}
+          style={{ width: 384, height: 384, marginBottom: 24 }}
+          contentFit="contain"
+        />
+
         <Text className="text-3xl font-balooBold text-black text-center">
           {t("breakdown.title")}
         </Text>
