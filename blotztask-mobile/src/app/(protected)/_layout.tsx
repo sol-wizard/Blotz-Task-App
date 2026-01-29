@@ -1,14 +1,21 @@
 import { systemPreferredLanguage } from "@/feature/auth/utils/system-preferred-language";
+import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { theme } from "@/shared/constants/theme";
+import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { Stack } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 import { useEffect } from "react";
 
 export default function ProtectedLayout() {
+  const posthog = usePostHog();
   const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
   const { updateUserPreferences } = useUserPreferencesMutation();
+
+  useLanguageInit();
+  useTrackActiveUser5s(posthog);
 
   useEffect(() => {
     if (userPreferences && userPreferences.preferredLanguage !== systemPreferredLanguage) {
@@ -25,8 +32,7 @@ export default function ProtectedLayout() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="settings" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
 
       <Stack.Screen

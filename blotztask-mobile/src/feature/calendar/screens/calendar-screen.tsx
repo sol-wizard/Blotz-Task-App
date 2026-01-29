@@ -39,7 +39,7 @@ export default function CalendarScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
       <CalendarHeader
         date={format(selectedDay, "yyyy-MM-dd")}
         progress={progress}
