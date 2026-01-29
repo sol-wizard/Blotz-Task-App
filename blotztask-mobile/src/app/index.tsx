@@ -1,5 +1,4 @@
 import { Redirect } from "expo-router";
-import { View, ActivityIndicator } from "react-native";
 import * as Notifications from "expo-notifications";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
@@ -7,6 +6,7 @@ import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPrefere
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
 import { useEffect } from "react";
 import { systemPreferredLanguage } from "@/feature/auth/utils/system-preferred-language";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 // Configure notification handling
 Notifications.setNotificationHandler({
@@ -73,12 +73,4 @@ export default function Index() {
 
   // Unauthenticated users go to auth flow
   return <Redirect href="/(auth)/signin" />;
-}
-
-function LoadingScreen() {
-  return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <ActivityIndicator size="large" color="#667eea" />
-    </View>
-  );
 }
