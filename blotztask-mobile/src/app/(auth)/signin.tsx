@@ -18,7 +18,11 @@ export default function SigninScreen() {
         }}
       >
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <Image source={ASSETS.blotzLogo} style={{ width: 240, height: 240 }} contentFit="cover" />
+          <Image
+            source={ASSETS.blotzLogo}
+            style={{ width: 240, height: 240 }}
+            contentFit="contain"
+          />
         </View>
 
         <View

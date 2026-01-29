@@ -39,38 +39,13 @@ Notifications.setNotificationCategoryAsync("task-reminder", [
 export default function Index() {
   const { isAuthenticated, isAuthLoading } = useAuth();
 
-  const { userProfile, isUserProfileLoading } = useUserProfile();
-  const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
-
-  const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    if (!userProfile || !userPreferences) return;
-    if (userPreferences.preferredLanguage === systemPreferredLanguage) return;
-
-    updateUserPreferences({
-      ...userPreferences,
-      preferredLanguage: systemPreferredLanguage,
-    });
-  }, [isAuthenticated, userPreferences, userProfile]);
-
-  // Determine overall loading state
-  const isLoading =
-    isAuthLoading ||
-    (isAuthenticated &&
-      (isUserProfileLoading || isUserPreferencesLoading || isUpdatingUserPreferences));
-
-  if (isLoading) {
+  if (isAuthLoading) {
     return <LoadingScreen />;
   }
 
-  // Authenticated users go to protected routes
-  if (isAuthenticated && userProfile && userPreferences) {
-    const destination = userProfile.isOnBoarded ? "/(protected)" : "/(protected)/onboarding";
-    return <Redirect href={destination} />;
+  if (isAuthenticated) {
+    return <Redirect href="/(protected)" />;
   }
 
-  // Unauthenticated users go to auth flow
   return <Redirect href="/(auth)/signin" />;
 }

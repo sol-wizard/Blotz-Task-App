@@ -1,12 +1,28 @@
+import { systemPreferredLanguage } from "@/feature/auth/utils/system-preferred-language";
+import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
+import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { theme } from "@/shared/constants/theme";
-import { useAuth } from "@/shared/hooks/useAuth";
-import { Redirect, Stack } from "expo-router";
+import { Stack } from "expo-router";
+import { useEffect } from "react";
 
 export default function ProtectedLayout() {
-  const { isAuthenticated, isAuthLoading } = useAuth();
+  const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
+  const { updateUserPreferences } = useUserPreferencesMutation();
 
-  if (isAuthLoading) return null;
-  if (!isAuthenticated) return <Redirect href="/(auth)/signin" />;
+  useEffect(() => {
+    if (userPreferences && userPreferences.preferredLanguage !== systemPreferredLanguage) {
+      updateUserPreferences({
+        ...userPreferences!,
+        preferredLanguage: systemPreferredLanguage,
+      });
+    }
+  }, [userPreferences?.preferredLanguage]);
+
+  if (isUserPreferencesLoading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />

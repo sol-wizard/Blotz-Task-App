@@ -7,12 +7,15 @@ import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
 import NotesScreen from "./notes";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { theme } from "@/shared/constants/theme";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import SettingsScreen from "./settings";
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { usePostHog } from "posthog-react-native";
+import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
+import { useUserProfile } from "@/shared/hooks/useUserProfile";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 const routes = [
   {
@@ -89,6 +92,8 @@ export default function ProtectedIndex() {
   const [index, setIndex] = useState(0);
   const insets = useSafeAreaInsets();
   const posthog = usePostHog();
+  const { userProfile, isUserProfileLoading } = useUserProfile();
+  useLanguageInit();
 
   const renderScene = BottomNavigation.SceneMap({
     calendar: CalendarRoute,
@@ -109,6 +114,17 @@ export default function ProtectedIndex() {
   };
 
   useTrackActiveUser5s(posthog);
+
+  if (isUserProfileLoading) {
+    return <LoadingScreen />;
+  }
+
+  // // Redirect to onboarding if not completed
+  if (userProfile && !userProfile.isOnBoarded) {
+    console.log("🥳 Redirecting to onboarding...");
+    console.log("User Profile:", userProfile);
+    return <Redirect href="/(protected)/onboarding" />;
+  }
 
   return (
     <SafeAreaView edges={["bottom"]} className="flex-1 bg-background">
@@ -136,7 +152,7 @@ export default function ProtectedIndex() {
           <GradientCircle size={58}>
             <Image
               source={ASSETS.whiteBun}
-              contentFit="cover"
+              contentFit="contain"
               style={[{ width: 28, height: 28, position: "absolute" }]}
             />
           </GradientCircle>

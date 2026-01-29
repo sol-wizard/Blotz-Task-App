@@ -11,22 +11,9 @@ interface UseUserProfileOptions {
   enabled?: boolean;
 }
 
-/**
- * Fetches the current user's profile.
- * 
- * By default, this hook automatically waits for authentication before fetching.
- * This prevents unnecessary API calls when the user isn't logged in.
- * 
- * @example
- * // Auto-waits for auth (recommended)
- * const { userProfile, isLoading } = useUserProfile();
- * 
- * // Manual control (if needed)
- * const { userProfile } = useUserProfile({ enabled: someCondition });
- */
 export const useUserProfile = (options: UseUserProfileOptions = {}) => {
   const { isAuthenticated, isAuthLoading } = useAuth();
-  
+
   // Default: only fetch when authenticated and auth check is complete
   // Can be overridden with explicit `enabled` option
   const shouldFetch = options.enabled ?? (!isAuthLoading && isAuthenticated);
@@ -41,8 +28,11 @@ export const useUserProfile = (options: UseUserProfileOptions = {}) => {
     enabled: shouldFetch,
   });
 
+  const isUserOnboarded = Boolean(userProfile?.isOnBoarded ?? false);
+
   return {
     userProfile,
+    isUserOnboarded,
     isUserProfileLoading,
     isUserProfileFetching,
   };
