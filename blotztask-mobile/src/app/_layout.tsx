@@ -25,6 +25,17 @@ import * as Sentry from "@sentry/react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/ui/toast-config";
+import { useAuth } from "@/shared/hooks/useAuth";
+
+Sentry.init({
+  dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
+  sendDefaultPii: true,
+  enableNative: true,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  enableAutoSessionTracking: true,
+  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+});
 
 export default function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
@@ -38,15 +49,6 @@ export default function RootLayout() {
     BalooExtraBold: Baloo2_800ExtraBold,
     InterThin: Inter_300Light,
     InterBold: Inter_700Bold,
-  });
-  Sentry.init({
-    dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
-    sendDefaultPii: true,
-    enableNative: true,
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1,
-    enableAutoSessionTracking: true,
-    integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
   });
 
   return (
@@ -65,11 +67,7 @@ export default function RootLayout() {
               <Portal.Host>
                 <SafeAreaProvider>
                   <KeyboardProvider>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="index" options={{ headerShown: false }} />
-                      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                      <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-                    </Stack>
+                    <RootStack />
                     <Toast config={toastConfig} position="bottom" bottomOffset={110} />
                   </KeyboardProvider>
                 </SafeAreaProvider>
@@ -79,5 +77,23 @@ export default function RootLayout() {
         </GestureHandlerRootView>
       </PostHogProvider>
     </Auth0Provider>
+  );
+}
+
+function RootStack() {
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+
+      <Stack.Protected guard={!isAuthenticated}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      </Stack.Protected>
+
+      <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+      </Stack.Protected>
+    </Stack>
   );
 }

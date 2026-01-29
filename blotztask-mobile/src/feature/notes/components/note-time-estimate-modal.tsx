@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 interface Props {
   visible: boolean;
   setIsModalVisible: (v: boolean) => void;
-  pickTime: () => void;
   handleStartNow: () => void;
   durationText?: string;
   error?: string | null;
@@ -15,17 +14,12 @@ interface Props {
 export const NoteTimeEstimateModal = ({
   visible,
   setIsModalVisible,
-  pickTime,
   durationText,
   handleStartNow,
   error,
   isEstimating,
 }: Props) => {
   const { t } = useTranslation("notes");
-  const handlePickTime = () => {
-    setIsModalVisible(false);
-    pickTime();
-  };
 
   return (
     <Modal
@@ -53,19 +47,12 @@ export const NoteTimeEstimateModal = ({
               <Text className="text-xl leading-6 text-onSurface font-baloo pt-2">
                 {t("timeEstimate.estimatedMessage")}
                 <Text className="text-highlight">{durationText}</Text>.
-                {t("timeEstimate.youCanDoItNow")}
               </Text>
 
-              <View className="mt-8 flex-row items-center justify-end">
-                <Pressable onPress={handlePickTime}>
-                  <Text className="text-sm text-primary font-baloo">
-                    {t("timeEstimate.pickATime")}
-                  </Text>
-                </Pressable>
-
+              <View className="mt-8 flex-row items-center justify-center">
                 <Pressable
                   onPress={handleStartNow}
-                  className="h-9 px-6 rounded-xl bg-highlight items-center justify-center ml-6"
+                  className="h-9 px-6 rounded-xl bg-highlight items-center justify-center"
                 >
                   <Text className="text-sm text-onSurface font-baloo">
                     {t("timeEstimate.startNow")}

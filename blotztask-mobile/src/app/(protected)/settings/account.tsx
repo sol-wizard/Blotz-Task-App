@@ -30,7 +30,6 @@ export default function AccountScreen() {
   const handleSignOut = async () => {
     await logout();
     posthog.reset();
-    router.replace("/(auth)/onboarding");
   };
   if (isUserProfileLoading) {
     return <LoadingScreen />;
@@ -83,7 +82,9 @@ export default function AccountScreen() {
         onPress={handleSignOut}
         className="bg-white rounded-xl w-96 py-4 items-center justify-center pr-4 shadow mt-12"
       >
-        <Text className="text-red-500 font-baloo text-xl ml-4">{t("common:buttons.signOut", "Sign Out")}</Text>
+        <Text className="text-red-500 font-baloo text-xl ml-4">
+          {t("common:buttons.signOut", "Sign Out")}
+        </Text>
       </Pressable>
     </SafeAreaView>
   );

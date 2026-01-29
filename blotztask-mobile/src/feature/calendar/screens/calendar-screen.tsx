@@ -7,7 +7,6 @@ import { FilteredTaskList } from "../components/filtered-task-list";
 import { useTaskDays } from "../hooks/useTaskDays";
 import { getMarkedDates, getSelectedDates } from "../util/get-marked-dates";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
-import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
@@ -31,7 +30,6 @@ export default function CalendarScreen() {
   const { weeklyTaskAvailability, isLoading } = useTaskDays({ selectedDay });
   const progress = useSharedValue(isCalendarVisible ? 1 : 0);
   usePushNotificationSetup();
-  useLanguageInit(); // Initialize language from backend
 
   let markedDates;
   if (!isLoading) {

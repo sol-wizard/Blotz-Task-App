@@ -4,7 +4,7 @@ import GetStartedButton from "@/feature/auth/components/get-started-button";
 import { ASSETS } from "@/shared/constants/assets";
 import { Image } from "expo-image";
 
-export default function OnboardingScreen() {
+export default function SigninScreen() {
   return (
     <>
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
@@ -18,7 +18,11 @@ export default function OnboardingScreen() {
         }}
       >
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <Image source={ASSETS.blotzLogo} style={{ width: 240, height: 240 }} contentFit="cover" />
+          <Image
+            source={ASSETS.blotzLogo}
+            style={{ width: 240, height: 240 }}
+            contentFit="contain"
+          />
         </View>
 
         <View
