@@ -20,7 +20,7 @@ export default function OnboardingScreen() {
 
   const handleFinish = async () => {
     await setUserOnboarded(true);
-    router.replace("/(protected)");
+    router.replace("/(protected)/(tabs)");
   };
 
   const handleNext = () => {
