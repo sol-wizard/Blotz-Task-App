@@ -96,6 +96,7 @@ public class SyncUserCommandHandler(
                     TimeType = TaskTimeType.SingleTime,
                     UserId = row.Id,
                     IsDone = false,
+                    LabelId = 7,
                     CreatedAt = utcNow,
                     UpdatedAt = utcNow
                 },
@@ -108,6 +109,7 @@ public class SyncUserCommandHandler(
                     TimeType = TaskTimeType.RangeTime,
                     UserId = row.Id,
                     IsDone = false,
+                    LabelId = 8,
                     CreatedAt = utcNow,
                     UpdatedAt = utcNow
                 },
@@ -120,6 +122,7 @@ public class SyncUserCommandHandler(
                     TimeType = null,
                     UserId = row.Id,
                     IsDone = false,
+                    LabelId = 6,
                     CreatedAt = utcNow,
                     UpdatedAt = utcNow
                 }
