@@ -45,7 +45,7 @@ export default function GashaponMachineScreen() {
     addNoteToTask({
       note: randomNote,
       onSuccess: () => {
-        router.push("/(protected)");
+        router.push("/(protected)/(tabs)");
         setModalVisible(false);
       },
     });

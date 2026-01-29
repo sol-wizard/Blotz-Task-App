@@ -30,10 +30,6 @@ export const NoteCard = ({
   const addNoteToTask = useAddNoteToTask();
   const { estimateTime, isEstimating, timeResult, estimateError } = useEstimateTaskTime();
 
-  const pickTime = () => {
-    console.log("Pick time pressed");
-  };
-
   const handleEstimateTime = (note: NoteDTO) => {
     setIsModalVisible(true);
     estimateTime(note);
@@ -90,7 +86,6 @@ export const NoteCard = ({
       )}
       <NoteTimeEstimateModal
         visible={isModalVisible}
-        pickTime={pickTime}
         handleStartNow={handleStartNow}
         setIsModalVisible={setIsModalVisible}
         durationText={convertDurationToText(timeResult ?? "")}

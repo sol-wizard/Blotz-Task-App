@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
-import { Language, UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
+import { Language } from "@/shared/models/user-preferences-dto";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 export default function LanguageScreen() {
@@ -22,18 +22,11 @@ export default function LanguageScreen() {
     const i18nLang = language === Language.En ? "en" : "zh";
     await i18n.changeLanguage(i18nLang);
 
-    // Update backend
-    const newUserPreferences: UserPreferencesDTO = {
-      autoRollover: userPreferences.autoRollover,
-      upcomingNotification: userPreferences.upcomingNotification,
-      overdueNotification: userPreferences.overdueNotification,
-      dailyPlanningNotification: userPreferences.dailyPlanningNotification,
-      eveningWrapUpNotification: userPreferences.eveningWrapUpNotification,
-      preferredLanguage: language,
-    };
-
     try {
-      await updateUserPreferences(newUserPreferences);
+      await updateUserPreferences({
+        ...userPreferences,
+        preferredLanguage: language,
+      });
       console.log(`Language updated to: ${language}`);
     } catch (error) {
       console.log("Failed to update language:", error);
