@@ -75,7 +75,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   });
 
   const { handleSubmit, formState, control, setValue } = form;
-  const { isValid, isSubmitting } = formState;
+  const { isSubmitting, errors } = formState;
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -157,6 +157,11 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 returnKeyType: "done",
               }}
             />
+            {errors.title && (
+              <Text className="font-balooBold text-red-300 mt-1 text-m">
+                {errors.title.message?.toString() || "Task title is required"}
+              </Text>
+            )}
           </Animated.View>
 
           <Animated.View
@@ -197,9 +202,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         <View className="px-8 py-6">
           <Pressable
             onPress={handleSubmit(handleFormSubmit)}
-            disabled={!isValid || isSubmitting}
+            disabled={isSubmitting}
             className={`w-full py-4 rounded-xl items-center justify-center ${
-              !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
+              isSubmitting ? "bg-gray-300" : "bg-lime-300"
             }`}
           >
             <Text className="font-balooBold text-xl text-black">
@@ -213,3 +218,5 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 };
 
 export default TaskForm;
+
+
