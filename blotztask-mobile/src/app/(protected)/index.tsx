@@ -4,7 +4,7 @@ import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPrefere
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { router } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 export default function ProtectedGate() {
   const { userProfile, isUserProfileLoading } = useUserProfile();
