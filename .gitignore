@@ -7,3 +7,7 @@
 .DS_Store
 .idea/
 package-lock.json
+
+.agents
+.codex
+.cursor

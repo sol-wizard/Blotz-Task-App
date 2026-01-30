@@ -45,7 +45,7 @@ export default function GashaponMachineScreen() {
     addNoteToTask({
       note: randomNote,
       onSuccess: () => {
-        router.push("/(protected)");
+        router.push("/(protected)/(tabs)");
         setModalVisible(false);
       },
     });
@@ -100,7 +100,6 @@ export default function GashaponMachineScreen() {
         >
           <Image
             source={ASSETS.gashaponMachineBase}
-            resizeMode="contain"
             className="absolute z-0"
             style={{
               alignSelf: "center",

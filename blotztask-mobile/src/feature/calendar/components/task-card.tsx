@@ -45,7 +45,7 @@ interface TaskCardProps {
   selectedDay?: Date;
 }
 
-export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) {
+const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) => {
   const { toggleTask, isToggling } = useTaskMutations();
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
     useSubtaskMutations();
@@ -287,4 +287,6 @@ export default function TaskCard({ task, deleteTask, isDeleting, selectedDay }: 
       </GestureDetector>
     </Animated.View>
   );
-}
+};
+
+export default React.memo(TaskCard);
