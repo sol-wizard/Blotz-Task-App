@@ -1,5 +1,4 @@
 import React from "react";
-import { Button } from "react-native-paper";
 import { useAuth0 } from "react-native-auth0";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -8,6 +7,7 @@ import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { systemPreferredLanguage } from "../utils/system-preferred-language";
+import { Pressable, Text } from "react-native";
 
 export default function GetStartedButton() {
   const { authorize, user } = useAuth0();
@@ -53,8 +53,8 @@ export default function GetStartedButton() {
   };
 
   return (
-    <Button onPress={onPress} mode="contained">
-      {t("buttons.getStarted")}
-    </Button>
+    <Pressable onPress={onPress}>
+      <Text>{t("buttons.getStarted")}</Text>
+    </Pressable>
   );
 }
