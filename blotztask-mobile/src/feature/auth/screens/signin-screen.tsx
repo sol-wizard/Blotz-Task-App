@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StatusBar, Text, Platform, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import GetStartedButton from "@/feature/auth/components/get-started-button";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import MaskedView from "@react-native-masked-view/masked-view";
