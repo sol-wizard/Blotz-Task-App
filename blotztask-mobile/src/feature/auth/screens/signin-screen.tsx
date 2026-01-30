@@ -1,13 +1,12 @@
 import React from "react";
-import { View, StatusBar } from "react-native";
+import { View, StatusBar, Text, Platform, StyleSheet } from "react-native";
 import GetStartedButton from "@/feature/auth/components/get-started-button";
-import { ASSETS } from "@/shared/constants/assets";
-import { Image } from "expo-image";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import MaskedView from "@react-native-masked-view/masked-view";
 
 export default function SigninScreen() {
   return (
     <>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <View
         style={{
           flex: 1,
@@ -17,13 +16,39 @@ export default function SigninScreen() {
           paddingHorizontal: 40,
         }}
       >
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <Image
-            source={ASSETS.blotzLogo}
-            style={{ width: 240, height: 240 }}
-            contentFit="contain"
+        <MaskedView
+          style={{ flex: 1, flexDirection: "row", height: "100%" }}
+          maskElement={
+            <View className="flex-1 flex-row justify-center items-center">
+              {"Blotz".split("").map((letter, index) => (
+                <Animated.Text
+                  key={index}
+                  className="font-balooExtraBold text-8xl py-6"
+                  entering={FadeInDown.delay(index * 100)
+                    .springify()
+                    .mass(2)}
+                >
+                  {letter}
+                </Animated.Text>
+              ))}
+            </View>
+          }
+        >
+          <Animated.View
+            style={[
+              styles.linearBackground,
+              {
+                animationName: {
+                  to: {
+                    transform: [{ rotate: "360deg" }],
+                  },
+                },
+                animationDuration: "3s",
+                animationIterationCount: "infinite",
+              },
+            ]}
           />
-        </View>
+        </MaskedView>
 
         <View
           style={{
@@ -37,3 +62,12 @@ export default function SigninScreen() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  linearBackground: {
+    experimental_backgroundImage:
+      "linear-gradient(90deg,rgba(163, 220, 47, 1) 19%, rgba(87, 199, 133, 1) 50%, rgba(47, 128, 237, 1) 100%)",
+    width: "100%",
+    height: "100%",
+  },
+});
