@@ -17,7 +17,6 @@ type SubtaskItemProps = {
   color?: string;
   isEditMode?: boolean;
   onDelete?: (id: number) => void;
-  isWarmup?: boolean;
 };
 
 export default function SubtaskItem({
@@ -26,7 +25,6 @@ export default function SubtaskItem({
   color,
   isEditMode = false,
   onDelete,
-  isWarmup = false,
 }: SubtaskItemProps) {
   const isChecked = subtask?.isDone;
   const handleToggle = () => {
@@ -40,7 +38,13 @@ export default function SubtaskItem({
   const textColor = isChecked ? theme.colors.disabled : theme.colors.onSurface;
 
   return (
-    <View className="relative w-full flex-row items-start justify-between py-2.5 px-3 mb-2">
+    <View
+      className="relative flex-row items-center py-2.5 px-3 mb-2"
+      style={{
+        backgroundColor: theme.colors.background,
+        borderRadius: 10,
+      }}
+    >
       {isEditMode ? (
         <TouchableOpacity
           onPress={handleDelete}
@@ -48,7 +52,7 @@ export default function SubtaskItem({
         >
           <MaterialIcons name="delete-outline" size={20} color={"#3D8DE0"} />
         </TouchableOpacity>
-      ) : isWarmup ? null : (
+      ) : (
         <TaskCheckbox
           checked={isChecked}
           onPress={handleToggle}
@@ -57,26 +61,17 @@ export default function SubtaskItem({
           size={28}
         />
       )}
-      <View className="flex-1 min-w-0 ml-3">
-        {isWarmup ? (
-          <View className="self-start rounded-full bg-orange-100 px-3 py-1 mb-1">
-            <Text className="text-orange-500 font-baloo text-sm">Warmup</Text>
-          </View>
-        ) : null}
-
-        <Text
-          className={`text-[15px] font-baloo ml-3 ${isChecked ? "line-through" : ""}`}
-          style={{ color: textColor }}
-        >
-          {subtask?.title}
-        </Text>
-      </View>
-
-      <View className="text-sm w-[60px] items-end ml-2">
-        <Text className="text-right font-baloo font-bold text-black">
+      <View className="text-sm min-w-[50px] px-2 py-1 rounded bg-blue-100 items-center justify-center">
+        <Text className="text-sm font-baloo font-bold text-black">
           {subtask.duration ? convertDurationToText(subtask.duration) : ""}
         </Text>
       </View>
+      <Text
+        className={`flex-1 text-[15px] font-baloo ml-3 ${isChecked ? "line-through" : ""}`}
+        style={{ color: textColor }}
+      >
+        {subtask?.title}
+      </Text>
     </View>
   );
 }
