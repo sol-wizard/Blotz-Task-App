@@ -8,6 +8,12 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { systemPreferredLanguage } from "../utils/system-preferred-language";
 import { Pressable, Text } from "react-native";
+import {
+  createAnimatedComponent,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 export default function GetStartedButton() {
   const { authorize, user } = useAuth0();
@@ -15,6 +21,13 @@ export default function GetStartedButton() {
   const posthog = usePostHog();
   const { t } = useTranslation("common");
   const { refreshAuthState } = useAuth();
+  const AnimatedPressable = createAnimatedComponent(Pressable);
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   const onPress = async () => {
     try {
       const language = systemPreferredLanguage?.startsWith("zh") ? "zh-CN" : "en";
@@ -52,13 +65,15 @@ export default function GetStartedButton() {
   };
 
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
-      style={({ pressed }) => ({
-        alignItems: "center",
-        transform: [{ scale: pressed ? 0.5 : 1 }],
-        opacity: pressed ? 0.9 : 1,
-      })}
+      onPressIn={() => {
+        scale.value = withTiming(1.08, { duration: 100 });
+      }}
+      onPressOut={() => {
+        scale.value = withTiming(1, { duration: 120 });
+      }}
+      style={animatedStyle}
     >
       <Text
         className="font-balooBold text-lg py-3 px-10 bg-black text-white rounded-full"
@@ -71,6 +86,6 @@ export default function GetStartedButton() {
       >
         {t("buttons.getStarted")}
       </Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
