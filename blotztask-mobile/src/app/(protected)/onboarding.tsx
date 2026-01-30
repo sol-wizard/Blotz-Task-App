@@ -3,90 +3,20 @@ import { OnboardingAiSection } from "@/feature/onboarding/components/onboarding-
 import { OnboardingBreakdownSection } from "@/feature/onboarding/components/onboarding-breakdown-section";
 import { OnboardingNoteSection } from "@/feature/onboarding/components/onboarding-note-section";
 import { OnboardingIntroSection } from "@/feature/onboarding/components/onboarding-intro-section";
+import { DotIndicator } from "@/feature/onboarding/components/dot-indicator";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
+import { Ionicons } from "@expo/vector-icons";
 import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
+  SlideInLeft,
+  SlideInRight,
+  SlideOutLeft,
+  SlideOutRight,
 } from "react-native-reanimated";
-
-function DotIndicator({ isActive, isLast }: { isActive: boolean; isLast: boolean }) {
-  const width = useSharedValue(isActive ? 24 : 8);
-
-  useEffect(() => {
-    width.value = withTiming(isActive ? 24 : 8, {
-      duration: 400,
-      easing: Easing.out(Easing.ease),
-    });
-  }, [isActive]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      width: width.value,
-    };
-  });
-
-  return (
-    <Animated.View
-      style={[
-        {
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: isActive ? "#000000" : "#D1D1D1",
-          marginRight: isLast ? 0 : 8,
-        },
-        animatedStyle,
-      ]}
-    />
-  );
-}
-
-function AnimatedSection({
-  isActive,
-  direction,
-  children,
-}: {
-  isActive: boolean;
-  direction: "forward" | "backward";
-  children: React.ReactNode;
-}) {
-  const opacity = useSharedValue(isActive ? 1 : 0);
-  const translateX = useSharedValue(isActive ? 0 : direction === "forward" ? 30 : -30);
-
-  useEffect(() => {
-    opacity.value = withTiming(isActive ? 1 : 0, {
-      duration: 400,
-      easing: Easing.out(Easing.ease),
-    });
-    translateX.value = withTiming(isActive ? 0 : direction === "forward" ? 30 : -30, {
-      duration: 400,
-      easing: Easing.out(Easing.ease),
-    });
-  }, [isActive, direction]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-      transform: [{ translateX: translateX.value }],
-    };
-  });
-
-  if (!isActive && opacity.value === 0) {
-    return null;
-  }
-
-  return (
-    <Animated.View style={[{ position: "absolute", width: "100%", height: "100%" }, animatedStyle]}>
-      {children}
-    </Animated.View>
-  );
-}
 
 export default function OnboardingScreen() {
   const { setUserOnboarded } = useUserProfileMutation();
@@ -109,32 +39,58 @@ export default function OnboardingScreen() {
     }
 
     setDirection("forward");
-    setActiveOnboardingIndex((prev) => prev + 1);
+    requestAnimationFrame(() => {
+      setActiveOnboardingIndex((prev) => prev + 1);
+    });
   };
 
   const handleBack = () => {
     setDirection("backward");
-    setActiveOnboardingIndex((prev) => Math.max(0, prev - 1));
+    requestAnimationFrame(() => {
+      setActiveOnboardingIndex((prev) => Math.max(0, prev - 1));
+    });
   };
 
   const activeSection = sections[activeOnboardingIndex];
+  const activeView = (() => {
+    switch (activeSection) {
+      case "intro":
+        return <OnboardingIntroSection />;
+      case "ai":
+        return <OnboardingAiSection />;
+      case "breakdown":
+        return <OnboardingBreakdownSection />;
+      case "gashapon":
+        return <OnboardingNoteSection />;
+      default:
+        return null;
+    }
+  })();
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-1">
-        <AnimatedSection isActive={activeSection === "intro"} direction={direction}>
-          <OnboardingIntroSection onSkip={handleFinish} />
-        </AnimatedSection>
-        <AnimatedSection isActive={activeSection === "ai"} direction={direction}>
-          <OnboardingAiSection onSkip={handleFinish} onBack={handleBack} />
-        </AnimatedSection>
-        <AnimatedSection isActive={activeSection === "breakdown"} direction={direction}>
-          <OnboardingBreakdownSection onSkip={handleFinish} onBack={handleBack} />
-        </AnimatedSection>
-        <AnimatedSection isActive={activeSection === "gashapon"} direction={direction}>
-          <OnboardingNoteSection onSkip={handleFinish} onBack={handleBack} />
-        </AnimatedSection>
+      {/* Header buttons */}
+      <View className="flex-row items-center justify-between px-6 pt-2">
+        {activeOnboardingIndex > 0 ? (
+          <Pressable onPress={handleBack} hitSlop={10}>
+            <Ionicons name="chevron-back" size={22} color="#8C8C8C" />
+          </Pressable>
+        ) : (
+          <View />
+        )}
+        <Pressable onPress={handleFinish} hitSlop={10}>
+          <Text className="text-xl font-baloo text-secondary">{t("actions.skip")}</Text>
+        </Pressable>
       </View>
+
+      <Animated.View
+        key={activeSection}
+        exiting={direction === "forward" ? SlideOutLeft.duration(400) : SlideOutRight.duration(400)}
+        entering={direction === "forward" ? SlideInRight.duration(400) : SlideInLeft.duration(400)}
+        className="flex-1"
+      >
+        {activeView}
+      </Animated.View>
       <View className="items-center pb-6 px-6">
         <View className="flex-row items-center mb-4">
           {sections.map((section, index) => {
