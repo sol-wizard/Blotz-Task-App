@@ -61,17 +61,20 @@ export default function SubtaskItem({
           size={28}
         />
       )}
-      <View className="text-sm min-w-[50px] px-2 py-1 rounded bg-blue-100 items-center justify-center">
-        <Text className="text-sm font-baloo font-bold text-black">
-          {subtask.duration ? convertDurationToText(subtask.duration) : ""}
+      <View className="flex-1 flex-row items-center justify-between ml-3">
+        <Text
+          className={`flex-1 text-[15px] font-baloo ${isChecked ? "line-through" : ""}`}
+          style={{ color: textColor }}
+        >
+          {subtask?.title}
         </Text>
+
+        {subtask.duration && (
+          <Text className="text-sm font-baloo font-bold text-black ml-2">
+            {subtask.duration ? convertDurationToText(subtask.duration) : ""}
+          </Text>
+        )}
       </View>
-      <Text
-        className={`flex-1 text-[15px] font-baloo ml-3 ${isChecked ? "line-through" : ""}`}
-        style={{ color: textColor }}
-      >
-        {subtask?.title}
-      </Text>
     </View>
   );
 }
