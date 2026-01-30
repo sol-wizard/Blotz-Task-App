@@ -34,10 +34,6 @@ export function AiTasksPreview({
   const finishedAllStepsRef = useRef<boolean>(false);
 
   useEffect(() => {
-    Keyboard.dismiss();
-  }, []);
-
-  useEffect(() => {
     return () => {
       if (!finishedAllStepsRef.current) {
         posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
