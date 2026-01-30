@@ -8,7 +8,6 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { systemPreferredLanguage } from "../utils/system-preferred-language";
 import { Pressable, Text } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
 export default function GetStartedButton() {
   const { authorize, user } = useAuth0();
@@ -16,16 +15,6 @@ export default function GetStartedButton() {
   const posthog = usePostHog();
   const { t } = useTranslation("common");
   const { refreshAuthState } = useAuth();
-  const pressScale = useSharedValue(1);
-  const pressOpacity = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: pressScale.value }],
-      opacity: pressOpacity.value,
-    };
-  });
-
   const onPress = async () => {
     try {
       const language = systemPreferredLanguage?.startsWith("zh") ? "zh-CN" : "en";
@@ -65,41 +54,23 @@ export default function GetStartedButton() {
   return (
     <Pressable
       onPress={onPress}
-      onPressIn={() => {
-        pressScale.value = withTiming(0.98, { duration: 120 });
-        pressOpacity.value = withTiming(0.92, { duration: 120 });
-      }}
-      onPressOut={() => {
-        pressScale.value = withTiming(1, { duration: 120 });
-        pressOpacity.value = withTiming(1, { duration: 120 });
-      }}
-      style={{ alignItems: "center" }}
+      style={({ pressed }) => ({
+        alignItems: "center",
+        transform: [{ scale: pressed ? 0.5 : 1 }],
+        opacity: pressed ? 0.9 : 1,
+      })}
     >
-      <Animated.View
-        style={[
-          {
-            backgroundColor: "#111111",
-            paddingVertical: 14,
-            paddingHorizontal: 28,
-            borderRadius: 999,
-            borderCurve: "continuous",
-            minWidth: 200,
-            alignItems: "center",
-            boxShadow: "0 10px 24px rgba(0, 0, 0, 0.18)",
-          },
-          animatedStyle,
-        ]}
+      <Text
+        className="font-balooBold text-lg py-3 px-10 bg-black text-white rounded-full"
+        style={{
+          borderCurve: "continuous",
+          textAlign: "center",
+          letterSpacing: 0.3,
+          boxShadow: "0 10px 24px rgba(0, 0, 0, 0.18)",
+        }}
       >
-        <Text
-          className="font-balooBold text-lg"
-          style={{
-            color: "#FFFFFF",
-            letterSpacing: 0.3,
-          }}
-        >
-          {t("buttons.getStarted")}
-        </Text>
-      </Animated.View>
+        {t("buttons.getStarted")}
+      </Text>
     </Pressable>
   );
 }
