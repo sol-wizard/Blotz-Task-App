@@ -90,7 +90,7 @@ export default function NotesScreen() {
 
           <Pressable
             onPress={handleAddSparkPress}
-            className="mx-6 mb-4"
+            className="flex-row mx-6 mb-4"
             style={{
               borderWidth: 2,
               borderStyle: "dashed",
@@ -102,6 +102,7 @@ export default function NotesScreen() {
               backgroundColor: theme.colors.background,
             }}
           >
+            <MaterialCommunityIcons name={"plus"} size={24} color={"#8C8C8C"} />
             <Text className="font-baloo text-lg " style={{ color: "#8C8C8C" }}>
               {t("addNote")}
             </Text>
