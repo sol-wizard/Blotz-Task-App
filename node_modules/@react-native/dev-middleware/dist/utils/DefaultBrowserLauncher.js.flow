@@ -1,0 +1,27 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow strict-local
+ * @format
+ */
+
+import type { DebuggerShellPreparationResult } from "../";
+
+/**
+ * Default `BrowserLauncher` implementation which opens URLs on the host
+ * machine.
+ */
+declare const DefaultBrowserLauncher: {
+  /**
+   * Attempt to open the debugger frontend in a Google Chrome or Microsoft Edge
+   * app window.
+   */
+  launchDebuggerAppWindow: (url: string) => Promise<void>,
+  unstable_showFuseboxShell(url: string, windowKey: string): Promise<void>,
+  unstable_prepareFuseboxShell(): Promise<DebuggerShellPreparationResult>,
+};
+
+declare export default typeof DefaultBrowserLauncher;

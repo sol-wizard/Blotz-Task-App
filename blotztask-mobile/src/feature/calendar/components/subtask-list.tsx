@@ -9,9 +9,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
 import { MaterialIcons } from "@expo/vector-icons";
 import { convertDurationToText } from "@/shared/util/convert-duration";
-import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
 
 type Props = {
   task: TaskDetailDTO;
@@ -77,5 +77,4 @@ const SubtaskList = ({ task, progress }: Props) => {
     </Animated.View>
   );
 };
-
 export default SubtaskList;

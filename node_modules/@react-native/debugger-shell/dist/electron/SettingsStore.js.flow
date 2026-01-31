@@ -1,0 +1,42 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ * @format
+ * @oncall react_native
+ */
+
+type Options = $ReadOnly<{
+  name?: string,
+  defaults?: Object,
+}>;
+
+/**
+ * A data persistence layer for storing application settings, modelled after
+ * [`electron-store`](https://www.npmjs.com/package/electron-store).
+ *
+ * Values are saved in a `config.json` file in `app.getPath('userData')`.
+ *
+ * Compatibility:
+ * - Maintains API and file format compatibility with `electron-store@8.2.0`.
+ * - Supports the Electron main process only.
+ */
+declare export default class SettingsStore {
+  path: string;
+  constructor(options?: Options): void;
+  get(key: string, defaultValue?: any): any;
+  set(key: string, value: any): void;
+  has(key: string): boolean;
+  reset(...keys: Array<string>): void;
+  delete(key: string): void;
+  clear(): void;
+  get store(): { [string]: mixed };
+  set store(value: mixed): void;
+  _deserialize: (value: string) => mixed;
+  _serialize: (value: mixed) => string;
+  _ensureDirectory(): void;
+  _write(value: mixed): void;
+}
