@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@react-native-masked-view/masked-view": "^0.3.2"
+  }
+}
