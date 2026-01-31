@@ -71,7 +71,8 @@
       [
         "./plugins/withAzureSpeechAndroid"
       ],
-      "expo-asset"
+      "expo-asset",
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true
