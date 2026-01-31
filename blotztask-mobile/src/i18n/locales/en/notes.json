@@ -11,6 +11,12 @@
     "doItNow": "Do it now",
     "pickNote": "Let fate decide✨"
   },
+
+    "notePlaceholder": "Add a Quick Note",
+    "save" : "Save",
+    "close" : "Close",
+    "noteModalTitle":"Input Field",
+
   "timeEstimate": {
     "estimating": "Estimating time...",
     "estimatedMessage": "This task will take around ",
