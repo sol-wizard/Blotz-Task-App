@@ -29,7 +29,7 @@ export default function UserDetailsScreen() {
           <Text className="flex-1 ml-2 mt-2 font-balooBold text-4xl leading-normal">{t("profile.title")}</Text>
         </View>
         <CardIdentityView />
-        <CardEditButton onPress={() => {}} />
+        <CardEditButton onPress={() => router.push("/settings")} />
       </View>
     </SafeAreaView>
   );
