@@ -31,7 +31,7 @@ export default function UserDetailsScreen() {
           </Text>
         </View>
         <CardIdentityView />
-        <CardEditButton onPress={() => {}} />
+        <CardEditButton onPress={() => router.push("/settings")} />
       </View>
     </SafeAreaView>
   );
