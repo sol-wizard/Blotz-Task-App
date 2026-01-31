@@ -1,4 +1,4 @@
-import { FlatList, View } from "react-native";
+import { View } from "react-native";
 import { TaskStatusRow } from "../../../shared/components/ui/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";

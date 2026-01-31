@@ -1,7 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Pressable } from "react-native";
 import * as Haptics from "expo-haptics";
-import { createAnimatedComponent, CSSAnimationKeyframes } from "react-native-reanimated";
+import { createAnimatedComponent } from "react-native-reanimated";
 
 interface TaskCheckboxProps {
   checked: boolean;
