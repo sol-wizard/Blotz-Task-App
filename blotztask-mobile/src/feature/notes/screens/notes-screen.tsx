@@ -102,8 +102,8 @@ export default function NotesScreen() {
               backgroundColor: theme.colors.background,
             }}
           >
-            <MaterialCommunityIcons name={"plus"} size={24} color={"#8C8C8C"} />
-            <Text className="font-baloo text-lg " style={{ color: "#8C8C8C" }}>
+            <MaterialCommunityIcons name={"plus"} size={24} color={theme.colors.primary} />
+            <Text className="font-baloo text-lg " style={{ color: theme.colors.primary }}>
               {t("addNote")}
             </Text>
           </Pressable>
