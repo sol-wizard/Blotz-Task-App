@@ -19,31 +19,31 @@ export default function SettingsScreen() {
       key: "account",
       label: t("menu.account"),
       icon: "account-outline",
-      route: "/(protected)/settings/account",
+      route: "/settings/account",
     },
     {
       key: "task-handling",
       label: t("menu.taskHandling"),
       icon: "file-check-outline",
-      route: "/(protected)/settings/task-handling",
+      route: "/settings/task-handling",
     },
     {
       key: "notifications",
       label: t("menu.notifications"),
       icon: "bell-outline",
-      route: "/(protected)/settings/notifications",
+      route: "/settings/notifications",
     },
     {
       key: "language",
       label: t("menu.language"),
       icon: "translate",
-      route: "/(protected)/settings/language",
+      route: "/settings/language",
     },
     {
       key: "under-development",
       label: t("menu.allTasks"),
       icon: "cog-outline",
-      route: "/(protected)/settings/all-tasks",
+      route: "/settings/all-tasks",
     },
   ];
 
@@ -52,7 +52,7 @@ export default function SettingsScreen() {
     : PNGIMAGES.blotzIcon;
 
   const handleProfileEdit = () => {
-    router.push("/(protected)/settings/avatar" as const);
+    router.push("/settings/avatar" as const);
   };
 
   return (
