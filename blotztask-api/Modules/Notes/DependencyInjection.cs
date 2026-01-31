@@ -10,7 +10,7 @@ public static class DependencyInjection
     services.AddScoped<CreateNoteCommandHandler>();
     services.AddScoped<UpdateNoteCommandHandler>();
     services.AddScoped<DeleteNoteCommandHandler>();
-    services.AddScoped<GetNotesQueryHandler>();
+    services.AddScoped<SearchNotesQueryHandler>();
     return services;
   }
 }

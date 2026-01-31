@@ -1,9 +1,11 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BlotzTask.Modules.Notes.Domain;
 using BlotzTask.Modules.Notes.DTOs;
 using BlotzTask.Modules.Notes.Queries;
 using BlotzTask.Modules.Notes.Commands;
+using BlotzTask.Modules.Tasks.Queries.Tasks;
 
 namespace BlotzTask.Modules.Notes;
 
@@ -13,13 +15,13 @@ namespace BlotzTask.Modules.Notes;
 public class NotesController
 (
   CreateNoteCommandHandler createNoteCommandHandler,
-  GetNotesQueryHandler GetNotesQueryHandler,
+  SearchNotesQueryHandler searchNotesQueryHandler,
   UpdateNoteCommandHandler updateNoteCommandHandler,
   DeleteNoteCommandHandler deleteNoteCommandHandler
 ) : ControllerBase
 {
   [HttpPost]
-  public async Task<NoteDto> CreateNote([FromBody] CreateNoteCommand request, CancellationToken ct)
+  public async Task<NoteDto> CreateNote([FromBody] NoteRequestDto request, CancellationToken ct)
   {
     if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
       throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
@@ -32,16 +34,16 @@ public class NotesController
 
   }
   [HttpGet]
-  public async Task<List<NoteDto>> Search([FromQuery] string? q, CancellationToken ct)
+  public async Task<List<NoteDto>> SearchNote([FromQuery] string? q, CancellationToken ct)
   {
     if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
       throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
-    var query = new GetNotes { UserId = userId, QueryString = q };
-    return await GetNotesQueryHandler.Handle(query, ct);
+    var query = new SearchNotesQuery { UserId = userId, QueryString = q };
+    return await searchNotesQueryHandler.Handle(query, ct);
   }
 
   [HttpPut("{id:guid}")]
-  public async Task<NoteDto> UpdateNote(Guid id, [FromBody] UpdateNoteCommand dto, CancellationToken ct)
+  public async Task<NoteDto> UpdateNote(Guid id, [FromBody] NoteRequestDto dto, CancellationToken ct)
   {
     if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
       throw new UnauthorizedAccessException("Counld not find valid user id from Http Context");

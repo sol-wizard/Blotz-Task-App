@@ -6,15 +6,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Notes.Queries;
 
-public class GetNotes
+public class SearchNotesQuery
 {
   [Required] public required Guid UserId { get; set; }
   public string? QueryString { get; set; }
 
 }
-public class GetNotesQueryHandler(BlotzTaskDbContext db, ILogger<GetNotesQueryHandler> logger)
+public class SearchNotesQueryHandler(BlotzTaskDbContext db, ILogger<SearchNotesQueryHandler> logger)
 {
-  public async Task<List<NoteDto>> Handle(GetNotes query, CancellationToken ct = default)
+  public async Task<List<NoteDto>> Handle(SearchNotesQuery query, CancellationToken ct = default)
   {
     logger.LogInformation("Getting notes for user {UserId}.Query{query}", query.UserId, query.QueryString);
     var notes = db.Notes
