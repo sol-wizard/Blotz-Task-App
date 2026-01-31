@@ -12,19 +12,28 @@ import {
 import { Inter_300Light, Inter_700Bold } from "@expo-google-fonts/inter";
 /* eslint-enable camelcase */
 import { Stack } from "expo-router";
-import { PaperProvider, Portal } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PostHogProvider } from "posthog-react-native";
 import "../../global.css";
 import React from "react";
 import { Auth0Provider } from "react-native-auth0";
-import { theme } from "@/shared/constants/theme";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/shared/util/queryClient";
 import * as Sentry from "@sentry/react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/ui/toast-config";
+import { useAuth } from "@/shared/hooks/useAuth";
+
+Sentry.init({
+  dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
+  sendDefaultPii: true,
+  enableNative: true,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  enableAutoSessionTracking: true,
+  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+});
 
 export default function RootLayout() {
   const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN!;
@@ -39,15 +48,6 @@ export default function RootLayout() {
     InterThin: Inter_300Light,
     InterBold: Inter_700Bold,
   });
-  Sentry.init({
-    dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
-    sendDefaultPii: true,
-    enableNative: true,
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1,
-    enableAutoSessionTracking: true,
-    integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
-  });
 
   return (
     <Auth0Provider domain={domain} clientId={clientId}>
@@ -61,23 +61,33 @@ export default function RootLayout() {
       >
         <GestureHandlerRootView>
           <QueryClientProvider client={queryClient}>
-            <PaperProvider theme={theme}>
-              <Portal.Host>
-                <SafeAreaProvider>
-                  <KeyboardProvider>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="index" options={{ headerShown: false }} />
-                      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                      <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-                    </Stack>
-                    <Toast config={toastConfig} position="bottom" bottomOffset={110} />
-                  </KeyboardProvider>
-                </SafeAreaProvider>
-              </Portal.Host>
-            </PaperProvider>
+            <SafeAreaProvider>
+              <KeyboardProvider>
+                <RootStack />
+                <Toast config={toastConfig} position="bottom" bottomOffset={110} />
+              </KeyboardProvider>
+            </SafeAreaProvider>
           </QueryClientProvider>
         </GestureHandlerRootView>
       </PostHogProvider>
     </Auth0Provider>
+  );
+}
+
+function RootStack() {
+  const { isAuthenticated } = useAuth();
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+
+      <Stack.Protected guard={!isAuthenticated}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      </Stack.Protected>
+
+      <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+      </Stack.Protected>
+    </Stack>
   );
 }

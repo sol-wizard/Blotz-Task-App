@@ -6,10 +6,10 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
-import { Language, UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
+import { Language } from "@/shared/models/user-preferences-dto";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 
-export default function LanguageScreen() {
+export default function SettingsLanguageScreen() {
   const router = useRouter();
   const { i18n, t } = useTranslation("settings");
   const { isUserPreferencesLoading, userPreferences } = useUserPreferencesQuery();
@@ -18,22 +18,14 @@ export default function LanguageScreen() {
   const handleLanguageChange = async (language: Language) => {
     if (!userPreferences) return;
 
-    // Update UI immediately
     const i18nLang = language === Language.En ? "en" : "zh";
     await i18n.changeLanguage(i18nLang);
 
-    // Update backend
-    const newUserPreferences: UserPreferencesDTO = {
-      autoRollover: userPreferences.autoRollover,
-      upcomingNotification: userPreferences.upcomingNotification,
-      overdueNotification: userPreferences.overdueNotification,
-      dailyPlanningNotification: userPreferences.dailyPlanningNotification,
-      eveningWrapUpNotification: userPreferences.eveningWrapUpNotification,
-      preferredLanguage: language,
-    };
-
     try {
-      await updateUserPreferences(newUserPreferences);
+      await updateUserPreferences({
+        ...userPreferences,
+        preferredLanguage: language,
+      });
       console.log(`Language updated to: ${language}`);
     } catch (error) {
       console.log("Failed to update language:", error);
@@ -48,7 +40,6 @@ export default function LanguageScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      {/* Header */}
       <View className="flex-row items-center px-5 py-4">
         <Pressable onPress={() => router.back()} className="mr-4">
           <MaterialCommunityIcons name="arrow-left" size={24} color="#363853" />
@@ -56,10 +47,8 @@ export default function LanguageScreen() {
         <Text className="text-2xl font-balooBold text-secondary">{t("language.title")}</Text>
       </View>
 
-      {/* Language Options */}
       <View className="px-5 mt-4">
         <View className="bg-white rounded-2xl overflow-hidden">
-          {/* English Option */}
           <Pressable
             onPress={() => handleLanguageChange(Language.En)}
             disabled={isUpdatingUserPreferences}
@@ -79,7 +68,6 @@ export default function LanguageScreen() {
             )}
           </Pressable>
 
-          {/* Chinese Option */}
           <Pressable
             onPress={() => handleLanguageChange(Language.Zh)}
             disabled={isUpdatingUserPreferences}
@@ -100,7 +88,6 @@ export default function LanguageScreen() {
           </Pressable>
         </View>
 
-        {/* Info Text */}
         <Text className="text-sm font-baloo text-gray-500 mt-4 px-2">
           {currentLanguage === Language.En ? t("language.infoText") : t("language.infoTextChinese")}
         </Text>

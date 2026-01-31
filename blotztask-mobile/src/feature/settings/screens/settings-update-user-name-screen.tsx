@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 import { useTranslation } from "react-i18next";
 
-export default function UpdateUserNameScreen() {
+export default function SettingsUpdateUserNameScreen() {
   const router = useRouter();
   const { userProfile } = useUserProfile();
   const [name, setName] = useState(userProfile?.displayName ?? "");
@@ -34,7 +34,9 @@ export default function UpdateUserNameScreen() {
         </Pressable>
 
         <View className="flex-1 items-center">
-          <Text className="text-3xl font-balooExtraBold text-secondary">{t("settings:updateName.title")}</Text>
+          <Text className="text-3xl font-balooExtraBold text-secondary">
+            {t("settings:updateName.title")}
+          </Text>
         </View>
 
         <Pressable
@@ -66,7 +68,9 @@ export default function UpdateUserNameScreen() {
         </Text>
       )}
       {name.trim().length === 0 && (
-        <Text className="mt-2 text-sm text-red-500 font-baloo">{t("common:validation.nameEmpty")}</Text>
+        <Text className="mt-2 text-sm text-red-500 font-baloo">
+          {t("common:validation.nameEmpty")}
+        </Text>
       )}
     </SafeAreaView>
   );

@@ -12,7 +12,7 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { ReturnButton } from "@/shared/components/ui/return-button";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function AllTasksScreen() {
+export default function SettingsAllTasksScreen() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
@@ -47,7 +47,6 @@ export default function AllTasksScreen() {
 
   return (
     <SafeAreaView className="flex-1">
-      {/* Header with back button */}
       <View className="flex-row items-center px-5 pt-2">
         <ReturnButton />
         <View className="flex-1 flex-row items-center justify-between">
