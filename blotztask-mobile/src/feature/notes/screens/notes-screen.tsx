@@ -1,7 +1,7 @@
 import { theme } from "@/shared/constants/theme";
 import { useCallback, useState } from "react";
-import { View, Text, Pressable } from "react-native";
-import { Searchbar } from "react-native-paper";
+import { View, Text, Pressable, TextInput, TouchableWithoutFeedback, Keyboard } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { NotesDualView } from "@/feature/notes/components/notes-dual-view";
@@ -45,79 +45,79 @@ export default function NotesScreen() {
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
-      <View className="flex-row justify-between items-center mt-10">
-        <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4 px-10">{t("title")}</Text>
-        <Pressable
-          onPress={() => router.push("/(protected)/gashapon-machine")}
-          className="rounded-full mr-4"
-        >
-          <LinearGradient
-            colors={["#9AD513", "#60B000", "#9AD513"]}
-            start={{ x: 0.8, y: 0 }}
-            end={{ x: 0, y: 0.5 }}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View className="flex-1">
+          <View className="flex-row justify-between items-center mt-10">
+            <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4 px-10">
+              {t("title")}
+            </Text>
+            <Pressable
+              onPress={() => router.push("/(protected)/gashapon-machine")}
+              className="rounded-full mr-4"
+            >
+              <LinearGradient
+                colors={["#9AD513", "#60B000", "#9AD513"]}
+                start={{ x: 0.8, y: 0 }}
+                end={{ x: 0, y: 0.5 }}
+                style={{
+                  borderRadius: 20,
+                  paddingHorizontal: 16,
+                  paddingVertical: 6,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text className="text-white font-baloo text-lg">{t("gashapon.pickNote")}</Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+
+          <View className="my-4 mx-1 px-3">
+            <View className="h-10 flex-row items-center rounded-full bg-[#E9EEF0] px-3">
+              <MaterialCommunityIcons name="magnify" size={18} color={theme.colors.disabled} />
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder={t("search")}
+                placeholderTextColor={theme.colors.disabled}
+                className="flex-1 ml-2 text-base font-baloo text-black"
+                style={{ color: "#000000" }}
+                returnKeyType="search"
+                clearButtonMode="while-editing"
+              />
+            </View>
+          </View>
+
+          <Pressable
+            onPress={handleAddSparkPress}
+            className="mx-6 mb-4"
             style={{
-              borderRadius: 20,
-              paddingHorizontal: 16,
-              paddingVertical: 6,
+              borderWidth: 2,
+              borderStyle: "dashed",
+              borderColor: "#8C8C8C",
+              borderRadius: 16,
+              height: 56,
               alignItems: "center",
               justifyContent: "center",
+              backgroundColor: theme.colors.background,
             }}
           >
-            <Text className="text-white font-baloo text-lg">{t("gashapon.pickNote")}</Text>
-          </LinearGradient>
-        </Pressable>
-      </View>
+            <Text className="font-baloo text-lg " style={{ color: "#8C8C8C" }}>
+              {t("addNote")}
+            </Text>
+          </Pressable>
 
-      <View className="my-4 mx-1">
-        <Searchbar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          icon={"magnify"}
-          placeholderTextColor={theme.colors.disabled}
-          clearIcon={searchQuery ? "close" : undefined}
-          iconColor={theme.colors.disabled}
-          style={{
-            backgroundColor: "#E9EEF0",
-            borderRadius: 20,
-            height: 40,
-            marginHorizontal: 12,
-          }}
-          inputStyle={{
-            fontSize: 16,
-            fontFamily: "BalooRegular",
-            paddingBottom: 14,
-          }}
-        />
-      </View>
-
-      <Pressable
-        onPress={handleAddSparkPress}
-        className="mx-6 mb-4"
-        style={{
-          borderWidth: 2,
-          borderStyle: "dashed",
-          borderColor: "#8C8C8C",
-          borderRadius: 16,
-          height: 56,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: theme.colors.background,
-        }}
-      >
-        <Text className="font-baloo text-lg " style={{ color: "#8C8C8C" }}>
-          {t("addNote")}
-        </Text>
-      </Pressable>
-
-      {showLoading && <LoadingScreen />}
-      {!showLoading && notesSearchResult.length > 0 && (
-        <NotesDualView
-          notes={notesSearchResult}
-          onDeleteTask={handleDelete}
-          isDeleting={isDeleting}
-          onPressTask={handlePressTask}
-        />
-      )}
+          {showLoading && <LoadingScreen />}
+          {!showLoading && notesSearchResult.length > 0 && (
+            <NotesDualView
+              notes={notesSearchResult}
+              onDeleteTask={handleDelete}
+              isDeleting={isDeleting}
+              onPressTask={handlePressTask}
+            />
+          )}
+        </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }

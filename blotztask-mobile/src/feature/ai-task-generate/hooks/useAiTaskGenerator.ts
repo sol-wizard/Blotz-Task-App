@@ -40,6 +40,7 @@ export function useAiTaskGenerator({
       setModalType("input");
     } else {
       setModalType("task-preview");
+
       setIsAiGenerating(false);
     }
   };

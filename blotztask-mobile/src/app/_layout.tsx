@@ -12,13 +12,11 @@ import {
 import { Inter_300Light, Inter_700Bold } from "@expo-google-fonts/inter";
 /* eslint-enable camelcase */
 import { Stack } from "expo-router";
-import { PaperProvider, Portal } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PostHogProvider } from "posthog-react-native";
 import "../../global.css";
 import React from "react";
 import { Auth0Provider } from "react-native-auth0";
-import { theme } from "@/shared/constants/theme";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/shared/util/queryClient";
 import * as Sentry from "@sentry/react-native";
@@ -63,16 +61,12 @@ export default function RootLayout() {
       >
         <GestureHandlerRootView>
           <QueryClientProvider client={queryClient}>
-            <PaperProvider theme={theme}>
-              <Portal.Host>
-                <SafeAreaProvider>
-                  <KeyboardProvider>
-                    <RootStack />
-                    <Toast config={toastConfig} position="bottom" bottomOffset={110} />
-                  </KeyboardProvider>
-                </SafeAreaProvider>
-              </Portal.Host>
-            </PaperProvider>
+            <SafeAreaProvider>
+              <KeyboardProvider>
+                <RootStack />
+                <Toast config={toastConfig} position="bottom" bottomOffset={110} />
+              </KeyboardProvider>
+            </SafeAreaProvider>
           </QueryClientProvider>
         </GestureHandlerRootView>
       </PostHogProvider>

@@ -22,7 +22,7 @@ export default function ProtectedLayout() {
           headerShadowVisible: false,
           headerTransparent: true,
           headerTitle: "",
-          headerBackVisible: true,
+          headerBackVisible: false,
           headerTintColor: "#000000",
           headerBackButtonDisplayMode: "minimal",
           headerStyle: {
