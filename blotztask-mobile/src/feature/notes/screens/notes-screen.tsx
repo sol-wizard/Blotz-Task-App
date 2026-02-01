@@ -12,7 +12,7 @@ import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
-import { Modal } from "react-native";
+import { NoteModal } from "@/feature/notes/components/note-modal";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,7 +21,6 @@ export default function NotesScreen() {
   const { t } = useTranslation("notes");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
-  const isSaveEnabled = noteText.trim().length > 0;
 
   useFocusEffect(
     useCallback(() => {
@@ -104,53 +103,20 @@ export default function NotesScreen() {
             </Text>
           </Pressable>
 
-          <Modal
+          <NoteModal
             visible={isModalVisible}
-            transparent
-            animationType="fade"
-            onRequestClose={() => setIsModalVisible(false)}
-          >
-            <View className="flex-1 bg-black/30 justify-center items-center">
-              <View className="w-11/12 bg-white rounded-2xl p-6">
-                <Pressable
-                  onPress={() => {
-                    setIsModalVisible(false);
-                    setNoteText("");
-                  }}
-                  className="self-end w-10 h-10 rounded-full bg-[#F3F4F6] items-center justify-center
-"
-                >
-                  <MaterialCommunityIcons name="close" size={18} color="#4B5563" />
-                </Pressable>
-
-                <TextInput
-                  value={noteText}
-                  onChangeText={setNoteText}
-                  placeholder={t("notePlaceholder")}
-                  placeholderTextColor={theme.colors.primary}
-                  multiline
-                  className="mt-3 h-36 rounded-xl bg-background px-4 text-base mx-4"
-                />
-                <Pressable
-                  disabled={!isSaveEnabled}
-                  onPress={() => {
-                    console.log(noteText);
-                    setNoteText("");
-                    setIsModalVisible(false);
-                  }}
-                  className={`mt-8 w-32 h-10 rounded-xl items-center 
-              justify-center self-center ${isSaveEnabled ? "bg-highlight" : "bg-gray-300"}`}
-                >
-                  <Text
-                    className="font-balooBold text-lg text-black rounded-xl  items-center justify-center
-               "
-                  >
-                    {t("save")}
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          </Modal>
+            noteText={noteText}
+            onChangeText={setNoteText}
+            onClose={() => {
+              setIsModalVisible(false);
+              setNoteText("");
+            }}
+            onSave={() => {
+              console.log(noteText);
+              setNoteText("");
+              setIsModalVisible(false);
+            }}
+          />
 
           {showLoading && <LoadingScreen />}
           {!showLoading && notesSearchResult.length > 0 && (
