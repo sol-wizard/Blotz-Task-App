@@ -26,7 +26,7 @@
       "appleTeamId": "LXC29JARY5",
       "icon": "./assets/images-png/blotz-icon.png",
       "entitlements": {
-        "com.apple.security.application-groups": ["group.com.blotz.blotztask"]
+        "com.apple.security.application-groups": ["group.com.Blotz.BlotzTask.widget"]
       }
     },
     "android": {
@@ -48,25 +48,25 @@
           "launchMode": "most-recent"
         }
       ],
-      [
-        "react-native-auth0",
-        {
-          "domain": "dev-k72xachs0fr6nebp.us.auth0.com"
-        }
-      ],
+      // [
+      //   "react-native-auth0",
+      //   {
+      //     "domain": "dev-k72xachs0fr6nebp.us.auth0.com"
+      //   }
+      // ],
       "expo-font",
       "expo-localization",
-      [
-        "@sentry/react-native/expo",
-        {
-          "url": "https://sentry.io/",
-          "project": "react-native",
-          "organization": "nicoles-project"
-        }
-      ],
+      // [
+      //   "@sentry/react-native/expo",
+      //   {
+      //     "url": "https://sentry.io/",
+      //     "project": "react-native",
+      //     "organization": "nicoles-project"
+      //   }
+      // ],
       "expo-audio",
-      ["./plugins/withCustomGradleProperties"],
-      ["./plugins/withAzureSpeechAndroid"],
+      // ["./plugins/withCustomGradleProperties"],
+      // ["./plugins/withAzureSpeechAndroid"],
       "expo-asset",
       "@bacons/apple-targets"
     ],

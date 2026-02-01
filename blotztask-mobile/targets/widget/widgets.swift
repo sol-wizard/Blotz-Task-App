@@ -42,8 +42,7 @@ struct widgetEntryView : View {
             Text("Time:")
             Text(entry.date, style: .time)
 
-            Text("Favorite Emoji:")
-            Text(entry.configuration.favoriteEmoji)
+            
         }
     }
 }
@@ -73,7 +72,7 @@ extension ConfigurationAppIntent {
     }
 }
 
-#Preview(as: .systemSmall) {
+#Preview(as: .systemMedium) {
     widget()
 } timeline: {
     SimpleEntry(date: .now, configuration: .smiley)
