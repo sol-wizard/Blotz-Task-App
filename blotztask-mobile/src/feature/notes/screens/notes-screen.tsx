@@ -16,11 +16,19 @@ import { NoteModal } from "@/feature/notes/components/note-modal";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
-  const { deleteNote, isNoteDeleting, createNote, isNoteCreating } = useNotesMutation();
+  const {
+    deleteNote,
+    isNoteDeleting,
+    createNote,
+    isNoteCreating,
+    updateNote,
+    isNoteUpdating,
+  } = useNotesMutation();
   const posthog = usePostHog();
   const { t } = useTranslation("notes");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
+  const [editingNote, setEditingNote] = useState<NoteDTO | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -34,8 +42,10 @@ export default function NotesScreen() {
     searchQuery,
   });
 
-  const handlePressTask = (task: any) => {
-    console.log("Test Pressing task", task);
+  const handlePressTask = (note: NoteDTO) => {
+    setEditingNote(note);
+    setNoteText(note.text ?? "");
+    setIsModalVisible(true);
   };
 
   const handleDelete = (note: NoteDTO) => {
@@ -50,6 +60,20 @@ export default function NotesScreen() {
         setIsModalVisible(false);
       },
     });
+  };
+
+  const handleUpdateNotePress = () => {
+    if (!editingNote || !noteText.trim() || isNoteUpdating) return;
+    updateNote(
+      { id: editingNote.id, text: noteText },
+      {
+        onSuccess: () => {
+          setNoteText("");
+          setEditingNote(null);
+          setIsModalVisible(false);
+        },
+      },
+    );
   };
 
   return (
@@ -99,7 +123,6 @@ export default function NotesScreen() {
 
           <Pressable
             onPress={() => {
-              console.log("Star Spark button clicked");
               setIsModalVisible(true);
             }}
             className="mx-6 mb-4 border-2 border-dashed rounded-2xl
@@ -114,14 +137,19 @@ export default function NotesScreen() {
           <NoteModal
             visible={isModalVisible}
             noteText={noteText}
-            isSaving={isNoteCreating}
+            isSaving={editingNote ? isNoteUpdating : isNoteCreating}
             onChangeText={setNoteText}
             onClose={() => {
               setIsModalVisible(false);
+              setEditingNote(null);
               setNoteText("");
             }}
             onSave={() => {
-              handleAddNotePress();
+              if (editingNote) {
+                handleUpdateNotePress();
+              } else {
+                handleAddNotePress();
+              }
             }}
           />
 
