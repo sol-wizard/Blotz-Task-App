@@ -1,5 +1,6 @@
 import { apiClient } from "@/shared/services/api/client";
 import { NoteDTO } from "../models/note-dto";
+import { EditNoteDTO } from "../models/edit-note-dto";
 
 export const searchNotes = async (keyword: string): Promise<NoteDTO[]> => {
   const url = `/notes`;
@@ -30,10 +31,10 @@ export const createNote = async (text: string): Promise<NoteDTO> => {
   }
 };
 
-export const updateNote = async (noteId: string, text: string): Promise<NoteDTO> => {
-  const url = `/notes/${noteId}`;
+export const updateNote = async (editNoteDto: EditNoteDTO): Promise<NoteDTO> => {
+  const url = `/notes/${editNoteDto.id}`;
   try {
-    return await apiClient.put(url, { text });
+    return await apiClient.put(url, { text: editNoteDto.text });
   } catch {
     throw new Error("Failed to update note.");
   }

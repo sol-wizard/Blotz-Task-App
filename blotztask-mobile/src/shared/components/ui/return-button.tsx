@@ -7,7 +7,6 @@ export const ReturnButton = () => {
   return (
     <Pressable
       onPress={() => {
-        console.log("Return button pressed");
         if (router.canGoBack()) {
           router.back();
         } else {
