@@ -11,6 +11,11 @@
     "doItNow": "立即执行",
     "pickNote": "抽一张✨"
   },
+
+   "notePlaceholder":"加一个笔记",
+    "save":"保存",
+    "close":"关闭",
+    
   "timeEstimate": {
     "estimating": "正在估算时间...",
     "estimatedMessage": "我们估算这个任务大约需要",
