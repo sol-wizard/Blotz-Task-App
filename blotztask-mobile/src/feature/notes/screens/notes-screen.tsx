@@ -1,6 +1,5 @@
 import { theme } from "@/shared/constants/theme";
 import { useCallback, useState } from "react";
-import { Searchbar } from "react-native-paper";
 import { View, Text, Pressable, TextInput, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -78,26 +77,20 @@ export default function NotesScreen() {
             </Pressable>
           </View>
 
-          <View className="my-4 mx-1">
-            <Searchbar
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              icon={"magnify"}
-              placeholderTextColor={theme.colors.disabled}
-              clearIcon={searchQuery ? "close" : undefined}
-              iconColor={theme.colors.disabled}
-              style={{
-                backgroundColor: "#E9EEF0",
-                borderRadius: 20,
-                height: 40,
-                marginHorizontal: 12,
-              }}
-              inputStyle={{
-                fontSize: 16,
-                fontFamily: "BalooRegular",
-                paddingBottom: 14,
-              }}
-            />
+          <View className="my-4 mx-1 px-3">
+            <View className="h-10 flex-row items-center rounded-full bg-[#E9EEF0] px-3">
+              <MaterialCommunityIcons name="magnify" size={18} color={theme.colors.disabled} />
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder={t("search")}
+                placeholderTextColor={theme.colors.disabled}
+                className="flex-1 ml-2 text-base font-baloo text-black"
+                style={{ color: "#000000" }}
+                returnKeyType="search"
+                clearButtonMode="while-editing"
+              />
+            </View>
           </View>
 
           <Pressable
