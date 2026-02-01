@@ -10,7 +10,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { theme } from "@/shared/constants/theme";
 import { format, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -187,7 +186,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                           }`}
                           style={
                             task.isDone
-                              ? { textDecorationLine: "line-through", textDecorationColor: "#9CA3AF" }
+                              ? {
+                                  textDecorationLine: "line-through",
+                                  textDecorationColor: "#9CA3AF",
+                                }
                               : undefined
                           }
                           numberOfLines={1}
