@@ -1,4 +1,4 @@
-import { Image } from "expo-image";
+import { Image } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useCallback } from "react";
@@ -134,9 +134,9 @@ export const MachineButton = ({
             position: "absolute",
             width: size,
             height: size,
-            bottom: 55,
+            bottom: 38,
             zIndex: 2,
-            marginLeft: 150,
+            marginLeft: 170,
           },
           animatedStyle,
         ]}

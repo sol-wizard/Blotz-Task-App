@@ -1,7 +1,8 @@
 import { theme } from "@/shared/constants/theme";
 import { useCallback, useState } from "react";
-import { View, Text, Pressable, TextInput } from "react-native";
 import { Searchbar } from "react-native-paper";
+import { View, Text, Pressable, TextInput, TouchableWithoutFeedback, Keyboard } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { NotesDualView } from "@/feature/notes/components/notes-dual-view";
@@ -50,115 +51,124 @@ export default function NotesScreen() {
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
-      <View className="flex-row justify-between items-center mt-10">
-        <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4 px-10">{t("title")}</Text>
-        <Pressable
-          onPress={() => router.push("/(protected)/gashapon-machine")}
-          className="rounded-full mr-4"
-        >
-          <LinearGradient
-            colors={["#9AD513", "#60B000", "#9AD513"]}
-            start={{ x: 0.8, y: 0 }}
-            end={{ x: 0, y: 0.5 }}
-            style={{
-              borderRadius: 20,
-              paddingHorizontal: 16,
-              paddingVertical: 6,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text className="text-white font-baloo text-lg">{t("gashapon.pickNote")}</Text>
-          </LinearGradient>
-        </Pressable>
-      </View>
-
-      <View className="my-4 mx-1">
-        <Searchbar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          icon={"magnify"}
-          placeholderTextColor={theme.colors.disabled}
-          clearIcon={searchQuery ? "close" : undefined}
-          iconColor={theme.colors.disabled}
-          style={{
-            backgroundColor: "#E9EEF0",
-            borderRadius: 20,
-            height: 40,
-            marginHorizontal: 12,
-          }}
-          inputStyle={{
-            fontSize: 16,
-            fontFamily: "BalooRegular",
-            paddingBottom: 14,
-          }}
-        />
-      </View>
-
-      <Pressable
-        onPress={handleAddNotePress}
-        className="mx-6 mb-4 border-2 border-dashed rounded-2xl
-         h-14 items-center justify-center bg-background"
-        style={{ borderColor: "#8C8C8C" }}
-      >
-        <Text className="font-baloo text-lg " style={{ color: "#8C8C8C" }}>
-          {t("addNote")}
-        </Text>
-      </Pressable>
-
-      <Modal
-        visible={isModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <View className="flex-1 bg-black/30 justify-center items-center">
-          <View className="w-11/12 bg-white rounded-2xl p-6">
-            <Pressable onPress={() => setIsModalVisible(false)} className="self-end w-10 h-10 rounded-full bg-gray-200 items-center justify-center
-">
-              <Text className="text-xl">x</Text>
-            </Pressable>
-            <Text className="font-baloo text-lg" style={{ color: theme.colors.disabled }}>
-              {t("noteModalTitle")}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View className="flex-1">
+          <View className="flex-row justify-between items-center mt-10">
+            <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4 px-10">
+              {t("title")}
             </Text>
-            <TextInput
-              value={noteText}
-              onChangeText={setNoteText}
-              placeholder={t("notePlaceholder")}
-              placeholderTextColor={theme.colors.disabled}
-              multiline
-              className="mt-3 h-32 rounded-xl bg-background p-4 text-base"
-            />
             <Pressable
-              disabled={!isSaveEnabled}
-              onPress={() => {
-                console.log(noteText);
-                setNoteText("");
-                setIsModalVisible(false);
-              }}
-              className={`mt-8 w-32 h-10 rounded-xl items-center 
-              justify-center self-center ${isSaveEnabled ? "bg-highlight" : "bg-gray-300"}`}
+              onPress={() => router.push("/(protected)/gashapon-machine")}
+              className="rounded-full mr-4"
             >
-              <Text
-                className="font-balooBold text-lg text-black rounded-xl  items-center justify-center
-               "
+              <LinearGradient
+                colors={["#9AD513", "#60B000", "#9AD513"]}
+                start={{ x: 0.8, y: 0 }}
+                end={{ x: 0, y: 0.5 }}
+                style={{
+                  borderRadius: 20,
+                  paddingHorizontal: 16,
+                  paddingVertical: 6,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                {t("save")}
-              </Text>
+                <Text className="text-white font-baloo text-lg">{t("gashapon.pickNote")}</Text>
+              </LinearGradient>
             </Pressable>
           </View>
-        </View>
-      </Modal>
 
-      {showLoading && <LoadingScreen />}
-      {!showLoading && notesSearchResult.length > 0 && (
-        <NotesDualView
-          notes={notesSearchResult}
-          onDeleteTask={handleDelete}
-          isDeleting={isDeleting}
-          onPressTask={handlePressTask}
-        />
-      )}
+          <View className="my-4 mx-1">
+            <Searchbar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              icon={"magnify"}
+              placeholderTextColor={theme.colors.disabled}
+              clearIcon={searchQuery ? "close" : undefined}
+              iconColor={theme.colors.disabled}
+              style={{
+                backgroundColor: "#E9EEF0",
+                borderRadius: 20,
+                height: 40,
+                marginHorizontal: 12,
+              }}
+              inputStyle={{
+                fontSize: 16,
+                fontFamily: "BalooRegular",
+                paddingBottom: 14,
+              }}
+            />
+          </View>
+
+          <Pressable
+            onPress={handleAddNotePress}
+            className="mx-6 mb-4 border-2 border-dashed rounded-2xl
+         h-14 items-center justify-center bg-background"
+            style={{ borderColor: "#8C8C8C" }}
+          >
+            <Text className="font-baloo text-lg " style={{ color: "#8C8C8C" }}>
+              {t("addNote")}
+            </Text>
+          </Pressable>
+
+          <Modal
+            visible={isModalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setIsModalVisible(false)}
+          >
+            <View className="flex-1 bg-black/30 justify-center items-center">
+              <View className="w-11/12 bg-white rounded-2xl p-6">
+                <Pressable
+                  onPress={() => setIsModalVisible(false)}
+                  className="self-end w-10 h-10 rounded-full bg-gray-200 items-center justify-center
+"
+                >
+                  <Text className="text-xl">x</Text>
+                </Pressable>
+                <Text className="font-baloo text-lg" style={{ color: theme.colors.disabled }}>
+                  {t("noteModalTitle")}
+                </Text>
+                <TextInput
+                  value={noteText}
+                  onChangeText={setNoteText}
+                  placeholder={t("notePlaceholder")}
+                  placeholderTextColor={theme.colors.disabled}
+                  multiline
+                  className="mt-3 h-32 rounded-xl bg-background p-4 text-base"
+                />
+                <Pressable
+                  disabled={!isSaveEnabled}
+                  onPress={() => {
+                    console.log(noteText);
+                    setNoteText("");
+                    setIsModalVisible(false);
+                  }}
+                  className={`mt-8 w-32 h-10 rounded-xl items-center 
+              justify-center self-center ${isSaveEnabled ? "bg-highlight" : "bg-gray-300"}`}
+                >
+                  <Text
+                    className="font-balooBold text-lg text-black rounded-xl  items-center justify-center
+               "
+                  >
+                    {t("save")}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </Modal>
+
+          {showLoading && <LoadingScreen />}
+          {!showLoading && notesSearchResult.length > 0 && (
+            <NotesDualView
+              notes={notesSearchResult}
+              onDeleteTask={handleDelete}
+              isDeleting={isDeleting}
+              onPressTask={handlePressTask}
+            />
+          )}
+        </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }
