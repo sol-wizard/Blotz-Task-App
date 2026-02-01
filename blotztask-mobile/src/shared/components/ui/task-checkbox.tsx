@@ -39,18 +39,10 @@ export const TaskCheckbox = ({
         width: size,
         height: size,
         borderRadius: size / 4,
-        animationName: backgroundAnimation,
-        animationDuration: "2.5s",
-        animationTimingFunction: "ease-in-out",
       }}
       disabled={disabled}
     >
       {checked && <MaterialIcons name="check" size={20} color="#3D8DE0" />}
     </AnimatedPressable>
   );
-};
-
-const backgroundAnimation: CSSAnimationKeyframes = {
-  "0%": { backgroundColor: "#FFFFFF" },
-  "100%": { backgroundColor: "#E3EFFE" },
 };
