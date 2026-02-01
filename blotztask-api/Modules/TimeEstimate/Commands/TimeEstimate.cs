@@ -8,7 +8,7 @@ namespace BlotzTask.Modules.TimeEstimate.Commands;
 
 public class NoteForEstimation
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Text { get; set; }
 }
 
@@ -91,6 +91,6 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
 
 public class NoteTimeEstimation
 {
-    public int NoteId { get; set; }
+    public Guid NoteId { get; set; }
     public TimeSpan Duration { get; set; }
 }
