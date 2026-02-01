@@ -13,17 +13,17 @@ export const useNotesSearch = ({
   const trimmedKeyword = searchQuery.trim();
   const hasKeyword = trimmedKeyword.length > 0;
   const [debouncedQuery] = useDebounce(hasKeyword ? trimmedKeyword : "", debouncedMs);
+  console.log("Debounced Query:", debouncedQuery);
 
-  const { data: allNotes, isLoading } = useQuery({
-    queryKey: noteKeys.all,
+  const { data: allNotes, isLoading: isNotesSearching } = useQuery({
+    queryKey: [...noteKeys.all, debouncedQuery],
     queryFn: () => searchNotes(debouncedQuery),
   });
 
-  const notesSearchResult = allNotes ?? [];
-  const showLoading = isLoading;
+
 
   return {
-    notesSearchResult,
-    showLoading,
+    notesSearchResult: allNotes ?? [],
+    isNotesSearching,
   };
 };
