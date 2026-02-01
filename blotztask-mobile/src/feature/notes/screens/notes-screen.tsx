@@ -16,7 +16,7 @@ import { NoteModal } from "@/feature/notes/components/note-modal";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
-  const { deleteNote, isNoteDeleting } = useNotesMutation();
+  const { deleteNote, isNoteDeleting, createNote, isNoteCreating } = useNotesMutation();
   const posthog = usePostHog();
   const { t } = useTranslation("notes");
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -43,8 +43,13 @@ export default function NotesScreen() {
   };
 
   const handleAddNotePress = () => {
-    console.log("Star Spark button clicked");
-    setIsModalVisible(true);
+    if (!noteText.trim() || isNoteCreating) return;
+    createNote(noteText, {
+      onSuccess: () => {
+        setNoteText("");
+        setIsModalVisible(false);
+      },
+    });
   };
 
   return (
@@ -93,7 +98,10 @@ export default function NotesScreen() {
           </View>
 
           <Pressable
-            onPress={handleAddNotePress}
+            onPress={() => {
+              console.log("Star Spark button clicked");
+              setIsModalVisible(true);
+            }}
             className="mx-6 mb-4 border-2 border-dashed rounded-2xl
          h-14 items-center justify-center bg-background"
             style={{ borderColor: "#8C8C8C" }}
@@ -106,15 +114,14 @@ export default function NotesScreen() {
           <NoteModal
             visible={isModalVisible}
             noteText={noteText}
+            isSaving={isNoteCreating}
             onChangeText={setNoteText}
             onClose={() => {
               setIsModalVisible(false);
               setNoteText("");
             }}
             onSave={() => {
-              console.log(noteText);
-              setNoteText("");
-              setIsModalVisible(false);
+              handleAddNotePress();
             }}
           />
 
