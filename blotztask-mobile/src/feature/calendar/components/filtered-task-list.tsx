@@ -1,4 +1,4 @@
-import { FlatList, View } from "react-native";
+import { View } from "react-native";
 import { TaskStatusRow } from "../../../shared/components/ui/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -11,6 +11,7 @@ import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { FlashList } from "@shopify/flash-list";
 
 export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
@@ -59,7 +60,7 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
       {isLoading ? (
         <LoadingScreen />
       ) : tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
-        <FlatList
+        <FlashList
           className="flex-1"
           data={tasksOfSelectedStatus}
           renderItem={renderTask}

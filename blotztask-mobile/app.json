@@ -24,15 +24,15 @@
         "NSLocationWhenInUseUsageDescription": "Allow BlotzTask to use your location to check regional availability."
       },
       "appleTeamId": "LXC29JARY5",
-      "icon": "./assets/images-png/blotz-icon.png"
+      "icon": "./assets/images-png/blotz-icon.png",
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.Blotz.BlotzTask.widget"]
+      }
     },
     "android": {
       "edgeToEdgeEnabled": true,
       "package": "com.blotz.blotztask",
-      "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.ACCESS_FINE_LOCATION"
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO", "android.permission.ACCESS_FINE_LOCATION"]
     },
     "web": {
       "bundler": "metro",
@@ -48,30 +48,27 @@
           "launchMode": "most-recent"
         }
       ],
-      [
-        "react-native-auth0",
-        {
-          "domain": "dev-k72xachs0fr6nebp.us.auth0.com"
-        }
-      ],
+      // [
+      //   "react-native-auth0",
+      //   {
+      //     "domain": "dev-k72xachs0fr6nebp.us.auth0.com"
+      //   }
+      // ],
       "expo-font",
       "expo-localization",
-      [
-        "@sentry/react-native/expo",
-        {
-          "url": "https://sentry.io/",
-          "project": "react-native",
-          "organization": "nicoles-project"
-        }
-      ],
+      // [
+      //   "@sentry/react-native/expo",
+      //   {
+      //     "url": "https://sentry.io/",
+      //     "project": "react-native",
+      //     "organization": "nicoles-project"
+      //   }
+      // ],
       "expo-audio",
-      [
-        "./plugins/withCustomGradleProperties"
-      ],
-      [
-        "./plugins/withAzureSpeechAndroid"
-      ],
-      "expo-asset"
+      // ["./plugins/withCustomGradleProperties"],
+      // ["./plugins/withAzureSpeechAndroid"],
+      "expo-asset",
+      "@bacons/apple-targets"
     ],
     "experiments": {
       "typedRoutes": true
