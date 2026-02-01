@@ -9,6 +9,8 @@ const STAR_ICONS = [
   ASSETS.rainbowStar,
 ];
 
+// TODO: Need to check the get star logic later
+
 const hashStringToNumber = (value: string): number => {
   let hash = 0;
   for (let i = 0; i < value.length; i += 1) {
