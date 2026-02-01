@@ -1,12 +1,11 @@
 import { Tabs, router } from "expo-router";
-import { Pressable, View } from "react-native";
+import { Pressable, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { theme } from "@/shared/constants/theme";
-import { Platform } from "react-native";
 
 function getTabIcon(routeKey: string, focused: boolean) {
   const DashedStar = ASSETS.dashedStar;
@@ -65,9 +64,9 @@ export default function ProtectedTabsLayout() {
           tabBarShowLabel: false,
           tabBarStyle: {
             backgroundColor: theme.colors.background,
-            height: Platform.OS === 'ios' ? 60 : 60 + insets.bottom,
-            marginBottom: Platform.OS === 'ios' ? 40 : 0,   
-            paddingBottom: Platform.OS === 'ios' ? 0 : insets.bottom,
+            height: Platform.OS === "ios" ? 60 : 60 + insets.bottom,
+            marginBottom: Platform.OS === "ios" ? 40 : 0,
+            paddingBottom: Platform.OS === "ios" ? 0 : insets.bottom,
             borderTopWidth: 0,
           },
         }}
@@ -108,7 +107,7 @@ export default function ProtectedTabsLayout() {
 
       <View
         className="absolute left-4 right-4 items-center"
-        style={{ bottom: insets.bottom + (Platform.OS === 'ios' ? 6 : 6), zIndex: 20 }}
+        style={{ bottom: insets.bottom + (Platform.OS === "ios" ? 6 : 6), zIndex: 20 }}
         pointerEvents="box-none"
       >
         <Pressable onPress={() => router.push("/ai-task-sheet")}>
