@@ -5,8 +5,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { NotesDualView } from "@/feature/notes/components/notes-dual-view";
-import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesSearch as useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
+import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import { router, useFocusEffect } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
@@ -15,7 +15,7 @@ import { NoteDTO } from "@/feature/notes/models/note-dto";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
-  const { isDeleting } = useTaskMutations();
+  const { deleteNote, isNoteDeleting } = useNotesMutation();
   const posthog = usePostHog();
   const { t } = useTranslation("notes");
 
@@ -37,7 +37,7 @@ export default function NotesScreen() {
   };
 
   const handleDelete = (note: NoteDTO) => {
-    console.log("Test Deleting task", note);
+    deleteNote(String(note.id));
   };
 
   const handleAddSparkPress = () => {
@@ -113,7 +113,7 @@ export default function NotesScreen() {
             <NotesDualView
               notes={notesSearchResult}
               onDeleteTask={handleDelete}
-              isDeleting={isDeleting}
+              isDeleting={isNoteDeleting}
               onPressTask={handlePressTask}
             />
           )}

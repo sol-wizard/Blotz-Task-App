@@ -11,3 +11,12 @@ export const searchNotes = async (keyword: string): Promise<NoteDTO[]> => {
     throw new Error("Failed to search notes.");
   }
 };
+
+export const deleteNote = async (noteId: string): Promise<void> => {
+  const url = `/notes/${noteId}`;
+  try {
+    await apiClient.delete(url);
+  } catch {
+    throw new Error("Failed to delete note.");
+  }
+};
