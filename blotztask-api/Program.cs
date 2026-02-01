@@ -3,6 +3,7 @@ using BlotzTask.Middleware;
 using BlotzTask.Modules.BreakDown;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.Labels;
+using BlotzTask.Modules.Notes;
 using BlotzTask.Modules.SpeechToText;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.TimeEstimate;
@@ -25,7 +26,7 @@ builder.Services.AddLabelModule();
 builder.Services.AddTaskBreakdownModule();
 builder.Services.AddTimeEstimateModule();
 builder.Services.AddSpeechToTextModule(builder.Configuration);
-
+builder.Services.AddNotesModule();
 
 builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 
