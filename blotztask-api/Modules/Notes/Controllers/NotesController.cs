@@ -34,12 +34,12 @@ public class NotesController
 
   }
   [HttpGet]
-  public async Task<List<NoteDto>> SearchNote([FromQuery] string? q, CancellationToken ct)
+  public async Task<List<NoteDto>> SearchNote([FromQuery] string? query, CancellationToken ct)
   {
     if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
       throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
-    var query = new SearchNotesQuery { UserId = userId, QueryString = q };
-    return await searchNotesQueryHandler.Handle(query, ct);
+    var searchQuery = new SearchNotesQuery { UserId = userId, QueryString = query };
+    return await searchNotesQueryHandler.Handle(searchQuery, ct);
   }
 
   [HttpPut("{id:guid}")]
