@@ -8,25 +8,20 @@ import { UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { useTranslation } from "react-i18next";
 
-export default function NotificationScreen() {
+export default function SettingsTaskHandlingScreen() {
+  const { t } = useTranslation("settings");
   const { isUserPreferencesLoading, userPreferences } = useUserPreferencesQuery();
   const { updateUserPreferences, isUpdatingUserPreferences } = useUserPreferencesMutation();
-  const { t } = useTranslation("settings");
-
-  const handleUpdateUserPreferences = async () => {
+  const handleToggleAutoRollover = async () => {
     if (!userPreferences) return;
-
-    const newUpcomingNotification = !userPreferences.upcomingNotification;
-
     const newUserPreferences: UserPreferencesDTO = {
-      autoRollover: userPreferences.autoRollover,
-      upcomingNotification: newUpcomingNotification,
+      autoRollover: !userPreferences.autoRollover,
+      upcomingNotification: userPreferences.upcomingNotification,
       overdueNotification: userPreferences.overdueNotification,
       dailyPlanningNotification: userPreferences.dailyPlanningNotification,
       eveningWrapUpNotification: userPreferences.eveningWrapUpNotification,
       preferredLanguage: userPreferences.preferredLanguage,
     };
-
     updateUserPreferences(newUserPreferences);
   };
 
@@ -40,28 +35,26 @@ export default function NotificationScreen() {
         <ReturnButton />
         <View className="flex-1 items-center">
           <Text className="text-3xl font-balooExtraBold text-secondary">
-            {t("notifications.title")}
+            {t("taskHandling.title")}
           </Text>
         </View>
       </View>
 
-      <View className="mx-6 mt-8 rounded-2xl bg-white px-6 pt-4">
-        <Text className="text-xl font-balooExtraBold text-secondary">
-          {t("notifications.taskNotifications")}
-        </Text>
-
-        <View className="mt-1">
-          <View className="flex-row items-center justify-between py-3">
-            <Text className="text-base font-baloo text-secondary">
-              {t("notifications.upcomingDueTasks")}
-            </Text>
-            <ToggleSwitch
-              value={userPreferences?.upcomingNotification ?? true}
-              disabled={isUpdatingUserPreferences}
-              onChange={() => handleUpdateUserPreferences()}
-            />
-          </View>
+      <View className="flex-row items-center justify-between bg-white rounded-2xl px-6 py-4 mt-8 mx-6">
+        <View className="flex-1 mr-4">
+          <Text className="text-lg font-baloo text-secondary">
+            {t("taskHandling.autoRollover")}
+          </Text>
+          <Text className="text-sm text-primary font-balooThin mt-1">
+            {t("taskHandling.autoRolloverDescription")}
+          </Text>
         </View>
+
+        <ToggleSwitch
+          value={userPreferences?.autoRollover ?? false}
+          disabled={isUpdatingUserPreferences}
+          onChange={handleToggleAutoRollover}
+        />
       </View>
     </SafeAreaView>
   );

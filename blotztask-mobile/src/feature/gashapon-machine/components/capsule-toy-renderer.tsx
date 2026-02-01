@@ -19,7 +19,7 @@ export const CapsuleToyRenderer = (props: any) => {
         zIndex: Math.round(body.position.y),
         transform: [{ rotate: `${angle}rad` }],
       }}
-      resizeMode="cover"
+      resizeMode="contain"
     />
   );
 };
