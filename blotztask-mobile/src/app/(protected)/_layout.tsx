@@ -15,21 +15,7 @@ export default function ProtectedLayout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
 
-      <Stack.Screen
-        name="task-details"
-        options={{
-          headerShown: true,
-          headerShadowVisible: false,
-          headerTransparent: true,
-          headerTitle: "",
-          headerBackVisible: false,
-          headerTintColor: "#000000",
-          headerBackButtonDisplayMode: "minimal",
-          headerStyle: {
-            backgroundColor: "transparent",
-          },
-        }}
-      />
+      <Stack.Screen name="task-details" options={{ headerShown: false }} />
       <Stack.Screen
         name="task-edit"
         options={{

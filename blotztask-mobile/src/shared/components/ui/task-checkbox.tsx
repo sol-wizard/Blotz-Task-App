@@ -1,7 +1,7 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { Pressable } from "react-native";
 import * as Haptics from "expo-haptics";
-import { createAnimatedComponent, CSSAnimationKeyframes } from "react-native-reanimated";
+import { createAnimatedComponent } from "react-native-reanimated";
 
 interface TaskCheckboxProps {
   checked: boolean;
@@ -39,18 +39,10 @@ export const TaskCheckbox = ({
         width: size,
         height: size,
         borderRadius: size / 4,
-        animationName: backgroundAnimation,
-        animationDuration: "2.5s",
-        animationTimingFunction: "ease-in-out",
       }}
       disabled={disabled}
     >
       {checked && <MaterialIcons name="check" size={20} color="#3D8DE0" />}
     </AnimatedPressable>
   );
-};
-
-const backgroundAnimation: CSSAnimationKeyframes = {
-  "0%": { backgroundColor: "#FFFFFF" },
-  "100%": { backgroundColor: "#E3EFFE" },
 };

@@ -5,7 +5,7 @@ import { EntityMap } from "../models/entity-map";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
-import { getStarIconAsBefore } from "@/feature/notes/utils/get-star-icon";
+import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
 import { Platform } from "react-native";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 

@@ -15,6 +15,7 @@ import {
   TaskSingleTimeCard,
 } from "@/feature/task-details/components/task-time-card";
 import { useTranslation } from "react-i18next";
+import { ReturnButton } from "@/shared/components/ui/return-button";
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
@@ -88,12 +89,15 @@ export default function TaskDetailsScreen() {
       className="flex-1"
       style={{ backgroundColor: selectedTask.label?.color ?? theme.colors.fallback }}
     >
+      <View pointerEvents="box-none" className="ml-6 pt-2">
+        <ReturnButton />
+      </View>
       <TouchableWithoutFeedback
         onPress={() => {
           Keyboard.dismiss();
         }}
       >
-        <View className="py-6 px-8">
+        <View className="pb-6 px-8">
           <View className="flex-row items-center mb-4 mt-6">
             <View className="px-3 py-1 rounded-xl border border-black">
               <Text className={`text-sm font-medium text-black`}>

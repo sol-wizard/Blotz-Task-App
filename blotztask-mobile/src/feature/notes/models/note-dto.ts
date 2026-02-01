@@ -1,5 +1,5 @@
 export interface NoteDTO {
-  id: number;
+  id: string;
   text: string;
   createdAt: string;
 }
