@@ -13,7 +13,6 @@ import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 import { NoteModal } from "@/feature/notes/components/note-modal";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
