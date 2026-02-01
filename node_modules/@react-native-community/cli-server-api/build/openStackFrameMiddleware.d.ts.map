@@ -1,1 +1,0 @@
-{"version":3,"file":"openStackFrameMiddleware.d.ts","sourceRoot":"","sources":["../src/openStackFrameMiddleware.ts"],"names":[],"mappings":"AAAA;;;;;GAKG;AAKH,OAAO,OAAO,MAAM,SAAS,CAAC;AAG9B,KAAK,OAAO,GAAG;IACb,YAAY,EAAE,aAAa,CAAC,MAAM,CAAC,CAAC;CACrC,CAAC;AAEF;;GAEG;AACH,MAAM,CAAC,OAAO,UAAU,wBAAwB,CAAC,CAAC,EAAE,OAAO,kBA+B1D"}
