@@ -113,22 +113,23 @@ export default function NotesScreen() {
             <View className="flex-1 bg-black/30 justify-center items-center">
               <View className="w-11/12 bg-white rounded-2xl p-6">
                 <Pressable
-                  onPress={() => setIsModalVisible(false)}
-                  className="self-end w-10 h-10 rounded-full bg-gray-200 items-center justify-center
+                  onPress={() => {
+                    setIsModalVisible(false);
+                    setNoteText("");
+                  }}
+                  className="self-end w-10 h-10 rounded-full bg-[#F3F4F6] items-center justify-center
 "
                 >
-                  <Text className="text-xl">x</Text>
+                  <MaterialCommunityIcons name="close" size={18} color="#4B5563" />
                 </Pressable>
-                <Text className="font-baloo text-lg" style={{ color: theme.colors.disabled }}>
-                  {t("noteModalTitle")}
-                </Text>
+
                 <TextInput
                   value={noteText}
                   onChangeText={setNoteText}
                   placeholder={t("notePlaceholder")}
-                  placeholderTextColor={theme.colors.disabled}
+                  placeholderTextColor={theme.colors.primary}
                   multiline
-                  className="mt-3 h-32 rounded-xl bg-background p-4 text-base"
+                  className="mt-3 h-36 rounded-xl bg-background px-4 text-base mx-4"
                 />
                 <Pressable
                   disabled={!isSaveEnabled}
