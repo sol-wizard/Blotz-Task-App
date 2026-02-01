@@ -2,11 +2,8 @@ import WidgetKit
 import SwiftUI
 
 @main
-struct exportWidgets: WidgetBundle {
+struct BlotzTaskWidgetBundle: WidgetBundle {
     var body: some Widget {
-        // Export widgets here
-        widget()
-        widgetControl()
-        WidgetLiveActivity()
+        TodayTasksWidget()
     }
 }

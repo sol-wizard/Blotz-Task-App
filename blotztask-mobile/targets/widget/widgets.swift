@@ -1,80 +1,111 @@
 import WidgetKit
 import SwiftUI
 
-struct Provider: AppIntentTimelineProvider {
-    func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), configuration: ConfigurationAppIntent())
+// MARK: - Model
+// ✅ 推荐先用 String? 接 endTime，避免 decode Date 失败导致 tasks 全空
+struct WidgetTask: Identifiable, Codable, Hashable {
+    let id: String
+    let title: String
+    let isDone: Bool
+    let endTime: String?
+}
+
+// MARK: - Entry
+struct TodayTasksEntry: TimelineEntry {
+    let date: Date
+    let tasks: [WidgetTask]
+}
+
+// MARK: - Provider
+struct TodayTasksProvider: TimelineProvider {
+    private let appGroupId = "group.com.yourcompany.blotztask" // TODO: 改成你的 App Group
+    private let tasksKey = "today_tasks"
+
+    func placeholder(in context: Context) -> TodayTasksEntry {
+        TodayTasksEntry(date: Date(), tasks: [
+            WidgetTask(id: "1", title: "Example task", isDone: false, endTime: nil),
+            WidgetTask(id: "2", title: "Another task", isDone: true, endTime: nil),
+        ])
     }
 
-    func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> SimpleEntry {
-        SimpleEntry(date: Date(), configuration: configuration)
+    func getSnapshot(in context: Context, completion: @escaping (TodayTasksEntry) -> Void) {
+        completion(TodayTasksEntry(date: Date(), tasks: loadTasks()))
     }
-    
-    func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<SimpleEntry> {
-        var entries: [SimpleEntry] = []
 
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
-        let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, configuration: configuration)
-            entries.append(entry)
+    func getTimeline(in context: Context, completion: @escaping (Timeline<TodayTasksEntry>) -> Void) {
+        let entry = TodayTasksEntry(date: Date(), tasks: loadTasks())
+
+        // 15分钟后请求刷新（系统不保证）
+        let nextRefresh = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date().addingTimeInterval(900)
+        completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
+    }
+
+    private func loadTasks() -> [WidgetTask] {
+        guard let defaults = UserDefaults(suiteName: appGroupId),
+              let json = defaults.string(forKey: tasksKey),
+              let data = json.data(using: .utf8) else {
+            return []
         }
 
-        return Timeline(entries: entries, policy: .atEnd)
+        do {
+            return try JSONDecoder().decode([WidgetTask].self, from: data)
+        } catch {
+            // 如果你想 debug，可以临时把 json 打印出来看看格式
+            return []
+        }
     }
-
-//    func relevances() async -> WidgetRelevances<ConfigurationAppIntent> {
-//        // Generate a list containing the contexts this widget is relevant in.
-//    }
 }
 
-struct SimpleEntry: TimelineEntry {
-    let date: Date
-    let configuration: ConfigurationAppIntent
-}
-
-struct widgetEntryView : View {
-    var entry: Provider.Entry
+// MARK: - View
+struct TodayTasksWidgetView: View {
+    let entry: TodayTasksEntry
 
     var body: some View {
-        VStack {
-            Text("Time:")
-            Text(entry.date, style: .time)
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Today")
+                .font(.headline)
 
-            
+            if entry.tasks.isEmpty {
+                Text("Open the app to sync tasks")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(entry.tasks.prefix(3)) { task in
+                    HStack(spacing: 8) {
+                        Image(systemName: task.isDone ? "checkmark.circle.fill" : "circle")
+                        Text(task.title)
+                            .lineLimit(1)
+
+                        Spacer()
+
+                        // 这里先不强制显示 endTime（你后面要显示再加解析）
+                    }
+                    .font(.subheadline)
+                }
+
+                if entry.tasks.count > 3 {
+                    Text("+ \(entry.tasks.count - 3) more")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer()
         }
+        .padding()
     }
 }
 
-struct widget: Widget {
-    let kind: String = "widget"
+// MARK: - Widget
+struct TodayTasksWidget: Widget {
+    let kind: String = "TodayTasksWidget" // TODO: 这个要和 index.swift 暴露的一致
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
-            widgetEntryView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
+        StaticConfiguration(kind: kind, provider: TodayTasksProvider()) { entry in
+            TodayTasksWidgetView(entry: entry)
         }
+        .configurationDisplayName("Today Tasks")
+        .description("Shows your tasks for today.")
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
-}
-
-extension ConfigurationAppIntent {
-    fileprivate static var smiley: ConfigurationAppIntent {
-        let intent = ConfigurationAppIntent()
-        intent.favoriteEmoji = "😀"
-        return intent
-    }
-    
-    fileprivate static var starEyes: ConfigurationAppIntent {
-        let intent = ConfigurationAppIntent()
-        intent.favoriteEmoji = "🤩"
-        return intent
-    }
-}
-
-#Preview(as: .systemMedium) {
-    widget()
-} timeline: {
-    SimpleEntry(date: .now, configuration: .smiley)
-    SimpleEntry(date: .now, configuration: .starEyes)
 }
