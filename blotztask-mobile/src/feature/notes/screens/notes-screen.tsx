@@ -1,5 +1,5 @@
 import { theme } from "@/shared/constants/theme";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { View, Text, Pressable, TextInput, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,6 +18,7 @@ export default function NotesScreen() {
   const { isDeleting } = useTaskMutations();
   const posthog = usePostHog();
   const { t } = useTranslation("notes");
+
 
   useFocusEffect(
     useCallback(() => {
