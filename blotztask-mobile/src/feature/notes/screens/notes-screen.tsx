@@ -16,14 +16,8 @@ import { NoteModal } from "@/feature/notes/components/note-modal";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
-  const {
-    deleteNote,
-    isNoteDeleting,
-    createNote,
-    isNoteCreating,
-    updateNote,
-    isNoteUpdating,
-  } = useNotesMutation();
+  const { deleteNote, isNoteDeleting, createNote, isNoteCreating, updateNote, isNoteUpdating } =
+    useNotesMutation();
   const posthog = usePostHog();
   const { t } = useTranslation("notes");
   const [isModalVisible, setIsModalVisible] = useState(false);
