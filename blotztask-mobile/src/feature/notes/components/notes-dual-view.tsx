@@ -3,7 +3,7 @@ import { useState } from "react";
 import { NoteCard } from "./note-card";
 import { NoteDTO } from "../models/note-dto";
 
-type ToggledMap = Record<number, boolean>;
+type ToggledMap = Record<string, boolean>;
 
 export const NotesDualView = ({
   notes,
@@ -18,7 +18,7 @@ export const NotesDualView = ({
 }) => {
   const [toggledMap, setToggledMap] = useState<ToggledMap>({});
 
-  const handleToggle = (id: number) => {
+  const handleToggle = (id: string) => {
     setToggledMap((prev) => {
       const isOn = !!prev[id];
       if (isOn) return {};
