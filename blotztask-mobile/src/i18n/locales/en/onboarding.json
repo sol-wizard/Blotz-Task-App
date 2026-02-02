@@ -4,15 +4,15 @@
     "continue": "Continue"
   },
   "ai-voice": {
-    "title": "Just say it, We'll handle the rest.",
-    "subtitle": "Speak your task out loud. AI instantly turns it into a task and adds it to today's schedule."
+    "title": "Just say it, \nWe'll handle the rest.",
+    "subtitle": "Speak your task out loud. AI instantly turns it \ninto a task and adds it to today's schedule."
   },
   "breakdown": {
-    "title": "Big goals, broken down",
+    "title": "Big goals, \nbroken down",
     "subtitle": "Tell AI what you want to achieve. It breaks the goal into small, clear steps you can actually follow."
   },
   "star-spark": {
-    "title": "Catch ideas before they fade",
-    "subtitle": "Save your thoughts in Star Spark, Spin the gacha, and AI picks one task for you to do today."
+    "title": "Catch ideas \nbefore they fade",
+    "subtitle": "Save your thoughts in Star Spark, Spin the gacha, \nand AI picks one task for you to do today."
   }
 }

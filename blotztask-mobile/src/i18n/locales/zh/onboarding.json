@@ -4,8 +4,8 @@
     "continue": "继续"
   },
   "ai-voice": {
-    "title": "只需开口，剩下的交给我们",
-    "subtitle": "说出您的任务，AI 将立即将其转化为待办事项并加入今日日程。"
+    "title": "只需开口，\n剩下的交给我们",
+    "subtitle": "说出您的任务，AI 将立即将其转化为\n待办事项并加入今日日程。"
   },
   "breakdown": {
     "title": "宏大目标，化整为零",
@@ -13,6 +13,6 @@
   },
   "star-spark": {
     "title": "捕捉转瞬即逝的灵感",
-    "subtitle": "将想法存入 Star Spark，抽个扭蛋，由 AI 幫您决定今天要做哪件事。"
+    "subtitle": "将想法存入 Star Spark，抽个扭蛋，\n由 AI 幫您决定今天要做哪件事。"
   }
 }
