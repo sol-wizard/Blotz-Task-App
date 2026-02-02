@@ -7,15 +7,15 @@
     "title": "欢迎使用 Blotz Tasks",
     "subtitle": "让计划更轻松、更整洁、更简单。"
   },
-  "ai": {
-    "title": "在日历里轻松安排",
-    "subtitle": "把任务拖进日程，或交给 AI 秒生成安排。"
+  "ai-voice": {
+    "title": "只需开口，剩下的交给我们",
+    "subtitle": "说出您的任务，AI 将立即将其转化为待办事项并加入今日日程。"
   },
   "breakdown": {
     "title": "把任务拆成小步骤",
     "subtitle": "把大目标变成易完成的小步。"
   },
-  "gashapon": {
+  "star-spark": {
     "title": "快速记录任务",
     "subtitle": "快速记录你的想法和待办事项，随时捕捉灵感。"
   }

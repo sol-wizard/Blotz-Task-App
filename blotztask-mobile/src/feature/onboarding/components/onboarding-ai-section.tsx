@@ -16,9 +16,7 @@ export function OnboardingAiSection({ onSkip, onBack }: OnboardingAiSectionProps
   return (
     <View className="flex-1 px-6">
       <View className="flex-row items-center justify-between pt-2">
-        <Pressable onPress={onBack} hitSlop={10}>
-          <Ionicons name="chevron-back" size={22} color="#8C8C8C" />
-        </Pressable>
+        <View className="w-10" />
         <Pressable onPress={onSkip} hitSlop={10}>
           <Text className="text-xl font-baloo text-secondary">{t("actions.skip")}</Text>
         </Pressable>
@@ -26,14 +24,16 @@ export function OnboardingAiSection({ onSkip, onBack }: OnboardingAiSectionProps
 
       <View className="flex-1 items-center justify-center">
         <Image
-          source={ASSETS.onboardingCalendar}
+          source={ASSETS.onboardingVoice}
           style={{ width: 384, height: 384, marginBottom: 24 }}
           contentFit="contain"
         />
 
-        <Text className="text-3xl font-balooBold text-black text-center">{t("ai.title")}</Text>
+        <Text className="text-3xl font-balooBold text-black text-center">
+          {t("ai-voice.title")}
+        </Text>
         <Text className="text-base font-baloo text-secondary text-center mt-2">
-          {t("ai.subtitle")}
+          {t("ai-voice.subtitle")}
         </Text>
       </View>
     </View>
