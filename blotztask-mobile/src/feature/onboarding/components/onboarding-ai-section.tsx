@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { Image } from "expo-image";
+import { Image, ImageBackground } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { ASSETS } from "@/shared/constants/assets";
@@ -15,29 +15,35 @@ export function OnboardingAiSection({ onSkip, onBack }: OnboardingAiSectionProps
 
   return (
     <View className="flex-1 pt-[4px] pb-[167.31px]">
-      <View className="flex-1 px-6">
-        <View className="flex-row items-center justify-between pt-2">
-          <View className="w-10" />
-          <Pressable onPress={onSkip} hitSlop={10}>
-            <Text className="text-xl font-baloo text-black/40">{t("actions.skip")}</Text>
-          </Pressable>
-        </View>
+      <ImageBackground
+        source={ASSETS.onboardingVoiceBackground}
+        style={{ flex: 1 }}
+        contentFit="cover"
+      >
+        <View className="flex-1 px-6">
+          <View className="flex-row items-center justify-between pt-2">
+            <View className="w-10" />
+            <Pressable onPress={onSkip} hitSlop={10}>
+              <Text className="text-xl font-baloo text-black/40">{t("actions.skip")}</Text>
+            </Pressable>
+          </View>
 
-        <View className="flex-1 items-center justify-center pb-20">
-          <Image
-            source={ASSETS.onboardingVoice}
-            style={{ width: "145%", aspectRatio: 1, marginBottom: -20 }}
-            contentFit="contain"
-          />
+          <View className="flex-1 items-center justify-center mt-16">
+            <Image
+              source={ASSETS.onboardingVoice}
+              style={{ width: 384, height: 384, marginBottom: 24 }}
+              contentFit="contain"
+            />
 
-          <Text className="text-3xl font-balooBold text-black text-center">
-            {t("ai-voice.title")}
-          </Text>
-          <Text className="text-base font-baloo text-black/40 text-center mt-2">
-            {t("ai-voice.subtitle")}
-          </Text>
+            <Text className="text-3xl font-balooBold text-black text-center">
+              {t("ai-voice.title")}
+            </Text>
+            <Text className="text-base font-baloo text-black/40 text-center mt-2">
+              {t("ai-voice.subtitle")}
+            </Text>
+          </View>
         </View>
-      </View>
+      </ImageBackground>
     </View>
   );
 }
