@@ -109,3 +109,19 @@ struct TodayTasksWidget: Widget {
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
+// MARK: - Previews
+
+#Preview("TodayTasksWidgetView - Empty") {
+    TodayTasksWidgetView(entry: TodayTasksEntry(date: Date(), tasks: []))
+}
+
+#Preview("TodayTasksWidgetView - Sample Tasks") {
+    let sampleTasks: [WidgetTask] = [
+        WidgetTask(id: "1", title: "Buy groceries", isDone: false, endTime: nil),
+        WidgetTask(id: "2", title: "Finish report", isDone: true, endTime: nil),
+        WidgetTask(id: "3", title: "Call Alice", isDone: false, endTime: nil),
+        WidgetTask(id: "4", title: "Plan weekend", isDone: false, endTime: nil)
+    ]
+    return TodayTasksWidgetView(entry: TodayTasksEntry(date: Date(), tasks: sampleTasks))
+}
+
