@@ -9,7 +9,7 @@ import { useTaskDays } from "../hooks/useTaskDays";
 import { getMarkedDates, getSelectedDates } from "../util/get-marked-dates";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { ReminderSection } from "../components/reminder-section";
 import { DeadlineSection } from "../components/deadline-section";
@@ -29,10 +29,9 @@ const calendarTheme = {
 
 export default function TasksScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date());
-  const [isCalendarVisible, setIsCalendarVisible] = useState(true);
+  const [isCalendarVisible] = useState(true);
   const [selectedSection, setSelectedSection] = useState<SectionType>("Today");
   const { weeklyTaskAvailability, isLoading } = useTaskDays({ selectedDay });
-  const progress = useSharedValue(isCalendarVisible ? 1 : 0);
   usePushNotificationSetup();
 
   let markedDates;

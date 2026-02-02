@@ -3,7 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AnimatedChevron } from "@/shared/components/ui/chevron";
 import { useState, useRef } from "react";
-import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
+import { useSharedValue, withTiming } from "react-native-reanimated";
 import Modal from "react-native-modal";
 
 export type SectionType = "Today" | "Reminder" | "DDL";
