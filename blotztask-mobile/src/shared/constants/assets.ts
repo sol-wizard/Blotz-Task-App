@@ -42,6 +42,9 @@ export const PNGIMAGES = {
   onboardingNote: require("../../../assets/images-png/onboarding-note.png"),
   onboardingVoice: require("../../../assets/images-png/onboarding-voice.png"),
   onboardingStarSpark: require("../../../assets/images-png/onboarding-starspark.png"),
+  onboardingBreakdownBackground: require("../../../assets/images-png/onboarding-breakdown-background.png"),
+  onboardingNoteBackground: require("../../../assets/images-png/onboarding-note-background.png"),
+  onboardingBlotzLogo: require("../../../assets/images-png/onboarding-blotz-logo.png"),
 } as const;
 
 export const SVGIMAGES = {

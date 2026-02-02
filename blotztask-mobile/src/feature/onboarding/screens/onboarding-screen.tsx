@@ -8,6 +8,8 @@ import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
+import { ASSETS } from "@/shared/constants/assets";
+import { Image } from "expo-image";
 
 export default function OnboardingScreen() {
   const { setUserOnboarded } = useUserProfileMutation();
@@ -39,6 +41,13 @@ export default function OnboardingScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
+      <View className="absolute top-10 left-0 right-0 items-center pt-2 z-50" pointerEvents="none">
+        <Image
+          source={ASSETS.onboardingBlotzLogo}
+          style={{ width: 70, height: 20 }}
+          contentFit="contain"
+        />
+      </View>
       {activeSection === "ai-voice" && (
         <OnboardingAiSection onSkip={handleFinish} onBack={handleBack} />
       )}
