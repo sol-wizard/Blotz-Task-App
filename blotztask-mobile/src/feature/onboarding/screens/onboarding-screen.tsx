@@ -15,7 +15,7 @@ export default function OnboardingScreen() {
   const { t } = useTranslation("onboarding");
   useLanguageInit();
 
-  const sections = ["intro", "ai", "breakdown", "gashapon"];
+  const sections = ["ai-voice", "star-spark", "breakdown"];
   const [activeOnboardingIndex, setActiveOnboardingIndex] = useState(0);
 
   const handleFinish = async () => {
@@ -40,12 +40,13 @@ export default function OnboardingScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {activeSection === "intro" && <OnboardingIntroSection onSkip={handleFinish} />}
-      {activeSection === "ai" && <OnboardingAiSection onSkip={handleFinish} onBack={handleBack} />}
+      {activeSection === "ai-voice" && (
+        <OnboardingAiSection onSkip={handleFinish} onBack={handleBack} />
+      )}
       {activeSection === "breakdown" && (
         <OnboardingBreakdownSection onSkip={handleFinish} onBack={handleBack} />
       )}
-      {activeSection === "gashapon" && (
+      {activeSection === "star-spark" && (
         <OnboardingNoteSection onSkip={handleFinish} onBack={handleBack} />
       )}
       <View className="items-center pb-6 px-6">

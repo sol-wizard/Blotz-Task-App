@@ -32,10 +32,10 @@ export function OnboardingNoteSection({ onSkip, onBack }: OnboardingNoteSectionP
         />
 
         <Text className="text-3xl font-balooBold text-black text-center">
-          {t("gashapon.title")}
+          {t("star-spark.title")}
         </Text>
         <Text className="text-base font-baloo text-secondary text-center mt-2">
-          {t("gashapon.subtitle")}
+          {t("star-spark.subtitle")}
         </Text>
       </View>
     </View>
