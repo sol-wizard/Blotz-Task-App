@@ -30,7 +30,7 @@ export function OnboardingBreakdownSection({ onSkip, onBack }: OnboardingBreakdo
             </Pressable>
           </View>
 
-          <View className="flex-1 items-center justify-center">
+          <View className="flex-1 items-center justify-center mt-14">
             <Image
               source={ASSETS.onboardingBreakdown}
               style={{ width: 345, height: 384, marginBottom: 24 }}
