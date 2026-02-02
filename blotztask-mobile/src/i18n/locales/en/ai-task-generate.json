@@ -1,6 +1,6 @@
 {
   "input": {
-    "placeholder": "Hold to speak or tap to write..."
+    "placeholder": "Type a task, or tap below to say it"
   },
   "buttons": {
     "speak": "Speak",
