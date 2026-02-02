@@ -1,8 +1,7 @@
 import WidgetKit
 import SwiftUI
+import AppIntents
 
-// MARK: - Model
-// ✅ 推荐先用 String? 接 endTime，避免 decode Date 失败导致 tasks 全空
 struct WidgetTask: Identifiable, Codable, Hashable {
     let id: String
     let title: String
@@ -10,60 +9,60 @@ struct WidgetTask: Identifiable, Codable, Hashable {
     let endTime: String?
 }
 
-// MARK: - Entry
 struct TodayTasksEntry: TimelineEntry {
     let date: Date
     let tasks: [WidgetTask]
+    let configuration: ConfigurationAppIntent
 }
 
-// MARK: - Provider
-struct TodayTasksProvider: TimelineProvider {
-    private let appGroupId = "group.com.yourcompany.blotztask" // TODO: 改成你的 App Group
-    private let tasksKey = "today_tasks"
-
+struct Provider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> TodayTasksEntry {
-        TodayTasksEntry(date: Date(), tasks: [
-            WidgetTask(id: "1", title: "Example task", isDone: false, endTime: nil),
-            WidgetTask(id: "2", title: "Another task", isDone: true, endTime: nil),
-        ])
+        TodayTasksEntry(date: Date(), tasks: [], configuration: ConfigurationAppIntent())
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (TodayTasksEntry) -> Void) {
-        completion(TodayTasksEntry(date: Date(), tasks: loadTasks()))
+    func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> TodayTasksEntry {
+        // In snapshot, provide a quick sample of tasks
+        let sample = [
+            WidgetTask(id: "1", title: "Buy groceries", isDone: false, endTime: nil),
+            WidgetTask(id: "2", title: "Finish report", isDone: true, endTime: nil),
+            WidgetTask(id: "3", title: "Call Alice", isDone: false, endTime: nil)
+        ]
+        return TodayTasksEntry(date: Date(), tasks: sample, configuration: configuration)
     }
-
-    func getTimeline(in context: Context, completion: @escaping (Timeline<TodayTasksEntry>) -> Void) {
-        let entry = TodayTasksEntry(date: Date(), tasks: loadTasks())
-
-        // 15分钟后请求刷新（系统不保证）
+    
+    func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<TodayTasksEntry> {
+        // Load tasks from shared storage if needed. For now, create a single entry with current tasks.
+        // You can later replace this with App Group UserDefaults or other shared storage.
+        let tasks = await loadTodayTasks()
+        let entry = TodayTasksEntry(date: Date(), tasks: tasks, configuration: configuration)
+        // Refresh in 15 minutes
         let nextRefresh = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date().addingTimeInterval(900)
-        completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
+        return Timeline(entries: [entry], policy: .after(nextRefresh))
     }
-
-    private func loadTasks() -> [WidgetTask] {
+    
+    private func loadTodayTasks() async -> [WidgetTask] {
+        // Read tasks from App Group shared UserDefaults as JSON string
+        let appGroupId = "group.com.yourcompany.blotztask"
+        let tasksKey = "today_tasks"
         guard let defaults = UserDefaults(suiteName: appGroupId),
               let json = defaults.string(forKey: tasksKey),
               let data = json.data(using: .utf8) else {
             return []
         }
-
         do {
             return try JSONDecoder().decode([WidgetTask].self, from: data)
         } catch {
-            // 如果你想 debug，可以临时把 json 打印出来看看格式
             return []
         }
     }
 }
 
-// MARK: - View
-struct TodayTasksWidgetView: View {
-    let entry: TodayTasksEntry
+struct widgetEntryView : View {
+    var entry: TodayTasksEntry
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Today")
-                .font(.headline)
+            Text("Today").font(.headline)
 
             if entry.tasks.isEmpty {
                 Text("Open the app to sync tasks")
@@ -72,13 +71,12 @@ struct TodayTasksWidgetView: View {
             } else {
                 ForEach(entry.tasks.prefix(3)) { task in
                     HStack(spacing: 8) {
-                        Image(systemName: task.isDone ? "checkmark.circle.fill" : "circle")
-                        Text(task.title)
-                            .lineLimit(1)
-
+                        Button(intent: ToggleTaskDoneIntent(taskID: task.id)) {
+                            Image(systemName: task.isDone ? "checkmark.circle.fill" : "circle")
+                        }
+                        .buttonStyle(.plain)
+                        Text(task.title).lineLimit(1)
                         Spacer()
-
-                        // 这里先不强制显示 endTime（你后面要显示再加解析）
                     }
                     .font(.subheadline)
                 }
@@ -89,39 +87,52 @@ struct TodayTasksWidgetView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-
             Spacer()
         }
-        .padding()
     }
 }
 
-// MARK: - Widget
-struct TodayTasksWidget: Widget {
-    let kind: String = "TodayTasksWidget" // TODO: 这个要和 index.swift 暴露的一致
+struct widget: Widget {
+    let kind: String = "widget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: TodayTasksProvider()) { entry in
-            TodayTasksWidgetView(entry: entry)
+        AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
+            widgetEntryView(entry: entry)
+                .containerBackground(.fill.tertiary, for: .widget)
         }
-        .configurationDisplayName("Today Tasks")
-        .description("Shows your tasks for today.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
-// MARK: - Previews
 
-#Preview("TodayTasksWidgetView - Empty") {
-    TodayTasksWidgetView(entry: TodayTasksEntry(date: Date(), tasks: []))
+extension ConfigurationAppIntent {
+    fileprivate static var smiley: ConfigurationAppIntent {
+        let intent = ConfigurationAppIntent()
+        intent.favoriteEmoji = "😀"
+        return intent
+    }
+    
+    fileprivate static var starEyes: ConfigurationAppIntent {
+        let intent = ConfigurationAppIntent()
+        intent.favoriteEmoji = "🤩"
+        return intent
+    }
 }
 
-#Preview("TodayTasksWidgetView - Sample Tasks") {
-    let sampleTasks: [WidgetTask] = [
+#Preview("Today Tasks - Small", as: .systemSmall) {
+    widget()
+} timeline: {
+    TodayTasksEntry(date: .now, tasks: [
+        WidgetTask(id: "1", title: "Buy groceries", isDone: false, endTime: nil),
+        WidgetTask(id: "2", title: "Finish report", isDone: true, endTime: nil)
+    ], configuration: .smiley)
+}
+#Preview("Today Tasks - Medium", as: .systemMedium) {
+    widget()
+} timeline: {
+    TodayTasksEntry(date: .now, tasks: [
         WidgetTask(id: "1", title: "Buy groceries", isDone: false, endTime: nil),
         WidgetTask(id: "2", title: "Finish report", isDone: true, endTime: nil),
         WidgetTask(id: "3", title: "Call Alice", isDone: false, endTime: nil),
         WidgetTask(id: "4", title: "Plan weekend", isDone: false, endTime: nil)
-    ]
-    return TodayTasksWidgetView(entry: TodayTasksEntry(date: Date(), tasks: sampleTasks))
+    ], configuration: .starEyes)
 }
 
