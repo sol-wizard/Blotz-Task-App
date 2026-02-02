@@ -102,3 +102,13 @@ export async function getAllTasks(): Promise<TaskDetailDTO[]> {
     throw new Error("Failed to fetch all tasks.");
   }
 }
+
+export async function fetchFloatingTasks(): Promise<TaskDetailDTO[]> {
+  const url = `/Task/star-spark-floating-tasks`;
+  try {
+    const data: TaskDetailDTO[] = await apiClient.get(url);
+    return data;
+  } catch {
+    throw new Error("Failed to fetch floating tasks.");
+  }
+}

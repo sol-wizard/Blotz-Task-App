@@ -32,7 +32,7 @@ public class GetStarSparkFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogge
             .Where(t => t.UserId == query.UserId
                         && t.StartTime == null
                         && t.EndTime == null
-                        && t.CreatedAt < DateTime.UtcNow.Date
+                        // && t.CreatedAt < DateTime.UtcNow.Date
                         && t.IsDone == false
             );
 
