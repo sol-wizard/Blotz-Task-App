@@ -3,10 +3,6 @@
     "skip": "跳过",
     "continue": "继续"
   },
-  "intro": {
-    "title": "欢迎使用 Blotz Tasks",
-    "subtitle": "让计划更轻松、更整洁、更简单。"
-  },
   "ai-voice": {
     "title": "只需开口，剩下的交给我们",
     "subtitle": "说出您的任务，AI 将立即将其转化为待办事项并加入今日日程。"
@@ -16,7 +12,7 @@
     "subtitle": "把大目标变成易完成的小步。"
   },
   "star-spark": {
-    "title": "快速记录任务",
-    "subtitle": "快速记录你的想法和待办事项，随时捕捉灵感。"
+    "title": "捕捉转瞬即逝的灵感",
+    "subtitle": "将想法存入 Star Spark，抽个扭蛋，由 AI 幫您决定今天要做哪件事。"
   }
 }

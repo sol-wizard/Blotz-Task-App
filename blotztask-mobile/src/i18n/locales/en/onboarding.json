@@ -3,10 +3,6 @@
     "skip": "Skip",
     "continue": "Continue"
   },
-  "intro": {
-    "title": "Welcome to Blotz Tasks",
-    "subtitle": "Keep planning light, tidy, and easy."
-  },
   "ai-voice": {
     "title": "Just say it, We'll handle the rest.",
     "subtitle": "Speak your task out loud. AI instantly turns it into a task and adds it to today's schedule."
@@ -16,7 +12,7 @@
     "subtitle": "Turn big goals into bite-sized steps you can finish fast."
   },
   "star-spark": {
-    "title": "Quick note",
-    "subtitle": "Quickly capture your thoughts and todos, catch inspiration anytime."
+    "title": "Catch ideas before they fade",
+    "subtitle": "Save your thoughts in Star Spark, Spin the gacha, and AI picks one task for you to do today."
   }
 }
