@@ -25,6 +25,7 @@
     "startFrom": "Start from",
     "endAt": "End at",
     "breakdownTask": "Breakdown Task",
+    "breakdownNoResult": "Could not break this down. Add more detail and try again.",
     "loadingSubtasks": "Loading subtasks...",
     "noSubtasksYet": "No subtasks yet",
     "complete": "Complete",

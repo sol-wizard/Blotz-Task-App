@@ -9,6 +9,7 @@ import SubtasksEditor from "./subtasks-editor";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
+import Toast from "react-native-toast-message";
 
 type SubtaskViewProps = {
   parentTask: TaskDetailDTO;
@@ -38,6 +39,11 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
         await replaceSubtasks({
           taskId: parentTask.id,
           subtasks: subtasks.map((subtask: AddSubtaskDTO) => ({ ...subtask })),
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: t("details.breakdownNoResult"),
         });
       }
     } catch (e) {

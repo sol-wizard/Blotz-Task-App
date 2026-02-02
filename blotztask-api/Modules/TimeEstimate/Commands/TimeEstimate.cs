@@ -27,7 +27,7 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
 
             var arguments = new KernelArguments(executionSettings)
             {
-                ["title"] = note.Text
+                ["text"] = note.Text
             };
 
             var result = await kernel.InvokePromptAsync(
@@ -56,10 +56,15 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
                 return null;
             }
 
+            var minimumDuration = TimeSpan.FromMinutes(5);
+            var normalizedDuration = parsedResult.Duration < minimumDuration
+                ? minimumDuration
+                : parsedResult.Duration;
+
             var timeEstimationResult = new NoteTimeEstimation
             {
                 NoteId = note.Id,
-                Duration = parsedResult.Duration
+                Duration = normalizedDuration
             };
             return timeEstimationResult;
         }

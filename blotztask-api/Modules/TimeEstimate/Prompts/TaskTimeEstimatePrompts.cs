@@ -16,6 +16,8 @@ public class TaskTimeEstimatePrompts
            - making a decision
            - writing a brief follow-up
         3. Use a .NET TimeSpan string in the ""c"" format (hh:mm:ss).
+        4. The estimate MUST be at least 5 minutes. If it would be smaller, use 00:05:00.
+        5. Round to the nearest 5 minutes when reasonable.
 
         Response Format:
         Return ONLY a JSON object with this exact structure:
