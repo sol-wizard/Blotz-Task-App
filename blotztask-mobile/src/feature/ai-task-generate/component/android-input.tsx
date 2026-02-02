@@ -147,8 +147,11 @@ export const AndroidInput = ({
   const showSendButton = text.trim() !== "" && !isListening;
 
   return (
-    <View className="mb-8 ">
-      <Text className="font-baloo text-lg mb-2">{t("aiTaskGenerate:labels.newTask")}</Text>
+    <View className="mb-8">
+      <View className="items-center mb-4">
+        <View className="w-12 h-1 rounded-full bg-[#ECECEC]" />
+      </View>
+      <Text className="font-balooBold text-2xl mb-2 px-4 text-secondary">{t("aiTaskGenerate:labels.newTask")}</Text>
       <TextInput
         value={text}
         onChangeText={setText}
@@ -156,7 +159,7 @@ export const AndroidInput = ({
         autoFocus
         placeholderTextColor={theme.colors.secondary}
         multiline
-        className="bg-[#F2F2F2] rounded-xl h-40 p-4"
+        className="font-baloo text-lg text-secondary bg-[#F4F4F4] border border-[#ECECEC] rounded-xl h-40 p-4"
         style={{ textAlignVertical: "top", textAlign: "left" }}
       />
       {aiGeneratedMessage?.errorMessage && (
@@ -164,12 +167,12 @@ export const AndroidInput = ({
       )}
       {showSendButton ? (
         isAiGenerating ? (
-          <View className="mt-4 h-14 rounded-full bg-[#F2F2F2] items-center justify-center">
+          <View className="mt-4 h-14 rounded-full bg-[#F4F4F4] border border-[#ECECEC] items-center justify-center">
             <ActivityIndicator size={10} color="#2F80ED" />
           </View>
         ) : (
           <Pressable
-            className="bg-[#F2F2F2] rounded-full mt-4 p-4 items-center"
+            className="bg-[#F4F4F4] border border-[#ECECEC] rounded-full mt-4 p-4 items-center"
             onPress={onPressSend}
           >
             <Text className="font-bold">{t("aiTaskGenerate:buttons.generateTask")}</Text>
