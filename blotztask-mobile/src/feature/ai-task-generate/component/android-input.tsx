@@ -148,7 +148,7 @@ export const AndroidInput = ({
 
   return (
     <View className="mb-8">
-      <View className="items-center mb-6">
+      <View className="items-center mb-4">
         <View className="w-12 h-1 rounded-full bg-[#ECECEC]" />
       </View>
       <Text className="font-balooBold text-2xl mb-2 px-4 text-secondary">{t("aiTaskGenerate:labels.newTask")}</Text>
