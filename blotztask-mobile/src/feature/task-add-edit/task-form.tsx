@@ -157,6 +157,11 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 returnKeyType: "done",
               }}
             />
+            {formState.errors.title && (
+              <Text className="text-red-500 text-sm ml-1 font-baloo">
+                {formState.errors.title.message}
+              </Text>
+            )}
           </Animated.View>
 
           <Animated.View
@@ -197,9 +202,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         <View className="px-8 py-6">
           <Pressable
             onPress={handleSubmit(handleFormSubmit)}
-            disabled={!isValid || isSubmitting}
+            disabled={isSubmitting}
             className={`w-full py-4 rounded-xl items-center justify-center ${
-              !isValid || isSubmitting ? "bg-gray-300" : "bg-lime-300"
+              isSubmitting ? "bg-gray-300" : "bg-lime-300"
             }`}
           >
             <Text className="font-balooBold text-xl text-black">
