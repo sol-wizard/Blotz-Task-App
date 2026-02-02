@@ -98,6 +98,12 @@ export default function ProtectedTabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="reminders"
+          options={{
+            tabBarIcon: ({ focused }) => getTabIcon("reminders", focused),
+          }}
+        />
+        <Tabs.Screen
           name="settings"
           options={{
             tabBarIcon: ({ focused }) => getTabIcon("settings", focused),
