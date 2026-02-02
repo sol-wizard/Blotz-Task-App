@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { format } from "date-fns";
-import { CalendarProvider, WeekCalendar } from "react-native-calendars";
+import { CalendarProvider, DateData, WeekCalendar } from "react-native-calendars";
 import { theme } from "@/shared/constants/theme";
 import CalendarHeader from "../components/calendar-header";
 import { FilteredTaskList } from "../components/filtered-task-list";
@@ -51,7 +51,9 @@ export default function CalendarScreen() {
       />
       <CalendarProvider
         date={format(selectedDay, "yyyy-MM-dd")}
-        onDateChanged={(date: string) => setSelectedDay(new Date(date))}
+        onDateChanged={(date: string) => {
+          setSelectedDay(new Date(date));
+        }}
         showTodayButton={false}
       >
         {isCalendarVisible && (
@@ -60,7 +62,6 @@ export default function CalendarScreen() {
             exiting={MotionAnimations.outExiting}
           >
             <WeekCalendar
-              current={format(selectedDay, "yyyy-MM-dd")}
               theme={calendarTheme}
               markedDates={markedDates}
               allowShadow={false}
