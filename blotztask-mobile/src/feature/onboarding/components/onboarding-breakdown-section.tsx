@@ -27,7 +27,7 @@ export function OnboardingBreakdownSection({ onSkip, onBack }: OnboardingBreakdo
       <View className="flex-1 items-center justify-center">
         <Image
           source={ASSETS.onboardingBreakdown}
-          style={{ width: 384, height: 384, marginBottom: 24 }}
+          style={{ width: 345, height: 384, marginBottom: 24 }}
           contentFit="contain"
         />
 
