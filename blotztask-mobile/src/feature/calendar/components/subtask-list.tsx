@@ -10,7 +10,7 @@ import Animated, {
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
-import SubtaskCheckbox from "@/feature/task-details/components/subtasks-checkbox";
+import TasksCheckbox from "@/feature/task-details/components/Tasks-checkbox";
 import { convertDurationToText } from "@/shared/util/convert-duration";
 
 type Props = {
@@ -49,7 +49,7 @@ const SubtaskList = ({ task, progress }: Props) => {
             disabled={isTogglingSubtaskStatus}
             className={`flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
           >
-            <SubtaskCheckbox
+            <TasksCheckbox
               checked={subtask.isDone}
               disabled={isTogglingSubtaskStatus}
               size={24}

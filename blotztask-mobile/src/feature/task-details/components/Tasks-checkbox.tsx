@@ -17,9 +17,8 @@ type Props = {
 };
 
 const GREEN = "#84CC16";
-const GREEN_BG = "#FFFFFF";
 
-export default function SubtaskCheckbox({
+export default function TasksCheckbox({
   checked,
   onChange,
   disabled = false,
@@ -38,22 +37,29 @@ export default function SubtaskCheckbox({
     <Pressable
       onPress={handlePress}
       disabled={disabled}
-      className={["items-center justify-center", disabled ? "opacity-50" : "", className].join(" ")}
+      className={[
+        "items-center justify-center border-2",
+        disabled ? "opacity-50" : "",
+        className,
+      ].join(" ")}
       style={[
         {
           width: size,
           height: size,
           borderRadius: size / 2,
-          borderWidth: 2,
           borderColor: checked ? color : uncheckedColor,
-          backgroundColor: GREEN_BG,
+          backgroundColor: checked ? color : "#FFFFFF",
         },
         style,
       ]}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked, disabled }}
     >
-      {checked && <MaterialIcons name="check" size={Math.round(size * 0.72)} color={color} />}
+      {checked && (
+        <MaterialIcons
+          name="check"
+          size={Math.round(size * 0.6)}
+          color="#FFFFFF"
+        />
+      )}
     </Pressable>
   );
 }

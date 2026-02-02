@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Pressable, Text, ActivityIndicator, useWindowDimensions } from "react-native";
-import SubtaskCheckbox from "@/feature/task-details/components/subtasks-checkbox";
+import TasksCheckbox from "@/feature/task-details/components/Tasks-checkbox";
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
@@ -162,7 +162,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                 {/* Header row */}
                 <View className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}>
                   <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
-                    <SubtaskCheckbox
+                    <TasksCheckbox
                       checked={task.isDone}
                       disabled={isLoading}
                       size={32}

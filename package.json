@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "@react-native-masked-view/masked-view": "^0.3.2"
-  },
-  "devDependencies": {
-    "@react-native-community/cli": "^20.1.1"
-  }
-}
