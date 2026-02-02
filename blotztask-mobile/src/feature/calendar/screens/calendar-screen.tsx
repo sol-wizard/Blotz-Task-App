@@ -60,7 +60,6 @@ export default function CalendarScreen() {
             exiting={MotionAnimations.outExiting}
           >
             <WeekCalendar
-              onDayPress={(day: DateData) => setSelectedDay(new Date(day.dateString))}
               current={format(selectedDay, "yyyy-MM-dd")}
               theme={calendarTheme}
               markedDates={markedDates}
