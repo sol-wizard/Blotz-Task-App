@@ -2,7 +2,6 @@ import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileM
 import { OnboardingAiSection } from "@/feature/onboarding/components/onboarding-ai-section";
 import { OnboardingBreakdownSection } from "@/feature/onboarding/components/onboarding-breakdown-section";
 import { OnboardingNoteSection } from "@/feature/onboarding/components/onboarding-note-section";
-import { OnboardingIntroSection } from "@/feature/onboarding/components/onboarding-intro-section";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -49,22 +48,22 @@ export default function OnboardingScreen() {
       {activeSection === "star-spark" && (
         <OnboardingNoteSection onSkip={handleFinish} onBack={handleBack} />
       )}
-      <View className="items-center pb-6 px-6">
-        <View className="flex-row items-center mb-4">
+      <View className="items-center pb-8 px-6">
+        <View className="flex-row items-center mb-[100px] mt-[-160px]">
           {sections.map((section, index) => {
             const isActive = index === activeOnboardingIndex;
             const key = `${section}-${index}`;
             return (
               <View
                 key={key}
-                className={`${isActive ? "w-6 bg-black" : "w-2 bg-gray-300"} h-2 rounded-full ${
+                className={`${isActive ? "w-2 bg-black" : "w-2 bg-gray-300"} h-2 rounded-full ${
                   index < sections.length - 1 ? "mr-2" : ""
                 }`}
               />
             );
           })}
         </View>
-        <Pressable onPress={handleNext} className="w-full bg-black rounded-full py-4">
+        <Pressable onPress={handleNext} className="w-[46%] h-[48px] bg-[#8BCC5A] rounded-full py-4">
           <Text className="text-white text-lg font-baloo text-center">{t("actions.continue")}</Text>
         </Pressable>
       </View>
