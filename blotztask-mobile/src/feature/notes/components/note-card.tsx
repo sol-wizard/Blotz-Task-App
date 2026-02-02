@@ -8,6 +8,8 @@ import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
 import { convertDurationToMinutes, convertDurationToText } from "@/shared/util/convert-duration";
 import { NoteDTO } from "../models/note-dto";
 import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
+import { useNotesMutation } from "../hooks/useNotesMutation";
+import { router } from "expo-router";
 
 export const NoteCard = ({
   note,
@@ -29,6 +31,7 @@ export const NoteCard = ({
 
   const addNoteToTask = useAddNoteToTask();
   const { estimateTime, isEstimating, timeResult, estimateError } = useEstimateTaskTime();
+  const { deleteNote } = useNotesMutation();
 
   const handleEstimateTime = (note: NoteDTO) => {
     setIsModalVisible(true);
@@ -42,8 +45,12 @@ export const NoteCard = ({
     addNoteToTask({
       note,
       durationMinutes,
-      onSuccess: () => setIsModalVisible(false),
+      onSuccess: () => {
+        setIsModalVisible(false);
+        deleteNote(note.id);
+      },
     });
+    router.push("/(protected)/(tabs)");
   };
   return (
     <View className="mb-4">

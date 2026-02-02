@@ -75,7 +75,7 @@
     "react-hook-form": "^7.60.0",
     "react-i18next": "^16.5.1",
     "react-native": "0.81.5",
-    "react-native-auth0": "^5.0.0-beta.3",
+    "react-native-auth0": "^5.4.0",
     "react-native-calendars": "https://codeload.github.com/craftworkco/react-native-calendars/tar.gz/ae19e2af74ecdb29d6117ca41fbf41977a10cc23",
     "react-native-draggable-flatlist": "^4.0.3",
     "react-native-element-dropdown": "^2.12.4",

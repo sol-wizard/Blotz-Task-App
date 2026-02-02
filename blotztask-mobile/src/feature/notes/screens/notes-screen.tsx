@@ -5,19 +5,24 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { NotesDualView } from "@/feature/notes/components/notes-dual-view";
-import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesSearch as useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
+import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import { router, useFocusEffect } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
+import { NoteModal } from "@/feature/notes/components/note-modal";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
-  const { isDeleting } = useTaskMutations();
+  const { deleteNote, isNoteDeleting, createNote, isNoteCreating, updateNote, isNoteUpdating } =
+    useNotesMutation();
   const posthog = usePostHog();
   const { t } = useTranslation("notes");
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [editingNote, setEditingNote] = useState<NoteDTO | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -31,16 +36,38 @@ export default function NotesScreen() {
     searchQuery,
   });
 
-  const handlePressTask = (task: any) => {
-    console.log("Test Pressing task", task);
+  const handlePressTask = (note: NoteDTO) => {
+    setEditingNote(note);
+    setNoteText(note.text ?? "");
+    setIsModalVisible(true);
   };
 
   const handleDelete = (note: NoteDTO) => {
-    console.log("Test Deleting task", note);
+    deleteNote(String(note.id));
   };
 
-  const handleAddSparkPress = () => {
-    console.log("Star Spark button clicked");
+  const handleAddNotePress = () => {
+    if (!noteText.trim() || isNoteCreating) return;
+    createNote(noteText, {
+      onSuccess: () => {
+        setNoteText("");
+        setIsModalVisible(false);
+      },
+    });
+  };
+
+  const handleUpdateNotePress = () => {
+    if (!editingNote || !noteText.trim() || isNoteUpdating) return;
+    updateNote(
+      { id: editingNote.id, text: noteText },
+      {
+        onSuccess: () => {
+          setNoteText("");
+          setEditingNote(null);
+          setIsModalVisible(false);
+        },
+      },
+    );
   };
 
   return (
@@ -89,18 +116,12 @@ export default function NotesScreen() {
           </View>
 
           <Pressable
-            onPress={handleAddSparkPress}
-            className="flex-row mx-6 mb-4"
-            style={{
-              borderWidth: 2,
-              borderStyle: "dashed",
-              borderColor: "#8C8C8C",
-              borderRadius: 16,
-              height: 56,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: theme.colors.background,
+            onPress={() => {
+              setIsModalVisible(true);
             }}
+            className="mx-6 mb-4 border-2 border-dashed rounded-2xl
+         h-14 items-center justify-center bg-background"
+            style={{ borderColor: "#8C8C8C" }}
           >
             <MaterialCommunityIcons name={"plus"} size={24} color={theme.colors.primary} />
             <Text className="font-baloo text-lg " style={{ color: theme.colors.primary }}>
@@ -108,12 +129,31 @@ export default function NotesScreen() {
             </Text>
           </Pressable>
 
+          <NoteModal
+            visible={isModalVisible}
+            noteText={noteText}
+            isSaving={editingNote ? isNoteUpdating : isNoteCreating}
+            onChangeText={setNoteText}
+            onClose={() => {
+              setIsModalVisible(false);
+              setEditingNote(null);
+              setNoteText("");
+            }}
+            onSave={() => {
+              if (editingNote) {
+                handleUpdateNotePress();
+              } else {
+                handleAddNotePress();
+              }
+            }}
+          />
+
           {showLoading && <LoadingScreen />}
           {!showLoading && notesSearchResult.length > 0 && (
             <NotesDualView
               notes={notesSearchResult}
               onDeleteTask={handleDelete}
-              isDeleting={isDeleting}
+              isDeleting={isNoteDeleting}
               onPressTask={handlePressTask}
             />
           )}
