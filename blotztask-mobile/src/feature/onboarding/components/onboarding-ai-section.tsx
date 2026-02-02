@@ -1,7 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { Image, ImageBackground } from "expo-image";
-import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { ASSETS } from "@/shared/constants/assets";
 
