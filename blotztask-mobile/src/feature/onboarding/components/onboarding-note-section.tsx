@@ -4,6 +4,7 @@ import { Image, ImageBackground } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { ASSETS } from "@/shared/constants/assets";
+import { theme } from "@/shared/constants/theme";
 
 type OnboardingNoteSectionProps = {
   onSkip: () => void;
@@ -23,7 +24,7 @@ export function OnboardingNoteSection({ onSkip, onBack }: OnboardingNoteSectionP
         <View className="flex-1 px-6">
           <View className="flex-row items-center justify-between pt-2">
             <Pressable onPress={onBack} hitSlop={10}>
-              <Ionicons name="chevron-back" size={22} color="#8C8C8C" />
+              <Ionicons name="chevron-back" size={22} color={theme.colors.primary} />
             </Pressable>
             <Pressable onPress={onSkip} hitSlop={10}>
               <Text className="text-xl font-baloo text-black/40">{t("actions.skip")}</Text>
