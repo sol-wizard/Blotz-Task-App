@@ -2,7 +2,7 @@ import { theme } from "@/shared/constants/theme";
 import { parseISO } from "date-fns";
 import { useState } from "react";
 import { Calendar, DateData } from "react-native-calendars";
-import { renderCalendarHeader } from "@/feature/calendar/util/date-formatter";
+import { renderCalendarHeader } from "@/feature/tasks/util/date-formatter";
 
 export const SingleDateCalendar = ({
   defaultStartDate,

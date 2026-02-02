@@ -3,7 +3,7 @@ import { EditTaskItemDTO } from "../../feature/task-add-edit/models/edit-task-it
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { apiClient } from "./api/client";
 
-import { DailyTaskIndicatorDTO } from "@/feature/calendar/models/daily-task-indicator-dto";
+import { DailyTaskIndicatorDTO } from "@/feature/tasks/models/daily-task-indicator-dto";
 import { startOfDay } from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 import { NoteDTO } from "@/feature/notes/models/note-dto";

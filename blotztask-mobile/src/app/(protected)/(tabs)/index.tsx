@@ -1,5 +1,5 @@
-import CalendarScreen from "@/feature/calendar/screens/calendar-screen";
+import TasksScreen from "@/feature/tasks/screens/tasks-screen";
 
 export default function CalendarTab() {
-  return <CalendarScreen />;
+  return <TasksScreen />;
 }

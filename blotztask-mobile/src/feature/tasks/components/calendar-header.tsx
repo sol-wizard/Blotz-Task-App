@@ -1,6 +1,6 @@
 import UserProfile from "./user-profile";
 import { View, Text, Pressable } from "react-native";
-import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
+import { formatCalendarDate } from "@/feature/tasks/util/date-formatter";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AnimatedChevron } from "@/shared/components/ui/chevron";
 
