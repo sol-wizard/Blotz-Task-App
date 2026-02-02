@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Pressable, Text, ActivityIndicator, useWindowDimensions } from "react-native";
-import TasksCheckbox from "@/feature/task-details/components/Tasks-checkbox";
+import TasksCheckbox from "@/feature/task-details/components/tasks-checkbox";
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,

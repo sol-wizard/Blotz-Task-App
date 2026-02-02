@@ -12,6 +12,7 @@ module.exports = {
         secondary: "#444964",
         highlight: "#9AD513",
         info: "#3D8DE0",
+        green: "#84CC16",
       },
       fontFamily: {
         balooThin: ["BalooThin"],
