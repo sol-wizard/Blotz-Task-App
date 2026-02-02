@@ -53,13 +53,7 @@ export default function TasksCheckbox({
         style,
       ]}
     >
-      {checked && (
-        <MaterialIcons
-          name="check"
-          size={Math.round(size * 0.6)}
-          color="#FFFFFF"
-        />
-      )}
+      {checked && <MaterialIcons name="check" size={Math.round(size * 0.6)} color="#FFFFFF" />}
     </Pressable>
   );
 }

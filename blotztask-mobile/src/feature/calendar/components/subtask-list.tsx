@@ -10,7 +10,7 @@ import Animated, {
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
-import TasksCheckbox from "@/feature/task-details/components/tasks-checkbox";
+import TasksCheckbox from "@/feature/task-details/components/task-checkbox";
 import { convertDurationToText } from "@/shared/util/convert-duration";
 
 type Props = {
