@@ -36,8 +36,8 @@ struct SimpleEntry: TimelineEntry {
 
 struct Task: Codable {
   let id: String
-  let title: String;
-  let isDone: String;
+  let title: String
+  let isDone: String
 }
 
 
@@ -51,10 +51,10 @@ struct widgetEntryView : View {
       (defaults?.data(forKey: "widget_today_tasks"))
         .flatMap { try? JSONDecoder().decode([Task].self, from: $0) }
     ) ?? []
-    print("widget_today_tasks:", todos)
+
     VStack(alignment: .leading, spacing: 12) {
       if todos.isEmpty {
-        Text("No todos...")
+        Text("No tasks for today...")
       }
       ForEach(todos, id: \.id) { todo in
         HStack {

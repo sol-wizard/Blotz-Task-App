@@ -96,7 +96,6 @@ function invalidateSelectedDayTask(
 
   const start = startOfDay(new Date(startTime));
   const end = startOfDay(new Date(endTime));
-  console.log("Invalidating selected day tasks from", start, "to", end);
 
   if (isSameDay(start, end)) {
     queryClient.invalidateQueries({
