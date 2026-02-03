@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { CalendarProvider, WeekCalendar } from "react-native-calendars";
 import { theme } from "@/shared/constants/theme";
@@ -10,6 +10,10 @@ import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetu
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { AppState } from "react-native";
+import { ExtensionStorage } from "@bacons/apple-targets";
+import { TASK_STORAGE_KEY, widgetStorage, WidgetTask } from "@/shared/constants/widget-storage";
+import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 
 // Define the theme object outside the component to prevent re-renders
 const calendarTheme = {
@@ -28,6 +32,7 @@ export default function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const { weeklyTaskAvailability, isLoading } = useTaskDays({ selectedDay });
+  const { selectedDayTasks: todayTasks } = useSelectedDayTasks({ selectedDay: new Date() });
   const progress = useSharedValue(isCalendarVisible ? 1 : 0);
   usePushNotificationSetup();
 
@@ -37,6 +42,23 @@ export default function CalendarScreen() {
   } else {
     markedDates = getSelectedDates({ selectedDay });
   }
+
+  useEffect(() => {
+    AppState.addEventListener("change", (status) => {
+      if (status === "background") {
+        ExtensionStorage.reloadWidget();
+        console.log("App moved to background, reloading widget storage.");
+        const widgetTodayTasks: WidgetTask[] = todayTasks.map((task) => ({
+          id: String(task.id),
+          title: task.title,
+          isDone: task.isDone ? "true" : "false",
+          endTime: task.endTime ? format(new Date(task.endTime), "HH:mm") : "",
+        }));
+        widgetStorage.set(TASK_STORAGE_KEY, widgetTodayTasks);
+        console.log("Widget today tasks updated:", widgetTodayTasks);
+      }
+    });
+  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>

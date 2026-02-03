@@ -53,7 +53,7 @@ struct widgetEntryView : View {
     
     let defaults = UserDefaults(suiteName: "group.com.Blotz.BlotzTask.widget")
     let todos = (
-      (defaults?.data(forKey: "widget_todos"))
+      (defaults?.data(forKey: "widget_today_tasks"))
         .flatMap { try? JSONDecoder().decode([Task].self, from: $0) }
     ) ?? []
     
