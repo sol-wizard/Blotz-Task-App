@@ -46,19 +46,19 @@ export default function CalendarScreen() {
   useEffect(() => {
     AppState.addEventListener("change", (status) => {
       if (status === "background") {
-        ExtensionStorage.reloadWidget();
-        console.log("App moved to background, reloading widget storage.");
         const widgetTodayTasks: WidgetTask[] = todayTasks.map((task) => ({
           id: String(task.id),
           title: task.title,
           isDone: task.isDone ? "true" : "false",
-          endTime: task.endTime ? format(new Date(task.endTime), "HH:mm") : "",
         }));
+        console.log("Preparing to update widget today tasks:", todayTasks);
         widgetStorage.set(TASK_STORAGE_KEY, widgetTodayTasks);
         console.log("Widget today tasks updated:", widgetTodayTasks);
+        ExtensionStorage.reloadWidget();
+        console.log("App moved to background, reloading widget storage.");
       }
     });
-  }, []);
+  }, [todayTasks]);
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>

@@ -37,14 +37,9 @@ struct SimpleEntry: TimelineEntry {
 struct Task: Codable {
   let id: String
   let title: String;
-  let isDone: Bool;
+  let isDone: String;
 }
 
-var mockData: [Task] = [
-  Task(id: "1", title: "Wash the car", isDone: false),
-  Task(id: "2", title: "Walk the dog", isDone: false),
-  Task(id: "3", title: "Go for a run", isDone: true)
-]
 
 struct widgetEntryView : View {
   var entry: Provider.Entry
@@ -56,14 +51,14 @@ struct widgetEntryView : View {
       (defaults?.data(forKey: "widget_today_tasks"))
         .flatMap { try? JSONDecoder().decode([Task].self, from: $0) }
     ) ?? []
-    
+    print("widget_today_tasks:", todos)
     VStack(alignment: .leading, spacing: 12) {
       if todos.isEmpty {
         Text("No todos...")
       }
       ForEach(todos, id: \.id) { todo in
         HStack {
-          Image(systemName: todo.isDone ? "checkmark.circle.fill" : "circle")
+          Image(systemName: todo.isDone=="true" ? "checkmark.circle.fill" : "circle")
           Text(todo.title)
             .font(.footnote)
         }
