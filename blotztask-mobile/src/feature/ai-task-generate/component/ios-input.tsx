@@ -85,28 +85,15 @@ const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessa
       {aiGeneratedMessage?.errorMessage && (
         <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
       )}
-      {showSendButton ? (
-        isAiGenerating ? (
-          <View className="mt-4 h-14 rounded-full bg-[#F2F2F2] border border-[#ECECEC] items-center justify-center">
-            <ActivityIndicator size={10} color="#2F80ED" />
-          </View>
-        ) : (
-          <Pressable
-            className="bg-[#F2F2F2] border border-[#ECECEC] rounded-full mt-4 p-4 items-center"
-            onPress={() => sendMessage(text)}
-          >
-            <Text className="font-bold">{t("buttons.generateTask")}</Text>
-          </Pressable>
-        )
-      ) : (
-        <VoiceInputButton
-          isListening={recognizing}
-          startListening={toggleListening}
-          abortListening={abortListeningMessage}
-          sendMessage={stopListening}
-          isAiGenerating={isAiGenerating}
-        />
-      )}
+      <VoiceInputButton
+        isListening={recognizing}
+        startListening={toggleListening}
+        abortListening={abortListeningMessage}
+        stopListening={stopListening}
+        isAiGenerating={isAiGenerating}
+        hasText={text.trim() !== ""}
+        onGenerateTask={() => sendMessage(text)}
+      />
     </View>
   );
 };
