@@ -48,25 +48,25 @@
           "launchMode": "most-recent"
         }
       ],
-      [
-        "react-native-auth0",
-        {
-          "domain": "dev-k72xachs0fr6nebp.us.auth0.com"
-        }
-      ],
+      // [
+      //   "react-native-auth0",
+      //   {
+      //     "domain": "dev-k72xachs0fr6nebp.us.auth0.com"
+      //   }
+      // ],
       "expo-font",
       "expo-localization",
-      [
-        "@sentry/react-native/expo",
-        {
-          "url": "https://sentry.io/",
-          "project": "react-native",
-          "organization": "nicoles-project"
-        }
-      ],
+      // [
+      //   "@sentry/react-native/expo",
+      //   {
+      //     "url": "https://sentry.io/",
+      //     "project": "react-native",
+      //     "organization": "nicoles-project"
+      //   }
+      // ],
       "expo-audio",
-      ["./plugins/withCustomGradleProperties"],
-      ["./plugins/withAzureSpeechAndroid"],
+      // ["./plugins/withCustomGradleProperties"],
+      // ["./plugins/withAzureSpeechAndroid"],
       "expo-asset",
       "@bacons/apple-targets"
     ],

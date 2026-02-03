@@ -50,6 +50,7 @@ export default function CalendarScreen() {
           id: String(task.id),
           title: task.title,
           isDone: task.isDone ? "true" : "false",
+          endTime: task.endTime ? task.endTime : "",
         }));
         console.log("Preparing to update widget today tasks:", todayTasks);
         widgetStorage.set(TASK_STORAGE_KEY, widgetTodayTasks);

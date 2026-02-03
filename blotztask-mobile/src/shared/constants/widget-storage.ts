@@ -7,4 +7,5 @@ export type WidgetTask = {
   id: string;
   title: string;
   isDone: string;
+  endTime: string;
 };

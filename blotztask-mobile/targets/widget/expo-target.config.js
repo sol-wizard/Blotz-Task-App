@@ -5,4 +5,8 @@ module.exports = (config) => ({
   entitlements: {
     "com.apple.security.application-groups": [`group.${config.ios.bundleIdentifier}.widget`],
   },
+  colors: {
+    $widgetBackground: "#F5F9FA",
+    $accent: "#D1D1D6",
+  },
 });
