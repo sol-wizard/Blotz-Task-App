@@ -9,9 +9,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { MaterialIcons } from "@expo/vector-icons";
-import { convertDurationToText } from "@/shared/util/convert-duration";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
+import TasksCheckbox from "@/feature/task-details/components/task-checkbox";
+import { convertDurationToText } from "@/shared/util/convert-duration";
 
 type Props = {
   task: TaskDetailDTO;
@@ -49,13 +49,13 @@ const SubtaskList = ({ task, progress }: Props) => {
             disabled={isTogglingSubtaskStatus}
             className={`flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
           >
-            <View
-              className={`w-6 h-6 rounded-lg mr-3 items-center justify-center border-2 ${
-                subtask.isDone ? "bg-[#4CAF50] border-[#4CAF50]" : "bg-white border-gray-300"
-              }`}
-            >
-              {subtask.isDone && <MaterialIcons name="check" size={16} color="white" />}
-            </View>
+            <TasksCheckbox
+              checked={subtask.isDone}
+              disabled={isTogglingSubtaskStatus}
+              size={24}
+              className="mr-3"
+              onChange={() => handleToggleSubtask(subtask.subTaskId)}
+            />
 
             <Text
               className={`flex-1 text-base font-baloo ${
@@ -77,5 +77,4 @@ const SubtaskList = ({ task, progress }: Props) => {
     </Animated.View>
   );
 };
-
 export default SubtaskList;

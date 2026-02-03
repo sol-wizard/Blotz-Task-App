@@ -19,8 +19,8 @@ function Segment({ filled }: { filled: boolean }) {
   }));
 
   return (
-    <View className="flex-1 h-full rounded-lg overflow-hidden bg-[#9AD513]/10">
-      <Animated.View className="h-full bg-[#9AD513]" style={fillStyle} />
+    <View className="flex-1 h-full rounded-lg overflow-hidden bg-[#E9F5E9]">
+      <Animated.View className="h-full bg-[#84CC16]" style={fillStyle} />
     </View>
   );
 }
