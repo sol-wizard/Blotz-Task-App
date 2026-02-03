@@ -38,12 +38,6 @@ struct Task: Codable {
   let endTime: String
 }
 
-//var mockData: [Task] = [
-//  Task(id: "1", title: "Wash the car", isDone: "false", endTime: "2026-02-03T10:30:00Z"),
-//  Task(id: "2", title: "Walk the dog", isDone: "false", endTime: "2026-02-03T14:00:00Z"),
-//  Task(id: "3", title: "Go for a run", isDone: "true", endTime: "2026-02-02T16:45:00Z"),
-//  Task(id: "4", title: "Go for a run", isDone: "false", endTime: "2026-02-02T16:45:00Z")
-//]
 
 struct WidgetEntryView: View {
     var entry: Provider.Entry
@@ -79,11 +73,11 @@ struct WidgetEntryView: View {
                   
                   // Completed count with a smaller font size and lighter gray color
                 Text(NSLocalizedString( "\(completedCount) of \(totalCount) completed", comment: "Completion"))
-                  .font(.caption) // Smaller font size
-                      .foregroundColor(Color.gray) // Lighter gray color
+                  .font(.caption) 
+                      .foregroundColor(Color.gray) 
               }
               
-              // The rest of your UI content...
+             
           }
             
             // If there are no tasks, show a message
@@ -185,16 +179,4 @@ extension ConfigurationAppIntent {
     }
 }
 
-#Preview(as: .systemSmall) {
-    TaskWidget()
-} timeline: {
-    SimpleEntry(date: .now, configuration: .smiley)
-    SimpleEntry(date: .now, configuration: .starEyes)
-}
 
-#Preview(as: .systemMedium) {
-    TaskWidget()
-} timeline: {
-    SimpleEntry(date: .now, configuration: .smiley)
-    SimpleEntry(date: .now, configuration: .starEyes)
-}
