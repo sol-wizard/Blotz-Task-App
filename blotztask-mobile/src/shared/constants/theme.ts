@@ -14,7 +14,7 @@ export const theme = {
     warning: "#F56767",
     fallback: "#f5f9fa",
     highlight: "#9AD513",
-    green: "#84CC16",
+    checked: "#84CC16",
   },
   fonts: {
     headingFamily,

@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, ViewStyle } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { theme } from "@/shared/constants/theme";
 
 type Props = {
   checked: boolean;
@@ -16,7 +17,7 @@ type Props = {
   style?: ViewStyle;
 };
 
-const GREEN = "#84CC16";
+const GREEN = theme.colors.checked;
 
 export default function TasksCheckbox({
   checked,
