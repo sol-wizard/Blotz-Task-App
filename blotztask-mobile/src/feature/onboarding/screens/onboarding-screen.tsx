@@ -62,7 +62,7 @@ export default function OnboardingScreen() {
         <OnboardingNoteSection onSkip={handleFinish} onBack={handleBack} direction={direction} />
       )}
       <View className="items-center pb-8 px-6">
-        <View className="flex-row items-center mb-[60px] mt-[-125px]">
+        <View className="flex-row items-center mb-16 mt-[-90]">
           {sections.map((section, index) => {
             const isActive = index === activeOnboardingIndex;
             const key = `${section}-${index}`;
