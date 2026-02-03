@@ -9,7 +9,7 @@ interface BlotzLogoProps {
 
 export function BlotzLogo({ fontSize = 20 }: BlotzLogoProps) {
   return (
-    <View style={{ height: fontSize * 1.5, width: fontSize * 3.5 }}>
+    <View style={{ height: fontSize * 1.5, width: fontSize * 4.5 }}>
       <MaskedView
         style={{ flex: 1 }}
         maskElement={
