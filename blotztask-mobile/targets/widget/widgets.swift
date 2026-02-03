@@ -38,23 +38,24 @@ struct Task: Codable {
   let endTime: String
 }
 
-var mockData: [Task] = [
-  Task(id: "1", title: "Wash the car", isDone: "false", endTime: "2026-02-03T10:30:00Z"),
-  Task(id: "2", title: "Walk the dog", isDone: "false", endTime: "2026-02-03T14:00:00Z"),
-  Task(id: "3", title: "Go for a run", isDone: "true", endTime: "2026-02-02T16:45:00Z")
-]
+//var mockData: [Task] = [
+//  Task(id: "1", title: "Wash the car", isDone: "false", endTime: "2026-02-03T10:30:00Z"),
+//  Task(id: "2", title: "Walk the dog", isDone: "false", endTime: "2026-02-03T14:00:00Z"),
+//  Task(id: "3", title: "Go for a run", isDone: "true", endTime: "2026-02-02T16:45:00Z"),
+//  Task(id: "4", title: "Go for a run", isDone: "false", endTime: "2026-02-02T16:45:00Z")
+//]
 
 struct WidgetEntryView: View {
     var entry: Provider.Entry
     
     var body: some View {
         let defaults = UserDefaults(suiteName: "group.com.Blotz.BlotzTask.widget")
-//        let todos = (
-//            (defaults?.data(forKey: "widget_today_tasks"))
-//                .flatMap { try? JSONDecoder().decode([Task].self, from: $0) }
-//        ) ?? []
+        let todos = (
+            (defaults?.data(forKey: "widget_today_tasks"))
+                .flatMap { try? JSONDecoder().decode([Task].self, from: $0) }
+        ) ?? []
       
-        let todos = mockData
+     
         
         // Filter incomplete tasks
         let incompleteTasks = todos.filter { $0.isDone != "true" }
@@ -69,7 +70,7 @@ struct WidgetEntryView: View {
         
         VStack(alignment: .leading) {
             // Display the "Today" label with completed vs total count
-          VStack(alignment: .leading, spacing: 12) {
+          VStack(alignment: .leading) {
               HStack(alignment: .bottom) {
                   // "Today" label with the normal style
                   Text(NSLocalizedString("Today", comment: "Today label"))
@@ -87,8 +88,10 @@ struct WidgetEntryView: View {
             
             // If there are no tasks, show a message
             if incompleteTasks.isEmpty {
-                Text("No tasks for today...")
+                Text(NSLocalizedString("No tasks for today...🧐", comment: "Empty label"))
+                    .font(.subheadline)
                     .foregroundColor(Color(red: 68/255, green: 73/255, blue: 100/255))
+                    .padding(10)
             }
             
             // Task List: Only show incomplete tasks, limited to 3 tasks
@@ -100,12 +103,12 @@ struct WidgetEntryView: View {
                         Text(todo.title)
                             .font(.footnote)
                             .foregroundColor(Color(red: 68/255, green: 73/255, blue: 100/255))
-                      Spacer() 
+                      Spacer()
                       if isEndTimeToday(endTime: todo.endTime) {
                         Text(formatEndTime(todo.endTime))
                                 .font(.footnote)
                                 .foregroundColor(Color.gray)
-                                .padding(.leading, 4) // Adding some space between title and time
+                                
                         }
                     }
                     .padding(.vertical, 2)
@@ -113,8 +116,7 @@ struct WidgetEntryView: View {
             
         }
         .padding()
-        .cornerRadius(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity,maxHeight: .infinity, alignment: .topLeading)
         
     }
   
