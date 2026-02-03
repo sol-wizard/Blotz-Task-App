@@ -8,8 +8,6 @@ import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
-import { ASSETS } from "@/shared/constants/assets";
-import { Image } from "expo-image";
 
 export default function OnboardingScreen() {
   const { setUserOnboarded } = useUserProfileMutation();
@@ -18,6 +16,7 @@ export default function OnboardingScreen() {
 
   const sections = ["ai-voice", "star-spark", "breakdown"];
   const [activeOnboardingIndex, setActiveOnboardingIndex] = useState(0);
+  const [direction, setDirection] = useState<"forward" | "backward">("forward");
 
   const handleFinish = async () => {
     await setUserOnboarded(true);
@@ -25,16 +24,24 @@ export default function OnboardingScreen() {
   };
 
   const handleNext = () => {
-    if (activeOnboardingIndex >= sections.length - 1) {
-      handleFinish();
-      return;
-    }
+    setDirection("forward");
 
-    setActiveOnboardingIndex((prev) => prev + 1);
+    setTimeout(() => {
+      if (activeOnboardingIndex >= sections.length - 1) {
+        handleFinish();
+        return;
+      }
+
+      setActiveOnboardingIndex((prev) => prev + 1);
+    }, 10);
   };
 
   const handleBack = () => {
-    setActiveOnboardingIndex((prev) => Math.max(0, prev - 1));
+    setDirection("backward");
+
+    setTimeout(() => {
+      setActiveOnboardingIndex((prev) => Math.max(0, prev - 1));
+    }, 10);
   };
 
   const activeSection = sections[activeOnboardingIndex];
@@ -42,13 +49,17 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       {activeSection === "ai-voice" && (
-        <OnboardingAiSection onSkip={handleFinish} onBack={handleBack} />
+        <OnboardingAiSection onSkip={handleFinish} onBack={handleBack} direction={direction} />
       )}
       {activeSection === "breakdown" && (
-        <OnboardingBreakdownSection onSkip={handleFinish} onBack={handleBack} />
+        <OnboardingBreakdownSection
+          onSkip={handleFinish}
+          onBack={handleBack}
+          direction={direction}
+        />
       )}
       {activeSection === "star-spark" && (
-        <OnboardingNoteSection onSkip={handleFinish} onBack={handleBack} />
+        <OnboardingNoteSection onSkip={handleFinish} onBack={handleBack} direction={direction} />
       )}
       <View className="items-center pb-8 px-6">
         <View className="flex-row items-center mb-[60px] mt-[-125px]">

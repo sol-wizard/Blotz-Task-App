@@ -5,17 +5,35 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { ASSETS } from "@/shared/constants/assets";
 import { BlotzLogo } from "@/shared/components/ui/blotz-logo";
+import Animated, {
+  FadeInRight,
+  FadeInLeft,
+  FadeOutRight,
+  FadeOutLeft,
+} from "react-native-reanimated";
 
 type OnboardingBreakdownSectionProps = {
   onSkip: () => void;
   onBack: () => void;
+  direction: "forward" | "backward";
 };
 
-export function OnboardingBreakdownSection({ onSkip, onBack }: OnboardingBreakdownSectionProps) {
+export function OnboardingBreakdownSection({
+  onSkip,
+  onBack,
+  direction,
+}: OnboardingBreakdownSectionProps) {
   const { t } = useTranslation("onboarding");
 
+  const entering = direction === "forward" ? FadeInRight : FadeInLeft;
+  const exiting = direction === "forward" ? FadeOutLeft : FadeOutRight;
+
   return (
-    <View className="flex-1 pt-2 pb-40">
+    <Animated.View
+      entering={entering.springify().damping(70)}
+      exiting={exiting}
+      className="flex-1 pt-2 pb-40"
+    >
       <ImageBackground
         source={ASSETS.onboardingBreakdownBackground}
         style={{ flex: 1 }}
@@ -52,6 +70,6 @@ export function OnboardingBreakdownSection({ onSkip, onBack }: OnboardingBreakdo
           </View>
         </View>
       </ImageBackground>
-    </View>
+    </Animated.View>
   );
 }
