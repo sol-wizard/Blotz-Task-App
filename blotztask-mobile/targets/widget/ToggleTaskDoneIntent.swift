@@ -22,7 +22,7 @@ struct ToggleTaskDoneIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult {
-        let userDefaults = UserDefaults(suiteName: "group.com.yourcompany.blotztask")
+        let userDefaults = UserDefaults(suiteName: "group.com.Blotz.BlotzTask.widget")
         guard let userDefaults = userDefaults else {
             return .result()
         }

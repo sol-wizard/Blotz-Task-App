@@ -1,95 +1,75 @@
 import WidgetKit
 import SwiftUI
-import AppIntents
 
-struct WidgetTask: Identifiable, Codable, Hashable {
-    let id: String
-    let title: String
-    let isDone: Bool
-    let endTime: String?
+struct Provider: AppIntentTimelineProvider {
+    func placeholder(in context: Context) -> SimpleEntry {
+        SimpleEntry(date: Date(), configuration: ConfigurationAppIntent())
+    }
+
+    func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> SimpleEntry {
+        SimpleEntry(date: Date(), configuration: configuration)
+    }
+    
+    func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<SimpleEntry> {
+        var entries: [SimpleEntry] = []
+
+        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
+        let currentDate = Date()
+        for hourOffset in 0 ..< 5 {
+            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
+            let entry = SimpleEntry(date: entryDate, configuration: configuration)
+            entries.append(entry)
+        }
+
+        return Timeline(entries: entries, policy: .atEnd)
+    }
+
+//    func relevances() async -> WidgetRelevances<ConfigurationAppIntent> {
+//        // Generate a list containing the contexts this widget is relevant in.
+//    }
 }
 
-struct TodayTasksEntry: TimelineEntry {
+struct SimpleEntry: TimelineEntry {
     let date: Date
-    let tasks: [WidgetTask]
     let configuration: ConfigurationAppIntent
 }
 
-struct Provider: AppIntentTimelineProvider {
-    func placeholder(in context: Context) -> TodayTasksEntry {
-        TodayTasksEntry(date: Date(), tasks: [], configuration: ConfigurationAppIntent())
-    }
-
-    func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> TodayTasksEntry {
-        // In snapshot, provide a quick sample of tasks
-        let sample = [
-            WidgetTask(id: "1", title: "Buy groceries", isDone: false, endTime: nil),
-            WidgetTask(id: "2", title: "Finish report", isDone: true, endTime: nil),
-            WidgetTask(id: "3", title: "Call Alice", isDone: false, endTime: nil)
-        ]
-        return TodayTasksEntry(date: Date(), tasks: sample, configuration: configuration)
-    }
-    
-    func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<TodayTasksEntry> {
-        // Load tasks from shared storage if needed. For now, create a single entry with current tasks.
-        // You can later replace this with App Group UserDefaults or other shared storage.
-        let tasks = await loadTodayTasks()
-        let entry = TodayTasksEntry(date: Date(), tasks: tasks, configuration: configuration)
-        // Refresh in 15 minutes
-        let nextRefresh = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date().addingTimeInterval(900)
-        return Timeline(entries: [entry], policy: .after(nextRefresh))
-    }
-    
-    private func loadTodayTasks() async -> [WidgetTask] {
-        // Read tasks from App Group shared UserDefaults as JSON string
-        let appGroupId = "group.com.yourcompany.blotztask"
-        let tasksKey = "today_tasks"
-        guard let defaults = UserDefaults(suiteName: appGroupId),
-              let json = defaults.string(forKey: tasksKey),
-              let data = json.data(using: .utf8) else {
-            return []
-        }
-        do {
-            return try JSONDecoder().decode([WidgetTask].self, from: data)
-        } catch {
-            return []
-        }
-    }
+struct Task: Codable {
+  let id: String
+  let title: String;
+  let isDone: Bool;
 }
 
+var mockData: [Task] = [
+  Task(id: "1", title: "Wash the car", isDone: false),
+  Task(id: "2", title: "Walk the dog", isDone: false),
+  Task(id: "3", title: "Go for a run", isDone: true)
+]
+
 struct widgetEntryView : View {
-    var entry: TodayTasksEntry
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Today").font(.headline)
-
-            if entry.tasks.isEmpty {
-                Text("Open the app to sync tasks")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(entry.tasks.prefix(3)) { task in
-                    HStack(spacing: 8) {
-                        Button(intent: ToggleTaskDoneIntent(taskID: task.id)) {
-                            Image(systemName: task.isDone ? "checkmark.circle.fill" : "circle")
-                        }
-                        .buttonStyle(.plain)
-                        Text(task.title).lineLimit(1)
-                        Spacer()
-                    }
-                    .font(.subheadline)
-                }
-
-                if entry.tasks.count > 3 {
-                    Text("+ \(entry.tasks.count - 3) more")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            Spacer()
+  var entry: Provider.Entry
+  
+  var body: some View {
+    
+    let defaults = UserDefaults(suiteName: "group.com.Blotz.BlotzTask.widget")
+    let todos = (
+      (defaults?.data(forKey: "widget_todos"))
+        .flatMap { try? JSONDecoder().decode([Task].self, from: $0) }
+    ) ?? []
+    
+    VStack(alignment: .leading, spacing: 12) {
+      if todos.isEmpty {
+        Text("No todos...")
+      }
+      ForEach(todos, id: \.id) { todo in
+        HStack {
+          Image(systemName: todo.isDone ? "checkmark.circle.fill" : "circle")
+          Text(todo.title)
+            .font(.footnote)
         }
+      }
     }
+  }
 }
 
 struct widget: Widget {
@@ -117,22 +97,23 @@ extension ConfigurationAppIntent {
     }
 }
 
-#Preview("Today Tasks - Small", as: .systemSmall) {
+#Preview(as: .systemSmall) {
     widget()
 } timeline: {
-    TodayTasksEntry(date: .now, tasks: [
-        WidgetTask(id: "1", title: "Buy groceries", isDone: false, endTime: nil),
-        WidgetTask(id: "2", title: "Finish report", isDone: true, endTime: nil)
-    ], configuration: .smiley)
-}
-#Preview("Today Tasks - Medium", as: .systemMedium) {
-    widget()
-} timeline: {
-    TodayTasksEntry(date: .now, tasks: [
-        WidgetTask(id: "1", title: "Buy groceries", isDone: false, endTime: nil),
-        WidgetTask(id: "2", title: "Finish report", isDone: true, endTime: nil),
-        WidgetTask(id: "3", title: "Call Alice", isDone: false, endTime: nil),
-        WidgetTask(id: "4", title: "Plan weekend", isDone: false, endTime: nil)
-    ], configuration: .starEyes)
+    SimpleEntry(date: .now, configuration: .smiley)
+    SimpleEntry(date: .now, configuration: .starEyes)
 }
 
+#Preview(as: .systemMedium) {
+    widget()
+} timeline: {
+    SimpleEntry(date: .now, configuration: .smiley)
+    SimpleEntry(date: .now, configuration: .starEyes)
+}
+
+#Preview(as: .systemLarge) {
+    widget()
+} timeline: {
+    SimpleEntry(date: .now, configuration: .smiley)
+    SimpleEntry(date: .now, configuration: .starEyes)
+}
