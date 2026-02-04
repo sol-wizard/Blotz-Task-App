@@ -1,4 +1,4 @@
-param projectName string 
+param projectName string
 param location string = resourceGroup().location
 param environment string
 
@@ -6,6 +6,12 @@ param environment string
 param dbAdminUsername string
 @secure()
 param dbAdminPassword string
+
+// Database SKU settings
+param dbSkuName string = 'Basic'
+param dbSkuTier string = 'Basic'
+param dbSkuCapacity int = 5
+param dbMaxSizeBytes int = 1073741824 // 1GB
 
 //TODO : A new database resource is created from azure portal please update the bicep script here
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
@@ -28,12 +34,12 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
     name: 'sqldb-${projectName}-${environment}'
     location: location
     sku: {
-      name: 'Basic'
-      tier: 'Basic'
-      capacity: 5
+      name: dbSkuName
+      tier: dbSkuTier
+      capacity: dbSkuCapacity
     }
     properties: {
-      maxSizeBytes: 1073741824
+      maxSizeBytes: dbMaxSizeBytes
     }
   }
 }

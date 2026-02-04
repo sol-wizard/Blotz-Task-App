@@ -7,6 +7,10 @@ param openAiEndpoint string
 param openAiDeploymentId string
 param logAnalyticsWorkspaceId string
 
+// App Service Plan SKU
+param appServiceSkuName string = 'B1'
+param appServiceSkuTier string = 'Basic'
+
 var normalizedKeyVaultUri = endsWith(keyVaultUri, '/') ? keyVaultUri : '${keyVaultUri}/'
 
 var corsAllowedOrigins = environment == 'stag' ? [
@@ -19,13 +23,13 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: 'asp-${webAppName}-${environment}'
   location: location
   sku: {
-    name: 'B1'
-    tier: 'Basic'
-    size: 'B1'
-    family: 'B'
-    capacity: 1
+    name: appServiceSkuName
+    tier: appServiceSkuTier
   }
   kind: 'linux'
+  properties: {
+    reserved: true
+  }
 }
 
 resource appService 'Microsoft.Web/sites@2022-09-01' = {

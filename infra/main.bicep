@@ -17,6 +17,16 @@ param githubRepo string // Format: org/repo (e.g., sol-wizard/Blotz-Task-App)
 param budgetAmount int
 param alertEmail string
 
+// App Service SKU settings
+param appServiceSkuName string
+param appServiceSkuTier string
+
+// Database SKU settings
+param dbSkuName string
+param dbSkuTier string
+param dbSkuCapacity int
+param dbMaxSizeGb int
+
 module logAnalytics 'modules/logAnalytics.bicep' = {
   name: '${deployment().name}-log-analytics'
   params: {
@@ -47,7 +57,7 @@ module kv 'modules/keyVault.bicep' = {
 }
 
 module webAppForAPI 'modules/appService.bicep' = {
-  name:'${deployment().name}-webApp'//TODO: Add a unique suffix
+  name: '${deployment().name}-webApp'
   params: {
     webAppName: '${namePrefix}-api'
     location: location
@@ -57,6 +67,8 @@ module webAppForAPI 'modules/appService.bicep' = {
     openAiEndpoint: openAi.outputs.endpoint
     openAiDeploymentId: openAi.outputs.deploymentId
     logAnalyticsWorkspaceId: logAnalytics.outputs.id
+    appServiceSkuName: appServiceSkuName
+    appServiceSkuTier: appServiceSkuTier
   }
 }
 
@@ -78,6 +90,10 @@ module sql 'modules/sqlserver.bicep' = {
     environment: environment
     dbAdminUsername: dbAdminUsername
     dbAdminPassword: dbAdminPassword
+    dbSkuName: dbSkuName
+    dbSkuTier: dbSkuTier
+    dbSkuCapacity: dbSkuCapacity
+    dbMaxSizeBytes: dbMaxSizeGb * 1073741824
   }
 }
 
