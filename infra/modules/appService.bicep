@@ -6,6 +6,8 @@ param keyVaultUri string
 param openAiEndpoint string
 param openAiDeploymentId string
 
+var normalizedKeyVaultUri = endsWith(keyVaultUri, '/') ? keyVaultUri : '${keyVaultUri}/'
+
 var corsAllowedOrigins = environment == 'stag' ? [
   'https://app-blotztaskapp-ui-stag.azurewebsites.net'
 ] : environment == 'prod' ? [
@@ -58,6 +60,14 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
         {
           name: 'AzureOpenAI__DeploymentId'
           value: openAiDeploymentId
+        }
+        {
+          name: 'AzureOpenAI__ApiKey'
+          value: '@Microsoft.KeyVault(SecretUri=${normalizedKeyVaultUri}secrets/azureopenai-apikey/)'
+        }
+        {
+          name: 'ConnectionStrings__DefaultConnection'
+          value: '@Microsoft.KeyVault(SecretUri=${normalizedKeyVaultUri}secrets/sql-connection-string/)'
         }
         {
           name: 'ASPNETCORE_ENVIRONMENT'

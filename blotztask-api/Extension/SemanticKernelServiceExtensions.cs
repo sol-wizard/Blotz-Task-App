@@ -17,7 +17,7 @@ public static class SemanticKernelServiceExtensions
             var deploymentId = configuration["AzureOpenAI:DeploymentId"];
             var apiKey = configuration["AzureOpenAI:ApiKey"];
 
-            if (secretClient != null && environment.IsProduction())
+            if (string.IsNullOrWhiteSpace(apiKey) && secretClient != null && environment.IsProduction())
             {
                 try
                 {
@@ -57,6 +57,5 @@ public static class SemanticKernelServiceExtensions
         return services;
     }
 }
-
 
 

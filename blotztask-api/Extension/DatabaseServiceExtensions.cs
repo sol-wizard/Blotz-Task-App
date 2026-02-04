@@ -17,21 +17,28 @@ public static class DatabaseServiceExtensions
 
         if (environment.IsProduction())
         {
+            var databaseConnectionString = configuration.GetConnectionString("DefaultConnection");
+            if (!string.IsNullOrWhiteSpace(databaseConnectionString))
+            {
+                services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(databaseConnectionString));
+                return services;
+            }
+
             var keyVaultEndpoint = configuration["KeyVault:VaultURI"];
             if (string.IsNullOrWhiteSpace(keyVaultEndpoint))
             {
-                throw new InvalidOperationException("Missing KeyVault configuration. Please set KeyVault:VaultURI.");
+                throw new InvalidOperationException(
+                    "Missing database connection string. Set ConnectionStrings:DefaultConnection (recommended via Key Vault reference) or KeyVault:VaultURI.");
             }
+
             var secretClient = new SecretClient(new Uri(keyVaultEndpoint), new DefaultAzureCredential());
             services.AddSingleton(secretClient);
 
             var sqlConnectionSecret = secretClient.GetSecret("sql-connection-string").Value.Value;
-            services.AddDbContext<BlotzTaskDbContext>(options =>
-                options.UseSqlServer(sqlConnectionSecret));
+            services.AddDbContext<BlotzTaskDbContext>(options => options.UseSqlServer(sqlConnectionSecret));
         }
 
         return services;
     }
 }
-
 

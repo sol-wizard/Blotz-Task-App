@@ -16,15 +16,10 @@ public static class OpenAiServiceExtensions
 
             var endpoint = config["AzureOpenAI:Endpoint"];
             var deploymentId = config["AzureOpenAI:DeploymentId"];
-            string? apiKey;
-
-            if (secretClient != null)
+            var apiKey = config["AzureOpenAI:ApiKey"];
+            if (string.IsNullOrWhiteSpace(apiKey) && secretClient != null)
             {
                 apiKey = secretClient.GetSecret("azureopenai-apikey").Value.Value;
-            }
-            else
-            {
-                apiKey = config["AzureOpenAI:ApiKey"];
             }
 
             if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
