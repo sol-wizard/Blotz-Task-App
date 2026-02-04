@@ -10,10 +10,8 @@ param dbAdminUsername string
 @secure()
 param dbAdminPassword string
 
-// OpenAI / Foundry model deployment configuration
-param openAiDeploymentName string = 'gpt-5.2'
-param openAiModelName string = 'gpt-5.2'
-param openAiModelVersion string = '2025-12-11'
+param openAiDeploymentName string = 'gpt-5.2-chat'
+param openAiModelName string = 'gpt-5.2-chat'
 
 module appInsight 'modules/appInsight.bicep' = {
   name: '${deployment().name}-app-insight'
@@ -80,14 +78,12 @@ module storeConnectionString 'modules/keyVaultSecret.bicep' = {
 module openAi 'modules/openAi.bicep' = {
   name: '${deployment().name}-openai'
   params: {
-    location: location
     environment: environment
     projectName: namePrefix
     keyVaultName: kv.outputs.name
     foundryProjectName: 'proj-${namePrefix}-${environment}'
     openAiDeploymentName: openAiDeploymentName
     openAiModelName: openAiModelName
-    openAiModelVersion: openAiModelVersion
   }
 }
 // module githubActionIdentity 'modules/identity.bicep' = {
