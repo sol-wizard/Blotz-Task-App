@@ -27,22 +27,24 @@ resource fic 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentity
   }
 }
 
+var kvSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6' // Key Vault Secrets User
+var contributorRoleId = 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor
+
 resource keyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, 'kv-admin-access-${githubActionIdentity.name}')
+  name: guid(keyVault.id, identityName, kvSecretsUserRoleId)
   scope: keyVault
   properties: {
     principalId: githubActionIdentity.properties.principalId
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6') // Key Vault Secrets User
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', kvSecretsUserRoleId)
     principalType: 'ServicePrincipal'
   }
 }
 
-//TODO: For staging remove the contributor role assignment which point to the subscription level
 resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, 'contributor-access-${githubActionIdentity.name}')
+  name: guid(resourceGroup().id, identityName, contributorRoleId)
   properties: {
     principalId: githubActionIdentity.properties.principalId
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c') // Contributor role ID
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
     principalType: 'ServicePrincipal'
   }
 }
