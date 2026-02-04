@@ -28,7 +28,6 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
 }
 
 //TODO: Need to turn the log on
-//TODO: Add health check path
 resource appService 'Microsoft.Web/sites@2022-09-01' = {
   name: 'app-${webAppName}-${environment}'
   location: location
@@ -40,6 +39,7 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
     serverFarmId: appServicePlan.id
     siteConfig: {
       alwaysOn: true
+      healthCheckPath: '/health'
       cors: {
         allowedOrigins: corsAllowedOrigins
         supportCredentials: true
