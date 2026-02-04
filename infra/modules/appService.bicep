@@ -50,10 +50,6 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
           value: appInsightConnectionString
         }
         {
-          name: 'KeyVault__VaultURI'
-          value: keyVaultUri
-        }
-        {
           name: 'AzureOpenAI__Endpoint'
           value: openAiEndpoint
         }

@@ -2,7 +2,6 @@ namespace BlotzTask.Extension;
 
 using Azure;
 using Azure.AI.OpenAI;
-using Azure.Security.KeyVault.Secrets;
 using OpenAI.Chat;
 
 public static class OpenAiServiceExtensions
@@ -12,19 +11,15 @@ public static class OpenAiServiceExtensions
         services.AddSingleton<ChatClient>(sp =>
         {
             var config = sp.GetRequiredService<IConfiguration>();
-            var secretClient = sp.GetService<SecretClient>();
 
             var endpoint = config["AzureOpenAI:Endpoint"];
             var deploymentId = config["AzureOpenAI:DeploymentId"];
             var apiKey = config["AzureOpenAI:ApiKey"];
-            if (string.IsNullOrWhiteSpace(apiKey) && secretClient != null)
-            {
-                apiKey = secretClient.GetSecret("azureopenai-apikey").Value.Value;
-            }
 
             if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
             {
-                throw new ArgumentException("Endpoint or API Key is missing!");
+                throw new InvalidOperationException(
+                    "Missing Azure OpenAI configuration. Set AzureOpenAI:Endpoint and AzureOpenAI:ApiKey in configuration or via Key Vault reference.");
             }
 
             var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
@@ -33,5 +28,4 @@ public static class OpenAiServiceExtensions
 
         return services;
     }
-
 }
