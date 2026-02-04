@@ -33,7 +33,7 @@ module logAnalytics 'modules/logAnalytics.bicep' = {
     projectName: namePrefix
     environment: environment
     location: location
-    retentionInDays: environment == 'prod' ? 30 : 7 // Shorter retention for staging
+    retentionInDays: 30 // Minimum for PerGB2018 SKU is 30 days
   }
 }
 
