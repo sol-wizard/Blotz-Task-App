@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
+import TasksCheckbox from "./task-checkbox";
 import { theme } from "@/shared/constants/theme";
 import { convertDurationToText } from "../../../shared/util/convert-duration";
 
@@ -41,7 +41,7 @@ export default function SubtaskItem({
     <View
       className="relative flex-row items-center py-2.5 px-3 mb-2"
       style={{
-        backgroundColor: theme.colors.background,
+        backgroundColor: "#FFFFFF",
         borderRadius: 10,
       }}
     >
@@ -53,27 +53,22 @@ export default function SubtaskItem({
           <MaterialIcons name="delete-outline" size={20} color={"#3D8DE0"} />
         </TouchableOpacity>
       ) : (
-        <TaskCheckbox
-          checked={isChecked}
-          onPress={handleToggle}
-          disabled={false}
-          haptic={true}
-          size={28}
-        />
+        <TasksCheckbox checked={isChecked} onChange={() => handleToggle()} />
       )}
-
-      <View className="text-sm min-w-[50px] px-2 py-1 rounded bg-blue-100 items-center justify-center">
-        <Text className="text-sm font-baloo font-bold text-black">
-          {subtask.duration ? convertDurationToText(subtask.duration) : ""}
+      <View className="flex-1 flex-row items-center justify-between ml-3">
+        <Text
+          className={`flex-1 text-[15px] font-baloo ${isChecked ? "line-through" : ""}`}
+          style={{ color: textColor }}
+        >
+          {subtask?.title}
         </Text>
-      </View>
 
-      <Text
-        className={`flex-1 text-[15px] font-baloo ml-3 ${isChecked ? "line-through" : ""}`}
-        style={{ color: textColor }}
-      >
-        {subtask?.title}
-      </Text>
+        {subtask.duration && (
+          <Text className="text-sm font-baloo font-bold text-black ml-2">
+            {subtask.duration ? convertDurationToText(subtask.duration) : ""}
+          </Text>
+        )}
+      </View>
     </View>
   );
 }

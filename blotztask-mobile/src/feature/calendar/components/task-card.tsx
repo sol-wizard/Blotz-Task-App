@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Pressable, Text, ActivityIndicator, useWindowDimensions } from "react-native";
-import { TaskCheckbox } from "@/shared/components/ui/task-checkbox";
+import TasksCheckbox from "@/feature/task-details/components/task-checkbox";
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
@@ -10,7 +10,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { theme } from "@/shared/constants/theme";
 import { format, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -163,22 +162,18 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                 {/* Header row */}
                 <View className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}>
                   <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
-                    <TaskCheckbox
+                    <TasksCheckbox
                       checked={task.isDone}
-                      onPress={async () => {
+                      disabled={isLoading}
+                      size={32}
+                      uncheckedColor="#D1D5DB"
+                      onChange={async () => {
                         toggleTask({ taskId: task.id, selectedDay });
+
                         if (task.alertTime && new Date(task.alertTime) > new Date()) {
                           await cancelNotification({ notificationId: task?.notificationId });
                         }
                       }}
-                      disabled={isLoading}
-                      haptic={!task.isDone}
-                      size={32}
-                    />
-
-                    <View
-                      className="w-[6px] h-[30px] rounded-[3px] mr-3"
-                      style={{ backgroundColor: task.label?.color ?? theme.colors.disabled }}
                     />
                   </Animated.View>
 
@@ -189,6 +184,14 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                           className={`text-xl font-baloo ${
                             task.isDone ? "text-neutral-400 line-through" : "text-black"
                           }`}
+                          style={
+                            task.isDone
+                              ? {
+                                  textDecorationLine: "line-through",
+                                  textDecorationColor: "#9CA3AF",
+                                }
+                              : undefined
+                          }
                           numberOfLines={1}
                         >
                           {task.title}
