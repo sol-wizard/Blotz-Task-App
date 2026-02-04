@@ -5,6 +5,7 @@ param appInsightConnectionString string
 param keyVaultUri string
 param openAiEndpoint string
 param openAiDeploymentId string
+param logAnalyticsWorkspaceId string
 
 var normalizedKeyVaultUri = endsWith(keyVaultUri, '/') ? keyVaultUri : '${keyVaultUri}/'
 
@@ -86,6 +87,38 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
         }
       ]
     }
+  }
+}
+
+resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'diag-${appService.name}'
+  scope: appService
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    logs: [
+      {
+        category: 'AppServiceHTTPLogs'
+        enabled: true
+      }
+      {
+        category: 'AppServiceConsoleLogs'
+        enabled: true
+      }
+      {
+        category: 'AppServiceAppLogs'
+        enabled: true
+      }
+      {
+        category: 'AppServicePlatformLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
   }
 }
 

@@ -14,6 +14,17 @@ param openAiDeploymentName string
 param openAiModelName string
 param openAiModelVersion string
 param githubRepo string // Format: org/repo (e.g., sol-wizard/Blotz-Task-App)
+param budgetAmount int
+param alertEmail string
+
+module logAnalytics 'modules/logAnalytics.bicep' = {
+  name: '${deployment().name}-log-analytics'
+  params: {
+    projectName: namePrefix
+    environment: environment
+    location: location
+  }
+}
 
 module appInsight 'modules/appInsight.bicep' = {
   name: '${deployment().name}-app-insight'
@@ -21,6 +32,7 @@ module appInsight 'modules/appInsight.bicep' = {
     projectName: namePrefix
     environment: environment
     location: location
+    logAnalyticsWorkspaceId: logAnalytics.outputs.id
   }
 }
 module kv 'modules/keyVault.bicep' = {
@@ -37,13 +49,14 @@ module kv 'modules/keyVault.bicep' = {
 module webAppForAPI 'modules/appService.bicep' = {
   name:'${deployment().name}-webApp'//TODO: Add a unique suffix
   params: {
-    webAppName: '${namePrefix}-api' 
+    webAppName: '${namePrefix}-api'
     location: location
     environment: environment
     appInsightConnectionString: appInsight.outputs.connectionString
     keyVaultUri: kv.outputs.vaultUri
     openAiEndpoint: openAi.outputs.endpoint
     openAiDeploymentId: openAi.outputs.deploymentId
+    logAnalyticsWorkspaceId: logAnalytics.outputs.id
   }
 }
 
@@ -108,5 +121,15 @@ module speech 'modules/speech.bicep' = {
     location: location
     environment: environment
     keyVaultName: kv.outputs.name
+  }
+}
+
+module budget 'modules/budget.bicep' = {
+  name: '${deployment().name}-budget'
+  params: {
+    projectName: namePrefix
+    environment: environment
+    budgetAmount: budgetAmount
+    alertEmail: alertEmail
   }
 }
