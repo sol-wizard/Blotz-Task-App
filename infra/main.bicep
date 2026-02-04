@@ -33,6 +33,7 @@ module logAnalytics 'modules/logAnalytics.bicep' = {
     projectName: namePrefix
     environment: environment
     location: location
+    retentionInDays: environment == 'prod' ? 30 : 7 // Shorter retention for staging
   }
 }
 

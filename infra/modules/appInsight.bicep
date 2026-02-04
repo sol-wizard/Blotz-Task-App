@@ -12,6 +12,7 @@ resource appInsight 'Microsoft.Insights/components@2020-02-02' = {
     WorkspaceResourceId: logAnalyticsWorkspaceId
     publicNetworkAccessForIngestion: 'Enabled'
     publicNetworkAccessForQuery: 'Enabled'
+    IngestionMode: 'LogAnalytics'
   }
 }
 
