@@ -27,7 +27,6 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   kind: 'linux'
 }
 
-//TODO: Need to turn the log on
 resource appService 'Microsoft.Web/sites@2022-09-01' = {
   name: 'app-${webAppName}-${environment}'
   location: location
@@ -37,9 +36,13 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
   }
   properties: {
     serverFarmId: appServicePlan.id
+    httpsOnly: true
     siteConfig: {
       alwaysOn: true
       healthCheckPath: '/health'
+      minTlsVersion: '1.2'
+      ftpsState: 'Disabled'
+      http20Enabled: true
       cors: {
         allowedOrigins: corsAllowedOrigins
         supportCredentials: true
@@ -76,6 +79,10 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
         {
           name: 'ASPNETCORE_ENVIRONMENT'
           value: environment == 'prod' ? 'Production' : 'Staging'
+        }
+        {
+          name: 'WEBSITE_HEALTHCHECK_MAXPINGFAILURES'
+          value: '3'
         }
       ]
     }
