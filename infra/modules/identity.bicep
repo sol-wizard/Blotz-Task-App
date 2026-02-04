@@ -2,6 +2,7 @@ param identityName string
 param location string = resourceGroup().location
 param environment string
 param projectName string
+param githubRepo string // Format: org/repo (e.g., sol-wizard/Blotz-Task-App)
 
 param keyVaultName string
 
@@ -19,8 +20,7 @@ resource fic 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentity
   name: 'fic-github-${projectName}-${environment}'
   properties: {
     issuer: 'https://token.actions.githubusercontent.com'
-    //TODO: Hardcoded repo and org name 
-    subject: 'repo:sol-wizard/Blotz-Task-App:environment:${environment == 'prod' ? 'Production' : 'Staging'}'
+    subject: 'repo:${githubRepo}:environment:${environment == 'prod' ? 'Production' : 'Staging'}'
     audiences: [
       'api://AzureADTokenExchange'
     ]

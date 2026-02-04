@@ -13,6 +13,7 @@ param dbAdminPassword string
 param openAiDeploymentName string
 param openAiModelName string
 param openAiModelVersion string
+param githubRepo string // Format: org/repo (e.g., sol-wizard/Blotz-Task-App)
 
 module appInsight 'modules/appInsight.bicep' = {
   name: '${deployment().name}-app-insight'
@@ -88,16 +89,17 @@ module openAi 'modules/openAi.bicep' = {
     openAiModelVersion: openAiModelVersion
   }
 }
-// module githubActionIdentity 'modules/identity.bicep' = {
-//   name: '${deployment().name}-github-action-identity'
-//   params: {
-//     identityName: 'uami-${namePrefix}-${environment}'
-//     location: location
-//     environment: environment
-//     projectName: namePrefix
-//     keyVaultName: kv.outputs.name
-//   }
-// }
+module githubActionIdentity 'modules/identity.bicep' = {
+  name: '${deployment().name}-github-action-identity'
+  params: {
+    identityName: 'id-gha-${namePrefix}-${environment}'
+    location: location
+    environment: environment
+    projectName: namePrefix
+    githubRepo: githubRepo
+    keyVaultName: kv.outputs.name
+  }
+}
 
 module speech 'modules/speech.bicep' = {
   name: '${deployment().name}-speech'
