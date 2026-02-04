@@ -6,8 +6,8 @@ param keyVaultUri string
 param openAiEndpoint string
 param openAiDeploymentId string
 
-var corsAllowedOrigins = environment == 'staging' ? [
-  'https://wapp-blotztaskapp-ui-staging.azurewebsites.net'
+var corsAllowedOrigins = environment == 'stag' ? [
+  'https://app-blotztaskapp-ui-stag.azurewebsites.net'
 ] : environment == 'prod' ? [
   'https://blotz-task-app.vercel.app'
 ] : []
@@ -28,7 +28,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
 //TODO: Need to turn the log on
 //TODO: Add health check path
 resource appService 'Microsoft.Web/sites@2022-09-01' = {
-  name: 'wapp-${webAppName}-${environment}'
+  name: 'app-${webAppName}-${environment}'
   location: location
   kind: 'app,linux'
   identity: {

@@ -1,7 +1,5 @@
-@description('Specifies the Azure location where the key vault should be created.')
 param location string = resourceGroup().location
 
-@description('Specifies whether the key vault is a standard vault or a premium vault.')
 @allowed([
   'standard'
   'premium'
@@ -18,7 +16,7 @@ param environment string
 
 resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
   //TODO: Add remove the v2 from the name once staging key vault is regenerated
-  name: 'kv-${projectName}-${environment}-v2'
+  name: 'kv-${projectName}-${environment}'
   location: location
   properties: {
     sku: {

@@ -1,23 +1,24 @@
-@description('Name of the application')
-param projectName string = 'blotztask' 
-
-@description('Location for all resources')
-param location string = resourceGroup().location
-
-@description('Environment for all resources')
-@allowed(['dev', 'staging', 'prod'])
 param environment string
+param organizationName string
+param projectName string
+var namePrefix = '${organizationName}-${projectName}'
+
+param location string = resourceGroup().location
 
 @secure()
 param dbAdminUsername string
 @secure()
 param dbAdminPassword string
 
+// OpenAI / Foundry model deployment configuration
+param openAiDeploymentName string = 'gpt-5.2'
+param openAiModelName string = 'gpt-5.2'
+param openAiModelVersion string = '2025-12-11'
 
 module appInsight 'modules/appInsight.bicep' = {
   name: '${deployment().name}-app-insight'
   params: {
-    projectName: projectName
+    projectName: namePrefix
     environment: environment
     location: location
   }
@@ -25,17 +26,18 @@ module appInsight 'modules/appInsight.bicep' = {
 module kv 'modules/keyVault.bicep' = {
   name: '${deployment().name}-keyvault' //TODO: Add a unique suffix
   params: {
-    projectName: projectName
+    projectName: namePrefix
     location: location
     environment: environment
     dbAdminUsername: dbAdminUsername
     dbAdminPassword: dbAdminPassword
   }
 }
+
 module webAppForAPI 'modules/appService.bicep' = {
   name:'${deployment().name}-webApp'//TODO: Add a unique suffix
   params: {
-    webAppName: '${projectName}-api' 
+    webAppName: '${namePrefix}-api' 
     location: location
     environment: environment
     appInsightConnectionString: appInsight.outputs.connectionString
@@ -45,27 +47,24 @@ module webAppForAPI 'modules/appService.bicep' = {
   }
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
-  name: kv.outputs.name
-}
-
-resource kvAdminRoleWebApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, 'kv-admin-webapp-${projectName}-${environment}')
-  properties: {
+module kvAdminRoleWebApp 'modules/keyVaultRoleAssignment.bicep' = {
+  name: '${deployment().name}-kv-admin-webapp'
+  params: {
+    keyVaultName: kv.outputs.name
     principalId: webAppForAPI.outputs.principalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
+    projectName: namePrefix
+    environment: environment
   }
 }
 
 module sql 'modules/sqlserver.bicep' = {
   name: '${deployment().name}-database'
   params: {
-    projectName: projectName
+    projectName: namePrefix
     location: location
     environment: environment
-    dbAdminUsername: keyVault.getSecret('db-admin-username')
-    dbAdminPassword: keyVault.getSecret('db-admin-password')
+    dbAdminUsername: dbAdminUsername
+    dbAdminPassword: dbAdminPassword
   }
 }
 
@@ -83,27 +82,30 @@ module openAi 'modules/openAi.bicep' = {
   params: {
     location: location
     environment: environment
-    projectName: projectName
+    projectName: namePrefix
     keyVaultName: kv.outputs.name
+    foundryProjectName: 'proj-${namePrefix}-${environment}'
+    openAiDeploymentName: openAiDeploymentName
+    openAiModelName: openAiModelName
+    openAiModelVersion: openAiModelVersion
   }
 }
-module githubActionIdentity 'modules/identity.bicep' = {
-  name: '${deployment().name}-github-action-identity'
-  params: {
-    identityName: 'uami-${projectName}-${environment}'
-    location: location
-    environment: environment
-    projectName: projectName
-    keyVaultName: kv.outputs.name
-  }
-}
+// module githubActionIdentity 'modules/identity.bicep' = {
+//   name: '${deployment().name}-github-action-identity'
+//   params: {
+//     identityName: 'uami-${namePrefix}-${environment}'
+//     location: location
+//     environment: environment
+//     projectName: namePrefix
+//     keyVaultName: kv.outputs.name
+//   }
+// }
 
 module speech 'modules/speech.bicep' = {
   name: '${deployment().name}-speech'
   params: {
-    projectName: projectName
+    projectName: namePrefix
     location: location
     environment: environment
   }
 }
-
