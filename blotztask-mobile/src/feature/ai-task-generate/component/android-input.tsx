@@ -88,7 +88,7 @@ export const AndroidInput = ({
       subFinal?.remove?.();
       subCanceled?.remove?.();
     };
-  }, []);
+  }, [setText]);
 
   const startListening = async () => {
     if (isFetchingAzureToken || !tokenItem) {

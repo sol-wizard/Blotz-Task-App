@@ -42,7 +42,7 @@ const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessa
     if (transcript) {
       setText(transcript);
     }
-  }, [transcript]);
+  }, [transcript, setText]);
 
 
 
