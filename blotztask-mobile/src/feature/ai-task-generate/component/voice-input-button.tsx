@@ -1,5 +1,6 @@
 import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import React from "react";
+import { VoiceTimer } from "./voice-timer";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import LottieView from "lottie-react-native";
@@ -27,28 +28,7 @@ const VoiceInputButton = ({
 }: Props) => {
   const { t } = useTranslation("aiTaskGenerate");
 
-  const [seconds, setSeconds] = React.useState(0);
 
-  React.useEffect(() => {
-    let interval: any;
-    if (isListening) {
-      setSeconds(0);
-      interval = setInterval(() => {
-        setSeconds((prev) => prev + 1);
-      }, 1000);
-    } else {
-      setSeconds(0);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isListening]);
-
-  const formattedTime = React.useMemo(() => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs.toString().padStart(2, "0")}`;
-  }, [seconds]);
 
   if (isAiGenerating) {
     return (
@@ -90,12 +70,7 @@ const VoiceInputButton = ({
                 resizeMode="contain"
               ></LottieView>
             </View>
-            <Text
-              className="text-white font-bold mr-3"
-              style={{ fontVariant: ["tabular-nums"] }}
-            >
-              {formattedTime}
-            </Text>
+            <VoiceTimer />
             <Pressable
               className="rounded-full bg-[#F4F4F4] items-center border border-[#ECECEC] justify-center w-20 h-11"
               disabled={isAiGenerating}
