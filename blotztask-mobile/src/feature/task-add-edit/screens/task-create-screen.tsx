@@ -6,6 +6,8 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EVENTS } from "@/shared/constants/posthog-events";
+import { View } from "react-native";
+import { ReturnButton } from "@/shared/components/ui/return-button";
 
 export default function TaskCreateScreen() {
   const router = useRouter();
@@ -30,7 +32,10 @@ export default function TaskCreateScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+    <SafeAreaView className="flex-1 bg-white">
+      <View pointerEvents="box-none" className="ml-6 pt-2">
+        <ReturnButton />
+      </View>
       <TaskForm mode="create" onSubmit={handleTaskSubmit} />
     </SafeAreaView>
   );

@@ -145,12 +145,12 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       <FormProvider {...form}>
         <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Title */}
-          <Animated.View className="mb-4 bg-white" layout={MotionAnimations.layout}>
+          <Animated.View className="my-2 bg-white" layout={MotionAnimations.layout}>
             <FormTextInput
               name="title"
               placeholder={t("form.newTask")}
               control={control}
-              className="font-balooBold text-4xl leading-normal"
+              className="font-balooBold text-3xl leading-normal"
               inputProps={{
                 multiline: false,
                 blurOnSubmit: true,
