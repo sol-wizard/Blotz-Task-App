@@ -27,6 +27,31 @@ const VoiceInputButton = ({
 }: Props) => {
   const { t } = useTranslation("aiTaskGenerate");
 
+  const [seconds, setSeconds] = React.useState(0);
+
+  React.useEffect(() => {
+    let interval: any;
+    if (isListening) {
+      setSeconds(0);
+      interval = setInterval(() => {
+        setSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setSeconds(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isListening]);
+
+  const formattedTime = React.useMemo(() => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  }, [seconds]);
+
   if (isAiGenerating) {
     return (
       <View className="mt-4 h-14 w-full rounded-full bg-[#F2F2F2] border border-[#ECECEC] items-center justify-center">
@@ -67,6 +92,12 @@ const VoiceInputButton = ({
                 resizeMode="contain"
               ></LottieView>
             </View>
+            <Text
+              className="text-white font-bold mr-3"
+              style={{ fontVariant: ["tabular-nums"] }}
+            >
+              {formattedTime}
+            </Text>
             <Pressable
               className="rounded-full bg-[#F4F4F4] items-center border border-[#ECECEC] justify-center w-20 h-11"
               disabled={isAiGenerating}
