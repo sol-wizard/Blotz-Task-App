@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, TextInput } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { ErrorMessageCard } from "./error-message-card";
@@ -144,7 +144,7 @@ export const AndroidInput = ({
     await startListening();
   };
 
-  const showSendButton = text.trim() !== "" && !isListening;
+
 
   return (
     <View className="mb-8">

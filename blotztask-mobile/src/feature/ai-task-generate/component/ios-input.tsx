@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, Vibration, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Vibration } from "react-native";
 import React, { useEffect } from "react";
 import { theme } from "@/shared/constants/theme";
 import { useTranslation } from "react-i18next";
@@ -44,7 +44,7 @@ const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessa
     }
   }, [transcript]);
 
-  const showSendButton = text.trim() !== "" && !recognizing;
+
 
   const toggleListening = async () => {
     if (recognizing) {

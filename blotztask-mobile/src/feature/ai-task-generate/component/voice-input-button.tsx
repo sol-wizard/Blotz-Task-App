@@ -47,9 +47,7 @@ const VoiceInputButton = ({
   const formattedTime = React.useMemo(() => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${minutes.toString().padStart(1, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
+    return `${minutes}:${secs.toString().padStart(2, "0")}`;
   }, [seconds]);
 
   if (isAiGenerating) {
