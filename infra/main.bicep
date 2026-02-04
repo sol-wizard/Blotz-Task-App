@@ -10,8 +10,9 @@ param dbAdminUsername string
 @secure()
 param dbAdminPassword string
 
-param openAiDeploymentName string = 'gpt-5.2-chat'
-param openAiModelName string = 'gpt-5.2-chat'
+param openAiDeploymentName string
+param openAiModelName string
+param openAiModelVersion string
 
 module appInsight 'modules/appInsight.bicep' = {
   name: '${deployment().name}-app-insight'
@@ -84,6 +85,7 @@ module openAi 'modules/openAi.bicep' = {
     foundryProjectName: 'proj-${namePrefix}-${environment}'
     openAiDeploymentName: openAiDeploymentName
     openAiModelName: openAiModelName
+    openAiModelVersion: openAiModelVersion
   }
 }
 // module githubActionIdentity 'modules/identity.bicep' = {
@@ -103,5 +105,6 @@ module speech 'modules/speech.bicep' = {
     projectName: namePrefix
     location: location
     environment: environment
+    keyVaultName: kv.outputs.name
   }
 }
