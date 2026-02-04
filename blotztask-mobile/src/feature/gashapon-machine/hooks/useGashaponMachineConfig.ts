@@ -163,9 +163,9 @@ export const useGashaponMachineConfig = ({
       const y = 230 + row * gapY;
       const star = Matter.Bodies.circle(x, y, starRadius, {
         restitution: 0.4,
-        friction: 0.05,
+        friction: 0.1,
         frictionStatic: 0.2,
-        frictionAir: 0.01,
+        frictionAir: 0.04,
         label: getStarEntityKey(i),
       });
 

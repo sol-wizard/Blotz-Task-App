@@ -119,7 +119,7 @@ export default function NotesScreen() {
             onPress={() => {
               setIsModalVisible(true);
             }}
-            className="mx-6 mb-4 border-2 border-dashed rounded-2xl
+            className="flex-row mx-6 mb-4 border-2 border-dashed rounded-2xl
          h-14 items-center justify-center bg-background"
             style={{ borderColor: "#8C8C8C" }}
           >
