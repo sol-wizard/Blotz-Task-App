@@ -162,7 +162,7 @@ export const useGashaponMachineConfig = ({
       const x = 90 + col * gapX;
       const y = 230 + row * gapY;
       const star = Matter.Bodies.circle(x, y, starRadius, {
-        restitution: 0.4,
+        restitution: 0.6,
         friction: 0.1,
         frictionStatic: 0.2,
         frictionAir: 0.04,
