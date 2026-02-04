@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, TextInput } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { ErrorMessageCard } from "./error-message-card";
@@ -88,7 +88,7 @@ export const AndroidInput = ({
       subFinal?.remove?.();
       subCanceled?.remove?.();
     };
-  }, []);
+  }, [setText]);
 
   const startListening = async () => {
     if (isFetchingAzureToken || !tokenItem) {
@@ -144,7 +144,7 @@ export const AndroidInput = ({
     await startListening();
   };
 
-  const showSendButton = text.trim() !== "" && !isListening;
+
 
   return (
     <View className="mb-8">
@@ -165,28 +165,15 @@ export const AndroidInput = ({
       {aiGeneratedMessage?.errorMessage && (
         <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
       )}
-      {showSendButton ? (
-        isAiGenerating ? (
-          <View className="mt-4 h-14 rounded-full bg-[#F4F4F4] border border-[#ECECEC] items-center justify-center">
-            <ActivityIndicator size={10} color="#2F80ED" />
-          </View>
-        ) : (
-          <Pressable
-            className="bg-[#F4F4F4] border border-[#ECECEC] rounded-full mt-4 p-4 items-center"
-            onPress={onPressSend}
-          >
-            <Text className="font-bold">{t("aiTaskGenerate:buttons.generateTask")}</Text>
-          </Pressable>
-        )
-      ) : (
-        <VoiceInputButton
-          isListening={isListening}
-          startListening={toggleListening}
-          abortListening={abortListening}
-          sendMessage={stopListening}
-          isAiGenerating={isAiGenerating}
-        />
-      )}
+      <VoiceInputButton
+        isListening={isListening}
+        startListening={toggleListening}
+        abortListening={abortListening}
+        stopListening={stopListening}
+        isAiGenerating={isAiGenerating}
+        hasText={text.trim() !== ""}
+        onGenerateTask={onPressSend}
+      />
     </View>
   );
 };
