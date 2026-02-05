@@ -9,6 +9,9 @@ import SubtasksEditor from "./subtasks-editor";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
+import { darkenHex } from "@/shared/util/color";
+import { red } from "react-native-reanimated/lib/typescript/Colors";
+
 
 type SubtaskViewProps = {
   parentTask: TaskDetailDTO;
@@ -47,6 +50,12 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
 
   const isLoading = isBreakingDown || isReplacingSubtasks || isLoadingSubtasks;
 
+  const labelColor = parentTask.label?.color;
+  const fallbackBg = "#EBF0FE";
+  const bgColor = labelColor ?? fallbackBg;
+  const textColor = darkenHex(bgColor,0.6);
+
+
   // Show loading state while fetching
   if (isLoadingSubtasks) {
     return (
@@ -68,16 +77,17 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
       <Pressable
         onPress={handleBreakDown}
         disabled={isLoading}
+        style={{ backgroundColor: isLoading ? undefined : bgColor }}
         className={`flex-row items-center justify-center self-center mt-8 rounded-2xl h-[55px] w-full ${
-          isLoading ? "bg-gray-300" : "bg-[#EBF0FE] active:bg-gray-100"
+          isLoading ? "bg-gray-300" : " active:bg-gray-100"
         }`}
       >
         {isLoading ? (
           <ActivityIndicator size="small" color="#3b82f6" />
         ) : (
           <>
-            <MaterialCommunityIcons name="format-list-checkbox" size={24} color="#3b82f6" />
-            <Text className="ml-2 text-blue-500 text-xl font-balooBold">
+            <MaterialCommunityIcons name="format-list-checkbox" size={24} color={textColor} />
+            <Text style={{color: textColor }} className="ml-2 text-xl font-balooBold">
               {t("details.breakdownTask")}
             </Text>
           </>
