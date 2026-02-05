@@ -87,10 +87,16 @@ function invalidateSelectedDayTask(
   startTime?: string | null,
   endTime?: string | null,
 ) {
-  if (!startTime || !endTime) return;
+  if (!startTime || !endTime) {
+    queryClient.invalidateQueries({
+      queryKey: taskKeys.selectedDay(convertToDateTimeOffset(new Date())),
+    });
+    return;
+  }
 
   const start = startOfDay(new Date(startTime));
   const end = startOfDay(new Date(endTime));
+
   if (isSameDay(start, end)) {
     queryClient.invalidateQueries({
       queryKey: taskKeys.selectedDay(convertToDateTimeOffset(start)),

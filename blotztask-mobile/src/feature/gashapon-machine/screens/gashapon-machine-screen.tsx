@@ -82,8 +82,9 @@ export default function GashaponMachineScreen() {
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       style={{ flex: 1 }}
+      pointerEvents="box-none"
     >
-      <SafeAreaView className="flex-1 items-center justify-center">
+      <SafeAreaView className="flex-1 items-center justify-center" pointerEvents="box-none">
         <NoteRevealModal
           visible={isModalVisible}
           task={randomNote}

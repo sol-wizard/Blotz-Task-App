@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { ActivityIndicator, FlatList, View, Text } from "react-native";
+import { ActivityIndicator, View, Text } from "react-native";
 import { TaskStatusRow } from "@/shared/components/ui/task-status-row";
 import TaskCard from "@/feature/calendar/components/task-card";
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
@@ -11,6 +11,7 @@ import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { ReturnButton } from "@/shared/components/ui/return-button";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { FlashList } from "@shopify/flash-list";
 
 export default function SettingsAllTasksScreen() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
@@ -74,7 +75,7 @@ export default function SettingsAllTasksScreen() {
           <ActivityIndicator size="small" />
         </View>
       ) : tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
-        <FlatList
+        <FlashList
           className="flex-1"
           data={tasksOfSelectedStatus}
           renderItem={renderTask}

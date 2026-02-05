@@ -17,7 +17,7 @@ export function SegmentToggle({ value, setValue }: Props) {
   const tabPositionX = useSharedValue(0);
 
   const onTabMovingAnimation = (index: number) => {
-    tabPositionX.value = withTiming(104 * index, {});
+    tabPositionX.value = withTiming(96 * index, {});
   };
 
   const tabAnimatedStyle = useAnimatedStyle(() => ({

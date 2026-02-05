@@ -119,11 +119,12 @@ export default function NotesScreen() {
             onPress={() => {
               setIsModalVisible(true);
             }}
-            className="mx-6 mb-4 border-2 border-dashed rounded-2xl
+            className="flex-row mx-6 mb-4 border-2 border-dashed rounded-2xl
          h-14 items-center justify-center bg-background"
             style={{ borderColor: "#8C8C8C" }}
           >
-            <Text className="font-baloo text-lg " style={{ color: "#8C8C8C" }}>
+            <MaterialCommunityIcons name={"plus"} size={24} color={theme.colors.primary} />
+            <Text className="font-baloo text-lg " style={{ color: theme.colors.primary }}>
               {t("addNote")}
             </Text>
           </Pressable>

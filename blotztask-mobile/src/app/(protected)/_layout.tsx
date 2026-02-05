@@ -16,31 +16,8 @@ export default function ProtectedLayout() {
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
 
       <Stack.Screen name="task-details" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="task-edit"
-        options={{
-          headerShown: true,
-          headerShadowVisible: false,
-          headerTitle: "",
-          headerBackVisible: true,
-          headerTintColor: "#8E8E93",
-          headerBackButtonDisplayMode: "minimal",
-        }}
-      />
-      <Stack.Screen
-        name="task-create"
-        options={{
-          headerShown: true,
-          headerShadowVisible: false,
-          headerTitle: "",
-          headerBackVisible: true,
-          headerTintColor: "#000000",
-          headerBackButtonDisplayMode: "minimal",
-          headerStyle: {
-            backgroundColor: "white",
-          },
-        }}
-      />
+      <Stack.Screen name="task-edit" options={{ headerShown: false }} />
+      <Stack.Screen name="task-create" options={{ headerShown: false }} />
 
       <Stack.Screen
         name="gashapon-machine"
