@@ -10,8 +10,6 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { darkenHex } from "@/shared/util/color";
-import { red } from "react-native-reanimated/lib/typescript/Colors";
-
 
 type SubtaskViewProps = {
   parentTask: TaskDetailDTO;
@@ -53,8 +51,7 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const labelColor = parentTask.label?.color;
   const fallbackBg = "#EBF0FE";
   const bgColor = labelColor ?? fallbackBg;
-  const textColor = darkenHex(bgColor,0.6);
-
+  const textColor = darkenHex(bgColor, 0.6);
 
   // Show loading state while fetching
   if (isLoadingSubtasks) {
@@ -87,7 +84,7 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
         ) : (
           <>
             <MaterialCommunityIcons name="format-list-checkbox" size={24} color={textColor} />
-            <Text style={{color: textColor }} className="ml-2 text-xl font-balooBold">
+            <Text style={{ color: textColor }} className="ml-2 text-xl font-balooBold">
               {t("details.breakdownTask")}
             </Text>
           </>
