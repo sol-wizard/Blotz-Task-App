@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useState } from "react";
 import { ReturnButton } from "@/shared/components/ui/return-button";
 import { router } from "expo-router";
@@ -113,35 +113,38 @@ export default function SettingsAccountScreen() {
       >
         <View className="bg-white rounded-2xl p-6 mx-6">
           <Text className="text-xl font-baloo text-secondary">{t("account.deleteTitle")}</Text>
-          <Text className="text-sm font-balooThin text-primary mt-2">
-            {t(
-              "account.deleteWarning",
-              "This action is permanent. This will delete all your data.",
-            )}
-          </Text>
           {isDeletingUser ? (
-            <Text className="text-sm font-baloo text-secondary mt-3">
-              {t("account.deleteLoading", "Deleting your data...")}
-            </Text>
-          ) : null}
-
-          <Pressable
-            onPress={() => setDeleteConfirmChecked((prev) => !prev)}
-            className="flex-row items-center mt-4"
-          >
-            <View
-              className={`h-5 w-5 rounded-md border ${
-                deleteConfirmChecked ? "bg-red-600 border-red-600" : "border-gray-300"
-              } items-center justify-center`}
-            >
-              {deleteConfirmChecked ? (
-                <MaterialCommunityIcons name="check" size={14} color="#ffffff" />
-              ) : null}
+            <View className="mt-3 flex-row items-center">
+              <ActivityIndicator size="small" color="#E11D48" />
+              <Text className="text-sm font-baloo text-secondary ml-3">
+                {t("account.deleteLoading")}
+              </Text>
             </View>
-            <Text className="ml-3 text-sm font-baloo text-secondary">
-              {t("account.deleteConfirmText", "I understand this cannot be undone.")}
-            </Text>
-          </Pressable>
+          ) : (
+            <>
+              <Text className="text-sm font-balooThin text-primary mt-2">
+                {t("account.deleteWarning")}
+              </Text>
+
+              <Pressable
+                onPress={() => setDeleteConfirmChecked((prev) => !prev)}
+                className="flex-row items-center mt-4"
+              >
+                <View
+                  className={`h-5 w-5 rounded-md border ${
+                    deleteConfirmChecked ? "bg-red-600 border-red-600" : "border-gray-300"
+                  } items-center justify-center`}
+                >
+                  {deleteConfirmChecked ? (
+                    <MaterialCommunityIcons name="check" size={14} color="#ffffff" />
+                  ) : null}
+                </View>
+                <Text className="ml-3 text-sm font-baloo text-secondary">
+                  {t("account.deleteConfirmText", "I understand this cannot be undone.")}
+                </Text>
+              </Pressable>
+            </>
+          )}
 
           <View className="flex-row justify-end mt-5">
             <Pressable
