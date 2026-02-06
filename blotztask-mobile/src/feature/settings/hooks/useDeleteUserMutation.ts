@@ -9,7 +9,7 @@ export function useDeleteUserMutation() {
   });
 
   return {
-    mutate: mutation.mutate,
+    mutate: mutation.mutateAsync,
     isPending: mutation.isPending,
   };
 }

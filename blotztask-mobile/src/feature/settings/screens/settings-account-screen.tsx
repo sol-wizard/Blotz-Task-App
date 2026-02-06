@@ -2,7 +2,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Pressable, Text, View } from "react-native";
 import { useState } from "react";
 import { ReturnButton } from "@/shared/components/ui/return-button";
-import { usePostHog } from "posthog-react-native";
 import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FormDivider } from "@/shared/components/ui/form-divider";
@@ -11,11 +10,12 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { useLogout } from "@/shared/hooks/useLogout";
 import { useTranslation } from "react-i18next";
 import Modal from "react-native-modal";
+import { useDeleteUserMutation } from "@/feature/settings/hooks/useDeleteUserMutation";
 
 export default function SettingsAccountScreen() {
   const logout = useLogout();
-  const posthog = usePostHog();
   const { t } = useTranslation("settings");
+  const { mutate: deleteUser, isPending: isDeletingUser } = useDeleteUserMutation();
 
   const { userProfile, isUserProfileLoading } = useUserProfile();
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
@@ -31,9 +31,9 @@ export default function SettingsAccountScreen() {
       ? `${userProfile.email.slice(0, 20)}...`
       : (userProfile?.email ?? "");
 
-  const handleSignOut = async () => {
+  const handleConfirmDelete = async () => {
+    await deleteUser();
     await logout();
-    posthog.reset();
   };
 
   const openDeleteModal = () => {
@@ -89,7 +89,7 @@ export default function SettingsAccountScreen() {
         </View>
       </View>
       <Pressable
-        onPress={handleSignOut}
+        onPress={async () => await logout()}
         className="bg-white rounded-xl w-96 py-4 items-center justify-center pr-4 shadow mt-12"
       >
         <Text className="text-red-500 font-baloo text-xl ml-4">{t("common:buttons.signOut")}</Text>
@@ -119,6 +119,11 @@ export default function SettingsAccountScreen() {
               "This action is permanent. This will delete all your data.",
             )}
           </Text>
+          {isDeletingUser ? (
+            <Text className="text-sm font-baloo text-secondary mt-3">
+              {t("account.deleteLoading", "Deleting your data...")}
+            </Text>
+          ) : null}
 
           <Pressable
             onPress={() => setDeleteConfirmChecked((prev) => !prev)}
@@ -134,21 +139,23 @@ export default function SettingsAccountScreen() {
               ) : null}
             </View>
             <Text className="ml-3 text-sm font-baloo text-secondary">
-              {t(
-                "account.deleteConfirmText",
-                "I understand this cannot be undone.",
-              )}
+              {t("account.deleteConfirmText", "I understand this cannot be undone.")}
             </Text>
           </Pressable>
 
           <View className="flex-row justify-end mt-5">
-            <Pressable onPress={() => setIsDeleteModalVisible(false)} className="px-4 py-2">
+            <Pressable
+              onPress={() => setIsDeleteModalVisible(false)}
+              disabled={isDeletingUser}
+              className="px-4 py-2"
+            >
               <Text className="text-secondary font-baloo">{t("common:buttons.cancel")}</Text>
             </Pressable>
             <Pressable
-              disabled={!deleteConfirmChecked}
+              disabled={!deleteConfirmChecked || isDeletingUser}
+              onPress={handleConfirmDelete}
               className={`ml-2 px-4 py-2 rounded-xl ${
-                deleteConfirmChecked ? "bg-red-600" : "bg-red-200"
+                deleteConfirmChecked && !isDeletingUser ? "bg-red-600" : "bg-red-200"
               }`}
             >
               <Text className="text-white font-baloo">{t("account.deleteConfirm")}</Text>

@@ -18,6 +18,7 @@
     "deleteTitle": "Delete Account",
     "deleteWarning": "This permanently deletes your account and all data (tasks, notes, preferences). This can’t be undone.",
     "deleteConfirmText": "I understand this cannot be undone.",
+    "deleteLoading": "Deleting your data...",
     "deleteConfirm": "Delete permanently"
   },
   "taskHandling": {
