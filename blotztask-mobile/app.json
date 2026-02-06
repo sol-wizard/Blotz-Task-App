@@ -29,10 +29,7 @@
     "android": {
       "edgeToEdgeEnabled": true,
       "package": "com.blotz.blotztask",
-      "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.ACCESS_FINE_LOCATION"
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO", "android.permission.ACCESS_FINE_LOCATION"]
     },
     "web": {
       "bundler": "metro",
@@ -65,12 +62,8 @@
         }
       ],
       "expo-audio",
-      [
-        "./plugins/withCustomGradleProperties"
-      ],
-      [
-        "./plugins/withAzureSpeechAndroid"
-      ],
+      ["./plugins/withCustomGradleProperties"],
+      ["./plugins/withAzureSpeechAndroid"],
       "expo-asset"
     ],
     "experiments": {
