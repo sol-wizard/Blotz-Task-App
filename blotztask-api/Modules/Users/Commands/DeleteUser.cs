@@ -28,15 +28,16 @@ public class DeleteUserCommandHandler(
                 .Where(n => n.UserId == UserId)
                 .ExecuteDeleteAsync(ct);
 
-            await db.Subtasks
-                .Where(s => db.TaskItems
-                    .Where(t => t.UserId == UserId)
-                    .Select(t => t.Id)
-                    .Contains(s.ParentTaskId))
-                .ExecuteDeleteAsync(ct);
-
             await db.TaskItems
                 .Where(t => t.UserId == UserId)
+                .ExecuteDeleteAsync(ct);
+
+            await db.DeletedTaskItems
+                .Where(t => t.UserId == UserId)
+                .ExecuteDeleteAsync(ct);
+
+            await db.Labels
+                .Where(l => l.UserId == UserId)
                 .ExecuteDeleteAsync(ct);
 
             await db.UserPreferences
