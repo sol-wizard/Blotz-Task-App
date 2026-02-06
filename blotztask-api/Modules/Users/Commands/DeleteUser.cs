@@ -23,12 +23,16 @@ public class DeleteUserCommandHandler(
         await using var tx = await db.Database.BeginTransactionAsync(ct);
         try
         {
-            await db.DeletedTaskItems
-                .Where(t => t.UserId == UserId)
-                .ExecuteDeleteAsync(ct);
 
             await db.Notes
                 .Where(n => n.UserId == UserId)
+                .ExecuteDeleteAsync(ct);
+
+            await db.Subtasks
+                .Where(s => db.TaskItems
+                    .Where(t => t.UserId == UserId)
+                    .Select(t => t.Id)
+                    .Contains(s.ParentTaskId))
                 .ExecuteDeleteAsync(ct);
 
             await db.TaskItems
@@ -41,10 +45,6 @@ public class DeleteUserCommandHandler(
 
             await db.PomodoroSetting
                 .Where(p => p.UserId == UserId)
-                .ExecuteDeleteAsync(ct);
-
-            await db.Labels
-                .Where(l => l.UserId == UserId)
                 .ExecuteDeleteAsync(ct);
 
             await db.AppUsers
