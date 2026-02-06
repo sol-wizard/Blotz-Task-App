@@ -31,6 +31,9 @@ param dbMaxSizeGb int
 @allowed(['default', 'recover'])
 param kvCreateMode string = 'default'
 
+// Entra ID group for dev team access
+param devGroupId string
+
 module logAnalytics 'modules/logAnalytics.bicep' = {
   name: '${deployment().name}-log-analytics'
   params: {
@@ -59,6 +62,7 @@ module kv 'modules/keyVault.bicep' = {
     dbAdminUsername: dbAdminUsername
     dbAdminPassword: dbAdminPassword
     createMode: kvCreateMode
+    devGroupId: devGroupId
   }
 }
 
