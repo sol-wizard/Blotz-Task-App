@@ -15,13 +15,7 @@
       "bundleIdentifier": "com.Blotz.BlotzTask",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSPhotoLibraryUsageDescription": "Allow BlotzTask to access your photos so you can attach images to tasks.",
-        "NSPhotoLibraryAddUsageDescription": "Allow BlotzTask to save exported images to your photo library.",
-        "NSCameraUsageDescription": "Allow BlotzTask to use the camera for calls and taking photos.",
-        "NSSpeechRecognitionUsageDescription": "We use speech recognition so you can add tasks by voice.",
-        "NSMicrophoneUsageDescription": "Allow BlotzTask to use the microphone for voice and video calls.",
-        "NSMotionUsageDescription": "This app uses motion data to simulate gravity and allow capsule toys to move when you shake your phone.",
-        "NSLocationWhenInUseUsageDescription": "Allow BlotzTask to use your location to check regional availability."
+        "CFBundleLocalizations": ["en", "zh-Hans"]
       },
       "appleTeamId": "LXC29JARY5",
       "icon": "./assets/images-png/blotz-icon.png"
@@ -39,6 +33,29 @@
       "expo-router",
       "expo-speech-recognition",
       "expo-secure-store",
+      [
+        "./plugins/withInfoPlistStrings",
+        {
+          "en": {
+            "NSPhotoLibraryUsageDescription": "Allow access to your photo library so you can attach images to tasks and notes (e.g., a screenshot or receipt).",
+            "NSPhotoLibraryAddUsageDescription": "Allow saving images to your photo library when you export or download images from BlotzTask (e.g., a shared task card).",
+            "NSCameraUsageDescription": "Allow camera access so you can take a photo and attach it to a task or note (e.g., a document, whiteboard, or receipt).",
+            "NSSpeechRecognitionUsageDescription": "BlotzTask uses speech recognition to turn your voice into text for creating tasks and notes.",
+            "NSMicrophoneUsageDescription": "BlotzTask uses the microphone for voice input so you can dictate tasks and notes. Audio is used only for speech-to-text and is not stored.",
+            "NSMotionUsageDescription": "BlotzTask uses motion data for an optional shake interaction in the app (e.g., to animate capsule-toy style effects). Motion data is not stored.",
+            "NSLocationWhenInUseUsageDescription": "BlotzTask uses your location to provide location-aware features when you choose to use them. Your location is not stored."
+          },
+          "zh-Hans": {
+            "NSPhotoLibraryUsageDescription": "允许访问相册，以便你将图片添加到任务和笔记中（例如截图或收据）。",
+            "NSPhotoLibraryAddUsageDescription": "允许将图片保存到相册，方便你从 BlotzTask 导出或下载图片（例如分享的任务卡片）。",
+            "NSCameraUsageDescription": "允许访问相机，以便你拍照并添加到任务或笔记中（例如文档、白板或收据）。",
+            "NSSpeechRecognitionUsageDescription": "BlotzTask 使用语音识别将你的语音转为文字，用于创建任务和笔记。",
+            "NSMicrophoneUsageDescription": "BlotzTask 使用麦克风进行语音输入，方便你口述任务和笔记。音频仅用于语音转文字，不会被存储。",
+            "NSMotionUsageDescription": "BlotzTask 使用运动数据来提供可选的摇一摇交互（例如胶囊玩具风格的动画效果）。运动数据不会被存储。",
+            "NSLocationWhenInUseUsageDescription": "BlotzTask 在你选择使用相关功能时获取定位信息，用于提供位置相关能力。你的位置信息不会被存储。"
+          }
+        }
+      ],
       [
         "expo-dev-client",
         {
