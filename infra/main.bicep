@@ -136,6 +136,15 @@ module githubActionIdentity 'modules/identity.bicep' = {
   }
 }
 
+module storage 'modules/storage.bicep' = {
+  name: '${deployment().name}-storage'
+  params: {
+    projectName: namePrefix
+    environment: environment
+    location: location
+  }
+}
+
 module speech 'modules/speech.bicep' = {
   name: '${deployment().name}-speech'
   params: {
