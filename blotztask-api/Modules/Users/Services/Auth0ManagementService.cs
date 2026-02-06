@@ -14,6 +14,7 @@ public interface IAuth0ManagementService
 
     Task<User> GetUserAsync(string auth0UserId,
         CancellationToken ct = default);
+
 }
 
 public class Auth0ManagementService : IAuth0ManagementService
@@ -94,6 +95,7 @@ public class Auth0ManagementService : IAuth0ManagementService
             throw;
         }
     }
+
 
     private async Task<string> GetManagementTokenAsync(CancellationToken ct)
     {
