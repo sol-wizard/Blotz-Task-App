@@ -21,10 +21,6 @@ jobs:
         with:
           node-version: "18"
 
-      - name: Install dependencies
-        run: npm install
-        working-directory: ./blotztask-mobile
-
       - name: Run ESLint on mobile
         run: npx eslint . --ext .ts,.tsx,.js
         working-directory: ./blotztask-mobile
