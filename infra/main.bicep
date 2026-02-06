@@ -34,6 +34,16 @@ param kvCreateMode string = 'default'
 // Entra ID group for dev team access
 param devGroupId string
 
+// Dev group: Contributor role at resource group level
+resource devGroupContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, devGroupId, 'contributor')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c') // Contributor
+    principalId: devGroupId
+    principalType: 'Group'
+  }
+}
+
 module logAnalytics 'modules/logAnalytics.bicep' = {
   name: '${deployment().name}-log-analytics'
   params: {
@@ -146,6 +156,7 @@ module storage 'modules/storage.bicep' = {
     projectName: namePrefix
     environment: environment
     location: location
+    devGroupId: devGroupId
   }
 }
 

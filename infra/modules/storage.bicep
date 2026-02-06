@@ -1,6 +1,7 @@
 param projectName string
 param environment string
 param location string = resourceGroup().location
+param devGroupId string
 
 // Storage account names: lowercase letters and numbers only, 3-24 chars
 var storageAccountName = 'stg${replace(projectName, '-', '')}${environment}'
@@ -29,6 +30,16 @@ resource avatarsContainer 'Microsoft.Storage/storageAccounts/blobServices/contai
   name: 'avatars'
   properties: {
     publicAccess: 'Blob'
+  }
+}
+
+resource devGroupBlobContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, devGroupId, 'storage-blob-data-contributor')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe') // Storage Blob Data Contributor
+    principalId: devGroupId
+    principalType: 'Group'
   }
 }
 
