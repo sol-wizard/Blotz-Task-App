@@ -14,11 +14,18 @@ param dbAdminPassword string
 param projectName string
 param environment string
 
+@allowed([
+  'default'
+  'recover'
+])
+@description('Use "recover" if Key Vault is in soft-deleted state')
+param createMode string = 'default'
+
 resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  //TODO: Add remove the v2 from the name once staging key vault is regenerated
   name: 'kv-${projectName}-${environment}'
   location: location
   properties: {
+    createMode: createMode
     sku: {
       family: 'A'
       name: skuName

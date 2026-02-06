@@ -27,6 +27,10 @@ param dbSkuTier string
 param dbSkuCapacity int
 param dbMaxSizeGb int
 
+// Key Vault create mode - use 'recover' if Key Vault is soft-deleted
+@allowed(['default', 'recover'])
+param kvCreateMode string = 'default'
+
 module logAnalytics 'modules/logAnalytics.bicep' = {
   name: '${deployment().name}-log-analytics'
   params: {
@@ -47,13 +51,14 @@ module appInsight 'modules/appInsight.bicep' = {
   }
 }
 module kv 'modules/keyVault.bicep' = {
-  name: '${deployment().name}-keyvault' //TODO: Add a unique suffix
+  name: '${deployment().name}-keyvault'
   params: {
     projectName: namePrefix
     location: location
     environment: environment
     dbAdminUsername: dbAdminUsername
     dbAdminPassword: dbAdminPassword
+    createMode: kvCreateMode
   }
 }
 

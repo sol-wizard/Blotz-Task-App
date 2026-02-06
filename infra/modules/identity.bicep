@@ -28,10 +28,10 @@ resource fic 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentity
 }
 
 var kvSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6' // Key Vault Secrets User
-var contributorRoleId = 'b24988ac-6180-42a0-ab88-20f7382dd24c' // Contributor
+var websiteContributorRoleId = 'de139f84-1756-47ae-9be6-808fbbe84772' // Website Contributor
 
 resource keyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, identityName, kvSecretsUserRoleId)
+  name: guid(keyVault.id, identityName, 'kv-secrets-user')
   scope: keyVault
   properties: {
     principalId: githubActionIdentity.properties.principalId
@@ -40,11 +40,11 @@ resource keyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01
   }
 }
 
-resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, identityName, contributorRoleId)
+resource websiteContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, identityName, 'website-contributor')
   properties: {
     principalId: githubActionIdentity.properties.principalId
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', websiteContributorRoleId)
     principalType: 'ServicePrincipal'
   }
 }
