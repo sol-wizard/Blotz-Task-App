@@ -13,7 +13,12 @@
     "name": "Name",
     "nameDescription": "This name appears across your account.",
     "email": "Email",
-    "emailDescription": "Used for login and notifications."
+    "emailDescription": "Used for login and notifications.",
+    "deleteAccount": "⚠️ Delete Account",
+    "deleteTitle": "Delete Account",
+    "deleteWarning": "This permanently deletes your account and all data (tasks, notes, preferences). This can’t be undone.",
+    "deleteConfirmText": "I understand this cannot be undone.",
+    "deleteConfirm": "Delete permanently"
   },
   "taskHandling": {
     "title": "Task Handling",
