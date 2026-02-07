@@ -8,6 +8,8 @@ import { Pressable, Text, View, FlatList, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
+import { Ionicons } from "@expo/vector-icons";
+import { BlotzLogo } from "@/shared/components/ui/blotz-logo";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -18,7 +20,6 @@ export default function OnboardingScreen() {
 
   const sections = ["ai-voice", "star-spark", "breakdown"];
   const [activeOnboardingIndex, setActiveOnboardingIndex] = useState(0);
-  const [direction, setDirection] = useState<"forward" | "backward">("forward");
   const flatListRef = useRef<FlatList>(null);
 
   const onMomentumScrollEnd = (e: any) => {
@@ -48,10 +49,23 @@ export default function OnboardingScreen() {
     setActiveOnboardingIndex(prevIndex);
   };
 
-  const activeSection = sections[activeOnboardingIndex];
-
   return (
     <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-row items-center px-6 pt-2 h-12">
+        <View className="flex-1 items-start">
+          {activeOnboardingIndex > 0 && (
+            <Pressable onPress={handleBack} hitSlop={10}>
+              <Ionicons name="chevron-back" size={22} color="#8C8C8C" />
+            </Pressable>
+          )}
+        </View>
+        <BlotzLogo fontSize={30} />
+        <View className="flex-1 items-end">
+          <Pressable onPress={handleFinish} hitSlop={10}>
+            <Text className="text-xl font-baloo text-black/40">{t("actions.skip")}</Text>
+          </Pressable>
+        </View>
+      </View>
       <FlatList
         ref={flatListRef}
         data={sections}
@@ -66,15 +80,9 @@ export default function OnboardingScreen() {
         onMomentumScrollEnd={onMomentumScrollEnd}
         renderItem={({ item }) => (
           <View style={{ width: SCREEN_WIDTH }}>
-            {item === "ai-voice" && (
-              <OnboardingAiSection onSkip={handleFinish} onBack={handleBack} />
-            )}
-            {item === "breakdown" && (
-              <OnboardingBreakdownSection onSkip={handleFinish} onBack={handleBack} />
-            )}
-            {item === "star-spark" && (
-              <OnboardingNoteSection onSkip={handleFinish} onBack={handleBack} />
-            )}
+            {item === "ai-voice" && <OnboardingAiSection />}
+            {item === "breakdown" && <OnboardingBreakdownSection />}
+            {item === "star-spark" && <OnboardingNoteSection />}
           </View>
         )}
       />
