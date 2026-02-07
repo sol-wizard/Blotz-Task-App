@@ -1,16 +1,10 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { Image, ImageBackground } from "expo-image";
 import { useTranslation } from "react-i18next";
 import { ASSETS } from "@/shared/constants/assets";
-import { BlotzLogo } from "@/shared/components/ui/blotz-logo";
 
-type OnboardingAiSectionProps = {
-  onSkip: () => void;
-  onBack: () => void;
-};
-
-export function OnboardingAiSection({ onSkip, onBack }: OnboardingAiSectionProps) {
+export function OnboardingAiSection() {
   const { t } = useTranslation("onboarding");
 
   return (
@@ -21,16 +15,6 @@ export function OnboardingAiSection({ onSkip, onBack }: OnboardingAiSectionProps
         contentFit="cover"
       >
         <View className="flex-1 px-6">
-          <View className="flex-row items-center pt-2">
-            <View className="flex-1 items-start" />
-            <BlotzLogo fontSize={30} />
-            <View className="flex-1 items-end">
-              <Pressable onPress={onSkip} hitSlop={10}>
-                <Text className="text-xl font-baloo text-black/40">{t("actions.skip")}</Text>
-              </Pressable>
-            </View>
-          </View>
-
           <View className="flex-1 items-center justify-center mt-16">
             <Image
               source={ASSETS.onboardingVoice}
