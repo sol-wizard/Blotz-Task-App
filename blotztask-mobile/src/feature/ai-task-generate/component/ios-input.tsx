@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, Vibration, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Vibration } from "react-native";
 import React, { useEffect } from "react";
 import { theme } from "@/shared/constants/theme";
 import { useTranslation } from "react-i18next";
@@ -42,9 +42,9 @@ const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessa
     if (transcript) {
       setText(transcript);
     }
-  }, [transcript]);
+  }, [transcript, setText]);
 
-  const showSendButton = text.trim() !== "" && !recognizing;
+
 
   const toggleListening = async () => {
     if (recognizing) {
@@ -67,8 +67,11 @@ const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessa
   };
 
   return (
-    <View className="mb-8 ">
-      <Text className="font-baloo text-lg mb-2">{t("labels.newTask")}</Text>
+    <View className="mb-8">
+      <View className="items-center mb-4">
+        <View className="w-12 h-1 rounded-full bg-[#ECECEC]" />
+      </View>
+      <Text className="font-balooBold text-2xl mb-2 px-4 text-secondary">{t("labels.newTask")}</Text>
       <TextInput
         value={text}
         onChangeText={setText}
@@ -76,34 +79,21 @@ const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessa
         autoFocus
         placeholderTextColor={theme.colors.secondary}
         multiline
-        className="bg-[#F2F2F2] rounded-xl h-40 p-4"
+        className="font-baloo text-lg text-secondary bg-[#F4F4F4] border border-[#ECECEC] rounded-xl h-40 p-4"
         style={{ textAlignVertical: "top", textAlign: "left" }}
       />
       {aiGeneratedMessage?.errorMessage && (
         <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
       )}
-      {showSendButton ? (
-        isAiGenerating ? (
-          <View className="mt-4 h-14 rounded-full bg-[#F2F2F2] items-center justify-center">
-            <ActivityIndicator size={10} color="#2F80ED" />
-          </View>
-        ) : (
-          <Pressable
-            className="bg-[#F2F2F2] rounded-full mt-4 p-4 items-center"
-            onPress={() => sendMessage(text)}
-          >
-            <Text className="font-bold">{t("buttons.generateTask")}</Text>
-          </Pressable>
-        )
-      ) : (
-        <VoiceInputButton
-          isListening={recognizing}
-          startListening={toggleListening}
-          abortListening={abortListeningMessage}
-          sendMessage={stopListening}
-          isAiGenerating={isAiGenerating}
-        />
-      )}
+      <VoiceInputButton
+        isListening={recognizing}
+        startListening={toggleListening}
+        abortListening={abortListeningMessage}
+        stopListening={stopListening}
+        isAiGenerating={isAiGenerating}
+        hasText={text.trim() !== ""}
+        onGenerateTask={() => sendMessage(text)}
+      />
     </View>
   );
 };
