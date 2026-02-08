@@ -54,16 +54,6 @@ resource roleAssignmentForDevGroup 'Microsoft.Authorization/roleAssignments@2022
   }
 }
 
-resource secretsUserForDevGroup 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, devGroupId, 'kv-secrets-user')
-  scope: kv
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6') // Key Vault Secrets User
-    principalId: devGroupId
-    principalType: 'Group'
-  }
-}
-
 resource secretUsername 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'db-admin-username'
   properties: {
