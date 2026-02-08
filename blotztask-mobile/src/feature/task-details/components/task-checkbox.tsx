@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, ViewStyle } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { theme } from "@/shared/constants/theme";
+import { interpolate, useAnimatedProps } from "react-native-reanimated";
 
 type Props = {
   checked: boolean;
@@ -17,15 +18,13 @@ type Props = {
   style?: ViewStyle;
 };
 
-const GREEN = theme.colors.checked;
-
 export default function TasksCheckbox({
   checked,
   onChange,
   disabled = false,
   size = 24,
-  color = GREEN,
-  uncheckedColor = GREEN,
+  color = theme.colors.checked,
+  uncheckedColor = theme.colors.checked,
   className = "",
   style,
 }: Props) {
@@ -58,3 +57,7 @@ export default function TasksCheckbox({
     </Pressable>
   );
 }
+
+// const animatedProps = useAnimatedProps(() => ({
+//   const fill = interpolate(progress.value, [0, 1], [0, 1]);
+// }));
