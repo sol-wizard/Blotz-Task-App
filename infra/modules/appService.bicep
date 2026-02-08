@@ -43,6 +43,7 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
     serverFarmId: appServicePlan.id
     httpsOnly: true
     siteConfig: {
+      linuxFxVersion: 'DOTNETCORE|10.0'
       alwaysOn: true
       healthCheckPath: '/health'
       minTlsVersion: '1.2'
