@@ -16,7 +16,6 @@ public class DeleteUserCommandHandler(
             throw new ArgumentException("UserId is required.", nameof(UserId));
 
         var appUser = await db.AppUsers
-            .AsNoTracking()
             .SingleOrDefaultAsync(u => u.Id == UserId, ct);
 
         if (appUser == null)
@@ -27,34 +26,8 @@ public class DeleteUserCommandHandler(
         await using var tx = await db.Database.BeginTransactionAsync(ct);
         try
         {
-
-            await db.Notes
-                .Where(n => n.UserId == UserId)
-                .ExecuteDeleteAsync(ct);
-
-            await db.TaskItems
-                .Where(t => t.UserId == UserId)
-                .ExecuteDeleteAsync(ct);
-
-            await db.DeletedTaskItems
-                .Where(t => t.UserId == UserId)
-                .ExecuteDeleteAsync(ct);
-
-            await db.Labels
-                .Where(l => l.UserId == UserId)
-                .ExecuteDeleteAsync(ct);
-
-            await db.UserPreferences
-                .Where(p => p.UserId == UserId)
-                .ExecuteDeleteAsync(ct);
-
-            await db.PomodoroSetting
-                .Where(p => p.UserId == UserId)
-                .ExecuteDeleteAsync(ct);
-
-            await db.AppUsers
-                .Where(u => u.Id == UserId)
-                .ExecuteDeleteAsync(ct);
+            db.AppUsers.Remove(appUser);
+            await db.SaveChangesAsync(ct);
 
             await tx.CommitAsync(ct);
             logger.LogInformation("Deleted user data from database for {UserId}", UserId);
