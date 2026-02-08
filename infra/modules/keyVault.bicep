@@ -1,7 +1,5 @@
-@description('Specifies the Azure location where the key vault should be created.')
 param location string = resourceGroup().location
 
-@description('Specifies whether the key vault is a standard vault or a premium vault.')
 @allowed([
   'standard'
   'premium'
@@ -16,11 +14,18 @@ param dbAdminPassword string
 param projectName string
 param environment string
 
+@allowed([
+  'default'
+  'recover'
+])
+@description('Use "recover" if Key Vault is in soft-deleted state')
+param createMode string = 'default'
+
 resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  //TODO: Add remove the v2 from the name once staging key vault is regenerated
-  name: 'kv-${projectName}-${environment}-v2'
+  name: 'kv-${projectName}-${environment}'
   location: location
   properties: {
+    createMode: createMode
     sku: {
       family: 'A'
       name: skuName
@@ -37,13 +42,15 @@ resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
   }
 }
 
-//TODO: This is a role assignement for myself so i can access
-resource roleAssignmentForUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, 'kv-admin-access')
-  properties: { //TODO: Should be a better way to do this no hard code subscription id
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483') // Key Vault Admin
-    principalId: '12d6caff-6751-446f-b168-b73ba30d316f' // TODO: here is my hard coded id, must be a better way to do this 
-    principalType: 'User'
+param devGroupId string
+
+resource roleAssignmentForDevGroup 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, devGroupId, 'kv-admin-access')
+  scope: kv
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483') // Key Vault Administrator
+    principalId: devGroupId
+    principalType: 'Group'
   }
 }
 
