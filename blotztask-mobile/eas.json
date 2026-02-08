@@ -49,9 +49,9 @@
       "autoIncrement": true,
       "env": {
         "BUNDLE_IDENTIFIER": "com.Blotz.BlotzTask",
-        "EXPO_PUBLIC_URL": "https://wapp-blotztaskapp.azurewebsites.net/",
-        "EXPO_PUBLIC_URL_WITH_API": "https://wapp-blotztaskapp.azurewebsites.net/api",
-        "EXPO_PUBLIC_AUTH0_AUDIENCE": "https://blotz-task-prod/api",
+        "EXPO_PUBLIC_URL": "https://app-blotz-task-api-prod.azurewebsites.net/",
+        "EXPO_PUBLIC_URL_WITH_API": "https://app-blotz-task-api-prod.azurewebsites.net/api",
+        "EXPO_PUBLIC_AUTH0_AUDIENCE": "https://blotz-task-dev/api",
         "EXPO_PUBLIC_AUTH0_DOMAIN": "dev-k72xachs0fr6nebp.us.auth0.com",
         "EXPO_PUBLIC_AUTH0_CLIENT_ID": "Hxd6XhpfKR9eRDUFwS56Hghgdch0aUN9",
         "EXPO_PUBLIC_APP_ENV": "production",
