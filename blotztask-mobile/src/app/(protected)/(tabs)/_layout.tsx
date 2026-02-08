@@ -22,9 +22,9 @@ function getTabIcon(routeKey: string, focused: boolean) {
           <DashedHouse width={20} height={20} />
         </View>
       );
-    case "starSpark":
+    case "notes":
       return focused ? (
-        <BottomNavImage source={ASSETS.starSpark} containerClassName="mr-10 mt-6" />
+        <BottomNavImage source={ASSETS.notes} containerClassName="mr-10 mt-6" />
       ) : (
         <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center mr-10 mt-6">
           <DashedStar width={24} height={24} />
@@ -80,7 +80,7 @@ export default function ProtectedTabsLayout() {
         <Tabs.Screen
           name="notes"
           options={{
-            tabBarIcon: ({ focused }) => getTabIcon("starSpark", focused),
+            tabBarIcon: ({ focused }) => getTabIcon("notes", focused),
           }}
         />
         <Tabs.Screen
