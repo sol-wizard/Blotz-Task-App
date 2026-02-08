@@ -13,6 +13,7 @@ public class UserController(
     SyncUserCommandHandler syncUserCommandHandler,
     GetUserProfileQueryHandler getUserProfileQueryHandler,
     UpdateUserProfileCommandHandler updateUserProfileCommandHandler,
+    DeleteUserCommandHandler deleteUserCommandHandler,
     ILogger<UserController> logger,
     IConfiguration configuration) : ControllerBase
 {
@@ -65,5 +66,15 @@ public class UserController(
             IsOnboarded = updateUserProfileDto.IsOnboarded
         };
         return await updateUserProfileCommandHandler.Handle(command, ct);
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteUser(CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        await deleteUserCommandHandler.Handle(userId, ct);
+        return NoContent();
     }
 }

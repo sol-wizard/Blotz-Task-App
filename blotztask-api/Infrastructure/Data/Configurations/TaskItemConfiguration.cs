@@ -10,6 +10,11 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
     {
         builder.HasIndex(t => new { t.UserId, t.StartTime, t.EndTime });
 
+        builder.HasOne(t => t.User)
+            .WithMany()
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.ToTable(t =>
         {
             t.HasCheckConstraint($"CK_TaskItem_Time_Valid",
