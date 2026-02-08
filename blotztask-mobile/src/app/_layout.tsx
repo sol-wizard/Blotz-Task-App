@@ -24,6 +24,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/ui/toast-config";
 import { useAuth } from "@/shared/hooks/useAuth";
+import posthog from "@/shared/constants/posthog-client";
 
 Sentry.init({
   dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
@@ -51,14 +52,7 @@ export default function RootLayout() {
 
   return (
     <Auth0Provider domain={domain} clientId={clientId}>
-      <PostHogProvider
-        apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY}
-        options={{
-          host: "https://us.i.posthog.com",
-          enableSessionReplay: true,
-        }}
-        autocapture
-      >
+      <PostHogProvider client={posthog} autocapture>
         <GestureHandlerRootView>
           <QueryClientProvider client={queryClient}>
             <SafeAreaProvider>

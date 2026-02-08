@@ -1,6 +1,8 @@
 import { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { clearTokens, refreshToken } from "./token-manager";
 import { router } from "expo-router";
+import { queryClient } from "@/shared/util/queryClient";
+import { AUTH_QUERY_KEY } from "@/shared/hooks/useAuth";
 
 export function handleAuthError(
   error: AxiosError,
@@ -20,7 +22,9 @@ export function handleAuthError(
       })
       .catch((refreshError) => {
         clearTokens();
-        router.replace("../(auth)/onboarding");
+        // Ensure auth state flips immediately for guards + redirects.
+        queryClient.setQueryData(AUTH_QUERY_KEY, false);
+        router.replace("/(auth)/signin");
         return Promise.reject(refreshError);
       });
   }
