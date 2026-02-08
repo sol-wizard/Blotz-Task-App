@@ -51,7 +51,7 @@ export async function fetchNotes(query?: string): Promise<NoteDTO[]> {
     });
     return data;
   } catch {
-    throw new Error("Failed to fetch floating tasks for StarSpark.");
+    throw new Error("Failed to fetch floating tasks for Notes.");
   }
 }
 

@@ -52,7 +52,9 @@ export default function GetStartedButton() {
         refreshAuthState();
 
         if (user) {
-          posthog.identify(user.sub);
+          posthog.identify(user.sub, {
+            env: process.env.EXPO_PUBLIC_APP_ENV ?? "unknown",
+          });
         }
 
         router.replace("/(protected)");
