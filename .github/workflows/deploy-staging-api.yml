@@ -3,23 +3,13 @@
 
 name: Staging - Build and deploy WebApi to Azure Web App
 
-# on:
-#   push:
-#     paths:
-#       - 'blotztask-api/**'
-#     branches:
-#       - main
-#   workflow_dispatch:
-
 on:
-  pull_request:
+  push:
+    paths:
+      - 'blotztask-api/**'
     branches:
       - main
-    types:
-      - opened
-      - edited
-      - reopened
-      - synchronize
+  workflow_dispatch:
 
 permissions: # Do i need a permission write here ?
   id-token: write
