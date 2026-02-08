@@ -1,76 +1,124 @@
-@description('Name of the application')
-param projectName string = 'blotztask' 
-
-@description('Location for all resources')
-param location string = resourceGroup().location
-
-@description('Environment for all resources')
-@allowed(['dev', 'staging', 'prod'])
 param environment string
+param organizationName string
+param projectName string
+var namePrefix = '${organizationName}-${projectName}'
+
+param location string = resourceGroup().location
 
 @secure()
 param dbAdminUsername string
 @secure()
 param dbAdminPassword string
 
+param openAiDeploymentName string
+param openAiModelName string
+param openAiModelVersion string
+param githubRepo string // Format: org/repo (e.g., sol-wizard/Blotz-Task-App)
+param budgetAmount int
+param alertEmail string
 
-module appInsight 'modules/appInsight.bicep' = {
-  name: '${deployment().name}-app-insight'
+// App Service SKU settings
+param appServiceSkuName string
+param appServiceSkuTier string
+
+// Database SKU settings
+param dbSkuName string
+param dbSkuTier string
+param dbSkuCapacity int
+param dbMaxSizeGb int
+
+// Key Vault create mode - use 'recover' if Key Vault is soft-deleted
+@allowed(['default', 'recover'])
+param kvCreateMode string = 'default'
+
+// Entra ID group for dev team access
+param devGroupId string
+
+// Dev group: Contributor role at resource group level
+resource devGroupContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceGroup().id, devGroupId, 'contributor')
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c') // Contributor
+    principalId: devGroupId
+    principalType: 'Group'
+  }
+}
+
+module logAnalytics 'modules/logAnalytics.bicep' = {
+  name: '${namePrefix}-${environment}-log-analytics'
   params: {
-    projectName: projectName
+    projectName: namePrefix
     environment: environment
     location: location
+    retentionInDays: 30 // Minimum for PerGB2018 SKU is 30 days
+  }
+}
+
+module appInsight 'modules/appInsight.bicep' = {
+  name: '${namePrefix}-${environment}-app-insight'
+  params: {
+    projectName: namePrefix
+    environment: environment
+    location: location
+    logAnalyticsWorkspaceId: logAnalytics.outputs.id
   }
 }
 module kv 'modules/keyVault.bicep' = {
-  name: '${deployment().name}-keyvault' //TODO: Add a unique suffix
+  name: '${namePrefix}-${environment}-keyvault'
   params: {
-    projectName: projectName
+    projectName: namePrefix
     location: location
     environment: environment
     dbAdminUsername: dbAdminUsername
     dbAdminPassword: dbAdminPassword
+    createMode: kvCreateMode
+    devGroupId: devGroupId
   }
 }
+
 module webAppForAPI 'modules/appService.bicep' = {
-  name:'${deployment().name}-webApp'//TODO: Add a unique suffix
+  name: '${namePrefix}-${environment}-webApp'
   params: {
-    webAppName: '${projectName}-api' 
+    webAppName: '${namePrefix}-api'
     location: location
     environment: environment
     appInsightConnectionString: appInsight.outputs.connectionString
     keyVaultUri: kv.outputs.vaultUri
     openAiEndpoint: openAi.outputs.endpoint
     openAiDeploymentId: openAi.outputs.deploymentId
+    logAnalyticsWorkspaceId: logAnalytics.outputs.id
+    appServiceSkuName: appServiceSkuName
+    appServiceSkuTier: appServiceSkuTier
   }
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
-  name: kv.outputs.name
-}
-
-resource kvAdminRoleWebApp 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, 'kv-admin-webapp-${projectName}-${environment}')
-  properties: {
+module kvAdminRoleWebApp 'modules/keyVaultRoleAssignment.bicep' = {
+  name: '${namePrefix}-${environment}-kv-admin-webapp'
+  params: {
+    keyVaultName: kv.outputs.name
     principalId: webAppForAPI.outputs.principalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '00482a5a-887f-4fb3-b363-3b7fe8e74483')
+    projectName: namePrefix
+    environment: environment
   }
 }
 
 module sql 'modules/sqlserver.bicep' = {
-  name: '${deployment().name}-database'
+  name: '${namePrefix}-${environment}-database'
   params: {
-    projectName: projectName
+    projectName: namePrefix
     location: location
     environment: environment
-    dbAdminUsername: keyVault.getSecret('db-admin-username')
-    dbAdminPassword: keyVault.getSecret('db-admin-password')
+    dbAdminUsername: dbAdminUsername
+    dbAdminPassword: dbAdminPassword
+    dbSkuName: dbSkuName
+    dbSkuTier: dbSkuTier
+    dbSkuCapacity: dbSkuCapacity
+    dbMaxSizeBytes: dbMaxSizeGb * 1073741824
   }
 }
 
 module storeConnectionString 'modules/keyVaultSecret.bicep' = {
-  name: '${deployment().name}-store-connection-string'
+  name: '${namePrefix}-${environment}-store-connection-string'
   params: {
     keyVaultName: kv.outputs.name
     secretName: 'sql-connection-string'
@@ -79,31 +127,56 @@ module storeConnectionString 'modules/keyVaultSecret.bicep' = {
 }
 
 module openAi 'modules/openAi.bicep' = {
-  name: '${deployment().name}-openai'
+  name: '${namePrefix}-${environment}-openai'
   params: {
-    location: location
     environment: environment
-    projectName: projectName
+    projectName: namePrefix
     keyVaultName: kv.outputs.name
+    foundryProjectName: 'proj-${namePrefix}-${environment}'
+    openAiDeploymentName: openAiDeploymentName
+    openAiModelName: openAiModelName
+    openAiModelVersion: openAiModelVersion
   }
 }
 module githubActionIdentity 'modules/identity.bicep' = {
-  name: '${deployment().name}-github-action-identity'
+  name: '${namePrefix}-${environment}-github-action-identity'
   params: {
-    identityName: 'uami-${projectName}-${environment}'
+    identityName: 'id-gha-${namePrefix}-${environment}'
     location: location
     environment: environment
-    projectName: projectName
+    projectName: namePrefix
+    githubRepo: githubRepo
     keyVaultName: kv.outputs.name
+    webAppName: webAppForAPI.outputs.name
+  }
+}
+
+module storage 'modules/storage.bicep' = {
+  name: '${namePrefix}-${environment}-storage'
+  params: {
+    projectName: namePrefix
+    environment: environment
+    location: location
+    devGroupId: devGroupId
   }
 }
 
 module speech 'modules/speech.bicep' = {
-  name: '${deployment().name}-speech'
+  name: '${namePrefix}-${environment}-speech'
   params: {
-    projectName: projectName
+    projectName: namePrefix
     location: location
     environment: environment
+    keyVaultName: kv.outputs.name
   }
 }
 
+module budget 'modules/budget.bicep' = {
+  name: '${namePrefix}-${environment}-budget'
+  params: {
+    projectName: namePrefix
+    environment: environment
+    budgetAmount: budgetAmount
+    alertEmail: alertEmail
+  }
+}

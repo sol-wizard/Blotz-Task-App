@@ -1,7 +1,7 @@
-
 param location string = resourceGroup().location
 param environment string
 param projectName string
+param logAnalyticsWorkspaceId string
 
 resource appInsight 'Microsoft.Insights/components@2020-02-02' = {
   name: 'appi-${projectName}-${environment}'
@@ -9,10 +9,10 @@ resource appInsight 'Microsoft.Insights/components@2020-02-02' = {
   kind: 'web'
   properties: {
     Application_Type: 'web'
-    Flow_Type: 'Bluefield'
-    Request_Source: 'rest'
+    WorkspaceResourceId: logAnalyticsWorkspaceId
     publicNetworkAccessForIngestion: 'Enabled'
     publicNetworkAccessForQuery: 'Enabled'
+    IngestionMode: 'LogAnalytics'
   }
 }
 

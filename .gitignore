@@ -1,5 +1,5 @@
 *.excalidraw
-./vs
+.vs
 .git-autoconfig.json
 .vs/
 # TODO: temporary hide power shell script
@@ -7,15 +7,11 @@
 .DS_Store
 .idea/
 package-lock.json
-<<<<<<< HEAD
-
 .agents
+.claude
 .codex
 .cursor
-=======
 20260130-Blotz-onboarding.md
 
-.agents
-.codex
-.cursor
->>>>>>> 719a31688504e159c33d7f4e67d8ff74a37e51d6
+# bicep build outputs (generated)
+infra/main.json
