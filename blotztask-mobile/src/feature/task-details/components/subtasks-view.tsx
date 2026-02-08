@@ -9,7 +9,7 @@ import SubtasksEditor from "./subtasks-editor";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
-import { darkenHex } from "@/shared/util/color";
+import { LABEL_COLOR_PALETTE_BY_ID } from "@/shared/util/label-colors";
 
 type SubtaskViewProps = {
   parentTask: TaskDetailDTO;
@@ -48,10 +48,11 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
 
   const isLoading = isBreakingDown || isReplacingSubtasks || isLoadingSubtasks;
 
-  const labelColor = parentTask.label?.color;
   const fallbackBg = "#EBF0FE";
-  const bgColor = labelColor ?? fallbackBg;
-  const textColor = darkenHex(bgColor, 0.6);
+  const labelId = parentTask.label?.labelId;
+  const palette = labelId ? LABEL_COLOR_PALETTE_BY_ID[labelId] : undefined;
+  const bgColor = palette?.bg ?? fallbackBg;
+  const textColor = palette?.text ?? "#3E415C";
 
   // Show loading state while fetching
   if (isLoadingSubtasks) {
@@ -74,10 +75,8 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
       <Pressable
         onPress={handleBreakDown}
         disabled={isLoading}
-        style={{ backgroundColor: isLoading ? undefined : bgColor }}
-        className={`flex-row items-center justify-center self-center mt-8 rounded-2xl h-[55px] w-full ${
-          isLoading ? "bg-gray-300" : " active:bg-gray-100"
-        }`}
+        style={{ backgroundColor: isLoading ? "#D1D5DB" : bgColor }}
+        className="flex-row items-center justify-center self-center mt-8 rounded-2xl h-[55px] w-full"
       >
         {isLoading ? (
           <ActivityIndicator size="small" color="#3b82f6" />
