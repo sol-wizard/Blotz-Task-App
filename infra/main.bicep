@@ -45,7 +45,7 @@ resource devGroupContributor 'Microsoft.Authorization/roleAssignments@2022-04-01
 }
 
 module logAnalytics 'modules/logAnalytics.bicep' = {
-  name: '${deployment().name}-log-analytics'
+  name: '${namePrefix}-${environment}-log-analytics'
   params: {
     projectName: namePrefix
     environment: environment
@@ -55,7 +55,7 @@ module logAnalytics 'modules/logAnalytics.bicep' = {
 }
 
 module appInsight 'modules/appInsight.bicep' = {
-  name: '${deployment().name}-app-insight'
+  name: '${namePrefix}-${environment}-app-insight'
   params: {
     projectName: namePrefix
     environment: environment
@@ -64,7 +64,7 @@ module appInsight 'modules/appInsight.bicep' = {
   }
 }
 module kv 'modules/keyVault.bicep' = {
-  name: '${deployment().name}-keyvault'
+  name: '${namePrefix}-${environment}-keyvault'
   params: {
     projectName: namePrefix
     location: location
@@ -77,7 +77,7 @@ module kv 'modules/keyVault.bicep' = {
 }
 
 module webAppForAPI 'modules/appService.bicep' = {
-  name: '${deployment().name}-webApp'
+  name: '${namePrefix}-${environment}-webApp'
   params: {
     webAppName: '${namePrefix}-api'
     location: location
@@ -93,7 +93,7 @@ module webAppForAPI 'modules/appService.bicep' = {
 }
 
 module kvAdminRoleWebApp 'modules/keyVaultRoleAssignment.bicep' = {
-  name: '${deployment().name}-kv-admin-webapp'
+  name: '${namePrefix}-${environment}-kv-admin-webapp'
   params: {
     keyVaultName: kv.outputs.name
     principalId: webAppForAPI.outputs.principalId
@@ -103,7 +103,7 @@ module kvAdminRoleWebApp 'modules/keyVaultRoleAssignment.bicep' = {
 }
 
 module sql 'modules/sqlserver.bicep' = {
-  name: '${deployment().name}-database'
+  name: '${namePrefix}-${environment}-database'
   params: {
     projectName: namePrefix
     location: location
@@ -118,7 +118,7 @@ module sql 'modules/sqlserver.bicep' = {
 }
 
 module storeConnectionString 'modules/keyVaultSecret.bicep' = {
-  name: '${deployment().name}-store-connection-string'
+  name: '${namePrefix}-${environment}-store-connection-string'
   params: {
     keyVaultName: kv.outputs.name
     secretName: 'sql-connection-string'
@@ -127,7 +127,7 @@ module storeConnectionString 'modules/keyVaultSecret.bicep' = {
 }
 
 module openAi 'modules/openAi.bicep' = {
-  name: '${deployment().name}-openai'
+  name: '${namePrefix}-${environment}-openai'
   params: {
     environment: environment
     projectName: namePrefix
@@ -139,7 +139,7 @@ module openAi 'modules/openAi.bicep' = {
   }
 }
 module githubActionIdentity 'modules/identity.bicep' = {
-  name: '${deployment().name}-github-action-identity'
+  name: '${namePrefix}-${environment}-github-action-identity'
   params: {
     identityName: 'id-gha-${namePrefix}-${environment}'
     location: location
@@ -147,11 +147,12 @@ module githubActionIdentity 'modules/identity.bicep' = {
     projectName: namePrefix
     githubRepo: githubRepo
     keyVaultName: kv.outputs.name
+    webAppName: webAppForAPI.outputs.name
   }
 }
 
 module storage 'modules/storage.bicep' = {
-  name: '${deployment().name}-storage'
+  name: '${namePrefix}-${environment}-storage'
   params: {
     projectName: namePrefix
     environment: environment
@@ -161,7 +162,7 @@ module storage 'modules/storage.bicep' = {
 }
 
 module speech 'modules/speech.bicep' = {
-  name: '${deployment().name}-speech'
+  name: '${namePrefix}-${environment}-speech'
   params: {
     projectName: namePrefix
     location: location
@@ -171,7 +172,7 @@ module speech 'modules/speech.bicep' = {
 }
 
 module budget 'modules/budget.bicep' = {
-  name: '${deployment().name}-budget'
+  name: '${namePrefix}-${environment}-budget'
   params: {
     projectName: namePrefix
     environment: environment
