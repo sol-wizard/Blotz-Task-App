@@ -23,18 +23,15 @@ public class DeleteUserCommandHandler(
 
         var auth0UserId = appUser.Auth0UserId;
 
-        await using var tx = await db.Database.BeginTransactionAsync(ct);
         try
         {
             db.AppUsers.Remove(appUser);
             await db.SaveChangesAsync(ct);
 
-            await tx.CommitAsync(ct);
             logger.LogInformation("Deleted user data from database for {UserId}", UserId);
         }
         catch (Exception ex)
         {
-            await tx.RollbackAsync(ct);
             logger.LogError(ex, "Failed to delete user data for {UserId} from database", UserId);
             throw;
         }
