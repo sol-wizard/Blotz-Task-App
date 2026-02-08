@@ -17,7 +17,7 @@ export function OnboardingNoteSection() {
         <View className="flex-1 px-6">
           <View className="flex-1 items-center justify-center mt-14">
             <Image
-              source={ASSETS.onboardingStarSpark}
+              source={ASSETS.onboardingNotes}
               style={{ width: 384, height: 384, marginBottom: 24 }}
               contentFit="contain"
             />
