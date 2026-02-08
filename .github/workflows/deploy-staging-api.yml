@@ -3,13 +3,23 @@
 
 name: Staging - Build and deploy WebApi to Azure Web App
 
+# on:
+#   push:
+#     paths:
+#       - 'blotztask-api/**'
+#     branches:
+#       - main
+#   workflow_dispatch:
+
 on:
-  push:
-    paths:
-      - 'blotztask-api/**'
+  pull_request:
     branches:
       - main
-  workflow_dispatch:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
 
 permissions: # Do i need a permission write here ?
   id-token: write
@@ -76,14 +86,14 @@ jobs:
         - name: Azure login
           uses: azure/login@v2
           with:
-            client-id: ${{ secrets.AZURE_UAI_CLIENT_ID }}
-            tenant-id: ${{ secrets.AZURE_UAI_TENANT_ID }}
+            client-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_TENANT_ID }}
             subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         
         - uses: Azure/get-keyvault-secrets@v1
           with:
-            keyvault: "kv-blotztask-prod" # TODO: do different way to get this
-            secrets: 'sql-connection-string'  #TODO: change connection string to match with production
+            keyvault: "kv-blotz-task-stag"
+            secrets: 'sql-connection-string'
           id: get-secret-connection-strings
 
         - name: EF - Apply Migration SQL Script 
@@ -96,8 +106,7 @@ jobs:
           id: deploy-to-webapp
           uses: azure/webapps-deploy@v3
           with:
-            app-name: 'wapp-blotztaskapp'
-            slot-name: 'Production'
+            app-name: 'app-blotz-task-api-stag'
             package: './'
 
         - name: azure logout
