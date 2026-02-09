@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Image } from "react-native";
+import { View, Image, Text } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
@@ -42,6 +42,8 @@ export default function GashaponMachineScreen() {
   const MAX_STARS = 30;
 
   const limitedNotes = useMemo(() => notesSearchResult.slice(0, MAX_STARS), [notesSearchResult]);
+
+  const isEmpty = limitedNotes.length === 0;
 
   const handleDoNow = () => {
     if (!randomNote) return;
@@ -91,6 +93,37 @@ export default function GashaponMachineScreen() {
           onCancel={handleCancel}
         />
         {!isAllLoaded && <LoadingScreen />}
+        {/* Bubble if empty note */}
+        {isEmpty && (
+          <View
+            style={{
+              position: "absolute",
+              top: 80,
+              left: 30,
+              right: 30,
+              zIndex: 50,
+              backgroundColor: "white",
+              borderRadius: 18,
+              paddingVertical: 12,
+              paddingHorizontal: 16,
+              flexDirection: "row",
+              alignItems: "center",
+
+              shadowOpacity: 0.15,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 4,
+            }}
+          >
+            <Image source={ASSETS.greenBun} 
+              style={{ width: 40, height: 40, marginRight: 8 }}
+              resizeMode="contain"
+            />
+            <Text className="text-xl text-[#3D8DE0] font-balooBold flex-1">
+              Not enough sparks yet. Gacha opens when there’s more
+            </Text>
+          </View>
+        )}
 
         <View
           style={{
