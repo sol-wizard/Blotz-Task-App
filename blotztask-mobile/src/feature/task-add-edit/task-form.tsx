@@ -159,7 +159,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             />
             {errors.title && (
               <Text className="font-balooBold text-red-300 mt-1 text-m">
-                {errors.title.message?.toString() || "Task title is required"}
+                {t("details.mustHaveTitleError")}
               </Text>
             )}
           </Animated.View>
