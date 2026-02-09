@@ -23,5 +23,10 @@
     "oops": "哎呀！",
     "errorMessage": "无法估算时间，请稍后再试。",
     "dismiss": "关闭"
+  },
+  "starspark": {
+    "encouragingTitle": "你已经完成了所有任务",
+    "encouragingDescription": "当生活变得忙碌时，我们会帮你保留这些任务。",
+    "gashaponTitle": "还没有足够的火花。等有更多的时候再来抽卡"
   }
 }
