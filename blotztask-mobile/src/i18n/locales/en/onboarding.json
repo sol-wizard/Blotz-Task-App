@@ -3,20 +3,16 @@
     "skip": "Skip",
     "continue": "Continue"
   },
-  "intro": {
-    "title": "Welcome to Blotz Tasks",
-    "subtitle": "Keep planning light, tidy, and easy."
-  },
-  "ai": {
-    "title": "Plan on the calendar",
-    "subtitle": "Drag tasks into your day, or let AI generate a schedule in seconds."
+  "ai-voice": {
+    "title": "Just say it, \nWe'll handle the rest.",
+    "subtitle": "Speak your task out loud. AI instantly turns it \ninto a task and adds it to today's schedule."
   },
   "breakdown": {
-    "title": "Break tasks down",
-    "subtitle": "Turn big goals into bite-sized steps you can finish fast."
+    "title": "Big goals, \nbroken down",
+    "subtitle": "Tell AI what you want to achieve. It breaks the goal into small, clear steps you can actually follow."
   },
-  "gashapon": {
-    "title": "Earn sparks and gashapon",
-    "subtitle": "Finish tasks to collect Star Sparks and spin the gashapon machine."
+  "notes": {
+    "title": "Catch ideas \nbefore they fade",
+    "subtitle": "Save your thoughts in Notes, Spin the gacha, \nand AI picks one task for you to do today."
   }
 }

@@ -1,4 +1,5 @@
-import { View, Image, Text } from "react-native";
+import { View, Text } from "react-native";
+import { Image } from "expo-image";
 import { PNGIMAGES } from "@/shared/constants/assets";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -15,7 +16,8 @@ export const CardIdentityView = () => {
   return (
     <View className="items-center">
       <Image
-        className="w-24 h-24 rounded-full mb-4 border-4 border-white shadow-lg"
+        className="rounded-full border-4 border-white shadow-lg"
+        style={{ width: 96, height: 96, marginBottom: 16 }}
         source={avatar}
       />
       <Text className="text-xl font-balooBold text-gray-800">{name}</Text>

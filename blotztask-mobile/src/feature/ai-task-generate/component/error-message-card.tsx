@@ -1,8 +1,9 @@
 import { ASSETS } from "@/shared/constants/assets";
-import { Text, Image } from "react-native";
+import { Text } from "react-native";
 import { useTranslation } from "react-i18next";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import Animated from "react-native-reanimated";
+import { Image } from "expo-image";
 
 export const ErrorMessageCard = ({ errorMessage }: { errorMessage?: string }) => {
   const { t } = useTranslation("aiTaskGenerate");

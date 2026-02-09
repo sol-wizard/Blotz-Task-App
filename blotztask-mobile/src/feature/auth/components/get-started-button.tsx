@@ -1,5 +1,4 @@
 import React from "react";
-import { Button } from "react-native-paper";
 import { useAuth0 } from "react-native-auth0";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -7,17 +6,31 @@ import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/shared/constants/token-key"
 import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/shared/hooks/useAuth";
+import { systemPreferredLanguage } from "../utils/system-preferred-language";
+import { Pressable, Text } from "react-native";
+import {
+  createAnimatedComponent,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 export default function GetStartedButton() {
   const { authorize, user } = useAuth0();
   const router = useRouter();
   const posthog = usePostHog();
-  const { i18n, t } = useTranslation("common");
+  const { t } = useTranslation("common");
   const { refreshAuthState } = useAuth();
+  const AnimatedPressable = createAnimatedComponent(Pressable);
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   const onPress = async () => {
     try {
-      const language = i18n.language?.startsWith("zh") ? "zh-CN" : "en";
+      const language = systemPreferredLanguage?.startsWith("zh") ? "zh-CN" : "en";
 
       const result = await authorize({
         audience: process.env.EXPO_PUBLIC_AUTH0_AUDIENCE,
@@ -39,7 +52,9 @@ export default function GetStartedButton() {
         refreshAuthState();
 
         if (user) {
-          posthog.identify(user.sub);
+          posthog.identify(user.sub, {
+            env: process.env.EXPO_PUBLIC_APP_ENV ?? "unknown",
+          });
         }
 
         router.replace("/(protected)");
@@ -52,8 +67,27 @@ export default function GetStartedButton() {
   };
 
   return (
-    <Button onPress={onPress} mode="contained">
-      {t("buttons.getStarted")}
-    </Button>
+    <AnimatedPressable
+      onPress={onPress}
+      onPressIn={() => {
+        scale.value = withTiming(1.08, { duration: 100 });
+      }}
+      onPressOut={() => {
+        scale.value = withTiming(1, { duration: 120 });
+      }}
+      style={animatedStyle}
+    >
+      <Text
+        className="font-balooBold text-lg py-3 px-10 bg-black text-white rounded-full"
+        style={{
+          borderCurve: "continuous",
+          textAlign: "center",
+          letterSpacing: 0.3,
+          boxShadow: "0 10px 24px rgba(0, 0, 0, 0.18)",
+        }}
+      >
+        {t("buttons.getStarted")}
+      </Text>
+    </AnimatedPressable>
   );
 }

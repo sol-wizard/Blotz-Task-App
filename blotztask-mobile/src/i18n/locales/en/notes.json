@@ -1,0 +1,27 @@
+{
+  "title": "Notes",
+  "banner": "Ready to turn a spark into action?",
+  "search": "Search tasks...",
+  "noTasks": "No floating tasks found",
+  "createTask": "Create your first task",
+  "addNote": "Add a Note",
+  "gashapon": {
+    "revealTitle": "Reveal A New Task",
+    "cancel": "Cancel",
+    "doItNow": "Do it now",
+    "pickNote": "Let fate decide✨"
+  },
+
+    "notePlaceholder": "Add a Quick Note",
+    "save" : "Save",
+    "close" : "Close",
+
+  "timeEstimate": {
+    "estimating": "Estimating time...",
+    "estimatedMessage": "This task will take around ",
+    "startNow": "Start now",
+    "oops": "Oops!",
+    "errorMessage": "Could not estimate time, please try again later.",
+    "dismiss": "Dismiss"
+  }
+}

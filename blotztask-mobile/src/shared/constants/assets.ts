@@ -32,11 +32,19 @@ export const PNGIMAGES = {
   blueStar: require("../../../assets/images-png/blue-star.png"),
   rainbowStar: require("../../../assets/images-png/rainbow-star.png"),
   greenHouse: require("../../../assets/images-png/green-house.png"),
-  starSpark: require("../../../assets/images-png/star-spark.png"),
+  notes: require("../../../assets/images-png/notes.png"),
   settingIcon: require("../../../assets/images-png/setting-icon.png"),
   machineEyes: require("../../../assets/images-png/machine-eyes.png"),
   successBun: require("../../../assets/images-png/success-bun.png"),
   transparentStar: require("../../../assets/images-png/transparent-star.png"),
+  onboardingCalendar: require("../../../assets/images-png/onboarding-calendar.png"),
+  onboardingBreakdown: require("../../../assets/images-png/onboarding-breakdown.png"),
+  onboardingNote: require("../../../assets/images-png/onboarding-note.png"),
+  onboardingVoice: require("../../../assets/images-png/onboarding-voice.png"),
+  onboardingNotes: require("../../../assets/images-png/onboarding-notes.png"),
+  onboardingBreakdownBackground: require("../../../assets/images-png/onboarding-breakdown-background.png"),
+  onboardingNoteBackground: require("../../../assets/images-png/onboarding-note-background.png"),
+  onboardingVoiceBackground: require("../../../assets/images-png/onboarding-voice-background.png"),
 } as const;
 
 export const SVGIMAGES = {

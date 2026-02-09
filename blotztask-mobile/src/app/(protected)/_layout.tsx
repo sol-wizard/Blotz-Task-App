@@ -1,28 +1,21 @@
-import { theme } from "@/shared/constants/theme";
+import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
+import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { Stack } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 
 export default function ProtectedLayout() {
+  const posthog = usePostHog();
+
+  useLanguageInit();
+  useTrackActiveUser5s(posthog);
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="settings" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
 
-      <Stack.Screen
-        name="task-details"
-        options={{
-          headerShown: true,
-          headerShadowVisible: false,
-          headerTransparent: true,
-          headerTitle: "",
-          headerBackVisible: true,
-          headerTintColor: "#000000",
-          headerBackButtonDisplayMode: "minimal",
-          headerStyle: {
-            backgroundColor: "transparent",
-          },
-        }}
-      />
+      <Stack.Screen name="task-details" options={{ headerShown: false }} />
       <Stack.Screen
         name="task-edit"
         options={{
@@ -48,20 +41,7 @@ export default function ProtectedLayout() {
           },
         }}
       />
-      <Stack.Screen
-        name="star-spark"
-        options={{
-          headerShown: true,
-          headerShadowVisible: false,
-          headerTitle: "",
-          headerBackVisible: true,
-          headerStyle: {
-            backgroundColor: theme.colors.background,
-          },
-          headerTintColor: theme.colors.secondary,
-          headerBackButtonDisplayMode: "minimal",
-        }}
-      />
+
       <Stack.Screen
         name="gashapon-machine"
         options={{

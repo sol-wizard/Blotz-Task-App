@@ -2,12 +2,17 @@ param identityName string
 param location string = resourceGroup().location
 param environment string
 param projectName string
+param githubRepo string // Format: org/repo (e.g., sol-wizard/Blotz-Task-App)
 
-@description('Name of the existing Key Vault')
 param keyVaultName string
+param webAppName string
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: keyVaultName
+}
+
+resource webApp 'Microsoft.Web/sites@2022-09-01' existing = {
+  name: webAppName
 }
 
 resource githubActionIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
@@ -20,30 +25,32 @@ resource fic 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentity
   name: 'fic-github-${projectName}-${environment}'
   properties: {
     issuer: 'https://token.actions.githubusercontent.com'
-    //TODO: Hardcoded repo and org name 
-    subject: 'repo:sol-wizard/Blotz-Task-App:environment:${environment == 'prod' ? 'Production' : 'Staging'}'
+    subject: 'repo:${githubRepo}:environment:${environment == 'prod' ? 'Production' : 'Staging'}'
     audiences: [
       'api://AzureADTokenExchange'
     ]
   }
 }
 
+var kvSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6' // Key Vault Secrets User
+var websiteContributorRoleId = 'de139f84-1756-47ae-9be6-808fbbe84772' // Website Contributor
+
 resource keyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, 'kv-admin-access-${githubActionIdentity.name}')
+  name: guid(keyVault.id, githubActionIdentity.id, 'kv-secrets-user')
   scope: keyVault
   properties: {
     principalId: githubActionIdentity.properties.principalId
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6') // Key Vault Secrets User
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', kvSecretsUserRoleId)
     principalType: 'ServicePrincipal'
   }
 }
 
-//TODO: For staging remove the contributor role assignment which point to the subscription level
-resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup().id, 'contributor-access-${githubActionIdentity.name}')
+resource websiteContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(webApp.id, githubActionIdentity.id, 'website-contributor')
+  scope: webApp
   properties: {
     principalId: githubActionIdentity.properties.principalId
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c') // Contributor role ID
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', websiteContributorRoleId)
     principalType: 'ServicePrincipal'
   }
 }

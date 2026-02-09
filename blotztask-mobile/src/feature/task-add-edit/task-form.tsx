@@ -75,7 +75,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   });
 
   const { handleSubmit, formState, control, setValue } = form;
-  const { isSubmitting, errors } = formState;
+  const { isSubmitting } = formState;
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -157,8 +157,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 returnKeyType: "done",
               }}
             />
-            {errors.title && (
-              <Text className="font-balooBold text-red-300 mt-1 text-m">
+            {formState.errors.title && (
+              <Text className="text-red-500 text-sm ml-1 font-baloo">
                 {t("details.mustHaveTitleError")}
               </Text>
             )}
