@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { use, useEffect, useMemo, useState } from "react";
 import { View, Image, Text } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,6 +18,7 @@ import { NoteDTO } from "@/feature/notes/models/note-dto";
 import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
 import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
+import { useTranslation } from "react-i18next";
 
 export default function GashaponMachineScreen() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
@@ -30,7 +31,6 @@ export default function GashaponMachineScreen() {
   const addNoteToTask = useAddNoteToTask();
   const posthog = usePostHog();
   const { deleteNote } = useNotesMutation();
-
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
 
   useEffect(() => {
@@ -44,6 +44,7 @@ export default function GashaponMachineScreen() {
   const limitedNotes = useMemo(() => notesSearchResult.slice(0, MAX_STARS), [notesSearchResult]);
 
   const isEmpty = limitedNotes.length === 0;
+  const { t } = useTranslation("starspark");
 
   const handleDoNow = () => {
     if (!randomNote) return;
@@ -120,7 +121,7 @@ export default function GashaponMachineScreen() {
               resizeMode="contain"
             />
             <Text className="text-xl text-[#3D8DE0] font-balooBold flex-1">
-              Not enough sparks yet. Gacha opens when there’s more
+              {t("empty.gashaponTitle")}
             </Text>
           </View>
         )}
