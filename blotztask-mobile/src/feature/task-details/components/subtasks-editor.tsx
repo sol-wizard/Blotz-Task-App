@@ -42,6 +42,11 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
           taskId: parentTask.id,
           subtasks: newSubtasks,
         });
+      } else {
+        await replaceSubtasks({
+          taskId: parentTask.id,
+          subtasks: [],
+        });
       }
     } catch (error) {
       console.error("Failed to refresh subtasks:", error);

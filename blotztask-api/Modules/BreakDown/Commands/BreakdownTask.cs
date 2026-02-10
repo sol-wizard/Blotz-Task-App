@@ -26,6 +26,9 @@ public class BreakdownTaskCommandHandler(
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     Kernel kernel)
 {
+    private static readonly TimeSpan MinimumSubtaskDuration = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan ProjectionRange = TimeSpan.FromMinutes(5);
+
     public async Task<List<SubTask>> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
     {
         logger.LogInformation("Breaking down task {TaskId}", command.TaskId);
@@ -62,12 +65,20 @@ public class BreakdownTaskCommandHandler(
 
             // KernelArguments holds both the prompt variables and execution settings
             // SK will replace {{$title}}, {{$description}}, etc. in the prompt template
+            var hasStartAndEnd = task.StartTime.HasValue && task.EndTime.HasValue;
+            var startTimeValue = hasStartAndEnd
+                ? task.StartTime!.Value.DateTime.ToString("yyyy-MM-dd HH:mm")
+                : "null";
+            var endTimeValue = hasStartAndEnd
+                ? task.EndTime!.Value.DateTime.ToString("yyyy-MM-dd HH:mm")
+                : "null";
+
             var arguments = new KernelArguments(executionSettings)
             {
                 ["title"] = task.Title,
                 ["description"] = task.Description ?? "No description provided",
-                ["startTime"] = task.StartTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null",
-                ["endTime"] = task.EndTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null",
+                ["startTime"] = startTimeValue,
+                ["endTime"] = endTimeValue,
                 ["preferredLanguage"] = preferredLanguageString
             };
 
@@ -112,7 +123,7 @@ public class BreakdownTaskCommandHandler(
             return parsedResult.Subtasks.Select(st => new SubTask
             {
                 Title = st.Title,
-                Duration = XmlConvert.ToTimeSpan(st.Duration), // Parses ISO 8601: PT30M, PT1H, PT24H
+                Duration = ProjectShortDuration(XmlConvert.ToTimeSpan(st.Duration)),
                 Order = st.Order,
             }).ToList();
         }
@@ -139,6 +150,21 @@ public class BreakdownTaskCommandHandler(
             );
             return [];
         }
+    }
+
+    private static TimeSpan ProjectShortDuration(TimeSpan duration)
+    {
+        if (duration >= MinimumSubtaskDuration)
+            return duration;
+
+        var ratio = duration.TotalMinutes / MinimumSubtaskDuration.TotalMinutes;
+        if (ratio < 0)
+            ratio = 0;
+        else if (ratio > 1)
+            ratio = 1;
+
+        var projectedMinutes = MinimumSubtaskDuration.TotalMinutes + ratio * ProjectionRange.TotalMinutes;
+        return TimeSpan.FromMinutes(projectedMinutes);
     }
 }
 public class SubTask
