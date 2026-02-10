@@ -11,7 +11,7 @@ type DraggableSubtaskListProps = {
   onDelete?: (id: number) => void;
   onToggle?: (id: number) => void;
   color?: string;
-}
+};
 export const DraggableSubtaskList = ({
   subtasks,
   isEditMode = false,
@@ -25,12 +25,10 @@ export const DraggableSubtaskList = ({
     setData(subtasks);
   }, [subtasks]);
 
-  const renderItem = ({item, drag, isActive}: RenderItemParams<SubtaskDTO>) => {
+  const renderItem = ({ item, drag, isActive }: RenderItemParams<SubtaskDTO>) => {
     return (
       <TouchableOpacity
-        style={[
-          { opacity: isActive ? 0.8 : 1.0 },
-        ]}
+        style={[{ opacity: isActive ? 0.8 : 1.0 }]}
         onLongPress={isEditMode ? drag : undefined}
         disabled={isActive || !isEditMode}
         activeOpacity={1}
@@ -48,8 +46,8 @@ export const DraggableSubtaskList = ({
           onDelete={onDelete}
         />
       </TouchableOpacity>
-    )
-  }
+    );
+  };
 
   return (
     <GestureHandlerRootView>
@@ -61,8 +59,9 @@ export const DraggableSubtaskList = ({
           renderItem={renderItem}
           autoscrollThreshold={40}
           autoscrollSpeed={100}
+          showsVerticalScrollIndicator={false}
         />
       </View>
     </GestureHandlerRootView>
   );
-}
+};
