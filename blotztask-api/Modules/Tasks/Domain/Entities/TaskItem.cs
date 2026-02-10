@@ -11,9 +11,9 @@ public class TaskItem
     public int Id { get; set; }
     public required string Title { get; set; }
     public string? Description { get; set; }
-    public required DateTimeOffset? StartTime { get; set; }
-    public required DateTimeOffset? EndTime { get; set; }
-    public required TaskTimeType? TimeType { get; set; }
+    public required DateTimeOffset StartTime { get; set; }
+    public required DateTimeOffset EndTime { get; set; }
+    public required TaskTimeType TimeType { get; set; }
     public bool IsDone { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
