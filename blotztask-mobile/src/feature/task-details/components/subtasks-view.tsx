@@ -41,6 +41,10 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
           subtasks: subtasks.map((subtask: AddSubtaskDTO) => ({ ...subtask })),
         });
       } else {
+        await replaceSubtasks({
+          taskId: parentTask.id,
+          subtasks: [],
+        });
         Toast.show({
           type: "error",
           text1: t("details.breakdownNoResult"),

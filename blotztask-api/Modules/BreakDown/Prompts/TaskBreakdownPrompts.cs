@@ -20,6 +20,7 @@ Guidelines:
 - Each subtask should have a title, duration in ISO 8601 format, and sequential order starting from 1.
 - Duration format: Use ONLY hours, minutes, and seconds (e.g., PT30M, PT1H30M, PT24H for 1 day, PT72H for 3 days).
 - NEVER use day notation (PT1D is invalid - use PT24H instead).
+- Only apply the total-duration constraint if BOTH Start Time and End Time are provided.
 - The total duration of subtasks should not exceed (EndTime - StartTime).
 - If task EndTime is null, estimate reasonable subtask durations.
 

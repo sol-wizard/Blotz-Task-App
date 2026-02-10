@@ -65,12 +65,20 @@ public class BreakdownTaskCommandHandler(
 
             // KernelArguments holds both the prompt variables and execution settings
             // SK will replace {{$title}}, {{$description}}, etc. in the prompt template
+            var hasStartAndEnd = task.StartTime.HasValue && task.EndTime.HasValue;
+            var startTimeValue = hasStartAndEnd
+                ? task.StartTime!.Value.DateTime.ToString("yyyy-MM-dd HH:mm")
+                : "null";
+            var endTimeValue = hasStartAndEnd
+                ? task.EndTime!.Value.DateTime.ToString("yyyy-MM-dd HH:mm")
+                : "null";
+
             var arguments = new KernelArguments(executionSettings)
             {
                 ["title"] = task.Title,
                 ["description"] = task.Description ?? "No description provided",
-                ["startTime"] = task.StartTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null",
-                ["endTime"] = task.EndTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null",
+                ["startTime"] = startTimeValue,
+                ["endTime"] = endTimeValue,
                 ["preferredLanguage"] = preferredLanguageString
             };
 

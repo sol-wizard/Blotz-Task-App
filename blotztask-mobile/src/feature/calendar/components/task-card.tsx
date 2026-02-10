@@ -107,6 +107,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
         setIsExpanded(true);
         taskCardTranslateX.value = withTiming(0, { duration: 160 });
       } else {
+        await replaceSubtasks({
+          taskId: task.id,
+          subtasks: [],
+        });
         Toast.show({
           type: "error",
           text1: t("details.breakdownNoResult"),
