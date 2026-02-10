@@ -117,9 +117,9 @@ public class SyncUserCommandHandler(
                 {
                     Title = "Plan your first task",
                     Description = "This is a floating task example",
-                    StartTime = null,
-                    EndTime = null,
-                    TimeType = null,
+                    StartTime = utcNow,
+                    EndTime = utcNow,
+                    TimeType = TaskTimeType.SingleTime,
                     UserId = row.Id,
                     IsDone = false,
                     LabelId = 6,
