@@ -27,6 +27,7 @@
     "breakdownTask": "Breakdown Task",
     "loadingSubtasks": "Loading subtasks...",
     "noSubtasksYet": "No subtasks yet",
+    "breakdownNoResult": "Could not break this down. Add more detail and try again",
     "complete": "Complete",
     "dragToReorder": "Drag to reorder~",
     "error": "Error",

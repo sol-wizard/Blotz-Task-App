@@ -12,7 +12,8 @@ End Time: {{$endTime}}
 
 Guidelines:
 - If the task title and description does not convey a actionable goal, return an empty array.
-- The FIRST subtask MUST be a tiny, frictionless action that helps the user start the task immediately. This subtask MUST take ≤ 5 minutes.
+- The FIRST subtask MUST be a tiny, frictionless action that helps the user start the task immediately.
+- Estimate realistic durations for each subtask. Avoid defaulting all steps to the same duration.
 - Break the task into logical, actionable subtasks.
 - Don't make assumptions about the task. Only generate subtasks that's actually involved in and closely related to the task.
 - You don't need to cover the whole time span of the task. Avoid generating too many subtasks. Make subtasks doable in reality.

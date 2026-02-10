@@ -8,10 +8,10 @@ export const toastConfig = {
       style={{
         elevation: 0,
       }}
-      className="flex-row items-center bg-gray-900 rounded-xl h-10 px-3 w-96 shadow-none"
+      className="flex-row items-start bg-gray-900 rounded-xl px-3 py-2 w-96 shadow-none"
     >
       <View className="flex-1 justify-center">
-        <Text numberOfLines={1} className="text-white font-baloo pl-2">
+        <Text numberOfLines={2} className="text-white font-baloo pl-2">
           {props.text1}
         </Text>
       </View>
