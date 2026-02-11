@@ -113,19 +113,6 @@ public class SyncUserCommandHandler(
                     CreatedAt = utcNow,
                     UpdatedAt = utcNow
                 },
-                new TaskItem
-                {
-                    Title = "Plan your first task",
-                    Description = "This is a floating task example",
-                    StartTime = utcNow,
-                    EndTime = utcNow,
-                    TimeType = TaskTimeType.SingleTime,
-                    UserId = row.Id,
-                    IsDone = false,
-                    LabelId = 6,
-                    CreatedAt = utcNow,
-                    UpdatedAt = utcNow
-                }
             };
 
             db.TaskItems.AddRange(defaultTasks);
