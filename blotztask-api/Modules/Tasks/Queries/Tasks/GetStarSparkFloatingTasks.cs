@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
-public class GetStarSparkFloatingTasksQuery
+public class GetNoteFloatingTasksQuery
 {
     [Required] public required Guid UserId { get; init; }
     public string? QueryString { get; init; }
 }
 
-public class GetStarSparkFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetStarSparkFloatingTasksQueryHandler> logger)
+public class GetNoteFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetNoteFloatingTasksQueryHandler> logger)
 {
-    public async Task<List<FloatingTaskItemDto>> Handle(GetStarSparkFloatingTasksQuery query, CancellationToken ct = default)
+    public async Task<List<FloatingTaskItemDto>> Handle(GetNoteFloatingTasksQuery query, CancellationToken ct = default)
     {
         var rawQueryString = query.QueryString?.Trim() ?? string.Empty;
         var hasSearchQuery = !string.IsNullOrWhiteSpace(rawQueryString);
@@ -25,7 +25,7 @@ public class GetStarSparkFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogge
         }
         else
         {
-            logger.LogInformation("Fetching floating tasks of user {UserId} for StarSpark", query.UserId);
+            logger.LogInformation("Fetching floating tasks of user {UserId} for Note", query.UserId);
         }
 
         var baseQuery = db.TaskItems
@@ -64,7 +64,7 @@ public class GetStarSparkFloatingTasksQueryHandler(BlotzTaskDbContext db, ILogge
             })
             .ToListAsync(ct);
 
-        logger.LogInformation("Successfully fetched {TaskCount} floating tasks of user {UserId} for StarSpark", tasks.Count,
+        logger.LogInformation("Successfully fetched {TaskCount} floating tasks of user {UserId} for Note", tasks.Count,
             query.UserId);
         return tasks;
     }
