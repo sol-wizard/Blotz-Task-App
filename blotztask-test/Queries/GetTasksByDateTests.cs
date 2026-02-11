@@ -57,10 +57,7 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         
         // 6. Task Outside (After): Starts well after end
         await _seeder.CreateTaskAsync(userId, "Task Outside (After)", clientStartDate.AddDays(1).AddHours(1), clientStartDate.AddDays(1).AddHours(2));
-
-        // 7. Floating Task (no start/end time): Should NOT appear on calendar page
-        // Floating tasks have no scheduled time - they will be shown in a separate Reminder UI later
-        await _seeder.CreateTaskAsync(userId, "Floating Task (No Time)", null, null, createdAt: clientStartDate.AddHours(2));
+        
 
         var query = new GetTasksByDateQuery
         {
@@ -143,69 +140,7 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         parisResult.Should().NotContain(t => t.Title == "Global Meeting (11:30 PM UTC)", 
             because: "Paris user (UTC+1) has already crossed into Nov 21 (it's 12:30 AM local), so they should NOT see this task on their 'Nov 20' view.");
     }
-
-    [Fact(Skip = "Floating tasks will no longer appear on calendar page - they will be shown in a separate Reminder UI")]
-    public async Task Handle_ShouldReturnFloatingTasks_OnlyWhenCreatedOnTheSelectedDate()
-    {
-        // Arrange
-        var userId = await _seeder.CreateUserAsync();
-        
-        // The specific date the user is looking at on their calendar (e.g., "Today")
-        var userSelectedDateUtc = new DateTime(2024, 11, 25, 0, 0, 0, DateTimeKind.Utc);
-
-        // 1. Floating task created ON this selected date (e.g. user added a quick todo "today")
-        // This represents a task the user just added to their list for the day.
-        var todayNoon = userSelectedDateUtc.AddHours(12);
-        await _seeder.CreateTaskAsync(userId, "Floating Task Created Today", null, null, createdAt: todayNoon);
-
-        // 2. Floating task created YESTERDAY
-        // This represents an old floating task from the past. It should NOT show up on today's view.
-        var yesterdayNoon = userSelectedDateUtc.AddDays(-1).AddHours(12);
-        await _seeder.CreateTaskAsync(userId, "Floating Task Created Yesterday", null, null, createdAt: yesterdayNoon);
-
-        // 3. Regular scheduled task for TODAY
-        // This is a standard calendar event/task with a start and end time.
-        await _seeder.CreateTaskAsync(userId, "Scheduled Task For Today", userSelectedDateUtc.AddHours(10), userSelectedDateUtc.AddHours(11));
-
-        // Scenario A: User views the calendar and wants to see floating tasks for that day
-        var queryRequestingFloatingTasks = new GetTasksByDateQuery
-        {
-            UserId = userId,
-            StartDate = userSelectedDateUtc,
-            IncludeFloatingForToday = true
-        };
-
-        // Scenario B: User views the calendar but wants to hide floating tasks (focus only on scheduled work)
-        var queryHidingFloatingTasks = new GetTasksByDateQuery
-        {
-            UserId = userId,
-            StartDate = userSelectedDateUtc,
-            IncludeFloatingForToday = false
-        };
-
-        // Act
-        var resultWithFloatingTasks = await _handler.Handle(queryRequestingFloatingTasks);
-        var resultWithoutFloatingTasks = await _handler.Handle(queryHidingFloatingTasks);
-
-        // Assert
-        
-        // Validation for Scenario A (Include Floating)
-        resultWithFloatingTasks.Should().Contain(t => t.Title == "Floating Task Created Today",
-            because: "The user created this floating task on the selected date, so it should appear.");
-            
-        resultWithFloatingTasks.Should().Contain(t => t.Title == "Scheduled Task For Today",
-            because: "Scheduled tasks for the day should always appear.");
-        
-        resultWithFloatingTasks.Should().NotContain(t => t.Title == "Floating Task Created Yesterday",
-            because: "Floating tasks created in the past should not clutter today's view.");
-
-        // Validation for Scenario B (Exclude Floating)
-        resultWithoutFloatingTasks.Should().NotContain(t => t.Title == "Floating Task Created Today",
-            because: "The user specifically requested to hide floating tasks for this view.");
-            
-        resultWithoutFloatingTasks.Should().Contain(t => t.Title == "Scheduled Task For Today",
-            because: "Scheduled tasks should still appear even when floating tasks are hidden.");
-    }
+    
 
     [Fact]
     public async Task Handle_ShouldShowOverdueTask_WithinSevenDayWindow()

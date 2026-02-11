@@ -61,24 +61,15 @@ public class GetTasksByDateQueryHandler(BlotzTaskDbContext db, ILogger<GetTasksB
                         (
                             // 1) Tasks that overlap selected day
                             (
-                                t.StartTime != null
-                                && t.StartTime < selectedDayEnd
+                               
+                                t.StartTime < selectedDayEnd
                                 && t.EndTime >= selectedDayStart
-                            )
-                            ||
-                            // 2) Floating tasks (unchanged)
-                            (
-                                query.IncludeFloatingForToday
-                                && t.StartTime == null
-                                && t.CreatedAt >= selectedDayStart
-                                && t.CreatedAt < selectedDayEnd
                             )
                             ||
                             // 3) Overdue tasks from [selectedDay-7, selectedDay) ONLY if AutoRollover == true
                             (
                                 autoRollover
                                 && !isFutureDay
-                                && t.StartTime != null
                                 && t.EndTime < userNow
                                 && !t.IsDone
                                 && t.StartTime < selectedDayEnd
