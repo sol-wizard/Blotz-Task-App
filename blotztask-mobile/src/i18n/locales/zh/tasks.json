@@ -31,7 +31,8 @@
     "dragToReorder": "拖拽重新排序~",
     "error": "错误",
     "failedToRefreshSubtasks": "刷新子任务失败。请重试。",
-    "failedToDeleteSubtask": "删除子任务失败。"
+    "failedToDeleteSubtask": "删除子任务失败。",
+    "mustHaveTitleError": "任务必须有一个标题"
   },
   "alerts": {
     "none": "无",
