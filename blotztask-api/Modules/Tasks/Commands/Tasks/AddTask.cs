@@ -51,9 +51,9 @@ public class AddTaskItemDto
 {
     public required string Title { get; set; }
     public required string Description { get; set; }
-    public DateTimeOffset? EndTime { get; set; }
-    public DateTimeOffset? StartTime { get; set; }
-    public TaskTimeType? TimeType { get; set; }
+    public required DateTimeOffset EndTime { get; set; }
+    public required DateTimeOffset StartTime { get; set; }
+    public required TaskTimeType TimeType { get; set; }
     public int? LabelId { get; set; }
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
