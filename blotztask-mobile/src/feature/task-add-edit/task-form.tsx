@@ -57,14 +57,15 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     ? (initialAlertTime ?? 300)
     : (initialAlertTime ?? null);
 
+  const now = new Date();
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
     description: dto?.description ?? "",
     labelId: dto?.labelId ?? null,
-    startDate: dto?.startTime ? new Date(dto?.startTime) : null,
-    startTime: dto?.startTime ? new Date(dto?.startTime) : endOfDay(new Date()),
-    endDate: dto?.endTime ? new Date(dto?.endTime) : null,
-    endTime: dto?.endTime ? new Date(dto?.endTime) : endOfDay(new Date()),
+    startDate: dto?.startTime ? new Date(dto?.startTime) : now,
+    startTime: dto?.startTime ? new Date(dto?.startTime) : now,
+    endDate: dto?.endTime ? new Date(dto?.endTime) : now,
+    endTime: dto?.endTime ? new Date(dto?.endTime) : now,
     alert: defaultAlert,
   };
 
@@ -110,8 +111,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     const submitTask: AddTaskItemDTO = {
       title: data.title.trim(),
       description: data.description?.trim() ?? undefined,
-      startTime: startTime ? convertToDateTimeOffset(startTime) : undefined,
-      endTime: endTime ? convertToDateTimeOffset(endTime) : undefined,
+      startTime: convertToDateTimeOffset(startTime!),
+      endTime: convertToDateTimeOffset(endTime!),
       labelId: data.labelId ?? undefined,
       timeType,
       alertTime: alertTime ? convertToDateTimeOffset(alertTime) : undefined,
@@ -218,5 +219,3 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 };
 
 export default TaskForm;
-
-
