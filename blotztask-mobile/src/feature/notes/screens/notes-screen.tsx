@@ -1,5 +1,5 @@
 import { theme } from "@/shared/constants/theme";
-import { use, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { View, Text, Pressable, TextInput, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
