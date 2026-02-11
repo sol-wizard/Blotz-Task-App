@@ -44,7 +44,7 @@ export default function GashaponMachineScreen() {
   const limitedNotes = useMemo(() => notesSearchResult.slice(0, MAX_STARS), [notesSearchResult]);
 
   const isEmpty = limitedNotes.length === 0;
-  const { t } = useTranslation("starspark");
+  const { t } = useTranslation("notes");
 
   const handleDoNow = () => {
     if (!randomNote) return;
@@ -121,7 +121,7 @@ export default function GashaponMachineScreen() {
               resizeMode="contain"
             />
             <Text className="text-xl text-[#3D8DE0] font-balooBold flex-1">
-              {t("empty.gashaponTitle")}
+              {t("starspark.gashaponTitle")}
             </Text>
           </View>
         )}
