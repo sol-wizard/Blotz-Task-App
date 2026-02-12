@@ -36,7 +36,7 @@ public class NotesController
   }
 
   [HttpPost("/api/TimeEstimate")]
-  public async Task<NoteTimeEstimation> EstimateNoteTime([FromBody] NoteForEstimation note, CancellationToken ct)
+  public async Task<NoteTimeEstimation?> EstimateNoteTime([FromBody] NoteForEstimation note, CancellationToken ct)
   {
     return await timeEstimateCommandHandler.Handle(note, ct);
   }

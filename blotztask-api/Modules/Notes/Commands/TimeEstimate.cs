@@ -9,12 +9,12 @@ namespace BlotzTask.Modules.Notes.Commands;
 public class NoteForEstimation
 {
     public Guid Id { get; set; }
-    public string Text { get; set; }
+    public required string Text { get; set; }
 }
 
 public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logger, Kernel kernel)
 {
-    public async Task<NoteTimeEstimation> Handle(NoteForEstimation note, CancellationToken ct = default)
+    public async Task<NoteTimeEstimation?> Handle(NoteForEstimation note, CancellationToken ct = default)
     {
         logger.LogInformation("AI is estimating time for floating task: {TaskId}", note.Id);
 
