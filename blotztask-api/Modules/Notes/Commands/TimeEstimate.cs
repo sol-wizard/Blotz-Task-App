@@ -1,10 +1,10 @@
 using System.Text.Json;
-using BlotzTask.Modules.TimeEstimate.DTOs;
-using BlotzTask.Modules.TimeEstimate.Prompts;
+using BlotzTask.Modules.Notes.DTOs;
+using BlotzTask.Modules.Notes.Prompts;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
-namespace BlotzTask.Modules.TimeEstimate.Commands;
+namespace BlotzTask.Modules.Notes.Commands;
 
 public class NoteForEstimation
 {
@@ -27,7 +27,7 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
 
             var arguments = new KernelArguments(executionSettings)
             {
-                ["title"] = note.Text
+                ["text"] = note.Text
             };
 
             var result = await kernel.InvokePromptAsync(
