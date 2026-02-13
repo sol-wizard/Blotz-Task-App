@@ -25,30 +25,29 @@ public class DeleteUserCommandHandler(
 
         try
         {
-            db.AppUsers.Remove(appUser);
-            await db.SaveChangesAsync(ct);
-
-            logger.LogInformation("Deleted user data from database for {UserId}", UserId);
+            await auth0ManagementService.DeleteUserAsync(auth0UserId, ct);
+            logger.LogInformation("Deleted Auth0 user {Auth0UserId} before DB cleanup for {UserId}", auth0UserId, UserId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to delete user data for {UserId} from database", UserId);
+            logger.LogError(ex,
+                "Failed to delete Auth0 user {Auth0UserId} for {UserId}. Aborting DB deletion.",
+                auth0UserId, UserId);
             throw;
         }
 
         try
         {
-            await auth0ManagementService.DeleteUserAsync(auth0UserId, ct);
-            logger.LogInformation("Deleted Auth0 user {Auth0UserId} after DB cleanup for {UserId}", auth0UserId,
-                UserId);
+            db.AppUsers.Remove(appUser);
+            await db.SaveChangesAsync(ct);
+
+            logger.LogInformation("Deleted user data from database for {UserId}", UserId);
             return "User deleted successfully.";
         }
         catch (Exception ex)
         {
-            logger.LogError(ex,
-                "Failed to delete Auth0 user {Auth0UserId} after DB cleanup for {UserId}. Will retry later.",
-                auth0UserId, UserId);
-            return "User deleted from database. Auth0 deletion scheduled.";
+            logger.LogError(ex, "Failed to delete user data for {UserId} from database", UserId);
+            throw;
         }
     }
 }
