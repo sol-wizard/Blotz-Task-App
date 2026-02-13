@@ -6,7 +6,6 @@ using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Notes;
 using BlotzTask.Modules.SpeechToText;
 using BlotzTask.Modules.Tasks;
-using BlotzTask.Modules.TimeEstimate;
 using BlotzTask.Modules.Users;
 using Serilog;
 
@@ -24,7 +23,6 @@ builder.Services.AddTaskModule();
 builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddLabelModule();
 builder.Services.AddTaskBreakdownModule();
-builder.Services.AddTimeEstimateModule();
 builder.Services.AddSpeechToTextModule(builder.Configuration);
 builder.Services.AddNotesModule();
 
