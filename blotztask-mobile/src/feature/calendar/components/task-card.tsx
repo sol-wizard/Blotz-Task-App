@@ -147,19 +147,19 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
 
   return (
     <Animated.View
-      className="mx-4 my-1 overflow-hidden h-20"
+      className="mx-4 my-2 overflow-hidden h-20"
       layout={MotionAnimations.layout}
       exiting={MotionAnimations.rightExiting}
       entering={MotionAnimations.upEntering}
     >
       <GestureDetector gesture={pan}>
-        <Animated.View style={cardStyle} className="flex-row items-stretch">
+        <Animated.View style={cardStyle} className="flex-row items-stretch pt-1">
           {/* 1) Card */}
-          <View style={{ width: screenWidth - 32 }}>
+          <View style={{ width: screenWidth - 32 }} className="h-full">
             <Pressable
               onPress={() => navigateToTaskDetails(task)}
               disabled={isLoading}
-              className="bg-white rounded-2xl overflow-hidden shadow-sm"
+              className="bg-white rounded-2xl overflow-hidden shadow-sm h-full"
             >
               <View className="flex-col">
                 {/* Header row */}
@@ -184,7 +184,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                     />
 
                     <View className="flex-1 flex-row justify-between items-center">
-                      <View className="justify-start pt-0 flex-1">
+                      <View className="justify-start flex-1">
                         <View className="flex-row items-center">
                           <Text
                             className={`text-xl font-baloo ${
@@ -205,7 +205,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                         </View>
 
                         {timePeriod && (
-                          <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
+                          <Text className="text-[13px] text-neutral-400 font-semibold">
                             {timePeriod}
                           </Text>
                         )}
