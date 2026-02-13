@@ -147,7 +147,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
 
   return (
     <Animated.View
-      className="mx-4 my-2 overflow-hidden"
+      className="mx-4 my-1 overflow-hidden"
       layout={MotionAnimations.layout}
       exiting={MotionAnimations.rightExiting}
       entering={MotionAnimations.upEntering}
@@ -246,15 +246,13 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
             </Pressable>
           </View>
 
-          <View className="w-2" />
-
           {/* Breakdown Action */}
-          <View className="w-32" pointerEvents="auto">
+          <View className="w-32 mx-3" pointerEvents="auto">
             <Pressable
               onPress={handleBreakdown}
               disabled={isLoading}
               android_ripple={{ color: "#DBEAFE", borderless: false }}
-              className={`w-32 h-20 rounded-xl bg-blue-500/10 items-center justify-center ${
+              className={`w-32 h-[62px] rounded-xl bg-blue-500/10 items-center justify-center ${
                 isBreakingDown || isReplacingSubtasks ? "opacity-50" : ""
               }`}
             >
@@ -265,7 +263,6 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
               )}
             </Pressable>
           </View>
-          <View className="w-2" />
 
           {/* 2) Delete action */}
           <View className="w-14" pointerEvents={"auto"}>
