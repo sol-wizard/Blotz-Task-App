@@ -1,4 +1,4 @@
 export interface NoteTimeEstimation {
-  noteId: number;
+  noteId: string;
   duration: string;
 }
