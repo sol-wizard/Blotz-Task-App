@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace BlotzTask.Modules.TimeEstimate.DTOs;
+namespace BlotzTask.Modules.Notes.DTOs;
 
 public class AITimeEstimation
 {

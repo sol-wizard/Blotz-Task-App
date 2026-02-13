@@ -8,6 +8,11 @@ public class DeletedTaskItemConfiguration : IEntityTypeConfiguration<DeletedTask
 {
     public void Configure(EntityTypeBuilder<DeletedTaskItem> builder)
     {
+        builder.HasOne(d => d.User)
+            .WithMany()
+            .HasForeignKey(d => d.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.ToTable(t =>
         {
             t.HasCheckConstraint($"CK_DeletedTaskItem_Time_Valid",
