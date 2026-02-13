@@ -16,14 +16,13 @@ param appServiceSkuName = 'B2'
 param appServiceSkuTier = 'Basic'
 
 // Database SKU (Basic tier - sufficient for 10 daily active users)
-param dbSkuName = 'Basic'
-param dbSkuTier = 'Basic'
-param dbSkuCapacity = 5 // DTUs
-param dbMaxSizeGb = 2
+param dbSkuName = 'Standard'
+param dbSkuTier = 'Standard'
+param dbSkuCapacity = 10 // DTUs
+param dbMaxSizeGb = 5
 
 // Entra ID dev group Object ID - create a prod group and replace this
-param devGroupId = '<REPLACE_WITH_PROD_GROUP_ID>'
+param devGroupId = '5719a9e2-49bd-49eb-85d1-e4afd63ca04d'
 
-// Do not commit real credentials. Provide these at deploy time.
-param dbAdminUsername = '<REPLACE>'
-param dbAdminPassword = '<REPLACE>'
+param dbAdminUsername = ''
+param dbAdminPassword = ''

@@ -42,3 +42,13 @@ export const updateUserPreferences = async (preferences: UserPreferencesDTO): Pr
     throw new Error("Failed to update user preferences");
   }
 };
+
+export const deleteUser = async (): Promise<void> => {
+  const url = `/User`;
+  try {
+    await apiClient.delete<void>(url);
+  } catch (err: any) {
+    console.error("Delete user failed:", err);
+    throw new Error("Failed to delete user");
+  }
+};
