@@ -25,6 +25,7 @@ const SubtaskList = ({ task, progress }: Props) => {
   const subtaskClipStyle = useAnimatedStyle(() => ({
     height: interpolate(progress.value, [0, 1], [0, contentHeight.value], Extrapolation.CLAMP),
     opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
+    marginTop: interpolate(progress.value, [0, 1], [0, 8], Extrapolation.CLAMP),
   }));
 
   const handleToggleSubtask = async (subtaskId: number) => {
@@ -39,7 +40,7 @@ const SubtaskList = ({ task, progress }: Props) => {
   };
 
   return (
-    <Animated.View style={[{ overflow: "hidden" }, subtaskClipStyle]} className="mt-2">
+    <Animated.View style={[{ overflow: "hidden" }, subtaskClipStyle]}>
       {/* This inner content is what we measure */}
       <View className="pr-2 pl-1" onLayout={onSubtaskContentLayout}>
         {task.subtasks?.map((subtask: SubtaskDTO) => (
