@@ -15,6 +15,11 @@ namespace BlotzTask.Infrastructure.Data.Configurations
             // Primary Key: enforce one row per user
             builder.HasKey(x => x.UserId);
 
+            builder.HasOne<AppUser>()
+                   .WithOne()
+                   .HasForeignKey<UserPreference>(x => x.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
             // Database-level default values
             builder.Property(x => x.AutoRollover)
                    .HasDefaultValue(true);
