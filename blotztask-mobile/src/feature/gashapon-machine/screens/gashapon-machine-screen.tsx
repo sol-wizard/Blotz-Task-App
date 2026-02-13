@@ -108,7 +108,8 @@ export default function GashaponMachineScreen() {
             style={{
               alignSelf: "center",
               width: 600,
-              height: 800,
+              height: 700,
+              top: -30,
             }}
             onLoad={() => setBasePicLoaded(true)}
           />

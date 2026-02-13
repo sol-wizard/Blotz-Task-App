@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { createRectangleBetweenPoints } from "../utils/create-rectangle-between-points";
 import { EntityMap } from "../models/entity-map";
 import { CapsuleToyRenderer } from "../components/capsule-toy-renderer";
+import { WallRenderer } from "../components/wall-renderer";
 import { wallPoints } from "../utils/gashapon-inner-wall-points";
 import { Accelerometer } from "expo-sensors";
 import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
@@ -180,6 +181,14 @@ export const useGashaponMachineConfig = ({
         world: world,
       },
     };
+
+    wallBodies.forEach((wall) => {
+      newEntities[wall.label] = {
+        body: wall,
+        color: "grey",
+        renderer: WallRenderer,
+      };
+    });
 
     stars.forEach((star, idx) => {
       const entityKey = getStarEntityKey(idx);
