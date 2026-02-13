@@ -1,6 +1,6 @@
 {
   "title": "Notes",
-  "banner": "Ready to turn a spark into action?",
+  "banner": "Ready to turn a note into action?",
   "search": "Search tasks...",
   "noTasks": "No floating tasks found",
   "createTask": "Create your first task",
@@ -12,9 +12,9 @@
     "pickNote": "Let fate decide✨"
   },
 
-    "notePlaceholder": "Add a Quick Note",
-    "save" : "Save",
-    "close" : "Close",
+  "notePlaceholder": "Add a Quick Note",
+  "save": "Save",
+  "close": "Close",
 
   "timeEstimate": {
     "estimating": "Estimating time...",

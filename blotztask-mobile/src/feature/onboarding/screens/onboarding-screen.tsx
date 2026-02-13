@@ -18,7 +18,7 @@ export default function OnboardingScreen() {
   const { t } = useTranslation("onboarding");
   useLanguageInit();
 
-  const sections = ["ai-voice", "star-spark", "breakdown"];
+  const sections = ["ai-voice", "note", "breakdown"];
   const [activeOnboardingIndex, setActiveOnboardingIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
@@ -82,7 +82,7 @@ export default function OnboardingScreen() {
           <View style={{ width: SCREEN_WIDTH }}>
             {item === "ai-voice" && <OnboardingAiSection />}
             {item === "breakdown" && <OnboardingBreakdownSection />}
-            {item === "star-spark" && <OnboardingNoteSection />}
+            {item === "note" && <OnboardingNoteSection />}
           </View>
         )}
       />
