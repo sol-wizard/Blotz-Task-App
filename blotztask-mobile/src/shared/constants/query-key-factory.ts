@@ -4,6 +4,7 @@ export const userKeys = {
   all: ["user"] as const,
   profile: () => [...userKeys.all, "profile"] as const,
   preferences: () => [...userKeys.all, "preferences"] as const,
+  delete: () => [...userKeys.all, "delete"] as const,
 } as const;
 
 export const labelKeys = {

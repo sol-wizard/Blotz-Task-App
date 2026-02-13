@@ -4,6 +4,7 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260208020235_AddCascadeDeletesForUserRelations")]
+    partial class AddCascadeDeletesForUserRelations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -134,7 +137,7 @@ namespace BlotzTask.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset>("EndTime")
+                    b.Property<DateTimeOffset?>("EndTime")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("IsDone")
@@ -143,10 +146,10 @@ namespace BlotzTask.Migrations
                     b.Property<int?>("LabelId")
                         .HasColumnType("int");
 
-                    b.Property<DateTimeOffset>("StartTime")
+                    b.Property<DateTimeOffset?>("StartTime")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("TimeType")
+                    b.Property<int?>("TimeType")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -238,7 +241,7 @@ namespace BlotzTask.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset>("EndTime")
+                    b.Property<DateTimeOffset?>("EndTime")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("IsDone")
@@ -250,10 +253,10 @@ namespace BlotzTask.Migrations
                     b.Property<string>("NotificationId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset>("StartTime")
+                    b.Property<DateTimeOffset?>("StartTime")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int>("TimeType")
+                    b.Property<int?>("TimeType")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
