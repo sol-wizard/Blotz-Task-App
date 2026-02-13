@@ -41,19 +41,14 @@ const SubtaskList = ({ task, progress }: Props) => {
   return (
     <Animated.View style={[{ overflow: "hidden" }, subtaskClipStyle]}>
       {/* This inner content is what we measure */}
-      <View className="px-5 pb-4" onLayout={onSubtaskContentLayout}>
+      <View className="" onLayout={onSubtaskContentLayout}>
         {task.subtasks?.map((subtask: SubtaskDTO) => (
-          <Pressable
-            key={subtask.subTaskId}
-            onPress={() => handleToggleSubtask(subtask.subTaskId)}
-            disabled={isTogglingSubtaskStatus}
-            className={`flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
-          >
+          <View key={subtask.subTaskId} className="flex-row items-center justify-center pt-2">
             <TasksCheckbox
               checked={subtask.isDone}
               disabled={isTogglingSubtaskStatus}
-              size={24}
-              className="mr-3"
+              size={20}
+              className="mr-3 border"
               onChange={() => handleToggleSubtask(subtask.subTaskId)}
             />
 
@@ -71,7 +66,7 @@ const SubtaskList = ({ task, progress }: Props) => {
                 {convertDurationToText(subtask.duration)}
               </Text>
             )}
-          </Pressable>
+          </View>
         ))}
       </View>
     </Animated.View>
