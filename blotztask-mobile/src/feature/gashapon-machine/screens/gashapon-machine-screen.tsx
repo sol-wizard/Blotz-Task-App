@@ -121,7 +121,7 @@ export default function GashaponMachineScreen() {
               resizeMode="contain"
             />
             <Text className="text-xl text-[#3D8DE0] font-balooBold flex-1">
-              {t("starspark.gashaponTitle")}
+              {t("emptyNoteMessage.gashaponTitle")}
             </Text>
           </View>
         )}

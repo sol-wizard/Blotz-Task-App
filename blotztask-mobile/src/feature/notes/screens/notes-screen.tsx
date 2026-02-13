@@ -159,10 +159,10 @@ export default function NotesScreen() {
           {!showLoading && notesSearchResult.length === 0 && ( 
             <View className="flex-1 items-center justify-center px-10">
               <Text className="text-center text-black font-balooBold text-2xl">
-                {t("starspark.encouragingTitle")}
+                {t("emptyNoteMessage.encouragingTitle")}
               </Text>
               <Text className="text-center text-black font-baloo text-xl mt-2">
-                {t("starspark.encouragingDescription")}
+                {t("emptyNoteMessage.encouragingDescription")}
               </Text>
               </View>
             )}  
