@@ -137,7 +137,7 @@ export default function GashaponMachineScreen() {
             source={ASSETS.machineEyes}
             resizeMode="contain"
             className="absolute z-10"
-            style={{ left: 80, top: 150 }}
+            style={{ left: 80, top: 210 }}
             onLoad={() => setEyesPicLoaded(true)}
           />
 
