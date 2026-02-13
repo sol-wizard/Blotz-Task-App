@@ -39,30 +39,35 @@ const SubtaskList = ({ task, progress }: Props) => {
   };
 
   return (
-    <Animated.View style={[{ overflow: "hidden" }, subtaskClipStyle]}>
+    <Animated.View style={[{ overflow: "hidden" }, subtaskClipStyle]} className="mt-2">
       {/* This inner content is what we measure */}
-      <View className="" onLayout={onSubtaskContentLayout}>
+      <View className="pr-2 pl-1" onLayout={onSubtaskContentLayout}>
         {task.subtasks?.map((subtask: SubtaskDTO) => (
-          <View key={subtask.subTaskId} className="flex-row items-center justify-center pt-2">
-            <TasksCheckbox
-              checked={subtask.isDone}
-              disabled={isTogglingSubtaskStatus}
-              size={20}
-              className="mr-3 border"
-              onChange={() => handleToggleSubtask(subtask.subTaskId)}
-            />
+          <View
+            key={subtask.subTaskId}
+            className="flex-row w-full pt-2 justify-between items-start"
+          >
+            <View className="flex-row">
+              <TasksCheckbox
+                checked={subtask.isDone}
+                disabled={isTogglingSubtaskStatus}
+                size={20}
+                className="mr-3 border"
+                onChange={() => handleToggleSubtask(subtask.subTaskId)}
+              />
 
-            <Text
-              className={`flex-1 text-base font-baloo ${
-                subtask.isDone ? "text-gray-400 line-through opacity-60" : "text-gray-700"
-              }`}
-              numberOfLines={1}
-            >
-              {subtask.title}
-            </Text>
+              <Text
+                className={`text-base font-baloo ${
+                  subtask.isDone ? "text-gray-400 line-through opacity-60" : "text-gray-700"
+                }`}
+                numberOfLines={1}
+              >
+                {subtask.title}
+              </Text>
+            </View>
 
             {subtask.duration && (
-              <Text className="text-sm text-gray-400 font-baloo ml-2">
+              <Text className="text-sm text-gray-400 font-baloo ml-2 text-right">
                 {convertDurationToText(subtask.duration)}
               </Text>
             )}
