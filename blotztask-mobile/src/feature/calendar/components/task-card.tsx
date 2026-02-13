@@ -25,6 +25,7 @@ import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMuta
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
+import { theme } from "@/shared/constants/theme";
 
 const rubberBand = (x: number, limit: number) => {
   "worklet";
@@ -142,25 +143,27 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   const endDate = task.endTime ? parseISO(task.endTime) : null;
   const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
 
+  const labelColor = task.label?.color ?? theme.colors.disabled;
+
   return (
     <Animated.View
-      className="mx-4 my-2 overflow-hidden"
+      className="mx-4 my-2 overflow-hidden h-20"
       layout={MotionAnimations.layout}
       exiting={MotionAnimations.rightExiting}
       entering={MotionAnimations.upEntering}
     >
       <GestureDetector gesture={pan}>
-        <Animated.View style={cardStyle} className="flex-row items-start">
+        <Animated.View style={cardStyle} className="flex-row items-stretch pt-1">
           {/* 1) Card */}
-          <View style={{ width: screenWidth - 32 }}>
+          <View style={{ width: screenWidth - 32 }} className="h-full">
             <Pressable
               onPress={() => navigateToTaskDetails(task)}
               disabled={isLoading}
-              className="bg-white rounded-2xl shadow-sm overflow-hidden"
+              className="bg-white rounded-2xl overflow-hidden shadow-sm h-full"
             >
               <View className="flex-col">
                 {/* Header row */}
-                <View className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}>
+                <View className={`flex-row items-center p-4 ${isLoading ? "opacity-70" : ""}`}>
                   <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
                     <TasksCheckbox
                       checked={task.isDone}
@@ -175,59 +178,63 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                         }
                       }}
                     />
-                  </Animated.View>
+                    <View
+                      className="w-[5px] h-10 rounded-full mx-3"
+                      style={{ backgroundColor: labelColor }}
+                    />
 
-                  <View className="flex-1 flex-row justify-between items-center">
-                    <View className="justify-start pt-0 flex-1">
-                      <View className="flex-row items-center">
-                        <Text
-                          className={`text-xl font-baloo ${
-                            task.isDone ? "text-neutral-400 line-through" : "text-black"
-                          }`}
-                          style={
-                            task.isDone
-                              ? {
-                                  textDecorationLine: "line-through",
-                                  textDecorationColor: "#9CA3AF",
-                                }
-                              : undefined
-                          }
-                          numberOfLines={1}
-                        >
-                          {task.title}
-                        </Text>
+                    <View className="flex-1 flex-row justify-between items-center">
+                      <View className="justify-start flex-1">
+                        <View className="flex-row items-center">
+                          <Text
+                            className={`text-xl font-baloo ${
+                              task.isDone ? "text-neutral-400 line-through" : "text-black"
+                            }`}
+                            style={
+                              task.isDone
+                                ? {
+                                    textDecorationLine: "line-through",
+                                    textDecorationColor: "#9CA3AF",
+                                  }
+                                : undefined
+                            }
+                            numberOfLines={1}
+                          >
+                            {task.title}
+                          </Text>
+                        </View>
+
+                        {timePeriod && (
+                          <Text className="text-[13px] text-neutral-400 font-semibold">
+                            {timePeriod}
+                          </Text>
+                        )}
                       </View>
 
-                      {timePeriod && (
-                        <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
-                          {timePeriod}
-                        </Text>
-                      )}
-                    </View>
+                      <View className="flex-row items-center">
+                        {endDate ? (
+                          <Text
+                            className={`${
+                              isOverdue ? "text-warning" : "text-primary"
+                            } font-baloo text-lg`}
+                          >
+                            {format(endDate, "H:mm")}
+                          </Text>
+                        ) : null}
 
-                    <View className="flex-row items-center">
-                      {endDate ? (
-                        <Text
-                          className={`${
-                            isOverdue ? "text-warning" : "text-primary"
-                          } font-baloo text-lg`}
-                        >
-                          {format(endDate, "H:mm")}
-                        </Text>
-                      ) : null}
-
-                      {hasSubtasks && (
-                        <Pressable
-                          onPress={() => setIsExpanded((v) => !v)}
-                          className="ml-2 p-1"
-                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                          disabled={isLoading}
-                        >
-                          <AnimatedChevron color="#9CA3AF" progress={progress} />
-                        </Pressable>
-                      )}
+                        {hasSubtasks && (
+                          <Pressable
+                            onPress={() => setIsExpanded((v) => !v)}
+                            className="ml-2 p-1"
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            disabled={isLoading}
+                          >
+                            <AnimatedChevron color="#9CA3AF" progress={progress} />
+                          </Pressable>
+                        )}
+                      </View>
                     </View>
-                  </View>
+                  </Animated.View>
                 </View>
 
                 {/* Progress bar shown only when collapsed */}
@@ -239,15 +246,13 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
             </Pressable>
           </View>
 
-          <View className="w-2" />
-
           {/* Breakdown Action */}
-          <View className="w-32" pointerEvents="auto">
+          <View className="w-32 mx-3 h-full" pointerEvents="auto">
             <Pressable
               onPress={handleBreakdown}
               disabled={isLoading}
               android_ripple={{ color: "#DBEAFE", borderless: false }}
-              className={`w-32 h-20 rounded-xl bg-blue-500/10 items-center justify-center ${
+              className={`w-32 h-full rounded-xl bg-blue-500/10 items-center justify-center ${
                 isBreakingDown || isReplacingSubtasks ? "opacity-50" : ""
               }`}
             >
@@ -258,10 +263,9 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
               )}
             </Pressable>
           </View>
-          <View className="w-2" />
 
           {/* 2) Delete action */}
-          <View className="w-14" pointerEvents={"auto"}>
+          <View className="w-14 h-full" pointerEvents={"auto"}>
             <Pressable
               onPress={async () => {
                 if (isLoading) return;
@@ -275,7 +279,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
               }}
               disabled={isLoading}
               android_ripple={{ color: "#FEE2E2", borderless: false }}
-              className={`w-14 h-20 rounded-xl bg-red-500/10 items-center justify-center ${
+              className={`w-14 h-full rounded-xl bg-red-500/10 items-center justify-center ${
                 isDeleting ? "opacity-50" : ""
               }`}
             >
