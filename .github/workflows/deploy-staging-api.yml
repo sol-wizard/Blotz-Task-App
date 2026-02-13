@@ -11,63 +11,27 @@ on:
       - main
   workflow_dispatch:
 
-permissions: # Do i need a permission write here ?
+permissions:
   id-token: write
   contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/build-api.yml
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0'
-
-      - name: Build with dotnet
-        working-directory: ./blotztask-api
-        run: dotnet build --configuration Release
-
-      - name: .Net - Tool restore
-        working-directory: ./blotztask-api
-        run: dotnet tool restore
-
-      - name: dotnet publish
-        working-directory: ./blotztask-api
-        run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
-      
-      - name: Upload artifacts for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: .net-app
-          path: ${{ runner.temp }}/blotztask-api
-
-      - name: Generate EF Core migration script
-        working-directory: ./blotztask-api
-        run: dotnet ef migrations script --idempotent -o ${{ runner.temp }}/migrations.sql
-
-      - name: Upload migration script for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: db-migrations
-          path: ${{ runner.temp }}/migrations.sql  
- 
   deploy:
       runs-on: ubuntu-latest
       needs: build
       environment:
         name: 'Staging'
         url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-      
+
       steps:
         - name: Download artifact from build job
           uses: actions/download-artifact@v4
           with:
             name: .net-app
-  
+
         - name: Download artifact from build job
           uses: actions/download-artifact@v4
           with:
@@ -79,20 +43,20 @@ jobs:
             client-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_CLIENT_ID }}
             tenant-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_TENANT_ID }}
             subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        
+
         - uses: Azure/get-keyvault-secrets@v1
           with:
             keyvault: "kv-blotz-task-stag"
             secrets: 'sql-connection-string'
           id: get-secret-connection-strings
 
-        - name: EF - Apply Migration SQL Script 
+        - name: EF - Apply Migration SQL Script
           uses: azure/sql-action@v2.3
           with:
-            connection-string: ${{ steps.get-secret-connection-strings.outputs.sql-connection-string }} # TODO: do different way to get this
-            path: ./migrations.sql    
-            
-        - name: Deploy to Azure Web App #What if my deployment failed here? can i rollback the above script deployment? You cant, you just need to make the schema changes is backward compitatble
+            connection-string: ${{ steps.get-secret-connection-strings.outputs.sql-connection-string }}
+            path: ./migrations.sql
+
+        - name: Deploy to Azure Web App
           id: deploy-to-webapp
           uses: azure/webapps-deploy@v3
           with:
