@@ -14,7 +14,7 @@ public class TaskController(
     TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
     AddTaskCommandHandler addTaskCommandHandler,
     GetTaskByIdQueryHandler getTaskByIdQueryHandler,
-    GetNoteFloatingTasksQueryHandler getNoteFloatingTasksQueryHandler,
+    // GetNoteFloatingTasksQueryHandler getNoteFloatingTasksQueryHandler,
     DeleteTaskCommandHandler deleteTaskCommandHandler,
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
@@ -63,23 +63,6 @@ public class TaskController(
             userId,
             result.Count(),
             stopwatch.ElapsedMilliseconds);
-        return result;
-    }
-
-    [HttpGet("note-floating-tasks")]
-    public async Task<IEnumerable<FloatingTaskItemDto>> GetNoteFloatingTasks(
-        [FromQuery] string? query, CancellationToken ct)
-    {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
-
-        var floatingTasksQuery = new GetNoteFloatingTasksQuery
-        {
-            UserId = userId,
-            QueryString = query
-        };
-
-        var result = await getNoteFloatingTasksQueryHandler.Handle(floatingTasksQuery, ct);
         return result;
     }
 
