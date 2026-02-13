@@ -1,0 +1,47 @@
+# Reusable build workflow for .NET API
+# Called by deploy-staging-api.yml and deploy-prod-api.yml
+
+name: Build .NET API
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0'
+
+      - name: Build with dotnet
+        working-directory: ./blotztask-api
+        run: dotnet build --configuration Release
+
+      - name: .Net - Tool restore
+        working-directory: ./blotztask-api
+        run: dotnet tool restore
+
+      - name: dotnet publish
+        working-directory: ./blotztask-api
+        run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
+
+      - name: Upload artifacts for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: .net-app
+          path: ${{ runner.temp }}/blotztask-api
+
+      - name: Generate EF Core migration script
+        working-directory: ./blotztask-api
+        run: dotnet ef migrations script --idempotent -o ${{ runner.temp }}/migrations.sql
+
+      - name: Upload migration script for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-migrations
+          path: ${{ runner.temp }}/migrations.sql
