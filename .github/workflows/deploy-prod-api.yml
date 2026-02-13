@@ -4,11 +4,6 @@
 name: Prod - Build and deploy WebApi to Azure Web App
 
 on:
-  push:
-    paths:
-      - 'blotztask-api/**'
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
