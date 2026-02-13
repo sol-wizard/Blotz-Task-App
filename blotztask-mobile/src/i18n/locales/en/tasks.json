@@ -31,7 +31,8 @@
     "dragToReorder": "Drag to reorder~",
     "error": "Error",
     "failedToRefreshSubtasks": "Failed to refresh subtasks. Please try again.",
-    "failedToDeleteSubtask": "Failed to delete subtask."
+    "failedToDeleteSubtask": "Failed to delete subtask.",
+    "mustHaveTitleError": "Task must have a title"
   },
   "alerts": {
     "none": "None",

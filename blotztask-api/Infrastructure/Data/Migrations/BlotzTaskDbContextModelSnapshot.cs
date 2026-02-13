@@ -134,7 +134,7 @@ namespace BlotzTask.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset?>("EndTime")
+                    b.Property<DateTimeOffset>("EndTime")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("IsDone")
@@ -143,10 +143,10 @@ namespace BlotzTask.Migrations
                     b.Property<int?>("LabelId")
                         .HasColumnType("int");
 
-                    b.Property<DateTimeOffset?>("StartTime")
+                    b.Property<DateTimeOffset>("StartTime")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("TimeType")
+                    b.Property<int>("TimeType")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -238,7 +238,7 @@ namespace BlotzTask.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset?>("EndTime")
+                    b.Property<DateTimeOffset>("EndTime")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("IsDone")
@@ -250,10 +250,10 @@ namespace BlotzTask.Migrations
                     b.Property<string>("NotificationId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset?>("StartTime")
+                    b.Property<DateTimeOffset>("StartTime")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<int?>("TimeType")
+                    b.Property<int>("TimeType")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
@@ -362,7 +362,6 @@ namespace BlotzTask.Migrations
             modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserPreference", b =>
                 {
                     b.Property<Guid>("UserId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("AutoRollover")
@@ -417,7 +416,8 @@ namespace BlotzTask.Migrations
                 {
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("User");
                 });
@@ -487,6 +487,15 @@ namespace BlotzTask.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserPreference", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
+                        .WithOne()
+                        .HasForeignKey("BlotzTask.Modules.Users.Domain.UserPreference", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>

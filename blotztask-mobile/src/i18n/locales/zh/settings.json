@@ -13,7 +13,13 @@
     "name": "名字",
     "nameDescription": "此名字将显示在您的账户中。",
     "email": "邮箱",
-    "emailDescription": "用于登录和通知。"
+    "emailDescription": "用于登录和通知。",
+    "deleteAccount": "⚠️ 删除账户",
+    "deleteTitle": "删除账户",
+    "deleteWarning": "将永久删除你的账号及所有数据（任务、笔记、偏好设置）。此操作无法撤销。",
+    "deleteConfirmText": "我已了解此操作无法撤销。",
+    "deleteLoading": "正在删除你的数据...",
+    "deleteConfirm": "永久删除"
   },
   "taskHandling": {
     "title": "任务处理",

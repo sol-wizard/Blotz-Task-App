@@ -14,7 +14,8 @@ public static class CoreServiceExtensions
                 // Convert enums to strings in JSON (e.g., "En" instead of 0)
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
-        services.AddHealthChecks();
+        services.AddHealthChecks()
+            .AddDbContextCheck<Infrastructure.Data.BlotzTaskDbContext>("database");
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
 

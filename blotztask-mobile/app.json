@@ -15,13 +15,15 @@
       "bundleIdentifier": "com.Blotz.BlotzTask",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSPhotoLibraryUsageDescription": "Allow BlotzTask to access your photos so you can attach images to tasks.",
-        "NSPhotoLibraryAddUsageDescription": "Allow BlotzTask to save exported images to your photo library.",
-        "NSCameraUsageDescription": "Allow BlotzTask to use the camera for calls and taking photos.",
-        "NSSpeechRecognitionUsageDescription": "We use speech recognition so you can add tasks by voice.",
-        "NSMicrophoneUsageDescription": "Allow BlotzTask to use the microphone for voice and video calls.",
-        "NSMotionUsageDescription": "This app uses motion data to simulate gravity and allow capsule toys to move when you shake your phone.",
-        "NSLocationWhenInUseUsageDescription": "Allow BlotzTask to use your location to check regional availability."
+        "CFBundleDevelopmentRegion": "en",
+        "CFBundleLocalizations": ["en", "zh-Hans"],
+        "NSPhotoLibraryUsageDescription": "Allow access to your photo library so you can attach images to tasks and notes (e.g., a screenshot or receipt).",
+        "NSPhotoLibraryAddUsageDescription": "Allow saving images to your photo library when you export or download images from BlotzTask (e.g., a shared task card).",
+        "NSCameraUsageDescription": "Allow camera access so you can take a photo and attach it to a task or note (e.g., a document, whiteboard, or receipt).",
+        "NSSpeechRecognitionUsageDescription": "BlotzTask uses speech recognition to turn your voice into text for creating tasks and notes.",
+        "NSMicrophoneUsageDescription": "BlotzTask uses the microphone for voice input so you can dictate tasks and notes. Audio is used only for speech-to-text and is not stored.",
+        "NSMotionUsageDescription": "BlotzTask uses motion data for an optional shake interaction in the app (e.g., to animate capsule-toy style effects). Motion data is not stored.",
+        "NSLocationWhenInUseUsageDescription": "BlotzTask uses your location to provide location-aware features when you choose to use them. Your location is not stored."
       },
       "appleTeamId": "LXC29JARY5",
       "icon": "./assets/images-png/blotz-icon.png"
@@ -29,10 +31,7 @@
     "android": {
       "edgeToEdgeEnabled": true,
       "package": "com.blotz.blotztask",
-      "permissions": [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.ACCESS_FINE_LOCATION"
-      ]
+      "permissions": ["android.permission.RECORD_AUDIO", "android.permission.ACCESS_FINE_LOCATION"]
     },
     "web": {
       "bundler": "metro",
@@ -65,12 +64,8 @@
         }
       ],
       "expo-audio",
-      [
-        "./plugins/withCustomGradleProperties"
-      ],
-      [
-        "./plugins/withAzureSpeechAndroid"
-      ],
+      ["./plugins/withCustomGradleProperties"],
+      ["./plugins/withAzureSpeechAndroid"],
       "expo-asset"
     ],
     "experiments": {
