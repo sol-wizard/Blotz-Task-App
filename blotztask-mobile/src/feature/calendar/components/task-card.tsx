@@ -147,19 +147,19 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
 
   return (
     <Animated.View
-      className="mx-4 my-1 overflow-hidden"
+      className="mx-4 my-1 overflow-hidden h-20"
       layout={MotionAnimations.layout}
       exiting={MotionAnimations.rightExiting}
       entering={MotionAnimations.upEntering}
     >
       <GestureDetector gesture={pan}>
-        <Animated.View style={cardStyle} className="flex-row items-start">
+        <Animated.View style={cardStyle} className="flex-row items-stretch">
           {/* 1) Card */}
           <View style={{ width: screenWidth - 32 }}>
             <Pressable
               onPress={() => navigateToTaskDetails(task)}
               disabled={isLoading}
-              className="bg-white rounded-2xl shadow-sm overflow-hidden"
+              className="bg-white rounded-2xl overflow-hidden shadow-sm"
             >
               <View className="flex-col">
                 {/* Header row */}
@@ -247,12 +247,12 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
           </View>
 
           {/* Breakdown Action */}
-          <View className="w-32 mx-3" pointerEvents="auto">
+          <View className="w-32 mx-3 h-full" pointerEvents="auto">
             <Pressable
               onPress={handleBreakdown}
               disabled={isLoading}
               android_ripple={{ color: "#DBEAFE", borderless: false }}
-              className={`w-32 h-[62px] rounded-xl bg-blue-500/10 items-center justify-center ${
+              className={`w-32 h-full rounded-xl bg-blue-500/10 items-center justify-center ${
                 isBreakingDown || isReplacingSubtasks ? "opacity-50" : ""
               }`}
             >
@@ -265,7 +265,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
           </View>
 
           {/* 2) Delete action */}
-          <View className="w-14" pointerEvents={"auto"}>
+          <View className="w-14 h-full" pointerEvents={"auto"}>
             <Pressable
               onPress={async () => {
                 if (isLoading) return;
@@ -279,7 +279,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
               }}
               disabled={isLoading}
               android_ripple={{ color: "#FEE2E2", borderless: false }}
-              className={`w-14 h-20 rounded-xl bg-red-500/10 items-center justify-center ${
+              className={`w-14 h-full rounded-xl bg-red-500/10 items-center justify-center ${
                 isDeleting ? "opacity-50" : ""
               }`}
             >
