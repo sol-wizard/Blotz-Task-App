@@ -1,99 +1,68 @@
-# name: Production - Build and deploy WebApi to Azure Web App
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
 
+name: Prod - Build and deploy WebApi to Azure Web App
 
-# on:
-#   workflow_dispatch:
+on:
+  push:
+    paths:
+      - 'blotztask-api/**'
+    branches:
+      - main
+  workflow_dispatch:
 
-# permissions: # Do i need a permission write here ?
-#   id-token: write
-#   contents: read
+permissions:
+  id-token: write
+  contents: read
 
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-#     environment:
-#       name: 'Production'
+jobs:
+  build:
+    uses: ./.github/workflows/build-api.yml
 
-#     steps:
-#       - uses: actions/checkout@v4
+  deploy:
+      runs-on: ubuntu-latest
+      needs: build
+      environment:
+        name: 'prod'
+        url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
-#       - name: Set up .NET Core
-#         uses: actions/setup-dotnet@v4
-#         with:
-#           dotnet-version: '8.0'
+      steps:
+        - name: Download artifact from build job
+          uses: actions/download-artifact@v4
+          with:
+            name: .net-app
 
-#       - name: Build with dotnet
-#         working-directory: ./blotztask-api
-#         run: dotnet build --configuration Release
+        - name: Download artifact from build job
+          uses: actions/download-artifact@v4
+          with:
+            name: db-migrations
 
-#       - name: .Net - Tool restore
-#         working-directory: ./blotztask-api
-#         run: dotnet tool restore
+        - name: Azure login
+          uses: azure/login@v2
+          with:
+            client-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_CLIENT_ID }}
+            tenant-id: ${{ secrets.AZURE_GHA_MANAGED_IDENTITY_TENANT_ID }}
+            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-#       - name: dotnet publish
-#         working-directory: ./blotztask-api
-#         run: dotnet publish -c Release -o ${{ runner.temp }}/blotztask-api
-      
-#       - name: Upload artifacts for deployment job
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: .net-app
-#           path: ${{ runner.temp }}/blotztask-api
+        - uses: Azure/get-keyvault-secrets@v1
+          with:
+            keyvault: "kv-blotz-task-prod"
+            secrets: 'sql-connection-string'
+          id: get-secret-connection-strings
 
-#       - name: Generate EF Core migration script
-#         working-directory: ./blotztask-api
-#         run: dotnet ef migrations script --idempotent -o ${{ runner.temp }}/migrations.sql
+        - name: EF - Apply Migration SQL Script
+          uses: azure/sql-action@v2.3
+          with:
+            connection-string: ${{ steps.get-secret-connection-strings.outputs.sql-connection-string }}
+            path: ./migrations.sql
 
-#       - name: Upload migration script for deployment job
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: db-migrations
-#           path: ${{ runner.temp }}/migrations.sql  
- 
-#   deploy:
-#       runs-on: ubuntu-latest
-#       needs: build
-#       environment:
-#         name: 'Production'
-#         url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-      
-#       steps:
-#         - name: Download artifact from build job
-#           uses: actions/download-artifact@v4
-#           with:
-#             name: .net-app
-  
-#         - name: Download artifact from build job
-#           uses: actions/download-artifact@v4
-#           with:
-#             name: db-migrations
+        - name: Deploy to Azure Web App
+          id: deploy-to-webapp
+          uses: azure/webapps-deploy@v3
+          with:
+            app-name: 'app-blotz-task-api-prod'
+            package: './'
 
-#         - name: Azure login
-#           uses: azure/login@v2
-#           with:
-#             client-id: ${{ secrets.AZURE_UAI_CLIENT_ID }}
-#             tenant-id: ${{ secrets.AZURE_UAI_TENANT_ID }}
-#             subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        
-#         - uses: Azure/get-keyvault-secrets@v1
-#           with:
-#             keyvault: "kv-blotztask-prod-v2" # TODO: do different way to get this
-#             secrets: 'sql-connection-string'  
-#           id: get-secret-connection-strings
-
-#         - name: EF - Apply Migration SQL Script 
-#           uses: azure/sql-action@v2.3
-#           with:
-#             connection-string: ${{ steps.get-secret-connection-strings.outputs.sql-connection-string }} # TODO: do different way to get this
-#             path: ./migrations.sql    
-            
-#         - name: Deploy to Azure Web App #What if my deployment failed here? can i rollback the above script deployment? You cant, you just need to make the schema changes is backward compitatble
-#           id: deploy-to-webapp
-#           uses: azure/webapps-deploy@v3
-#           with:
-#             app-name: 'wapp-blotztask-api-prod' #TODO: change to dynamic name
-#             package: './'
-
-#         - name: azure logout
-#           run: |
-#             az logout
+        - name: azure logout
+          run: |
+            az logout
