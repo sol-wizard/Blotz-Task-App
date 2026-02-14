@@ -28,3 +28,6 @@ param devGroupId = 'aae34f6e-c28e-4064-9d5b-15336d8c147a'
 // DB credentials - overridden at deploy time via deploy-staging.ps1
 param dbAdminUsername = ''
 param dbAdminPassword = ''
+
+// Auth0 - overridden at deploy time
+param auth0ManagementClientSecret = ''

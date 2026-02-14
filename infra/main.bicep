@@ -9,6 +9,8 @@ param location string = resourceGroup().location
 param dbAdminUsername string
 @secure()
 param dbAdminPassword string
+@secure()
+param auth0ManagementClientSecret string
 
 param openAiDeploymentName string
 param openAiModelName string
@@ -123,6 +125,15 @@ module storeConnectionString 'modules/keyVaultSecret.bicep' = {
     keyVaultName: kv.outputs.name
     secretName: 'sql-connection-string'
     secretValue: sql.outputs.connectionString
+  }
+}
+
+module storeAuth0ManagementClientSecret 'modules/keyVaultSecret.bicep' = {
+  name: '${namePrefix}-${environment}-store-auth0-mgmt-secret'
+  params: {
+    keyVaultName: kv.outputs.name
+    secretName: 'auth0-management-client-secret'
+    secretValue: auth0ManagementClientSecret
   }
 }
 

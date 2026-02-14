@@ -26,3 +26,6 @@ param devGroupId = '5719a9e2-49bd-49eb-85d1-e4afd63ca04d'
 
 param dbAdminUsername = ''
 param dbAdminPassword = ''
+
+// Auth0 - overridden at deploy time
+param auth0ManagementClientSecret = ''

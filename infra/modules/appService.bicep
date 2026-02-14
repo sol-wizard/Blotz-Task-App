@@ -83,6 +83,10 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
           value: '@Microsoft.KeyVault(SecretUri=${normalizedKeyVaultUri}secrets/sql-connection-string/)'
         }
         {
+          name: 'Auth0__ManagementClientSecret'
+          value: '@Microsoft.KeyVault(SecretUri=${normalizedKeyVaultUri}secrets/auth0-management-client-secret/)'
+        }
+        {
           name: 'ASPNETCORE_ENVIRONMENT'
           value: environment == 'prod' ? 'Production' : 'Staging'
         }
