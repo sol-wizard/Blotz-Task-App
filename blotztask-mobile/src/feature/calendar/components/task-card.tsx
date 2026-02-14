@@ -153,96 +153,90 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
       entering={MotionAnimations.upEntering}
     >
       <GestureDetector gesture={pan}>
-        <Animated.View style={cardStyle} className="flex-row pt-1">
+        <Animated.View style={cardStyle} className="flex-row pt-1 h-20">
           {/* 1) Card */}
-          <View style={{ width: screenWidth - 32 }} className="h-full">
-            <Pressable
-              onPress={() => navigateToTaskDetails(task)}
-              disabled={isLoading}
-              className="bg-white rounded-2xl overflow-hidden shadow-sm h-full flex-col"
-            >
-              {/* Header row */}
-              <Animated.View
-                style={leftExtrasStyle}
-                className={`flex-col items-start p-4 ${isLoading ? "opacity-70" : ""}`}
-              >
-                <View className="flex-row">
-                  <TasksCheckbox
-                    checked={task.isDone}
-                    disabled={isLoading}
-                    size={30}
-                    className="border-2"
-                    uncheckedColor="#D1D5DB"
-                    onChange={async () => {
-                      toggleTask({ taskId: task.id, selectedDay });
+          <View
+            style={{ width: screenWidth - 32 }}
+            className={`flex-col items-start bg-white p-4 rounded-2xl ${isLoading ? "opacity-70" : ""}`}
+          >
+            {/* Header row */}
+            <Animated.View style={leftExtrasStyle}>
+              <View className="flex-row ">
+                <TasksCheckbox
+                  checked={task.isDone}
+                  disabled={isLoading}
+                  size={30}
+                  className="border-2"
+                  uncheckedColor="#D1D5DB"
+                  onChange={async () => {
+                    toggleTask({ taskId: task.id, selectedDay });
 
-                      if (task.alertTime && new Date(task.alertTime) > new Date()) {
-                        await cancelNotification({ notificationId: task?.notificationId });
+                    if (task.alertTime && new Date(task.alertTime) > new Date()) {
+                      await cancelNotification({ notificationId: task?.notificationId });
+                    }
+                  }}
+                />
+                <View
+                  className="w-[5px] h-10 rounded-full mx-3"
+                  style={{ backgroundColor: labelColor }}
+                />
+
+                <View className="flex-1 flex-row justify-between items-center">
+                  <Pressable onPress={() => navigateToTaskDetails(task)} disabled={isLoading}>
+                    <Text
+                      className={`text-xl font-baloo ${
+                        task.isDone ? "text-neutral-400 line-through" : "text-black"
+                      }`}
+                      style={
+                        task.isDone
+                          ? {
+                              textDecorationLine: "line-through",
+                              textDecorationColor: "#9CA3AF",
+                            }
+                          : undefined
                       }
-                    }}
-                  />
-                  <View
-                    className="w-[5px] h-10 rounded-full mx-3"
-                    style={{ backgroundColor: labelColor }}
-                  />
+                      numberOfLines={1}
+                    >
+                      {task.title}
+                    </Text>
 
-                  <View className="flex-1 flex-row justify-between items-center">
-                    <View className="justify-start flex-1">
-                      <Text
-                        className={`text-xl font-baloo ${
-                          task.isDone ? "text-neutral-400 line-through" : "text-black"
-                        }`}
-                        style={
-                          task.isDone
-                            ? {
-                                textDecorationLine: "line-through",
-                                textDecorationColor: "#9CA3AF",
-                              }
-                            : undefined
-                        }
-                        numberOfLines={1}
-                      >
-                        {task.title}
+                    {timePeriod && (
+                      <Text className="text-[13px] text-neutral-400 font-semibold">
+                        {timePeriod}
                       </Text>
+                    )}
+                  </Pressable>
 
-                      {timePeriod && (
-                        <Text className="text-[13px] text-neutral-400 font-semibold">
-                          {timePeriod}
-                        </Text>
-                      )}
-                    </View>
+                  <View className="flex-row items-center">
+                    {endDate ? (
+                      <Text
+                        className={`${
+                          isOverdue ? "text-warning" : "text-primary"
+                        } font-baloo text-lg`}
+                      >
+                        {format(endDate, "H:mm")}
+                      </Text>
+                    ) : null}
 
-                    <View className="flex-row items-center">
-                      {endDate ? (
-                        <Text
-                          className={`${
-                            isOverdue ? "text-warning" : "text-primary"
-                          } font-baloo text-lg`}
-                        >
-                          {format(endDate, "H:mm")}
-                        </Text>
-                      ) : null}
-
-                      {hasSubtasks && (
-                        <Pressable
-                          onPress={() => setIsExpanded((v) => !v)}
-                          className="ml-2 p-1"
-                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                          disabled={isLoading}
-                        >
-                          <AnimatedChevron color="#9CA3AF" progress={progress} />
-                        </Pressable>
-                      )}
-                    </View>
+                    {hasSubtasks && (
+                      <Pressable
+                        onPress={() => setIsExpanded((v) => !v)}
+                        className="ml-2 p-1"
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        disabled={isLoading}
+                      >
+                        <AnimatedChevron color="#9CA3AF" progress={progress} />
+                      </Pressable>
+                    )}
                   </View>
                 </View>
-                {/* Progress bar shown only when collapsed */}
-                {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
+              </View>
+              {/* Progress bar shown only when collapsed */}
+              {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
 
-                {/* Subtask list */}
-                {hasSubtasks && <SubtaskList task={task} progress={progress} />}
-              </Animated.View>
-            </Pressable>
+              {/* Subtask list */}
+              {hasSubtasks && <SubtaskList task={task} progress={progress} />}
+            </Animated.View>
           </View>
 
           {/* Breakdown Action */}
