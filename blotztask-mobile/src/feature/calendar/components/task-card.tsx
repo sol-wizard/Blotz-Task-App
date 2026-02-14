@@ -34,6 +34,7 @@ const rubberBand = (x: number, limit: number) => {
     const extra = x - limit;
     return limit + extra * 0.25;
   }
+
   return x;
 };
 
@@ -51,6 +52,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   const posthog = usePostHog();
 
   const queryClient = useQueryClient();
+
   const { width: screenWidth } = useWindowDimensions();
 
   // Swipe-to-delete
@@ -58,8 +60,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
 
   // Expand / collapse
   const [isExpanded, setIsExpanded] = useState(false);
+  // measured full height of subtask content
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
 
+  /* Always allow breakdown / subtask generation */
   const hasSubtasks = !!task.subtasks?.length;
 
   const widthInfo = React.useMemo(() => {
@@ -67,7 +71,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     const breakdownWidth = 128; // w-32
     const spacerWidth = 8; // w-2
 
-    const totalWidth = spacerWidth + breakdownWidth + spacerWidth + deleteWidth;
+    // Structure: [Card] [Spacer] ([Breakdown] [Spacer]) [Delete]
+    const totalWidth = spacerWidth + deleteWidth + breakdownWidth + spacerWidth;
 
     return {
       actionWidth: totalWidth,
@@ -75,7 +80,6 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
       openThreshold: totalWidth * 0.5,
       breakdownWidth,
       deleteWidth,
-      spacerWidth,
     };
   }, []);
 
@@ -126,6 +130,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     transform: [{ translateX: taskCardTranslateX.value }],
   }));
 
+  const leftExtrasStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: taskCardTranslateX.value * 1.25 }],
+  }));
+
   const timePeriod = formatDateRange({
     startTime: task.startTime,
     endTime: task.endTime,
@@ -145,109 +153,109 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
       entering={MotionAnimations.upEntering}
     >
       <GestureDetector gesture={pan}>
-        <Animated.View style={cardStyle} className="flex-row items-stretch">
+        <Animated.View style={cardStyle} className="flex-row items-start">
           {/* 1) Card */}
-          <View
-            style={{ width: screenWidth - 32 }}
-            className={`bg-white p-4 rounded-2xl ${isLoading ? "opacity-70" : ""}`}
-          >
-            {/* Header row */}
-            <View className="flex-row items-center">
-              <TasksCheckbox
-                checked={task.isDone}
-                disabled={isLoading}
-                size={30}
-                className="border-2"
-                uncheckedColor="#D1D5DB"
-                onChange={async () => {
-                  toggleTask({ taskId: task.id, selectedDay });
-
-                  if (task.alertTime && new Date(task.alertTime) > new Date()) {
-                    await cancelNotification({ notificationId: task?.notificationId });
-                  }
-                }}
-              />
-
-              <View
-                className="w-[5px] h-10 rounded-full mx-3"
-                style={{ backgroundColor: labelColor }}
-              />
-
-              <View className="flex-1 flex-row items-center justify-between">
-                <Pressable
-                  onPress={() => navigateToTaskDetails(task)}
-                  disabled={isLoading}
-                  className="flex-1 pr-2"
-                >
-                  <Text
-                    className={`text-xl font-baloo ${
-                      task.isDone ? "text-neutral-400 line-through" : "text-black"
-                    }`}
-                    style={
-                      task.isDone
-                        ? {
-                            textDecorationLine: "line-through",
-                            textDecorationColor: "#9CA3AF",
-                          }
-                        : undefined
-                    }
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {task.title}
-                  </Text>
-
-                  {timePeriod ? (
-                    <Text
-                      className="text-[13px] text-neutral-400 font-semibold"
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {timePeriod}
-                    </Text>
-                  ) : null}
-                </Pressable>
-
-                <View className="flex-row items-center flex-shrink-0">
-                  {endDate ? (
-                    <Text
-                      className={`${isOverdue ? "text-warning" : "text-primary"} font-baloo text-lg`}
-                    >
-                      {format(endDate, "H:mm")}
-                    </Text>
-                  ) : null}
-
-                  {hasSubtasks ? (
-                    <Pressable
-                      onPress={() => setIsExpanded((v) => !v)}
-                      className="ml-2 p-1"
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          <View style={{ width: screenWidth - 32 }}>
+            <Pressable
+              onPress={() => navigateToTaskDetails(task)}
+              disabled={isLoading}
+              className="bg-white rounded-2xl shadow-sm overflow-hidden"
+            >
+              <View className="flex-col">
+                {/* Header row */}
+                <View className={`flex-row items-center p-5 ${isLoading ? "opacity-70" : ""}`}>
+                  <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
+                    <TasksCheckbox
+                      checked={task.isDone}
                       disabled={isLoading}
-                    >
-                      <AnimatedChevron color="#9CA3AF" progress={progress} />
-                    </Pressable>
-                  ) : null}
+                      size={30}
+                      className="border-2"
+                      uncheckedColor="#D1D5DB"
+                      onChange={async () => {
+                        toggleTask({ taskId: task.id, selectedDay });
+
+                        if (task.alertTime && new Date(task.alertTime) > new Date()) {
+                          await cancelNotification({ notificationId: task?.notificationId });
+                        }
+                      }}
+                    />
+                    <View
+                      className="w-[5px] h-10 rounded-full mx-3"
+                      style={{ backgroundColor: labelColor }}
+                    />
+                  </Animated.View>
+
+                  <View className="flex-1 flex-row justify-between items-center">
+                    <View className="justify-start pt-0 flex-1">
+                      <View className="flex-row items-center">
+                        <Text
+                          className={`text-xl font-baloo ${
+                            task.isDone ? "text-neutral-400 line-through" : "text-black"
+                          }`}
+                          style={
+                            task.isDone
+                              ? {
+                                  textDecorationLine: "line-through",
+                                  textDecorationColor: "#9CA3AF",
+                                }
+                              : undefined
+                          }
+                          numberOfLines={1}
+                        >
+                          {task.title}
+                        </Text>
+                      </View>
+
+                      {timePeriod && (
+                        <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
+                          {timePeriod}
+                        </Text>
+                      )}
+                    </View>
+
+                    <View className="flex-row items-center">
+                      {endDate ? (
+                        <Text
+                          className={`${
+                            isOverdue ? "text-warning" : "text-primary"
+                          } font-baloo text-lg`}
+                        >
+                          {format(endDate, "H:mm")}
+                        </Text>
+                      ) : null}
+
+                      {hasSubtasks && (
+                        <Pressable
+                          onPress={() => setIsExpanded((v) => !v)}
+                          className="ml-2 p-1"
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          disabled={isLoading}
+                        >
+                          <AnimatedChevron color="#9CA3AF" progress={progress} />
+                        </Pressable>
+                      )}
+                    </View>
+                  </View>
                 </View>
+
+                {/* Progress bar shown only when collapsed */}
+                {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
+
+                {/* Subtask list */}
+                {hasSubtasks && <SubtaskList task={task} progress={progress} />}
               </View>
-            </View>
-
-            {/* Progress bar shown only when collapsed */}
-            {hasSubtasks ? <SubtaskProgressBar subtasks={task.subtasks} /> : null}
-
-            {/* Subtask list */}
-            {hasSubtasks ? <SubtaskList task={task} progress={progress} /> : null}
+            </Pressable>
           </View>
 
-          {/* spacer */}
           <View className="w-2" />
 
           {/* Breakdown Action */}
-          <View className="w-32 self-stretch" pointerEvents="auto">
+          <View className="w-32" pointerEvents="auto">
             <Pressable
               onPress={handleBreakdown}
               disabled={isLoading}
               android_ripple={{ color: "#DBEAFE", borderless: false }}
-              className={`flex-1 rounded-xl bg-blue-500/10 items-center justify-center ${
+              className={`w-32 h-20 rounded-xl bg-blue-500/10 items-center justify-center ${
                 isBreakingDown || isReplacingSubtasks ? "opacity-50" : ""
               }`}
             >
@@ -258,12 +266,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
               )}
             </Pressable>
           </View>
-
-          {/* spacer */}
           <View className="w-2" />
 
-          {/* Delete action */}
-          <View className="w-14 self-stretch" pointerEvents="auto">
+          {/* 2) Delete action */}
+          <View className="w-14" pointerEvents={"auto"}>
             <Pressable
               onPress={async () => {
                 if (isLoading) return;
@@ -277,7 +283,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
               }}
               disabled={isLoading}
               android_ripple={{ color: "#FEE2E2", borderless: false }}
-              className={`flex-1 rounded-xl bg-red-500/10 items-center justify-center ${
+              className={`w-14 h-20 rounded-xl bg-red-500/10 items-center justify-center ${
                 isDeleting ? "opacity-50" : ""
               }`}
             >
