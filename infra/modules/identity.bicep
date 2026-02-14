@@ -25,7 +25,7 @@ resource fic 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentity
   name: 'fic-github-${projectName}-${environment}'
   properties: {
     issuer: 'https://token.actions.githubusercontent.com'
-    subject: 'repo:${githubRepo}:environment:${environment == 'prod' ? 'Production' : 'Staging'}'
+    subject: 'repo:${githubRepo}:environment:${environment == 'prod' ? 'prod' : 'Staging'}'
     audiences: [
       'api://AzureADTokenExchange'
     ]

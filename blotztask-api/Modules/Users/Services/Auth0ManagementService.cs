@@ -14,6 +14,8 @@ public interface IAuth0ManagementService
 
     Task<User> GetUserAsync(string auth0UserId,
         CancellationToken ct = default);
+
+    Task DeleteUserAsync(string auth0UserId, CancellationToken ct = default);
 }
 
 public class Auth0ManagementService : IAuth0ManagementService
@@ -94,6 +96,29 @@ public class Auth0ManagementService : IAuth0ManagementService
             throw;
         }
     }
+
+    public async Task DeleteUserAsync(string auth0UserId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(auth0UserId))
+            throw new ArgumentException("auth0UserId is required", nameof(auth0UserId));
+
+        var token = await GetManagementTokenAsync(ct);
+        var managementClient = new ManagementApiClient(
+            token,
+            new Uri(_settings.Audience));
+
+        try
+        {
+            await managementClient.Users.DeleteAsync(auth0UserId, ct);
+            _logger.LogInformation("Deleted Auth0 user {Auth0UserId}", auth0UserId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete Auth0 user {Auth0UserId}", auth0UserId);
+            throw;
+        }
+    }
+
 
     private async Task<string> GetManagementTokenAsync(CancellationToken ct)
     {
