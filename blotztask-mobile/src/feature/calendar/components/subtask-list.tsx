@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text } from "react-native";
 import React from "react";
 import Animated, {
   DerivedValue,
@@ -25,6 +25,7 @@ const SubtaskList = ({ task, progress }: Props) => {
   const subtaskClipStyle = useAnimatedStyle(() => ({
     height: interpolate(progress.value, [0, 1], [0, contentHeight.value], Extrapolation.CLAMP),
     opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
+    marginTop: interpolate(progress.value, [0, 1], [0, 8], Extrapolation.CLAMP),
   }));
 
   const handleToggleSubtask = async (subtaskId: number) => {
@@ -41,37 +42,37 @@ const SubtaskList = ({ task, progress }: Props) => {
   return (
     <Animated.View style={[{ overflow: "hidden" }, subtaskClipStyle]}>
       {/* This inner content is what we measure */}
-      <View className="px-5 pb-4" onLayout={onSubtaskContentLayout}>
+      <View className="pr-2 pl-1" onLayout={onSubtaskContentLayout}>
         {task.subtasks?.map((subtask: SubtaskDTO) => (
-          <Pressable
+          <View
             key={subtask.subTaskId}
-            onPress={() => handleToggleSubtask(subtask.subTaskId)}
-            disabled={isTogglingSubtaskStatus}
-            className={`flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
+            className="flex-row w-full pt-2 justify-between items-start"
           >
-            <TasksCheckbox
-              checked={subtask.isDone}
-              disabled={isTogglingSubtaskStatus}
-              size={24}
-              className="mr-3"
-              onChange={() => handleToggleSubtask(subtask.subTaskId)}
-            />
+            <View className="flex-row">
+              <TasksCheckbox
+                checked={subtask.isDone}
+                disabled={isTogglingSubtaskStatus}
+                size={20}
+                className="mr-3 border"
+                onChange={() => handleToggleSubtask(subtask.subTaskId)}
+              />
 
-            <Text
-              className={`flex-1 text-base font-baloo ${
-                subtask.isDone ? "text-gray-400 line-through opacity-60" : "text-gray-700"
-              }`}
-              numberOfLines={1}
-            >
-              {subtask.title}
-            </Text>
+              <Text
+                className={`text-base font-baloo ${
+                  subtask.isDone ? "text-gray-400 line-through opacity-60" : "text-gray-700"
+                }`}
+                numberOfLines={1}
+              >
+                {subtask.title}
+              </Text>
+            </View>
 
             {subtask.duration && (
-              <Text className="text-sm text-gray-400 font-baloo ml-2">
+              <Text className="text-sm text-gray-400 font-baloo ml-2 text-right">
                 {convertDurationToText(subtask.duration)}
               </Text>
             )}
-          </Pressable>
+          </View>
         ))}
       </View>
     </Animated.View>

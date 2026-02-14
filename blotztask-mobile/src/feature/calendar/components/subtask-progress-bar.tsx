@@ -32,7 +32,7 @@ export const SubtaskProgressBar = ({ subtasks }: SubtaskProgressBarProps) => {
   const completed = subtasks.filter((s) => s.isDone).length;
 
   return (
-    <View className="flex-row gap-[6px] h-[8px] mx-5 mb-5">
+    <View className="flex-row gap-[6px] h-[6px] mt-2">
       {Array.from({ length: total }).map((_, index) => (
         <Segment key={index} filled={index < completed} />
       ))}
