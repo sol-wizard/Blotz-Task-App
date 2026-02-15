@@ -38,11 +38,7 @@ export default function TasksCheckbox({
     <Pressable
       onPress={handlePress}
       disabled={disabled}
-      className={[
-        "items-center justify-center border-2",
-        disabled ? "opacity-50" : "",
-        className,
-      ].join(" ")}
+      className={["items-center justify-center", disabled ? "opacity-50" : "", className].join(" ")}
       style={[
         {
           width: size,
