@@ -17,12 +17,13 @@ export const taskFormSchema = z
     (data) => {
       const start = combineDateTime(data.startDate, data.startTime);
       const end = combineDateTime(data.endDate, data.endTime);
-      if (!start || !end) return true;
+      if (!start || !end) return false;
 
       return isBefore(start, end) || isEqual(start, end);
     },
     {
       message: "Start time cannot be later than end time",
+      path: ["endTime"],
     },
   );
 
