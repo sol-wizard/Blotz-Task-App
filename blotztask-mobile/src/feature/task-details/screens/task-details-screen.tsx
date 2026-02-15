@@ -41,12 +41,8 @@ export default function TaskDetailsScreen() {
       dto: {
         title: selectedTask.title,
         description: newDescription,
-        startTime: selectedTask.startTime
-          ? convertToDateTimeOffset(new Date(selectedTask.startTime))
-          : undefined,
-        endTime: selectedTask.endTime
-          ? convertToDateTimeOffset(new Date(selectedTask.endTime))
-          : undefined,
+        startTime: convertToDateTimeOffset(new Date(selectedTask.startTime)),
+        endTime: convertToDateTimeOffset(new Date(selectedTask.endTime)),
         labelId: selectedTask.label?.labelId,
         timeType: selectedTask.timeType ?? null,
       },
@@ -129,18 +125,11 @@ export default function TaskDetailsScreen() {
             />
           </View>
 
-          {selectedTask.startTime && selectedTask.startTime === selectedTask.endTime && (
+          {selectedTask.startTime === selectedTask.endTime ? (
             <TaskSingleTimeCard startTime={selectedTask.startTime} />
+          ) : (
+            <TaskRangeTimeCard startTime={selectedTask.startTime} endTime={selectedTask.endTime} />
           )}
-
-          {selectedTask.startTime &&
-            selectedTask.endTime &&
-            selectedTask.startTime !== selectedTask.endTime && (
-              <TaskRangeTimeCard
-                startTime={selectedTask.startTime}
-                endTime={selectedTask.endTime}
-              />
-            )}
         </View>
       </TouchableWithoutFeedback>
 
