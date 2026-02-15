@@ -156,6 +156,17 @@ export default function NotesScreen() {
               onPressTask={handlePressTask}
             />
           )}
+          {!showLoading && notesSearchResult.length === 0 && ( 
+            <View className="flex-1 items-center justify-center px-10">
+              <Text className="text-center text-black font-balooBold text-2xl">
+                {t("emptyNoteMessage.encouragingTitle")}
+              </Text>
+              <Text className="text-center text-black font-baloo text-xl mt-2">
+                {t("emptyNoteMessage.encouragingDescription")}
+              </Text>
+              </View>
+            )}  
+              
         </View>
       </TouchableWithoutFeedback>
     </SafeAreaView>
