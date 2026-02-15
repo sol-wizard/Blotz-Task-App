@@ -14,7 +14,8 @@
     "selectDate": "Select Date",
     "selectTime": "Select Time",
     "start": "Start",
-    "end": "End"
+    "end": "End",
+    "invalidTimeRange": "Start time cannot be later than end time"
   },
   "details": {
     "notFound": "Selected Task not found.",

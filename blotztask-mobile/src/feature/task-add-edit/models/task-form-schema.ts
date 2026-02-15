@@ -22,7 +22,7 @@ export const taskFormSchema = z
       return isBefore(start, end) || isEqual(start, end);
     },
     {
-      message: "Start time cannot be later than end time",
+      message: "form.invalidTimeRange",
       path: ["endTime"],
     },
   );

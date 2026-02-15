@@ -180,7 +180,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
           {formState.errors.endTime && (
             <Text className="text-red-500 text-sm mb-4 font-baloo">
-              {formState.errors.endTime.message}
+              {t(formState.errors.endTime.message || "")}
             </Text>
           )}
           {isActiveTab === "reminder" && <ReminderTab control={control} />}
