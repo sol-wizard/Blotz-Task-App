@@ -23,10 +23,10 @@ export function OnboardingNoteSection() {
             />
 
             <Text className="text-3xl font-balooBold text-black text-center">
-              {t("note.title")}
+              {t("notes.title")}
             </Text>
             <Text className="text-base font-baloo text-black/40 text-center mt-2">
-              {t("note.subtitle")}
+              {t("notes.subtitle")}
             </Text>
           </View>
         </View>
