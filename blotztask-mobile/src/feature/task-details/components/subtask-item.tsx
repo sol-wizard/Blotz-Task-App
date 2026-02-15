@@ -53,7 +53,12 @@ export default function SubtaskItem({
           <MaterialIcons name="delete-outline" size={20} color={"#3D8DE0"} />
         </TouchableOpacity>
       ) : (
-        <TasksCheckbox checked={isChecked} onChange={() => handleToggle()} />
+        <TasksCheckbox
+          checked={isChecked}
+          onChange={() => handleToggle()}
+          size={20}
+          className="border"
+        />
       )}
       <View className="flex-1 flex-row items-center justify-between ml-3">
         <Text
