@@ -141,8 +141,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     selectedDay,
   });
 
-  const endDate = task.endTime ? parseISO(task.endTime) : null;
-  const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
+  const endDate = parseISO(task.endTime);
+  const isOverdue = endDate.getTime() <= new Date().getTime() && !task.isDone;
 
   const labelColor = task.label?.color ?? theme.colors.disabled;
 
@@ -216,15 +216,13 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                       </View>
 
                       <View className="flex-row items-center">
-                        {endDate ? (
-                          <Text
-                            className={`${
-                              isOverdue ? "text-warning" : "text-primary"
-                            } font-baloo text-lg`}
-                          >
-                            {format(endDate, "H:mm")}
-                          </Text>
-                        ) : null}
+                        <Text
+                          className={`${
+                            isOverdue ? "text-warning" : "text-primary"
+                          } font-baloo text-lg`}
+                        >
+                          {format(endDate, "H:mm")}
+                        </Text>
 
                         {hasSubtasks && (
                           <Pressable
