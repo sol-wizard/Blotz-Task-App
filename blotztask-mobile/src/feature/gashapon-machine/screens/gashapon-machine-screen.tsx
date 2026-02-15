@@ -30,7 +30,6 @@ export default function GashaponMachineScreen() {
   const addNoteToTask = useAddNoteToTask();
   const posthog = usePostHog();
   const { deleteNote } = useNotesMutation();
-
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
 
   useEffect(() => {
@@ -91,7 +90,6 @@ export default function GashaponMachineScreen() {
           onCancel={handleCancel}
         />
         {!isAllLoaded && <LoadingScreen />}
-
         <View
           style={{
             width: 360,
