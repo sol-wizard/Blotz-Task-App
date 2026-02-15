@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Image, Text } from "react-native";
+import { View, Image } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useGashaponMachineConfig } from "@/feature/gashapon-machine/hooks/useGashaponMachineConfig";
@@ -42,9 +42,6 @@ export default function GashaponMachineScreen() {
   const MAX_STARS = 30;
 
   const limitedNotes = useMemo(() => notesSearchResult.slice(0, MAX_STARS), [notesSearchResult]);
-
-  const isEmpty = limitedNotes.length === 0;
-  const { t } = useTranslation("notes");
 
   const handleDoNow = () => {
     if (!randomNote) return;
