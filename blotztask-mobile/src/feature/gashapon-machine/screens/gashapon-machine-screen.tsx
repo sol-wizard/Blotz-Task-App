@@ -18,7 +18,6 @@ import { NoteDTO } from "@/feature/notes/models/note-dto";
 import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
 import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
-import { useTranslation } from "react-i18next";
 
 export default function GashaponMachineScreen() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
