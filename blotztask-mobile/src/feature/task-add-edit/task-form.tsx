@@ -27,6 +27,7 @@ import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { theme } from "@/shared/constants/theme";
 
 type TaskFormProps =
   | {
@@ -155,6 +156,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 multiline: false,
                 blurOnSubmit: true,
                 returnKeyType: "done",
+                placeholderTextColor: theme.colors.disabled,
               }}
             />
             {formState.errors.title && (
@@ -173,6 +175,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
               placeholder={t("form.addNote")}
               control={control}
               className="font-baloo text-lg text-primary"
+              inputProps={{
+                placeholderTextColor: theme.colors.primary,
+              }}
             />
           </Animated.View>
 
