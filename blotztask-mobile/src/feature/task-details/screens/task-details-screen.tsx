@@ -95,7 +95,7 @@ export default function TaskDetailsScreen() {
       >
         <View className="pb-6 px-8">
           <View className="flex-row items-center justify-between mb-4 mt-6">
-            <View className="flex-1 flex-row flex-wrap items-center pr-5">
+            <View className="flex-1 flex-row items-center gap-2">
               <View className="px-3 py-1 rounded-xl border border-black">
                 <Text className={`text-sm font-medium text-black`}>
                   {selectedTask.isDone ? t("common:status.done") : t("common:status.todo")}
@@ -103,7 +103,7 @@ export default function TaskDetailsScreen() {
               </View>
 
               {selectedTask.label && (
-                <View className="ml-2 px-3 py-1 rounded-xl border border-black">
+                <View className="px-3 py-1 rounded-xl border border-black">
                   <Text className="text-sm font-medium text-black">
                     {getTranslatedLabelName(selectedTask.label.name)}
                   </Text>
