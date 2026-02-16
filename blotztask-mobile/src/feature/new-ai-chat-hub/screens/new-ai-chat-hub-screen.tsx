@@ -12,6 +12,7 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
+import { sendVoiceFile } from "../services/fast-transcription-service";
 
 const recorderOptions = {
   extension: ".wav",
@@ -85,6 +86,17 @@ export default function NewAiChatHubScreen() {
     setIsRecording(false);
     const uri = audioRecorder.uri;
     console.log("Recording stopped and stored at", uri);
+
+    if (!uri) {
+      return;
+    }
+
+    try {
+      const transcriptionText = await sendVoiceFile(uri);
+      console.log("Fast transcription result:", transcriptionText);
+    } catch (error) {
+      console.error("Failed to transcribe recorded audio", error);
+    }
   }
 
   return (
