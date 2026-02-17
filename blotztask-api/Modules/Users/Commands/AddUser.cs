@@ -169,21 +169,6 @@ public class SyncUserCommandHandler(
             return new AddUserResult { Id = row.Id, Auth0UserId = row.Auth0UserId };
         }
 
-        existing.Email = email;
-        existing.DisplayName = displayName;
-        existing.PictureUrl = pictureUrl;
-        existing.UpdatedAt = utcNow;
-
-        logger.LogInformation(
-            "Persisting updates to AppUser (Id: {Id}, Auth0Id: {Auth0UserId})",
-            existing.Id, existing.Auth0UserId);
-
-        await db.SaveChangesAsync(ct);
-
-        logger.LogInformation(
-            "♻ Updated AppUser (Id: {Id}, Auth0Id: {Auth0UserId})",
-            existing.Id, existing.Auth0UserId);
-
         return new AddUserResult { Id = existing.Id, Auth0UserId = existing.Auth0UserId };
     }
 
