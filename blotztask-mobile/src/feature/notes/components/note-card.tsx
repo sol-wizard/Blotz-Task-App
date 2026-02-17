@@ -18,6 +18,7 @@ export const NoteCard = ({
   isDeleting,
   onDelete,
   onPressCard,
+  onAddToTask,
 }: {
   note: NoteDTO;
   isToggled: boolean;
@@ -25,6 +26,7 @@ export const NoteCard = ({
   isDeleting: boolean;
   onDelete: (t: NoteDTO) => void;
   onPressCard: (task: NoteDTO) => void;
+  onAddToTask?: (note: NoteDTO) => void;
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const { t } = useTranslation("notes");
@@ -84,7 +86,11 @@ export const NoteCard = ({
             </View>
           </Pressable>
 
-          <Pressable onPress={() => handleEstimateTime(note)}>
+          <Pressable
+            onPress={() => {
+              onAddToTask?.(note);
+            }}
+          >
             <View className="w-8 h-8 bg-[#E3EFFE] rounded-xl items-center justify-center ml-2">
               <MaterialCommunityIcons name="plus" color="#3D8DE0" size={18} />
             </View>
