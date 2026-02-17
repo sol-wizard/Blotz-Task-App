@@ -9,9 +9,9 @@ using Microsoft.Extensions.Options;
 [Authorize]
 public class SpeechController : ControllerBase
 {
+    private readonly IFastTranscriptionService _fastTranscriptionService;
     private readonly SpeechTokenSettings _settings;
     private readonly SpeechTokenService _speech;
-    private readonly IFastTranscriptionService _fastTranscriptionService;
 
     public SpeechController(
         SpeechTokenService speech,
@@ -32,18 +32,25 @@ public class SpeechController : ControllerBase
         return Ok(new
         {
             token,
-            region = _settings.Region,
+            region = _settings.Region
         });
     }
 
     [HttpPost("fast-transcribe")]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> FastTranscribe([FromForm(Name = "audio")] IFormFile wavFile, CancellationToken ct)
+    public async Task<IActionResult> FastTranscribe([FromForm(Name = "audio")] IFormFile wavFile,
+        [FromQuery] string conversationId, CancellationToken ct)
     {
         if (wavFile == null || wavFile.Length == 0)
             return BadRequest("A WAV file is required in form field 'audio'.");
 
-        var text = await _fastTranscriptionService.FastTranscribeWavAsync(wavFile, ct);
+        var fastTranscriptionRequest = new FastTranscriptionRequest
+        {
+            wavFile = wavFile,
+            conversationId = conversationId
+        };
+
+        var text = await _fastTranscriptionService.FastTranscribeWavAsync(fastTranscriptionRequest, ct);
 
         return Ok(new { text });
     }

@@ -37,12 +37,12 @@ public class AiTaskGenerateChatHub : Hub
 
         var timeZone = TimeZoneInfo.Utc;
         var timeZoneId = httpContext?.Request.Query["timeZone"].ToString();
+        var conversationId = httpContext?.Request.Query["conversationId"].ToString();
         try
         {
-            if (!string.IsNullOrWhiteSpace(timeZoneId))
-            {
-                timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-            }
+            if (!string.IsNullOrWhiteSpace(timeZoneId)) timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            if (!string.IsNullOrWhiteSpace(conversationId))
+                await Groups.AddToGroupAsync(Context.ConnectionId, conversationId);
         }
         catch (Exception ex)
         {
@@ -65,6 +65,7 @@ public class AiTaskGenerateChatHub : Hub
         _chatHistoryManagerService.RemoveConversation();
         await base.OnDisconnectedAsync(exception);
     }
+
     //TODO: Do we need this user paramter in this function? check and test frontend after clean up
     public async Task SendMessage(string user, string message)
     {

@@ -1,14 +1,22 @@
+using System.ComponentModel.DataAnnotations;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using BlotzTask.Modules.SpeechToText.Dtos;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
 namespace BlotzTask.Modules.SpeechToText.Services;
 
+public class FastTranscriptionRequest
+{
+    [Required] public string conversationId { get; set; }
+    [Required] public IFormFile wavFile { get; set; }
+}
+
 public interface IFastTranscriptionService
 {
-    Task<string> FastTranscribeWavAsync(IFormFile wavFile, CancellationToken ct = default);
+    Task<string> FastTranscribeWavAsync(FastTranscriptionRequest fastTranscriptionRequest,
+        CancellationToken ct = default);
 }
 
 public sealed class FastTranscriptionService : IFastTranscriptionService
@@ -23,8 +31,10 @@ public sealed class FastTranscriptionService : IFastTranscriptionService
         _settings = settings.Value;
     }
 
-    public async Task<string> FastTranscribeWavAsync(IFormFile wavFile, CancellationToken ct = default)
+    public async Task<string> FastTranscribeWavAsync(FastTranscriptionRequest fastTranscriptionRequest,
+        CancellationToken ct = default)
     {
+        var wavFile = fastTranscriptionRequest.wavFile;
         if (wavFile == null || wavFile.Length == 0)
             throw new ArgumentException("WAV file is required.", nameof(wavFile));
 
@@ -36,7 +46,7 @@ public sealed class FastTranscriptionService : IFastTranscriptionService
 
         await using var fileStream = wavFile.OpenReadStream();
         using var audioContent = new StreamContent(fileStream);
-        audioContent.Headers.ContentType = new("audio/wav");
+        audioContent.Headers.ContentType = new MediaTypeHeaderValue("audio/wav");
 
         const string definitionJson = "{\"locales\":[]}";
         using var definitionContent = new StringContent(definitionJson, Encoding.UTF8, "application/json");
@@ -50,16 +60,12 @@ public sealed class FastTranscriptionService : IFastTranscriptionService
         var body = await response.Content.ReadAsStringAsync(ct);
 
         if (!response.IsSuccessStatusCode)
-        {
             throw new InvalidOperationException(
                 $"Fast transcription request failed: {(int)response.StatusCode} {response.ReasonPhrase}. Body: {body}");
-        }
 
         var text = ExtractFullResult(body);
         if (string.IsNullOrWhiteSpace(text))
-        {
             throw new InvalidOperationException($"Transcription response did not contain text. Body: {body}");
-        }
 
         Console.WriteLine(text);
         return text;
