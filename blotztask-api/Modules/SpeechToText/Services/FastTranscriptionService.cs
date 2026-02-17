@@ -3,14 +3,16 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using BlotzTask.Modules.SpeechToText.Dtos;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace BlotzTask.Modules.SpeechToText.Services;
 
 public class FastTranscriptionRequest
 {
-    [Required] public string conversationId { get; set; }
-    [Required] public IFormFile wavFile { get; set; }
+    [Required] public Guid UserId { get; set; }
+    [Required] public string ConversationId { get; set; }
+    [Required] public IFormFile WavFile { get; set; }
 }
 
 public interface IFastTranscriptionService
@@ -23,18 +25,23 @@ public sealed class FastTranscriptionService : IFastTranscriptionService
 {
     private const string ApiVersion = "2025-10-15";
     private readonly HttpClient _http;
+    private readonly ILogger<FastTranscriptionService> _logger;
+    private readonly IChatMessageProcessor _processor;
     private readonly SpeechTokenSettings _settings;
 
-    public FastTranscriptionService(HttpClient http, IOptions<SpeechTokenSettings> settings)
+    public FastTranscriptionService(HttpClient http, IOptions<SpeechTokenSettings> settings,
+        IChatMessageProcessor processor, ILogger<FastTranscriptionService> logger)
     {
         _http = http;
         _settings = settings.Value;
+        _processor = processor;
+        _logger = logger;
     }
 
     public async Task<string> FastTranscribeWavAsync(FastTranscriptionRequest fastTranscriptionRequest,
         CancellationToken ct = default)
     {
-        var wavFile = fastTranscriptionRequest.wavFile;
+        var wavFile = fastTranscriptionRequest.WavFile;
         if (wavFile == null || wavFile.Length == 0)
             throw new ArgumentException("WAV file is required.", nameof(wavFile));
 
@@ -67,7 +74,22 @@ public sealed class FastTranscriptionService : IFastTranscriptionService
         if (string.IsNullOrWhiteSpace(text))
             throw new InvalidOperationException($"Transcription response did not contain text. Body: {body}");
 
-        Console.WriteLine(text);
+        _logger.LogInformation("Transcription generated for conversation {ConversationId}", fastTranscriptionRequest.ConversationId);
+
+        try
+        {
+            await _processor.ProcessUserTextAsync(fastTranscriptionRequest.UserId,
+                fastTranscriptionRequest.ConversationId!,
+                text, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to process transcription for user {UserId} and conversation {ConversationId}",
+                fastTranscriptionRequest.UserId,
+                fastTranscriptionRequest.ConversationId);
+        }
+        
         return text;
     }
 

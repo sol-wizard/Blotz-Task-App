@@ -43,11 +43,15 @@ public class SpeechController : ControllerBase
     {
         if (wavFile == null || wavFile.Length == 0)
             return BadRequest("A WAV file is required in form field 'audio'.");
+        
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
         var fastTranscriptionRequest = new FastTranscriptionRequest
         {
-            wavFile = wavFile,
-            conversationId = conversationId
+            UserId = userId,
+            WavFile = wavFile,
+            ConversationId = conversationId
         };
 
         var text = await _fastTranscriptionService.FastTranscribeWavAsync(fastTranscriptionRequest, ct);
