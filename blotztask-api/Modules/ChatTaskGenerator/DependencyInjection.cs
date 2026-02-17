@@ -8,6 +8,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
         services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
+        services.AddScoped<IChatMessageProcessor, ChatMessageProcessor>();
 
         return services;
     }
