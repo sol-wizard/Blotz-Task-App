@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   AudioQuality,
@@ -13,6 +13,15 @@ import {
   useAudioRecorderState,
 } from "expo-audio";
 import { sendVoiceFile } from "../services/fast-transcription-service";
+import { useAiTaskGenerator } from "@/feature/ai-task-generate/hooks/useAiTaskGenerator";
+import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-task-generate/utils/map-extracted-to-task-dto";
+import { useAllLabels } from "@/shared/hooks/useAllLabels";
+import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
+
+const SILENCE_THRESHOLD_DB = -45;
+const SPEECH_THRESHOLD_DB = -35;
+const SILENCE_HOLD_MS = 900;
+const MIN_CHUNK_DURATION_MS = 1200;
 
 const recorderOptions = {
   extension: ".wav",
@@ -31,73 +40,177 @@ const recorderOptions = {
   web: {},
 } satisfies RecordingOptions;
 
+function GeneratedTaskTitles({ tasks }: { tasks?: AiTaskDTO[] }) {
+  if (!tasks?.length) {
+    return null;
+  }
+
+  return (
+    <View className="mt-2 mb-2 gap-2">
+      {tasks.map((task, index) => (
+        <View key={task.id} className="rounded-xl bg-white/20 border border-white/30 px-3 py-2">
+          <Text selectable className="text-white font-baloo text-base">
+            {index + 1}. {task.title}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export default function NewAiChatHubScreen() {
   const { height } = useWindowDimensions();
-  const [isRecording, setIsRecording] = useState<boolean>(true);
   const audioRecorder = useAudioRecorder(recorderOptions);
-  const recorderState = useAudioRecorderState(audioRecorder);
+  const recorderState = useAudioRecorderState(audioRecorder, 250);
+  const { labels } = useAllLabels();
+
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const setModalType = () => {
+    return;
+  };
+
+  const { aiGeneratedMessage } = useAiTaskGenerator({
+    setIsAiGenerating,
+    setModalType,
+  });
+
+  const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map((task) =>
+    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
+  );
+
+  const isScreenActiveRef = useRef(false);
+  const isSendingAudioRef = useRef(false);
+  const silenceStartedAtRef = useRef<number | null>(null);
+  const speechDetectedInChunkRef = useRef(false);
+
+  const startRecording = async () => {
+    const status = audioRecorder.getStatus();
+    if (status.isRecording) {
+      return;
+    }
+    await setAudioModeAsync({
+      allowsRecording: true,
+      playsInSilentMode: true,
+    });
+
+    await audioRecorder.prepareToRecordAsync();
+    audioRecorder.record();
+    speechDetectedInChunkRef.current = false;
+    silenceStartedAtRef.current = null;
+    console.log("Continuous recording started");
+  };
+
+  const sendChunkAndContinue = async (reason: "silence" | "exit") => {
+    if (isSendingAudioRef.current) {
+      return;
+    }
+
+    const status = audioRecorder.getStatus();
+    if (!status.isRecording) {
+      return;
+    }
+
+    if (reason === "silence" && status.durationMillis < MIN_CHUNK_DURATION_MS) {
+      return;
+    }
+
+    isSendingAudioRef.current = true;
+    silenceStartedAtRef.current = null;
+
+    try {
+      await audioRecorder.stop();
+      const uri = audioRecorder.uri;
+
+      if (
+        uri &&
+        status.durationMillis >= MIN_CHUNK_DURATION_MS &&
+        speechDetectedInChunkRef.current
+      ) {
+        const transcriptionText = await sendVoiceFile(uri);
+        console.log("Fast transcription result:", transcriptionText);
+      }
+    } catch (error) {
+      console.error("Failed to process recording chunk", error);
+    } finally {
+      isSendingAudioRef.current = false;
+    }
+
+    if (reason === "silence" && isScreenActiveRef.current) {
+      try {
+        await startRecording();
+      } catch (error) {
+        console.error("Failed to restart continuous recording", error);
+      }
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      isScreenActiveRef.current = true;
+
+      async function startOnFocus() {
+        try {
+          const { granted } = await requestRecordingPermissionsAsync();
+          if (!granted) {
+            console.warn("Recording permission not granted");
+            return;
+          }
+          await startRecording();
+        } catch (error) {
+          console.error("Failed to start recording on focus", error);
+        }
+      }
+
+      void startOnFocus();
+
+      return () => {
+        isScreenActiveRef.current = false;
+        silenceStartedAtRef.current = null;
+        void sendChunkAndContinue("exit");
+      };
+    }, []),
+  );
 
   useEffect(() => {
-    async function requestPermission() {
-      const { granted } = await requestRecordingPermissionsAsync();
-      if (granted) {
-        console.log("Permission granted");
-      }
-    }
-
-    requestPermission();
-    if (!isRecording) {
+    if (!isScreenActiveRef.current || !recorderState.isRecording || isSendingAudioRef.current) {
+      silenceStartedAtRef.current = null;
       return;
     }
-    startRecording();
-  }, [isRecording]);
 
-  async function startRecording() {
-    try {
-      if (recorderState.isRecording) {
+    const metering = recorderState.metering;
+    if (metering == null) {
+      return;
+    }
+
+    // Mark this chunk as "has voice" once level reaches speech threshold.
+    if (metering > SPEECH_THRESHOLD_DB) {
+      speechDetectedInChunkRef.current = true;
+      silenceStartedAtRef.current = null;
+      return;
+    }
+
+    // If user has not spoken yet in this chunk, don't silence-flush.
+    if (!speechDetectedInChunkRef.current) {
+      silenceStartedAtRef.current = null;
+      return;
+    }
+
+    const now = Date.now();
+    if (metering <= SILENCE_THRESHOLD_DB) {
+      if (silenceStartedAtRef.current == null) {
+        silenceStartedAtRef.current = now;
         return;
       }
-      await setAudioModeAsync({
-        allowsRecording: true,
-        playsInSilentMode: true,
-      });
 
-      await audioRecorder.prepareToRecordAsync();
-      audioRecorder.record();
-      console.log("Starting recording..");
-
-      setIsRecording(true);
-      console.log("Recording started");
-    } catch (err) {
-      console.error("Failed to start recording", err);
-    }
-  }
-
-  async function stopRecording() {
-    if (!audioRecorder) {
-      return;
-    }
-    if (!recorderState.isRecording) {
-      return;
-    }
-    console.log("Stopping recording..");
-
-    await audioRecorder.stop();
-    setIsRecording(false);
-    const uri = audioRecorder.uri;
-    console.log("Recording stopped and stored at", uri);
-
-    if (!uri) {
+      if (now - silenceStartedAtRef.current >= SILENCE_HOLD_MS) {
+        silenceStartedAtRef.current = null;
+        void sendChunkAndContinue("silence");
+      }
       return;
     }
 
-    try {
-      const transcriptionText = await sendVoiceFile(uri);
-      console.log("Fast transcription result:", transcriptionText);
-    } catch (error) {
-      console.error("Failed to transcribe recorded audio", error);
-    }
-  }
+    silenceStartedAtRef.current = null;
+  }, [sendChunkAndContinue, recorderState.isRecording, recorderState.metering]);
 
   return (
     <View className="flex-1 bg-transparent">
@@ -126,57 +239,13 @@ export default function NewAiChatHubScreen() {
               <MaterialCommunityIcons name="chevron-down" size={30} color="#FFFFFF" />
             </Pressable>
           </View>
-          <View className="flex-1 items-center justify-center">
-            <Text selectable className="mb-2 text-2xl font-semibold text-white font-baloo">
-              Listening ...
+
+          <GeneratedTaskTitles tasks={aiGeneratedTasks} />
+
+          <View className="h-12 items-center justify-center">
+            <Text className="text-white/80 font-balooThin">
+              {recorderState.isRecording ? "Recording continuously" : "Preparing microphone..."}
             </Text>
-            <Text selectable className="text-lg text-white/90 font-balooThin">
-              Say everything you need to get done.
-            </Text>
-          </View>
-          <View className="flex-row gap-3">
-            <Pressable
-              className={`flex-1 h-12 rounded-xl items-center justify-center flex-row border ${
-                recorderState.isRecording ? "bg-white/20 border-white/30" : "bg-white border-white"
-              }`}
-              onPress={startRecording}
-              disabled={recorderState.isRecording}
-            >
-              <MaterialCommunityIcons
-                name="microphone-outline"
-                size={20}
-                color={recorderState.isRecording ? "#FFFFFF99" : "#1F2937"}
-              />
-              <Text
-                className={`ml-2 font-semibold ${
-                  recorderState.isRecording ? "text-white/70" : "text-gray-800"
-                }`}
-              >
-                Start recording
-              </Text>
-            </Pressable>
-            <Pressable
-              className={`flex-1 h-12 rounded-xl items-center justify-center flex-row border ${
-                recorderState.isRecording
-                  ? "bg-red-500 border-red-500"
-                  : "bg-white/20 border-white/30"
-              }`}
-              onPress={stopRecording}
-              disabled={!recorderState.isRecording}
-            >
-              <MaterialCommunityIcons
-                name="stop-circle-outline"
-                size={20}
-                color={recorderState.isRecording ? "#FFFFFF" : "#FFFFFF99"}
-              />
-              <Text
-                className={`ml-2 font-semibold ${
-                  recorderState.isRecording ? "text-white" : "text-white/70"
-                }`}
-              >
-                Stop recording
-              </Text>
-            </Pressable>
           </View>
         </LinearGradient>
       </View>
