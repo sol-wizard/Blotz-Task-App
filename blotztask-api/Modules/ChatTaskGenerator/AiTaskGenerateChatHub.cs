@@ -88,4 +88,20 @@ public class AiTaskGenerateChatHub : Hub
             await Clients.Caller.SendAsync("ReceiveMessage", aiServiceError);
         }
     }
+
+    public Task SendAudioChunk(PcmAudioChunk chunk)
+    {
+        _logger.LogDebug(
+            "Received PCM chunk. ConnectionId: {ConnectionId}, Position: {Position}, EventDataSize: {EventDataSize}, TotalSize: {TotalSize}, SampleRate: {SampleRate}, Channels: {Channels}, Encoding: {Encoding}",
+            Context.ConnectionId,
+            chunk.Position,
+            chunk.EventDataSize,
+            chunk.TotalSize,
+            chunk.SampleRate,
+            chunk.Channels,
+            chunk.Encoding
+        );
+
+        return Task.CompletedTask;
+    }
 }

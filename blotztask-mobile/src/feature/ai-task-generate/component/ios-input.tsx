@@ -9,7 +9,6 @@ import VoiceInputButton from "./voice-input-button";
 import * as Haptics from "expo-haptics";
 import { requestIOSMicrophonePermission } from "../utils/request-microphone-permission";
 import { ErrorMessageCard } from "./error-message-card";
-import { router } from "expo-router";
 
 type Props = {
   text: string;
@@ -95,15 +94,6 @@ const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessa
         hasText={text.trim() !== ""}
         onGenerateTask={() => sendMessage(text)}
       />
-
-      <Pressable
-        className="mt-3.5 self-center px-3.5 py-2 rounded-full border border-[#E5E7EB] bg-white"
-        onPress={() => router.push("/(protected)/new-ai-chat-hub")}
-      >
-        <Text selectable style={{ color: "#111827", fontSize: 14, fontWeight: "600" }}>
-          Open New AI Chat Hub
-        </Text>
-      </Pressable>
     </View>
   );
 };
