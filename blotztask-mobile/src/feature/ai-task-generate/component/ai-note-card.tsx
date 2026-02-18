@@ -27,7 +27,7 @@ export function AiNoteCard({ note, handleNoteDelete, onTextChange }: Props) {
 
   return (
     <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] min-h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
-      <View className="flex-1">
+      <View className="flex-1 flex-row items-center ml-4">
         <TextInput
           value={draftText}
           onChangeText={setDraftText}
@@ -35,7 +35,7 @@ export function AiNoteCard({ note, handleNoteDelete, onTextChange }: Props) {
           onSubmitEditing={handleEdit}
           returnKeyType="done"
           multiline
-          className="flex-1 mr-3 text-lg font-baloo leading-5 min-h-[44px]"
+          className="flex-1 mr-3 text-lg font-baloo leading-5"
           style={{ color: theme.colors.onSurface }}
           placeholder={t("noteCard.textPlaceholder")}
           placeholderTextColor={theme.colors.disabled}
