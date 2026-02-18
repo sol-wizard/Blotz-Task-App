@@ -5,7 +5,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { NoteDTO } from "../models/note-dto";
 import { router } from "expo-router";
-
+import { LinearGradient } from "expo-linear-gradient";
 import { SegmentToggle } from "@/feature/task-add-edit/components/segment-toggle";
 import { ReminderTab } from "@/feature/task-add-edit/components/reminder-tab";
 import { EventTab } from "@/feature/task-add-edit/components/event-tab";
@@ -154,27 +154,44 @@ export const NoteAddToTaskBottomSheet = ({
       useNativeDriver
       style={{ margin: 0 }}
     >
-      <View className="bg-white rounded-t-3xl p-6" style={{ marginTop: "auto", maxHeight: "85%" }}>
+      <View className="bg-white rounded-t-3xl p-6 mt-auto ">
         <FormProvider {...methods}>
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-            {/* Header */}
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-xl font-balooBold">Add to Task</Text>
-
-              <View className="flex-row items-center">
-                {/* AI task estimate button - style follows 'pick a note' look */}
-                <Pressable
-                  onPress={handleAIEstimate}
-                  disabled={isEstimating}
-                  className="bg-white px-3 py-2 rounded-full flex-row items-center justify-center mr-3"
-                >
-                  {isEstimating ? (
-                    <ActivityIndicator size="small" color="#3D8DE0" />
-                  ) : (
-                    <Text className="text-sm font-baloo text-[#3D8DE0]">AI 任务估算</Text>
-                  )}
+            {/* Header: mode toggle (reminder/event), AI estimate button, close (all inline) */}
+            <View className="flex-row items-center justify-between mb-6 gap-3 h-20">
+              {/* Left: toggle fills available horizontal space but stays vertically centered */}
+              <View className="flex-1 self-center pt-3 ml-1">
+                <SegmentToggle
+                  value={mode === "reminder" ? "reminder" : "event"}
+                  setValue={handleTabChange}
+                />
+              </View>
+              <View className="flex-row items-center ml-3 gap-x-2 -mt-3">
+                {/* AI button */}
+                <Pressable onPress={handleAIEstimate} disabled={isEstimating}>
+                  <LinearGradient
+                    colors={["#9AD513", "#60B000", "#9AD513"]}
+                    start={{ x: 0.8, y: 0 }}
+                    end={{ x: 0, y: 0.5 }}
+                    style={{
+                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {isEstimating ? (
+                      <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                      <Text className="text-white font-baloo text-m">
+                        {t("timeEstimate.estimateButton")}
+                      </Text>
+                    )}
+                  </LinearGradient>
                 </Pressable>
 
+                {/* Close button: vertically centered by parent */}
                 <Pressable onPress={onClose}>
                   <Text className="text-gray-500 text-lg">✕</Text>
                 </Pressable>
@@ -183,7 +200,7 @@ export const NoteAddToTaskBottomSheet = ({
 
             {/* Mode toggle (Reminder / Event) */}
             <View className="mb-4">
-              <SegmentToggle value={mode} setValue={handleTabChange} />
+              {/* <SegmentToggle value={mode} setValue={handleTabChange} /> */}
               {mode === "reminder" ? (
                 <View className="mb-6">
                   <ReminderTab control={methods.control} />
@@ -200,9 +217,7 @@ export const NoteAddToTaskBottomSheet = ({
               onPress={onApply}
               className="bg-lime-300 rounded-xl py-4 items-center justify-center"
             >
-              <Text className="font-balooBold text-lg text-black">
-                {t("addToTask.apply") || "Apply"}
-              </Text>
+              <Text className="font-balooBold text-lg text-black">{"Apply"}</Text>
             </Pressable>
           </ScrollView>
         </FormProvider>
