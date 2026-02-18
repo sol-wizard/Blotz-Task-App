@@ -8,10 +8,12 @@
     "tapToSpeak": "点击说话",
     "generateTask": "+ 生成任务",
     "addToTasks": "添加到任务",
+    "addToNotes": "添加到笔记",
     "goBack": "返回"
   },
   "labels": {
-    "newTask": "新任务"
+    "newTask": "新任务",
+    "notesSection": "笔记"
   },
   "success": {
     "taskAdded": "太棒了！任务已添加！"
@@ -23,5 +25,10 @@
     "titlePlaceholder": "任务标题",
     "editTitleLabel": "编辑任务标题",
     "editTitleHint": "双击编辑任务标题"
+  },
+  "noteCard": {
+    "textPlaceholder": "笔记内容",
+    "editTextLabel": "编辑笔记",
+    "editTextHint": "双击编辑笔记"
   }
 }
