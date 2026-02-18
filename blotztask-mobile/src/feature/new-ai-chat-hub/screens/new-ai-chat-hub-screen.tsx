@@ -69,7 +69,7 @@ export default function NewAiChatHubScreen() {
     return;
   };
 
-  const { aiGeneratedMessage } = useAiTaskGenerator({
+  const { aiGeneratedMessage, generateFromHistory } = useAiTaskGenerator({
     setIsAiGenerating,
     setModalType,
   });
@@ -123,6 +123,7 @@ export default function NewAiChatHubScreen() {
       ) {
         const transcriptionText = await sendVoiceFile(uri);
         console.log("Fast transcription result:", transcriptionText);
+        await generateFromHistory();
       }
     } catch (error) {
       console.error("Failed to process recording chunk", error);

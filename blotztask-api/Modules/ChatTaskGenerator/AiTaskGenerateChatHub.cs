@@ -7,7 +7,6 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 [Authorize]
 public class AiTaskGenerateChatHub : Hub
 {
-    private readonly IAiTaskGenerateService _aiTaskGenerateService;
     private readonly IChatHistoryManagerService _chatHistoryManagerService;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
     private readonly IChatMessageProcessor _processor;
@@ -15,13 +14,11 @@ public class AiTaskGenerateChatHub : Hub
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
         IChatHistoryManagerService chatHistoryManagerService,
-        IAiTaskGenerateService aiTaskGenerateService,
         IChatMessageProcessor processor
     )
     {
         _logger = logger;
         _chatHistoryManagerService = chatHistoryManagerService;
-        _aiTaskGenerateService = aiTaskGenerateService;
         _processor = processor;
     }
 
@@ -79,5 +76,16 @@ public class AiTaskGenerateChatHub : Hub
             throw new HubException("conversationId is required.");
 
         await _processor.ProcessUserTextAsync(userId, conversationId!, message, Context.ConnectionAborted);
+    }
+
+    public async Task GenerateFromHistory()
+    {
+        var httpContext = Context.GetHttpContext();
+        var conversationId = httpContext?.Request.Query["conversationId"].ToString();
+
+        if (string.IsNullOrWhiteSpace(conversationId))
+            throw new HubException("conversationId is required.");
+
+        await _processor.ProcessFromHistoryAsync(conversationId!, Context.ConnectionAborted);
     }
 }

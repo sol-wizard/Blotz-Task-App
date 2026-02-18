@@ -39,7 +39,7 @@ public class SpeechController : ControllerBase
     [HttpPost("fast-transcribe")]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> FastTranscribe([FromForm(Name = "audio")] IFormFile wavFile,
-        [FromQuery] string conversationId, CancellationToken ct)
+        CancellationToken ct)
     {
         if (wavFile == null || wavFile.Length == 0)
             return BadRequest("A WAV file is required in form field 'audio'.");
@@ -50,8 +50,7 @@ public class SpeechController : ControllerBase
         var fastTranscriptionRequest = new FastTranscriptionRequest
         {
             UserId = userId,
-            WavFile = wavFile,
-            ConversationId = conversationId
+            WavFile = wavFile
         };
 
         var text = await _fastTranscriptionService.FastTranscribeWavAsync(fastTranscriptionRequest, ct);

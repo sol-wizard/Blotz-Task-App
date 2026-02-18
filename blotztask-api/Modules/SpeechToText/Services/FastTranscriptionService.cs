@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.SpeechToText.Dtos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,7 +12,6 @@ namespace BlotzTask.Modules.SpeechToText.Services;
 public class FastTranscriptionRequest
 {
     [Required] public Guid UserId { get; set; }
-    [Required] public string ConversationId { get; set; }
     [Required] public IFormFile WavFile { get; set; }
 }
 
@@ -24,17 +24,18 @@ public interface IFastTranscriptionService
 public sealed class FastTranscriptionService : IFastTranscriptionService
 {
     private const string ApiVersion = "2025-10-15";
+    private readonly IChatHistoryManagerService _chatHistoryManagerService;
     private readonly HttpClient _http;
     private readonly ILogger<FastTranscriptionService> _logger;
-    private readonly IChatMessageProcessor _processor;
     private readonly SpeechTokenSettings _settings;
 
     public FastTranscriptionService(HttpClient http, IOptions<SpeechTokenSettings> settings,
-        IChatMessageProcessor processor, ILogger<FastTranscriptionService> logger)
+        IChatHistoryManagerService chatHistoryManagerService,
+        ILogger<FastTranscriptionService> logger)
     {
         _http = http;
         _settings = settings.Value;
-        _processor = processor;
+        _chatHistoryManagerService = chatHistoryManagerService;
         _logger = logger;
     }
 
@@ -74,20 +75,18 @@ public sealed class FastTranscriptionService : IFastTranscriptionService
         if (string.IsNullOrWhiteSpace(text))
             throw new InvalidOperationException($"Transcription response did not contain text. Body: {body}");
 
-        _logger.LogInformation("Transcription generated for conversation {ConversationId}", fastTranscriptionRequest.ConversationId);
+        _logger.LogInformation("Transcription generated for user {UserId}", fastTranscriptionRequest.UserId);
 
         try
         {
-            await _processor.ProcessUserTextAsync(fastTranscriptionRequest.UserId,
-                fastTranscriptionRequest.ConversationId!,
-                text, ct);
+            var chatHistory = _chatHistoryManagerService.GetChatHistory();
+            chatHistory.AddUserMessage(text);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Failed to process transcription for user {UserId} and conversation {ConversationId}",
-                fastTranscriptionRequest.UserId,
-                fastTranscriptionRequest.ConversationId);
+                "Failed to append transcription to chat history for user {UserId}",
+                fastTranscriptionRequest.UserId);
         }
         
         return text;

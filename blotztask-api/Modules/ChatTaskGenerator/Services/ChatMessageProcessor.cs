@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 public interface IChatMessageProcessor
 {
     Task ProcessUserTextAsync(Guid userId, string conversationId, string message, CancellationToken ct);
+    Task ProcessFromHistoryAsync(string conversationId, CancellationToken ct);
 }
 
 public sealed class ChatMessageProcessor : IChatMessageProcessor
@@ -31,6 +32,11 @@ public sealed class ChatMessageProcessor : IChatMessageProcessor
 
         chatHistory.AddUserMessage(message);
 
+        await ProcessFromHistoryAsync(conversationId, ct);
+    }
+
+    public async Task ProcessFromHistoryAsync(string conversationId, CancellationToken ct)
+    {
         try
         {
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
