@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import Modal from "react-native-modal";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -13,6 +13,10 @@ import { buildTaskTimePayload } from "@/feature/task-add-edit/util/time-converti
 
 import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
 import { useNotesMutation } from "../hooks/useNotesMutation";
+import { useEstimateTaskTime } from "@/feature/notes/hooks/useEstimateTaskTime";
+import { convertDurationToMinutes } from "@/shared/util/convert-duration";
+import { addMinutes } from "date-fns/addMinutes";
+import { TaskTimeType } from "@/shared/models/task-detail-dto";
 
 type FormValues = {
   startDate: Date;
@@ -47,6 +51,7 @@ export const NoteAddToTaskBottomSheet = ({
 
   const [isVisible, setIsVisible] = useState<boolean>(visible);
   const [mode, setMode] = useState<"reminder" | "event">("reminder");
+  const { estimateTime, isEstimating, timeResult } = useEstimateTaskTime();
 
   useEffect(() => {
     setIsVisible(visible);
@@ -63,7 +68,6 @@ export const NoteAddToTaskBottomSheet = ({
       return;
     }
 
-    // build payload using shared util (keeps consistency with TaskForm)
     const {
       startTime: payloadStart,
       endTime: payloadEnd,
@@ -75,7 +79,6 @@ export const NoteAddToTaskBottomSheet = ({
       mode === "reminder" ? data.startTime : data.endTime,
     );
 
-    // fallback safety
     const start = payloadStart ?? new Date();
     const end = payloadEnd ?? new Date(start.getTime() + 60 * 60 * 1000);
     const durationMinutes = Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000));
@@ -97,6 +100,27 @@ export const NoteAddToTaskBottomSheet = ({
     });
   });
 
+  const handleAIEstimate = async () => {
+    if (!note) return;
+    try {
+      const maybeResult = await estimateTime(note);
+      const durationStr = (maybeResult && (maybeResult as any).duration) ?? timeResult ?? "";
+      const minutes = convertDurationToMinutes(durationStr);
+      if (minutes === undefined) return;
+
+      const start = methods.getValues("startTime") ?? new Date();
+      const startDateVal = methods.getValues("startDate") ?? new Date();
+      const newEnd = addMinutes(start, minutes);
+
+      methods.setValue("endTime", newEnd);
+      methods.setValue("endDate", startDateVal);
+
+      setMode("event");
+    } catch (err) {
+      console.warn("AI estimate failed", err);
+    }
+  };
+
   // optional: reflect form values in UI if needed
   const watched = watch();
 
@@ -116,9 +140,25 @@ export const NoteAddToTaskBottomSheet = ({
             {/* Header */}
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-xl font-balooBold">Add to Task</Text>
-              <Pressable onPress={onClose}>
-                <Text className="text-gray-500 text-lg">✕</Text>
-              </Pressable>
+
+              <View className="flex-row items-center">
+                {/* AI task estimate button - style follows 'pick a note' look */}
+                <Pressable
+                  onPress={handleAIEstimate}
+                  disabled={isEstimating}
+                  className="bg-white px-3 py-2 rounded-full flex-row items-center justify-center mr-3"
+                >
+                  {isEstimating ? (
+                    <ActivityIndicator size="small" color="#3D8DE0" />
+                  ) : (
+                    <Text className="text-sm font-baloo text-[#3D8DE0]">AI 任务估算</Text>
+                  )}
+                </Pressable>
+
+                <Pressable onPress={onClose}>
+                  <Text className="text-gray-500 text-lg">✕</Text>
+                </Pressable>
+              </View>
             </View>
 
             {/* Note preview */}
