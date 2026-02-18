@@ -32,13 +32,8 @@ export const NoteCard = ({
   const { t } = useTranslation("notes");
 
   const addNoteToTask = useAddNoteToTask();
-  const { estimateTime, isEstimating, timeResult, estimateError } = useEstimateTaskTime();
+  const { isEstimating, timeResult, estimateError } = useEstimateTaskTime();
   const { deleteNote } = useNotesMutation();
-
-  const handleEstimateTime = (note: NoteDTO) => {
-    setIsModalVisible(true);
-    estimateTime(note);
-  };
 
   const handleStartNow = () => {
     const durationMinutes = convertDurationToMinutes(timeResult ?? "");

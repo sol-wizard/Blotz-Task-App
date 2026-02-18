@@ -47,7 +47,7 @@ export const NoteAddToTaskBottomSheet = ({
   };
 
   const methods = useForm<FormValues>({ defaultValues: defaults });
-  const { handleSubmit, reset, watch } = methods;
+  const { handleSubmit, reset } = methods;
 
   const [isVisible, setIsVisible] = useState<boolean>(visible);
   const [mode, setMode] = useState<"reminder" | "event">("reminder");
@@ -60,7 +60,7 @@ export const NoteAddToTaskBottomSheet = ({
       reset(defaults);
       setMode("reminder");
     }
-  }, [visible, note, reset]);
+  }, [visible, reset]);
 
   const handleTabChange = (next: "reminder" | "event") => {
     setMode(next);
@@ -114,7 +114,9 @@ export const NoteAddToTaskBottomSheet = ({
         onClose();
         try {
           deleteNote(note.id);
-        } catch (e) {}
+        } catch (e) {
+          console.warn("Failed to delete note", e);
+        }
         router.push("/(protected)/(tabs)");
       },
     });
@@ -140,9 +142,6 @@ export const NoteAddToTaskBottomSheet = ({
       console.warn("AI estimate failed", err);
     }
   };
-
-  // optional: reflect form values in UI if needed
-  const watched = watch();
 
   return (
     <Modal
