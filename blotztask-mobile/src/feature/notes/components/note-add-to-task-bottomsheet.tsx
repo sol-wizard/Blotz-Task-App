@@ -62,6 +62,23 @@ export const NoteAddToTaskBottomSheet = ({
     }
   }, [visible, note, reset]);
 
+  const handleTabChange = (next: "reminder" | "event") => {
+    setMode(next);
+    if (next === "reminder") {
+      // restore defaults for reminder (same behavior as TaskForm)
+      reset(defaults);
+      return;
+    }
+    // event: set end = start + 1h
+    const start = methods.getValues("startTime") ?? new Date();
+    const startDateVal = methods.getValues("startDate") ?? new Date();
+    const nextEnd = new Date(start.getTime() + 60 * 60 * 1000);
+    methods.setValue("startDate", startDateVal);
+    methods.setValue("startTime", start);
+    methods.setValue("endDate", startDateVal);
+    methods.setValue("endTime", nextEnd);
+  };
+
   const onApply = handleSubmit((data) => {
     if (!note) {
       onClose();
@@ -81,20 +98,23 @@ export const NoteAddToTaskBottomSheet = ({
 
     const start = payloadStart ?? new Date();
     const end = payloadEnd ?? new Date(start.getTime() + 60 * 60 * 1000);
-    const durationMinutes = Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000));
+
+    // If Single time type, backend requires start===end → pass duration 0.
+    const durationMinutes =
+      timeType === TaskTimeType.Single
+        ? 0
+        : Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000));
 
     addNoteToTask({
       note,
       startTime: start,
       durationMinutes,
-      timeType: timeType ?? 1,
+      timeType: timeType ?? TaskTimeType.Range,
       onSuccess: () => {
         onClose();
         try {
           deleteNote(note.id);
-        } catch (e) {
-          // keep behavior safe if deletion fails
-        }
+        } catch (e) {}
         router.push("/(protected)/(tabs)");
       },
     });
@@ -161,40 +181,19 @@ export const NoteAddToTaskBottomSheet = ({
               </View>
             </View>
 
-            {/* Note preview */}
-            <View className="bg-gray-100 rounded-xl p-4 mb-4">
-              <Text className="text-sm text-gray-500 font-baloo">Note</Text>
-              <Text className="text-base font-baloo text-black mt-2">{note?.text}</Text>
-            </View>
-
             {/* Mode toggle (Reminder / Event) */}
             <View className="mb-4">
-              <SegmentToggle
-                value={mode === "reminder" ? "reminder" : "event"}
-                setValue={(v) => {
-                  const next = v === "reminder" ? "reminder" : "event";
-                  setMode(next);
-                  if (next === "event") {
-                    // ensure end defaults to +1h relative to start
-                    const s = methods.getValues("startTime") ?? new Date();
-                    const sDate = methods.getValues("startDate") ?? new Date();
-                    const nextEnd = new Date(s.getTime() + 60 * 60 * 1000);
-                    reset({ ...methods.getValues(), endDate: sDate, endTime: nextEnd });
-                  }
-                }}
-              />
+              <SegmentToggle value={mode} setValue={handleTabChange} />
+              {mode === "reminder" ? (
+                <View className="mb-6">
+                  <ReminderTab control={methods.control} />
+                </View>
+              ) : (
+                <View className="mb-6">
+                  <EventTab control={methods.control} />
+                </View>
+              )}
             </View>
-
-            {/* Tabs: reuse ReminderTab / EventTab from TaskForm */}
-            {mode === "reminder" ? (
-              <View className="mb-6">
-                <ReminderTab control={methods.control} />
-              </View>
-            ) : (
-              <View className="mb-6">
-                <EventTab control={methods.control} />
-              </View>
-            )}
 
             {/* Apply */}
             <Pressable
