@@ -79,7 +79,7 @@ export default function NewAiChatHubScreen() {
   );
 
   const isScreenActiveRef = useRef(false);
-  const isSendingAudioRef = useRef(false);
+
   const silenceStartedAtRef = useRef<number | null>(null);
   const speechDetectedInChunkRef = useRef(false);
 
@@ -101,10 +101,6 @@ export default function NewAiChatHubScreen() {
   };
 
   const sendChunkAndContinue = async (reason: "silence" | "exit") => {
-    if (isSendingAudioRef.current) {
-      return;
-    }
-
     const status = audioRecorder.getStatus();
     if (!status.isRecording) {
       return;
@@ -114,7 +110,6 @@ export default function NewAiChatHubScreen() {
       return;
     }
 
-    isSendingAudioRef.current = true;
     silenceStartedAtRef.current = null;
 
     try {
@@ -131,8 +126,6 @@ export default function NewAiChatHubScreen() {
       }
     } catch (error) {
       console.error("Failed to process recording chunk", error);
-    } finally {
-      isSendingAudioRef.current = false;
     }
 
     if (reason === "silence" && isScreenActiveRef.current) {
@@ -172,7 +165,7 @@ export default function NewAiChatHubScreen() {
   );
 
   useEffect(() => {
-    if (!isScreenActiveRef.current || !recorderState.isRecording || isSendingAudioRef.current) {
+    if (!isScreenActiveRef.current || !recorderState.isRecording) {
       silenceStartedAtRef.current = null;
       return;
     }
