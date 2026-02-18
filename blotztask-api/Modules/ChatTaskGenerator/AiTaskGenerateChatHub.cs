@@ -39,10 +39,7 @@ public class AiTaskGenerateChatHub : Hub
         var timeZoneId = httpContext?.Request.Query["timeZone"].ToString();
         try
         {
-            if (!string.IsNullOrWhiteSpace(timeZoneId))
-            {
-                timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-            }
+            if (!string.IsNullOrWhiteSpace(timeZoneId)) timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
         }
         catch (Exception ex)
         {
@@ -65,6 +62,7 @@ public class AiTaskGenerateChatHub : Hub
         _chatHistoryManagerService.RemoveConversation();
         await base.OnDisconnectedAsync(exception);
     }
+
     //TODO: Do we need this user paramter in this function? check and test frontend after clean up
     public async Task SendMessage(string user, string message)
     {
@@ -91,7 +89,7 @@ public class AiTaskGenerateChatHub : Hub
 
     public Task SendAudioChunk(PcmAudioChunk chunk)
     {
-        _logger.LogDebug(
+        _logger.LogInformation(
             "Received PCM chunk. ConnectionId: {ConnectionId}, Position: {Position}, EventDataSize: {EventDataSize}, TotalSize: {TotalSize}, SampleRate: {SampleRate}, Channels: {Channels}, Encoding: {Encoding}",
             Context.ConnectionId,
             chunk.Position,
