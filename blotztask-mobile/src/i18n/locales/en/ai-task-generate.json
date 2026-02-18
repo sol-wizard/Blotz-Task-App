@@ -9,6 +9,7 @@
     "generateTask": "+ Generate Task",
     "addToTasks": "Add to tasks",
     "addToNotes": "Add to notes",
+    "addAll": "Add all",
     "goBack": "Go back"
   },
   "labels": {

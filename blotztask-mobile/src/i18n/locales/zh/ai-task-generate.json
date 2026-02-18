@@ -9,6 +9,7 @@
     "generateTask": "+ 生成任务",
     "addToTasks": "添加到任务",
     "addToNotes": "添加到笔记",
+    "addAll": "全部添加",
     "goBack": "返回"
   },
   "labels": {

@@ -8,7 +8,6 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { usePostHog } from "posthog-react-native";
-import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { AiNoteDTO } from "../models/ai-note-dto";
 import { theme } from "@/shared/constants/theme";
@@ -18,6 +17,8 @@ import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { createNote } from "@/feature/notes/services/notes-service";
 import { noteKeys } from "@/shared/constants/query-key-factory";
+import { addTaskItem } from "@/shared/services/task-service";
+import { taskKeys } from "@/shared/constants/query-key-factory";
 
 export function AiTasksPreview({
   aiTasks,
@@ -34,10 +35,9 @@ export function AiTasksPreview({
 }) {
   const { t } = useTranslation("aiTaskGenerate");
   const queryClient = useQueryClient();
-  const { addTask, isAdding } = useTaskMutations();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
   const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes ?? []);
-  const [isAddingNotes, setIsAddingNotes] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   const posthog = usePostHog();
 
@@ -47,18 +47,20 @@ export function AiTasksPreview({
     return () => {
       if (!finishedAllStepsRef.current) {
         posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-          ai_output: JSON.stringify(localTasks),
+          ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
           user_input: userInput,
           outcome: "abandoned",
-          ai_generated_task_count: localTasks?.length ?? 0,
+          ai_generated_task_count: localTasks.length,
+          ai_generated_note_count: localNotes.length,
           user_add_task_count: 0,
+          user_add_note_count: 0,
         });
       }
     };
-  }, [localTasks]);
+  }, [localTasks, localNotes]);
 
-  const createTasksDisabled = isAdding || localTasks.length === 0;
-  const createNotesDisabled = isAddingNotes || localNotes.length === 0;
+  const hasItems = localTasks.length > 0 || localNotes.length > 0;
+  const addAllDisabled = isAdding || !hasItems;
 
   const onDeleteNote = (noteId: string) => {
     setLocalNotes((prev) => prev.filter((n) => n.id !== noteId));
@@ -76,45 +78,42 @@ export function AiTasksPreview({
     setLocalTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, title: newTitle } : t)));
   };
 
-  const handleAddTasks = async () => {
-    if (isAdding || !localTasks.length) return;
+  const handleAddAll = async () => {
+    if (isAdding || !hasItems) return;
 
     try {
-      const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
+      setIsAdding(true);
 
-      await Promise.all(payloads.map((payload) => addTask(payload)));
+      if (localTasks.length > 0) {
+        const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
+        await Promise.all(payloads.map((payload) => addTaskItem(payload)));
+        queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      }
+
+      if (localNotes.length > 0) {
+        await Promise.all(localNotes.map((n) => createNote(n.text)));
+        queryClient.invalidateQueries({ queryKey: noteKeys.all });
+      }
 
       finishedAllStepsRef.current = true;
 
       posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-        ai_output: JSON.stringify(localTasks),
+        ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
         user_input: userInput,
-        ai_generate_task_count: localTasks.length ?? 0,
-        user_add_task_count: payloads.length ?? 0,
+        ai_generated_task_count: localTasks.length,
+        ai_generated_note_count: localNotes.length,
+        user_add_task_count: localTasks.length,
+        user_add_note_count: localNotes.length,
         outcome: "accepted",
       });
 
       setLocalTasks([]);
-      router.back();
-    } catch (error) {
-      console.log("Add tasks failed", error);
-    }
-  };
-
-  const handleAddNotes = async () => {
-    if (isAddingNotes || !localNotes.length) return;
-
-    try {
-      setIsAddingNotes(true);
-      await Promise.all(localNotes.map((n) => createNote(n.text)));
-      queryClient.invalidateQueries({ queryKey: noteKeys.all });
-      finishedAllStepsRef.current = true;
       setLocalNotes([]);
       router.back();
     } catch (error) {
-      console.log("Add notes failed", error);
+      console.log("Add tasks/notes failed", error);
     } finally {
-      setIsAddingNotes(false);
+      setIsAdding(false);
     }
   };
 
@@ -123,11 +122,13 @@ export function AiTasksPreview({
     setModalType("input");
 
     posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-      ai_output: JSON.stringify(localTasks),
+      ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
       user_input: userInput,
-      ai_generate_task_count: localTasks?.length ?? 0,
+      ai_generated_task_count: localTasks.length,
+      ai_generated_note_count: localNotes.length,
       outcome: "go_back",
       user_add_task_count: 0,
+      user_add_note_count: 0,
     });
   };
 
@@ -175,36 +176,19 @@ export function AiTasksPreview({
         </Pressable>
 
         <Pressable
-          onPress={handleAddTasks}
-          disabled={createTasksDisabled}
+          onPress={handleAddAll}
+          disabled={addAllDisabled}
           className={`w-[100px] h-12 rounded-full items-center justify-center mx-2 ${
-            createTasksDisabled ? "bg-gray-300" : "bg-[#a6d445]"
+            addAllDisabled ? "bg-gray-300" : "bg-[#a6d445]"
           }`}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityRole="button"
-          accessibilityLabel={t("buttons.addToTasks")}
+          accessibilityLabel={t("buttons.addAll")}
         >
           {isAdding ? (
             <ActivityIndicator size="small" />
           ) : (
-            <Text className="font-baloo text-sm">{t("buttons.addToTasks")}</Text>
-          )}
-        </Pressable>
-
-        <Pressable
-          onPress={handleAddNotes}
-          disabled={createNotesDisabled}
-          className={`w-[100px] h-12 rounded-full items-center justify-center mx-2 ${
-            createNotesDisabled ? "bg-gray-300" : "bg-[#a6d445]"
-          }`}
-          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-          accessibilityRole="button"
-          accessibilityLabel={t("buttons.addToNotes")}
-        >
-          {isAddingNotes ? (
-            <ActivityIndicator size="small" />
-          ) : (
-            <Text className="font-baloo text-sm">{t("buttons.addToNotes")}</Text>
+            <Text className="font-baloo text-sm">{t("buttons.addAll")}</Text>
           )}
         </Pressable>
       </View>
