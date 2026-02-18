@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Vibration } from "react-native";
+import { View, Text, TextInput, Vibration, Pressable } from "react-native";
 import React, { useEffect } from "react";
 import { theme } from "@/shared/constants/theme";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ import VoiceInputButton from "./voice-input-button";
 import * as Haptics from "expo-haptics";
 import { requestIOSMicrophonePermission } from "../utils/request-microphone-permission";
 import { ErrorMessageCard } from "./error-message-card";
+import { router } from "expo-router";
 
 type Props = {
   text: string;
@@ -44,8 +45,6 @@ const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessa
     }
   }, [transcript, setText]);
 
-
-
   const toggleListening = async () => {
     if (recognizing) {
       stopListening();
@@ -71,7 +70,9 @@ const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessa
       <View className="items-center mb-4">
         <View className="w-12 h-1 rounded-full bg-[#ECECEC]" />
       </View>
-      <Text className="font-balooBold text-2xl mb-2 px-4 text-secondary">{t("labels.newTask")}</Text>
+      <Text className="font-balooBold text-2xl mb-2 px-4 text-secondary">
+        {t("labels.newTask")}
+      </Text>
       <TextInput
         value={text}
         onChangeText={setText}
@@ -94,6 +95,15 @@ const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessa
         hasText={text.trim() !== ""}
         onGenerateTask={() => sendMessage(text)}
       />
+
+      <Pressable
+        className="mt-3.5 self-center px-3.5 py-2 rounded-full border border-[#E5E7EB] bg-white"
+        onPress={() => router.push("/(protected)/new-ai-chat-hub")}
+      >
+        <Text selectable style={{ color: "#111827", fontSize: 14, fontWeight: "600" }}>
+          Open New AI Chat Hub
+        </Text>
+      </Pressable>
     </View>
   );
 };
