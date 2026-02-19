@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
-import { useFocusEffect } from "@react-navigation/native";
 import { AudioDataEvent, RecordingConfig, useAudioRecorder } from "@siteed/expo-audio-studio";
 import { AiResultMessageDTO } from "@/feature/ai-task-generate/models/ai-result-message-dto";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
@@ -151,18 +150,11 @@ export function useAutoPcmStreaming() {
   }, [ensurePrepared, receiveMessageHandler, sendAudioChunk, startRecording, stopStreaming]);
 
   useEffect(() => {
-    // Prewarm once so entering the screen can start listening immediately.
-    void ensurePrepared();
-  }, [ensurePrepared]);
-
-  useFocusEffect(
-    useCallback(() => {
-      void startStreaming();
-      return () => {
-        void stopStreaming();
-      };
-    }, [startStreaming, stopStreaming]),
-  );
+    void startStreaming();
+    return () => {
+      void stopStreaming();
+    };
+  }, [startStreaming, stopStreaming]);
 
   return {
     isListening,
