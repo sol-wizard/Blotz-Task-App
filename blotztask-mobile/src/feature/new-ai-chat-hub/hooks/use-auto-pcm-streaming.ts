@@ -20,7 +20,7 @@ const recordingConfig: RecordingConfig = {
 
 export function useAutoPcmStreaming() {
   const connectionRef = useRef<signalR.HubConnection | null>(null);
-  const isStoppingRef = useRef(false);
+
   const isStartingRef = useRef(false);
   const isPreparedRef = useRef(false);
   const preparePromiseRef = useRef<Promise<void> | null>(null);
@@ -64,11 +64,6 @@ export function useAutoPcmStreaming() {
   }, []);
 
   const stopStreaming = useCallback(async () => {
-    if (isStoppingRef.current) {
-      return;
-    }
-    isStoppingRef.current = true;
-
     try {
       await stopRecording();
     } catch (error) {
@@ -89,7 +84,6 @@ export function useAutoPcmStreaming() {
     }
 
     setIsListening(false);
-    isStoppingRef.current = false;
   }, [receiveMessageHandler, stopRecording]);
 
   const ensurePrepared = useCallback(async () => {
@@ -115,12 +109,15 @@ export function useAutoPcmStreaming() {
   }, [prepareRecording]);
 
   const startStreaming = useCallback(async () => {
-    if (isStartingRef.current || isStoppingRef.current) {
+    if (isStartingRef.current) {
       return;
     }
 
     const existingConnection = connectionRef.current;
-    if (existingConnection && existingConnection.state !== signalR.HubConnectionState.Disconnected) {
+    if (
+      existingConnection &&
+      existingConnection.state !== signalR.HubConnectionState.Disconnected
+    ) {
       return;
     }
 
