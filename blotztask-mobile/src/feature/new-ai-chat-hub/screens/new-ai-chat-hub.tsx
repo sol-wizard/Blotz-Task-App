@@ -1,3 +1,4 @@
+import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-task-generate/utils/map-extracted-to-task-dto";
 import { useAutoPcmStreaming } from "@/feature/new-ai-chat-hub/hooks/use-auto-pcm-streaming";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -7,6 +8,10 @@ import { Pressable, View, Text, useWindowDimensions } from "react-native";
 export default function NewAiChatHubScreen() {
   const { height } = useWindowDimensions();
   const { aiGeneratedMessage, isListening, isStarting, errorMessage } = useAutoPcmStreaming();
+
+  const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map((task) =>
+    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
+  );
 
   return (
     <View className="flex-1 bg-transparent">
