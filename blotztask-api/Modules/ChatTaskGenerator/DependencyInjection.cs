@@ -8,8 +8,8 @@ public static class DependencyInjection
     {
         services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
         services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
+        services.AddSingleton<IChatToAiPipelineService, ChatToAiPipelineService>();
         services.AddSingleton<IRealtimeSpeechRecognitionService, RealtimeSpeechRecognitionService>();
-        
 
         return services;
     }

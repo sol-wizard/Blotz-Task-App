@@ -1,6 +1,5 @@
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
-using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -9,22 +8,22 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 [Authorize]
 public class AiTaskGenerateChatHub : Hub
 {
-    private readonly IAiTaskGenerateService _aiTaskGenerateService;
     private readonly IChatHistoryManagerService _chatHistoryManagerService;
-    private readonly IRealtimeSpeechRecognitionService _realtimeSpeechRecognitionService;
+    private readonly IChatToAiPipelineService _chatToAiPipelineService;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
+    private readonly IRealtimeSpeechRecognitionService _realtimeSpeechRecognitionService;
 
 
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
         IChatHistoryManagerService chatHistoryManagerService,
-        IAiTaskGenerateService aiTaskGenerateService,
+        IChatToAiPipelineService chatToAiPipelineService,
         IRealtimeSpeechRecognitionService realtimeSpeechRecognitionService
     )
     {
         _logger = logger;
         _chatHistoryManagerService = chatHistoryManagerService;
-        _aiTaskGenerateService = aiTaskGenerateService;
+        _chatToAiPipelineService = chatToAiPipelineService;
         _realtimeSpeechRecognitionService = realtimeSpeechRecognitionService;
     }
 
@@ -71,25 +70,10 @@ public class AiTaskGenerateChatHub : Hub
     //TODO: Do we need this user paramter in this function? check and test frontend after clean up
     public async Task SendMessage(string user, string message)
     {
-        try
-        {
-            var ct = Context.ConnectionAborted;
-            var chatHistory = _chatHistoryManagerService.GetChatHistory();
-
-            chatHistory.AddUserMessage(message);
-            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
-
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
-        }
-        catch (AiTaskGenerationException ex)
-        {
-            var aiServiceError = new AiGenerateMessage
-            {
-                IsSuccess = false,
-                ErrorMessage = ex.Message
-            };
-            await Clients.Caller.SendAsync("ReceiveMessage", aiServiceError);
-        }
+        await _chatToAiPipelineService.ProcessMessageAsync(
+            Context.ConnectionId,
+            message,
+            Context.ConnectionAborted);
     }
 
     public async Task SendAudioChunk(PcmAudioChunk chunk)
