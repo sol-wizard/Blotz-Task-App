@@ -43,7 +43,7 @@ export default function SettingsScreen() {
       key: "under-development",
       label: t("menu.allTasks"),
       icon: "cog-outline",
-      route: "/settings/all-tasks",
+      route: "/settings/under-development",
     },
   ];
 
@@ -97,19 +97,6 @@ export default function SettingsScreen() {
             </View>
           ))}
         </View>
-
-        <Pressable
-          onPress={() => router.push("/(protected)/new-ai-chat-hub")}
-          className="mt-4 w-full rounded-2xl bg-white px-4 py-4"
-        >
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center">
-              <MaterialCommunityIcons name="robot-outline" size={22} color="#444964" />
-              <Text className="text-lg font-baloo text-secondary ml-3">New AI Chat Hub</Text>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
-          </View>
-        </Pressable>
       </View>
     </SafeAreaView>
   );

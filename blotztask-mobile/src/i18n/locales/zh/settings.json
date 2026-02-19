@@ -46,5 +46,12 @@
   "profile": {
     "title": "个人资料",
     "editProfile": "编辑个人资料"
+  },
+  "underDevelopment": {
+    "title": "开发中功能",
+    "menu": {
+      "allTasksPage": "所有任务页面",
+      "newAiChatHubTesting": "新 AI 聊天中心测试"
+    }
   }
 }
