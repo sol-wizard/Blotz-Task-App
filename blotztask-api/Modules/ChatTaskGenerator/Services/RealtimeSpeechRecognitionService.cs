@@ -9,7 +9,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IRealtimeSpeechRecognitionService
 {
-    Task StartSessionAsync(string connectionId, CancellationToken ct = default);
+    Task StartSessionAsync(string connectionId, string? initialLanguage = null, CancellationToken ct = default);
     Task PushAudioChunkAsync(string connectionId, PcmAudioChunk chunk, CancellationToken ct = default);
     Task StopSessionAsync(string connectionId, CancellationToken ct = default);
 }
@@ -32,11 +32,11 @@ public class RealtimeSpeechRecognitionService : IRealtimeSpeechRecognitionServic
         _logger = logger;
     }
 
-    public async Task StartSessionAsync(string connectionId, CancellationToken ct = default)
+    public async Task StartSessionAsync(string connectionId, string? initialLanguage = null, CancellationToken ct = default)
     {
         if (_sessions.ContainsKey(connectionId)) return;
 
-        var session = CreateSession(connectionId);
+        var session = CreateSession(connectionId, initialLanguage);
         if (!_sessions.TryAdd(connectionId, session))
         {
             await session.DisposeAsync();
@@ -70,15 +70,15 @@ public class RealtimeSpeechRecognitionService : IRealtimeSpeechRecognitionServic
         await session.DisposeAsync(ct);
     }
 
-    private RealtimeSpeechSession CreateSession(string connectionId)
+    private RealtimeSpeechSession CreateSession(string connectionId, string? initialLanguage)
     {
         if (string.IsNullOrWhiteSpace(_settings.Key) || string.IsNullOrWhiteSpace(_settings.Region))
             throw new InvalidOperationException("AzureSpeech Key/Region configuration is missing.");
 
         var speechConfig = SpeechConfig.FromSubscription(_settings.Key, _settings.Region);
         speechConfig.SetProperty(PropertyId.SpeechServiceConnection_LanguageIdMode, "Continuous");
-
-        var autoDetectSourceLanguageConfig = AutoDetectSourceLanguageConfig.FromLanguages(CandidateLanguages);
+        var detectLanguages = BuildDetectionLanguages(initialLanguage);
+        var autoDetectSourceLanguageConfig = AutoDetectSourceLanguageConfig.FromLanguages(detectLanguages);
         var audioFormat = AudioStreamFormat.GetWaveFormatPCM(16000, 16, 1);
         var pushStream = AudioInputStream.CreatePushStream(audioFormat);
         var audioConfig = AudioConfig.FromStreamInput(pushStream);
@@ -90,6 +90,19 @@ public class RealtimeSpeechRecognitionService : IRealtimeSpeechRecognitionServic
             recognizer,
             _logger,
             ProcessRecognizedTextAsync);
+    }
+
+    private static string[] BuildDetectionLanguages(string? initialLanguage)
+    {
+        if (string.IsNullOrWhiteSpace(initialLanguage)) return CandidateLanguages;
+
+        var normalized = initialLanguage.Trim();
+        var selected = CandidateLanguages
+            .FirstOrDefault(l => l.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+
+        if (selected is null) return CandidateLanguages;
+
+        return [selected, .. CandidateLanguages.Where(l => !l.Equals(selected, StringComparison.OrdinalIgnoreCase))];
     }
 
     private async Task ProcessRecognizedTextAsync(string connectionId, string recognizedText)

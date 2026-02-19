@@ -1,5 +1,7 @@
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
+using BlotzTask.Modules.Users.Enums;
+using BlotzTask.Modules.Users.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -12,19 +14,22 @@ public class AiTaskGenerateChatHub : Hub
     private readonly IChatToAiPipelineService _chatToAiPipelineService;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
     private readonly IRealtimeSpeechRecognitionService _realtimeSpeechRecognitionService;
+    private readonly GetUserPreferencesQueryHandler _getUserPreferencesQueryHandler;
 
 
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
         IChatHistoryManagerService chatHistoryManagerService,
         IChatToAiPipelineService chatToAiPipelineService,
-        IRealtimeSpeechRecognitionService realtimeSpeechRecognitionService
+        IRealtimeSpeechRecognitionService realtimeSpeechRecognitionService,
+        GetUserPreferencesQueryHandler getUserPreferencesQueryHandler
     )
     {
         _logger = logger;
         _chatHistoryManagerService = chatHistoryManagerService;
         _chatToAiPipelineService = chatToAiPipelineService;
         _realtimeSpeechRecognitionService = realtimeSpeechRecognitionService;
+        _getUserPreferencesQueryHandler = getUserPreferencesQueryHandler;
     }
 
     public override async Task OnConnectedAsync()
@@ -52,7 +57,14 @@ public class AiTaskGenerateChatHub : Hub
         var userLocalNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
 
         await _chatHistoryManagerService.InitializeNewConversation(userId, userLocalNow);
-        await _realtimeSpeechRecognitionService.StartSessionAsync(Context.ConnectionId, Context.ConnectionAborted);
+        var userPreferences = await _getUserPreferencesQueryHandler.Handle(
+            new GetUserPreferencesQuery { UserId = userId },
+            Context.ConnectionAborted);
+        var initialLanguage = ToSpeechLanguageCode(userPreferences.PreferredLanguage);
+        await _realtimeSpeechRecognitionService.StartSessionAsync(
+            Context.ConnectionId,
+            initialLanguage,
+            Context.ConnectionAborted);
         await base.OnConnectedAsync();
     }
 
@@ -83,4 +95,11 @@ public class AiTaskGenerateChatHub : Hub
             chunk,
             Context.ConnectionAborted);
     }
+
+    private static string ToSpeechLanguageCode(Language preferredLanguage) =>
+        preferredLanguage switch
+        {
+            Language.Zh => "zh-CN",
+            _ => "en-US"
+        };
 }
