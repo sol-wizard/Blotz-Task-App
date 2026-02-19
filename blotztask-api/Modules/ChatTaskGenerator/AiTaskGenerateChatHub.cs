@@ -11,18 +11,21 @@ public class AiTaskGenerateChatHub : Hub
 {
     private readonly IAiTaskGenerateService _aiTaskGenerateService;
     private readonly IChatHistoryManagerService _chatHistoryManagerService;
+    private readonly IRealtimeSpeechRecognitionService _realtimeSpeechRecognitionService;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
 
 
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
         IChatHistoryManagerService chatHistoryManagerService,
-        IAiTaskGenerateService aiTaskGenerateService
+        IAiTaskGenerateService aiTaskGenerateService,
+        IRealtimeSpeechRecognitionService realtimeSpeechRecognitionService
     )
     {
         _logger = logger;
         _chatHistoryManagerService = chatHistoryManagerService;
         _aiTaskGenerateService = aiTaskGenerateService;
+        _realtimeSpeechRecognitionService = realtimeSpeechRecognitionService;
     }
 
     public override async Task OnConnectedAsync()
@@ -50,6 +53,7 @@ public class AiTaskGenerateChatHub : Hub
         var userLocalNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
 
         await _chatHistoryManagerService.InitializeNewConversation(userId, userLocalNow);
+        await _realtimeSpeechRecognitionService.StartSessionAsync(Context.ConnectionId, Context.ConnectionAborted);
         await base.OnConnectedAsync();
     }
 
@@ -59,6 +63,7 @@ public class AiTaskGenerateChatHub : Hub
         _logger.LogInformation(
             $"User disconnected: {connectionId}. Exception: {exception?.Message}"
         );
+        await _realtimeSpeechRecognitionService.StopSessionAsync(connectionId, Context.ConnectionAborted);
         _chatHistoryManagerService.RemoveConversation();
         await base.OnDisconnectedAsync(exception);
     }
@@ -87,19 +92,11 @@ public class AiTaskGenerateChatHub : Hub
         }
     }
 
-    public Task SendAudioChunk(PcmAudioChunk chunk)
+    public async Task SendAudioChunk(PcmAudioChunk chunk)
     {
-        _logger.LogInformation(
-            "Received PCM chunk. ConnectionId: {ConnectionId}, Position: {Position}, EventDataSize: {EventDataSize}, TotalSize: {TotalSize}, SampleRate: {SampleRate}, Channels: {Channels}, Encoding: {Encoding}",
+        await _realtimeSpeechRecognitionService.PushAudioChunkAsync(
             Context.ConnectionId,
-            chunk.Position,
-            chunk.EventDataSize,
-            chunk.TotalSize,
-            chunk.SampleRate,
-            chunk.Channels,
-            chunk.Encoding
-        );
-
-        return Task.CompletedTask;
+            chunk,
+            Context.ConnectionAborted);
     }
 }

@@ -10,23 +10,19 @@ export default function AiTaskSheetScreen() {
 
   return (
     <View className="flex-1 bg-transparent">
-      <Pressable
-        className="absolute inset-0"
-        onPress={() => router.back()}
-        pointerEvents="auto"
-      />
+      <Pressable className="absolute inset-0" onPress={() => router.back()} pointerEvents="auto" />
       <KeyboardAvoidingView
         style={{ flex: 1, justifyContent: "flex-end" }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         pointerEvents="box-none"
       >
         <View className="rounded-t-3xl px-4 pt-4 bg-background" pointerEvents="auto">
-          <AiModalContent
+          {/* <AiModalContent
             modalType={modalType}
             setModalType={(next) => {
               setModalType(next);
             }}
-          />
+          /> */}
         </View>
       </KeyboardAvoidingView>
     </View>
