@@ -46,15 +46,13 @@ export const NoteAddToTaskBottomSheet = ({
     endTime: new Date(now.getTime() + 60 * 60 * 1000),
   };
 
-  const methods = useForm<FormValues>({ defaultValues: defaults });
-  const { handleSubmit, reset } = methods;
+  const newTask = useForm<FormValues>({ defaultValues: defaults });
+  const { handleSubmit, reset } = newTask;
 
-  const [isVisible, setIsVisible] = useState<boolean>(visible);
   const [mode, setMode] = useState<"reminder" | "event">("reminder");
   const { estimateTime, isEstimating, timeResult } = useEstimateTaskTime();
 
   useEffect(() => {
-    setIsVisible(visible);
     if (visible) {
       // reset form when opening for the current note
       reset(defaults);
@@ -70,13 +68,13 @@ export const NoteAddToTaskBottomSheet = ({
       return;
     }
     // event: set end = start + 1h
-    const start = methods.getValues("startTime") ?? new Date();
-    const startDateVal = methods.getValues("startDate") ?? new Date();
+    const start = newTask.getValues("startTime") ?? new Date();
+    const startDateVal = newTask.getValues("startDate") ?? new Date();
     const nextEnd = new Date(start.getTime() + 60 * 60 * 1000);
-    methods.setValue("startDate", startDateVal);
-    methods.setValue("startTime", start);
-    methods.setValue("endDate", startDateVal);
-    methods.setValue("endTime", nextEnd);
+    newTask.setValue("startDate", startDateVal);
+    newTask.setValue("startTime", start);
+    newTask.setValue("endDate", startDateVal);
+    newTask.setValue("endTime", nextEnd);
   };
 
   const onApply = handleSubmit((data) => {
@@ -84,6 +82,13 @@ export const NoteAddToTaskBottomSheet = ({
       onClose();
       return;
     }
+
+    console.log("onApply data:", {
+      startDate: data.startDate,
+      startTime: data.startTime,
+      endDate: data.endDate,
+      endTime: data.endTime,
+    });
 
     const {
       startTime: payloadStart,
@@ -99,17 +104,21 @@ export const NoteAddToTaskBottomSheet = ({
     const start = payloadStart ?? new Date();
     const end = payloadEnd ?? new Date(start.getTime() + 60 * 60 * 1000);
 
-    // If Single time type, backend requires start===end → pass duration 0.
-    const durationMinutes =
-      timeType === TaskTimeType.Single
-        ? 0
-        : Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000));
+    // // If Single time type, backend requires start===end → pass duration 0.
+    // const durationMinutes =
+    //   timeType === TaskTimeType.Single
+    //     ? 0
+    //     : Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000));
+
+    if (!timeType) {
+      console.error("buildTaskTimePayload returned null timeType");
+    }
 
     addNoteToTask({
       note,
       startTime: start,
-      durationMinutes,
-      timeType: timeType ?? TaskTimeType.Range,
+      endTime: end,
+      timeType: Number(timeType) as TaskTimeType,
       onSuccess: () => {
         onClose();
         try {
@@ -130,12 +139,12 @@ export const NoteAddToTaskBottomSheet = ({
       const minutes = convertDurationToMinutes(durationStr);
       if (minutes === undefined) return;
 
-      const start = methods.getValues("startTime") ?? new Date();
-      const startDateVal = methods.getValues("startDate") ?? new Date();
+      const start = newTask.getValues("startTime") ?? new Date();
+      const startDateVal = newTask.getValues("startDate") ?? new Date();
       const newEnd = addMinutes(start, minutes);
 
-      methods.setValue("endTime", newEnd);
-      methods.setValue("endDate", startDateVal);
+      newTask.setValue("endTime", newEnd);
+      newTask.setValue("endDate", startDateVal);
 
       setMode("event");
     } catch (err) {
@@ -145,7 +154,7 @@ export const NoteAddToTaskBottomSheet = ({
 
   return (
     <Modal
-      isVisible={isVisible}
+      isVisible={visible}
       onBackdropPress={onClose}
       backdropOpacity={0.4}
       animationIn="slideInUp"
@@ -154,7 +163,7 @@ export const NoteAddToTaskBottomSheet = ({
       style={{ margin: 0 }}
     >
       <View className="bg-white rounded-t-3xl p-6 mt-auto ">
-        <FormProvider {...methods}>
+        <FormProvider {...newTask}>
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
             {/* Header: mode toggle (reminder/event), AI estimate button, close (all inline) */}
             <View className="flex-row items-center justify-between mb-6 gap-3 h-20">
@@ -202,11 +211,11 @@ export const NoteAddToTaskBottomSheet = ({
               {/* <SegmentToggle value={mode} setValue={handleTabChange} /> */}
               {mode === "reminder" ? (
                 <View className="mb-6">
-                  <ReminderTab control={methods.control} />
+                  <ReminderTab control={newTask.control} />
                 </View>
               ) : (
                 <View className="mb-6">
-                  <EventTab control={methods.control} />
+                  <EventTab control={newTask.control} />
                 </View>
               )}
             </View>

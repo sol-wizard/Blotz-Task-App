@@ -39,12 +39,18 @@ export const NoteCard = ({
     const durationMinutes = convertDurationToMinutes(timeResult ?? "");
     if (durationMinutes === undefined) return;
 
+    const start = new Date();
+    const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
+
     addNoteToTask({
       note,
-      durationMinutes,
+      startTime: start,
+      endTime: end,
+      timeType: 1,
       onSuccess: () => {
         setIsModalVisible(false);
         deleteNote(note.id);
+        router.push("/(protected)/(tabs)");
       },
     });
     router.push("/(protected)/(tabs)");

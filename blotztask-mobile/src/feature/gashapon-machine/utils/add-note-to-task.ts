@@ -6,7 +6,7 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 type AddNoteToTaskParams = {
   note: NoteDTO | null;
   startTime?: Date;
-  durationMinutes?: number;
+  endTime?: Date;
   timeType?: number;
   onSuccess?: () => void;
 };
@@ -14,7 +14,7 @@ type AddNoteToTaskParams = {
 export const useAddNoteToTask = () => {
   const { addTask } = useTaskMutations();
 
-  return ({ note, startTime, durationMinutes, timeType = 1, onSuccess }: AddNoteToTaskParams) => {
+  return ({ note, startTime, endTime, timeType = 1, onSuccess }: AddNoteToTaskParams) => {
     if (!note) return;
     const text = note.text ?? "";
 
@@ -22,8 +22,7 @@ export const useAddNoteToTask = () => {
     const description = text.length > 50 ? text : "";
 
     const start = startTime ?? new Date();
-    const end =
-      durationMinutes !== undefined ? addMinutes(start, durationMinutes) : endOfDay(new Date());
+    const end = endTime ?? new Date(start.getTime() + 60 * 60 * 1000);
 
     addTask({
       title,
