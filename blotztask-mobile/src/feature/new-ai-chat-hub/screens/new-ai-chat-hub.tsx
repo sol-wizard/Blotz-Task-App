@@ -4,10 +4,14 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Pressable, View, Text, useWindowDimensions } from "react-native";
+import { GeneratedTaskTitles } from "../components/ai-result-card";
+import { useAllLabels } from "@/shared/hooks/useAllLabels";
 
 export default function NewAiChatHubScreen() {
   const { height } = useWindowDimensions();
   const { aiGeneratedMessage, isListening, isStarting, errorMessage } = useAutoPcmStreaming();
+
+  const { labels } = useAllLabels();
 
   const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map((task) =>
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
@@ -40,6 +44,7 @@ export default function NewAiChatHubScreen() {
               <MaterialCommunityIcons name="chevron-down" size={30} color="#FFFFFF" />
             </Pressable>
           </View>
+          <GeneratedTaskTitles tasks={aiGeneratedTasks} />
 
           <View className="mt-3 rounded-xl bg-white/20 border border-white/30 px-3 py-2">
             <Text className="text-white font-baloo text-base">
