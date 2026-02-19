@@ -17,7 +17,7 @@ const recordingConfig: RecordingConfig = {
   },
 };
 
-export function useAutoPcmStreaming() {
+export function usePcmStreaming() {
   const [isListening, setIsListening] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();

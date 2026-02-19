@@ -1,5 +1,5 @@
 import { mapExtractedTaskDTOToAiTaskDTO } from "@/feature/ai-task-generate/utils/map-extracted-to-task-dto";
-import { useAutoPcmStreaming } from "@/feature/new-ai-chat-hub/hooks/use-auto-pcm-streaming";
+import { usePcmStreaming } from "@/feature/new-ai-chat-hub/hooks/use-pcm-streaming";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -9,7 +9,7 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 
 export default function NewAiChatHubScreen() {
   const { height } = useWindowDimensions();
-  const { aiGeneratedMessage, isListening, isStarting } = useAutoPcmStreaming();
+  const { aiGeneratedMessage, isListening, isStarting } = usePcmStreaming();
 
   const { labels } = useAllLabels();
 
