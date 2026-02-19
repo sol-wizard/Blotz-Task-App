@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, Pressable, Keyboard, TextInput } from "react-native";
+import React from "react";
+import { View, Text, Pressable, TextInput } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import { theme } from "@/shared/constants/theme";
@@ -14,18 +14,6 @@ type Props = {
 
 export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
-  const [draftTitle, setDraftTitle] = useState(task.title);
-
-  const handleEdit = () => {
-    const trimmed = draftTitle.trim();
-    if (trimmed && trimmed !== task.title) {
-      onTitleChange?.(task.id, trimmed);
-    } else if (!trimmed) {
-      setDraftTitle(task.title);
-    }
-
-    Keyboard.dismiss();
-  };
   const formatTime = formatAiTaskCardTime({ startTime: task.startTime, endTime: task.endTime });
   const formatDate = formatAiTaskCardDate({ startTime: task.startTime, endTime: task.endTime });
 
@@ -38,10 +26,8 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
 
       <View className="flex-1 flex-row items-center ml-4">
         <TextInput
-          value={draftTitle}
-          onChangeText={setDraftTitle}
-          onBlur={handleEdit}
-          onSubmitEditing={handleEdit}
+          value={task.title}
+          onChangeText={(text) => onTitleChange?.(task.id, text)}
           returnKeyType="done"
           multiline
           className="flex-1 mr-3 text-lg font-baloo leading-5"
