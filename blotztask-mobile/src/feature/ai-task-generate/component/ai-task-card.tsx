@@ -14,9 +14,6 @@ type Props = {
 
 export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
-  
- 
-
   const formatTime = formatAiTaskCardTime({ startTime: task.startTime, endTime: task.endTime });
   const formatDate = formatAiTaskCardDate({ startTime: task.startTime, endTime: task.endTime });
 
