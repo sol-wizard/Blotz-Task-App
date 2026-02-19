@@ -18,8 +18,6 @@ const recordingConfig: RecordingConfig = {
 };
 
 export function useAutoPcmStreaming() {
-  const isPreparedRef = useRef(false);
-
   const [isListening, setIsListening] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
@@ -31,12 +29,7 @@ export function useAutoPcmStreaming() {
   };
 
   const ensurePrepared = async () => {
-    if (isPreparedRef.current) {
-      return;
-    }
-
     await prepareRecording(recordingConfig);
-    isPreparedRef.current = true;
   };
 
   const startConnectionAndStreaming = async () => {
