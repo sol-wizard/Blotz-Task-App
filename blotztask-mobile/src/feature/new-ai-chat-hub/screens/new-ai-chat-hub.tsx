@@ -6,7 +6,7 @@ import { Pressable, View, Text, useWindowDimensions } from "react-native";
 
 export default function NewAiChatHubScreen() {
   const { height } = useWindowDimensions();
-  const { isListening, errorMessage } = useAutoPcmStreaming();
+  const { isListening, isStarting, errorMessage } = useAutoPcmStreaming();
 
   return (
     <View className="flex-1 bg-transparent">
@@ -38,7 +38,7 @@ export default function NewAiChatHubScreen() {
 
           <View className="mt-3 rounded-xl bg-white/20 border border-white/30 px-3 py-2">
             <Text className="text-white font-baloo text-base">
-              {isListening ? "Listening..." : "Not listening"}
+              {isListening ? "Listening..." : isStarting ? "Starting microphone..." : "Not listening"}
             </Text>
             {errorMessage ? (
               <Text className="text-white font-baloo text-sm mt-1">{errorMessage}</Text>

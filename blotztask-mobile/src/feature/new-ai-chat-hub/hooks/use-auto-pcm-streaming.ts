@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { useFocusEffect } from "@react-navigation/native";
 import { AudioDataEvent, RecordingConfig, useAudioRecorder } from "@siteed/expo-audio-studio";
@@ -21,11 +21,14 @@ const recordingConfig: RecordingConfig = {
 export function useAutoPcmStreaming() {
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const isStoppingRef = useRef(false);
+  const isPreparedRef = useRef(false);
+  const preparePromiseRef = useRef<Promise<void> | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
 
-  const { startRecording, stopRecording } = useAudioRecorder();
+  const { prepareRecording, startRecording, stopRecording } = useAudioRecorder();
 
   const receiveMessageHandler = useCallback((receivedAiMessage: AiResultMessageDTO) => {
     setAiGeneratedMessage(receivedAiMessage);
@@ -87,11 +90,35 @@ export function useAutoPcmStreaming() {
     isStoppingRef.current = false;
   }, [receiveMessageHandler, stopRecording]);
 
+  const ensurePrepared = useCallback(async () => {
+    if (isPreparedRef.current) {
+      return;
+    }
+
+    if (preparePromiseRef.current) {
+      await preparePromiseRef.current;
+      return;
+    }
+
+    preparePromiseRef.current = prepareRecording(recordingConfig)
+      .then(() => {
+        isPreparedRef.current = true;
+      })
+      .finally(() => {
+        preparePromiseRef.current = null;
+      });
+
+    await preparePromiseRef.current;
+  }, [prepareRecording]);
+
   const startStreaming = useCallback(async () => {
     setErrorMessage(null);
-    setIsListening(false);
+    setIsStarting(true);
 
     try {
+      // Warm up recorder resources/permissions before start to reduce startup latency.
+      await ensurePrepared();
+
       const connection = await signalRService.createConnection();
       await connection.start();
       connection.on("ReceiveMessage", receiveMessageHandler);
@@ -107,8 +134,15 @@ export function useAutoPcmStreaming() {
       console.error("Error starting AI chat hub audio streaming:", error);
       setErrorMessage("Microphone streaming failed");
       await stopStreaming();
+    } finally {
+      setIsStarting(false);
     }
-  }, [receiveMessageHandler, sendAudioChunk, startRecording, stopStreaming]);
+  }, [ensurePrepared, receiveMessageHandler, sendAudioChunk, startRecording, stopStreaming]);
+
+  useEffect(() => {
+    // Prewarm once so entering the screen can start listening immediately.
+    void ensurePrepared();
+  }, [ensurePrepared]);
 
   useFocusEffect(
     useCallback(() => {
@@ -121,6 +155,7 @@ export function useAutoPcmStreaming() {
 
   return {
     isListening,
+    isStarting,
     errorMessage,
     aiGeneratedMessage,
     setAiGeneratedMessage,
