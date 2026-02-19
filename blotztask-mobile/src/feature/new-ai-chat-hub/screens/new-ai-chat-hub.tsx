@@ -9,7 +9,7 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 
 export default function NewAiChatHubScreen() {
   const { height } = useWindowDimensions();
-  const { aiGeneratedMessage, isListening, isStarting, errorMessage } = useAutoPcmStreaming();
+  const { aiGeneratedMessage, isListening, isStarting } = useAutoPcmStreaming();
 
   const { labels } = useAllLabels();
 
@@ -54,9 +54,6 @@ export default function NewAiChatHubScreen() {
                   ? "Starting microphone..."
                   : "Not listening"}
             </Text>
-            {errorMessage ? (
-              <Text className="text-white font-baloo text-sm mt-1">{errorMessage}</Text>
-            ) : null}
           </View>
         </LinearGradient>
       </View>
