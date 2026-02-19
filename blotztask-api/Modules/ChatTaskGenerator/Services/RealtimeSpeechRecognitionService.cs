@@ -32,7 +32,8 @@ public class RealtimeSpeechRecognitionService : IRealtimeSpeechRecognitionServic
         _logger = logger;
     }
 
-    public async Task StartSessionAsync(string connectionId, string? initialLanguage = null, CancellationToken ct = default)
+    public async Task StartSessionAsync(string connectionId, string? initialLanguage = null,
+        CancellationToken ct = default)
     {
         if (_sessions.ContainsKey(connectionId)) return;
 
@@ -203,11 +204,12 @@ internal sealed class RealtimeSpeechSession
         }
     }
 
-    public async ValueTask DisposeAsync(CancellationToken ct = default)
+    public async Task DisposeAsync(CancellationToken ct = default)
     {
         try
         {
-            if (_started) await _recognizer.StopContinuousRecognitionAsync().ConfigureAwait(false);
+            if (_started)
+                await _recognizer.StopContinuousRecognitionAsync().ConfigureAwait(false);
         }
         finally
         {
