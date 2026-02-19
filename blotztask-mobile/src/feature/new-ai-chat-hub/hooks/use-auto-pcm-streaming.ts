@@ -22,7 +22,7 @@ export function useAutoPcmStreaming() {
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const isStoppingRef = useRef(false);
   const isPreparedRef = useRef(false);
-  const preparePromiseRef = useRef<Promise<void> | null>(null);
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
@@ -30,11 +30,11 @@ export function useAutoPcmStreaming() {
 
   const { prepareRecording, startRecording, stopRecording } = useAudioRecorder();
 
-  const receiveMessageHandler = useCallback((receivedAiMessage: AiResultMessageDTO) => {
+  const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
     setAiGeneratedMessage(receivedAiMessage);
-  }, []);
+  };
 
-  const sendAudioChunk = useCallback(async (event: AudioDataEvent) => {
+  const sendAudioChunk = async (event: AudioDataEvent) => {
     const connection = connectionRef.current;
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
       return;
@@ -59,7 +59,7 @@ export function useAutoPcmStreaming() {
     } catch (error) {
       console.error("Error sending PCM chunk:", error);
     }
-  }, []);
+  };
 
   const stopStreaming = useCallback(async () => {
     if (isStoppingRef.current) {
@@ -95,20 +95,9 @@ export function useAutoPcmStreaming() {
       return;
     }
 
-    if (preparePromiseRef.current) {
-      await preparePromiseRef.current;
-      return;
-    }
-
-    preparePromiseRef.current = prepareRecording(recordingConfig)
-      .then(() => {
-        isPreparedRef.current = true;
-      })
-      .finally(() => {
-        preparePromiseRef.current = null;
-      });
-
-    await preparePromiseRef.current;
+    prepareRecording(recordingConfig).then(() => {
+      isPreparedRef.current = true;
+    });
   }, [prepareRecording]);
 
   const startStreaming = useCallback(async () => {
