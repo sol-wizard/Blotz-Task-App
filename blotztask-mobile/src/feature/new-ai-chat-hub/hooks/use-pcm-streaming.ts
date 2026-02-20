@@ -59,11 +59,6 @@ export function usePcmStreaming() {
           const chunk: PcmAudioChunk = {
             dataBase64: event.data,
             position: event.position,
-            eventDataSize: event.eventDataSize,
-            totalSize: event.totalSize,
-            sampleRate: recordingConfig.sampleRate ?? 16000,
-            channels: recordingConfig.channels ?? 1,
-            encoding: recordingConfig.encoding ?? "pcm_16bit",
           };
 
           try {
