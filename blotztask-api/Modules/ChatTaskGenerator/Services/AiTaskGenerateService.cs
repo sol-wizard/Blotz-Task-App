@@ -1,5 +1,4 @@
 using System.Text.Json;
-using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
@@ -90,12 +89,22 @@ public class AiTaskGenerateService(
             logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
             throw new AiTokenLimitedException();
         }
-        catch (HttpOperationException ex) when (
-            ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase)
-        )
+        catch (HttpOperationException ex)
         {
-            logger.LogWarning(ex, "Request blocked by Azure OpenAI content filter.");
-            throw new AiContentFilterException();
+            logger.LogWarning(
+                ex,
+                "Azure OpenAI request failed. StatusCode={StatusCode}. ResponseContent={ResponseContent}",
+                ex.StatusCode,
+                ex.ResponseContent
+            );
+
+            // 2) 再判断是否 content_filter
+            if ((ex.ResponseContent?.Contains("\"code\":\"content_filter\"", StringComparison.OrdinalIgnoreCase) ??
+                 false) ||
+                (ex.Message?.Contains("content_filter", StringComparison.OrdinalIgnoreCase) ?? false))
+                throw new AiContentFilterException();
+
+            throw;
         }
         catch (Exception ex)
         {
