@@ -15,7 +15,6 @@ import { useNotesMutation } from "../hooks/useNotesMutation";
 import { useEstimateTaskTime } from "@/feature/notes/hooks/useEstimateTaskTime";
 import { convertDurationToMinutes } from "@/shared/util/convert-duration";
 import { addMinutes } from "date-fns/addMinutes";
-import { TaskTimeType } from "@/shared/models/task-detail-dto";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type FormValues = {
