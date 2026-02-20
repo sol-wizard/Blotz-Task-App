@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Vibration } from "react-native";
+import { View, Text, TextInput, Vibration, Pressable } from "react-native";
 import React, { useEffect } from "react";
 import { theme } from "@/shared/constants/theme";
 import { useTranslation } from "react-i18next";
@@ -44,8 +44,6 @@ const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessa
     }
   }, [transcript, setText]);
 
-
-
   const toggleListening = async () => {
     if (recognizing) {
       stopListening();
@@ -71,7 +69,9 @@ const IOSInput = ({ text, setText, sendMessage, isAiGenerating, aiGeneratedMessa
       <View className="items-center mb-4">
         <View className="w-12 h-1 rounded-full bg-[#ECECEC]" />
       </View>
-      <Text className="font-balooBold text-2xl mb-2 px-4 text-secondary">{t("labels.newTask")}</Text>
+      <Text className="font-balooBold text-2xl mb-2 px-4 text-secondary">
+        {t("labels.newTask")}
+      </Text>
       <TextInput
         value={text}
         onChangeText={setText}

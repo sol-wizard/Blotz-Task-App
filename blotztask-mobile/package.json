@@ -26,6 +26,7 @@
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.6",
     "@sentry/react-native": "~7.2.0",
+    "@siteed/expo-audio-studio": "^2.18.4",
     "@tanstack/react-query": "^5.90.3",
     "@types/react": "~19.1.10",
     "axios": "^1.13.2",

@@ -1,5 +1,4 @@
 using BlotzTask.Modules.ChatTaskGenerator.Services;
-using BlotzTask.Shared.Store;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
 
@@ -9,13 +8,9 @@ public static class DependencyInjection
     {
         services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
         services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
-
-        services.AddSingleton(new ChatHistoryStore(
-            TimeSpan.FromMinutes(30), // Sessions expire after 30 minutes of inactivity
-            TimeSpan.FromMinutes(5) // Scanning every 5 minutes
-        ));
+        services.AddSingleton<IChatToAiPipelineService, ChatToAiPipelineService>();
+        services.AddSingleton<IRealtimeSpeechRecognitionService, RealtimeSpeechRecognitionService>();
 
         return services;
     }
 }
-

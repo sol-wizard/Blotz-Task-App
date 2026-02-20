@@ -36,12 +36,13 @@ public class ChatHistoryManagerService(
 
     public async Task<ChatHistory> InitializeNewConversation(Guid userId, DateTimeOffset userLocalNow)
     {
+        
         if (_chatHistory != null) return await Task.FromResult(_chatHistory);
 
         // Fetch user preferences to get preferred language
         var userPreferencesQuery = new GetUserPreferencesQuery { UserId = userId };
         var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, CancellationToken.None);
-        
+
         // Convert Language enum to a readable string for the AI
         var preferredLanguageString = userPreferences.PreferredLanguage switch
         {

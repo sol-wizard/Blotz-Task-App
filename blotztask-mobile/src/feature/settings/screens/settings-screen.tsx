@@ -43,7 +43,7 @@ export default function SettingsScreen() {
       key: "under-development",
       label: t("menu.allTasks"),
       icon: "cog-outline",
-      route: "/settings/all-tasks",
+      route: "/settings/under-development",
     },
   ];
 

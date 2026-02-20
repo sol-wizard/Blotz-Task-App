@@ -1,5 +1,4 @@
 using System.Text.Json;
-using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
@@ -71,7 +70,7 @@ public class AiTaskGenerateService(
                     throw new AiInvalidJsonException(functionResultMessage.Content);
                 }
 
-                chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateMessage));
+                
                 return aiGenerateMessage;
             }
             catch (JsonException ex)
@@ -90,7 +89,7 @@ public class AiTaskGenerateService(
             logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
             throw new AiTokenLimitedException();
         }
-        catch (HttpOperationException ex) when (
+         catch (HttpOperationException ex) when (
             ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase)
         )
         {
