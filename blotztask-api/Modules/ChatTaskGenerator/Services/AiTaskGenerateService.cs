@@ -89,22 +89,12 @@ public class AiTaskGenerateService(
             logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
             throw new AiTokenLimitedException();
         }
-        catch (HttpOperationException ex)
+         catch (HttpOperationException ex) when (
+            ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase)
+        )
         {
-            logger.LogWarning(
-                ex,
-                "Azure OpenAI request failed. StatusCode={StatusCode}. ResponseContent={ResponseContent}",
-                ex.StatusCode,
-                ex.ResponseContent
-            );
-
-            // 2) 再判断是否 content_filter
-            if ((ex.ResponseContent?.Contains("\"code\":\"content_filter\"", StringComparison.OrdinalIgnoreCase) ??
-                 false) ||
-                (ex.Message?.Contains("content_filter", StringComparison.OrdinalIgnoreCase) ?? false))
-                throw new AiContentFilterException();
-
-            throw;
+            logger.LogWarning(ex, "Request blocked by Azure OpenAI content filter.");
+            throw new AiContentFilterException();
         }
         catch (Exception ex)
         {
