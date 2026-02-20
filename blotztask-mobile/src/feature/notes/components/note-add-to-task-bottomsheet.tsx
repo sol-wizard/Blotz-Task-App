@@ -16,6 +16,7 @@ import { useEstimateTaskTime } from "@/feature/notes/hooks/useEstimateTaskTime";
 import { convertDurationToMinutes } from "@/shared/util/convert-duration";
 import { addMinutes } from "date-fns/addMinutes";
 import { TaskTimeType } from "@/shared/models/task-detail-dto";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type FormValues = {
   startDate: Date;
@@ -115,7 +116,7 @@ export const NoteAddToTaskBottomSheet = ({
       note,
       startTime: start,
       endTime: end,
-      timeType: Number(timeType) as TaskTimeType,
+      timeType,
       onSuccess: () => {
         onClose();
         try {
@@ -197,7 +198,7 @@ export const NoteAddToTaskBottomSheet = ({
 
                 {/* Close button: vertically centered by parent */}
                 <Pressable onPress={onClose}>
-                  <Text className="text-gray-500 text-lg">✕</Text>
+                  <MaterialCommunityIcons name="close" size={16} color="#4B5563" />
                 </Pressable>
               </View>
             </View>
