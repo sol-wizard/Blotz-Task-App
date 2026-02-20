@@ -70,7 +70,7 @@ public class AiTaskGenerateService(
                     throw new AiInvalidJsonException(functionResultMessage.Content);
                 }
 
-                chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateMessage));
+                
                 return aiGenerateMessage;
             }
             catch (JsonException ex)
