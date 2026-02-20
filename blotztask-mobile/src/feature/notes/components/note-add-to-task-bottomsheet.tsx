@@ -10,7 +10,6 @@ import { SegmentToggle } from "@/feature/task-add-edit/components/segment-toggle
 import { ReminderTab } from "@/feature/task-add-edit/components/reminder-tab";
 import { EventTab } from "@/feature/task-add-edit/components/event-tab";
 import { buildTaskTimePayload } from "@/feature/task-add-edit/util/time-convertion";
-
 import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
 import { useNotesMutation } from "../hooks/useNotesMutation";
 import { useEstimateTaskTime } from "@/feature/notes/hooks/useEstimateTaskTime";
@@ -25,6 +24,8 @@ type FormValues = {
   endTime: Date;
 };
 
+type TaskFormField = FormValues;
+
 export const NoteAddToTaskBottomSheet = ({
   visible,
   note,
@@ -37,44 +38,33 @@ export const NoteAddToTaskBottomSheet = ({
   const { t } = useTranslation("notes");
   const addNoteToTask = useAddNoteToTask();
   const { deleteNote } = useNotesMutation();
+  const { estimateTime, isEstimating, timeResult } = useEstimateTaskTime();
 
+  // Initialize form like TaskForm does
   const now = new Date();
-  const defaults: FormValues = {
+  const defaultValues: TaskFormField = {
     startDate: now,
     startTime: now,
-    endDate: new Date(now.getTime() + 60 * 60 * 1000),
-    endTime: new Date(now.getTime() + 60 * 60 * 1000),
+    endDate: now,
+    endTime: addMinutes(now, 60),
   };
 
-  const newTask = useForm<FormValues>({ defaultValues: defaults });
-  const { handleSubmit, reset } = newTask;
+  const form = useForm<FormValues>({
+    defaultValues: defaultValues,
+  });
 
+  const { handleSubmit, reset, control, setValue, getValues } = form;
   const [mode, setMode] = useState<"reminder" | "event">("reminder");
-  const { estimateTime, isEstimating, timeResult } = useEstimateTaskTime();
 
   useEffect(() => {
     if (visible) {
-      // reset form when opening for the current note
-      reset(defaults);
+      reset(defaultValues);
       setMode("reminder");
     }
   }, [visible, reset]);
 
   const handleTabChange = (next: "reminder" | "event") => {
     setMode(next);
-    if (next === "reminder") {
-      // restore defaults for reminder (same behavior as TaskForm)
-      reset(defaults);
-      return;
-    }
-    // event: set end = start + 1h
-    const start = newTask.getValues("startTime") ?? new Date();
-    const startDateVal = newTask.getValues("startDate") ?? new Date();
-    const nextEnd = new Date(start.getTime() + 60 * 60 * 1000);
-    newTask.setValue("startDate", startDateVal);
-    newTask.setValue("startTime", start);
-    newTask.setValue("endDate", startDateVal);
-    newTask.setValue("endTime", nextEnd);
   };
 
   const onApply = handleSubmit((data) => {
@@ -83,12 +73,24 @@ export const NoteAddToTaskBottomSheet = ({
       return;
     }
 
-    console.log("onApply data:", {
-      startDate: data.startDate,
-      startTime: data.startTime,
-      endDate: data.endDate,
-      endTime: data.endTime,
-    });
+    // Sync time fields' date portion to match the selected date
+    const syncedStartTime = new Date(
+      data.startDate.getFullYear(),
+      data.startDate.getMonth(),
+      data.startDate.getDate(),
+      data.startTime.getHours(),
+      data.startTime.getMinutes(),
+      data.startTime.getSeconds(),
+    );
+
+    const syncedEndTime = new Date(
+      (mode === "reminder" ? data.startDate : data.endDate).getFullYear(),
+      (mode === "reminder" ? data.startDate : data.endDate).getMonth(),
+      (mode === "reminder" ? data.startDate : data.endDate).getDate(),
+      data.endTime.getHours(),
+      data.endTime.getMinutes(),
+      data.endTime.getSeconds(),
+    );
 
     const {
       startTime: payloadStart,
@@ -96,22 +98,17 @@ export const NoteAddToTaskBottomSheet = ({
       timeType,
     } = buildTaskTimePayload(
       data.startDate,
-      data.startTime,
+      syncedStartTime,
       mode === "reminder" ? data.startDate : data.endDate,
-      mode === "reminder" ? data.startTime : data.endTime,
+      syncedEndTime,
     );
 
     const start = payloadStart ?? new Date();
     const end = payloadEnd ?? new Date(start.getTime() + 60 * 60 * 1000);
 
-    // // If Single time type, backend requires start===end → pass duration 0.
-    // const durationMinutes =
-    //   timeType === TaskTimeType.Single
-    //     ? 0
-    //     : Math.max(1, Math.round((end.getTime() - start.getTime()) / 60000));
-
     if (!timeType) {
       console.error("buildTaskTimePayload returned null timeType");
+      return;
     }
 
     addNoteToTask({
@@ -139,13 +136,12 @@ export const NoteAddToTaskBottomSheet = ({
       const minutes = convertDurationToMinutes(durationStr);
       if (minutes === undefined) return;
 
-      const start = newTask.getValues("startTime") ?? new Date();
-      const startDateVal = newTask.getValues("startDate") ?? new Date();
+      const start = getValues("startTime") ?? new Date();
+      const startDateVal = getValues("startDate") ?? new Date();
       const newEnd = addMinutes(start, minutes);
 
-      newTask.setValue("endTime", newEnd);
-      newTask.setValue("endDate", startDateVal);
-
+      setValue("endTime", newEnd);
+      setValue("endDate", startDateVal);
       setMode("event");
     } catch (err) {
       console.warn("AI estimate failed", err);
@@ -163,7 +159,7 @@ export const NoteAddToTaskBottomSheet = ({
       style={{ margin: 0 }}
     >
       <View className="bg-white rounded-t-3xl p-6 mt-auto ">
-        <FormProvider {...newTask}>
+        <FormProvider {...form}>
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
             {/* Header: mode toggle (reminder/event), AI estimate button, close (all inline) */}
             <View className="flex-row items-center justify-between mb-6 gap-3 h-20">
@@ -208,14 +204,13 @@ export const NoteAddToTaskBottomSheet = ({
 
             {/* Mode toggle (Reminder / Event) */}
             <View className="mb-4">
-              {/* <SegmentToggle value={mode} setValue={handleTabChange} /> */}
               {mode === "reminder" ? (
                 <View className="mb-6">
-                  <ReminderTab control={newTask.control} />
+                  <ReminderTab control={control} />
                 </View>
               ) : (
                 <View className="mb-6">
-                  <EventTab control={newTask.control} />
+                  <EventTab control={control} />
                 </View>
               )}
             </View>
