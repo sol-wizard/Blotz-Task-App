@@ -103,8 +103,8 @@ export default function TaskDetailsScreen() {
               </View>
 
               {selectedTask.label && (
-                <View className="px-3 py-1 rounded-xl border border-black">
-                  <Text className="text-sm font-medium text-black">
+                <View className="px-3 py-1 rounded-xl border border-black flex-shrink">
+                  <Text className="text-sm font-medium text-black" numberOfLines={1}>
                     {getTranslatedLabelName(selectedTask.label.name)}
                   </Text>
                 </View>
@@ -122,6 +122,10 @@ export default function TaskDetailsScreen() {
             >
               <MaterialCommunityIcons name="pencil-minus-outline" size={28} />
             </TouchableOpacity>
+          </View>
+
+          <View className="flex-row items-start justify-center mb-4">
+            <Text className="flex-1 font-balooBold text-4xl leading-normal">{selectedTask.title}</Text>
           </View>
 
           {selectedTask.startTime === selectedTask.endTime ? (
