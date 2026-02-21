@@ -21,7 +21,7 @@ public static class AiTaskGeneratorPrompts
 
                        Task Guidelines:
                        - One task per time-bound action. Title must summarize the action. Leave description empty if not implied.
-                       - There are only three valid task types: Floating (start_time = end_time = null), Single Time (start_time = end_time), Range (start_time < end_time).
+                       - There are only three valid task types: note (start_time = end_time = null), Single Time (start_time = end_time), Range (start_time < end_time).
                        - If the user mentions date but not time, assign a time based on task content. Relative dates MUST be calculated from currentTime and dayOfWeek.
                        - Every task MUST have task_label: one of "Work", "Life", "Learning", "Health" (English only).
 
