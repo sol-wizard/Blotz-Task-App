@@ -35,15 +35,18 @@ export function calculateAlertTime(
 }
 
 export function buildTaskTimePayload(
-  startDate: Date | null,
-  startTime: Date | null,
-  endDate: Date | null,
-  endTime: Date | null,
-): { startTime: Date | undefined; endTime: Date | undefined; timeType: TaskTimeType | null } {
+  startDate: Date,
+  startTime: Date,
+  endDate: Date,
+  endTime: Date,
+): { startTime: Date; endTime: Date; timeType: TaskTimeType } {
   const start = startDate != null ? mergeDateTime(startDate, startTime ?? undefined) : undefined;
   const end = endDate != null ? mergeDateTime(endDate, endTime ?? undefined) : undefined;
+  console.log("start:", start);
+  console.log("end:", end);
 
   const taskTimeType = getTimeType(start, end);
+  console.log("timetype:", taskTimeType);
 
   // multi-day range + missing time => normalize to day bounds
   if (taskTimeType === TaskTimeType.Range && isMultiDay(startDate, endDate) && startTime === null) {
@@ -60,11 +63,7 @@ export function buildTaskTimePayload(
   };
 }
 
-function getTimeType(start?: Date, end?: Date): TaskTimeType | null {
-  if (!start || !end) {
-    return null;
-  }
-
+function getTimeType(start: Date, end: Date): TaskTimeType {
   return isSameMinute(start, end) ? TaskTimeType.Single : TaskTimeType.Range;
 }
 

@@ -65,6 +65,20 @@ export const NoteAddToTaskBottomSheet = ({
 
   const handleTabChange = (next: "reminder" | "event") => {
     setMode(next);
+    if (next === "reminder") {
+      setValue("startDate", defaultValues.startDate);
+      setValue("startTime", defaultValues.startTime);
+      setValue("endDate", defaultValues.endDate);
+      setValue("endTime", defaultValues.endTime);
+      return;
+    }
+
+    const start = new Date();
+    const oneHourLater = new Date(start.getTime() + 3600000);
+    setValue("startDate", start);
+    setValue("startTime", start);
+    setValue("endDate", oneHourLater);
+    setValue("endTime", oneHourLater);
   };
 
   const onApply = handleSubmit((data) => {
@@ -73,48 +87,17 @@ export const NoteAddToTaskBottomSheet = ({
       return;
     }
 
-    // Sync time fields' date portion to match the selected date
-    const syncedStartTime = new Date(
-      data.startDate.getFullYear(),
-      data.startDate.getMonth(),
-      data.startDate.getDate(),
-      data.startTime.getHours(),
-      data.startTime.getMinutes(),
-      data.startTime.getSeconds(),
-    );
-
-    const syncedEndTime = new Date(
-      (mode === "reminder" ? data.startDate : data.endDate).getFullYear(),
-      (mode === "reminder" ? data.startDate : data.endDate).getMonth(),
-      (mode === "reminder" ? data.startDate : data.endDate).getDate(),
-      data.endTime.getHours(),
-      data.endTime.getMinutes(),
-      data.endTime.getSeconds(),
-    );
-
-    const {
-      startTime: payloadStart,
-      endTime: payloadEnd,
-      timeType,
-    } = buildTaskTimePayload(
+    const { startTime, endTime, timeType } = buildTaskTimePayload(
       data.startDate,
-      syncedStartTime,
+      data.startTime,
       mode === "reminder" ? data.startDate : data.endDate,
-      syncedEndTime,
+      mode === "reminder" ? data.startTime : data.endTime,
     );
-
-    const start = payloadStart ?? new Date();
-    const end = payloadEnd ?? new Date(start.getTime() + 60 * 60 * 1000);
-
-    if (!timeType) {
-      console.error("buildTaskTimePayload returned null timeType");
-      return;
-    }
 
     addNoteToTask({
       note,
-      startTime: start,
-      endTime: end,
+      startTime,
+      endTime,
       timeType,
       onSuccess: () => {
         onClose();
