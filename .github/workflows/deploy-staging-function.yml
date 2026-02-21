@@ -1,53 +1,53 @@
-name: Build and deploy blotz functions to Azure Function App - blotz-task-recurring-trigger
+# name: Build and deploy blotz functions to Azure Function App - blotz-task-recurring-trigger
 
-on:
-  push:
-    paths:
-      - 'blotztask-function/**'
-    branches:
-      - main
-  workflow_dispatch:
+# on:
+#   push:
+#     paths:
+#       - 'blotztask-function/**'
+#     branches:
+#       - main
+#   workflow_dispatch:
 
-env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: './blotztask-function'
-  DOTNET_VERSION: '8.0.x' 
+# env:
+#   AZURE_FUNCTIONAPP_PACKAGE_PATH: './blotztask-function'
+#   DOTNET_VERSION: '8.0.x' 
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest      
-    environment:
-        name: 'Staging'
-    permissions:
-      id-token: write
-      contents: read 
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest      
+#     environment:
+#         name: 'Staging'
+#     permissions:
+#       id-token: write
+#       contents: read 
 
-    steps:
-      - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v4
+#     steps:
+#       - name: 'Checkout GitHub Action'
+#         uses: actions/checkout@v4
 
-      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+#       - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+#         uses: actions/setup-dotnet@v1
+#         with:
+#           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: 'Resolve Project Dependencies Using Dotnet'
-        shell: bash
-        run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          dotnet build --configuration Release --output ./output
-          popd
+#       - name: 'Resolve Project Dependencies Using Dotnet'
+#         shell: bash
+#         run: |
+#           pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+#           dotnet build --configuration Release --output ./output
+#           popd
       
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_UAI_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_UAI_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+#       - name: Login to Azure
+#         uses: azure/login@v2
+#         with:
+#           client-id: ${{ secrets.AZURE_UAI_CLIENT_ID }}
+#           tenant-id: ${{ secrets.AZURE_UAI_TENANT_ID }}
+#           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: 'Run Azure Functions Action'
-        uses: Azure/functions-action@v1
-        id: fa
-        with:
-          app-name: 'blotz-task-recurring-trigger'
-          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
+#       - name: 'Run Azure Functions Action'
+#         uses: Azure/functions-action@v1
+#         id: fa
+#         with:
+#           app-name: 'blotz-task-recurring-trigger'
+#           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
           

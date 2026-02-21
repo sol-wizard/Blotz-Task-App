@@ -14,7 +14,8 @@
     "selectDate": "选择日期",
     "selectTime": "选择时间",
     "start": "开始",
-    "end": "结束"
+    "end": "結束",
+    "invalidTimeRange": "开始时间不能晚于结束时间"
   },
   "details": {
     "notFound": "未找到选定的任务。",
@@ -31,7 +32,8 @@
     "dragToReorder": "拖拽重新排序~",
     "error": "错误",
     "failedToRefreshSubtasks": "刷新子任务失败。请重试。",
-    "failedToDeleteSubtask": "删除子任务失败。"
+    "failedToDeleteSubtask": "删除子任务失败。",
+    "mustHaveTitleError": "任务必须有一个标题"
   },
   "alerts": {
     "none": "无",

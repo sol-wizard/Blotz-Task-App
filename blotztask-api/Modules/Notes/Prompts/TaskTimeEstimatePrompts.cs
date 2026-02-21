@@ -1,4 +1,4 @@
-namespace BlotzTask.Modules.TimeEstimate.Prompts;
+namespace BlotzTask.Modules.Notes.Prompts;
 
 public class TaskTimeEstimatePrompts
 {

@@ -44,7 +44,7 @@ export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
 }
 
 export async function fetchNotes(query?: string): Promise<NoteDTO[]> {
-  const url = `/Task/star-spark-floating-tasks`;
+  const url = `/Task/notes`;
   try {
     const data: NoteDTO[] = await apiClient.get(url, {
       params: query ? { query } : undefined,

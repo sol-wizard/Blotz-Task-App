@@ -24,10 +24,10 @@ import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
-import { endOfDay } from "date-fns";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { theme } from "@/shared/constants/theme";
 
 type TaskFormProps =
   | {
@@ -57,14 +57,15 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     ? (initialAlertTime ?? 300)
     : (initialAlertTime ?? null);
 
+  const now = new Date();
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
     description: dto?.description ?? "",
     labelId: dto?.labelId ?? null,
-    startDate: dto?.startTime ? new Date(dto?.startTime) : null,
-    startTime: dto?.startTime ? new Date(dto?.startTime) : endOfDay(new Date()),
-    endDate: dto?.endTime ? new Date(dto?.endTime) : null,
-    endTime: dto?.endTime ? new Date(dto?.endTime) : endOfDay(new Date()),
+    startDate: dto?.startTime ? new Date(dto?.startTime) : now,
+    startTime: dto?.startTime ? new Date(dto?.startTime) : now,
+    endDate: dto?.endTime ? new Date(dto?.endTime) : now,
+    endTime: dto?.endTime ? new Date(dto?.endTime) : now,
     alert: defaultAlert,
   };
 
@@ -110,8 +111,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     const submitTask: AddTaskItemDTO = {
       title: data.title.trim(),
       description: data.description?.trim() ?? undefined,
-      startTime: startTime ? convertToDateTimeOffset(startTime) : undefined,
-      endTime: endTime ? convertToDateTimeOffset(endTime) : undefined,
+      startTime: convertToDateTimeOffset(startTime!),
+      endTime: convertToDateTimeOffset(endTime!),
       labelId: data.labelId ?? undefined,
       timeType,
       alertTime: alertTime ? convertToDateTimeOffset(alertTime) : undefined,
@@ -155,11 +156,12 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
                 multiline: false,
                 blurOnSubmit: true,
                 returnKeyType: "done",
+                placeholderTextColor: theme.colors.disabled,
               }}
             />
             {formState.errors.title && (
               <Text className="text-red-500 text-sm ml-1 font-baloo">
-                {formState.errors.title.message}
+                {t("details.mustHaveTitleError")}
               </Text>
             )}
           </Animated.View>
@@ -173,12 +175,19 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
               placeholder={t("form.addNote")}
               control={control}
               className="font-baloo text-lg text-primary"
+              inputProps={{
+                placeholderTextColor: theme.colors.primary,
+              }}
             />
           </Animated.View>
 
           <FormDivider />
           <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
-
+          {formState.errors.endTime && (
+            <Text className="text-red-500 text-sm mb-4 font-baloo">
+              {t(formState.errors.endTime.message || "")}
+            </Text>
+          )}
           {isActiveTab === "reminder" && <ReminderTab control={control} />}
           {isActiveTab === "event" && <EventTab control={control} />}
           <FormDivider />

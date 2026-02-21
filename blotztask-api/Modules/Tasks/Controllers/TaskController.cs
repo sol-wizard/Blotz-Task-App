@@ -14,7 +14,6 @@ public class TaskController(
     TaskStatusUpdateCommandHandler taskStatusUpdateCommandHandler,
     AddTaskCommandHandler addTaskCommandHandler,
     GetTaskByIdQueryHandler getTaskByIdQueryHandler,
-    GetStarSparkFloatingTasksQueryHandler getStarSparkFloatingTasksQueryHandler,
     DeleteTaskCommandHandler deleteTaskCommandHandler,
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
@@ -63,23 +62,6 @@ public class TaskController(
             userId,
             result.Count(),
             stopwatch.ElapsedMilliseconds);
-        return result;
-    }
-
-    [HttpGet("star-spark-floating-tasks")]
-    public async Task<IEnumerable<FloatingTaskItemDto>> GetStarSparkFloatingTasks(
-        [FromQuery] string? query, CancellationToken ct)
-    {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
-
-        var floatingTasksQuery = new GetStarSparkFloatingTasksQuery
-        {
-            UserId = userId,
-            QueryString = query
-        };
-
-        var result = await getStarSparkFloatingTasksQueryHandler.Handle(floatingTasksQuery, ct);
         return result;
     }
 
