@@ -16,6 +16,7 @@ import { useEstimateTaskTime } from "@/feature/notes/hooks/useEstimateTaskTime";
 import { convertDurationToMinutes } from "@/shared/util/convert-duration";
 import { addMinutes } from "date-fns/addMinutes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { NoteTimeEstimation } from "../models/note-time-estimation";
 
 type FormValues = {
   startDate: Date;
@@ -115,7 +116,8 @@ export const NoteAddToTaskBottomSheet = ({
     if (!note) return;
     try {
       const maybeResult = await estimateTime(note);
-      const durationStr = (maybeResult && (maybeResult as any).duration) ?? timeResult ?? "";
+      const durationStr =
+        (maybeResult && (maybeResult as NoteTimeEstimation).duration) ?? timeResult ?? "";
       const minutes = convertDurationToMinutes(durationStr);
       if (minutes === undefined) return;
 
