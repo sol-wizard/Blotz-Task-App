@@ -10,11 +10,13 @@ export const NotesDualView = ({
   onDeleteTask,
   isDeleting,
   onPressTask,
+  onAddToTask,
 }: {
   notes: NoteDTO[];
   onDeleteTask: (t: NoteDTO) => void;
   isDeleting: boolean;
   onPressTask: (note: NoteDTO) => void;
+  onAddToTask?: (note: NoteDTO) => void;
 }) => {
   const [toggledMap, setToggledMap] = useState<ToggledMap>({});
 
@@ -46,6 +48,7 @@ export const NotesDualView = ({
                   onDelete={onDeleteTask}
                   isDeleting={isDeleting}
                   onPressCard={onPressTask}
+                  onAddToTask={onAddToTask}
                 />
               );
             })}
@@ -62,6 +65,7 @@ export const NotesDualView = ({
                   onDelete={onDeleteTask}
                   isDeleting={isDeleting}
                   onPressCard={onPressTask}
+                  onAddToTask={onAddToTask}
                 />
               );
             })}

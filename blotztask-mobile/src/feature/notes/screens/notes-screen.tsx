@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 import { NoteModal } from "@/feature/notes/components/note-modal";
+import { NoteAddToTaskBottomSheet } from "@/feature/notes/components/note-add-to-task-bottomsheet";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,6 +24,10 @@ export default function NotesScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [editingNote, setEditingNote] = useState<NoteDTO | null>(null);
+
+  // Bottom sheet state for add-to-task (managed at screen level)
+  const [isAddToTaskVisible, setIsAddToTaskVisible] = useState(false);
+  const [selectedNoteForTask, setSelectedNoteForTask] = useState<NoteDTO | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -154,6 +159,11 @@ export default function NotesScreen() {
               onDeleteTask={handleDelete}
               isDeleting={isNoteDeleting}
               onPressTask={handlePressTask}
+              onAddToTask={(note: NoteDTO) => {
+                console.log("onAddToTask called from NoteCard:", note.id);
+                setSelectedNoteForTask(note);
+                setIsAddToTaskVisible(true);
+              }}
             />
           )}
           {!showLoading && notesSearchResult.length === 0 && ( 
@@ -169,6 +179,15 @@ export default function NotesScreen() {
               
         </View>
       </TouchableWithoutFeedback>
+      
+      <NoteAddToTaskBottomSheet
+        visible={isAddToTaskVisible}
+        note={selectedNoteForTask}
+        onClose={() => {
+          setIsAddToTaskVisible(false);
+          setSelectedNoteForTask(null);
+        }}
+      />
     </SafeAreaView>
   );
 }
