@@ -1,5 +1,5 @@
 import { TaskTimeType } from "@/shared/models/task-detail-dto";
-import { isSameDay, isSameMinute } from "date-fns";
+import { isSameMinute } from "date-fns";
 
 const ALLOWED_ALERT_SECONDS = [0, 300, 600, 1800, 3600, 7200, 86400, 604800];
 
@@ -40,24 +40,12 @@ export function buildTaskTimePayload(
   endDate: Date,
   endTime: Date,
 ): { startTime: Date; endTime: Date; timeType: TaskTimeType } {
-  const start = startDate != null ? mergeDateTime(startDate, startTime ?? undefined) : undefined;
-  const end = endDate != null ? mergeDateTime(endDate, endTime ?? undefined) : undefined;
-  console.log("start:", start);
-  console.log("end:", end);
-
+  const start = mergeDateTime(startDate, startTime);
+  const end = mergeDateTime(endDate, endTime);
   const taskTimeType = getTimeType(start, end);
-  console.log("timetype:", taskTimeType);
-
-  // multi-day range + missing time => normalize to day bounds
-  if (taskTimeType === TaskTimeType.Range && isMultiDay(startDate, endDate) && startTime === null) {
-    start?.setHours(0, 0, 0, 0);
-  }
-  if (taskTimeType === TaskTimeType.Range && isMultiDay(startDate, endDate) && endTime === null) {
-    end?.setHours(23, 59, 0, 0);
-  }
 
   return {
-    startTime: taskTimeType === TaskTimeType.Single ? start : start,
+    startTime: start,
     endTime: taskTimeType === TaskTimeType.Single ? start : end,
     timeType: taskTimeType,
   };
@@ -74,6 +62,3 @@ function mergeDateTime(date: Date, time?: Date): Date {
   }
   return merged;
 }
-
-const isMultiDay = (startDate: Date | null, endDate: Date | null) =>
-  !!(startDate && endDate && !isSameDay(startDate, endDate));

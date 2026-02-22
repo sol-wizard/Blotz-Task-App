@@ -7,7 +7,7 @@ import { NoteTimeEstimateModal } from "./note-time-estimate-modal";
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
 import { convertDurationToMinutes, convertDurationToText } from "@/shared/util/convert-duration";
 import { NoteDTO } from "../models/note-dto";
-import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
+import { useAddNoteToTask } from "@/shared/hooks/add-note-to-task";
 import { useNotesMutation } from "../hooks/useNotesMutation";
 import { router } from "expo-router";
 

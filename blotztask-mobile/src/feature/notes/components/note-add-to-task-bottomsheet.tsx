@@ -10,7 +10,7 @@ import { SegmentToggle } from "@/feature/task-add-edit/components/segment-toggle
 import { ReminderTab } from "@/feature/task-add-edit/components/reminder-tab";
 import { EventTab } from "@/feature/task-add-edit/components/event-tab";
 import { buildTaskTimePayload } from "@/feature/task-add-edit/util/time-convertion";
-import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
+import { useAddNoteToTask } from "@/shared/hooks/add-note-to-task";
 import { useNotesMutation } from "../hooks/useNotesMutation";
 import { useEstimateTaskTime } from "@/feature/notes/hooks/useEstimateTaskTime";
 import { convertDurationToMinutes } from "@/shared/util/convert-duration";
@@ -62,7 +62,7 @@ export const NoteAddToTaskBottomSheet = ({
       reset(defaultValues);
       setMode("reminder");
     }
-  }, [visible, reset]);
+  }, [visible]);
 
   const handleTabChange = (next: "reminder" | "event") => {
     setMode(next);
@@ -115,18 +115,18 @@ export const NoteAddToTaskBottomSheet = ({
   const handleAIEstimate = async () => {
     if (!note) return;
     try {
-      const maybeResult = await estimateTime(note);
+      const aiResult = await estimateTime(note);
       const durationStr =
-        (maybeResult && (maybeResult as NoteTimeEstimation).duration) ?? timeResult ?? "";
+        (aiResult && (aiResult as NoteTimeEstimation).duration) ?? timeResult ?? "";
       const minutes = convertDurationToMinutes(durationStr);
       if (minutes === undefined) return;
 
-      const start = getValues("startTime") ?? new Date();
-      const startDateVal = getValues("startDate") ?? new Date();
-      const newEnd = addMinutes(start, minutes);
+      const startTime = getValues("startTime") ?? new Date();
+      const startDate = getValues("startDate") ?? new Date();
+      const newEnd = addMinutes(startTime, minutes);
 
       setValue("endTime", newEnd);
-      setValue("endDate", startDateVal);
+      setValue("endDate", startDate);
       setMode("event");
     } catch (err) {
       console.warn("AI estimate failed", err);
