@@ -12,17 +12,18 @@ namespace BlotzTask.Modules.Users.Commands;
 
 public sealed record SyncUserCommand(JsonElement User);
 
-public sealed class AddUserResult
+public sealed class SyncUserResult
 {
     public required Guid Id { get; init; }
     public required string Auth0UserId { get; init; }
 }
 
+// Change file name
 public class SyncUserCommandHandler(
     BlotzTaskDbContext db,
     ILogger<SyncUserCommandHandler> logger)
 {
-    public async Task<AddUserResult> Handle(SyncUserCommand command, CancellationToken ct = default)
+    public async Task<SyncUserResult> Handle(SyncUserCommand command, CancellationToken ct = default)
     {
         logger.LogInformation("Starting user sync at {Time}", DateTime.UtcNow);
 
@@ -166,10 +167,10 @@ public class SyncUserCommandHandler(
                 "Created new AppUser (Id: {Id}, Auth0Id: {Auth0UserId})",
                 row.Id, row.Auth0UserId);
 
-            return new AddUserResult { Id = row.Id, Auth0UserId = row.Auth0UserId };
+            return new SyncUserResult { Id = row.Id, Auth0UserId = row.Auth0UserId };
         }
 
-        return new AddUserResult { Id = existing.Id, Auth0UserId = existing.Auth0UserId };
+        return new SyncUserResult { Id = existing.Id, Auth0UserId = existing.Auth0UserId };
     }
 
     private string? Get(JsonElement source, string name)
