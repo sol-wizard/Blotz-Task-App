@@ -20,11 +20,6 @@ export default function ProtectedLayout() {
         name="task-edit"
         options={{
           headerShown: false,
-          headerShadowVisible: false,
-          headerTitle: "",
-          headerBackVisible: true,
-          headerTintColor: "#8E8E93",
-          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <Stack.Screen
