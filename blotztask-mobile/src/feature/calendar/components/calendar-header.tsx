@@ -3,6 +3,8 @@ import { View, Text, Pressable } from "react-native";
 import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AnimatedChevron } from "@/shared/components/ui/chevron";
+import { router } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface CalendarHeaderProps {
   date: string;
@@ -27,6 +29,16 @@ export default function CalendarHeader({ date, progress, onToggleCalendar }: Cal
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <AnimatedChevron color="#1F2937" progress={progress} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => {
+            router.push({
+              pathname: "/(protected)/ddl",
+            });
+          }}
+        >
+          <MaterialCommunityIcons name="bell-outline" size={24} color="black" />
         </Pressable>
       </View>
 

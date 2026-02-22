@@ -16,6 +16,9 @@ export default function ProtectedLayout() {
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
 
       <Stack.Screen name="task-details" options={{ headerShown: false }} />
+
+      <Stack.Screen name="ddl" options={{ headerShown: false }} />
+
       <Stack.Screen
         name="task-edit"
         options={{
