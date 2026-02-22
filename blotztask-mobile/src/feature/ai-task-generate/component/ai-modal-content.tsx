@@ -3,6 +3,7 @@ import { BottomSheetType } from "../models/bottom-sheet-type";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
+import { mapExtractedNoteDTOToAiNoteDTO } from "../utils/map-extracted-to-note-dto";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AndroidInput } from "./android-input";
 import { Platform } from "react-native";
@@ -25,15 +26,17 @@ export const AiModalContent = ({
 
   const { labels } = useAllLabels();
 
-  const aiGeneratedTasks = aiGeneratedMessage?.extractedTasks.map((task) =>
+  const aiGeneratedTasks = (aiGeneratedMessage?.extractedTasks ?? []).map((task) =>
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
   );
+  const aiGeneratedNotes = (aiGeneratedMessage?.extractedNotes ?? []).map(mapExtractedNoteDTOToAiNoteDTO);
 
   switch (modalType) {
     case "task-preview":
       return (
         <AiTasksPreview
           aiTasks={aiGeneratedTasks}
+          aiNotes={aiGeneratedNotes}
           userInput={text}
           setModalType={setModalType}
           setAiGeneratedMessage={setAiGeneratedMessage}

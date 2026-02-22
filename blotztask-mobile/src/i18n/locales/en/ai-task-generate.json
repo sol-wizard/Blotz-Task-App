@@ -8,10 +8,13 @@
     "tapToSpeak": "Tap to speak",
     "generateTask": "+ Generate Task",
     "addToTasks": "Add to tasks",
+    "addToNotes": "Add to notes",
+    "addAll": "Add all",
     "goBack": "Go back"
   },
   "labels": {
-    "newTask": "New Task"
+    "newTask": "New Task",
+    "notesSection": "Notes"
   },
   "success": {
     "taskAdded": "Yay! Task added!"
@@ -23,5 +26,10 @@
     "titlePlaceholder": "Task title",
     "editTitleLabel": "Edit task title",
     "editTitleHint": "Double tap to edit task title"
+  },
+  "noteCard": {
+    "textPlaceholder": "Note content",
+    "editTextLabel": "Edit note",
+    "editTextHint": "Double tap to edit note"
   }
 }
