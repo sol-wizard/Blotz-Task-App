@@ -94,35 +94,38 @@ export default function TaskDetailsScreen() {
         }}
       >
         <View className="pb-6 px-8">
-          <View className="flex-row items-center mb-4 mt-6">
-            <View className="px-3 py-1 rounded-xl border border-black">
-              <Text className={`text-sm font-medium text-black`}>
-                {selectedTask.isDone ? t("common:status.done") : t("common:status.todo")}
-              </Text>
-            </View>
-            {selectedTask.label && (
-              <View className="ml-2 px-3 py-1 rounded-xl border border-black">
-                <Text className="text-sm font-medium text-black">
-                  {getTranslatedLabelName(selectedTask.label.name)}
+          <View className="flex-row items-center justify-between mb-4 mt-6">
+            <View className="flex-1 flex-row items-center gap-2">
+              <View className="px-3 py-1 rounded-xl border border-black">
+                <Text className={`text-sm font-medium text-black`}>
+                  {selectedTask.isDone ? t("common:status.done") : t("common:status.todo")}
                 </Text>
               </View>
-            )}
-          </View>
 
-          <View className="flex-row items-start justify-center mb-4">
-            <Text className="flex-1 font-balooBold text-4xl leading-normal">
-              {selectedTask.title}
-            </Text>
-            <MaterialCommunityIcons
-              name="pencil-minus-outline"
-              onPress={async () => {
+              {selectedTask.label && (
+                <View className="px-3 py-1 rounded-xl border border-black flex-shrink">
+                  <Text className="text-sm font-medium text-black" numberOfLines={1}>
+                    {getTranslatedLabelName(selectedTask.label.name)}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            <TouchableOpacity
+              onPress={() => {
                 router.push({
                   pathname: "/(protected)/task-edit",
                   params: { taskId: selectedTask.id },
                 });
               }}
-              size={28}
-            />
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialCommunityIcons name="pencil-minus-outline" size={28} />
+            </TouchableOpacity>
+          </View>
+
+          <View className="flex-row items-start justify-center mb-4">
+            <Text className="flex-1 font-balooBold text-4xl leading-normal">{selectedTask.title}</Text>
           </View>
 
           {selectedTask.startTime === selectedTask.endTime ? (

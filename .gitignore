@@ -15,3 +15,8 @@ package-lock.json
 
 # bicep build outputs (generated)
 infra/main.json
+
+
+
+blotztask-api/appsettings.Development.json
+blotztask-api/appsettings.Develoment.json
