@@ -1,4 +1,5 @@
 using BlotzTask.Modules.SpeechToText.Dtos;
+using BlotzTask.Modules.SpeechToText.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -8,12 +9,17 @@ using Microsoft.Extensions.Options;
 [Authorize]
 public class SpeechController : ControllerBase
 {
+    private readonly IFastTranscriptionService _fastTranscriptionService;
     private readonly SpeechTokenSettings _settings;
     private readonly SpeechTokenService _speech;
 
-    public SpeechController(SpeechTokenService speech, IOptions<SpeechTokenSettings> settings)
+    public SpeechController(
+        SpeechTokenService speech,
+        IFastTranscriptionService fastTranscriptionService,
+        IOptions<SpeechTokenSettings> settings)
     {
         _speech = speech;
+        _fastTranscriptionService = fastTranscriptionService;
         _settings = settings.Value;
     }
 
@@ -26,7 +32,29 @@ public class SpeechController : ControllerBase
         return Ok(new
         {
             token,
-            region = _settings.Region,
+            region = _settings.Region
         });
+    }
+
+    [HttpPost("fast-transcribe")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> FastTranscribe([FromForm(Name = "audio")] IFormFile wavFile,
+        CancellationToken ct)
+    {
+        if (wavFile == null || wavFile.Length == 0)
+            return BadRequest("A WAV file is required in form field 'audio'.");
+        
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        var fastTranscriptionRequest = new FastTranscriptionRequest
+        {
+            UserId = userId,
+            WavFile = wavFile
+        };
+
+        var text = await _fastTranscriptionService.FastTranscribeWavAsync(fastTranscriptionRequest, ct);
+
+        return Ok(new { text });
     }
 }

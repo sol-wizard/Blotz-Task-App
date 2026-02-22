@@ -1,6 +1,4 @@
-using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
-using BlotzTask.Shared.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -9,20 +7,19 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 [Authorize]
 public class AiTaskGenerateChatHub : Hub
 {
-    private readonly IAiTaskGenerateService _aiTaskGenerateService;
     private readonly IChatHistoryManagerService _chatHistoryManagerService;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
-
+    private readonly IChatMessageProcessor _processor;
 
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
         IChatHistoryManagerService chatHistoryManagerService,
-        IAiTaskGenerateService aiTaskGenerateService
+        IChatMessageProcessor processor
     )
     {
         _logger = logger;
         _chatHistoryManagerService = chatHistoryManagerService;
-        _aiTaskGenerateService = aiTaskGenerateService;
+        _processor = processor;
     }
 
     public override async Task OnConnectedAsync()
@@ -37,12 +34,12 @@ public class AiTaskGenerateChatHub : Hub
 
         var timeZone = TimeZoneInfo.Utc;
         var timeZoneId = httpContext?.Request.Query["timeZone"].ToString();
+        var conversationId = httpContext?.Request.Query["conversationId"].ToString();
         try
         {
-            if (!string.IsNullOrWhiteSpace(timeZoneId))
-            {
-                timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-            }
+            if (!string.IsNullOrWhiteSpace(timeZoneId)) timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            if (!string.IsNullOrWhiteSpace(conversationId))
+                await Groups.AddToGroupAsync(Context.ConnectionId, conversationId);
         }
         catch (Exception ex)
         {
@@ -65,27 +62,30 @@ public class AiTaskGenerateChatHub : Hub
         _chatHistoryManagerService.RemoveConversation();
         await base.OnDisconnectedAsync(exception);
     }
+
     //TODO: Do we need this user paramter in this function? check and test frontend after clean up
     public async Task SendMessage(string user, string message)
     {
-        try
-        {
-            var ct = Context.ConnectionAborted;
-            var chatHistory = _chatHistoryManagerService.GetChatHistory();
+        var httpContext = Context.GetHttpContext();
+        var conversationId = httpContext?.Request.Query["conversationId"].ToString();
 
-            chatHistory.AddUserMessage(message);
-            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
+        if (httpContext?.Items.TryGetValue("UserId", out var userIdObj) != true || userIdObj is not Guid userId)
+            throw new HubException("UserId not found.");
 
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
-        }
-        catch (AiTaskGenerationException ex)
-        {
-            var aiServiceError = new AiGenerateMessage
-            {
-                IsSuccess = false,
-                ErrorMessage = ex.Message
-            };
-            await Clients.Caller.SendAsync("ReceiveMessage", aiServiceError);
-        }
+        if (string.IsNullOrWhiteSpace(conversationId))
+            throw new HubException("conversationId is required.");
+
+        await _processor.ProcessUserTextAsync(userId, conversationId!, message, Context.ConnectionAborted);
+    }
+
+    public async Task GenerateFromHistory()
+    {
+        var httpContext = Context.GetHttpContext();
+        var conversationId = httpContext?.Request.Query["conversationId"].ToString();
+
+        if (string.IsNullOrWhiteSpace(conversationId))
+            throw new HubException("conversationId is required.");
+
+        await _processor.ProcessFromHistoryAsync(conversationId!, Context.ConnectionAborted);
     }
 }
