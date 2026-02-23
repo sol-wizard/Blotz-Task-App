@@ -20,7 +20,6 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         _handler = new GetWeeklyTaskAvailabilityQueryHandler(_context, logger);
     }
 
-    [Fact(Skip = "Expected failure until API excludes floating tasks from calendar green-dot logic; floating tasks belong in Reminder UI.")]
     public async Task Handle_ShouldReturnTrue_WhenUserHasTasksOnTheDate()
     {
         // Arrange
