@@ -11,7 +11,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.Blotz.BlotzTask",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
