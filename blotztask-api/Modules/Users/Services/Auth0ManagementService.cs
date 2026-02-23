@@ -65,6 +65,13 @@ public class Auth0ManagementService : IAuth0ManagementService
 
         var managementApiAccessToken = token.AccessToken;
 
+        _logger.LogInformation(
+            "Auth0 management token loaded. TokenLoaded={TokenLoaded}, Audience={Audience}, ClientId={ClientId}, ClientSecretLength={ClientSecretLength}",
+            !string.IsNullOrWhiteSpace(managementApiAccessToken),
+            _settings.Audience,
+            _settings.ClientId,
+            _settings.ClientSecret?.Length ?? 0);
+
         _cachedToken = managementApiAccessToken;
 
         _tokenExpiresAtUtc = DateTime.UtcNow.AddSeconds(token.ExpiresIn - 60);
