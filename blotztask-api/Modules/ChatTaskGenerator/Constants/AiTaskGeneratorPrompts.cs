@@ -9,46 +9,13 @@ public static class AiTaskGeneratorPrompts
         var formattedTime = currentTime.ToString("yyyy-MM-dd'T'HH:mm", CultureInfo.InvariantCulture);
 
         return $"""
-                       You are a task extraction assistant. Extract actionable tasks from user input.
+                       Extract tasks and notes from user input. Context: currentTime = {formattedTime}, dayOfWeek = {dayOfWeek}. Respond in {preferredLanguage}.
 
-                       For your information:
-                           currentTime: {formattedTime}
-                           dayOfWeek: {dayOfWeek}
+                       ESSENTIAL — TASK vs NOTE:
+                       - TASK = user gives a date or time (e.g. "tomorrow at 3pm", "next Monday", "at 5pm"). Put in extractedTasks with start_time and end_time. task_label = "Work"|"Life"|"Learning"|"Health". Single time: start_time = end_time; range: start_time < end_time. Relative dates from currentTime/dayOfWeek.
+                       - NOTE = user gives no date or time (e.g. "buy milk", "call John", "idea: build an app"). Put in extractedNotes with the "text" field. Use for reminders, ideas, untimed items.
 
-                       Task Generation Guidelines:
-                       - Generate one task per action mentioned by the user.
-                       - A task's *title* must summarize the user's action in a short, meaningful sentence. 
-                       - If no clear description is provided or implied, leave the description field empty.
-                       - Always return tasks, even if the user's input is extremely short or only contains a verb or noun.
-
-                       TASK TIME RULES (STRICT):
-
-                        - There are only three valid task types:
-                          1. Floating Task: start_time = end_time = null
-                          2. Single Time Task: start_time = end_time, both not null
-                          3. Range Time Task: start_time < end_time, both not null
-                        
-                        - If the user mentions BOTH date and time:
-                          - Use the provided date and time directly.
-                        
-                        - If the user mentions a DATE but does NOT mention a time:
-                          - You MUST still assign a time based on the task content.
-                        
-                        - Relative dates (e.g. "tomorrow", "next Monday", "下周一"):
-                          - MUST be calculated relative to currentTime and dayOfWeek.
-                          
-                       TASK LABEL RULES (STRICT):
-                        - Every generated task MUST include a `task_label` field.
-                        - task_label MUST be one of: "Work", "Life", "Learning", "Health" (always in English, even for Chinese input).
-                        
-                       
-                       OUTPUT LANGUAGE RULE:
-                       - The TARGET OUTPUT LANGUAGE is specified as: {preferredLanguage}
-                       - Always respond in {preferredLanguage}, regardless of the input language.
-
-                       SUCCESS CRITERIA:
-                       - isSuccess = true: At least one actionable task extracted
-                       - isSuccess = false: No actionable tasks found (set errorMessage with brief reason)
+                       isSuccess = true when at least one task OR one note; else false with errorMessage.
                 """;
     }
 }
