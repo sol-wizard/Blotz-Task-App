@@ -11,7 +11,7 @@ namespace BlotzTask.Infrastructure.Data;
 
 public class BlotzTaskDbContext : DbContext
 {
-    public BlotzTaskDbContext(DbContextOptions<BlotzTaskDbContext> options) : base(options)
+    public BlotzTaskDbContext(DbContextOptions options) : base(options)
     {
     }
 
