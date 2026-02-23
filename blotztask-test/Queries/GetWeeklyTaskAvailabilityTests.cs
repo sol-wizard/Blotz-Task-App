@@ -20,6 +20,7 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         _handler = new GetWeeklyTaskAvailabilityQueryHandler(_context, logger);
     }
 
+    [Fact]
     public async Task Handle_ShouldReturnTrue_WhenUserHasTasksOnTheDate()
     {
         // Arrange

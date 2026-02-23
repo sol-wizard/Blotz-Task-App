@@ -21,6 +21,7 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         _handler = new GetTasksByDateQueryHandler(_context, logger);
     }
 
+    [Fact]
     public async Task Handle_ShouldReturnTasks_OnlyIfTheyFallWithinTheSelectedDate()
     {
         // Arrange
