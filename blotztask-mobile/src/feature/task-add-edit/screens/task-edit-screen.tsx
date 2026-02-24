@@ -6,6 +6,8 @@ import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { View } from "react-native";
+import { ReturnButton } from "@/shared/components/ui/return-button";
 
 export default function TaskEditScreen() {
   const { updateTask, isUpdating } = useTaskMutations();
@@ -44,8 +46,21 @@ export default function TaskEditScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
-      <TaskForm mode="edit" dto={taskEditData} onSubmit={handleTaskSubmit} />
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
+      
+      <View
+        style={{
+          paddingTop: 8,
+          paddingHorizontal: 20,
+        }}
+      >
+        <ReturnButton />
+      </View>
+
+      <View style={{ flex: 1 }}>
+        <TaskForm mode="edit" dto={taskEditData} onSubmit={handleTaskSubmit} />
+      </View>
+
     </SafeAreaView>
   );
 }
