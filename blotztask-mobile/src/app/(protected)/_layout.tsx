@@ -63,6 +63,17 @@ export default function ProtectedLayout() {
           fullScreenGestureEnabled: false,
         }}
       />
+      <Stack.Screen
+        name="new-ai-chat-hub"
+        options={{
+          headerShown: false,
+          presentation: "transparentModal",
+          animation: "fade",
+          contentStyle: { backgroundColor: "rgba(0,0,0,0.4)" },
+          gestureEnabled: false,
+          fullScreenGestureEnabled: false,
+        }}
+      />
     </Stack>
   );
 }

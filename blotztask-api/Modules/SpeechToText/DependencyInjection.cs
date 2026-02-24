@@ -1,4 +1,5 @@
 using BlotzTask.Modules.SpeechToText.Dtos;
+using BlotzTask.Modules.SpeechToText.Services;
 
 namespace BlotzTask.Modules.SpeechToText;
 
@@ -15,6 +16,10 @@ public static class DependencyInjection
         });
 
         services.AddHttpClient<SpeechTokenService>(client => { client.Timeout = TimeSpan.FromSeconds(10); });
+        services.AddHttpClient<IFastTranscriptionService, FastTranscriptionService>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(60);
+        });
 
         services.AddSingleton<SpeechTokenService>();
 

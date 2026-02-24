@@ -33,6 +33,24 @@ export function useAiTaskGenerator({
     }
   };
 
+  const generateFromHistory = async () => {
+    setIsAiGenerating(true);
+
+    if (connection) {
+      try {
+        await signalRService.invoke(connection, "GenerateFromHistory");
+      } catch (error) {
+        console.error("Error invoking GenerateFromHistory:", error);
+        setIsAiGenerating(false);
+        setModalType("input");
+      }
+    } else {
+      console.warn("Cannot generate from history: Not connected.");
+      setIsAiGenerating(false);
+      setModalType("input");
+    }
+  };
+
   const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
     setAiGeneratedMessage(receivedAiMessage);
     if (!receivedAiMessage.isSuccess) {
@@ -76,6 +94,7 @@ export function useAiTaskGenerator({
   return {
     aiGeneratedMessage,
     sendMessage,
+    generateFromHistory,
     setAiGeneratedMessage,
   };
 }
