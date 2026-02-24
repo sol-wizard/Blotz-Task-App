@@ -5,7 +5,7 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { View } from "react-native";
 import { ReturnButton } from "@/shared/components/ui/return-button";
 
