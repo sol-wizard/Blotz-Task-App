@@ -16,7 +16,6 @@ export default function TaskEditScreen() {
   const { selectedTask, isLoading, isFetching } = useTaskById({ taskId });
 
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   if (isLoading || !selectedTask || isUpdating || isFetching) {
     return <LoadingScreen />;
