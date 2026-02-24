@@ -51,7 +51,7 @@ export default function TaskEditScreen() {
       
       <View
         style={{
-          paddingTop: insets.top,
+          paddingTop: 8,
           paddingHorizontal: 20,
         }}
       >
