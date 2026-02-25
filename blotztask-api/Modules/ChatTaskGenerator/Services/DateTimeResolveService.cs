@@ -1,6 +1,7 @@
+using System.Text;
+using System.Text.Json;
 using Microsoft.Recognizers.Text;
 using Microsoft.Recognizers.Text.DateTime;
-using System.Text.Json;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
@@ -27,17 +28,13 @@ public class DateTimeResolveService
 
         Console.WriteLine($"🔔 Chinese result count: {zh.Count}");
         foreach (var item in zh)
-        {
             Console.WriteLine(
                 $"🔔 [ZH] Text={item.Text}, Type={item.TypeName}, Start={item.Start}, End={item.End}, Resolution={JsonSerializer.Serialize(item.Resolution)}");
-        }
 
         Console.WriteLine($"🔔 English result count: {en.Count}");
         foreach (var item in en)
-        {
             Console.WriteLine(
                 $"🔔 [EN] Text={item.Text}, Type={item.TypeName}, Start={item.Start}, End={item.End}, Resolution={JsonSerializer.Serialize(item.Resolution)}");
-        }
 
         var replacedMessage = ReplaceRecognizedDateTimes(message, [.. zh, .. en]);
         Console.WriteLine($"🔔 Replaced message: {replacedMessage}");
@@ -51,8 +48,8 @@ public class DateTimeResolveService
         var replacements = results
             .Select(r => new
             {
-                Start = r.Start,
-                End = r.End,
+                r.Start,
+                r.End,
                 Value = ExtractResolvedValue(r.Resolution)
             })
             .Where(r => !string.IsNullOrWhiteSpace(r.Value))
@@ -62,15 +59,14 @@ public class DateTimeResolveService
             .OrderByDescending(r => r.Start)
             .ToList();
 
-        var replaced = message;
-        foreach (var replacement in replacements)
+        var newMessage = new StringBuilder(message);
+        foreach (var r in replacements)
         {
-            var length = replacement.End - replacement.Start + 1;
-            replaced = replaced.Remove(replacement.Start, length)
-                .Insert(replacement.Start, replacement.Value);
+            newMessage.Remove(r.Start, r.End - r.Start + 1);
+            newMessage.Insert(r.Start, r.Value);
         }
 
-        return replaced;
+        return newMessage.ToString();
     }
 
     private static string? ExtractResolvedValue(object? resolution)
