@@ -34,6 +34,7 @@ public class DateTimeResolveService
     {
         if (string.IsNullOrWhiteSpace(message) || results.Count == 0) return message;
 
+        // start/end are the inclusive character indexes of the recognized time phrase in the original message; we use them to replace that exact substring with the resolved absolute value.
         var replacements = results
             .Select(r => new
             {
