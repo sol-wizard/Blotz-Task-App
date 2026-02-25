@@ -49,6 +49,7 @@ public class AiTaskGenerateChatHub : Hub
             _logger.LogWarning(ex, "Invalid time zone '{TimeZoneId}'. Using UTC.", timeZoneId);
         }
 
+        Context.Items["TimeZone"] = timeZone;
 
         var userLocalNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone);
 
@@ -68,6 +69,12 @@ public class AiTaskGenerateChatHub : Hub
     //TODO: Do we need this user paramter in this function? check and test frontend after clean up
     public async Task SendMessage(string user, string message)
     {
+        var timeZone = Context.Items.TryGetValue("TimeZone", out var timeZoneObj) &&
+                       timeZoneObj is TimeZoneInfo tz
+            ? tz
+            : TimeZoneInfo.Utc;
+        Console.WriteLine($"TimeZoneId={timeZone.Id}");
+
         try
         {
             var ct = Context.ConnectionAborted;
