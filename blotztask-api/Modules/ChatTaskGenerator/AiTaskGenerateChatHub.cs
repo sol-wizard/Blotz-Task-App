@@ -11,18 +11,21 @@ public class AiTaskGenerateChatHub : Hub
 {
     private readonly IAiTaskGenerateService _aiTaskGenerateService;
     private readonly IChatHistoryManagerService _chatHistoryManagerService;
+    private readonly DateTimeResolveService _dateTimeResolveService;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
 
 
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
         IChatHistoryManagerService chatHistoryManagerService,
-        IAiTaskGenerateService aiTaskGenerateService
+        IAiTaskGenerateService aiTaskGenerateService,
+        DateTimeResolveService dateTimeResolveService
     )
     {
         _logger = logger;
         _chatHistoryManagerService = chatHistoryManagerService;
         _aiTaskGenerateService = aiTaskGenerateService;
+        _dateTimeResolveService = dateTimeResolveService;
     }
 
     public override async Task OnConnectedAsync()
@@ -39,10 +42,7 @@ public class AiTaskGenerateChatHub : Hub
         var timeZoneId = httpContext?.Request.Query["timeZone"].ToString();
         try
         {
-            if (!string.IsNullOrWhiteSpace(timeZoneId))
-            {
-                timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-            }
+            if (!string.IsNullOrWhiteSpace(timeZoneId)) timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
         }
         catch (Exception ex)
         {
@@ -66,6 +66,7 @@ public class AiTaskGenerateChatHub : Hub
         _chatHistoryManagerService.RemoveConversation();
         await base.OnDisconnectedAsync(exception);
     }
+
     //TODO: Do we need this user paramter in this function? check and test frontend after clean up
     public async Task SendMessage(string user, string message)
     {
@@ -73,14 +74,21 @@ public class AiTaskGenerateChatHub : Hub
                        timeZoneObj is TimeZoneInfo tz
             ? tz
             : TimeZoneInfo.Utc;
-        Console.WriteLine($"TimeZoneId={timeZone.Id}");
+
+        var resolveDateTimesRequest = new ResolveDateTimesRequest
+        {
+            Message = message,
+            TimeZone = timeZone
+        };
+
 
         try
         {
             var ct = Context.ConnectionAborted;
             var chatHistory = _chatHistoryManagerService.GetChatHistory();
 
-            chatHistory.AddUserMessage(message);
+            var resolvedMessage = _dateTimeResolveService.Resolve(resolveDateTimesRequest);
+            chatHistory.AddUserMessage(resolvedMessage);
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
 
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);

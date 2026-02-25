@@ -19,8 +19,6 @@ export const signalRService = {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const url = `${SIGNALR_HUBS_CHAT}?timeZone=${encodeURIComponent(timeZone)}`;
 
-    console.log("timezone:", timeZone);
-
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(url, {
         accessTokenFactory: () => token,
