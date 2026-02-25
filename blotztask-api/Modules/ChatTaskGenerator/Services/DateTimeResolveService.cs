@@ -26,18 +26,8 @@ public class DateTimeResolveService
         var zh = DateTimeRecognizer.RecognizeDateTime(message, Culture.Chinese, refTime: localNow);
         var en = DateTimeRecognizer.RecognizeDateTime(message, Culture.English, refTime: localNow);
 
-        Console.WriteLine($"🔔 Chinese result count: {zh.Count}");
-        foreach (var item in zh)
-            Console.WriteLine(
-                $"🔔 [ZH] Text={item.Text}, Type={item.TypeName}, Start={item.Start}, End={item.End}, Resolution={JsonSerializer.Serialize(item.Resolution)}");
-
-        Console.WriteLine($"🔔 English result count: {en.Count}");
-        foreach (var item in en)
-            Console.WriteLine(
-                $"🔔 [EN] Text={item.Text}, Type={item.TypeName}, Start={item.Start}, End={item.End}, Resolution={JsonSerializer.Serialize(item.Resolution)}");
-
         var replacedMessage = ReplaceRecognizedDateTimes(message, [.. zh, .. en]);
-        Console.WriteLine($"🔔 Replaced message: {replacedMessage}");
+
         return replacedMessage;
     }
 
@@ -50,7 +40,7 @@ public class DateTimeResolveService
             {
                 r.Start,
                 r.End,
-                Value = ExtractResolvedValue(r.Resolution)
+                Value = ExtractResolvedTimeValue(r.Resolution)
             })
             .Where(r => !string.IsNullOrWhiteSpace(r.Value))
             .Where(r => r.Start >= 0 && r.End >= r.Start && r.End < message.Length)
@@ -69,7 +59,7 @@ public class DateTimeResolveService
         return newMessage.ToString();
     }
 
-    private static string? ExtractResolvedValue(object? resolution)
+    private static string? ExtractResolvedTimeValue(object? resolution)
     {
         if (resolution is null) return null;
 
