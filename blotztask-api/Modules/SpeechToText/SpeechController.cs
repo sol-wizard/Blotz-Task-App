@@ -1,32 +1,28 @@
 using BlotzTask.Modules.SpeechToText.Dtos;
+using BlotzTask.Modules.SpeechToText.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 [ApiController]
 [Route("api/speech")]
 [Authorize]
 public class SpeechController : ControllerBase
 {
-    private readonly SpeechTokenSettings _settings;
-    private readonly SpeechTokenService _speech;
+    private readonly SpeechTranscriptionService _speech;
 
-    public SpeechController(SpeechTokenService speech, IOptions<SpeechTokenSettings> settings)
+    public SpeechController(SpeechTranscriptionService speech)
     {
         _speech = speech;
-        _settings = settings.Value;
     }
 
 
-    [HttpGet("token")]
-    public async Task<IActionResult> GetToken(CancellationToken ct)
+    [HttpPost("transcribe")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> Transcribe([FromForm] SpeechTranscribeRequest request, CancellationToken ct)
     {
-        var token = await _speech.GetTokenAsync(ct);
+        if (request.Audio is null) throw new ArgumentException("audio is required.");
 
-        return Ok(new
-        {
-            token,
-            region = _settings.Region,
-        });
+        var result = await _speech.TranscribeAsync(request.Audio, request.Definition, ct);
+        return Ok(result);
     }
 }
