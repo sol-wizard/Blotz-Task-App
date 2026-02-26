@@ -27,9 +27,15 @@
     "editTitleLabel": "Edit task title",
     "editTitleHint": "Double tap to edit task title"
   },
+  "validation": {
+    "emptyTitle": {
+      "title": "Invalid title",
+      "message": "Title can't be empty."
+    }
+  },
   "noteCard": {
     "textPlaceholder": "Note content",
     "editTextLabel": "Edit note",
     "editTextHint": "Double tap to edit note"
-  }
+  } 
 }
