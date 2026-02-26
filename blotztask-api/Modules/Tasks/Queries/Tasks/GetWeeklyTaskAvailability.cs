@@ -54,7 +54,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                             ||
                             // Overdue tasks within 7 days (matching GetTasksByDateQuery)
                             (
-                               t.IsDone
+                               !t.IsDone
                                 && t.EndTime < userNow
                                 && t.EndTime >= sevenDayWindowStart
                             )
