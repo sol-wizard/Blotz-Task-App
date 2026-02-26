@@ -5,13 +5,9 @@ namespace BlotzTask.Modules.SpeechToText.Dtos;
 
 public class SpeechTranscribeResponse
 {
-    [JsonPropertyName("durationMilliseconds")]
-    public int DurationMilliseconds { get; set; }
-
     [JsonPropertyName("combinedPhrases")]
     public List<SpeechCombinedPhrase> CombinedPhrases { get; set; } = new();
     
-
 }
 
 public class SpeechCombinedPhrase

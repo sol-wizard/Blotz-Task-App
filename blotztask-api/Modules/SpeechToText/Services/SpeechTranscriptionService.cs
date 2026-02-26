@@ -22,7 +22,7 @@ public sealed class SpeechTranscriptionService
         _logger = logger;
     }
 
-    public async Task<SpeechTranscribeResponse> TranscribeAsync(
+    public async Task<String> TranscribeAsync(
         IFormFile audio,
         CancellationToken ct = default)
     {
@@ -67,11 +67,15 @@ public sealed class SpeechTranscriptionService
         var result = JsonSerializer.Deserialize<SpeechTranscribeResponse>(
             body,
             new JsonSerializerOptions(JsonSerializerDefaults.Web));
-
-        
-        _logger.LogInformation("Speech transcription completed. DurationMs: {DurationMs}", result?.DurationMilliseconds);
+        var text = result.CombinedPhrases == null
+            ? null
+            : string.Join(" ",
+                result.CombinedPhrases
+                    .Select(v => v.Text)
+                    .Where(text => !string.IsNullOrWhiteSpace(text))
+            ).Trim();
     
 
-        return result ?? throw new InvalidOperationException("Speech transcribe response is empty.");
+        return text ?? throw new InvalidOperationException("Speech transcribe response is empty.");
     }
 }

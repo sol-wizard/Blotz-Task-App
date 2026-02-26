@@ -1,5 +1,4 @@
 import { apiClient } from "@/shared/services/api/client";
-import { SpeechTranscribeResponseDTO } from "../models/speech-transcribe-response-dto";
 
 const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/speech/transcribe`;
 
@@ -11,16 +10,11 @@ export async function transcribeAudioFile(params: { uri: string }): Promise<stri
     type: "audio/wav",
   } as any);
 
-  const response = await apiClient.post<SpeechTranscribeResponseDTO>(url, formData, {
+  const response = await apiClient.post<string>(url, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
   });
 
-  const combined = response.combinedPhrases
-    ?.map((v) => v.text)
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-  return combined;
+  return response;
 }
