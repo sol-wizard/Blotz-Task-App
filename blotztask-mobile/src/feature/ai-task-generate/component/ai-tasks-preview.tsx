@@ -78,16 +78,6 @@ export function AiTasksPreview({
     setLocalTasks((prev) =>
       prev.map((t, index) => (index === taskIndex ? { ...t, title: newTitle } : t)),
     );
-
-    setAiGeneratedMessage((prev) => {
-      if (!prev) return prev;
-
-      const extractedTasks = (prev.extractedTasks ?? []).map((t, index) =>
-        index === taskIndex ? { ...t, title: newTitle } : t,
-      );
-
-      return { ...prev, extractedTasks };
-    });
   };
 
   const handleAddAll = async () => {
