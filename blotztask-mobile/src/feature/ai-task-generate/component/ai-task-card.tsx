@@ -24,8 +24,8 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
       setDraftTitle(task.title);
     }
 
-    Keyboard.dismiss();
-  };
+  Keyboard.dismiss();
+};
   const formatTime = formatAiTaskCardTime({ startTime: task.startTime, endTime: task.endTime });
   const formatDate = formatAiTaskCardDate({ startTime: task.startTime, endTime: task.endTime });
 
@@ -39,7 +39,10 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
       <View className="flex-1 flex-row items-center ml-4">
         <TextInput
           value={draftTitle}
-          onChangeText={setDraftTitle}
+          onChangeText={(nextTitle) => {
+            setDraftTitle(nextTitle);
+            onTitleChange?.(task.id, nextTitle);
+          }}
           onBlur={handleEdit}
           onSubmitEditing={handleEdit}
           returnKeyType="done"
