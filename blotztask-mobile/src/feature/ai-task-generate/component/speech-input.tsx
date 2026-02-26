@@ -81,8 +81,6 @@ export const SpeechInput = ({
 
       const transcribedText = await transcribeAudioFile({
         uri,
-        fileName: "speech.wav",
-        mimeType: "audio/wav",
       });
       setText(transcribedText);
     } catch (error) {

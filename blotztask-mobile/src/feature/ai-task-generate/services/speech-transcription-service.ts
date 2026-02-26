@@ -3,16 +3,12 @@ import { SpeechTranscribeResponseDTO } from "../models/speech-transcribe-respons
 
 const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/speech/transcribe`;
 
-export async function transcribeAudioFile(params: {
-  uri: string;
-  fileName?: string;
-  mimeType?: string;
-}): Promise<string> {
+export async function transcribeAudioFile(params: { uri: string }): Promise<string> {
   const formData = new FormData();
   formData.append("audio", {
     uri: params.uri,
-    name: params.fileName ?? "speech.wav",
-    type: params.mimeType ?? "audio/wav",
+    name: "speech.wav",
+    type: "audio/wav",
   } as any);
 
   const response = await apiClient.post<SpeechTranscribeResponseDTO>(url, formData, {
