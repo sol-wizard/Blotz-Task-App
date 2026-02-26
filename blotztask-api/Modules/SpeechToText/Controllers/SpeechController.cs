@@ -1,3 +1,4 @@
+// controller
 using BlotzTask.Modules.SpeechToText.Dtos;
 using BlotzTask.Modules.SpeechToText.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -22,7 +23,7 @@ public class SpeechController : ControllerBase
     {
         if (request.Audio is null) throw new ArgumentException("audio is required.");
 
-        var result = await _speech.TranscribeAsync(request.Audio, request.Definition, ct);
+        var result = await _speech.TranscribeAsync(request.Audio, ct);
         return Ok(result);
     }
 }

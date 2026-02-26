@@ -1,12 +1,17 @@
-import { View, Text, TextInput, Vibration } from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { View, Text, TextInput } from "react-native";
+import { useRef, useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
 import VoiceInputButton from "./voice-input-button";
 import { useTranslation } from "react-i18next";
-import * as Haptics from "expo-haptics";
-import { Audio } from "expo-av";
+import {
+  AudioModule,
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+} from "expo-audio";
+import type { AudioRecorder } from "expo-audio";
 import { transcribeAudioFile } from "../services/speech-transcription-service";
 
 export const SpeechInput = ({
@@ -25,169 +30,91 @@ export const SpeechInput = ({
   const { t } = useTranslation(["aiTaskGenerate", "common"]);
   const [isListening, setIsListening] = useState(false);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+  const recordingRef = useRef<AudioRecorder | null>(null);
 
-  const recordingRef = useRef<Audio.Recording | null>(null);
-  const isStoppingRef = useRef(false);
-  const transcriptBufferRef = useRef("");
-
-  useEffect(() => {
-    Audio.requestPermissionsAsync().then((permission) => {
-      if (!permission.granted) {
-        console.warn("[Mic] Microphone permission not granted. Voice input will not work.");
-      }
-    });
-  }, []);
-
-  const toAudioMimeType = (_uri: string) => "audio/wav";
-
-  const cleanupRecordingRef = () => {
-    recordingRef.current?.setOnRecordingStatusUpdate(null);
-    recordingRef.current = null;
-  };
-
-  const startRecordingChunk = async () => {
-    const recording = new Audio.Recording();
-    await recording.prepareToRecordAsync({
-      android: {
-        extension: ".wav",
-        outputFormat: Audio.AndroidOutputFormat.DEFAULT,
-        audioEncoder: Audio.AndroidAudioEncoder.DEFAULT,
-        sampleRate: 16000,
-        numberOfChannels: 1,
-        bitRate: 256000,
-      },
-      ios: {
-        extension: ".wav",
-        outputFormat: Audio.IOSOutputFormat.LINEARPCM,
-        audioQuality: Audio.IOSAudioQuality.MAX,
-        sampleRate: 16000,
-        numberOfChannels: 1,
-        bitRate: 256000,
-        linearPCMBitDepth: 16,
-        linearPCMIsBigEndian: false,
-        linearPCMIsFloat: false,
-      },
-      web: {
-        mimeType: "audio/wav",
-        bitsPerSecond: 256000,
-      },
-    } as any);
-    await recording.startAsync();
-    recordingRef.current = recording;
-  };
-
-  const uploadRecordingAndHandleTranscript = async (uri: string, shouldSendToBackend: boolean) => {
-    setIsUploadingAudio(true);
+  const startListening = async () => {
     try {
+      const permission = await requestRecordingPermissionsAsync();
+      if (!permission.granted) {
+        console.warn("[Mic] Permission not granted");
+        return;
+      }
+
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
+      });
+
+      const recorder = new AudioModule.AudioRecorder({
+        ...RecordingPresets.HIGH_QUALITY,
+        extension: ".wav",
+      });
+      await recorder.prepareToRecordAsync();
+      recorder.record();
+
+      recordingRef.current = recorder;
+      setIsListening(true);
+    } catch (error) {
+      console.warn("[Mic] Error creating recording.", error);
+    }
+  };
+
+  const uploadAudio = async () => {
+    try {
+      const recorder = recordingRef.current;
+      if (!recorder) {
+        console.warn("[Mic] No active recording");
+        return;
+      }
+
+      setIsUploadingAudio(true);
+      await recorder.stop();
+      const uri = recorder.uri;
+
+      recordingRef.current = null;
+      setIsListening(false);
+
+      if (!uri) {
+        console.warn("[Mic] No recording URI found");
+        return;
+      }
+
       const transcribedText = await transcribeAudioFile({
         uri,
         fileName: "speech.wav",
-        mimeType: toAudioMimeType(uri),
+        mimeType: "audio/wav",
       });
-      const chunkText = transcribedText.trim();
-      if (!chunkText) return;
-
-      const mergedText = transcriptBufferRef.current
-        ? `${transcriptBufferRef.current} ${chunkText}`.replace(/\s+/g, " ").trim()
-        : chunkText;
-
-      transcriptBufferRef.current = mergedText;
-      setText(mergedText);
-
-      if (shouldSendToBackend) sendMessage(mergedText);
+      setText(transcribedText);
+    } catch (error) {
+      console.warn("[Mic] Error stopping recording.", error);
     } finally {
+      await setAudioModeAsync({
+        allowsRecording: false,
+        playsInSilentMode: true,
+      }).catch(() => undefined);
       setIsUploadingAudio(false);
     }
   };
 
-  const startListening = async () => {
-    try {
-      isStoppingRef.current = false;
-
-      await Audio.requestPermissionsAsync();
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-
-      await startRecordingChunk();
-      setIsListening(true);
-      transcriptBufferRef.current = "";
-      setText("");
-    } catch (err) {
-      console.error("Failed to start recording:", err);
-      cleanupRecordingRef();
-      setIsListening(false);
-    }
-  };
-
-  const stopListening = async (transcribe = true, shouldSendToBackend = false) => {
-    if (isStoppingRef.current) return;
-    isStoppingRef.current = true;
-
-    try {
-      const recording = recordingRef.current;
-      if (recording) {
-        await recording.stopAndUnloadAsync();
-        const uri = recording.getURI();
-        cleanupRecordingRef();
-
-        if (transcribe && uri) {
-          await uploadRecordingAndHandleTranscript(uri, shouldSendToBackend);
-        }
-      }
-
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
-      });
-      setIsListening(false);
-    } catch (err) {
-      console.error("Error stopping recording session:", err);
-      cleanupRecordingRef();
-      setIsListening(false);
-    } finally {
-      isStoppingRef.current = false;
-    }
-  };
-
-  const abortListening = async () => {
-    await stopListening(false, false);
-    transcriptBufferRef.current = "";
+  const abortListening = () => {
+    const recorder = recordingRef.current;
+    recordingRef.current = null;
+    setIsListening(false);
     setText("");
+
+    void (async () => {
+      try {
+        if (recorder) {
+          await recorder.stop();
+        }
+      } finally {
+        await setAudioModeAsync({
+          allowsRecording: false,
+          playsInSilentMode: true,
+        }).catch(() => undefined);
+      }
+    })();
   };
-
-  const onPressSend = () => {
-    const finalUserText = text.trim();
-    if (!finalUserText) return;
-    sendMessage(finalUserText);
-  };
-
-  const toggleListening = async () => {
-    if (isListening) {
-      await stopListening(true, false);
-      return;
-    }
-
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    } catch {
-      Vibration.vibrate(10);
-    }
-
-    await startListening();
-  };
-
-  useEffect(
-    () => () => {
-      const recording = recordingRef.current;
-      if (!recording) return;
-      recording.setOnRecordingStatusUpdate(null);
-      void recording.stopAndUnloadAsync().catch(() => undefined);
-      recordingRef.current = null;
-    },
-    [],
-  );
 
   return (
     <View className="mb-8">
@@ -212,14 +139,12 @@ export const SpeechInput = ({
       )}
       <VoiceInputButton
         isListening={isListening}
-        startListening={toggleListening}
+        startListening={startListening}
         abortListening={abortListening}
-        stopListening={() => {
-          void stopListening(true);
-        }}
+        stopListening={uploadAudio}
         isAiGenerating={isAiGenerating || isUploadingAudio}
         hasText={text.trim() !== ""}
-        onGenerateTask={onPressSend}
+        onGenerateTask={() => sendMessage(text)}
       />
     </View>
   );
