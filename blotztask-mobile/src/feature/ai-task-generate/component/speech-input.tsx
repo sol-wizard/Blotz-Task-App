@@ -1,17 +1,16 @@
 import { View, Text, TextInput } from "react-native";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
 import VoiceInputButton from "./voice-input-button";
 import { useTranslation } from "react-i18next";
 import {
-  AudioModule,
   RecordingPresets,
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
+  useAudioRecorder,
 } from "expo-audio";
-import type { AudioRecorder } from "expo-audio";
 import { transcribeAudioFile } from "../services/speech-transcription-service";
 
 export const SpeechInput = ({
@@ -30,7 +29,7 @@ export const SpeechInput = ({
   const { t } = useTranslation(["aiTaskGenerate", "common"]);
   const [isListening, setIsListening] = useState(false);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
-  const recordingRef = useRef<AudioRecorder | null>(null);
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
   const startListening = async () => {
     try {
@@ -45,14 +44,8 @@ export const SpeechInput = ({
         playsInSilentMode: true,
       });
 
-      const recorder = new AudioModule.AudioRecorder({
-        ...RecordingPresets.HIGH_QUALITY,
-        extension: ".wav",
-      });
       await recorder.prepareToRecordAsync();
       recorder.record();
-
-      recordingRef.current = recorder;
       setIsListening(true);
     } catch (error) {
       console.warn("[Mic] Error creating recording.", error);
@@ -61,8 +54,7 @@ export const SpeechInput = ({
 
   const uploadAudio = async () => {
     try {
-      const recorder = recordingRef.current;
-      if (!recorder) {
+      if (!isListening) {
         console.warn("[Mic] No active recording");
         return;
       }
@@ -70,8 +62,6 @@ export const SpeechInput = ({
       setIsUploadingAudio(true);
       await recorder.stop();
       const uri = recorder.uri;
-
-      recordingRef.current = null;
       setIsListening(false);
 
       if (!uri) {
@@ -97,14 +87,12 @@ export const SpeechInput = ({
   };
 
   const abortListening = () => {
-    const recorder = recordingRef.current;
-    recordingRef.current = null;
     setIsListening(false);
     setText("");
 
     void (async () => {
       try {
-        if (recorder) {
+        if (recorder.isRecording) {
           await recorder.stop();
         }
       } finally {

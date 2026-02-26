@@ -21,9 +21,10 @@ export async function transcribeAudioFile(params: {
     },
   });
 
-  const combined = response.combinedPhrases?.map((v) => v.text).filter(Boolean).join(" ").trim();
-  if (combined) return combined;
-
-  const phraseText = response.phrases?.map((v) => v.text).filter(Boolean).join(" ").trim();
-  return phraseText;
+  const combined = response.combinedPhrases
+    ?.map((v) => v.text)
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  return combined;
 }
