@@ -16,7 +16,7 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
   const formatTime = formatAiTaskCardTime({ startTime: task.startTime, endTime: task.endTime });
   const formatDate = formatAiTaskCardDate({ startTime: task.startTime, endTime: task.endTime });
-
+  
   return (
     <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] min-h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
       <View
@@ -30,7 +30,8 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
           onChangeText={(text) => onTitleChange?.(task.id, text)}
           returnKeyType="done"
           multiline
-          className="flex-1 mr-3 text-lg font-baloo leading-5"
+          className="flex-1 mr-3 text-lg font-baloo"
+          textAlignVertical="center"
           style={{ color: theme.colors.onSurface }}
           placeholder={t("taskCard.titlePlaceholder")}
           placeholderTextColor={theme.colors.disabled}
