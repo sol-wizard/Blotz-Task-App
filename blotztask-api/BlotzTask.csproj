@@ -23,6 +23,8 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.Recognizers.Text" Version="1.8.13" />
+        <PackageReference Include="Microsoft.Recognizers.Text.DateTime" Version="1.8.13" />
         <PackageReference Include="Microsoft.SemanticKernel" Version="1.72.0" />
         <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
         <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="5.0.0" />
