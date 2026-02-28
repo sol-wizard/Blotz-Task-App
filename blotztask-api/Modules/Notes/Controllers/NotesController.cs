@@ -17,7 +17,8 @@ public class NotesController
   CreateNoteCommandHandler createNoteCommandHandler,
   SearchNotesQueryHandler searchNotesQueryHandler,
   UpdateNoteCommandHandler updateNoteCommandHandler,
-  DeleteNoteCommandHandler deleteNoteCommandHandler
+  DeleteNoteCommandHandler deleteNoteCommandHandler,
+  TimeEstimateCommandHandler timeEstimateCommandHandler
 ) : ControllerBase
 {
   [HttpPost]
@@ -33,6 +34,13 @@ public class NotesController
     return await createNoteCommandHandler.Handle(command, ct);
 
   }
+
+  [HttpPost("/api/TimeEstimate")]
+  public async Task<NoteTimeEstimation?> EstimateNoteTime([FromBody] NoteForEstimation note, CancellationToken ct)
+  {
+    return await timeEstimateCommandHandler.Handle(note, ct);
+  }
+
   [HttpGet]
   public async Task<List<NoteDto>> SearchNote([FromQuery] string? query, CancellationToken ct)
   {

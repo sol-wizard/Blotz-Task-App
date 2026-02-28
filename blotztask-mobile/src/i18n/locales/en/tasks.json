@@ -14,7 +14,8 @@
     "selectDate": "Select Date",
     "selectTime": "Select Time",
     "start": "Start",
-    "end": "End"
+    "end": "End",
+    "invalidTimeRange": "Start time cannot be later than end time"
   },
   "details": {
     "notFound": "Selected Task not found.",
@@ -32,7 +33,8 @@
     "dragToReorder": "Drag to reorder~",
     "error": "Error",
     "failedToRefreshSubtasks": "Failed to refresh subtasks. Please try again.",
-    "failedToDeleteSubtask": "Failed to delete subtask."
+    "failedToDeleteSubtask": "Failed to delete subtask.",
+    "mustHaveTitleError": "Task must have a title"
   },
   "alerts": {
     "none": "None",

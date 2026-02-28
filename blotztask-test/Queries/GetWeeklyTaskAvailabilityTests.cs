@@ -20,7 +20,7 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         _handler = new GetWeeklyTaskAvailabilityQueryHandler(_context, logger);
     }
 
-    [Fact(Skip = "Expected failure until API excludes floating tasks from calendar green-dot logic; floating tasks belong in Reminder UI.")]
+    [Fact]
     public async Task Handle_ShouldReturnTrue_WhenUserHasTasksOnTheDate()
     {
         // Arrange
@@ -34,12 +34,7 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
 
         // 2. Incomplete Task on Tuesday
         await _seeder.CreateTaskAsync(userId, "Incomplete Task", monday.AddDays(1).AddHours(10), monday.AddDays(1).AddHours(11));
-
-        // 3. Floating Task Created on Wednesday
-        // This task has NO start/end time, but its CreatedAt matches Wednesday.
-        // The green dot should NOT appear because floating tasks will be shown in a separate Reminder UI, not on the calendar page.
-        await _seeder.CreateTaskAsync(userId, "Floating Task Wednesday", null, null, createdAt: monday.AddDays(2).AddHours(12));
-
+        
         var query = new GetWeeklyTaskAvailabilityQuery
         {
             UserId = userId,

@@ -48,22 +48,13 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                         (
                             // Tasks in date range
                             (
-                                t.StartTime != null
-                                && t.StartTime < weekEndExclusive 
+                                t.StartTime < weekEndExclusive 
                                 && t.EndTime > weekStart
-                            )
-                            ||
-                            // Floating tasks
-                            (
-                                t.StartTime == null
-                                && t.CreatedAt >= weekStart 
-                                && t.CreatedAt < weekEndExclusive
                             )
                             ||
                             // Overdue tasks within 7 days (matching GetTasksByDateQuery)
                             (
-                                t.StartTime != null
-                                && !t.IsDone
+                               !t.IsDone
                                 && t.EndTime < userNow
                                 && t.EndTime >= sevenDayWindowStart
                             )
@@ -90,8 +81,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
 
             var hasTask = tasks.Any(t =>
             {
-                if (t.StartTime.HasValue && t.EndTime.HasValue)
-                {
                     // Tasks in date range
                     if (t.StartTime < dayEnd && t.EndTime >= dayStart) return true;
 
@@ -105,12 +94,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                         return true;
                     }
                     return false;
-                }
-
-                var createdAtUtc = DateTime.SpecifyKind(t.CreatedAt, DateTimeKind.Utc);
-                var createdAtLocal = new DateTimeOffset(createdAtUtc, TimeSpan.Zero).ToOffset(dayStart.Offset);
-
-                return createdAtLocal >= dayStart && createdAtLocal < dayEnd;
             });
 
             result.Add(new DailyTaskIndicatorDto
@@ -119,7 +102,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                 HasTask = hasTask
             });
         }
-
         logger.LogInformation(
             "Computed weekly task availability for user {UserId} in {ElapsedMs}ms",
             query.UserId,
@@ -128,7 +110,6 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         return result;
     }
 }
-
 public class DailyTaskIndicatorDto
 {
     public DateTimeOffset Date { get; set; }

@@ -3,6 +3,8 @@ using BlotzTask.Modules.SpeechToText.Dtos;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
+// Currently this service is only used in android to help get token from azure speech to enable the speech to text service on android
+
 public sealed class SpeechTokenService
 {
     private const string CacheKey = "azure-speech-token";
