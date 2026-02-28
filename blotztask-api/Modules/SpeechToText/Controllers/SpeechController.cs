@@ -1,5 +1,4 @@
 // controller
-using BlotzTask.Modules.SpeechToText.Dtos;
 using BlotzTask.Modules.SpeechToText.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,11 +18,11 @@ public class SpeechController : ControllerBase
 
     [HttpPost("transcribe")]
     [Consumes("multipart/form-data")]
-    public async Task<IActionResult> Transcribe([FromForm] SpeechTranscribeRequest request, CancellationToken ct)
+    public async Task<IActionResult> Transcribe(IFormFile audio, CancellationToken ct)
     {
-        if (request.Audio is null) throw new ArgumentException("audio is required.");
+        if (audio is null) throw new ArgumentException("audio is required.");
 
-        var result = await _speech.TranscribeAsync(request.Audio, ct);
+        var result = await _speech.TranscribeAsync(audio, ct);
         return Ok(result);
     }
 }
