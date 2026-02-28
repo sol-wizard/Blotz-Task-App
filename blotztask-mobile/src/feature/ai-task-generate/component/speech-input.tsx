@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import {
   RecordingPresets,
   requestRecordingPermissionsAsync,
+  getRecordingPermissionsAsync,
   setAudioModeAsync,
   useAudioRecorder,
 } from "expo-audio";
@@ -29,13 +30,11 @@ export const SpeechInput = ({
   const { t } = useTranslation(["aiTaskGenerate", "common"]);
   const [isListening, setIsListening] = useState(false);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
-  const [hasMicPermission, setHasMicPermission] = useState(false);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
   useEffect(() => {
     void (async () => {
       const permission = await requestRecordingPermissionsAsync();
-      setHasMicPermission(permission.granted);
       if (!permission.granted) {
         console.warn("[Mic] Permission not granted");
       }
@@ -44,7 +43,8 @@ export const SpeechInput = ({
 
   const startListening = async () => {
     try {
-      if (!hasMicPermission) {
+      const permission = await getRecordingPermissionsAsync();
+      if (!permission.granted) {
         console.warn("[Mic] Permission not granted");
         return;
       }
