@@ -108,7 +108,7 @@ public class BreakdownTaskCommandHandler(
             return parsedResult.Subtasks.Select(st => new SubTask
             {
                 Title = st.Title,
-                Duration = ProjectShortDuration(XmlConvert.ToTimeSpan(st.Duration)),
+                Duration = XmlConvert.ToTimeSpan(st.Duration), // Parses ISO 8601: PT30M, PT1H, PT24H
                 Order = st.Order
             }).ToList();
         }
@@ -135,21 +135,6 @@ public class BreakdownTaskCommandHandler(
             );
             return [];
         }
-    }
-
-    private static TimeSpan ProjectShortDuration(TimeSpan duration)
-    {
-        if (duration >= MinimumSubtaskDuration)
-            return duration;
-
-        var ratio = duration.TotalMinutes / MinimumSubtaskDuration.TotalMinutes;
-        if (ratio < 0)
-            ratio = 0;
-        else if (ratio > 1)
-            ratio = 1;
-
-        var projectedMinutes = MinimumSubtaskDuration.TotalMinutes + ratio * ProjectionRange.TotalMinutes;
-        return TimeSpan.FromMinutes(projectedMinutes);
     }
 }
 
