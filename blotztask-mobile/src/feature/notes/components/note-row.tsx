@@ -34,7 +34,7 @@ export const NoteRow = ({
   const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
   const addNoteToTask = useAddNoteToTask();
   const { estimateTime, isEstimating, timeResult, estimateError } = useEstimateTaskTime();
-  const { deleteNote, isNoteDeleting } = useNotesMutation();
+  const { deleteNote } = useNotesMutation();
 
   const handleAddToTask = () => {
     setIsEstimateModalVisible(true);

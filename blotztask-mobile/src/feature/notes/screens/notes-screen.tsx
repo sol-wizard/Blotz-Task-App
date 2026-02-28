@@ -16,7 +16,6 @@ import { NoteDTO } from "@/feature/notes/models/note-dto";
 import { NoteModal } from "@/feature/notes/components/note-modal";
 import { NoteRow } from "@/feature/notes/components/note-row";
 
-const LIST_BOTTOM_PADDING = 140;
 
 function NotesHeader({
   title,
@@ -113,13 +112,6 @@ export default function NotesScreen() {
 
   const closeAllRows = () => {
     Object.values(swipeablesRef.current).forEach((ref) => ref?.close());
-  };
-
-  const openCreateModal = () => {
-    closeAllRows();
-    setEditingNote(null);
-    setNoteText("");
-    setIsModalVisible(true);
   };
 
   const openEditModal = (note: NoteDTO) => {
