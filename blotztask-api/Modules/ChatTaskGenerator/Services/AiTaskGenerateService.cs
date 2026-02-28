@@ -1,5 +1,4 @@
 using System.Text.Json;
-using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
@@ -71,7 +70,6 @@ public class AiTaskGenerateService(
                     throw new AiInvalidJsonException(functionResultMessage.Content);
                 }
 
-                chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateMessage));
                 return aiGenerateMessage;
             }
             catch (JsonException ex)

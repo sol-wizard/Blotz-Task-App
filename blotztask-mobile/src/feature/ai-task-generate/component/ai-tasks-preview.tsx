@@ -3,31 +3,41 @@ import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
 import { View, Pressable, ActivityIndicator, ScrollView, Text } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
+import { AiNoteCard } from "./ai-note-card";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { usePostHog } from "posthog-react-native";
-import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
+import { AiNoteDTO } from "../models/ai-note-dto";
 import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { createNote } from "@/feature/notes/services/notes-service";
+import { noteKeys } from "@/shared/constants/query-key-factory";
+import { addTaskItem } from "@/shared/services/task-service";
+import { taskKeys } from "@/shared/constants/query-key-factory";
 
 export function AiTasksPreview({
   aiTasks,
+  aiNotes,
   setModalType,
   userInput,
   setAiGeneratedMessage,
 }: {
   aiTasks?: AiTaskDTO[];
+  aiNotes?: AiNoteDTO[];
   setModalType: (v: BottomSheetType) => void;
   userInput: string;
   setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) {
   const { t } = useTranslation("aiTaskGenerate");
-  const { addTask, isAdding } = useTaskMutations();
+  const queryClient = useQueryClient();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
+  const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes ?? []);
+  const [isAdding, setIsAdding] = useState(false);
 
   const posthog = usePostHog();
 
@@ -37,17 +47,28 @@ export function AiTasksPreview({
     return () => {
       if (!finishedAllStepsRef.current) {
         posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-          ai_output: JSON.stringify(localTasks),
+          ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
           user_input: userInput,
           outcome: "abandoned",
-          ai_generated_task_count: localTasks?.length ?? 0,
+          ai_generated_task_count: localTasks.length,
+          ai_generated_note_count: localNotes.length,
           user_add_task_count: 0,
+          user_add_note_count: 0,
         });
       }
     };
-  }, [localTasks]);
+  }, [localTasks, localNotes]);
 
-  const createDisabled = isAdding || localTasks?.length === 0;
+  const hasItems = localTasks.length > 0 || localNotes.length > 0;
+  const addAllDisabled = isAdding || !hasItems;
+
+  const onDeleteNote = (noteId: string) => {
+    setLocalNotes((prev) => prev.filter((n) => n.id !== noteId));
+  };
+
+  const onNoteTextChange = (noteId: string, newText: string) => {
+    setLocalNotes((prev) => prev.map((n) => (n.id === noteId ? { ...n, text: newText } : n)));
+  };
 
   const onDeleteTask = (taskId: string) => {
     setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
@@ -57,28 +78,42 @@ export function AiTasksPreview({
     setLocalTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, title: newTitle } : t)));
   };
 
-  const handleAddTasks = async () => {
-    if (isAdding || !localTasks?.length) return;
+  const handleAddAll = async () => {
+    if (isAdding || !hasItems) return;
 
     try {
-      const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
+      setIsAdding(true);
 
-      await Promise.all(payloads.map((payload) => addTask(payload)));
+      if (localTasks.length > 0) {
+        const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
+        await Promise.all(payloads.map((payload) => addTaskItem(payload)));
+        queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      }
+
+      if (localNotes.length > 0) {
+        await Promise.all(localNotes.map((n) => createNote(n.text)));
+        queryClient.invalidateQueries({ queryKey: noteKeys.all });
+      }
 
       finishedAllStepsRef.current = true;
 
       posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-        ai_output: JSON.stringify(localTasks),
+        ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
         user_input: userInput,
-        ai_generate_task_count: localTasks?.length ?? 0,
-        user_add_task_count: payloads.length ?? 0,
+        ai_generated_task_count: localTasks.length,
+        ai_generated_note_count: localNotes.length,
+        user_add_task_count: localTasks.length,
+        user_add_note_count: localNotes.length,
         outcome: "accepted",
       });
 
       setLocalTasks([]);
+      setLocalNotes([]);
       router.back();
     } catch (error) {
-      console.log("Add tasks failed", error);
+      console.log("Add tasks/notes failed", error);
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -87,31 +122,52 @@ export function AiTasksPreview({
     setModalType("input");
 
     posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-      ai_output: JSON.stringify(localTasks),
+      ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
       user_input: userInput,
-      ai_generate_task_count: localTasks?.length ?? 0,
+      ai_generated_task_count: localTasks.length,
+      ai_generated_note_count: localNotes.length,
       outcome: "go_back",
       user_add_task_count: 0,
+      user_add_note_count: 0,
     });
   };
 
   return (
     <View className="items-center max-h-[600px]">
       <ScrollView className="w-full mt-4 mb-8">
-        {localTasks?.map((task) => (
-          <AiTaskCard
-            key={task.id}
-            task={task}
-            handleTaskDelete={onDeleteTask}
-            onTitleChange={onTitleChange}
-          />
-        ))}
+        {localTasks.length > 0 && (
+          <>
+            {localTasks.map((task) => (
+              <AiTaskCard
+                key={task.id}
+                task={task}
+                handleTaskDelete={onDeleteTask}
+                onTitleChange={onTitleChange}
+              />
+            ))}
+          </>
+        )}
+        {localNotes.length > 0 && (
+          <>
+            <Text className="font-baloo text-base text-primary ml-7 mt-4 mb-2">
+              {t("labels.notesSection")}
+            </Text>
+            {localNotes.map((note) => (
+              <AiNoteCard
+                key={note.id}
+                note={note}
+                handleNoteDelete={onDeleteNote}
+                onTextChange={onNoteTextChange}
+              />
+            ))}
+          </>
+        )}
       </ScrollView>
 
-      <View className="flex-row justify-center items-center mt-4 mb-10">
+      <View className="flex-row justify-center items-center mt-4 mb-10 flex-wrap gap-2">
         <Pressable
           onPress={handleGoBack}
-          className="w-12 h-12 rounded-full items-center justify-center bg-background mx-8 font-bold"
+          className="w-12 h-12 rounded-full items-center justify-center bg-background mx-2 font-bold"
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityRole="button"
           accessibilityLabel={t("buttons.goBack")}
@@ -120,19 +176,19 @@ export function AiTasksPreview({
         </Pressable>
 
         <Pressable
-          onPress={handleAddTasks}
-          disabled={createDisabled}
-          className={`w-[100px] h-12 rounded-full items-center justify-center mx-8 ${
-            createDisabled ? "bg-gray-300" : "bg-[#a6d445]"
+          onPress={handleAddAll}
+          disabled={addAllDisabled}
+          className={`w-[100px] h-12 rounded-full items-center justify-center mx-2 ${
+            addAllDisabled ? "bg-gray-300" : "bg-[#a6d445]"
           }`}
           style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           accessibilityRole="button"
-          accessibilityLabel={t("buttons.addToTasks")}
+          accessibilityLabel={t("buttons.addAll")}
         >
           {isAdding ? (
             <ActivityIndicator size="small" />
           ) : (
-            <Text className="font-baloo text-sm">{t("buttons.addToTasks")}</Text>
+            <Text className="font-baloo text-sm">{t("buttons.addAll")}</Text>
           )}
         </Pressable>
       </View>

@@ -9,6 +9,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IChatHistoryManagerService, ChatHistoryManagerService>();
         services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
+        services.AddScoped<DateTimeResolveService>();
 
         services.AddSingleton(new ChatHistoryStore(
             TimeSpan.FromMinutes(30), // Sessions expire after 30 minutes of inactivity
@@ -18,4 +19,3 @@ public static class DependencyInjection
         return services;
     }
 }
-
