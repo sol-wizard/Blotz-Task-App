@@ -13,11 +13,9 @@ namespace BlotzTask.Modules.BreakDown.Commands;
 
 public class BreakdownTaskCommand
 {
-    [Required]
-    public required int TaskId { get; init; }
+    [Required] public required int TaskId { get; init; }
 
-    [Required]
-    public required Guid UserId { get; init; }
+    [Required] public required Guid UserId { get; init; }
 }
 
 public class BreakdownTaskCommandHandler(
@@ -33,15 +31,12 @@ public class BreakdownTaskCommandHandler(
         var query = new GetTasksByIdQuery { TaskId = command.TaskId, UserId = command.UserId };
         var task = await getTaskByIdQueryHandler.Handle(query, ct);
 
-        if (task == null)
-        {
-            throw new ArgumentException($"Task with ID {command.TaskId} not found.");
-        }
+        if (task == null) throw new ArgumentException($"Task with ID {command.TaskId} not found.");
 
         // Fetch user preferences to get preferred language
         var userPreferencesQuery = new GetUserPreferencesQuery { UserId = command.UserId };
         var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, ct);
-        
+
         // Convert Language enum to a readable string for the AI
         var preferredLanguageString = userPreferences.PreferredLanguage switch
         {
@@ -67,8 +62,7 @@ public class BreakdownTaskCommandHandler(
                 ["title"] = task.Title,
                 ["description"] = task.Description ?? "No description provided",
                 ["startTime"] = task.StartTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null",
-                ["endTime"] = task.EndTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null",
-                ["preferredLanguage"] = preferredLanguageString
+                ["endTime"] = task.EndTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null"
             };
 
             // InvokePromptAsync: SK's method for executing a prompt template with variable substitution
@@ -76,7 +70,9 @@ public class BreakdownTaskCommandHandler(
             // 2. Sends the prompt to OpenAI with the specified execution settings
             // 3. Returns the structured JSON response
             var result = await kernel.InvokePromptAsync(
-                TaskBreakdownPrompts.BreakdownPrompt,
+                TaskBreakdownPrompts.GetBreakdownPrompt(
+                    preferredLanguageString
+                ),
                 arguments,
                 cancellationToken: ct
             );
@@ -113,7 +109,7 @@ public class BreakdownTaskCommandHandler(
             {
                 Title = st.Title,
                 Duration = XmlConvert.ToTimeSpan(st.Duration), // Parses ISO 8601: PT30M, PT1H, PT24H
-                Order = st.Order,
+                Order = st.Order
             }).ToList();
         }
         catch (JsonException ex)
@@ -141,6 +137,7 @@ public class BreakdownTaskCommandHandler(
         }
     }
 }
+
 public class SubTask
 {
     public string Title { get; set; } = string.Empty;
