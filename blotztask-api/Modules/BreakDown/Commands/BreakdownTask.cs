@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
-using System.Xml;
 using BlotzTask.Modules.BreakDown.DTOs;
 using BlotzTask.Modules.BreakDown.Prompts;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
@@ -24,7 +24,7 @@ public class BreakdownTaskCommandHandler(
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     Kernel kernel)
 {
-    public async Task<List<SubTask>> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
+    public async Task<GeneratedSubTaskList> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
     {
         logger.LogInformation("Breaking down task {TaskId}", command.TaskId);
 
@@ -79,16 +79,16 @@ public class BreakdownTaskCommandHandler(
 
             var responseContent = result.ToString();
 
-            if (string.IsNullOrEmpty(responseContent))
+            if (string.IsNullOrWhiteSpace(responseContent))
             {
                 logger.LogWarning("LLM returned no response for task breakdown");
-                return [];
+                throw new AiEmptyResponseException("LLM returned no response for task breakdown.");
             }
 
             logger.LogInformation("LLM raw result: {Content}", responseContent);
 
             // Deserialize the structured JSON response into our DTO
-            // Because we used ResponseFormat = typeof(GeneratedSubTaskList), 
+            // Because we used ResponseFormat = typeof(GeneratedSubTaskList),
             // OpenAI guarantees the response matches this schema
             var parsedResult = JsonSerializer.Deserialize<GeneratedSubTaskList>(
                 responseContent,
@@ -98,49 +98,49 @@ public class BreakdownTaskCommandHandler(
             if (parsedResult == null)
             {
                 logger.LogWarning("Failed to parse structured output into {Type}", nameof(GeneratedSubTaskList));
-                return [];
+                throw new AiInvalidJsonException(responseContent);
             }
 
-            // Map DTOs to domain entities
-            // XmlConvert.ToTimeSpan parses ISO 8601 durations (PT30M, PT1H30M, PT24H)
-            // Note: We constrain the LLM to use hours/minutes/seconds only (no days like PT1D)
-            // to ensure XmlConvert can parse it correctly
-            return parsedResult.Subtasks.Select(st => new SubTask
-            {
-                Title = st.Title,
-                Duration = XmlConvert.ToTimeSpan(st.Duration), // Parses ISO 8601: PT30M, PT1H, PT24H
-                Order = st.Order
-            }).ToList();
+            return parsedResult;
         }
         catch (JsonException ex)
         {
-            // Should rarely happen with structured output, but log if it does
             logger.LogError(ex, "Failed to parse LLM response JSON. Content might be malformed");
-            return [];
+            throw new AiInvalidJsonException("Malformed JSON response from task breakdown model.", ex);
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException oce)
         {
-            // User or system canceled the request
-            logger.LogWarning("Task breakdown was canceled");
-            return [];
+            logger.LogWarning(oce, "Task breakdown was canceled");
+            throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
+        }
+        catch (TokenLimitExceededException ex)
+        {
+            logger.LogWarning(ex, "Token limit exceeded during task breakdown.");
+            throw new AiTokenLimitedException();
+        }
+        catch (HttpOperationException ex)
+            when (ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogWarning(ex, "Request blocked by Azure OpenAI content filter during task breakdown.");
+            throw new AiContentFilterException();
+        }
+        catch (AiTaskGenerationException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            // Catch-all for unexpected errors (network issues, model errors, etc.)
             logger.LogError(
                 ex,
                 "Unexpected error during task breakdown. TaskId: {TaskId}, Exception: {Exception}",
                 command.TaskId,
                 ex.Message
             );
-            return [];
+            throw new AiTaskGenerationException(
+                AiErrorCode.Unknown,
+                "An unhandled exception occurred during task breakdown.",
+                ex
+            );
         }
     }
-}
-
-public class SubTask
-{
-    public string Title { get; set; } = string.Empty;
-    public TimeSpan Duration { get; set; }
-    public int Order { get; set; }
 }

@@ -1,4 +1,5 @@
 using BlotzTask.Modules.BreakDown.Commands;
+using BlotzTask.Modules.BreakDown.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,7 +22,7 @@ public class TaskBreakdownController : ControllerBase
     }
 
     [HttpPost("{taskId}")]
-    public async Task<List<SubTask>> BreakdownTask(string taskId, CancellationToken ct)
+    public async Task<GeneratedSubTaskList> BreakdownTask(string taskId, CancellationToken ct)
     {
         _logger.LogInformation("BreakdownTask called with taskId: {TaskId}", taskId);
 

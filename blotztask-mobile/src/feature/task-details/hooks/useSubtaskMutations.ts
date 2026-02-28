@@ -6,12 +6,12 @@ import {
   toggleSubtaskStatus,
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
 import { subtaskKeys, taskKeys } from "@/shared/constants/query-key-factory";
+import { BreakdownMessageDTO } from "../models/breakdown-message-dto";
 
 export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();
-  const breakdownMutation = useMutation<BreakdownSubtaskDTO[] | undefined, void, number>({
+  const breakdownMutation = useMutation<BreakdownMessageDTO | undefined, void, number>({
     mutationFn: createBreakDownSubtasks,
     onSuccess: (data) => {
       console.log("Subtasks created:", data);
