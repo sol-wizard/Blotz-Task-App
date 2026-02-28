@@ -12,6 +12,12 @@ param dbAdminPassword string
 @secure()
 param auth0ManagementClientSecret string
 
+// Auth0 Configuration
+param auth0Domain string
+param auth0Audience string
+param auth0ManagementClientId string
+param auth0ManagementAudience string
+
 param openAiDeploymentName string
 param openAiModelName string
 param openAiModelVersion string
@@ -91,6 +97,10 @@ module webAppForAPI 'modules/appService.bicep' = {
     logAnalyticsWorkspaceId: logAnalytics.outputs.id
     appServiceSkuName: appServiceSkuName
     appServiceSkuTier: appServiceSkuTier
+    auth0Domain: auth0Domain
+    auth0Audience: auth0Audience
+    auth0ManagementClientId: auth0ManagementClientId
+    auth0ManagementAudience: auth0ManagementAudience
   }
 }
 
