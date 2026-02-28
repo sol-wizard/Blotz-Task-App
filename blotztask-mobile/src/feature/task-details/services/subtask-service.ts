@@ -11,7 +11,7 @@ export const createBreakDownSubtasks = async (
     const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/TaskBreakdown/${taskId}`;
     const data: BreakdownMessageDTO = await apiClient.post(url);
     return data;
-  } catch (err) {
+  } catch {
     throw new Error("Error breaking down subtasks");
   }
 };
