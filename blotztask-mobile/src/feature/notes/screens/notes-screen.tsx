@@ -79,7 +79,7 @@ import { TextInput } from "react-native";
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { deleteNote, isNoteDeleting, createNote, isNoteCreating, updateNote, isNoteUpdating } =
+  const { deleteNote, createNote, isNoteCreating, updateNote, isNoteUpdating } =
     useNotesMutation();
 
   const posthog = usePostHog();
