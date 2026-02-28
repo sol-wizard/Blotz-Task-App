@@ -24,9 +24,6 @@ public class BreakdownTaskCommandHandler(
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     Kernel kernel)
 {
-    private static readonly TimeSpan MinimumSubtaskDuration = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan ProjectionRange = TimeSpan.FromMinutes(5);
-
     public async Task<List<SubTask>> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
     {
         logger.LogInformation("Breaking down task {TaskId}", command.TaskId);
