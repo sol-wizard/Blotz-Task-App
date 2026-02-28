@@ -34,7 +34,8 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
     posthog.capture(EVENTS.BREAKDOWN_TASK);
 
     try {
-      const subtasks = (await breakDownTask(parentTask.id)) ?? [];
+      const breakdownMessage = await breakDownTask(parentTask.id);
+      const subtasks = breakdownMessage?.subTasks ?? [];
       if (subtasks.length > 0) {
         await replaceSubtasks({
           taskId: parentTask.id,

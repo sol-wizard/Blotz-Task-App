@@ -36,7 +36,8 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
 
   const handleRefresh = async () => {
     try {
-      const newSubtasks = await breakDownTask(parentTask.id);
+      const breakdownMessage = await breakDownTask(parentTask.id);
+      const newSubtasks = breakdownMessage?.subTasks ?? [];
       if (newSubtasks && newSubtasks.length > 0) {
         await replaceSubtasks({
           taskId: parentTask.id,
