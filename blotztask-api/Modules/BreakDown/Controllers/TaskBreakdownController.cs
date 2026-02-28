@@ -22,7 +22,7 @@ public class TaskBreakdownController : ControllerBase
     }
 
     [HttpPost("{taskId}")]
-    public async Task<GeneratedSubTaskList> BreakdownTask(string taskId, CancellationToken ct)
+    public async Task<BreakdownMessage> BreakdownTask(string taskId, CancellationToken ct)
     {
         _logger.LogInformation("BreakdownTask called with taskId: {TaskId}", taskId);
 

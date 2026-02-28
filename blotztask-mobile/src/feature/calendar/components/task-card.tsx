@@ -98,7 +98,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
 
     try {
       const breakdownMessage = await breakDownTask(task.id);
-      const subtasks = breakdownMessage?.subTasks ?? [];
+      const subtasks = breakdownMessage?.subtasks ?? [];
       if (subtasks.length > 0) {
         await replaceSubtasks({
           taskId: task.id,

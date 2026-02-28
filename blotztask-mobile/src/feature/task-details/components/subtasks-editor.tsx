@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { theme } from "@/shared/constants/theme";
@@ -7,20 +7,20 @@ import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "@/feature/task-details/hooks/useSubtasksByParentId";
 import { DraggableSubtaskList } from "@/feature/task-details/components/draggable-subtask-list";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import Toast from "react-native-toast-message";
 
 type SubtasksEditorProps = {
   parentTask: TaskDetailDTO;
+  onRefreshSubtasks: () => Promise<void>;
+  isBreakingDown: boolean;
+  isReplacingSubtasks: boolean;
 };
 
-const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
+const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isBreakingDown, isReplacingSubtasks }: SubtasksEditorProps) => {
   const { t } = useTranslation(["tasks", "common"]);
   const { data: fetchedSubtasks, isLoading } = useSubtasksByParentId(parentTask.id);
 
   const {
-    breakDownTask,
-    isBreakingDown,
-    replaceSubtasks,
-    isReplacingSubtasks,
     deleteSubtask,
     isDeletingSubtask,
     isUpdatingSubtask,
@@ -35,20 +35,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
   };
 
   const handleRefresh = async () => {
-    try {
-      const breakdownMessage = await breakDownTask(parentTask.id);
-      const newSubtasks = breakdownMessage?.subTasks ?? [];
-      if (newSubtasks && newSubtasks.length > 0) {
-        await replaceSubtasks({
-          taskId: parentTask.id,
-          subtasks: newSubtasks,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to refresh subtasks:", error);
-      // TODO: Implement error screen
-      Alert.alert(t("tasks:details.error"), t("tasks:details.failedToRefreshSubtasks"));
-    }
+    await onRefreshSubtasks();
   };
 
   const handleEdit = () => {
@@ -60,7 +47,10 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
       await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id });
     } catch (error) {
       console.error("Failed to delete subtask:", error);
-      Alert.alert(t("tasks:details.error"), t("tasks:details.failedToDeleteSubtask"));
+      Toast.show({
+        type: "error",
+        text1: t("tasks:details.failedToDeleteSubtask"),
+      });
     }
   };
 

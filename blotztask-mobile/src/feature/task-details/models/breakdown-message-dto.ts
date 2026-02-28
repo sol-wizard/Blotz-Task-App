@@ -1,7 +1,7 @@
 import { BreakdownSubtaskDTO } from "./breakdown-subtask-dto";
 
 export type BreakdownMessageDTO = {
-  subTasks: BreakdownSubtaskDTO[];
+  subtasks: BreakdownSubtaskDTO[];
   isSuccess: boolean;
   errorMessage?: string;
 };

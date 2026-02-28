@@ -13,9 +13,6 @@ export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();
   const breakdownMutation = useMutation<BreakdownMessageDTO | undefined, void, number>({
     mutationFn: createBreakDownSubtasks,
-    onSuccess: (data) => {
-      console.log("Subtasks created:", data);
-    },
     onError: (error) => {
       console.error("Failed to create subtasks:", error);
     },
@@ -23,8 +20,12 @@ export const useSubtaskMutations = () => {
 
   const replaceSubtasksMutation = useMutation({
     mutationFn: replaceSubtasks,
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.taskId) });
+      await queryClient.refetchQueries({
+        queryKey: subtaskKeys.all(variables.taskId),
+        exact: true,
+      });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
     onError: (error) => {

@@ -10,6 +10,7 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { LABEL_COLOR_PALETTE_BY_ID } from "@/shared/util/label-colors";
+import Toast from "react-native-toast-message";
 
 type SubtaskViewProps = {
   parentTask: TaskDetailDTO;
@@ -28,6 +29,13 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const displaySubtasks = fetchedSubtasks || [];
   const hasSubtasks = displaySubtasks.length > 0;
 
+  const showBreakdownErrorToast = (message?: string) => {
+    Toast.show({
+      type: "error",
+      text1: message?.trim() || t("details.failedToRefreshSubtasks"),
+    });
+  };
+
   const handleBreakDown = async () => {
     if (isBreakingDown || isReplacingSubtasks) return;
 
@@ -35,7 +43,18 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
 
     try {
       const breakdownMessage = await breakDownTask(parentTask.id);
-      const subtasks = breakdownMessage?.subTasks ?? [];
+
+      if (!breakdownMessage) {
+        showBreakdownErrorToast();
+        return;
+      }
+
+      if (breakdownMessage.isSuccess === false) {
+        showBreakdownErrorToast(breakdownMessage.errorMessage);
+        return;
+      }
+
+      const subtasks = breakdownMessage.subtasks ?? [];
       if (subtasks.length > 0) {
         await replaceSubtasks({
           taskId: parentTask.id,
@@ -44,6 +63,7 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
       }
     } catch (e) {
       console.error("Subtask error:", e);
+      showBreakdownErrorToast(e instanceof Error ? e.message : undefined);
     }
   };
 
@@ -67,7 +87,14 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
 
   // Show manage view if subtasks exist
   if (hasSubtasks) {
-    return <SubtasksEditor parentTask={parentTask} />;
+    return (
+      <SubtasksEditor
+        parentTask={parentTask}
+        onRefreshSubtasks={handleBreakDown}
+        isBreakingDown={isBreakingDown}
+        isReplacingSubtasks={isReplacingSubtasks}
+      />
+    );
   }
 
   // Show initial breakdown view if no subtasks exist yet

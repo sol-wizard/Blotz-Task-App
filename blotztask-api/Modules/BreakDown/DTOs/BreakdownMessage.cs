@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace BlotzTask.Modules.BreakDown.DTOs;
 
-public class GeneratedSubTaskList
+public class BreakdownMessage
 {
     [JsonPropertyName("subtasks")] public List<GeneratedSubTask> Subtasks { get; set; } = new();
 

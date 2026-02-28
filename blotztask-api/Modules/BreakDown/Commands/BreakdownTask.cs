@@ -24,7 +24,7 @@ public class BreakdownTaskCommandHandler(
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     Kernel kernel)
 {
-    public async Task<GeneratedSubTaskList> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
+    public async Task<BreakdownMessage> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
     {
         logger.LogInformation("Breaking down task {TaskId}", command.TaskId);
 
@@ -52,7 +52,7 @@ public class BreakdownTaskCommandHandler(
             // This uses OpenAI's JSON Schema feature to enforce the response structure at the model level
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                ResponseFormat = typeof(GeneratedSubTaskList) // Enforces structured output via JSON Schema
+                ResponseFormat = typeof(BreakdownMessage) // Enforces structured output via JSON Schema
             };
 
             // KernelArguments holds both the prompt variables and execution settings
@@ -90,14 +90,14 @@ public class BreakdownTaskCommandHandler(
             // Deserialize the structured JSON response into our DTO
             // Because we used ResponseFormat = typeof(GeneratedSubTaskList),
             // OpenAI guarantees the response matches this schema
-            var parsedResult = JsonSerializer.Deserialize<GeneratedSubTaskList>(
+            var parsedResult = JsonSerializer.Deserialize<BreakdownMessage>(
                 responseContent,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
 
             if (parsedResult == null)
             {
-                logger.LogWarning("Failed to parse structured output into {Type}", nameof(GeneratedSubTaskList));
+                logger.LogWarning("Failed to parse structured output into {Type}", nameof(BreakdownMessage));
                 throw new AiInvalidJsonException(responseContent);
             }
 
