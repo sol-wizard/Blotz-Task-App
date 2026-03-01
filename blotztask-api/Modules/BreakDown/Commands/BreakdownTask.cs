@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
-using System.Xml;
 using BlotzTask.Modules.BreakDown.DTOs;
 using BlotzTask.Modules.BreakDown.Prompts;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
@@ -13,11 +13,9 @@ namespace BlotzTask.Modules.BreakDown.Commands;
 
 public class BreakdownTaskCommand
 {
-    [Required]
-    public required int TaskId { get; init; }
+    [Required] public required int TaskId { get; init; }
 
-    [Required]
-    public required Guid UserId { get; init; }
+    [Required] public required Guid UserId { get; init; }
 }
 
 public class BreakdownTaskCommandHandler(
@@ -26,22 +24,19 @@ public class BreakdownTaskCommandHandler(
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     Kernel kernel)
 {
-    public async Task<List<SubTask>> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
+    public async Task<BreakdownMessage> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
     {
         logger.LogInformation("Breaking down task {TaskId}", command.TaskId);
 
         var query = new GetTasksByIdQuery { TaskId = command.TaskId, UserId = command.UserId };
         var task = await getTaskByIdQueryHandler.Handle(query, ct);
 
-        if (task == null)
-        {
-            throw new ArgumentException($"Task with ID {command.TaskId} not found.");
-        }
+        if (task == null) throw new ArgumentException($"Task with ID {command.TaskId} not found.");
 
         // Fetch user preferences to get preferred language
         var userPreferencesQuery = new GetUserPreferencesQuery { UserId = command.UserId };
         var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, ct);
-        
+
         // Convert Language enum to a readable string for the AI
         var preferredLanguageString = userPreferences.PreferredLanguage switch
         {
@@ -57,7 +52,7 @@ public class BreakdownTaskCommandHandler(
             // This uses OpenAI's JSON Schema feature to enforce the response structure at the model level
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                ResponseFormat = typeof(GeneratedSubTaskList) // Enforces structured output via JSON Schema
+                ResponseFormat = typeof(BreakdownMessage) // Enforces structured output via JSON Schema
             };
 
             // KernelArguments holds both the prompt variables and execution settings
@@ -67,8 +62,7 @@ public class BreakdownTaskCommandHandler(
                 ["title"] = task.Title,
                 ["description"] = task.Description ?? "No description provided",
                 ["startTime"] = task.StartTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null",
-                ["endTime"] = task.EndTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null",
-                ["preferredLanguage"] = preferredLanguageString
+                ["endTime"] = task.EndTime?.DateTime.ToString("yyyy-MM-dd HH:mm") ?? "null"
             };
 
             // InvokePromptAsync: SK's method for executing a prompt template with variable substitution
@@ -76,74 +70,77 @@ public class BreakdownTaskCommandHandler(
             // 2. Sends the prompt to OpenAI with the specified execution settings
             // 3. Returns the structured JSON response
             var result = await kernel.InvokePromptAsync(
-                TaskBreakdownPrompts.BreakdownPrompt,
+                TaskBreakdownPrompts.GetBreakdownPrompt(
+                    preferredLanguageString
+                ),
                 arguments,
                 cancellationToken: ct
             );
 
             var responseContent = result.ToString();
 
-            if (string.IsNullOrEmpty(responseContent))
+            if (string.IsNullOrWhiteSpace(responseContent))
             {
                 logger.LogWarning("LLM returned no response for task breakdown");
-                return [];
+                throw new AiEmptyResponseException("LLM returned no response for task breakdown.");
             }
 
             logger.LogInformation("LLM raw result: {Content}", responseContent);
 
             // Deserialize the structured JSON response into our DTO
-            // Because we used ResponseFormat = typeof(GeneratedSubTaskList), 
+            // Because we used ResponseFormat = typeof(GeneratedSubTaskList),
             // OpenAI guarantees the response matches this schema
-            var parsedResult = JsonSerializer.Deserialize<GeneratedSubTaskList>(
+            var parsedResult = JsonSerializer.Deserialize<BreakdownMessage>(
                 responseContent,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
 
             if (parsedResult == null)
             {
-                logger.LogWarning("Failed to parse structured output into {Type}", nameof(GeneratedSubTaskList));
-                return [];
+                logger.LogWarning("Failed to parse structured output into {Type}", nameof(BreakdownMessage));
+                throw new AiInvalidJsonException(responseContent);
             }
 
-            // Map DTOs to domain entities
-            // XmlConvert.ToTimeSpan parses ISO 8601 durations (PT30M, PT1H30M, PT24H)
-            // Note: We constrain the LLM to use hours/minutes/seconds only (no days like PT1D)
-            // to ensure XmlConvert can parse it correctly
-            return parsedResult.Subtasks.Select(st => new SubTask
-            {
-                Title = st.Title,
-                Duration = XmlConvert.ToTimeSpan(st.Duration), // Parses ISO 8601: PT30M, PT1H, PT24H
-                Order = st.Order,
-            }).ToList();
+            return parsedResult;
         }
         catch (JsonException ex)
         {
-            // Should rarely happen with structured output, but log if it does
             logger.LogError(ex, "Failed to parse LLM response JSON. Content might be malformed");
-            return [];
+            throw new AiInvalidJsonException("Malformed JSON response from task breakdown model.", ex);
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException oce)
         {
-            // User or system canceled the request
-            logger.LogWarning("Task breakdown was canceled");
-            return [];
+            logger.LogWarning(oce, "Task breakdown was canceled");
+            throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
+        }
+        catch (TokenLimitExceededException ex)
+        {
+            logger.LogWarning(ex, "Token limit exceeded during task breakdown.");
+            throw new AiTokenLimitedException();
+        }
+        catch (HttpOperationException ex)
+            when (ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogWarning(ex, "Request blocked by Azure OpenAI content filter during task breakdown.");
+            throw new AiContentFilterException();
+        }
+        catch (AiTaskGenerationException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            // Catch-all for unexpected errors (network issues, model errors, etc.)
             logger.LogError(
                 ex,
                 "Unexpected error during task breakdown. TaskId: {TaskId}, Exception: {Exception}",
                 command.TaskId,
                 ex.Message
             );
-            return [];
+            throw new AiTaskGenerationException(
+                AiErrorCode.Unknown,
+                "An unhandled exception occurred during task breakdown.",
+                ex
+            );
         }
     }
-}
-public class SubTask
-{
-    public string Title { get; set; } = string.Empty;
-    public TimeSpan Duration { get; set; }
-    public int Order { get; set; }
 }

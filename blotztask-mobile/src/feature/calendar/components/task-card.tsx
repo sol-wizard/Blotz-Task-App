@@ -97,7 +97,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     posthog.capture(EVENTS.BREAKDOWN_TASK);
 
     try {
-      const subtasks = (await breakDownTask(task.id)) ?? [];
+      const breakdownMessage = await breakDownTask(task.id);
+      const subtasks = breakdownMessage?.subtasks ?? [];
       if (subtasks.length > 0) {
         await replaceSubtasks({
           taskId: task.id,
