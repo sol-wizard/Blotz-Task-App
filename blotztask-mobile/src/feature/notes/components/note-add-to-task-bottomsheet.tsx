@@ -42,16 +42,18 @@ export const NoteAddToTaskBottomSheet = ({
   const { estimateTime, isEstimating, timeResult } = useEstimateTaskTime();
 
   // Initialize form like TaskForm does
-  const now = new Date();
-  const defaultValues: TaskFormField = {
-    startDate: now,
-    startTime: now,
-    endDate: now,
-    endTime: addMinutes(now, 60),
+  const getDefaultValues = (): TaskFormField => {
+    const now = new Date();
+    return {
+      startDate: now,
+      startTime: now,
+      endDate: now,
+      endTime: addMinutes(now, 60),
+    };
   };
 
   const form = useForm<FormValues>({
-    defaultValues: defaultValues,
+    defaultValues: getDefaultValues(),
   });
 
   const { handleSubmit, reset, control, setValue, getValues } = form;
@@ -59,7 +61,7 @@ export const NoteAddToTaskBottomSheet = ({
 
   useEffect(() => {
     if (visible) {
-      reset(defaultValues);
+      reset(getDefaultValues());
       setMode("reminder");
     }
   }, [visible]);
@@ -67,19 +69,12 @@ export const NoteAddToTaskBottomSheet = ({
   const handleTabChange = (next: "reminder" | "event") => {
     setMode(next);
     if (next === "reminder") {
-      setValue("startDate", defaultValues.startDate);
-      setValue("startTime", defaultValues.startTime);
-      setValue("endDate", defaultValues.endDate);
-      setValue("endTime", defaultValues.endTime);
+      setValue("startDate", getDefaultValues().startDate);
+      setValue("startTime", getDefaultValues().startTime);
+      setValue("endDate", getDefaultValues().endDate);
+      setValue("endTime", getDefaultValues().endTime);
       return;
     }
-
-    const start = new Date();
-    const oneHourLater = new Date(start.getTime() + 3600000);
-    setValue("startDate", start);
-    setValue("startTime", start);
-    setValue("endDate", oneHourLater);
-    setValue("endTime", oneHourLater);
   };
 
   const onApply = handleSubmit((data) => {
