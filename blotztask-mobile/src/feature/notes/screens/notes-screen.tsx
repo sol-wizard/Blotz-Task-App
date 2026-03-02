@@ -160,13 +160,12 @@ export default function NotesScreen() {
               isDeleting={isNoteDeleting}
               onPressTask={handlePressTask}
               onAddToTask={(note: NoteDTO) => {
-                console.log("onAddToTask called from NoteCard:", note.id);
                 setSelectedNoteForTask(note);
                 setIsAddToTaskVisible(true);
               }}
             />
           )}
-          {!showLoading && notesSearchResult.length === 0 && ( 
+          {!showLoading && notesSearchResult.length === 0 && (
             <View className="flex-1 items-center justify-center px-10">
               <Text className="text-center text-black font-balooBold text-2xl">
                 {t("emptyNoteMessage.encouragingTitle")}
@@ -174,12 +173,11 @@ export default function NotesScreen() {
               <Text className="text-center text-black font-baloo text-xl mt-2">
                 {t("emptyNoteMessage.encouragingDescription")}
               </Text>
-              </View>
-            )}  
-              
+            </View>
+          )}
         </View>
       </TouchableWithoutFeedback>
-      
+
       <NoteAddToTaskBottomSheet
         visible={isAddToTaskVisible}
         note={selectedNoteForTask}
