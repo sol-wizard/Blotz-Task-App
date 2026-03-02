@@ -16,16 +16,20 @@ type MarkedDates = Record<string, MarkedDate>;
 const DATE_COLORS = {
   background: "#EEFBE1",
   text: theme.colors.highlight,
+  invalidDate: "#FF4444",
+  invalidDateBackground: "#FFE5E5",
 };
 
 const DoubleDatesCalendar = ({
   startDate,
   endDate,
   setEndDate,
+  current,
 }: {
   startDate: Date;
   endDate: Date;
   setEndDate: (v: Date) => void;
+  current: string;
 }) => {
   const getDatesInRange = (start: Date, end: Date): MarkedDates => {
     const days = eachDayOfInterval({ start, end });
@@ -51,11 +55,29 @@ const DoubleDatesCalendar = ({
   const markedDates: MarkedDates = (() => {
     if (!endDate) {
       return {
-        [startDate.toDateString()]: {
+        [format(startDate, "yyyy-MM-dd")]: {
           startingDay: true,
           endingDay: true,
           color: DATE_COLORS.background,
           textColor: DATE_COLORS.text,
+        },
+      };
+    }
+
+    // Ensure end date is not before start date
+    if (isBefore(endDate, startDate) && !isSameDay(endDate, startDate)) {
+      return {
+        [format(startDate, "yyyy-MM-dd")]: {
+          startingDay: true,
+          endingDay: true,
+          color: DATE_COLORS.background,
+          textColor: DATE_COLORS.text,
+        },
+        [format(endDate, "yyyy-MM-dd")]: {
+          startingDay: true,
+          endingDay: true,
+          color: DATE_COLORS.invalidDateBackground,
+          textColor: DATE_COLORS.invalidDate,
         },
       };
     }
@@ -66,11 +88,7 @@ const DoubleDatesCalendar = ({
 
   const onDayPress = (day: DateData) => {
     const selected = parseISO(day.dateString);
-    if (isSameDay(startDate, selected) || isBefore(startDate, selected)) {
-      setEndDate(selected);
-    }
-
-    return;
+    setEndDate(selected);
   };
 
   return (
@@ -79,6 +97,8 @@ const DoubleDatesCalendar = ({
         markingType="period"
         markedDates={markedDates}
         onDayPress={onDayPress}
+        // show endDate's month if present, otherwise startDate's month
+        current={current}
         theme={{
           todayTextColor: "#BAD5FA",
           arrowColor: theme.colors.highlight,
