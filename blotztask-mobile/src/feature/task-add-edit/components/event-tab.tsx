@@ -179,6 +179,12 @@ export const EventTab = ({ control }: { control: any }) => {
               startDate={startDateValue}
               endDate={endDateValue}
               setEndDate={endDateOnChange}
+              current={format(
+                activeSelector === "endDate"
+                  ? (endDateValue ?? startDateValue ?? new Date())
+                  : (startDateValue ?? new Date()),
+                "yyyy-MM-dd",
+              )}
             />
           </Animated.View>
         )}

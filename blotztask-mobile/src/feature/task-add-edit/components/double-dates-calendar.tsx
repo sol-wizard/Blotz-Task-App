@@ -24,10 +24,12 @@ const DoubleDatesCalendar = ({
   startDate,
   endDate,
   setEndDate,
+  current,
 }: {
   startDate: Date;
   endDate: Date;
   setEndDate: (v: Date) => void;
+  current: string;
 }) => {
   const getDatesInRange = (start: Date, end: Date): MarkedDates => {
     const days = eachDayOfInterval({ start, end });
@@ -95,6 +97,8 @@ const DoubleDatesCalendar = ({
         markingType="period"
         markedDates={markedDates}
         onDayPress={onDayPress}
+        // show endDate's month if present, otherwise startDate's month
+        current={current}
         theme={{
           todayTextColor: "#BAD5FA",
           arrowColor: theme.colors.highlight,
