@@ -25,6 +25,8 @@ import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMuta
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
+import Toast from "react-native-toast-message";
+import { useTranslation } from "react-i18next";
 import { theme } from "@/shared/constants/theme";
 
 const rubberBand = (x: number, limit: number) => {
@@ -50,6 +52,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
     useSubtaskMutations();
   const posthog = usePostHog();
+  const { t } = useTranslation("tasks");
 
   const queryClient = useQueryClient();
 
@@ -105,6 +108,15 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
         });
         setIsExpanded(true);
         taskCardTranslateX.value = withTiming(0, { duration: 160 });
+      } else {
+        await replaceSubtasks({
+          taskId: task.id,
+          subtasks: [],
+        });
+        Toast.show({
+          type: "error",
+          text1: t("details.breakdownNoResult"),
+        });
       }
     } catch (e) {
       console.error("Breakdown error:", e);
