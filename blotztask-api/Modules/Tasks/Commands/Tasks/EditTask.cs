@@ -29,7 +29,9 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
         TaskTimeValidator.ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime,
             command.TaskDetails.TimeType);
 
-        task.Title = command.TaskDetails.Title;
+        var newTitle = TaskTitleValidator.TrimAndValidate(command.TaskDetails.Title);
+
+        task.Title = newTitle;
         task.Description = command.TaskDetails.Description;
         task.StartTime = command.TaskDetails.StartTime;
         task.EndTime = command.TaskDetails.EndTime;

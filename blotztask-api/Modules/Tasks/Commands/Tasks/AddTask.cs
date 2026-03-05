@@ -23,9 +23,11 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
         TaskTimeValidator.ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime,
             command.TaskDetails.TimeType);
 
+        var title = TaskTitleValidator.TrimAndValidate(command.TaskDetails.Title);
+
         var newTask = new TaskItem
         {
-            Title = command.TaskDetails.Title,
+            Title = title,
             Description = command.TaskDetails.Description,
             StartTime = command.TaskDetails.StartTime,
             EndTime = command.TaskDetails.EndTime,
