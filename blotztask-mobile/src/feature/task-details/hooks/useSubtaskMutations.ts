@@ -7,11 +7,11 @@ import {
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { subtaskKeys, taskKeys } from "@/shared/constants/query-key-factory";
-import { BreakdownMessageDTO } from "../models/breakdown-message-dto";
+import { BreakdownResultDTO } from "../models/breakdown-result-dto";
 
 export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();
-  const breakdownMutation = useMutation<BreakdownMessageDTO | undefined, void, number>({
+  const breakdownMutation = useMutation<BreakdownResultDTO | undefined, void, number>({
     mutationFn: createBreakDownSubtasks,
     onError: (error) => {
       console.error("Failed to create subtasks:", error);

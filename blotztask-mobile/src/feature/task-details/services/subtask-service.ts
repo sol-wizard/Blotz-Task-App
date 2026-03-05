@@ -1,15 +1,15 @@
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import { SubtaskDTO } from "../models/subtask-dto";
 import { apiClient } from "@/shared/services/api/client";
-import { BreakdownMessageDTO } from "../models/breakdown-message-dto";
+import { BreakdownResultDTO } from "../models/breakdown-result-dto";
 
 export const createBreakDownSubtasks = async (
   taskId: number,
-): Promise<BreakdownMessageDTO | undefined> => {
+): Promise<BreakdownResultDTO | undefined> => {
   if (!taskId) return;
   try {
     const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/TaskBreakdown/${taskId}`;
-    const data: BreakdownMessageDTO = await apiClient.post(url);
+    const data: BreakdownResultDTO = await apiClient.post(url);
     return data;
   } catch {
     throw new Error("Error breaking down subtasks");
