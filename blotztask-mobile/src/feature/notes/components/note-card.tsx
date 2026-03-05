@@ -53,7 +53,7 @@ export const NoteCard = ({
     router.push("/(protected)/(tabs)");
   };
   return (
-    <View className="mb-4">
+    <View>
       <Pressable
         onLongPress={onToggle}
         onPress={() => {
@@ -61,10 +61,10 @@ export const NoteCard = ({
           onPressCard(note);
         }}
       >
-        <View className={`bg-white rounded-3xl p-4 ${isToggled ? "border-2 border-info" : ""}`}>
+        <View className={`px-5 py-4 ${isToggled ? "border-2 border-info" : ""}`}>
           <Text className="text-xl font-semibold text-black font-baloo">{note.text}</Text>
 
-          <View className="mt-4 flex-row items-center justify-between">
+          <View className="mt-2 flex-row items-center justify-between">
             <Text className="text-xs text-[#6B7280] font-balooThin">
               {note.createdAt && format(new Date(note.createdAt + "Z"), "dd MMM HH:mm")}
             </Text>
