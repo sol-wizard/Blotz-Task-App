@@ -1,6 +1,6 @@
 import { theme } from "@/shared/constants/theme";
 import { parseISO } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, DateData } from "react-native-calendars";
 import { renderCalendarHeader } from "@/feature/calendar/util/date-formatter";
 
@@ -12,6 +12,11 @@ export const SingleDateCalendar = ({
   onStartDateChange: (...event: any[]) => void;
 }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(defaultStartDate);
+
+  // keep selectedDate in sync when parent changes defaultStartDate
+  useEffect(() => {
+    setSelectedDate(defaultStartDate ?? null);
+  }, [defaultStartDate]);
 
   return (
     <Calendar
@@ -32,6 +37,8 @@ export const SingleDateCalendar = ({
             }
           : {}
       }
+      // ensure calendar opens at the currently selected date/month
+      current={selectedDate ?? undefined}
       theme={{
         todayTextColor: "#BAD5FA",
         arrowColor: theme.colors.highlight,
