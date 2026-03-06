@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pressable, View, Text } from "react-native";
 import { SingleDateCalendar } from "./single-date-calendar";
-import { addDays, differenceInCalendarDays, format, isAfter } from "date-fns";
+import { addDays, differenceInCalendarDays, format, isAfter, isSameDay, isBefore } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
 import { useController } from "react-hook-form";
 import TimePicker from "./time-picker";
@@ -59,6 +59,17 @@ export const EventTab = ({ control }: { control: any }) => {
       endDateOnChange(addDays(nextDate, previousSpan));
     }
   };
+
+  const isDateInvalid =
+    endDateValue &&
+    startDateValue &&
+    isBefore(endDateValue, startDateValue) &&
+    !isSameDay(endDateValue, startDateValue);
+
+  const isSameDate = endDateValue && startDateValue && isSameDay(endDateValue, startDateValue);
+
+  const isTimeInvalid =
+    isSameDate && endTimeValue && startTimeValue && isBefore(endTimeValue, startTimeValue);
 
   return (
     <Animated.View
@@ -128,7 +139,15 @@ export const EventTab = ({ control }: { control: any }) => {
               onPress={() => setActiveSelector((prev) => (prev === "endDate" ? null : "endDate"))}
               className="bg-background px-4 py-2 rounded-xl mr-2"
             >
-              <Text className="text-xl font-balooThin text-secondary">
+              <Text
+                className={`text-xl font-balooThin ${
+                  isDateInvalid
+                    ? "text-red-500 line-through"
+                    : isTimeInvalid
+                      ? "text-secondary line-through"
+                      : "text-secondary"
+                }`}
+              >
                 {endDateValue ? format(endDateValue, dateFormat, { locale }) : t("form.selectDate")}
               </Text>
             </Pressable>
@@ -137,7 +156,15 @@ export const EventTab = ({ control }: { control: any }) => {
               onPress={() => setActiveSelector((prev) => (prev === "endTime" ? null : "endTime"))}
               className="bg-background px-4 py-2 rounded-xl"
             >
-              <Text className="text-xl font-balooThin text-secondary ">
+              <Text
+                className={`text-xl font-balooThin ${
+                  isTimeInvalid
+                    ? "text-red-500 line-through"
+                    : isDateInvalid
+                      ? "text-secondary line-through"
+                      : "text-secondary"
+                }`}
+              >
                 {endTimeValue ? format(endTimeValue, "hh:mm a") : t("form.selectTime")}
               </Text>
             </Pressable>
@@ -152,6 +179,12 @@ export const EventTab = ({ control }: { control: any }) => {
               startDate={startDateValue}
               endDate={endDateValue}
               setEndDate={endDateOnChange}
+              current={format(
+                activeSelector === "endDate"
+                  ? (endDateValue ?? startDateValue ?? new Date())
+                  : (startDateValue ?? new Date()),
+                "yyyy-MM-dd",
+              )}
             />
           </Animated.View>
         )}
