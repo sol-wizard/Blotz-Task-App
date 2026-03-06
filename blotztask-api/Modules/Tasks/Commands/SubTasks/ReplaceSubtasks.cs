@@ -1,14 +1,14 @@
 using System.ComponentModel.DataAnnotations;
-using BlotzTask.Modules.Tasks.Domain.Entities;
+using System.Xml;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Tasks.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 public class ReplaceSubtasksCommand
 {
-    [Required]
-    public int TaskId { get; set; } // Parent Task ID
-    [Required]
-    public List<SubtaskDto> Subtasks { get; set; } = new();
+    [Required] public int TaskId { get; set; } // Parent Task ID
+
+    [Required] public List<SubtaskDto> Subtasks { get; set; } = new();
 }
 
 public class ReplaceSubtasksCommandHandler
@@ -38,12 +38,12 @@ public class ReplaceSubtasksCommandHandler
         {
             Title = dto.Title,
             Description = dto.Description,
-            Duration = dto.Duration,
+            Duration = XmlConvert.ToTimeSpan(dto.Duration),
             Order = dto.Order,
             IsDone = false,
             ParentTaskId = parentTask.Id,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         }).ToList();
 
         _db.Subtasks.AddRange(newSubtasks);
@@ -57,6 +57,6 @@ public class SubtaskDto
 {
     public required string Title { get; set; }
     public string Description { get; set; } = string.Empty;
-    public TimeSpan Duration { get; set; }
+    public required string Duration { get; set; }
     public int Order { get; set; }
 }
