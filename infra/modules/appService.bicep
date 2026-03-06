@@ -7,6 +7,12 @@ param openAiEndpoint string
 param openAiDeploymentId string
 param logAnalyticsWorkspaceId string
 
+// Auth0 Configuration
+param auth0Domain string
+param auth0Audience string
+param auth0ManagementClientId string
+param auth0ManagementAudience string
+
 // App Service Plan SKU
 param appServiceSkuName string = 'B1'
 param appServiceSkuTier string = 'Basic'
@@ -57,6 +63,26 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
         {
           name: 'ApplicationInsights__ConnectionString'
           value: appInsightConnectionString
+        }
+        {
+          name: 'Auth0__Domain'
+          value: auth0Domain
+        }
+        {
+          name: 'Auth0__Audience'
+          value: auth0Audience
+        }
+        {
+          name: 'Auth0__Management__ClientId'
+          value: auth0ManagementClientId
+        }
+        {
+          name: 'Auth0__Management__Audience'
+          value: auth0ManagementAudience
+        }
+        {
+          name: 'Auth0__Management__ClientSecret'
+          value: '@Microsoft.KeyVault(SecretUri=${normalizedKeyVaultUri}secrets/auth0-management-client-secret/)'
         }
         {
           name: 'AzureOpenAI__Endpoint'

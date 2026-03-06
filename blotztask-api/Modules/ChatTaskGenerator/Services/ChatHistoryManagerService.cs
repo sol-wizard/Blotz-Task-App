@@ -9,7 +9,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 public interface IChatHistoryManagerService
 {
     void RemoveConversation();
-    Task<ChatHistory> InitializeNewConversation(Guid userId, DateTimeOffset userLocalNow);
+    Task<ChatHistory> InitializeNewConversation(Guid userId);
     ChatHistory GetChatHistory();
 }
 
@@ -34,14 +34,14 @@ public class ChatHistoryManagerService(
         _chatHistory = null;
     }
 
-    public async Task<ChatHistory> InitializeNewConversation(Guid userId, DateTimeOffset userLocalNow)
+    public async Task<ChatHistory> InitializeNewConversation(Guid userId)
     {
         if (_chatHistory != null) return await Task.FromResult(_chatHistory);
 
         // Fetch user preferences to get preferred language
         var userPreferencesQuery = new GetUserPreferencesQuery { UserId = userId };
         var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, CancellationToken.None);
-        
+
         // Convert Language enum to a readable string for the AI
         var preferredLanguageString = userPreferences.PreferredLanguage switch
         {
@@ -54,8 +54,6 @@ public class ChatHistoryManagerService(
 
         chatHistory.AddSystemMessage(
             AiTaskGeneratorPrompts.GetSystemMessage(
-                userLocalNow.DateTime,
-                userLocalNow.DayOfWeek,
                 preferredLanguageString
             )
         );
