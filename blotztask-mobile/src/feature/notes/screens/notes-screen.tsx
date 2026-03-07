@@ -28,8 +28,9 @@ export default function NotesScreen() {
   const [editingNote, setEditingNote] = useState<NoteDTO | null>(null);
 
   // Bottom sheet state for add-to-task (managed at screen level)
-  const [isAddToTaskVisible, setIsAddToTaskVisible] = useState(false);
+  const [noteTimePickerSheetVisible, setNoteTimePickerSheetVisible] = useState(false);
   const [selectedNote, setSelectedNote] = useState<NoteDTO | null>(null);
+  const [pendingEstimateNote, setPendingEstimateNote] = useState<NoteDTO | null>(null);
   const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
   const { estimateTime, isEstimating, estimationResult, estimationError } = useEstimateTaskTime();
 
@@ -79,10 +80,21 @@ export default function NotesScreen() {
     );
   };
 
-  const handleAIEstimate = () => {
-    if (!selectedNote) return;
+  const handleAIEstimate = (note: NoteDTO | null) => {
+    if (!note) return;
+    setPendingEstimateNote(note);
+    setNoteTimePickerSheetVisible(false);
+  };
+
+  const handleNoteTimePickerHide = () => {
+    setSelectedNote(null);
+
+    if (!pendingEstimateNote) return;
+
+    const noteToEstimate = pendingEstimateNote;
+    setPendingEstimateNote(null);
     setIsEstimateModalVisible(true);
-    estimateTime(selectedNote);
+    void estimateTime(noteToEstimate).catch(() => undefined);
   };
 
   return (
@@ -93,6 +105,7 @@ export default function NotesScreen() {
             <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4 px-10">
               {t("title")}
             </Text>
+
             <Pressable
               onPress={() => router.push("/(protected)/gashapon-machine")}
               className="rounded-full mr-4"
@@ -171,7 +184,8 @@ export default function NotesScreen() {
               onPressTask={handlePressTask}
               onAddToTask={(note: NoteDTO) => {
                 setSelectedNote(note);
-                setIsAddToTaskVisible(true);
+                setNoteTimePickerSheetVisible(true);
+                console.log("Selected note for time estimation:", note);
               }}
             />
           )}
@@ -189,12 +203,14 @@ export default function NotesScreen() {
       </TouchableWithoutFeedback>
 
       <NoteTimePickerSheet
-        visible={isAddToTaskVisible}
+        visible={noteTimePickerSheetVisible}
         note={selectedNote}
         onClose={() => {
-          setIsAddToTaskVisible(false);
+          setNoteTimePickerSheetVisible(false);
           setSelectedNote(null);
+          setPendingEstimateNote(null);
         }}
+        onModalHide={handleNoteTimePickerHide}
         handleAIEstimate={handleAIEstimate}
       />
       <NoteTimeEstimateModal

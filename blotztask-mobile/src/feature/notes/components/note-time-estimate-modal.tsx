@@ -25,12 +25,14 @@ export const NoteTimeEstimateModal = ({
       isVisible={visible}
       onBackdropPress={() => setIsModalVisible(false)}
       backdropOpacity={0.4}
-      animationIn="fadeIn"
-      animationOut="fadeOut"
-      useNativeDriver
-      style={{ margin: 0 }}
+      animationIn="slideInUp"
+      animationOut="slideOutDown"
+      useNativeDriver={false}
     >
-      <View className="flex-1 items-center justify-center px-6">
+      <View style={{ backgroundColor: "white", padding: 20 }}>
+        <Text style={{ color: "black" }}>TEST MODAL</Text>
+      </View>
+      {/* <View className="flex-1 items-center justify-center px-6">
         <View className="w-full max-w-[280px] rounded-3xl bg-background px-10 py-14">
           {isEstimating && (
             <View className="items-center py-4">
@@ -61,7 +63,7 @@ export const NoteTimeEstimateModal = ({
             </>
           )}
 
-          {/* {!isEstimating && estimationError && (
+          {!isEstimating && estimationError && (
             <>
               <Text className="text-lg text-gray-800 font-balooExtraBold mb-2">
                 {t("timeEstimate.oops")}
@@ -77,9 +79,9 @@ export const NoteTimeEstimateModal = ({
                 </Text>
               </Pressable>
             </>
-          )} */}
+          )}
         </View>
-      </View>
+      </View> */}
     </Modal>
   );
 };

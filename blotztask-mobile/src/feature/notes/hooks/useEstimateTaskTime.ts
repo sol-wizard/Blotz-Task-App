@@ -17,6 +17,7 @@ export const useEstimateTaskTime = () => {
   const estimateTime = async (note: NoteDTO) => {
     setIsEstimating(true);
     setEstimationError(null);
+    setEstimationResult(undefined);
 
     try {
       const data = await queryClient.fetchQuery<NoteTimeEstimationResult>({
