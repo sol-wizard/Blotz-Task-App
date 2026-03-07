@@ -14,7 +14,7 @@ public class NoteForEstimation
 
 public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logger, Kernel kernel)
 {
-    public async Task<NoteTimeEstimation?> Handle(NoteForEstimation note, CancellationToken ct = default)
+    public async Task<AITimeEstimationResult?> Handle(NoteForEstimation note, CancellationToken ct = default)
     {
         logger.LogInformation("AI is estimating time for floating task: {TaskId}", note.Id);
 
@@ -57,12 +57,8 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
                 return null;
             }
 
-            var timeEstimationResult = new NoteTimeEstimation
-            {
-                NoteId = note.Id,
-                Duration = parsedResult.Duration
-            };
-            return timeEstimationResult;
+
+            return parsedResult;
         }
         catch (JsonException ex)
         {
