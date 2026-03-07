@@ -29,7 +29,11 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
         TaskTimeValidator.ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime,
             command.TaskDetails.TimeType);
 
-        var newTitle = TaskTitleValidator.TrimAndValidate(command.TaskDetails.Title);
+        var newTitle = (command.TaskDetails.Title ?? string.Empty).Trim();
+        if (string.IsNullOrEmpty(newTitle))
+        {
+            throw new ValidationException("Title is required.");
+        }
 
         task.Title = newTitle;
         task.Description = command.TaskDetails.Description;

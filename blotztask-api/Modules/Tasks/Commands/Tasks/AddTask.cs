@@ -23,7 +23,11 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
         TaskTimeValidator.ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime,
             command.TaskDetails.TimeType);
 
-        var title = TaskTitleValidator.TrimAndValidate(command.TaskDetails.Title);
+        var title = (command.TaskDetails.Title ?? string.Empty).Trim();
+        if (string.IsNullOrEmpty(title))
+        {
+            throw new ValidationException("Title is required.");
+        }
 
         var newTask = new TaskItem
         {
