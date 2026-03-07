@@ -69,6 +69,7 @@ export const NoteTimeEstimateModal = ({
                 .
               </Text>
 
+              {/* TODO: Add "Start Now" button functionality with the new endpoint */}
               <View className="mt-8 flex-row items-center justify-center">
                 <Pressable
                   onPress={() => setIsModalVisible(false)}
