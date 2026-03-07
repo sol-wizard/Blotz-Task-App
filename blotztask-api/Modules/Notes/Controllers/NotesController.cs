@@ -31,9 +31,19 @@ public class NotesController(
     }
 
     [HttpPost("/api/TimeEstimate")]
-    public async Task<AITimeEstimationResult?> EstimateNoteTime([FromBody] NoteForEstimation note, CancellationToken ct)
+    public async Task<AITimeEstimationResult?> EstimateNoteTime([FromBody] NoteTimeEstimationDto note,
+        CancellationToken ct)
     {
-        return await timeEstimateCommandHandler.Handle(note, ct);
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        var command = new NoteTimeEstimationRequest
+        {
+            UserId = userId,
+            Text = note.Text,
+            NoteId = note.Id
+        };
+        return await timeEstimateCommandHandler.Handle(command, ct);
     }
 
     [HttpGet]

@@ -94,7 +94,7 @@ export default function NotesScreen() {
     const noteToEstimate = pendingEstimateNote;
     setPendingEstimateNote(null);
     setIsEstimateModalVisible(true);
-    void estimateTime(noteToEstimate).catch(() => undefined);
+    estimateTime(noteToEstimate);
   };
 
   return (

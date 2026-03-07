@@ -1,23 +1,46 @@
 using System.Text.Json;
 using BlotzTask.Modules.Notes.DTOs;
 using BlotzTask.Modules.Notes.Prompts;
+using BlotzTask.Modules.Users.Enums;
+using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace BlotzTask.Modules.Notes.Commands;
 
-public class NoteForEstimation
+public class NoteTimeEstimationDto
 {
     public Guid Id { get; set; }
+
     public required string Text { get; set; }
 }
 
-public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logger, Kernel kernel)
+public class NoteTimeEstimationRequest
 {
-    public async Task<AITimeEstimationResult?> Handle(NoteForEstimation note, CancellationToken ct = default)
+    public Guid NoteId { get; set; }
+    public Guid UserId { get; set; }
+    public required string Text { get; set; }
+}
+
+public class TimeEstimateCommandHandler(
+    ILogger<TimeEstimateCommandHandler> logger,
+    GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
+    Kernel kernel)
+{
+    public async Task<AITimeEstimationResult?> Handle(NoteTimeEstimationRequest request, CancellationToken ct = default)
     {
-        logger.LogInformation("AI is estimating time for floating task: {TaskId}", note.Id);
+        logger.LogInformation("AI is estimating time for floating task: {TaskId}", request.NoteId);
+
+        var userPreferencesQuery = new GetUserPreferencesQuery { UserId = request.UserId };
+        var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, ct);
+
+        var preferredLanguageString = userPreferences.PreferredLanguage switch
+        {
+            Language.En => "English",
+            Language.Zh => "Chinese (Simplified)",
+            _ => "English"
+        };
 
         try
         {
@@ -28,11 +51,11 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
 
             var arguments = new KernelArguments(executionSettings)
             {
-                ["text"] = note.Text
+                ["text"] = request.Text
             };
 
             var result = await kernel.InvokePromptAsync(
-                TaskTimeEstimatePrompts.Prompt,
+                TaskTimeEstimatePrompts.GetTimeEstimatePrompt(preferredLanguageString),
                 arguments,
                 cancellationToken: ct
             );
@@ -96,7 +119,7 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
             logger.LogError(
                 ex,
                 "Unexpected error during task time estimate. TaskId: {TaskId}, Exception: {Exception}",
-                note.Id,
+                request.NoteId,
                 ex.Message
             );
             throw new AiTaskGenerationException(

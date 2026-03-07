@@ -12,7 +12,7 @@ export const useEstimateTaskTime = () => {
   const [estimationResult, setEstimationResult] = useState<NoteTimeEstimationResult | undefined>(
     undefined,
   );
-  const [estimationError, setEstimationError] = useState<unknown>(null);
+  const [estimationError, setEstimationError] = useState<string | null>(null);
 
   const estimateTime = async (note: NoteDTO) => {
     setIsEstimating(true);
@@ -25,11 +25,17 @@ export const useEstimateTaskTime = () => {
         queryFn: () => estimateNoteTime(note),
         meta: { silent: true },
       });
+      console.log("Time estimation result:", data);
+      if (data.isSuccess === true) {
+        setEstimationResult(data);
+        return;
+      } else {
+        setEstimationError(data.errorMessage ?? "unknown error");
+      }
 
-      setEstimationResult(data);
       return data;
     } catch (err) {
-      setEstimationError(err);
+      setEstimationError(err instanceof Error ? err.message : "unknown error");
       throw err;
     } finally {
       setIsEstimating(false);

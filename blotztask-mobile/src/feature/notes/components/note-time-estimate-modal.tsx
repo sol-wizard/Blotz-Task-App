@@ -7,7 +7,7 @@ interface Props {
   visible: boolean;
   setIsModalVisible: (v: boolean) => void;
   estimateResult?: NoteTimeEstimationResult;
-  estimationError?: unknown;
+  estimationError: string | null;
   isEstimating?: boolean;
 }
 
@@ -29,11 +29,8 @@ export const NoteTimeEstimateModal = ({
       animationOut="slideOutDown"
       useNativeDriver={false}
     >
-      <View style={{ backgroundColor: "white", padding: 20 }}>
-        <Text style={{ color: "black" }}>TEST MODAL</Text>
-      </View>
-      {/* <View className="flex-1 items-center justify-center px-6">
-        <View className="w-full max-w-[280px] rounded-3xl bg-background px-10 py-14">
+      <View className="flex-1 items-center justify-center px-6">
+        <View className="w-full max-w-[280px] rounded-3xl bg-background p-10">
           {isEstimating && (
             <View className="items-center py-4">
               <ActivityIndicator size="large" />
@@ -65,23 +62,17 @@ export const NoteTimeEstimateModal = ({
 
           {!isEstimating && estimationError && (
             <>
-              <Text className="text-lg text-gray-800 font-balooExtraBold mb-2">
-                {t("timeEstimate.oops")}
-              </Text>
-
-              <Text className="text-gray-600 font-baloo mb-6">
-                {t("timeEstimate.errorMessage")}
-              </Text>
+              <Text className="text-gray-600 font-baloo mb-6 text-lg">{estimationError}</Text>
 
               <Pressable onPress={() => setIsModalVisible(false)} className="items-center">
-                <Text className="text-sm text-gray-400 font-balooThin">
+                <Text className="text-lg text-gray-400 font-balooThin">
                   {t("timeEstimate.dismiss")}
                 </Text>
               </Pressable>
             </>
           )}
         </View>
-      </View> */}
+      </View>
     </Modal>
   );
 };
