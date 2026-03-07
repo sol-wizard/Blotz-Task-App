@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import Modal from "react-native-modal";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -12,11 +12,8 @@ import { EventTab } from "@/feature/task-add-edit/components/event-tab";
 import { buildTaskTimePayload } from "@/feature/task-add-edit/util/time-convertion";
 import { useAddNoteToTask } from "@/shared/hooks/add-note-to-task";
 import { useNotesMutation } from "../hooks/useNotesMutation";
-import { useEstimateTaskTime } from "@/feature/notes/hooks/useEstimateTaskTime";
-import { convertDurationToMinutes } from "@/shared/util/convert-duration";
 import { addMinutes } from "date-fns/addMinutes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { NoteTimeEstimation } from "../models/note-time-estimation";
 
 type FormValues = {
   startDate: Date;
@@ -27,19 +24,22 @@ type FormValues = {
 
 type TaskFormField = FormValues;
 
-export const NoteAddToTaskBottomSheet = ({
+export const NoteTimePickerSheet = ({
   visible,
   note,
   onClose,
+  onModalHide,
+  handleAIEstimate,
 }: {
   visible: boolean;
   note: NoteDTO | null;
   onClose: () => void;
+  onModalHide?: () => void;
+  handleAIEstimate: (note: NoteDTO | null) => void;
 }) => {
   const { t } = useTranslation("notes");
   const addNoteToTask = useAddNoteToTask();
   const { deleteNote } = useNotesMutation();
-  const { estimateTime, isEstimating, timeResult } = useEstimateTaskTime();
 
   // Initialize form like TaskForm does
   const getDefaultValues = (): TaskFormField => {
@@ -56,7 +56,7 @@ export const NoteAddToTaskBottomSheet = ({
     defaultValues: getDefaultValues(),
   });
 
-  const { handleSubmit, reset, control, setValue, getValues } = form;
+  const { handleSubmit, reset, control, setValue } = form;
   const [mode, setMode] = useState<"reminder" | "event">("reminder");
 
   useEffect(() => {
@@ -107,31 +107,11 @@ export const NoteAddToTaskBottomSheet = ({
     });
   });
 
-  const handleAIEstimate = async () => {
-    if (!note) return;
-    try {
-      const aiResult = await estimateTime(note);
-      const durationStr =
-        (aiResult && (aiResult as NoteTimeEstimation).duration) ?? timeResult ?? "";
-      const minutes = convertDurationToMinutes(durationStr);
-      if (minutes === undefined) return;
-
-      const startTime = getValues("startTime") ?? new Date();
-      const startDate = getValues("startDate") ?? new Date();
-      const newEnd = addMinutes(startTime, minutes);
-
-      setValue("endTime", newEnd);
-      setValue("endDate", startDate);
-      setMode("event");
-    } catch (err) {
-      console.warn("AI estimate failed", err);
-    }
-  };
-
   return (
     <Modal
       isVisible={visible}
       onBackdropPress={onClose}
+      onModalHide={onModalHide}
       backdropOpacity={0.4}
       animationIn="slideInUp"
       animationOut="slideOutDown"
@@ -152,7 +132,7 @@ export const NoteAddToTaskBottomSheet = ({
               </View>
               <View className="flex-row items-center ml-3 gap-x-2 -mt-3">
                 {/* AI button */}
-                <Pressable onPress={handleAIEstimate} disabled={isEstimating}>
+                <Pressable onPress={() => handleAIEstimate(note)}>
                   <LinearGradient
                     colors={["#9AD513", "#60B000", "#9AD513"]}
                     start={{ x: 0.8, y: 0 }}
@@ -165,13 +145,9 @@ export const NoteAddToTaskBottomSheet = ({
                       justifyContent: "center",
                     }}
                   >
-                    {isEstimating ? (
-                      <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                      <Text className="text-white font-baloo text-m">
-                        {t("timeEstimate.estimateButton")}
-                      </Text>
-                    )}
+                    <Text className="text-white font-baloo text-m">
+                      {t("timeEstimate.estimateButton")}
+                    </Text>
                   </LinearGradient>
                 </Pressable>
 
