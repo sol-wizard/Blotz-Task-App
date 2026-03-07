@@ -22,7 +22,7 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
         {
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                ResponseFormat = typeof(AITimeEstimation)
+                ResponseFormat = typeof(AITimeEstimationResult)
             };
 
             var arguments = new KernelArguments(executionSettings)
@@ -45,14 +45,15 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
 
             logger.LogInformation("AI time estimation result - raw: {Content}", responseContent);
 
-            var parsedResult = JsonSerializer.Deserialize<AITimeEstimation>(
+            var parsedResult = JsonSerializer.Deserialize<AITimeEstimationResult>(
                 responseContent,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
 
             if (parsedResult == null)
             {
-                logger.LogWarning("Failed to parse AI time estimation result into {Type}", nameof(AITimeEstimation));
+                logger.LogWarning("Failed to parse AI time estimation result into {Type}",
+                    nameof(AITimeEstimationResult));
                 return null;
             }
 
