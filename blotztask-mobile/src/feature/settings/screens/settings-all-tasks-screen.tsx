@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { ActivityIndicator, FlatList, View, Text } from "react-native";
+import { ActivityIndicator, FlatList, View, Text, Pressable } from "react-native";
 import { TaskStatusRow } from "@/shared/components/ui/task-status-row";
 import TaskCard from "@/feature/calendar/components/task-card";
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
 import { getAllTasks } from "@/shared/services/task-service";
-import UserProfile from "@/feature/calendar/components/user-profile";
 import { TaskStatusType } from "@/feature/calendar/models/task-status-type";
+import { router } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { ReturnButton } from "@/shared/components/ui/return-button";
@@ -53,7 +54,12 @@ export default function SettingsAllTasksScreen() {
           <Text className="text-5xl text-gray-800 font-balooExtraBold items-end pt-8">
             All Tasks
           </Text>
-          <UserProfile />
+          <Pressable
+            onPress={() => router.push({ pathname: "/(protected)/ddl" })}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <MaterialCommunityIcons name="bell-outline" size={24} color="black" />
+          </Pressable>
         </View>
       </View>
 
