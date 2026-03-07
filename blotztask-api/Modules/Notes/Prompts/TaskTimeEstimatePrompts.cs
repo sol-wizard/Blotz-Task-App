@@ -11,10 +11,10 @@ public static class TaskTimeEstimatePrompts
                   {{$text}}
 
                   Instructions:
-                  - Treat the note as a small, informal reminder or thought.
-                  - Estimate the time needed to handle it in a single focused session (e.g., replying, deciding, clarifying, or taking a quick action).
+                  - Treat the note as a single focused session not a long term goal.
+                  - If the note does not include full details, use reasonable assumptions to infer a likely handling time.
                   - Return the estimated duration using .NET TimeSpan "c" format (hh:mm:ss).
-                  - If the note is unclear, empty, or cannot reasonably be estimated, return isSuccess=false and provide a short errorMessage.
+                  - If the note is non-actionable gibberish, return isSuccess=false and provide a short errorMessage.
 
                   Output language rule:
                   - If isSuccess=false, errorMessage MUST be written in {{$preferredLanguage}}.
