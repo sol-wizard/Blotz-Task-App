@@ -1,23 +1,22 @@
 import { Pressable, View, Text, ActivityIndicator } from "react-native";
 import Modal from "react-native-modal";
 import { useTranslation } from "react-i18next";
+import { NoteTimeEstimationResult } from "../models/note-time-estimation-result";
 
 interface Props {
   visible: boolean;
   setIsModalVisible: (v: boolean) => void;
-  handleStartNow: () => void;
-  durationText?: string;
-  error?: string | null;
+  estimateResult?: NoteTimeEstimationResult;
+  estimationError?: unknown;
   isEstimating?: boolean;
 }
 
 export const NoteTimeEstimateModal = ({
   visible,
   setIsModalVisible,
-  durationText,
-  handleStartNow,
-  error,
   isEstimating,
+  estimateResult,
+  estimationError,
 }: Props) => {
   const { t } = useTranslation("notes");
 
@@ -42,16 +41,16 @@ export const NoteTimeEstimateModal = ({
             </View>
           )}
 
-          {!isEstimating && !error && durationText && (
+          {!isEstimating && estimateResult?.isSuccess && (
             <>
               <Text className="text-xl leading-6 text-onSurface font-baloo pt-2">
                 {t("timeEstimate.estimatedMessage")}
-                <Text className="text-highlight">{durationText}</Text>.
+                <Text className="text-highlight">{estimateResult.duration}</Text>.
               </Text>
 
               <View className="mt-8 flex-row items-center justify-center">
                 <Pressable
-                  onPress={handleStartNow}
+                  onPress={() => setIsModalVisible(false)}
                   className="h-9 px-6 rounded-xl bg-highlight items-center justify-center"
                 >
                   <Text className="text-sm text-onSurface font-baloo">
@@ -62,7 +61,7 @@ export const NoteTimeEstimateModal = ({
             </>
           )}
 
-          {!isEstimating && error && (
+          {/* {!isEstimating && estimationError && (
             <>
               <Text className="text-lg text-gray-800 font-balooExtraBold mb-2">
                 {t("timeEstimate.oops")}
@@ -78,7 +77,7 @@ export const NoteTimeEstimateModal = ({
                 </Text>
               </Pressable>
             </>
-          )}
+          )} */}
         </View>
       </View>
     </Modal>

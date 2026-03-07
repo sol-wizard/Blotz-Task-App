@@ -12,8 +12,10 @@ import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
-import { NoteModal } from "@/feature/notes/components/note-modal";
-import { NoteAddToTaskBottomSheet } from "@/feature/notes/components/note-add-to-task-bottomsheet";
+import { NoteInputModal } from "@/feature/notes/components/note-input-modal";
+import { NoteTimePickerSheet } from "@/feature/notes/components/note-time-picker-sheet";
+import { NoteTimeEstimateModal } from "../components/note-time-estimate-modal";
+import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,7 +29,9 @@ export default function NotesScreen() {
 
   // Bottom sheet state for add-to-task (managed at screen level)
   const [isAddToTaskVisible, setIsAddToTaskVisible] = useState(false);
-  const [selectedNoteForTask, setSelectedNoteForTask] = useState<NoteDTO | null>(null);
+  const [selectedNote, setSelectedNote] = useState<NoteDTO | null>(null);
+  const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
+  const { estimateTime, isEstimating, estimationResult, estimationError } = useEstimateTaskTime();
 
   useFocusEffect(
     useCallback(() => {
@@ -73,6 +77,12 @@ export default function NotesScreen() {
         },
       },
     );
+  };
+
+  const handleAIEstimate = () => {
+    if (!selectedNote) return;
+    setIsEstimateModalVisible(true);
+    estimateTime(selectedNote);
   };
 
   return (
@@ -133,7 +143,7 @@ export default function NotesScreen() {
             </Text>
           </Pressable>
 
-          <NoteModal
+          <NoteInputModal
             visible={isModalVisible}
             noteText={noteText}
             isSaving={editingNote ? isNoteUpdating : isNoteCreating}
@@ -160,7 +170,7 @@ export default function NotesScreen() {
               isDeleting={isNoteDeleting}
               onPressTask={handlePressTask}
               onAddToTask={(note: NoteDTO) => {
-                setSelectedNoteForTask(note);
+                setSelectedNote(note);
                 setIsAddToTaskVisible(true);
               }}
             />
@@ -178,13 +188,21 @@ export default function NotesScreen() {
         </View>
       </TouchableWithoutFeedback>
 
-      <NoteAddToTaskBottomSheet
+      <NoteTimePickerSheet
         visible={isAddToTaskVisible}
-        note={selectedNoteForTask}
+        note={selectedNote}
         onClose={() => {
           setIsAddToTaskVisible(false);
-          setSelectedNoteForTask(null);
+          setSelectedNote(null);
         }}
+        handleAIEstimate={handleAIEstimate}
+      />
+      <NoteTimeEstimateModal
+        visible={isEstimateModalVisible}
+        setIsModalVisible={setIsEstimateModalVisible}
+        isEstimating={isEstimating}
+        estimateResult={estimationResult}
+        estimationError={estimationError}
       />
     </SafeAreaView>
   );

@@ -13,7 +13,7 @@ interface NoteModalProps {
   onSave: () => void;
 }
 
-export const NoteModal = ({
+export const NoteInputModal = ({
   visible,
   noteText,
   isSaving,
