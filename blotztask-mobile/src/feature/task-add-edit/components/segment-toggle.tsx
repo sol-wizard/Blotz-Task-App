@@ -15,9 +15,11 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export function SegmentToggle({ value, setValue }: Props) {
   const { t } = useTranslation("tasks");
   const tabPositionX = useSharedValue(0);
+  const [containerWidth, setContainerWidth] = React.useState(0);
 
   const onTabMovingAnimation = (index: number) => {
-    tabPositionX.value = withTiming(104 * index, {});
+    const tabWidth = containerWidth / 2;
+    tabPositionX.value = withTiming(tabWidth * index, {});
   };
 
   const tabAnimatedStyle = useAnimatedStyle(() => ({
@@ -28,6 +30,7 @@ export function SegmentToggle({ value, setValue }: Props) {
     <Animated.View
       className="flex-row bg-[#F4F6FA] p-1 rounded-xl mb-6 w-56 items-center"
       layout={MotionAnimations.layout}
+      onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
     >
       <Animated.View
         className="absolute bg-white rounded-xl w-28 h-10 shadow-sm shadow-gray-400"
