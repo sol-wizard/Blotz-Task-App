@@ -29,8 +29,6 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
 
             t.HasCheckConstraint($"CK_TaskItem_Start_Before_Or_Equal_End",
                 "([StartTime] IS NULL AND [EndTime] IS NULL) OR ([StartTime] <= [EndTime])");
-
-            t.HasCheckConstraint("CK_TaskItem_Title_NotEmpty", "LTRIM(RTRIM([Title])) <> ''");
         });
     }
 }
