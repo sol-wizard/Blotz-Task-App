@@ -1,8 +1,8 @@
-import UserProfile from "./user-profile";
 import { View, Text, Pressable } from "react-native";
 import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
-import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AnimatedChevron } from "@/shared/components/ui/chevron";
+import { router } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface CalendarHeaderProps {
   date: string;
@@ -12,7 +12,6 @@ interface CalendarHeaderProps {
 
 export default function CalendarHeader({ date, progress, onToggleCalendar }: CalendarHeaderProps) {
   const { dayOfWeek } = formatCalendarDate(date);
-  const { userProfile } = useUserProfile();
 
   return (
     <View className="flex-row items-center justify-between px-5">
@@ -30,7 +29,17 @@ export default function CalendarHeader({ date, progress, onToggleCalendar }: Cal
         </Pressable>
       </View>
 
-      <UserProfile profile={userProfile} />
+      <View className="flex-row items-center justify-end px-5">
+        <Pressable
+          onPress={() => {
+            router.push({
+              pathname: "/(protected)/ddl",
+            });
+          }}
+        >
+          <MaterialCommunityIcons name="bell-outline" size={24} color="black" />
+        </Pressable>
+      </View>
     </View>
   );
 }
