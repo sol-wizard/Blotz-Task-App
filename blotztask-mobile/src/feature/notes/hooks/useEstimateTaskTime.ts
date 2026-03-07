@@ -4,9 +4,11 @@ import { useState } from "react";
 import { estimateKeys } from "@/shared/constants/query-key-factory";
 import { NoteTimeEstimationResult } from "../models/note-time-estimation-result";
 import { NoteDTO } from "../models/note-dto";
+import { useTranslation } from "react-i18next";
 
 export const useEstimateTaskTime = () => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation("notes");
 
   const [isEstimating, setIsEstimating] = useState(false);
   const [estimationResult, setEstimationResult] = useState<NoteTimeEstimationResult | undefined>(
@@ -30,12 +32,14 @@ export const useEstimateTaskTime = () => {
         setEstimationResult(data);
         return;
       } else {
-        setEstimationError(data.errorMessage ?? "unknown error");
+        setEstimationError(data.errorMessage?.trim() || t("timeEstimate.errorMessage"));
       }
 
       return data;
     } catch (err) {
-      setEstimationError(err instanceof Error ? err.message : "unknown error");
+      setEstimationError(
+        err instanceof Error && err.message.trim() ? err.message : t("timeEstimate.errorMessage"),
+      );
       throw err;
     } finally {
       setIsEstimating(false);
