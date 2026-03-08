@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -80,7 +80,10 @@ export default function SettingsScreen() {
         </Text>
         <Text className="text-base font-baloo text-gray-500 mt-1">{t("version")}</Text>
 
-        <View className="mt-8 w-full bg-white rounded-2xl items-center">
+        <ScrollView
+          className="mt-8 w-full bg-white rounded-2xl"
+          contentContainerStyle={{ alignItems: "center" }}
+        >
           {menuItems.map((item, index) => (
             <View key={item.key} className="w-11/12">
               <Pressable
@@ -96,7 +99,7 @@ export default function SettingsScreen() {
               {index < menuItems.length - 1 && <FormDivider marginVertical={2} />}
             </View>
           ))}
-        </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
