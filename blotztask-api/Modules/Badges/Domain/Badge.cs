@@ -11,6 +11,7 @@ public class Badge
     public required string Description { get; set; }
     public required string IconUrl { get; set; }
     public BadgeCategory Category { get; set; }
+    public int? Threshold { get; set; }
     public int Order { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAtUtc { get; set; }
