@@ -16,6 +16,7 @@ import { NoteModal } from "@/feature/notes/components/note-modal";
 import { NoteRow } from "@/feature/notes/components/note-row";
 
 
+import { NoteAddToTaskBottomSheet } from "@/feature/notes/components/note-add-to-task-bottomsheet";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,6 +30,10 @@ export default function NotesScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [editingNote, setEditingNote] = useState<NoteDTO | null>(null);
+
+  // Bottom sheet state for add-to-task (managed at screen level)
+  const [isAddToTaskVisible, setIsAddToTaskVisible] = useState(false);
+  const [selectedNoteForTask, setSelectedNoteForTask] = useState<NoteDTO | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -191,6 +196,15 @@ export default function NotesScreen() {
           {showLoading && <LoadingScreen />}
         </View>
       </TouchableWithoutFeedback>
+
+      <NoteAddToTaskBottomSheet
+        visible={isAddToTaskVisible}
+        note={selectedNoteForTask}
+        onClose={() => {
+          setIsAddToTaskVisible(false);
+          setSelectedNoteForTask(null);
+        }}
+      />
     </SafeAreaView>
   );
 }

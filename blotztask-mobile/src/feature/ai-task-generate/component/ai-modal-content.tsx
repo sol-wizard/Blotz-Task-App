@@ -5,9 +5,7 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { mapExtractedNoteDTOToAiNoteDTO } from "../utils/map-extracted-to-note-dto";
 import { AiTasksPreview } from "./ai-tasks-preview";
-import { AndroidInput } from "./android-input";
-import { Platform } from "react-native";
-import IOSInput from "./ios-input";
+import { SpeechInput } from "./speech-input";
 
 export const AiModalContent = ({
   modalType,
@@ -45,16 +43,8 @@ export const AiModalContent = ({
 
     case "input":
     default:
-      return Platform.OS !== "android" ? (
-        <IOSInput
-          text={text}
-          setText={setText}
-          sendMessage={sendMessage}
-          isAiGenerating={isAiGenerating}
-          aiGeneratedMessage={aiGeneratedMessage}
-        />
-      ) : (
-        <AndroidInput
+      return (
+        <SpeechInput
           text={text}
           setText={setText}
           sendMessage={sendMessage}

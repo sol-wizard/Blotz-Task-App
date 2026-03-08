@@ -17,6 +17,7 @@
   "close": "Close",
 
   "timeEstimate": {
+    "estimateButton": "AI Time Estimate",
     "estimating": "Estimating time...",
     "estimatedMessage": "This task will take around ",
     "startNow": "Start now",
