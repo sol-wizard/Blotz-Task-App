@@ -14,13 +14,13 @@ public interface IAiTaskGenerateService
 
 public class AiTaskGenerateService(
     IChatHistoryManagerService chatHistoryManagerService,
-    IChatCompletionService chatCompletionService,
     ILogger<AiTaskGenerateService> logger,
     Kernel kernel)
     : IAiTaskGenerateService
 {
     public async Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct)
     {
+        var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>("TaskGeneration");
         var chatHistory = chatHistoryManagerService.GetChatHistory();
 
         try
@@ -30,6 +30,7 @@ public class AiTaskGenerateService(
                 ResponseFormat = typeof(AiGenerateMessage) // Enforces structured output via JSON Schema
             };
 
+            logger.LogInformation("TaskGeneration: Invoking AI with ServiceId=TaskGeneration");
             var chatResults = await chatCompletionService.GetChatMessageContentsAsync(
                 chatHistory,
                 executionSettings,
@@ -39,6 +40,7 @@ public class AiTaskGenerateService(
 
             var functionResultMessage = chatResults.LastOrDefault();
 
+            logger.LogInformation("TaskGeneration: Response from ModelId={ModelId}", functionResultMessage?.ModelId ?? "unknown");
             logger.LogInformation(functionResultMessage?.Content);
 
             if (functionResultMessage == null)

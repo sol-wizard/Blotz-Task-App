@@ -57,7 +57,8 @@ public class BreakdownTaskCommandHandler(
             // This uses OpenAI's JSON Schema feature to enforce the response structure at the model level
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                ResponseFormat = typeof(GeneratedSubTaskList) // Enforces structured output via JSON Schema
+                ResponseFormat = typeof(GeneratedSubTaskList), // Enforces structured output via JSON Schema
+                ServiceId = "Breakdown"
             };
 
             // KernelArguments holds both the prompt variables and execution settings
@@ -71,6 +72,7 @@ public class BreakdownTaskCommandHandler(
                 ["preferredLanguage"] = preferredLanguageString
             };
 
+            logger.LogInformation("Breakdown: Invoking AI with ServiceId={ServiceId}", executionSettings.ServiceId ?? "default");
             // InvokePromptAsync: SK's method for executing a prompt template with variable substitution
             // 1. Replaces {{$variable}} placeholders with values from arguments
             // 2. Sends the prompt to OpenAI with the specified execution settings

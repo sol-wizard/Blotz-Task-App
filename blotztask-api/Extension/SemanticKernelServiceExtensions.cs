@@ -18,12 +18,12 @@ public static class SemanticKernelServiceExtensions
             string.IsNullOrWhiteSpace(apiKey))
         {
             throw new InvalidOperationException(
-                "Missing Azure OpenAI configuration. Set AzureOpenAI:Endpoint, AzureOpenAI:DeploymentId, and AzureOpenAI:ApiKey in configuration or via Key Vault reference.");
+                "Missing Azure OpenAI configuration. Set AzureOpenAI:Endpoint, AzureOpenAI:AiModels:TaskGeneration:DeploymentId, AzureOpenAI:AiModels:Breakdown:DeploymentId, and AzureOpenAI:ApiKey in configuration or via Key Vault reference.");
         }
 
         services.AddKernel()
-            .AddAzureOpenAIChatCompletion(taskGenerationDeploymentId, endpoint, apiKey)
-            .AddAzureOpenAIChatCompletion(breakdownDeploymentId, endpoint, apiKey);
+            .AddAzureOpenAIChatCompletion(taskGenerationDeploymentId, endpoint, apiKey, serviceId: "TaskGeneration")
+            .AddAzureOpenAIChatCompletion(breakdownDeploymentId, endpoint, apiKey, serviceId: "Breakdown");
 
         return services;
     }
