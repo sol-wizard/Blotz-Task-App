@@ -10,6 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { format, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -26,6 +27,7 @@ import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { theme } from "@/shared/constants/theme";
+import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
 
 const rubberBand = (x: number, limit: number) => {
   "worklet";
@@ -46,6 +48,7 @@ interface TaskCardProps {
 }
 
 const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) => {
+  const { t } = useTranslation("tasks");
   const { toggleTask, isToggling } = useTaskMutations();
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
     useSubtaskMutations();
@@ -97,7 +100,19 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     posthog.capture(EVENTS.BREAKDOWN_TASK);
 
     try {
-      const subtasks = (await breakDownTask(task.id)) ?? [];
+      const breakdownMessage = await breakDownTask(task.id);
+
+      if (!breakdownMessage) {
+        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"));
+        return;
+      }
+
+      if (breakdownMessage.isSuccess === false) {
+        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), breakdownMessage.errorMessage);
+        return;
+      }
+
+      const subtasks = breakdownMessage.subtasks ?? [];
       if (subtasks.length > 0) {
         await replaceSubtasks({
           taskId: task.id,
@@ -108,6 +123,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
       }
     } catch (e) {
       console.error("Breakdown error:", e);
+      showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), e instanceof Error ? e.message : undefined);
     }
   };
 
