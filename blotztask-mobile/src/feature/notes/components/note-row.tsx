@@ -1,18 +1,21 @@
-import React, { useMemo, useState } from "react";
-import { View, Pressable, Text } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Swipeable } from "react-native-gesture-handler";
+import React, { useRef, useState, useEffect } from "react";
+import Animated from "react-native-reanimated";
+import ReanimatedSwipeable, {
+  SwipeableMethods,
+} from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 
 import { NoteDTO } from "../models/note-dto";
 import { NoteCard } from "./note-card";
+import { NoteActions } from "./note-actions";
 import { NoteTimeEstimateModal } from "./note-time-estimate-modal";
 
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
 import { convertDurationToMinutes, convertDurationToText } from "@/shared/util/convert-duration";
 import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
 import { useNotesMutation } from "../hooks/useNotesMutation";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 export const NoteRow = ({
   note,
@@ -24,10 +27,9 @@ export const NoteRow = ({
   note: NoteDTO;
   onPressNote: (note: NoteDTO) => void;
   onDelete: (note: NoteDTO) => void;
-  registerSwipeable: (id: string, ref: Swipeable | null) => void;
+  registerSwipeable: (id: string, ref: SwipeableMethods | null) => void;
   closeOtherRows: (openId: string) => void;
 }) => {
-  const noteId = useMemo(() => String(note.id), [note.id]);
   const { t } = useTranslation("notes");
 
   const [isSwiping, setIsSwiping] = useState(false);
@@ -35,6 +37,13 @@ export const NoteRow = ({
   const addNoteToTask = useAddNoteToTask();
   const { estimateTime, isEstimating, timeResult, estimateError } = useEstimateTaskTime();
   const { deleteNote } = useNotesMutation();
+  const noteId = String(note.id);
+
+  const swipeRef = useRef<SwipeableMethods | null>(null);
+
+  useEffect(() => {
+    registerSwipeable(noteId, swipeRef.current);
+  }, [noteId, registerSwipeable]);
 
   const handleAddToTask = () => {
     setIsEstimateModalVisible(true);
@@ -56,110 +65,42 @@ export const NoteRow = ({
     });
   };
 
-  const ActionButton = ({
-    icon,
-    label,
-    bgColor,
-    onPress,
-    }: {
-    icon: string;
-    label: string;
-    bgColor: string;
-    onPress: () => void;
-    }) => {
-    return (
-        <Pressable onPress={onPress} style={{ alignItems: "center" }}>
-        {/* 圓形 icon 背景 */}
-        <View
-            style={{
-            width: 38,
-            height: 38,
-            borderRadius: 19,
-            backgroundColor: bgColor,
-            alignItems: "center",
-            justifyContent: "center",
-            }}
-        >
-            <MaterialCommunityIcons name={icon} size={18} color="#FFFFFF" />
-        </View>
-
-        <Text
-            style={{
-            marginTop: 6,
-            fontSize: 12,
-            color: "#8A8A8A",
-            fontWeight: "600",
-            }}
-        >
-            {label}
-        </Text>
-        </Pressable>
-    );
-    };
-
-  const renderRightActions = () => {
   return (
-    <View
-      style={{
-        width: 170,
-        height: "100%",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "flex-end",
-        paddingRight: 16,
-        gap: 18,
-      }}
-    >
-        <ActionButton
-            icon="calendar-plus"
-            label="Add to task"
-            bgColor="#8BC34A"
-            onPress={handleAddToTask}
-        />
-
-        <ActionButton
-            icon="trash-can-outline"
-            label="Delete"
-            bgColor="#F0625F"
-            onPress={() => onDelete(note)}
-        />
-        </View>
-    );
-    };
-
-  return (
-    <>
-      <Swipeable
-        ref={(ref) => registerSwipeable(noteId, ref)}
-        renderRightActions={renderRightActions}
+    <Animated.View entering={MotionAnimations.upEntering} exiting={MotionAnimations.rightExiting} layout={MotionAnimations.layout}>
+      <ReanimatedSwipeable
+        ref={swipeRef}
+        renderRightActions={(progress) => (
+          <NoteActions
+            note={note}
+            progress={progress}
+            onAddToTask={() => handleAddToTask()}
+            onDelete={() => onDelete(note)}
+          />
+        )}
         rightThreshold={32}
         overshootRight={false}
         friction={2}
         onSwipeableWillOpen={() => {
-            closeOtherRows(noteId);
-            setIsSwiping(true); 
+          closeOtherRows(noteId);
+          setIsSwiping(true);
         }}
         onSwipeableWillClose={() => {
-            setIsSwiping(false); 
+          setIsSwiping(false);
         }}
+      >
+        <Animated.View
+          className={`flex-1 overflow-hidden rounded-3xl ${isSwiping ? "bg-gray-100" : "bg-white"}`}
         >
-        <View style={{ flex: 1,
-            backgroundColor: isSwiping ? "#F3F4F6" : "#FFFFFF",
-            borderTopLeftRadius: 24,
-            borderTopRightRadius:  24,
-            borderBottomLeftRadius:  24,
-            borderBottomRightRadius:  24,
-            overflow: "hidden" }}>
-            <NoteCard
-                note={note}
-                onPressCard={() => onPressNote(note)}
-                isToggled={false}
-                onToggle={() => {}}
-                isDeleting={false}
-                onDelete={() => {}}
-                />
-        </View>
-      </Swipeable>
+          <NoteCard
+            note={note}
+            onPressCard={() => onPressNote(note)}
+            isToggled={false}
+            onToggle={() => {}}
+            isDeleting={false}
+            onDelete={() => {}}
+          />
+        </Animated.View>
+      </ReanimatedSwipeable>
 
       <NoteTimeEstimateModal
         visible={isEstimateModalVisible}
@@ -169,6 +110,6 @@ export const NoteRow = ({
         isEstimating={isEstimating}
         error={estimateError ? t("timeEstimate.errorMessage") : null}
       />
-    </>
+    </Animated.View>
   );
 };
