@@ -1,10 +1,9 @@
 import { useCallback, useRef, useState } from "react";
-import { View, Text, Pressable, TouchableWithoutFeedback, Keyboard, FlatList } from "react-native";
+import { View, Text, Pressable, TouchableWithoutFeedback, Keyboard, FlatList, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
-import { LinearGradient } from "expo-linear-gradient";
 import { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 
 import LoadingScreen from "@/shared/components/ui/loading-screen";
@@ -17,6 +16,8 @@ import { NoteRow } from "@/feature/notes/components/note-row";
 
 
 import { NoteAddToTaskBottomSheet } from "@/feature/notes/components/note-add-to-task-bottomsheet";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { theme } from "@/shared/constants/theme";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,7 +39,7 @@ export default function NotesScreen() {
   useFocusEffect(
     useCallback(() => {
       posthog.capture("screen_viewed", { screen_name: "Notes" });
-    }, [posthog]),
+    }, []),
   );
 
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
@@ -110,6 +111,22 @@ export default function NotesScreen() {
       >
         <View className="flex-1">
           <NoteHeader/>
+
+          <View className="my-4 mx-1 px-3">
+            <View className="h-10 flex-row items-center rounded-full bg-[#E9EEF0] px-3">
+              <MaterialCommunityIcons name="magnify" size={18} color={theme.colors.disabled} />
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder={t("search")}
+                placeholderTextColor={theme.colors.disabled}
+                className="flex-1 ml-2 text-base font-baloo text-black"
+                style={{ color: "#000000" }}
+                returnKeyType="search"
+                clearButtonMode="while-editing"
+              />
+            </View>
+          </View>
 
           <View className="px-6 flex-1">
             {notesSearchResult.length > 0 ? (
