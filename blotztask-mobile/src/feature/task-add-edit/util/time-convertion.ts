@@ -1,5 +1,5 @@
 import { TaskTimeType } from "@/shared/models/task-detail-dto";
-import { isSameDay, isSameMinute } from "date-fns";
+import { isSameMinute } from "date-fns";
 
 const ALLOWED_ALERT_SECONDS = [0, 300, 600, 1800, 3600, 7200, 86400, 604800];
 
@@ -35,36 +35,23 @@ export function calculateAlertTime(
 }
 
 export function buildTaskTimePayload(
-  startDate: Date | null,
-  startTime: Date | null,
-  endDate: Date | null,
-  endTime: Date | null,
-): { startTime: Date | undefined; endTime: Date | undefined; timeType: TaskTimeType | null } {
-  const start = startDate != null ? mergeDateTime(startDate, startTime ?? undefined) : undefined;
-  const end = endDate != null ? mergeDateTime(endDate, endTime ?? undefined) : undefined;
-
+  startDate: Date,
+  startTime: Date,
+  endDate: Date,
+  endTime: Date,
+): { startTime: Date; endTime: Date; timeType: TaskTimeType } {
+  const start = mergeDateTime(startDate, startTime);
+  const end = mergeDateTime(endDate, endTime);
   const taskTimeType = getTimeType(start, end);
 
-  // multi-day range + missing time => normalize to day bounds
-  if (taskTimeType === TaskTimeType.Range && isMultiDay(startDate, endDate) && startTime === null) {
-    start?.setHours(0, 0, 0, 0);
-  }
-  if (taskTimeType === TaskTimeType.Range && isMultiDay(startDate, endDate) && endTime === null) {
-    end?.setHours(23, 59, 0, 0);
-  }
-
   return {
-    startTime: taskTimeType === TaskTimeType.Single ? start : start,
+    startTime: start,
     endTime: taskTimeType === TaskTimeType.Single ? start : end,
     timeType: taskTimeType,
   };
 }
 
-function getTimeType(start?: Date, end?: Date): TaskTimeType | null {
-  if (!start || !end) {
-    return null;
-  }
-
+function getTimeType(start: Date, end: Date): TaskTimeType {
   return isSameMinute(start, end) ? TaskTimeType.Single : TaskTimeType.Range;
 }
 
@@ -75,6 +62,3 @@ function mergeDateTime(date: Date, time?: Date): Date {
   }
   return merged;
 }
-
-const isMultiDay = (startDate: Date | null, endDate: Date | null) =>
-  !!(startDate && endDate && !isSameDay(startDate, endDate));

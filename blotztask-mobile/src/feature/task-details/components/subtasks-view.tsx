@@ -10,6 +10,7 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { LABEL_COLOR_PALETTE_BY_ID } from "@/shared/util/label-colors";
+import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
 
 type SubtaskViewProps = {
   parentTask: TaskDetailDTO;
@@ -34,7 +35,19 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
     posthog.capture(EVENTS.BREAKDOWN_TASK);
 
     try {
-      const subtasks = (await breakDownTask(parentTask.id)) ?? [];
+      const breakdownMessage = await breakDownTask(parentTask.id);
+
+      if (!breakdownMessage) {
+        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"));
+        return;
+      }
+
+      if (breakdownMessage.isSuccess === false) {
+        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), breakdownMessage.errorMessage);
+        return;
+      }
+
+      const subtasks = breakdownMessage.subtasks ?? [];
       if (subtasks.length > 0) {
         await replaceSubtasks({
           taskId: parentTask.id,
@@ -43,6 +56,7 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
       }
     } catch (e) {
       console.error("Subtask error:", e);
+      showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), e instanceof Error ? e.message : undefined);
     }
   };
 
@@ -66,7 +80,14 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
 
   // Show manage view if subtasks exist
   if (hasSubtasks) {
-    return <SubtasksEditor parentTask={parentTask} />;
+    return (
+      <SubtasksEditor
+        parentTask={parentTask}
+        onRefreshSubtasks={handleBreakDown}
+        isBreakingDown={isBreakingDown}
+        isReplacingSubtasks={isReplacingSubtasks}
+      />
+    );
   }
 
   // Show initial breakdown view if no subtasks exist yet
