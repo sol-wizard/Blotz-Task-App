@@ -12,6 +12,7 @@ const formatCardDateForLocale = (isoString: string) => {
   }
 
   // English format: 08 Jan
+  return format(date, "dd MMM");
 };
 
 export const formatAiTaskCardDate = ({
