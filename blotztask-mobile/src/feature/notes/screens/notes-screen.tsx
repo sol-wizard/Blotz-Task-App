@@ -5,7 +5,7 @@ import { router, useFocusEffect } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
-import { Swipeable } from "react-native-gesture-handler";
+import { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { NoteHeader } from "@/feature/notes/components/note-header";
@@ -38,9 +38,9 @@ export default function NotesScreen() {
 
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
 
-  const swipeablesRef = useRef<Record<string, Swipeable | null>>({});
+  const swipeablesRef = useRef<Record<string, SwipeableMethods | null>>({});
 
-  const registerSwipeable = (id: string, ref: Swipeable | null) => {
+  const registerSwipeable = (id: string, ref: SwipeableMethods | null) => {
     swipeablesRef.current[id] = ref;
   };
 
@@ -104,7 +104,7 @@ export default function NotesScreen() {
         accessible={false}
       >
         <View className="flex-1">
-          <NoteHeader />
+          <NoteHeader/>
 
           <View className="px-6 flex-1">
             {notesSearchResult.length > 0 ? (
