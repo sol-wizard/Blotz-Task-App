@@ -75,7 +75,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     defaultValues: defaultValues,
   });
 
-  const { handleSubmit, formState, control, setValue, clearErrors } = form;
+  const { handleSubmit, formState, control, setValue, clearErrors, trigger } = form;
   const { isSubmitting } = formState;
 
   if (isUserPreferencesLoading) {
@@ -190,7 +190,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             </Text>
           )}
           {isActiveTab === "reminder" && <ReminderTab control={control} />}
-          {isActiveTab === "event" && <EventTab control={control} />}
+          {isActiveTab === "event" && <EventTab control={control} trigger={trigger} clearErrors={clearErrors} />}
           <FormDivider />
 
           <AlertSelect control={control} />
