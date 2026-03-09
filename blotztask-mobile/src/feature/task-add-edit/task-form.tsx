@@ -75,7 +75,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     defaultValues: defaultValues,
   });
 
-  const { handleSubmit, formState, control, setValue } = form;
+  const { handleSubmit, formState, control, setValue, clearErrors } = form;
   const { isSubmitting } = formState;
 
   if (isUserPreferencesLoading) {
@@ -124,6 +124,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const handleTabChange = (next: SegmentButtonValue) => {
     setIsActiveTab(next);
+    clearErrors(["endDate", "endTime"]);
 
     if (mode === "edit" || next === "reminder") {
       setValue("startDate", defaultValues.startDate);
