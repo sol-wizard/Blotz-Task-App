@@ -22,25 +22,18 @@ export const formatAiTaskCardDate = ({
   startTime: string;
   endTime: string;
 }) => {
-  if (!startTime && !endTime) {
-    // use "today" key from JSON file
+  const startDate = parseISO(startTime);
+  const endDate = parseISO(endTime);
+
+  if (isToday(startDate)) {
     return i18n.t("aiTaskGenerate:taskCard.today");
   }
 
-  if (startTime && endTime) {
-    const startDate = parseISO(startTime);
-    const endDate = parseISO(endTime);
-
-    if (isToday(startDate)) {
-      return i18n.t("aiTaskGenerate:taskCard.today");
-    }
-
-    if (isSameDay(startDate, endDate)) {
-      return formatCardDateForLocale(startTime);
-    }
-
-    return `${formatCardDateForLocale(startTime)} - ${formatCardDateForLocale(endTime)}`;
+  if (isSameDay(startDate, endDate)) {
+    return formatCardDateForLocale(startTime);
   }
+
+  return `${formatCardDateForLocale(startTime)} - ${formatCardDateForLocale(endTime)}`;
 };
 
 export const formatAiTaskCardTime = ({
