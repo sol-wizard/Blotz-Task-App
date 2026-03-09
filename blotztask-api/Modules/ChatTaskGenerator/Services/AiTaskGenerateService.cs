@@ -85,7 +85,11 @@ public class AiTaskGenerateService(
             logger.LogInformation(oce, "AI task generation cancelled.");
             throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
         }
-        catch (TokenLimitExceededException ex)
+        catch (HttpOperationException ex) when (
+            ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase)
+        )
         {
             logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
             throw new AiTokenLimitedException();
