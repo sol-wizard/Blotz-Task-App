@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useRef, useState } from "react";
-import { View, Pressable, ActivityIndicator, ScrollView, Text } from "react-native";
+import { View, Pressable, ActivityIndicator, ScrollView, Text, Alert } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { AiNoteCard } from "./ai-note-card";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -31,7 +31,7 @@ export function AiTasksPreview({
   aiNotes?: AiNoteDTO[];
   setModalType: (v: BottomSheetType) => void;
   userInput: string;
-  setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
+  setAiGeneratedMessage: React.Dispatch<React.SetStateAction<AiResultMessageDTO | undefined>>;
 }) {
   const { t } = useTranslation("aiTaskGenerate");
   const queryClient = useQueryClient();
@@ -74,18 +74,27 @@ export function AiTasksPreview({
     setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
-  const onTitleChange = (taskId: string, newTitle: string) => {
-    setLocalTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, title: newTitle } : t)));
+  const onTitleChange = (taskIndex: number, newTitle: string) => {
+    setLocalTasks((prev) =>
+      prev.map((t, index) => (index === taskIndex ? { ...t, title: newTitle } : t)),
+    );
   };
 
   const handleAddAll = async () => {
     if (isAdding || !hasItems) return;
 
     try {
+      const hasEmptyTitle = localTasks.some((t) => t.title.trim() === "");
+      if (hasEmptyTitle) {
+        Alert.alert(t("validation.emptyTitle.title"), t("validation.emptyTitle.message"));
+        return;
+      }
+
+      const trimmedTasks = localTasks.map((t) => ({ ...t, title: t.title.trim() }));
+      const payloads = trimmedTasks.map(convertAiTaskToAddTaskItemDTO);
       setIsAdding(true);
 
-      if (localTasks.length > 0) {
-        const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
+      if (trimmedTasks.length > 0) {
         await Promise.all(payloads.map((payload) => addTaskItem(payload)));
         queryClient.invalidateQueries({ queryKey: taskKeys.all });
       }
@@ -118,7 +127,7 @@ export function AiTasksPreview({
   };
 
   const handleGoBack = () => {
-    setAiGeneratedMessage();
+    setAiGeneratedMessage(undefined);
     setModalType("input");
 
     posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
@@ -137,12 +146,12 @@ export function AiTasksPreview({
       <ScrollView className="w-full mt-4 mb-8">
         {localTasks.length > 0 && (
           <>
-            {localTasks.map((task) => (
+            {localTasks.map((task,index) => (
               <AiTaskCard
                 key={task.id}
                 task={task}
                 handleTaskDelete={onDeleteTask}
-                onTitleChange={onTitleChange}
+                onTitleChange={(_taskId, newTitle) => onTitleChange(index, newTitle)}
               />
             ))}
           </>

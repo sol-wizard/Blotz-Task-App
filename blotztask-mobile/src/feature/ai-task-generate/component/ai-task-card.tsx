@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, Pressable, Keyboard, TextInput } from "react-native";
+import React from "react";
+import { View, Text, Pressable, TextInput } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import { theme } from "@/shared/constants/theme";
@@ -14,21 +14,9 @@ type Props = {
 
 export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
-  const [draftTitle, setDraftTitle] = useState(task.title);
-
-  const handleEdit = () => {
-    const trimmed = draftTitle.trim();
-    if (trimmed && trimmed !== task.title) {
-      onTitleChange?.(task.id, trimmed);
-    } else if (!trimmed) {
-      setDraftTitle(task.title);
-    }
-
-    Keyboard.dismiss();
-  };
   const formatTime = formatAiTaskCardTime({ startTime: task.startTime, endTime: task.endTime });
   const formatDate = formatAiTaskCardDate({ startTime: task.startTime, endTime: task.endTime });
-
+  
   return (
     <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] min-h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
       <View
@@ -38,13 +26,12 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
 
       <View className="flex-1 flex-row items-center ml-4">
         <TextInput
-          value={draftTitle}
-          onChangeText={setDraftTitle}
-          onBlur={handleEdit}
-          onSubmitEditing={handleEdit}
+          value={task.title}
+          onChangeText={(text) => onTitleChange?.(task.id, text)}
           returnKeyType="done"
           multiline
-          className="flex-1 mr-3 text-lg font-baloo leading-5"
+          className="flex-1 mr-3 text-lg font-baloo"
+          textAlignVertical="center"
           style={{ color: theme.colors.onSurface }}
           placeholder={t("taskCard.titlePlaceholder")}
           placeholderTextColor={theme.colors.disabled}

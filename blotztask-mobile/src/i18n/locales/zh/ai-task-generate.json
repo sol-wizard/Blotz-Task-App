@@ -27,6 +27,12 @@
     "editTitleLabel": "编辑任务标题",
     "editTitleHint": "双击编辑任务标题"
   },
+  "validation": {
+    "emptyTitle": {
+      "title": "标题无效",
+      "message": "标题不能为空。"
+    }
+  },
   "noteCard": {
     "textPlaceholder": "笔记内容",
     "editTextLabel": "编辑笔记",
