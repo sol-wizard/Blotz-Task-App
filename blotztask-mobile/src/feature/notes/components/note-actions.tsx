@@ -56,7 +56,7 @@ const ActionButton = memo(function ActionButton({
         className="items-center"
       >
         <View
-          className={`w-[38px] h-[38px] rounded-full items-center justify-center ${bgColorClass} ${
+          className={`w-10 h-10 rounded-full items-center justify-center ${bgColorClass} ${
             disabled ? "opacity-60" : ""
           }`}
         >
@@ -77,18 +77,15 @@ type NoteActionsProps<TNote> = {
   widthClassName?: string;
 };
 
-
 export const NoteActions = memo(function NoteActions<TNote>({
   note,
   onAddToTask,
   onDelete,
   progress,
 }: NoteActionsProps<TNote>) {
-  const handleAdd = useCallback(() => onAddToTask?.(note), [onAddToTask, note]);
-  const handleDelete = useCallback(() => onDelete?.(note), [onDelete, note]);
-
+  const handleAdd = () => onAddToTask?.(note);
+  const handleDelete = () => onDelete?.(note);
   const { t } = useTranslation("notes");
-
   return (
     <View className={`w-[190px] h-full flex-row items-center justify-end pr-4`}>
       <View className="flex-row items-center" style={{ gap: 18 }}>
