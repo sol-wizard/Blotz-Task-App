@@ -58,7 +58,6 @@ export const NoteCard = ({
   return (
     <View>
       <Pressable
-        onLongPress={onToggle}
         onPress={() => {
           if (isToggled) return;
           onPressCard(note);

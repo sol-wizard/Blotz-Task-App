@@ -2,6 +2,7 @@ import { View, Text, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { theme } from "@/shared/constants/theme";
 
 export const NoteHeader = () => {
   const { t } = useTranslation("notes");

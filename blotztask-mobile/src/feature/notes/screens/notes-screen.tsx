@@ -68,7 +68,6 @@ export default function NotesScreen() {
   };
 
   const handleDelete = (note: NoteDTO) => {
-    closeAllRows();
     deleteNote(String(note.id));
   };
 
@@ -102,6 +101,7 @@ export default function NotesScreen() {
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
+      <NoteHeader/>
       <TouchableWithoutFeedback
         onPress={() => {
           Keyboard.dismiss();
@@ -110,8 +110,6 @@ export default function NotesScreen() {
         accessible={false}
       >
         <View className="flex-1">
-          <NoteHeader/>
-
           <View className="my-4 mx-1 px-3">
             <View className="h-10 flex-row items-center rounded-full bg-[#E9EEF0] px-3">
               <MaterialCommunityIcons name="magnify" size={18} color={theme.colors.disabled} />
@@ -121,13 +119,10 @@ export default function NotesScreen() {
                 placeholder={t("search")}
                 placeholderTextColor={theme.colors.disabled}
                 className="flex-1 ml-2 text-base font-baloo text-black"
-                style={{ color: "#000000" }}
                 returnKeyType="search"
-                clearButtonMode="while-editing"
               />
             </View>
           </View>
-
           <View className="px-6 flex-1">
             {notesSearchResult.length > 0 ? (
               <View
@@ -142,6 +137,11 @@ export default function NotesScreen() {
                   elevation: 2,
                 }}
               >
+                {showLoading && (
+                  <View className="flex-1 items-center justify-center">
+                    <LoadingScreen />
+                  </View>
+                )}
                 <FlatList
                   data={showLoading ? [] : notesSearchResult}
                   keyExtractor={(item) => String(item.id)}
@@ -164,6 +164,7 @@ export default function NotesScreen() {
                       }}
                     />
                   )}
+                  showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
                   onScrollBeginDrag={closeAllRows}
                   removeClippedSubviews
