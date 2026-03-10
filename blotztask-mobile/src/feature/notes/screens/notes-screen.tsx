@@ -43,7 +43,7 @@ export default function NotesScreen() {
   );
 
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
-
+  
   const swipeablesRef = useRef<Record<string, SwipeableMethods | null>>({});
 
   const registerSwipeable = (id: string, ref: SwipeableMethods | null) => {
@@ -101,7 +101,6 @@ export default function NotesScreen() {
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
-      <NoteHeader/>
       <TouchableWithoutFeedback
         onPress={() => {
           Keyboard.dismiss();
@@ -110,79 +109,63 @@ export default function NotesScreen() {
         accessible={false}
       >
         <View className="flex-1">
+          <NoteHeader />
           <View className="my-4 mx-1 px-3">
             <View className="h-10 flex-row items-center rounded-full bg-[#E9EEF0] px-3">
               <MaterialCommunityIcons name="magnify" size={18} color={theme.colors.disabled} />
               <TextInput
                 value={searchQuery}
                 onChangeText={setSearchQuery}
-                placeholder={t("search")}
-                placeholderTextColor={theme.colors.disabled}
-                className="flex-1 ml-2 text-base font-baloo text-black"
-                returnKeyType="search"
+                placeholder="Search notes"
+                placeholderTextColor="#9CA3AF"
+                className="ml-2 flex-1 text-base text-black"
               />
             </View>
           </View>
           <View className="px-6 flex-1">
-            {notesSearchResult.length > 0 ? (
-              <View
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  borderRadius: 24,
-                  overflow: "hidden",
-                  shadowColor: "#000",
-                  shadowOpacity: 0.06,
-                  shadowRadius: 14,
-                  shadowOffset: { width: 0, height: 6 },
-                  elevation: 2,
-                }}
-              >
-                {showLoading && (
-                  <View className="flex-1 items-center justify-center">
-                    <LoadingScreen />
-                  </View>
+            <View className="flex-1 bg-white rounded-3xl overflow-hidden shadow-sm">
+              <FlatList
+                data={showLoading ? [] : notesSearchResult}
+                keyExtractor={(item) => String(item.id)}
+                renderItem={({ item }) => (
+                  <NoteRow
+                    note={item}
+                    onPressNote={openEditModal}
+                    onDelete={handleDelete}
+                    registerSwipeable={registerSwipeable}
+                    closeOtherRows={closeOtherRows}
+                  />
                 )}
-                <FlatList
-                  data={showLoading ? [] : notesSearchResult}
-                  keyExtractor={(item) => String(item.id)}
-                  renderItem={({ item }) => (
-                    <NoteRow
-                      note={item}
-                      onPressNote={openEditModal}
-                      onDelete={handleDelete}
-                      registerSwipeable={registerSwipeable}
-                      closeOtherRows={closeOtherRows}
-                    />
-                  )}
-                  ItemSeparatorComponent={() => (
-                    <View
-                      style={{
-                        height: 1,
-                        backgroundColor: "#E7E7E7",
-                        marginLeft: 18,
-                        marginRight: 18,
-                      }}
-                    />
-                  )}
-                  showsVerticalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                  onScrollBeginDrag={closeAllRows}
-                  removeClippedSubviews
-                  initialNumToRender={12}
-                  windowSize={7}
-                  maxToRenderPerBatch={12}
-                />
-              </View>
-            ) : (
-              <View className="flex-1 items-center justify-center px-10">
-                <Text className="text-center text-black font-balooBold text-2xl">
-                  {t("emptyNoteMessage.encouragingTitle")}
-                </Text>
-                <Text className="text-center text-black font-baloo text-xl mt-2">
-                  {t("emptyNoteMessage.encouragingDescription")}
-                </Text>
-              </View>
-            )}
+                ItemSeparatorComponent={() => (
+                  <View
+                    style={{
+                      height: 1,
+                      backgroundColor: "#E7E7E7",
+                      marginLeft: 18,
+                      marginRight: 18,
+                    }}
+                  />
+                )}
+                ListEmptyComponent={
+                  !showLoading ? (
+                    <View className="flex-1 items-center justify-center px-10 py-20">
+                      <Text className="text-center text-black font-balooBold text-2xl">
+                        {t("emptyNoteMessage.encouragingTitle")}
+                      </Text>
+                      <Text className="text-center text-black font-baloo text-xl mt-2">
+                        {t("emptyNoteMessage.encouragingDescription")}
+                      </Text>
+                    </View>
+                  ) : null
+                }
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                onScrollBeginDrag={closeAllRows}
+                initialNumToRender={12}
+                windowSize={7}
+                maxToRenderPerBatch={12}
+              />
+            </View>
           </View>
 
           <Pressable
