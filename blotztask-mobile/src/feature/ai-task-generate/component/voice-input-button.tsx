@@ -18,17 +18,15 @@ type Props = {
 };
 
 const VoiceInputButton = ({
-  isListening, 
+  isListening,
   startListening,
   abortListening,
-  stopListening, 
+  stopListening,
   isAiGenerating,
-  hasText, 
+  hasText,
   onGenerateTask,
 }: Props) => {
   const { t } = useTranslation("aiTaskGenerate");
-
-
 
   if (isAiGenerating) {
     return (
@@ -100,14 +98,26 @@ const VoiceInputButton = ({
 
   // Default: Tap to Speak
   return (
-    <Pressable
-      className="mt-4 h-14 w-full bg-[#F4F4F4] rounded-full border border-[#ECECEC] items-center flex-row justify-center"
-      onPress={startListening}
-      accessibilityLabel={t("buttons.tapToSpeak")}
+    <LinearGradient
+      colors={["#A3DC2F", "#2F80ED"]}
+      start={{ x: 0, y: 0.5 }}
+      end={{ x: 1, y: 0.5 }}
+      style={{
+        marginTop: 16,
+        borderRadius: 999,
+        padding: 2,
+        width: "100%",
+      }}
     >
-      <MaterialCommunityIcons name="microphone-outline" size={20} color="black" />
-      <Text className="font-bold ml-2">{t("buttons.tapToSpeak")}</Text>
-    </Pressable>
+      <Pressable
+        className="h-14 w-full bg-[#F4F4F4] rounded-full items-center justify-center flex-row"
+        onPress={startListening}
+        accessibilityLabel={t("buttons.tapToSpeak")}
+      >
+        <MaterialCommunityIcons name="microphone-outline" size={20} color="black" />
+        <Text className="font-bold ml-2">{t("buttons.tapToSpeak")}</Text>
+      </Pressable>
+    </LinearGradient>
   );
 };
 
