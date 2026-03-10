@@ -25,7 +25,8 @@
   "taskCard": {
     "titlePlaceholder": "任务标题",
     "editTitleLabel": "编辑任务标题",
-    "editTitleHint": "双击编辑任务标题"
+    "editTitleHint": "双击编辑任务标题",
+    "today": "今天"
   },
   "noteCard": {
     "textPlaceholder": "笔记内容",

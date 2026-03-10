@@ -53,16 +53,14 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
           autoFocus={false}
         />
 
-        {task.startTime || task.endTime ? (
-          <View className="items-center ml-2 flex-shrink-0">
-            {formatTime && (
-              <Text className="text-sm font-balooThin ml-1 text-primary">{formatTime}</Text>
-            )}
-            {formatDate && (
-              <Text className="text-sm font-balooThin ml-1 text-primary">{formatDate}</Text>
-            )}
-          </View>
-        ) : null}
+        <View className="items-center ml-2 flex-shrink-0">
+          {formatTime ? (
+            <Text className="text-sm font-balooThin ml-1 text-primary">{formatTime}</Text>
+          ) : null}
+          {formatDate ? (
+            <Text className="text-sm font-balooThin ml-1 text-primary">{formatDate}</Text>
+          ) : null}
+        </View>
       </View>
 
       <Pressable

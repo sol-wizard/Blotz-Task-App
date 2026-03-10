@@ -113,7 +113,11 @@ public class BreakdownTaskCommandHandler(
             logger.LogWarning(oce, "Task breakdown was canceled");
             throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
         }
-        catch (TokenLimitExceededException ex)
+        catch (HttpOperationException ex) when (
+            ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase)
+        )
         {
             logger.LogWarning(ex, "Token limit exceeded during task breakdown.");
             throw new AiTokenLimitedException();

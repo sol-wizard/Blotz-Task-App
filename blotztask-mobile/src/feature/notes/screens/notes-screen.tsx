@@ -12,8 +12,10 @@ import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
-import { NoteModal } from "@/feature/notes/components/note-modal";
-import { NoteAddToTaskBottomSheet } from "@/feature/notes/components/note-add-to-task-bottomsheet";
+import { NoteInputModal } from "@/feature/notes/components/note-input-modal";
+import { NoteTimePickerSheet } from "@/feature/notes/components/note-time-picker-sheet";
+import { NoteTimeEstimateModal } from "../components/note-time-estimate-modal";
+import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,8 +28,11 @@ export default function NotesScreen() {
   const [editingNote, setEditingNote] = useState<NoteDTO | null>(null);
 
   // Bottom sheet state for add-to-task (managed at screen level)
-  const [isAddToTaskVisible, setIsAddToTaskVisible] = useState(false);
-  const [selectedNoteForTask, setSelectedNoteForTask] = useState<NoteDTO | null>(null);
+  const [noteTimePickerSheetVisible, setNoteTimePickerSheetVisible] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<NoteDTO | null>(null);
+  const [pendingEstimateNote, setPendingEstimateNote] = useState<NoteDTO | null>(null);
+  const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
+  const { estimateTime, isEstimating, estimationResult, estimationError } = useEstimateTaskTime();
 
   useFocusEffect(
     useCallback(() => {
@@ -75,6 +80,23 @@ export default function NotesScreen() {
     );
   };
 
+  const handleAIEstimate = (note: NoteDTO | null) => {
+    if (!note) return;
+    setPendingEstimateNote(note);
+    setNoteTimePickerSheetVisible(false);
+  };
+
+  const handleNoteTimePickerHide = () => {
+    setSelectedNote(null);
+
+    if (!pendingEstimateNote) return;
+
+    const noteToEstimate = pendingEstimateNote;
+    setPendingEstimateNote(null);
+    setIsEstimateModalVisible(true);
+    estimateTime(noteToEstimate);
+  };
+
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -83,6 +105,7 @@ export default function NotesScreen() {
             <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4 px-10">
               {t("title")}
             </Text>
+
             <Pressable
               onPress={() => router.push("/(protected)/gashapon-machine")}
               className="rounded-full mr-4"
@@ -133,7 +156,7 @@ export default function NotesScreen() {
             </Text>
           </Pressable>
 
-          <NoteModal
+          <NoteInputModal
             visible={isModalVisible}
             noteText={noteText}
             isSaving={editingNote ? isNoteUpdating : isNoteCreating}
@@ -160,8 +183,9 @@ export default function NotesScreen() {
               isDeleting={isNoteDeleting}
               onPressTask={handlePressTask}
               onAddToTask={(note: NoteDTO) => {
-                setSelectedNoteForTask(note);
-                setIsAddToTaskVisible(true);
+                setSelectedNote(note);
+                setNoteTimePickerSheetVisible(true);
+                console.log("Selected note for time estimation:", note);
               }}
             />
           )}
@@ -178,13 +202,23 @@ export default function NotesScreen() {
         </View>
       </TouchableWithoutFeedback>
 
-      <NoteAddToTaskBottomSheet
-        visible={isAddToTaskVisible}
-        note={selectedNoteForTask}
+      <NoteTimePickerSheet
+        visible={noteTimePickerSheetVisible}
+        note={selectedNote}
         onClose={() => {
-          setIsAddToTaskVisible(false);
-          setSelectedNoteForTask(null);
+          setNoteTimePickerSheetVisible(false);
+          setSelectedNote(null);
+          setPendingEstimateNote(null);
         }}
+        onModalHide={handleNoteTimePickerHide}
+        handleAIEstimate={handleAIEstimate}
+      />
+      <NoteTimeEstimateModal
+        visible={isEstimateModalVisible}
+        setIsModalVisible={setIsEstimateModalVisible}
+        isEstimating={isEstimating}
+        estimateResult={estimationResult}
+        estimationError={estimationError}
       />
     </SafeAreaView>
   );

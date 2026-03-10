@@ -25,7 +25,8 @@
   "taskCard": {
     "titlePlaceholder": "Task title",
     "editTitleLabel": "Edit task title",
-    "editTitleHint": "Double tap to edit task title"
+    "editTitleHint": "Double tap to edit task title",
+    "today": "Today"
   },
   "noteCard": {
     "textPlaceholder": "Note content",
