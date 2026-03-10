@@ -11,8 +11,3 @@ export function convertDurationToText(timeStr: string): string {
     return `${hours > 0 ? hours + "h " : ""}${minutes > 0 ? minutes + "min" : ""}`;
   }
 }
-
-export const convertDurationToMinutes = (duration: string): number => {
-  const [hours, minutes, seconds] = duration.split(":").map(Number);
-  return hours * 60 + minutes + Math.ceil(seconds / 60);
-};
