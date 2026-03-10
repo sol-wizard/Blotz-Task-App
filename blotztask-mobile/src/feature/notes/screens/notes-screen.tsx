@@ -10,12 +10,13 @@ import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import { router, useFocusEffect } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
-import { LinearGradient } from "expo-linear-gradient";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 import { NoteInputModal } from "@/feature/notes/components/note-input-modal";
 import { NoteTimePickerSheet } from "@/feature/notes/components/note-time-picker-sheet";
 import { NoteTimeEstimateModal } from "../components/note-time-estimate-modal";
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
+import WritingIcon from "../../../../assets/images-svg/writing.svg";
+import ClickIcon from "../../../../assets/images-svg/click.svg";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -110,11 +111,9 @@ export default function NotesScreen() {
               onPress={() => router.push("/(protected)/gashapon-machine")}
               className="rounded-full mr-4"
             >
-              <LinearGradient
-                colors={["#9AD513", "#60B000", "#9AD513"]}
-                start={{ x: 0.8, y: 0 }}
-                end={{ x: 0, y: 0.5 }}
+              <View
                 style={{
+                  backgroundColor: "#e5e5e5",
                   borderRadius: 20,
                   paddingHorizontal: 16,
                   paddingVertical: 6,
@@ -122,8 +121,16 @@ export default function NotesScreen() {
                   justifyContent: "center",
                 }}
               >
-                <Text className="text-white font-baloo text-lg">{t("gashapon.pickNote")}</Text>
-              </LinearGradient>
+                <View className="flex-row items-center">
+                  <ClickIcon
+                    width={18}
+                    height={18}
+                    stroke="#444964"
+                    style={{ marginRight: 5, transform: [{ scaleX: -1 }] }}
+                  />
+                  <Text className="text-gray-700 font-baloo text-lg">{t("gashapon.pickNote")}</Text>
+                </View>
+              </View>
             </Pressable>
           </View>
 
@@ -143,18 +150,7 @@ export default function NotesScreen() {
             </View>
           </View>
 
-          <Pressable
-            onPress={() => {
-              setIsModalVisible(true);
-            }}
-            className="mx-6 mb-4 border-2 border-dashed rounded-2xl
-         h-14 items-center justify-center bg-background"
-            style={{ borderColor: "#8C8C8C" }}
-          >
-            <Text className="font-baloo text-lg " style={{ color: "#8C8C8C" }}>
-              {t("addNote")}
-            </Text>
-          </Pressable>
+
 
           <NoteInputModal
             visible={isModalVisible}
@@ -197,8 +193,28 @@ export default function NotesScreen() {
               <Text className="text-center text-black font-baloo text-xl mt-2">
                 {t("emptyNoteMessage.encouragingDescription")}
               </Text>
-            </View>
-          )}
+              </View>
+            )}  
+
+            <Pressable
+              onPress={() => {
+                setIsModalVisible(true);
+              }}
+              className="mx-6 mb-4 border-2 border-dashed rounded-2xl
+              h-14 items-center justify-center bg-background"
+              style={{ borderColor: "#9AD513", backgroundColor: "#FBFFF6" }}
+            >
+              <View className="flex-row items-center">
+                <WritingIcon 
+                  width={18} 
+                  height={18} 
+                  stroke="#587E00" 
+                  strokeWidth={0.8} 
+                />
+                <Text className="font-baloo text-lg ml-2" style={{ color: "#587E00" }}>{t("addNote")}</Text>
+              </View>
+            </Pressable>
+              
         </View>
       </TouchableWithoutFeedback>
 
