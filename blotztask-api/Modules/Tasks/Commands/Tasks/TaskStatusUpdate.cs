@@ -34,6 +34,7 @@ public class TaskStatusUpdateCommandHandler(BlotzTaskDbContext db, ILogger<TaskS
         return new TaskStatusResultDto
         {
             Id = task.Id,
+            IsDone = task.IsDone,
             UpdatedAt = task.UpdatedAt,
             Message = task.IsDone ? "Task marked as completed." : "Task marked as incomplete."
         };
@@ -43,6 +44,7 @@ public class TaskStatusUpdateCommandHandler(BlotzTaskDbContext db, ILogger<TaskS
 public class TaskStatusResultDto
 {
     public int Id { get; set; }
+    public bool IsDone { get; set; }
     public DateTime UpdatedAt { get; set; }
     public string Message { get; set; } = string.Empty;
 }
