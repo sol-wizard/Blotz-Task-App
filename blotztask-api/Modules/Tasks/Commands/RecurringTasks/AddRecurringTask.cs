@@ -13,8 +13,6 @@ public class AddRecurringTaskCommandHandler(ILogger<AddRecurringTaskCommandHandl
     {
         logger.LogInformation("Adding recurring task started at {Timestamp}", command.Timestamp);
 
-        await Task.Delay(100, ct);
-
         logger.LogInformation("Recurring task generation completed successfully at {Timestamp}", command.Timestamp);
 
         return "Recurring task generation completed.";

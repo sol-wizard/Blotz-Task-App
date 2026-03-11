@@ -39,7 +39,7 @@ public class SubTaskController(
     [HttpPut("subtask-completion-status/{id}")]
     public async Task<IActionResult> UpdateSubtaskStatus(int id, CancellationToken ct)
     {
-        var message = await updateSubtaskStatusCommandHandler.Handle(id, ct);
+        var message = await updateSubtaskStatusCommandHandler.Handle(new UpdateSubtaskStatusCommand { SubtaskId = id }, ct);
         return Ok(message);
     }
 
