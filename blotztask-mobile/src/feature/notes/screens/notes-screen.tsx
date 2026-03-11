@@ -15,8 +15,7 @@ import { NoteInputModal } from "@/feature/notes/components/note-input-modal";
 import { NoteTimePickerSheet } from "@/feature/notes/components/note-time-picker-sheet";
 import { NoteTimeEstimateModal } from "../components/note-time-estimate-modal";
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
-import WritingIcon from "../../../../assets/images-svg/writing.svg";
-import ClickIcon from "../../../../assets/images-svg/click.svg";
+
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -111,25 +110,14 @@ export default function NotesScreen() {
               onPress={() => router.push("/(protected)/gashapon-machine")}
               className="rounded-full mr-4"
             >
-              <View
-                style={{
-                  backgroundColor: "#e5e5e5",
-                  borderRadius: 20,
-                  paddingHorizontal: 16,
-                  paddingVertical: 6,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <View className="flex-row items-center">
-                  <ClickIcon
-                    width={18}
-                    height={18}
-                    stroke="#444964"
-                    style={{ marginRight: 5, transform: [{ scaleX: -1 }] }}
-                  />
-                  <Text className="text-gray-700 font-baloo text-lg">{t("gashapon.pickNote")}</Text>
-                </View>
+              <View className="flex-row items-center bg-[#E9EEF0] rounded-[20px] px-4 py-1.5 justify-center">
+                <MaterialCommunityIcons
+                  name="cursor-default-click-outline"
+                  size={16}
+                  color="#444964"
+                  style={{ marginRight: 5, transform: [{ scaleX: -1 }] }}
+                />
+                <Text className="text-gray-700 font-baloo text-lg">{t("gashapon.pickNote")}</Text>
               </View>
             </Pressable>
           </View>
@@ -205,16 +193,16 @@ export default function NotesScreen() {
               style={{ borderColor: "#9AD513", backgroundColor: "#FBFFF6" }}
             >
               <View className="flex-row items-center">
-                <WritingIcon 
-                  width={18} 
-                  height={18} 
-                  stroke="#587E00" 
+                <MaterialCommunityIcons
+                  name="pencil-minus-outline"
+                  size={18}
+                  color="#587E00"
                   strokeWidth={0.8} 
                 />
                 <Text className="font-baloo text-lg ml-2" style={{ color: "#587E00" }}>{t("addNote")}</Text>
               </View>
             </Pressable>
-              
+            
         </View>
       </TouchableWithoutFeedback>
 
