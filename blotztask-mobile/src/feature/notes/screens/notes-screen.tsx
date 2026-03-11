@@ -11,13 +11,15 @@ import { NoteHeader } from "@/feature/notes/components/note-header";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
-import { NoteModal } from "@/feature/notes/components/note-modal";
 import { NoteRow } from "@/feature/notes/components/note-row";
 
-
-import { NoteAddToTaskBottomSheet } from "@/feature/notes/components/note-add-to-task-bottomsheet";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "@/shared/constants/theme";
+import { NoteInputModal } from "@/feature/notes/components/note-input-modal";
+import { NoteTimePickerSheet } from "@/feature/notes/components/note-time-picker-sheet";
+import { NoteTimeEstimateModal } from "../components/note-time-estimate-modal";
+import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
+
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,8 +35,11 @@ export default function NotesScreen() {
   const [editingNote, setEditingNote] = useState<NoteDTO | null>(null);
 
   // Bottom sheet state for add-to-task (managed at screen level)
-  const [isAddToTaskVisible, setIsAddToTaskVisible] = useState(false);
-  const [selectedNoteForTask, setSelectedNoteForTask] = useState<NoteDTO | null>(null);
+  const [noteTimePickerSheetVisible, setNoteTimePickerSheetVisible] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<NoteDTO | null>(null);
+  const [pendingEstimateNote, setPendingEstimateNote] = useState<NoteDTO | null>(null);
+  const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
+  const { estimateTime, isEstimating, estimationResult, estimationError } = useEstimateTaskTime();
 
   useFocusEffect(
     useCallback(() => {
@@ -99,6 +104,24 @@ export default function NotesScreen() {
     });
   };
 
+    const handleAIEstimate = (note: NoteDTO | null) => {
+    if (!note) return;
+    setPendingEstimateNote(note);
+    setNoteTimePickerSheetVisible(false);
+  };
+
+  const handleNoteTimePickerHide = () => {
+    setSelectedNote(null);
+
+    if (!pendingEstimateNote) return;
+
+    const noteToEstimate = pendingEstimateNote;
+    setPendingEstimateNote(null);
+    setIsEstimateModalVisible(true);
+    estimateTime(noteToEstimate);
+  };
+
+
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
       <TouchableWithoutFeedback
@@ -137,7 +160,7 @@ export default function NotesScreen() {
                   />
                 )}
                 ItemSeparatorComponent={() => (
-                  <View className="h-[1px] bg-[#E7E7E7] mx-1" />
+                  <View className="h-[1px] bg-[#E7E7E7] mx-5" />
                 )}
                 ListEmptyComponent={
                   !showLoading ? (
@@ -174,7 +197,8 @@ export default function NotesScreen() {
             </Text>
           </Pressable>
 
-          <NoteModal
+
+          <NoteInputModal
             visible={isModalVisible}
             noteText={noteText}
             isSaving={editingNote ? isNoteUpdating : isNoteCreating}
@@ -191,13 +215,23 @@ export default function NotesScreen() {
         </View>
       </TouchableWithoutFeedback>
 
-      <NoteAddToTaskBottomSheet
-        visible={isAddToTaskVisible}
-        note={selectedNoteForTask}
+      <NoteTimePickerSheet
+        visible={noteTimePickerSheetVisible}
+        note={selectedNote}
         onClose={() => {
-          setIsAddToTaskVisible(false);
-          setSelectedNoteForTask(null);
+          setNoteTimePickerSheetVisible(false);
+          setSelectedNote(null);
+          setPendingEstimateNote(null);
         }}
+        onModalHide={handleNoteTimePickerHide}
+        handleAIEstimate={handleAIEstimate}
+      />
+      <NoteTimeEstimateModal
+        visible={isEstimateModalVisible}
+        setIsModalVisible={setIsEstimateModalVisible}
+        isEstimating={isEstimating}
+        estimateResult={estimationResult}
+        estimationError={estimationError}
       />
     </SafeAreaView>
   );

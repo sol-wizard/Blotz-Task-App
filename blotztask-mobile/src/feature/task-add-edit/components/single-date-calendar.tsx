@@ -9,7 +9,7 @@ export const SingleDateCalendar = ({
   onStartDateChange,
 }: {
   defaultStartDate: string;
-  onStartDateChange: (...event: any[]) => void;
+  onStartDateChange: (date: Date) => void;
 }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(defaultStartDate);
 
