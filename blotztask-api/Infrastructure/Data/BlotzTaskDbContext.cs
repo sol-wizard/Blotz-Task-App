@@ -1,4 +1,5 @@
 using BlotzTask.Infrastructure.Data.Configurations;
+using BlotzTask.Modules.Badges.Domain;
 using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Labels.Enums;
 using BlotzTask.Modules.Tasks.Domain.Entities;
@@ -24,6 +25,9 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<UserPreference> UserPreferences { get; set; }
     public DbSet<PomodoroSetting> PomodoroSetting { get; set; }
     public DbSet<Note> Notes { get; set; }
+    public DbSet<Badge> Badges { get; set; }
+    public DbSet<UserBadge> UserBadges { get; set; }
+    public DbSet<UserProgress> UserProgress { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

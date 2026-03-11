@@ -4,6 +4,7 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260310134659_RewardTable")]
+    partial class RewardTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -306,47 +309,6 @@ namespace BlotzTask.Migrations
                     b.ToTable("Subtasks", (string)null);
                 });
 
-            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskDeadline", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("SYSUTCDATETIME()");
-
-                    b.Property<DateTimeOffset>("DueAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("IsPinned")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<int>("TaskItemId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("SYSUTCDATETIME()");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DueAt");
-
-                    b.HasIndex("TaskItemId")
-                        .IsUnique();
-
-                    b.HasIndex("IsPinned", "DueAt");
-
-                    b.ToTable("TaskDeadlines", (string)null);
-                });
-
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
                 {
                     b.Property<int>("Id")
@@ -611,17 +573,6 @@ namespace BlotzTask.Migrations
                     b.Navigation("ParentTask");
                 });
 
-            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskDeadline", b =>
-                {
-                    b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", "TaskItem")
-                        .WithOne("Deadline")
-                        .HasForeignKey("BlotzTask.Modules.Tasks.Domain.Entities.TaskDeadline", "TaskItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TaskItem");
-                });
-
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
                 {
                     b.HasOne("BlotzTask.Modules.Labels.Domain.Label", "Label")
@@ -666,8 +617,6 @@ namespace BlotzTask.Migrations
 
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
                 {
-                    b.Navigation("Deadline");
-
                     b.Navigation("Subtasks");
                 });
 
