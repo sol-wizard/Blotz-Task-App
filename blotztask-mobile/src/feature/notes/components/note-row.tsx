@@ -65,7 +65,11 @@ export const NoteRow = ({
   };
 
   return (
-    <Animated.View entering={MotionAnimations.upEntering} exiting={MotionAnimations.rightExiting} layout={MotionAnimations.layout}>
+    <Animated.View
+      entering={MotionAnimations.upEntering}
+      exiting={MotionAnimations.rightExiting}
+      layout={MotionAnimations.layout}
+    >
       <ReanimatedSwipeable
         ref={swipeRef}
         renderRightActions={(progress) => (
@@ -76,8 +80,8 @@ export const NoteRow = ({
             onDelete={() => onDelete(note)}
           />
         )}
-        rightThreshold={32}
-        overshootRight={false}
+        rightThreshold={12}
+        overshootRight={true}
         friction={2}
         onSwipeableWillOpen={() => {
           closeOtherRows(noteId);
@@ -94,9 +98,9 @@ export const NoteRow = ({
             note={note}
             onPressCard={() => onPressNote(note)}
             isToggled={false}
-            onToggle={() => {}}
             isDeleting={false}
             onDelete={() => {}}
+            onToggle={() => {}}
           />
         </Animated.View>
       </ReanimatedSwipeable>

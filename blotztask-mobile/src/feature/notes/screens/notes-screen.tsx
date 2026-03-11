@@ -123,7 +123,7 @@ export default function NotesScreen() {
             </View>
           </View>
           <View className="px-6 flex-1">
-            <View className="flex-1 bg-white rounded-3xl overflow-hidden shadow-sm">
+            <View className="bg-white rounded-3xl overflow-hidden">
               <FlatList
                 data={showLoading ? [] : notesSearchResult}
                 keyExtractor={(item) => String(item.id)}
@@ -137,14 +137,7 @@ export default function NotesScreen() {
                   />
                 )}
                 ItemSeparatorComponent={() => (
-                  <View
-                    style={{
-                      height: 1,
-                      backgroundColor: "#E7E7E7",
-                      marginLeft: 18,
-                      marginRight: 18,
-                    }}
-                  />
+                  <View className="h-[1px] bg-[#E7E7E7] mx-1" />
                 )}
                 ListEmptyComponent={
                   !showLoading ? (
