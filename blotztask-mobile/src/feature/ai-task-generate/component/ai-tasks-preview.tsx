@@ -38,6 +38,7 @@ export function AiTasksPreview({
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
   const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes ?? []);
   const [isAdding, setIsAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const posthog = usePostHog();
 
@@ -83,6 +84,7 @@ export function AiTasksPreview({
 
     try {
       setIsAdding(true);
+      setAddError(null);
 
       if (localTasks.length > 0) {
         const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
@@ -111,7 +113,8 @@ export function AiTasksPreview({
       setLocalNotes([]);
       router.back();
     } catch (error) {
-      console.log("Add tasks/notes failed", error);
+      console.error("Add tasks/notes failed", error);
+      setAddError(t("errors.default"));
     } finally {
       setIsAdding(false);
     }
@@ -164,6 +167,9 @@ export function AiTasksPreview({
         )}
       </ScrollView>
 
+      {addError && (
+        <Text className="font-baloo text-sm text-red-500 text-center mb-2 px-4">{addError}</Text>
+      )}
       <View className="flex-row justify-center items-center mt-4 mb-10 flex-wrap gap-2">
         <Pressable
           onPress={handleGoBack}

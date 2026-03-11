@@ -20,7 +20,7 @@ public class ChatHistoryManagerService(
 )
     : IChatHistoryManagerService
 {
-    private static ChatHistory? _chatHistory;
+    private ChatHistory? _chatHistory;
 
     public ChatHistory GetChatHistory()
     {

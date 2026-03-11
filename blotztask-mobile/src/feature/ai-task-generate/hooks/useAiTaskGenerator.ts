@@ -33,20 +33,20 @@ export function useAiTaskGenerator({
     }
   };
 
-  const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
-    setAiGeneratedMessage(receivedAiMessage);
-    if (!receivedAiMessage.isSuccess) {
-      setIsAiGenerating(false);
-      setModalType("input");
-    } else {
-      setModalType("task-preview");
-
-      setIsAiGenerating(false);
-    }
-  };
-
   useEffect(() => {
     let newConnection: signalR.HubConnection | null = null;
+
+    const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
+      setAiGeneratedMessage(receivedAiMessage);
+      if (!receivedAiMessage.isSuccess) {
+        setIsAiGenerating(false);
+        setModalType("input");
+      } else {
+        setModalType("task-preview");
+        setIsAiGenerating(false);
+      }
+    };
+
     const startConnection = async () => {
       try {
         newConnection = await signalRService.createConnection();
