@@ -1,4 +1,4 @@
-import { Controller } from "react-hook-form";
+import { Control, Controller, FieldValues } from "react-hook-form";
 import { TextInput, TextInputProps } from "react-native";
 
 export function FormTextInput({
@@ -10,7 +10,7 @@ export function FormTextInput({
 }: {
   name: string;
   placeholder: string;
-  control: any;
+  control: Control<FieldValues>;
   className?: string;
   inputProps?: TextInputProps;
 }) {

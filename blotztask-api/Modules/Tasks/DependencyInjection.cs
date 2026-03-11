@@ -1,8 +1,10 @@
 using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 using BlotzTask.Modules.Tasks.Commands.SubTasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
+using BlotzTask.Modules.Tasks.Events;
 using BlotzTask.Modules.Tasks.Queries.SubTasks;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Shared.Events;
 
 namespace BlotzTask.Modules.Tasks;
 
@@ -21,7 +23,10 @@ public static class DependencyInjection
         services.AddScoped<AddRecurringTaskCommandHandler>();
         services.AddScoped<UpdateSubtaskStatusCommandHandler>();
 
-        // Manual registration of query handlers 
+        // Event handlers
+        services.AddScoped<IDomainEventHandler<TaskCompletedEvent>, TaskCompletedEventHandler>();
+
+        // Manual registration of query handlers
         services.AddScoped<GetTasksByDateQueryHandler>();
         services.AddScoped<GetTaskByIdQueryHandler>();
         services.AddScoped<GetAllTasksQueryHandler>();
