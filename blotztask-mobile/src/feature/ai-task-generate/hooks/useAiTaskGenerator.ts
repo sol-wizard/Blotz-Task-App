@@ -20,7 +20,7 @@ export function useAiTaskGenerator({
     setIsAiGenerating(true);
     if (connection) {
       try {
-        await signalRService.invoke(connection, "SendMessage", "User", text);
+        await signalRService.invoke(connection, "SendMessage", text);
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
         setIsAiGenerating(false);

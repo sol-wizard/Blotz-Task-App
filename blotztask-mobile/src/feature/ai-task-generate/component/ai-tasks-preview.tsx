@@ -42,20 +42,28 @@ export function AiTasksPreview({
 
   const posthog = usePostHog();
 
+  const captureOutcome = (
+    outcome: "accepted" | "go_back" | "abandoned",
+    addedTaskCount = 0,
+    addedNoteCount = 0
+  ) => {
+    posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
+      ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
+      user_input: userInput,
+      outcome,
+      ai_generated_task_count: localTasks.length,
+      ai_generated_note_count: localNotes.length,
+      user_add_task_count: addedTaskCount,
+      user_add_note_count: addedNoteCount,
+    });
+  };
+
   const finishedAllStepsRef = useRef<boolean>(false);
 
   useEffect(() => {
     return () => {
       if (!finishedAllStepsRef.current) {
-        posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-          ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
-          user_input: userInput,
-          outcome: "abandoned",
-          ai_generated_task_count: localTasks.length,
-          ai_generated_note_count: localNotes.length,
-          user_add_task_count: 0,
-          user_add_note_count: 0,
-        });
+        captureOutcome("abandoned");
       }
     };
   }, [localTasks, localNotes]);
@@ -99,15 +107,7 @@ export function AiTasksPreview({
 
       finishedAllStepsRef.current = true;
 
-      posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-        ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
-        user_input: userInput,
-        ai_generated_task_count: localTasks.length,
-        ai_generated_note_count: localNotes.length,
-        user_add_task_count: localTasks.length,
-        user_add_note_count: localNotes.length,
-        outcome: "accepted",
-      });
+      captureOutcome("accepted", localTasks.length, localNotes.length);
 
       setLocalTasks([]);
       setLocalNotes([]);
@@ -124,15 +124,7 @@ export function AiTasksPreview({
     setAiGeneratedMessage();
     setModalType("input");
 
-    posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-      ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
-      user_input: userInput,
-      ai_generated_task_count: localTasks.length,
-      ai_generated_note_count: localNotes.length,
-      outcome: "go_back",
-      user_add_task_count: 0,
-      user_add_note_count: 0,
-    });
+    captureOutcome("go_back");
   };
 
   return (

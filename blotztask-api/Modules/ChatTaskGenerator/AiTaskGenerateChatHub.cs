@@ -65,8 +65,7 @@ public class AiTaskGenerateChatHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    //TODO: Do we need this user paramter in this function? check and test frontend after clean up
-    public async Task SendMessage(string user, string message)
+    public async Task SendMessage(string message)
     {
         var timeZone = Context.Items.TryGetValue("TimeZone", out var timeZoneObj) &&
                        timeZoneObj is TimeZoneInfo tz

@@ -36,36 +36,23 @@ public class ChatHistoryManagerService(
 
     public async Task<ChatHistory> InitializeNewConversation(Guid userId)
     {
-        if (_chatHistory != null) return await Task.FromResult(_chatHistory);
+        if (_chatHistory != null) return _chatHistory;
 
-        // Fetch user preferences to get preferred language
         var userPreferencesQuery = new GetUserPreferencesQuery { UserId = userId };
         var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, CancellationToken.None);
 
-        // Convert Language enum to a readable string for the AI
         var preferredLanguageString = userPreferences.PreferredLanguage switch
         {
             Language.En => "English",
             Language.Zh => "Chinese (Simplified)",
-            _ => "English" // Default fallback
+            _ => "English"
         };
 
         var chatHistory = new ChatHistory();
+        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguageString));
 
-        chatHistory.AddSystemMessage(
-            AiTaskGeneratorPrompts.GetSystemMessage(
-                preferredLanguageString
-            )
-        );
-
-        SetChatHistory(chatHistory);
-
-        return await Task.FromResult(chatHistory);
-    }
-
-
-    public void SetChatHistory(ChatHistory chatHistory)
-    {
         _chatHistory = chatHistory;
+
+        return chatHistory;
     }
 }
