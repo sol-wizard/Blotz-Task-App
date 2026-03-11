@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Xml;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Entities;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 public class ReplaceSubtasksCommand
@@ -26,7 +27,7 @@ public class ReplaceSubtasksCommandHandler
             .FirstOrDefaultAsync(t => t.Id == command.TaskId, ct);
 
         if (parentTask == null)
-            throw new Exception($"Parent task {command.TaskId} not found.");
+            throw new NotFoundException($"Parent task {command.TaskId} not found.");
 
         var existingSubtasks = await _db.Subtasks
             .Where(s => s.ParentTaskId == parentTask.Id)

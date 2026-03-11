@@ -39,7 +39,7 @@ export async function replaceSubtasks({
 
   try {
     await apiClient.post(url, { taskId, subtasks });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Add subtasks failed:", err);
     throw new Error("Add subtasks failed");
   }

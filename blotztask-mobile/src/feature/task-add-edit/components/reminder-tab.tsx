@@ -1,4 +1,5 @@
-import { useController } from "react-hook-form";
+import { Control, useController } from "react-hook-form";
+import { TaskFormField } from "../models/task-form-schema";
 import { View, Text, Pressable } from "react-native";
 import { format } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
@@ -9,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 
-export const ReminderTab = ({ control }: { control: any }) => {
+export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) => {
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
   const {
