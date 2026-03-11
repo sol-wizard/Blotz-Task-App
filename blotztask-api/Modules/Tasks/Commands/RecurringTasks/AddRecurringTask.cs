@@ -9,12 +9,12 @@ public class AddRecurringTaskCommand
 
 public class AddRecurringTaskCommandHandler(ILogger<AddRecurringTaskCommandHandler> logger)
 {
-    public async Task<string> Handle(AddRecurringTaskCommand command, CancellationToken ct)
+    public Task<string> Handle(AddRecurringTaskCommand command, CancellationToken ct)
     {
         logger.LogInformation("Adding recurring task started at {Timestamp}", command.Timestamp);
 
         logger.LogInformation("Recurring task generation completed successfully at {Timestamp}", command.Timestamp);
 
-        return "Recurring task generation completed.";
+        return Task.FromResult("Recurring task generation completed.");
     }
 }
