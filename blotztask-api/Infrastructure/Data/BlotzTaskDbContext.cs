@@ -17,6 +17,7 @@ public class BlotzTaskDbContext : DbContext
     }
 
     public DbSet<TaskItem> TaskItems { get; set; }
+    public DbSet<TaskDeadline> TaskDeadlines { get; set; }
     public DbSet<Label> Labels { get; set; }
     public DbSet<DeletedTaskItem> DeletedTaskItems { get; set; }
     public DbSet<Subtask> Subtasks => Set<Subtask>();
@@ -33,6 +34,7 @@ public class BlotzTaskDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SubtaskConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TaskItemConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(TaskDeadlineConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DeletedTaskItemConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LabelConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppUserConfiguration).Assembly);
