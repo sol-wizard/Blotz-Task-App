@@ -9,20 +9,17 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct);
+    Task<AiGenerateMessage> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct);
 }
 
 public class AiTaskGenerateService(
-    IChatHistoryManagerService chatHistoryManagerService,
     IChatCompletionService chatCompletionService,
     ILogger<AiTaskGenerateService> logger,
     Kernel kernel)
     : IAiTaskGenerateService
 {
-    public async Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct)
+    public async Task<AiGenerateMessage> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct)
     {
-        var chatHistory = chatHistoryManagerService.GetChatHistory();
-
         try
         {
             var executionSettings = new OpenAIPromptExecutionSettings
