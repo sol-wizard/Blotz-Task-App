@@ -37,7 +37,7 @@ public class DeleteUserCommandHandler(
         {
             logger.LogError(ex,
                 "Failed to delete Auth0 user {Auth0UserId} for {UserId}. Aborting DB deletion.",
-                auth0UserId, UserId);
+                auth0UserId, command.UserId);
             throw;
         }
 
