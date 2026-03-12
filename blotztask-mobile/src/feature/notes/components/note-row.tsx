@@ -35,7 +35,7 @@ export const NoteRow = ({
   const [isSwiping, setIsSwiping] = useState(false);
   const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
   const addNoteToTask = useAddNoteToTask();
-  const { estimateTime, isEstimating, timeResult, estimateError } = useEstimateTaskTime();
+  const { estimateTime, isEstimating, estimationResult, estimationError } = useEstimateTaskTime();
   const { deleteNote } = useNotesMutation();
   const noteId = String(note.id);
 
@@ -46,19 +46,7 @@ export const NoteRow = ({
     estimateTime(note);
   };
 
-  const handleStartNow = () => {
-    const durationMinutes = convertDurationToMinutes(timeResult ?? "");
-    if (durationMinutes === undefined) return;
 
-    addNoteToTask({
-      note,
-      onSuccess: () => {
-        setIsEstimateModalVisible(false);
-        deleteNote(note.id);
-        router.push("/(protected)/(tabs)");
-      },
-    });
-  };
 
   return (
     <Animated.View
@@ -101,14 +89,13 @@ export const NoteRow = ({
           />
         </Animated.View>
       </ReanimatedSwipeable>
-
+        
       <NoteTimeEstimateModal
         visible={isEstimateModalVisible}
         setIsModalVisible={setIsEstimateModalVisible}
-        handleStartNow={handleStartNow}
-        durationText={convertDurationToText(timeResult ?? "")}
         isEstimating={isEstimating}
-        error={estimateError ? t("timeEstimate.errorMessage") : null}
+        estimateResult={estimationResult}
+        estimationError={estimationError}
       />
     </Animated.View>
   );
