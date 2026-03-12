@@ -1,3 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "nativewind/theme.css";
+
+@theme {
+  --color-background: #F5F9FA;
+  --color-warning: #F56767;
+  --color-primary: #8C8C8C;
+  --color-secondary: #444964;
+  --color-highlight: #9AD513;
+  --color-info: #3D8DE0;
+  --color-checked: #84CC16;
+
+  --font-balooThin: BalooThin;
+  --font-baloo: BalooRegular;
+  --font-balooBold: BalooBold;
+  --font-balooExtraBold: BalooExtraBold;
+  --font-interThin: InterThin;
+  --font-interBold: InterBold;
+}

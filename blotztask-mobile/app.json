@@ -9,14 +9,16 @@
     "orientation": "portrait",
     "scheme": "blotztask",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.Blotz.BlotzTask",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "en",
-        "CFBundleLocalizations": ["en", "zh-Hans"],
+        "CFBundleLocalizations": [
+          "en",
+          "zh-Hans"
+        ],
         "NSPhotoLibraryUsageDescription": "Allow access to your photo library so you can attach images to tasks and notes (e.g., a screenshot or receipt).",
         "NSPhotoLibraryAddUsageDescription": "Allow saving images to your photo library when you export or download images from BlotzTask (e.g., a shared task card).",
         "NSCameraUsageDescription": "Allow camera access so you can take a photo and attach it to a task or note (e.g., a document, whiteboard, or receipt).",
@@ -29,9 +31,11 @@
       "icon": "./assets/images-png/blotz-icon.png"
     },
     "android": {
-      "edgeToEdgeEnabled": true,
       "package": "com.blotz.blotztask",
-      "permissions": ["android.permission.RECORD_AUDIO", "android.permission.ACCESS_FINE_LOCATION"]
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -64,9 +68,18 @@
         }
       ],
       "expo-audio",
-      ["./plugins/withCustomGradleProperties"],
-      ["./plugins/withAzureSpeechAndroid"],
-      "expo-asset"
+      [
+        "./plugins/withCustomGradleProperties"
+      ],
+      [
+        "./plugins/withAzureSpeechAndroid"
+      ],
+      "expo-asset",
+      "@react-native-community/datetimepicker",
+      "@sentry/react-native",
+      "expo-build-properties",
+      "expo-image",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
