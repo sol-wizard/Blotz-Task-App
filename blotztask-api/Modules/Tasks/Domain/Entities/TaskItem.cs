@@ -25,4 +25,5 @@ public class TaskItem
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
     public TaskDeadline? Deadline { get; set; }
+    public bool IsDdl { get; set; } = false;
 }

@@ -40,6 +40,7 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
             NotificationId = command.TaskDetails.NotificationId,
             AlertTime = command.TaskDetails.AlertTime,
             UserId = command.UserId,
+            IsDdl = command.TaskDetails.IsDdl ?? false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -63,4 +64,5 @@ public class AddTaskItemDto
     public int? LabelId { get; set; }
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
+    public bool? IsDdl { get; set; }
 }

@@ -4,19 +4,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
-public class GetAllTasksQuery
+public class GetAllDdlTasksQuery
 {
     public required Guid UserId { get; init; }
 }
 
-public class GetAllTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetAllTasksQueryHandler> logger)
+public class GetAllDdlTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetAllDdlTasksQueryHandler> logger)
 {
-    public async Task<List<AllTaskItemDto>> Handle(GetAllTasksQuery query, CancellationToken ct = default)
+    public async Task<List<AllTaskItemDto>> Handle(GetAllDdlTasksQuery query, CancellationToken ct = default)
     {
-        logger.LogInformation("Fetching all tasks for user {UserId}", query.UserId);
+        logger.LogInformation("Fetching all DDL tasks for user {UserId}", query.UserId);
 
         var tasks = await db.TaskItems
-            .Where(t => t.UserId == query.UserId)
+            .Where(t => t.UserId == query.UserId && t.IsDdl)
             .OrderByDescending(t => t.StartTime).ThenBy(t => t.Title)
             .Select(task => new AllTaskItemDto
             {
@@ -40,21 +40,7 @@ public class GetAllTasksQueryHandler(BlotzTaskDbContext db, ILogger<GetAllTasksQ
             })
             .ToListAsync(ct);
 
-        logger.LogInformation("Successfully fetched {TaskCount} tasks for user {UserId}", tasks.Count, query.UserId);
+        logger.LogInformation("Successfully fetched {TaskCount} DDL tasks for user {UserId}", tasks.Count, query.UserId);
         return tasks;
     }
-}
-
-public class AllTaskItemDto
-{
-    public int Id { get; set; }
-    public required string Title { get; set; }
-    public string? Description { get; set; }
-    public DateTimeOffset? StartTime { get; set; }
-    public DateTimeOffset? EndTime { get; set; }
-    public bool IsDone { get; set; }
-    public LabelDto? Label { get; set; }
-    public string? NotificationId { get; set; }
-    public DateTimeOffset? AlertTime { get; set; }
-    public bool IsDdl { get; set; }
 }

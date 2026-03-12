@@ -367,6 +367,9 @@ namespace BlotzTask.Migrations
                     b.Property<DateTimeOffset>("EndTime")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<bool>("IsDdl")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDone")
                         .HasColumnType("bit");
 
