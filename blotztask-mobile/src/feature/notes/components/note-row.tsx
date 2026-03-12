@@ -4,7 +4,6 @@ import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useTranslation } from "react-i18next";
-import { router } from "expo-router";
 
 import { NoteDTO } from "../models/note-dto";
 import { NoteCard } from "./note-card";
@@ -12,9 +11,6 @@ import { NoteActions } from "./note-actions";
 import { NoteTimeEstimateModal } from "./note-time-estimate-modal";
 
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
-import { convertDurationToMinutes, convertDurationToText } from "@/shared/util/convert-duration";
-import { useAddNoteToTask } from "@/shared/hooks/add-note-to-task";
-import { useNotesMutation } from "../hooks/useNotesMutation";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 export const NoteRow = ({
@@ -34,9 +30,7 @@ export const NoteRow = ({
 
   const [isSwiping, setIsSwiping] = useState(false);
   const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
-  const addNoteToTask = useAddNoteToTask();
   const { estimateTime, isEstimating, estimationResult, estimationError } = useEstimateTaskTime();
-  const { deleteNote } = useNotesMutation();
   const noteId = String(note.id);
 
   const swipeRef = useRef<SwipeableMethods | null>(null);

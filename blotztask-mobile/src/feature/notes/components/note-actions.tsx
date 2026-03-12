@@ -15,7 +15,7 @@ type NoteActionsProps<TNote> = {
   widthClassName?: string;
 };
 
-export const NoteActions = memo(function NoteActions<TNote>({
+export function NoteActions<TNote>({
   note,
   onAddToTask,
   onDelete,
