@@ -1,14 +1,8 @@
 import React, { memo, useCallback, useState } from "react";
-import { View, Text, Pressable } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import Animated, {
-  SharedValue,
-  interpolate,
-  useAnimatedStyle,
-  Extrapolation,
-} from "react-native-reanimated";
+import { SharedValue } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 import { ActionButton } from "./action-button";
+import { View } from "react-native";
 
 
 
