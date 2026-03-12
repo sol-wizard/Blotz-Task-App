@@ -1,16 +1,27 @@
 import { useState } from "react";
 import { Pressable, View, Text } from "react-native";
 import { SingleDateCalendar } from "./single-date-calendar";
-import { addDays, differenceInCalendarDays, format, isAfter, isSameDay, isBefore } from "date-fns";
+import { addDays, differenceInCalendarDays, format, isAfter, isSameDay, isBefore, isEqual } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
-import { useController } from "react-hook-form";
+import { Control, UseFormClearErrors, UseFormTrigger, useController } from "react-hook-form";
+import { TaskFormField } from "../models/task-form-schema";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { combineDateTime } from "../util/combine-date-time";
 
-export const EventTab = ({ control }: { control: any }) => {
+export const EventTab = ({ control, trigger, clearErrors }: { control: Control<TaskFormField>; trigger: UseFormTrigger<TaskFormField>; clearErrors: UseFormClearErrors<TaskFormField> }) => {
+  const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
+    const start = combineDateTime(sd, st);
+    const end = combineDateTime(ed, et);
+    if (start && end && (isBefore(start, end) || isEqual(start, end))) {
+      clearErrors?.("endTime");
+    } else {
+      trigger?.("endTime");
+    }
+  };
   const { t, i18n } = useTranslation("tasks");
   const isChinese = i18n.language === "zh";
   const locale = isChinese ? zhCN : enUS;
@@ -55,9 +66,15 @@ export const EventTab = ({ control }: { control: any }) => {
 
     startDateOnChange(nextDate);
 
+    const nextEndDate =
+      endDateValue && isAfter(nextDate, endDateValue)
+        ? addDays(nextDate, previousSpan)
+        : endDateValue;
     if (endDateValue && isAfter(nextDate, endDateValue)) {
-      endDateOnChange(addDays(nextDate, previousSpan));
+      endDateOnChange(nextEndDate);
     }
+
+    validateRange(nextDate, startTimeValue, nextEndDate, endTimeValue);
   };
 
   const isDateInvalid =
@@ -125,7 +142,13 @@ export const EventTab = ({ control }: { control: any }) => {
             entering={MotionAnimations.upEntering}
             exiting={MotionAnimations.outExiting}
           >
-            <TimePicker value={startTimeValue} onChange={(v: Date) => startTimeOnChange(v)} />
+            <TimePicker
+              value={startTimeValue}
+              onChange={(v: Date) => {
+                startTimeOnChange(v);
+                validateRange(startDateValue, v, endDateValue, endTimeValue);
+              }}
+            />
           </Animated.View>
         )}
       </Animated.View>
@@ -178,7 +201,10 @@ export const EventTab = ({ control }: { control: any }) => {
             <DoubleDatesCalendar
               startDate={startDateValue}
               endDate={endDateValue}
-              setEndDate={endDateOnChange}
+              setEndDate={(v: Date) => {
+                endDateOnChange(v);
+                validateRange(startDateValue, startTimeValue, v, endTimeValue);
+              }}
               current={format(
                 activeSelector === "endDate"
                   ? (endDateValue ?? startDateValue ?? new Date())
@@ -193,7 +219,13 @@ export const EventTab = ({ control }: { control: any }) => {
             entering={MotionAnimations.upEntering}
             exiting={MotionAnimations.outExiting}
           >
-            <TimePicker value={endTimeValue} onChange={(v: Date) => endTimeOnChange(v)} />
+            <TimePicker
+              value={endTimeValue}
+              onChange={(v: Date) => {
+                endTimeOnChange(v);
+                validateRange(startDateValue, startTimeValue, endDateValue, v);
+              }}
+            />
           </Animated.View>
         )}
       </Animated.View>

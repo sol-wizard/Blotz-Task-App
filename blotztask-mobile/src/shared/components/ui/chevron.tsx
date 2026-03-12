@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
 
-export const AnimatedChevron = ({ progress, color }: { progress: any; color: string }) => {
+export const AnimatedChevron = ({ progress, color }: { progress: SharedValue<number>; color: string }) => {
   const iconStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${progress.value * 180}deg` }],
   }));

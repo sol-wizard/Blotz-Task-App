@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
+using BlotzTask.Modules.Tasks.Events;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Shared.Events;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,6 +20,7 @@ public class TaskController(
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
     GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler,
+    IEventDispatcher eventDispatcher,
     ILogger<TaskController> logger
 ) : ControllerBase
 {
@@ -138,24 +141,26 @@ public class TaskController(
     [HttpPut("task-completion-status/{id}")]
     public async Task<TaskStatusResultDto> TaskStatusUpdate(int id, CancellationToken ct)
     {
-        var command = new TaskStatusUpdateCommand
-        {
-            TaskId = id
-        };
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
+        var command = new TaskStatusUpdateCommand { TaskId = id };
         var result = await taskStatusUpdateCommandHandler.Handle(command, ct);
 
         if (result == null)
             throw new InvalidOperationException($"Task status update failed: no valid data returned for task ID {id}.");
 
+        if (result.IsDone)
+            await eventDispatcher.DispatchAsync(new TaskCompletedEvent { UserId = userId }, ct);
+
         return result;
     }
 
     [HttpDelete("{id}")]
-    public async Task<string> DeleteTaskById(int id)
+    public async Task<string> DeleteTaskById(int id, CancellationToken ct)
     {
         var command = new DeleteTaskCommand { TaskId = id };
 
-        return await deleteTaskCommandHandler.Handle(command);
+        return await deleteTaskCommandHandler.Handle(command, ct);
     }
 }

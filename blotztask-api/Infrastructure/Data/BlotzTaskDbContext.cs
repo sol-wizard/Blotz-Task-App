@@ -1,4 +1,5 @@
 using BlotzTask.Infrastructure.Data.Configurations;
+using BlotzTask.Modules.Badges.Domain;
 using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Labels.Enums;
 using BlotzTask.Modules.Tasks.Domain.Entities;
@@ -16,6 +17,7 @@ public class BlotzTaskDbContext : DbContext
     }
 
     public DbSet<TaskItem> TaskItems { get; set; }
+    public DbSet<TaskDeadline> TaskDeadlines { get; set; }
     public DbSet<Label> Labels { get; set; }
     public DbSet<DeletedTaskItem> DeletedTaskItems { get; set; }
     public DbSet<Subtask> Subtasks => Set<Subtask>();
@@ -23,12 +25,16 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<UserPreference> UserPreferences { get; set; }
     public DbSet<PomodoroSetting> PomodoroSetting { get; set; }
     public DbSet<Note> Notes { get; set; }
+    public DbSet<Badge> Badges { get; set; }
+    public DbSet<UserBadge> UserBadges { get; set; }
+    public DbSet<UserProgress> UserProgress { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SubtaskConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TaskItemConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(TaskDeadlineConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DeletedTaskItemConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LabelConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppUserConfiguration).Assembly);

@@ -3,10 +3,11 @@ import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
 import { AnimatedChevron } from "@/shared/components/ui/chevron";
 import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SharedValue } from "react-native-reanimated";
 
 interface CalendarHeaderProps {
   date: string;
-  progress: any;
+  progress: SharedValue<number>;
   onToggleCalendar: () => void;
 }
 
