@@ -11,7 +11,6 @@ import { ReminderTab } from "@/feature/task-add-edit/components/reminder-tab";
 import { EventTab } from "@/feature/task-add-edit/components/event-tab";
 import { buildTaskTimePayload } from "@/feature/task-add-edit/util/time-convertion";
 import { useAddNoteToTask } from "@/shared/hooks/add-note-to-task";
-import { useNotesMutation } from "../hooks/useNotesMutation";
 import { addMinutes } from "date-fns/addMinutes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -39,7 +38,6 @@ export const NoteTimePickerSheet = ({
 }) => {
   const { t } = useTranslation("notes");
   const addNoteToTask = useAddNoteToTask();
-  const { deleteNote } = useNotesMutation();
 
   // Initialize form like TaskForm does
   const getDefaultValues = (): TaskFormField => {
@@ -94,14 +92,8 @@ export const NoteTimePickerSheet = ({
       note,
       startTime,
       endTime,
-      timeType,
       onSuccess: () => {
         onClose();
-        try {
-          deleteNote(note.id);
-        } catch (e) {
-          console.warn("Failed to delete note", e);
-        }
         router.push("/(protected)/(tabs)");
       },
     });

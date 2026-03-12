@@ -1,6 +1,9 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { addDays, isSameDay, startOfDay } from "date-fns";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
+import { convertNoteToTask } from "@/feature/notes/services/notes-service";
+import { taskKeys, noteKeys } from "@/shared/constants/query-key-factory";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
-import useTaskMutations from "@/shared/hooks/useTaskMutations";
 
 type AddNoteToTaskParams = {
   note: NoteDTO | null;
@@ -10,27 +13,46 @@ type AddNoteToTaskParams = {
   onSuccess?: () => void;
 };
 
+function invalidateSelectedDayTask(
+  queryClient: ReturnType<typeof useQueryClient>,
+  startTime: string,
+  endTime: string,
+) {
+  const start = startOfDay(new Date(startTime));
+  const end = startOfDay(new Date(endTime));
+  if (isSameDay(start, end)) {
+    queryClient.invalidateQueries({
+      queryKey: taskKeys.selectedDay(convertToDateTimeOffset(start)),
+    });
+    return;
+  }
+  let cursorDay = startOfDay(start);
+  while (cursorDay <= end) {
+    queryClient.invalidateQueries({
+      queryKey: taskKeys.selectedDay(convertToDateTimeOffset(cursorDay)),
+    });
+    cursorDay = addDays(cursorDay, 1);
+  }
+}
+
 export const useAddNoteToTask = () => {
-  const { addTask } = useTaskMutations();
+  const queryClient = useQueryClient();
 
-  return ({ note, startTime, endTime, timeType = 1, onSuccess }: AddNoteToTaskParams) => {
+  return async ({ note, startTime, endTime, onSuccess }: AddNoteToTaskParams) => {
     if (!note) return;
-    const text = note.text ?? "";
-
-    const title = text.length > 50 ? text.slice(0, 50) : text;
-    const description = text.length > 50 ? text : "";
-
     const start = startTime ?? new Date();
     const end = endTime ?? new Date(start.getTime() + 60 * 60 * 1000);
+    const startTimeStr = convertToDateTimeOffset(start);
+    const endTimeStr = convertToDateTimeOffset(end);
 
-    addTask({
-      title,
-      description,
-      startTime: convertToDateTimeOffset(start),
-      endTime: convertToDateTimeOffset(end),
-      timeType,
-    });
-
-    onSuccess?.();
+    try {
+      const task = await convertNoteToTask(note.id, startTimeStr, endTimeStr);
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      queryClient.invalidateQueries({ queryKey: noteKeys.all });
+      invalidateSelectedDayTask(queryClient, task.startTime, task.endTime);
+      onSuccess?.();
+    } catch {
+      // On failure: do not remove the original note from UI
+    }
   };
 };

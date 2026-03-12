@@ -3,6 +3,7 @@ using BlotzTask.Modules.Notes.DTOs;
 using BlotzTask.Modules.Notes.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BlotzTask.Modules.Tasks.Queries.Tasks;
 
 namespace BlotzTask.Modules.Notes;
 
@@ -14,7 +15,9 @@ public class NotesController(
     SearchNotesQueryHandler searchNotesQueryHandler,
     UpdateNoteCommandHandler updateNoteCommandHandler,
     DeleteNoteCommandHandler deleteNoteCommandHandler,
-    TimeEstimateCommandHandler timeEstimateCommandHandler
+    TimeEstimateCommandHandler timeEstimateCommandHandler,
+    ConvertNoteToTaskCommandHandler convertNoteToTaskCommandHandler,
+    GetTaskByIdQueryHandler getTaskByIdQueryHandler
 ) : ControllerBase
 {
     [HttpPost]
@@ -81,5 +84,33 @@ public class NotesController(
         };
         await deleteNoteCommandHandler.Handle(command, ct);
         return NoContent();
+    }
+
+    [HttpPost("{id:guid}/convert-to-task")]
+    public async Task<ActionResult<TaskByIdItemDto>> ConvertNoteToTask(
+        Guid id,
+        [FromBody] ConvertNoteToTaskRequestDto? request,
+        CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        if (request is null)
+            return BadRequest("Request body with StartTime and EndTime is required.");
+
+        var command = new ConvertNoteToTaskCommand
+        {
+            NoteId = id,
+            UserId = userId,
+            StartTime = request.StartTime,
+            EndTime = request.EndTime
+        };
+        
+        var newTaskId = await convertNoteToTaskCommandHandler.Handle(command, ct);
+        
+        var taskDto = await getTaskByIdQueryHandler.Handle(
+            new GetTasksByIdQuery { TaskId = newTaskId, UserId = userId },
+            ct);
+
+        return Ok(taskDto);
     }
 }

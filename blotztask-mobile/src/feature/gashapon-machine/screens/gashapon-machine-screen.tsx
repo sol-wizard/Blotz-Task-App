@@ -17,7 +17,6 @@ import { usePostHog } from "posthog-react-native";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 import { useAddNoteToTask } from "@/shared/hooks/add-note-to-task";
 import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
-import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 
 export default function GashaponMachineScreen() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
@@ -29,7 +28,6 @@ export default function GashaponMachineScreen() {
   const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
   const addNoteToTask = useAddNoteToTask();
   const posthog = usePostHog();
-  const { deleteNote } = useNotesMutation();
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
 
   useEffect(() => {
@@ -47,7 +45,6 @@ export default function GashaponMachineScreen() {
     addNoteToTask({
       note: randomNote,
       onSuccess: () => {
-        deleteNote(randomNote.id);
         router.push("/(protected)/(tabs)");
         setModalVisible(false);
       },
