@@ -3,7 +3,6 @@ import Animated from "react-native-reanimated";
 import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
-import { useTranslation } from "react-i18next";
 
 import { NoteDTO } from "../models/note-dto";
 import { NoteCard } from "./note-card";
@@ -26,7 +25,6 @@ export const NoteRow = ({
   onRowOpen: (id: string, ref: SwipeableMethods | null) => void;
   onRowClose: (id: string) => void;
 }) => {
-  const { t } = useTranslation("notes");
 
   const [isSwiping, setIsSwiping] = useState(false);
   const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
