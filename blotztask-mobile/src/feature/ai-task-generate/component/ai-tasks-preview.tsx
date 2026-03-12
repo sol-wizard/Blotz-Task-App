@@ -15,10 +15,10 @@ import { EVENTS } from "@/shared/constants/posthog-events";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { createNote } from "@/feature/notes/services/notes-service";
 import { noteKeys } from "@/shared/constants/query-key-factory";
-import { addTaskItem } from "@/shared/services/task-service";
 import { taskKeys } from "@/shared/constants/query-key-factory";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 
 export function AiTasksPreview({
   aiTasks,
@@ -37,8 +37,9 @@ export function AiTasksPreview({
   const queryClient = useQueryClient();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
   const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes ?? []);
-  const [isAdding, setIsAdding] = useState(false);
-  const [addError, setAddError] = useState<string | null>(null);
+  const { addTaskAsync, isAdding } = useTaskMutations();
+  const { createNoteAsync, isNoteCreating } = useNotesMutation();
+ 
 
   const posthog = usePostHog();
 
@@ -69,7 +70,7 @@ export function AiTasksPreview({
   }, [localTasks, localNotes]);
 
   const hasItems = localTasks.length > 0 || localNotes.length > 0;
-  const addAllDisabled = isAdding || !hasItems;
+  const addAllDisabled = (isAdding || isNoteCreating) || !hasItems;
 
   const onDeleteNote = (noteId: string) => {
     setLocalNotes((prev) => prev.filter((n) => n.id !== noteId));
@@ -88,35 +89,29 @@ export function AiTasksPreview({
   };
 
   const handleAddAll = async () => {
-    if (isAdding || !hasItems) return;
+    if (isAdding || isNoteCreating || !hasItems) return;
 
     try {
-      setIsAdding(true);
-      setAddError(null);
-
+      // tasks
       if (localTasks.length > 0) {
         const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
-        await Promise.all(payloads.map((payload) => addTaskItem(payload)));
-        queryClient.invalidateQueries({ queryKey: taskKeys.all });
+        await Promise.all(payloads.map((payload) => addTaskAsync(payload)));
+        // query invalidation is already handled by the mutation's onSuccess
       }
 
+      // notes
       if (localNotes.length > 0) {
-        await Promise.all(localNotes.map((n) => createNote(n.text)));
-        queryClient.invalidateQueries({ queryKey: noteKeys.all });
+        await Promise.all(localNotes.map((n) => createNoteAsync(n.text)));
+        // invalidation handled by mutation
       }
 
       finishedAllStepsRef.current = true;
-
       captureOutcome("accepted", localTasks.length, localNotes.length);
-
       setLocalTasks([]);
       setLocalNotes([]);
       router.back();
     } catch (error) {
       console.error("Add tasks/notes failed", error);
-      setAddError(t("errors.default"));
-    } finally {
-      setIsAdding(false);
     }
   };
 
@@ -159,9 +154,7 @@ export function AiTasksPreview({
         )}
       </ScrollView>
 
-      {addError && (
-        <Text className="font-baloo text-sm text-red-500 text-center mb-2 px-4">{addError}</Text>
-      )}
+     
       <View className="flex-row justify-center items-center mt-4 mb-10 flex-wrap gap-2">
         <Pressable
           onPress={handleGoBack}
@@ -183,7 +176,7 @@ export function AiTasksPreview({
           accessibilityRole="button"
           accessibilityLabel={t("buttons.addAll")}
         >
-          {isAdding ? (
+          {(isAdding || isNoteCreating) ? (
             <ActivityIndicator size="small" />
           ) : (
             <Text className="font-baloo text-sm">{t("buttons.addAll")}</Text>
