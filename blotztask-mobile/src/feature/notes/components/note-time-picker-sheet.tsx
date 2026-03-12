@@ -81,7 +81,7 @@ export const NoteTimePickerSheet = ({
       return;
     }
 
-    const { startTime, endTime, timeType } = buildTaskTimePayload(
+    const { startTime, endTime } = buildTaskTimePayload(
       data.startDate,
       data.startTime,
       mode === "reminder" ? data.startDate : data.endDate,
