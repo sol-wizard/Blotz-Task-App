@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from "react";
+import React, { memo, useState } from "react";
 import { SharedValue } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 import { ActionButton } from "./action-button";

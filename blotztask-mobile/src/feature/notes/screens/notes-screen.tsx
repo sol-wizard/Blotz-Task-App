@@ -48,22 +48,31 @@ export default function NotesScreen() {
   );
 
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
-  
-  const swipeablesRef = useRef<Record<string, SwipeableMethods | null>>({});
+  const openSwipeableRef = useRef<SwipeableMethods | null>(null);
+  const openSwipeableId = useRef<string | null>(null);
 
-  const registerSwipeable = (id: string, ref: SwipeableMethods | null) => {
-    swipeablesRef.current[id] = ref;
-  };
+    const handleRowOpen = (id: string, ref: SwipeableMethods | null) => {
+      if (openSwipeableId.current && openSwipeableId.current !== id) {
+        openSwipeableRef.current?.close();
+      }
 
-  const closeOtherRows = (openId: string) => {
-    Object.entries(swipeablesRef.current).forEach(([id, ref]) => {
-      if (id !== openId) ref?.close();
-    });
-  };
+      openSwipeableId.current = id;
+      openSwipeableRef.current = ref;
+    };
 
-  const closeAllRows = () => {
-    Object.values(swipeablesRef.current).forEach((ref) => ref?.close());
-  };
+    const handleRowClose = (id: string) => {
+      if (openSwipeableId.current === id) {
+        openSwipeableId.current = null;
+        openSwipeableRef.current = null;
+      }
+    };
+
+    const closeAllRows = () => {
+      openSwipeableRef.current?.close();
+      openSwipeableRef.current = null;
+      openSwipeableId.current = null;
+    };
+      
 
   const openEditModal = (note: NoteDTO) => {
     closeAllRows();
@@ -155,8 +164,8 @@ export default function NotesScreen() {
                     note={item}
                     onPressNote={openEditModal}
                     onDelete={handleDelete}
-                    registerSwipeable={registerSwipeable}
-                    closeOtherRows={closeOtherRows}
+                    onRowOpen={handleRowOpen}
+                    onRowClose={handleRowClose}
                   />
                 )}
                 ItemSeparatorComponent={() => (
@@ -186,6 +195,7 @@ export default function NotesScreen() {
 
           <Pressable
             onPress={() => {
+              closeAllRows();
               setIsModalVisible(true);
             }}
             className="mx-6 mb-4 border-2 border-dashed rounded-2xl

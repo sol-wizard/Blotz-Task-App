@@ -21,14 +21,14 @@ export const NoteRow = ({
   note,
   onPressNote,
   onDelete,
-  registerSwipeable,
-  closeOtherRows,
+  onRowOpen,
+  onRowClose
 }: {
   note: NoteDTO;
   onPressNote: (note: NoteDTO) => void;
   onDelete: (note: NoteDTO) => void;
-  registerSwipeable: (id: string, ref: SwipeableMethods | null) => void;
-  closeOtherRows: (openId: string) => void;
+  onRowOpen: (id: string, ref: SwipeableMethods | null) => void;
+  onRowClose: (id: string) => void;
 }) => {
   const { t } = useTranslation("notes");
 
@@ -40,10 +40,6 @@ export const NoteRow = ({
   const noteId = String(note.id);
 
   const swipeRef = useRef<SwipeableMethods | null>(null);
-
-  useEffect(() => {
-    registerSwipeable(noteId, swipeRef.current);
-  }, [noteId, registerSwipeable]);
 
   const handleAddToTask = () => {
     setIsEstimateModalVisible(true);
@@ -84,10 +80,11 @@ export const NoteRow = ({
         overshootRight={true}
         friction={2}
         onSwipeableWillOpen={() => {
-          closeOtherRows(noteId);
+          onRowOpen(noteId, swipeRef.current);
           setIsSwiping(true);
         }}
         onSwipeableWillClose={() => {
+          onRowClose(noteId);
           setIsSwiping(false);
         }}
       >
