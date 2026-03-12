@@ -49,29 +49,19 @@ export default function NotesScreen() {
 
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
   const openSwipeableRef = useRef<SwipeableMethods | null>(null);
-  const openSwipeableId = useRef<string | null>(null);
 
-    const handleRowOpen = (id: string, ref: SwipeableMethods | null) => {
-      if (openSwipeableId.current && openSwipeableId.current !== id) {
-        openSwipeableRef.current?.close();
-      }
+  const handleRowOpen = (ref: SwipeableMethods | null) => {
+    if (openSwipeableRef.current && openSwipeableRef.current !== ref) {
+      openSwipeableRef.current.close();
+    }
+    openSwipeableRef.current = ref;
+  };
 
-      openSwipeableId.current = id;
-      openSwipeableRef.current = ref;
-    };
 
-    const handleRowClose = (id: string) => {
-      if (openSwipeableId.current === id) {
-        openSwipeableId.current = null;
-        openSwipeableRef.current = null;
-      }
-    };
-
-    const closeAllRows = () => {
-      openSwipeableRef.current?.close();
-      openSwipeableRef.current = null;
-      openSwipeableId.current = null;
-    };
+  const closeAllRows = () => {
+    openSwipeableRef.current?.close();
+    openSwipeableRef.current = null;
+  };
       
 
   const openEditModal = (note: NoteDTO) => {
@@ -168,7 +158,6 @@ export default function NotesScreen() {
                     onPressNote={openEditModal}
                     onDelete={handleDelete}
                     onRowOpen={handleRowOpen}
-                    onRowClose={handleRowClose}
                   />
                 )}
                 ItemSeparatorComponent={() => (

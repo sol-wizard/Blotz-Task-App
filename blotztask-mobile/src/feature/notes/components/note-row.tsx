@@ -16,20 +16,17 @@ export const NoteRow = ({
   note,
   onPressNote,
   onDelete,
-  onRowOpen,
-  onRowClose
+  onRowOpen
 }: {
   note: NoteDTO;
   onPressNote: (note: NoteDTO) => void;
   onDelete: (note: NoteDTO) => void;
-  onRowOpen: (id: string, ref: SwipeableMethods | null) => void;
-  onRowClose: (id: string) => void;
+  onRowOpen: (ref: SwipeableMethods | null) => void;
 }) => {
 
   const [isSwiping, setIsSwiping] = useState(false);
   const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
   const { estimateTime, isEstimating, estimationResult, estimationError } = useEstimateTaskTime();
-  const noteId = String(note.id);
 
   const swipeRef = useRef<SwipeableMethods | null>(null);
 
@@ -60,11 +57,10 @@ export const NoteRow = ({
         overshootRight={true}
         friction={2}
         onSwipeableWillOpen={() => {
-          onRowOpen(noteId, swipeRef.current);
+          onRowOpen(swipeRef.current);
           setIsSwiping(true);
         }}
         onSwipeableWillClose={() => {
-          onRowClose(noteId);
           setIsSwiping(false);
         }}
       >
