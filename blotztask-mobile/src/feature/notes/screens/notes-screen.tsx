@@ -1,10 +1,10 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { View, Text, Pressable, TouchableWithoutFeedback, Keyboard, FlatList, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
-import { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
+import { useSwipeableManager } from "../hooks/useSwipeableManager";
 
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { NoteHeader } from "@/feature/notes/components/note-header";
@@ -48,21 +48,9 @@ export default function NotesScreen() {
   );
 
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
-  const openSwipeableRef = useRef<SwipeableMethods | null>(null);
-
-  const handleRowOpen = (ref: SwipeableMethods | null) => {
-    if (openSwipeableRef.current && openSwipeableRef.current !== ref) {
-      openSwipeableRef.current.close();
-    }
-    openSwipeableRef.current = ref;
-  };
+  const { onRowOpen, closeAllRows } = useSwipeableManager();
 
 
-  const closeAllRows = () => {
-    openSwipeableRef.current?.close();
-    openSwipeableRef.current = null;
-  };
-      
 
   const openEditModal = (note: NoteDTO) => {
     closeAllRows();
@@ -157,7 +145,7 @@ export default function NotesScreen() {
                     note={item}
                     onPressNote={openEditModal}
                     onDelete={handleDelete}
-                    onRowOpen={handleRowOpen}
+                    onRowOpen={onRowOpen}
                   />
                 )}
                 ItemSeparatorComponent={() => (
