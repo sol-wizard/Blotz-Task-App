@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import Animated from "react-native-reanimated";
 import ReanimatedSwipeable, {
   SwipeableMethods,
