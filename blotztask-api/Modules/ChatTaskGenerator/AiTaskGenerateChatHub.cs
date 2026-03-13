@@ -14,8 +14,8 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 public class AiTaskGenerateChatHub : Hub
 {
     private readonly IAiTaskGenerateService _aiTaskGenerateService;
-    private readonly DateTimeResolveService _dateTimeResolveService;
     private readonly ChatHistoryStore _chatHistoryStore;
+    private readonly DateTimeResolveService _dateTimeResolveService;
     private readonly GetUserPreferencesQueryHandler _getUserPreferencesQueryHandler;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
 
@@ -104,6 +104,7 @@ public class AiTaskGenerateChatHub : Hub
             });
 
             chatHistory.AddUserMessage(resolvedMessage);
+
 
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
