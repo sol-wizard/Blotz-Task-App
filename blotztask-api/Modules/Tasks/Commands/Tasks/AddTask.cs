@@ -45,6 +45,21 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
         };
 
         db.TaskItems.Add(newTask);
+        
+        if (command.TaskDetails.IsDdl == true)
+        {
+            var deadline = new TaskDeadline
+            {
+                TaskItemId = newTask.Id,
+                TaskItem = newTask,
+                DueAt = newTask.EndTime,
+                CreatedAt = newTask.CreatedAt,
+                UpdatedAt = newTask.UpdatedAt,
+                IsPinned = false
+            };
+            db.TaskDeadlines.Add(deadline);
+        }
+        
         await db.SaveChangesAsync(ct);
 
         logger.LogInformation("Task {Id} was successfully added for user {UserId}", newTask.Id, command.UserId);
@@ -63,4 +78,5 @@ public class AddTaskItemDto
     public int? LabelId { get; set; }
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
+    public bool? IsDdl { get; set; }
 }

@@ -19,6 +19,7 @@ public class TaskController(
     DeleteTaskCommandHandler deleteTaskCommandHandler,
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
+    GetAllDdlTasksQueryHandler getAllDdlTasksQueryHandler,
     GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler,
     IEventDispatcher eventDispatcher,
     ILogger<TaskController> logger
@@ -108,6 +109,16 @@ public class TaskController(
 
         var query = new GetAllTasksQuery { UserId = userId };
         return await getAllTasksQueryHandler.Handle(query, ct);
+    }
+    
+    [HttpGet("ddl")]
+    public async Task<IEnumerable<AllDdlTaskItemDto>> GetAllDdlTasks(CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+
+        var query = new GetAllDdlTasksQuery { UserId = userId };
+        return await getAllDdlTasksQueryHandler.Handle(query, ct);
     }
 
     [HttpPost]
