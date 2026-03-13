@@ -65,12 +65,8 @@ public class DateTimeResolveService
         if (resolution is not IDictionary<string, object> dict) return null;
         if (!dict.TryGetValue("values", out var valuesObj) || valuesObj is null) return null;
 
-        if (valuesObj is not List<Dictionary<string, string>> values || values.Count == 0) return null;
-
-        if (values.Count != 1)
-        {
-            return null;
-        }
+    
+        if (valuesObj is not List<Dictionary<string, string>> values || values.Count != 1) return null;
 
         var selectedTime = values[0];
 
