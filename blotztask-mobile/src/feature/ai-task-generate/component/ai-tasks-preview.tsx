@@ -14,9 +14,6 @@ import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { noteKeys } from "@/shared/constants/query-key-factory";
-import { taskKeys } from "@/shared/constants/query-key-factory";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 
@@ -34,7 +31,6 @@ export function AiTasksPreview({
   setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) {
   const { t } = useTranslation("aiTaskGenerate");
-  const queryClient = useQueryClient();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
   const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes ?? []);
   const { addTaskAsync, isAdding } = useTaskMutations();
