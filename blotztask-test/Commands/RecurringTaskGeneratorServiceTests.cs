@@ -14,7 +14,7 @@ public class RecurringTaskGeneratorServiceTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public void GenerateInstances_DailyEveryDay_ShouldReturnAllDaysInRange()
+    public void GenerateTaskItems_DailyEveryDay_ShouldReturnAllDaysInRange()
     {
         // Real-world example: "Take medication every day"
         // Task starts Mar 1. Generate for Mar 1–5.
@@ -30,7 +30,7 @@ public class RecurringTaskGeneratorServiceTests
         var to   = new DateOnly(2026, 3, 5);
 
         // Act
-        var result = _service.GenerateInstances(recurringTask, from, to);
+        var result = _service.GenerateTaskItems(recurringTask, from, to);
 
         // Assert
         result.Should().HaveCount(5, because: "every day from Mar 1 to Mar 5 inclusive is a match");
@@ -45,7 +45,7 @@ public class RecurringTaskGeneratorServiceTests
     }
 
     [Fact]
-    public void GenerateInstances_DailyEveryTwoDays_ShouldSkipAlternateDays()
+    public void GenerateTaskItems_DailyEveryTwoDays_ShouldSkipAlternateDays()
     {
         // Real-world example: "Water the plants every 2 days"
         // Task starts Mar 1 (interval=2). Generate for Mar 1–7.
@@ -61,7 +61,7 @@ public class RecurringTaskGeneratorServiceTests
         var to   = new DateOnly(2026, 3, 7);
 
         // Act
-        var result = _service.GenerateInstances(recurringTask, from, to);
+        var result = _service.GenerateTaskItems(recurringTask, from, to);
 
         // Assert
         result.Should().HaveCount(4, because: "with interval=2 starting Mar 1, matches are Mar 1, 3, 5, 7");
@@ -79,7 +79,7 @@ public class RecurringTaskGeneratorServiceTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public void GenerateInstances_WeeklyOnMonday_ShouldReturnOnlyMondays()
+    public void GenerateTaskItems_WeeklyOnMonday_ShouldReturnOnlyMondays()
     {
         // Real-world example: "Weekly team standup every Monday"
         // Task starts Mon Mar 2. Generate for Mar 2–22.
@@ -96,7 +96,7 @@ public class RecurringTaskGeneratorServiceTests
         var to   = new DateOnly(2026, 3, 22);
 
         // Act
-        var result = _service.GenerateInstances(recurringTask, from, to);
+        var result = _service.GenerateTaskItems(recurringTask, from, to);
 
         // Assert
         result.Should().HaveCount(3, because: "Mondays in range: Mar 2, 9, 16");
@@ -105,7 +105,7 @@ public class RecurringTaskGeneratorServiceTests
     }
 
     [Fact]
-    public void GenerateInstances_WeeklyOnMondayAndWednesday_ShouldReturnBothDays()
+    public void GenerateTaskItems_WeeklyOnMondayAndWednesday_ShouldReturnBothDays()
     {
         // Real-world example: "Gym session every Monday and Wednesday"
         // Task starts Mon Mar 2. Generate for Mar 2–8 (one week only).
@@ -122,7 +122,7 @@ public class RecurringTaskGeneratorServiceTests
         var to   = new DateOnly(2026, 3, 8);
 
         // Act
-        var result = _service.GenerateInstances(recurringTask, from, to);
+        var result = _service.GenerateTaskItems(recurringTask, from, to);
 
         // Assert
         result.Should().HaveCount(2, because: "in the week of Mar 2–8, only Mon Mar 2 and Wed Mar 4 match");
@@ -135,7 +135,7 @@ public class RecurringTaskGeneratorServiceTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public void GenerateInstances_MonthlyOnThe15th_ShouldReturnOnly15thOfEachMonth()
+    public void GenerateTaskItems_MonthlyOnThe15th_ShouldReturnOnly15thOfEachMonth()
     {
         // Real-world example: "Pay rent on the 15th of every month"
         // Task starts Jan 15. Generate for Jan 1–Mar 31.
@@ -152,7 +152,7 @@ public class RecurringTaskGeneratorServiceTests
         var to   = new DateOnly(2026, 3, 31);
 
         // Act
-        var result = _service.GenerateInstances(recurringTask, from, to);
+        var result = _service.GenerateTaskItems(recurringTask, from, to);
 
         // Assert
         result.Should().HaveCount(3, because: "the 15th falls in Jan, Feb, Mar within the range");
@@ -169,7 +169,7 @@ public class RecurringTaskGeneratorServiceTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public void GenerateInstances_WhenFromIsBeforeTaskStartDate_ShouldClampToStartDate()
+    public void GenerateTaskItems_WhenFromIsBeforeTaskStartDate_ShouldClampToStartDate()
     {
         // Real-world example: "Daily morning run — user created it Mar 5, but the generator
         // window starts Mar 1. No runs should appear before Mar 5."
@@ -185,16 +185,16 @@ public class RecurringTaskGeneratorServiceTests
         var to   = new DateOnly(2026, 3, 7);
 
         // Act
-        var result = _service.GenerateInstances(recurringTask, from, to);
+        var result = _service.GenerateTaskItems(recurringTask, from, to);
 
         // Assert
-        result.Should().HaveCount(3, because: "instances should only start from Mar 5, not Mar 1");
+        result.Should().HaveCount(3, because: "task items should only start from Mar 5, not Mar 1");
         result.All(t => DateOnly.FromDateTime(t.StartTime.Date) >= new DateOnly(2026, 3, 5))
               .Should().BeTrue(because: "no TaskItem should be generated before the task's StartDate");
     }
 
     [Fact]
-    public void GenerateInstances_WhenTaskHasEndDateInsideWindow_ShouldStopAtEndDate()
+    public void GenerateTaskItems_WhenTaskHasEndDateInsideWindow_ShouldStopAtEndDate()
     {
         // Real-world example: "Daily check-in during a 3-day workshop (Mar 1–3).
         // Generator window goes to Mar 7, but the task ends Mar 3."
@@ -211,7 +211,7 @@ public class RecurringTaskGeneratorServiceTests
         var to   = new DateOnly(2026, 3, 7);
 
         // Act
-        var result = _service.GenerateInstances(recurringTask, from, to);
+        var result = _service.GenerateTaskItems(recurringTask, from, to);
 
         // Assert
         result.Should().HaveCount(3, because: "task ends Mar 3, so only Mar 1, 2, 3 are generated");
@@ -220,7 +220,7 @@ public class RecurringTaskGeneratorServiceTests
     }
 
     [Fact]
-    public void GenerateInstances_WhenWindowIsEntirelyBeforeTaskStartDate_ShouldReturnEmpty()
+    public void GenerateTaskItems_WhenWindowIsEntirelyBeforeTaskStartDate_ShouldReturnEmpty()
     {
         // Real-world example: "Quarterly review starts Apr 1, but the generator is
         // asked to fill March. There's nothing to generate yet."
@@ -236,7 +236,7 @@ public class RecurringTaskGeneratorServiceTests
         var to   = new DateOnly(2026, 3, 31);
 
         // Act
-        var result = _service.GenerateInstances(recurringTask, from, to);
+        var result = _service.GenerateTaskItems(recurringTask, from, to);
 
         // Assert
         result.Should().BeEmpty(because: "the entire window is before the task's StartDate");

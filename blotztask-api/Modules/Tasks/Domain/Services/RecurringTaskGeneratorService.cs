@@ -6,13 +6,13 @@ namespace BlotzTask.Modules.Tasks.Domain.Services;
 public class RecurringTaskGeneratorService
 {
     /// <summary>
-    /// Generates TaskItem instances for the given recurring task between <paramref name="from"/> and <paramref name="to"/> inclusive.
+    /// Generates TaskItems for the given recurring task between <paramref name="from"/> and <paramref name="to"/> inclusive.
     /// Does NOT save to the database — caller is responsible for persisting.
     /// </summary>
-    public IReadOnlyList<TaskItem> GenerateInstances(RecurringTask template, DateOnly from, DateOnly to)
+    public IReadOnlyList<TaskItem> GenerateTaskItems(RecurringTask template, DateOnly from, DateOnly to)
     {
         var results = new List<TaskItem>();
-        // Clamp to the task's own StartDate — can't generate instances before the task begins
+        // Clamp to the task's own StartDate — can't generate task items before the task begins
         var walkDate = from > template.StartDate ? from : template.StartDate;
 
         while (walkDate <= to)

@@ -47,7 +47,7 @@ public class RecurringTask
     public DateOnly? EndDate { get; set; }
     public bool IsActive { get; set; } = true;
 
-    // Watermark: instances have been generated up to (and including) this date
+    // Watermark: task items have been generated up to (and including) this date
     public DateOnly GeneratedUpTo { get; set; }
 
     public DateTime CreatedAt { get; set; }
