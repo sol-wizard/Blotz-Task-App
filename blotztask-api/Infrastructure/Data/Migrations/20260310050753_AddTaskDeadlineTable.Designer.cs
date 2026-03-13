@@ -4,6 +4,7 @@ using BlotzTask.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    partial class BlotzTaskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260310050753_AddTaskDeadlineTable")]
+    partial class AddTaskDeadlineTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,91 +24,6 @@ namespace BlotzTask.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.Badge", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("IconUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Threshold")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Category");
-
-                    b.ToTable("Badges", (string)null);
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.UserBadge", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("BadgeId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EarnedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("UserId", "BadgeId");
-
-                    b.HasIndex("BadgeId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserBadges", (string)null);
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.UserProgress", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<DateTime>("UpdatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("UserProgress", (string)null);
-                });
 
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
@@ -536,30 +454,6 @@ namespace BlotzTask.Migrations
                             PreferredLanguage = "Zh",
                             UpcomingNotification = true
                         });
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.UserBadge", b =>
-                {
-                    b.HasOne("BlotzTask.Modules.Badges.Domain.Badge", null)
-                        .WithMany()
-                        .HasForeignKey("BadgeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.UserProgress", b =>
-                {
-                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
-                        .WithOne()
-                        .HasForeignKey("BlotzTask.Modules.Badges.Domain.UserProgress", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
