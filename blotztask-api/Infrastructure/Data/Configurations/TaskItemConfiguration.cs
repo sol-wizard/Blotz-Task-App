@@ -19,7 +19,7 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         builder.HasOne(t => t.RecurringTask)
             .WithMany()
             .HasForeignKey(t => t.RecurringTaskId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder.ToTable(t =>
         {

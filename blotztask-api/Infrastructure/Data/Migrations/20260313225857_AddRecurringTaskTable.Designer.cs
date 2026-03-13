@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BlotzTask.Migrations
 {
     [DbContext(typeof(BlotzTaskDbContext))]
-    [Migration("20260313042234_AddRecurringTaskTable")]
+    [Migration("20260313225857_AddRecurringTaskTable")]
     partial class AddRecurringTaskTable
     {
         /// <inheritdoc />
@@ -754,7 +754,7 @@ namespace BlotzTask.Migrations
                     b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", "RecurringTask")
                         .WithMany()
                         .HasForeignKey("RecurringTaskId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
                         .WithMany()

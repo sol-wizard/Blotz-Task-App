@@ -751,7 +751,7 @@ namespace BlotzTask.Migrations
                     b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", "RecurringTask")
                         .WithMany()
                         .HasForeignKey("RecurringTaskId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
                         .WithMany()

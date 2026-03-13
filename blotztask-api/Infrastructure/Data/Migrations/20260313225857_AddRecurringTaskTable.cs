@@ -77,8 +77,7 @@ namespace BlotzTask.Migrations
                 table: "TaskItems",
                 column: "RecurringTaskId",
                 principalTable: "RecurringTasks",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                principalColumn: "Id");
         }
 
         /// <inheritdoc />
