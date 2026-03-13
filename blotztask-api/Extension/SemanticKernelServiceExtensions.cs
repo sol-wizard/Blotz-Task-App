@@ -1,6 +1,5 @@
 using BlotzTask.Filters;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace BlotzTask.Extension;
 
@@ -39,12 +38,6 @@ public static class SemanticKernelServiceExtensions
                     sp.GetRequiredService<ILogger<PromptRenderLoggingFilter>>()));
 
             return kernelBuilder.Build();
-        });
-
-        services.AddScoped<IChatCompletionService>(sp =>
-        {
-            var kernel = sp.GetRequiredService<Kernel>();
-            return kernel.GetRequiredService<IChatCompletionService>();
         });
 
         return services;
