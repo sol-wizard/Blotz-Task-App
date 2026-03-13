@@ -15,7 +15,7 @@ import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-not
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
-import { useAddNoteToTask } from "@/shared/hooks/add-note-to-task";
+import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
 import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
 
 export default function GashaponMachineScreen() {
@@ -26,7 +26,7 @@ export default function GashaponMachineScreen() {
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
   const [randomNote, setRandomTask] = useState<NoteDTO | null>(null);
   const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
-  const addNoteToTask = useAddNoteToTask();
+  const { addNoteToTask, isConverting } = useAddNoteToTask();
   const posthog = usePostHog();
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
 
@@ -85,6 +85,7 @@ export default function GashaponMachineScreen() {
           task={randomNote}
           onDoNow={handleDoNow}
           onCancel={handleCancel}
+          isDoNowLoading={isConverting}
         />
         {!isAllLoaded && <LoadingScreen />}
         <View

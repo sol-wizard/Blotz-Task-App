@@ -9,6 +9,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Notes.Commands;
 
+public class ConvertNoteToTaskRequestDto
+{
+    [Required]
+    public required DateTimeOffset StartTime { get; set; }
+
+    [Required]
+    public required DateTimeOffset EndTime { get; set; }
+}
+
 public class ConvertNoteToTaskCommand
 {
     [Required] public required Guid NoteId { get; init; }
@@ -27,9 +36,10 @@ public class ConvertNoteToTaskCommandHandler(
             "Converting note {NoteId} to task for user {UserId}", command.NoteId, command.UserId
         );
         
-        // Validate Time (Consistent with current task interface)
-        TaskTimeValidator.ValidateTaskTimes(command.StartTime, command.EndTime, TaskTimeType.RangeTime);
-        
+        // Validate time: SingleTime when start == end, RangeTime when start < end
+        var timeType = command.StartTime == command.EndTime ? TaskTimeType.SingleTime : TaskTimeType.RangeTime;
+        TaskTimeValidator.ValidateTaskTimes(command.StartTime, command.EndTime, timeType);
+
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         
         // 1. search note using noteId + userId, not found -> 404
@@ -40,8 +50,10 @@ public class ConvertNoteToTaskCommandHandler(
         if (note == null)
             throw new NotFoundException("Note not found or no permission.");
 
-        var text = note.Text ?? string.Empty;
-        
+        var text = note.Text;
+        if (string.IsNullOrWhiteSpace(text))
+            throw new ValidationException("Note text is required to convert to task. Cannot create a task with an empty title.");
+
         // 2. Title/Description: if <=50, all as title;
         // if > 50 previous 50 as title, all as description
         string title;
@@ -64,7 +76,7 @@ public class ConvertNoteToTaskCommandHandler(
             Description = description,
             StartTime = command.StartTime,
             EndTime = command.EndTime,
-            TimeType = TaskTimeType.RangeTime,
+            TimeType = timeType,
             LabelId = null,
             UserId = command.UserId,
             CreatedAt = DateTime.UtcNow,

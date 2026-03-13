@@ -3,7 +3,6 @@ using BlotzTask.Modules.Notes.DTOs;
 using BlotzTask.Modules.Notes.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using BlotzTask.Modules.Tasks.Queries.Tasks;
 
 namespace BlotzTask.Modules.Notes;
 
@@ -16,8 +15,7 @@ public class NotesController(
     UpdateNoteCommandHandler updateNoteCommandHandler,
     DeleteNoteCommandHandler deleteNoteCommandHandler,
     TimeEstimateCommandHandler timeEstimateCommandHandler,
-    ConvertNoteToTaskCommandHandler convertNoteToTaskCommandHandler,
-    GetTaskByIdQueryHandler getTaskByIdQueryHandler
+    ConvertNoteToTaskCommandHandler convertNoteToTaskCommandHandler
 ) : ControllerBase
 {
     [HttpPost]
@@ -87,9 +85,9 @@ public class NotesController(
     }
 
     [HttpPost("{id:guid}/convert-to-task")]
-    public async Task<ActionResult<TaskByIdItemDto>> ConvertNoteToTask(
+    public async Task<IActionResult> ConvertNoteToTask(
         Guid id,
-        [FromBody] ConvertNoteToTaskRequestDto? request,
+        [FromBody] Commands.ConvertNoteToTaskRequestDto? request,
         CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
@@ -104,13 +102,8 @@ public class NotesController(
             StartTime = request.StartTime,
             EndTime = request.EndTime
         };
-        
-        var newTaskId = await convertNoteToTaskCommandHandler.Handle(command, ct);
-        
-        var taskDto = await getTaskByIdQueryHandler.Handle(
-            new GetTasksByIdQuery { TaskId = newTaskId, UserId = userId },
-            ct);
 
-        return Ok(taskDto);
+        var newTaskId = await convertNoteToTaskCommandHandler.Handle(command, ct);
+        return Ok(new { taskId = newTaskId });
     }
 }

@@ -1,7 +1,6 @@
 import { apiClient } from "@/shared/services/api/client";
 import { NoteDTO } from "../models/note-dto";
 import { EditNoteDTO } from "../models/edit-note-dto";
-import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 
 export const searchNotes = async (keyword: string): Promise<NoteDTO[]> => {
   const url = `/notes`;
@@ -45,10 +44,10 @@ export const convertNoteToTask = async (
   noteId: string,
   startTime: string,
   endTime: string,
-): Promise<TaskDetailDTO> => {
+): Promise<{ taskId: number }> => {
   const url = `/notes/${noteId}/convert-to-task`;
   try {
-    return await apiClient.post<TaskDetailDTO>(url, { startTime, endTime });
+    return await apiClient.post<{ taskId: number }>(url, { startTime, endTime });
   } catch {
     throw new Error("Failed to convert note to task.");
   }
