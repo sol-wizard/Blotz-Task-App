@@ -16,11 +16,11 @@ param alertEmail = 'benjaminneoh2928@gmail.com'
 param appServiceSkuName = 'B1'
 param appServiceSkuTier = 'Basic'
 
-// Database SKU (Basic tier for staging)
-param dbSkuName = 'Basic'
-param dbSkuTier = 'Basic'
-param dbSkuCapacity = 5 // DTUs
+// Database (Serverless vCore for staging - auto-pauses when idle)
 param dbMaxSizeGb = 2
+
+param dbAutoPauseDelayMinutes = 60
+param dbMaxVCores = 1
 
 // Entra ID dev group Object ID (rg-blotz-task-stag-devs)
 param devGroupId = 'aae34f6e-c28e-4064-9d5b-15336d8c147a'

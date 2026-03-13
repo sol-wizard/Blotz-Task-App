@@ -15,11 +15,11 @@ param alertEmail = 'benjaminneoh2928@gmail.com'
 param appServiceSkuName = 'B2'
 param appServiceSkuTier = 'Basic'
 
-// Database SKU (Basic tier - sufficient for 10 daily active users)
-param dbSkuName = 'Standard'
-param dbSkuTier = 'Standard'
-param dbSkuCapacity = 10 // DTUs
+// Database (Serverless vCore for prod - auto-pauses when idle, geo-redundant backup)
 param dbMaxSizeGb = 5
+
+param dbAutoPauseDelayMinutes = 60
+param dbMaxVCores = 1
 
 // Entra ID dev group Object ID - create a prod group and replace this
 param devGroupId = '5719a9e2-49bd-49eb-85d1-e4afd63ca04d'
