@@ -9,7 +9,7 @@ param openAiDeploymentName = 'gpt-5.2-chat'
 param openAiModelName = 'gpt-5.2-chat'
 param openAiModelVersion = '2025-12-11'
 param githubRepo = 'sol-wizard/Blotz-Task-App'
-param budgetAmount = 50
+param budgetAmount = 30
 param alertEmail = 'benjaminneoh2928@gmail.com'
 
 // App Service SKU (Basic tier for staging)
