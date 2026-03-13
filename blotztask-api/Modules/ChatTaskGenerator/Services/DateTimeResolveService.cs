@@ -67,7 +67,12 @@ public class DateTimeResolveService
 
         if (valuesObj is not List<Dictionary<string, string>> values || values.Count == 0) return null;
 
-        var selectedTime = values.Count >= 2 ? values[1] : values[0];
+        if (values.Count != 1)
+        {
+            return null;
+        }
+
+        var selectedTime = values[0];
 
         if (selectedTime.TryGetValue("value", out var v) && !string.IsNullOrWhiteSpace(v))
             return v;
