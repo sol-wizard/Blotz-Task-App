@@ -14,11 +14,8 @@ import { theme } from "@/shared/constants/theme";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { createNote } from "@/feature/notes/services/notes-service";
-import { noteKeys } from "@/shared/constants/query-key-factory";
-import { addTaskItem } from "@/shared/services/task-service";
-import { taskKeys } from "@/shared/constants/query-key-factory";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 
 export function AiTasksPreview({
   aiTasks,
@@ -34,33 +31,42 @@ export function AiTasksPreview({
   setAiGeneratedMessage: (v?: AiResultMessageDTO) => void;
 }) {
   const { t } = useTranslation("aiTaskGenerate");
-  const queryClient = useQueryClient();
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks ?? []);
   const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes ?? []);
-  const [isAdding, setIsAdding] = useState(false);
+  const { addTaskAsync, isAdding } = useTaskMutations();
+  const { createNoteAsync, isNoteCreating } = useNotesMutation();
+ 
 
   const posthog = usePostHog();
+
+  const captureOutcome = (
+    outcome: "accepted" | "go_back" | "abandoned",
+    addedTaskCount = 0,
+    addedNoteCount = 0
+  ) => {
+    posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
+      ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
+      user_input: userInput,
+      outcome,
+      ai_generated_task_count: localTasks.length,
+      ai_generated_note_count: localNotes.length,
+      user_add_task_count: addedTaskCount,
+      user_add_note_count: addedNoteCount,
+    });
+  };
 
   const finishedAllStepsRef = useRef<boolean>(false);
 
   useEffect(() => {
     return () => {
       if (!finishedAllStepsRef.current) {
-        posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-          ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
-          user_input: userInput,
-          outcome: "abandoned",
-          ai_generated_task_count: localTasks.length,
-          ai_generated_note_count: localNotes.length,
-          user_add_task_count: 0,
-          user_add_note_count: 0,
-        });
+        captureOutcome("abandoned");
       }
     };
   }, [localTasks, localNotes]);
 
   const hasItems = localTasks.length > 0 || localNotes.length > 0;
-  const addAllDisabled = isAdding || !hasItems;
+  const addAllDisabled = (isAdding || isNoteCreating) || !hasItems;
 
   const onDeleteNote = (noteId: string) => {
     setLocalNotes((prev) => prev.filter((n) => n.id !== noteId));
@@ -79,41 +85,29 @@ export function AiTasksPreview({
   };
 
   const handleAddAll = async () => {
-    if (isAdding || !hasItems) return;
+    if (isAdding || isNoteCreating || !hasItems) return;
 
     try {
-      setIsAdding(true);
-
+      // tasks
       if (localTasks.length > 0) {
         const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
-        await Promise.all(payloads.map((payload) => addTaskItem(payload)));
-        queryClient.invalidateQueries({ queryKey: taskKeys.all });
+        await Promise.all(payloads.map((payload) => addTaskAsync(payload)));
+        // query invalidation is already handled by the mutation's onSuccess
       }
 
+      // notes
       if (localNotes.length > 0) {
-        await Promise.all(localNotes.map((n) => createNote(n.text)));
-        queryClient.invalidateQueries({ queryKey: noteKeys.all });
+        await Promise.all(localNotes.map((n) => createNoteAsync(n.text)));
+        // invalidation handled by mutation
       }
 
       finishedAllStepsRef.current = true;
-
-      posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-        ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
-        user_input: userInput,
-        ai_generated_task_count: localTasks.length,
-        ai_generated_note_count: localNotes.length,
-        user_add_task_count: localTasks.length,
-        user_add_note_count: localNotes.length,
-        outcome: "accepted",
-      });
-
+      captureOutcome("accepted", localTasks.length, localNotes.length);
       setLocalTasks([]);
       setLocalNotes([]);
       router.back();
     } catch (error) {
-      console.log("Add tasks/notes failed", error);
-    } finally {
-      setIsAdding(false);
+      console.error("Add tasks/notes failed", error);
     }
   };
 
@@ -121,15 +115,7 @@ export function AiTasksPreview({
     setAiGeneratedMessage();
     setModalType("input");
 
-    posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-      ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
-      user_input: userInput,
-      ai_generated_task_count: localTasks.length,
-      ai_generated_note_count: localNotes.length,
-      outcome: "go_back",
-      user_add_task_count: 0,
-      user_add_note_count: 0,
-    });
+    captureOutcome("go_back");
   };
 
   return (
@@ -164,6 +150,7 @@ export function AiTasksPreview({
         )}
       </ScrollView>
 
+     
       <View className="flex-row justify-center items-center mt-4 mb-10 flex-wrap gap-2">
         <Pressable
           onPress={handleGoBack}
@@ -185,7 +172,7 @@ export function AiTasksPreview({
           accessibilityRole="button"
           accessibilityLabel={t("buttons.addAll")}
         >
-          {isAdding ? (
+          {(isAdding || isNoteCreating) ? (
             <ActivityIndicator size="small" />
           ) : (
             <Text className="font-baloo text-sm">{t("buttons.addAll")}</Text>

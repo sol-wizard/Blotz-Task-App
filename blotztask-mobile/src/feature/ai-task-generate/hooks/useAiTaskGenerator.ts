@@ -20,7 +20,7 @@ export function useAiTaskGenerator({
     setIsAiGenerating(true);
     if (connection) {
       try {
-        await signalRService.invoke(connection, "SendMessage", "User", text);
+        await signalRService.invoke(connection, "SendMessage", text);
       } catch (error) {
         console.error("Error invoking SendMessage:", error);
         setIsAiGenerating(false);
@@ -33,20 +33,20 @@ export function useAiTaskGenerator({
     }
   };
 
-  const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
-    setAiGeneratedMessage(receivedAiMessage);
-    if (!receivedAiMessage.isSuccess) {
-      setIsAiGenerating(false);
-      setModalType("input");
-    } else {
-      setModalType("task-preview");
-
-      setIsAiGenerating(false);
-    }
-  };
-
   useEffect(() => {
     let newConnection: signalR.HubConnection | null = null;
+
+    const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
+      setAiGeneratedMessage(receivedAiMessage);
+      if (!receivedAiMessage.isSuccess) {
+        setIsAiGenerating(false);
+        setModalType("input");
+      } else {
+        setModalType("task-preview");
+        setIsAiGenerating(false);
+      }
+    };
+
     const startConnection = async () => {
       try {
         newConnection = await signalRService.createConnection();
