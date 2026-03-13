@@ -31,7 +31,7 @@ public class AddCustomLabelCommandHandler(BlotzTaskDbContext db, ILogger<AddCust
 
         if (exist)
         {
-            throw new Exception($"Label {command.Name} already exists for  {command.UserId}.");
+            throw new InvalidOperationException($"Label {command.Name} already exists for {command.UserId}.");
         }
 
         var label = new Label
@@ -42,8 +42,7 @@ public class AddCustomLabelCommandHandler(BlotzTaskDbContext db, ILogger<AddCust
             Scope = LabelScope.Custom,
             UserId = command.UserId
         };
-        // Fire-and-forget is intentional here; SaveChangesAsync will still persist the added entity.
-        _ = db.Labels.AddAsync(label, ct);
+        db.Labels.Add(label);
         await db.SaveChangesAsync(ct);
         return $"Created label {command.Name} for {command.UserId} successfully.";
 

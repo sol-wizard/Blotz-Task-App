@@ -29,7 +29,7 @@ export default function SettingsAllTasksScreen() {
     try {
       const data = await getAllTasks();
       setTasks(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
     } finally {
       setLoading(false);

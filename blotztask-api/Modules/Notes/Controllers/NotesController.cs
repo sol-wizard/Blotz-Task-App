@@ -59,7 +59,7 @@ public class NotesController(
     public async Task<NoteDto> UpdateNote(Guid id, [FromBody] NoteRequestDto dto, CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Counld not find valid user id from Http Context");
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         var command = new UpdateNoteCommand
         {
             NoteId = id,
@@ -73,7 +73,7 @@ public class NotesController(
     public async Task<IActionResult> DeleteNote(Guid id, CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Counld not found valid user id from Http Context");
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
         var command = new DeleteNoteCommand
         {
             NoteId = id,
