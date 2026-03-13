@@ -53,8 +53,8 @@ export const NoteRow = ({
             onDelete={() => onDelete(note)}
           />
         )}
-        rightThreshold={12}
-        overshootRight={true}
+        rightThreshold={32}
+        overshootRight={false}
         friction={2}
         onSwipeableWillOpen={() => {
           onRowOpen(swipeRef.current);

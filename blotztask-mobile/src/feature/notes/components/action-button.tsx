@@ -18,7 +18,6 @@ export const ActionButton = ({
   bgColor,
   onPress,
   disabled = false,
-  className = "",
   isLoading = false,
 }: ActionButtonProps) => {
   return (
@@ -30,17 +29,17 @@ export const ActionButton = ({
     >
       {isLoading ? (
         <View
-          className={`h-10 w-10 items-center justify-center rounded-full ${className} ${bgColor} opacity-60`}
+          className={`h-10 w-10 items-center justify-center rounded-full ${bgColor} opacity-60`}
         ></View>
       ) : (
-        <>
+        <View className="items-center">
           <View
-            className={`h-10 w-10 items-center justify-center rounded-full ${className} ${bgColor} ${disabled ? "opacity-60" : ""}`}
+            className={`h-10 w-10 items-center justify-center rounded-full ${bgColor} ${disabled ? "opacity-60" : ""}`}
           >
             <MaterialCommunityIcons name={icon} color="#FFFFFF" size={18} />
           </View>
-          <Text className="mt-1.5 text-xs text-gray-500 font-baloo">{label}</Text>
-        </>
+          <Text className="mt-2 text-xs text-gray-500 font-baloo">{label}</Text>
+        </View>
       )}
     </Pressable>
   );

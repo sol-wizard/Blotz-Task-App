@@ -128,13 +128,14 @@ export default function NotesScreen() {
                 onChangeText={setSearchQuery}
                 placeholder="Search notes"
                 placeholderTextColor="#9CA3AF"
-                className="ml-2 flex-1 text-base text-black"
+                className="ml-2 flex-1 text-base text-black font-baloo h-10"
+                textAlignVertical="center"
               />
             </View>
           </View>
           <View className="px-6 flex-1">
               <View
-                className={`rounded-3xl overflow-hidden ${
+                className={`flex-1 rounded-3xl overflow-hidden ${
                   notesSearchResult.length === 0 ? "" : "bg-white"
                 }`}>
               <FlatList
@@ -163,6 +164,10 @@ export default function NotesScreen() {
                     </View>
                   ) : null
                 }
+                contentContainerStyle={{ 
+                  flexGrow: 1,
+                  justifyContent: !showLoading && notesSearchResult.length === 0 ? "center" : "flex-start",
+               }}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
                 onScrollBeginDrag={closeAllRows}
