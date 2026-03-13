@@ -1,4 +1,3 @@
-using BlotzTask.Filters;
 using Microsoft.SemanticKernel;
 
 namespace BlotzTask.Extension;
@@ -28,14 +27,6 @@ public static class SemanticKernelServiceExtensions
                 endpoint,
                 apiKey
             );
-
-            kernelBuilder.Services.AddSingleton<IFunctionInvocationFilter>(
-                new FunctionInvocationLoggingFilter(
-                    sp.GetRequiredService<ILogger<FunctionInvocationLoggingFilter>>()));
-
-            kernelBuilder.Services.AddSingleton<IPromptRenderFilter>(
-                new PromptRenderLoggingFilter(
-                    sp.GetRequiredService<ILogger<PromptRenderLoggingFilter>>()));
 
             return kernelBuilder.Build();
         });
