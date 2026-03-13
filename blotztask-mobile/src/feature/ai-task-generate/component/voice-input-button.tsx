@@ -110,12 +110,12 @@ const VoiceInputButton = ({
       }}
     >
       <Pressable
-        className="h-14 w-full bg-[#F4F4F4] rounded-full items-center justify-center flex-row"
+        className="h-14 w-full rounded-full items-center justify-center flex-row"
         onPress={startListening}
         accessibilityLabel={t("buttons.tapToSpeak")}
       >
-        <MaterialCommunityIcons name="microphone-outline" size={20} color="black" />
-        <Text className="font-bold ml-2">{t("buttons.tapToSpeak")}</Text>
+        <MaterialCommunityIcons name="microphone-outline" size={20} color="white" />
+        <Text className="font-bold ml-2 text-white">{t("buttons.tapToSpeak")}</Text>
       </Pressable>
     </LinearGradient>
   );
