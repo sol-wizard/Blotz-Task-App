@@ -7,13 +7,10 @@ param dbAdminUsername string
 @secure()
 param dbAdminPassword string
 
-// Database SKU settings
-param dbSkuName string = 'Basic'
-param dbSkuTier string = 'Basic'
-param dbSkuCapacity int = 5
 param dbMaxSizeBytes int = 1073741824 // 1GB
+param dbAutoPauseDelayMinutes int = 60 // set to -1 to disable auto-pause
+param dbMaxVCores int = 1
 
-//TODO : A new database resource is created from azure portal please update the bicep script here
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: 'sql-${projectName}-${environment}'
   location: location
@@ -34,12 +31,16 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
     name: 'sqldb-${projectName}-${environment}'
     location: location
     sku: {
-      name: dbSkuName
-      tier: dbSkuTier
-      capacity: dbSkuCapacity
+      name: 'GP_S_Gen5_${dbMaxVCores}'
+      tier: 'GeneralPurpose'
+      family: 'Gen5'
+      capacity: dbMaxVCores
     }
     properties: {
       maxSizeBytes: dbMaxSizeBytes
+      autoPauseDelay: dbAutoPauseDelayMinutes
+      minCapacity: json('0.5')
+      requestedBackupStorageRedundancy: 'Local'
     }
   }
 }

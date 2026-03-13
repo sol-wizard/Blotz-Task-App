@@ -9,8 +9,7 @@ public enum AiErrorCode
     InvalidJson = 2,
     TokenLimited = 3,
     BlockedByContentFilter = 4,
-    NoMessageReturned = 5,
-    Canceled = 6
+    Canceled = 5
 }
 
 public class AiTaskGenerationException : HubException
@@ -57,15 +56,6 @@ public sealed class AiContentFilterException
     public AiContentFilterException(
         string message = "Your message triggered safety filters. Please rephrase and try again.")
         : base(AiErrorCode.BlockedByContentFilter, message)
-    {
-    }
-}
-
-public sealed class AiNoMessageReturnedException
-    : AiTaskGenerationException
-{
-    public AiNoMessageReturnedException()
-        : base(AiErrorCode.NoMessageReturned, "AI returned no messages.")
     {
     }
 }
