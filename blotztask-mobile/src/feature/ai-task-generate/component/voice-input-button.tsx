@@ -139,13 +139,16 @@ const VoiceInputButton = ({
       end={{ x: 1, y: 0.5 }}
       style={{
         marginTop: 16,
-        borderRadius: 999,
-        padding: 2,
+        height: 54,
+        borderRadius: 20,
+        padding: 1,
+        overflow: "hidden",
         width: "100%",
       }}
     >
       <Pressable
-        className="h-14 w-full rounded-full bg-[#F4F4F4] items-center justify-center flex-row"
+        className="w-full flex-1 bg-[#ffffff] items-center justify-center flex-row"
+        style={{ borderRadius: 19 }}
         onPress={startListening}
         accessibilityLabel={t("buttons.tapToSpeak")}
       >
