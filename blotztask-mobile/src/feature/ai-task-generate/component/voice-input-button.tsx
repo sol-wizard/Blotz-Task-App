@@ -147,7 +147,7 @@ const VoiceInputButton = ({
       }}
     >
       <Pressable
-        className="w-full flex-1 bg-[#ffffff] items-center justify-center flex-row"
+        className="w-full flex-1 bg-[#F5F9FA] items-center justify-center flex-row"
         style={{ borderRadius: 19 }}
         onPress={startListening}
         accessibilityLabel={t("buttons.tapToSpeak")}
