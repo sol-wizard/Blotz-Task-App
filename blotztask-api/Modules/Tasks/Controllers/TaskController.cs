@@ -20,7 +20,6 @@ public class TaskController(
     DeleteTaskCommandHandler deleteTaskCommandHandler,
     EditTaskCommandHandler editTaskCommandHandler,
     GetAllTasksQueryHandler getAllTasksQueryHandler,
-    GetAllDdlTasksQueryHandler getAllDdlTasksQueryHandler,
     GetWeeklyTaskAvailabilityQueryHandler getWeeklyTaskAvailabilityQueryHandler,
     IEventDispatcher eventDispatcher,
     ILogger<TaskController> logger
