@@ -165,6 +165,91 @@ public class RecurringTaskGeneratorServiceTests
     }
 
     // -----------------------------------------------------------------------
+    // Yearly recurrence
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public void GenerateTaskItems_YearlyOnMar14_ShouldReturnOneMar14PerYear()
+    {
+        // Real-world example: "Remind me of my friend's birthday every year on Mar 14"
+        // Task starts Mar 14 2026. Generate for Mar 14 2026 – Mar 14 2028.
+        // Expected: Mar 14 2026, Mar 14 2027, Mar 14 2028 — one per year.
+
+        // Arrange
+        var recurringTask = MakeRecurringTask(
+            frequency: RecurrenceFrequency.Yearly,
+            interval: 1,
+            startDate: new DateOnly(2026, 3, 14));
+
+        var from = new DateOnly(2026, 3, 14);
+        var to   = new DateOnly(2028, 3, 14);
+
+        // Act
+        var result = _service.GenerateTaskItems(recurringTask, from, to);
+
+        // Assert
+        result.Should().HaveCount(3, because: "Mar 14 occurs in 2026, 2027, and 2028");
+        result.Select(t => DateOnly.FromDateTime(t.StartTime.Date))
+              .Should().BeEquivalentTo([
+                  new DateOnly(2026, 3, 14),
+                  new DateOnly(2027, 3, 14),
+                  new DateOnly(2028, 3, 14),
+              ]);
+    }
+
+    [Fact]
+    public void GenerateTaskItems_YearlyEveryTwoYears_ShouldSkipAlternateYears()
+    {
+        // Real-world example: "Biennial review — happens every 2 years starting 2026"
+        // Task starts Jan 1 2026 (interval=2). Generate for 2026–2029.
+        // Expected: Jan 1 2026, Jan 1 2028 — every other year.
+
+        // Arrange
+        var recurringTask = MakeRecurringTask(
+            frequency: RecurrenceFrequency.Yearly,
+            interval: 2,
+            startDate: new DateOnly(2026, 1, 1));
+
+        var from = new DateOnly(2026, 1, 1);
+        var to   = new DateOnly(2029, 12, 31);
+
+        // Act
+        var result = _service.GenerateTaskItems(recurringTask, from, to);
+
+        // Assert
+        result.Should().HaveCount(2, because: "with interval=2 starting 2026, matches are 2026 and 2028");
+        result.Select(t => DateOnly.FromDateTime(t.StartTime.Date))
+              .Should().BeEquivalentTo([
+                  new DateOnly(2026, 1, 1),
+                  new DateOnly(2028, 1, 1),
+              ]);
+    }
+
+    [Fact]
+    public void GenerateTaskItems_YearlyWhenWindowStartsBeforeAnniversaryDate_ShouldStillMatchThatYear()
+    {
+        // Real-world example: "Anniversary is Jun 15. Generator window opens Jun 10–Jun 20.
+        // The Jun 15 occurrence should still be picked up."
+        // Expected: Jun 15 2026 — window doesn't need to start on the exact day.
+
+        // Arrange
+        var recurringTask = MakeRecurringTask(
+            frequency: RecurrenceFrequency.Yearly,
+            interval: 1,
+            startDate: new DateOnly(2026, 6, 15));
+
+        var from = new DateOnly(2026, 6, 10);
+        var to   = new DateOnly(2026, 6, 20);
+
+        // Act
+        var result = _service.GenerateTaskItems(recurringTask, from, to);
+
+        // Assert
+        result.Should().HaveCount(1, because: "Jun 15 falls within the window");
+        DateOnly.FromDateTime(result[0].StartTime.Date).Should().Be(new DateOnly(2026, 6, 15));
+    }
+
+    // -----------------------------------------------------------------------
     // Boundary / edge cases
     // -----------------------------------------------------------------------
 
