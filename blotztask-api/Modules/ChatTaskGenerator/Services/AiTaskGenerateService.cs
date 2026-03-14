@@ -26,14 +26,15 @@ public class AiTaskGenerateService(
                 ResponseFormat = typeof(AiGenerateMessage)
             };
 
-            var result = await kernel.InvokePromptAsync(
-                "{{$chatHistory}}",
-                new KernelArguments(executionSettings)
-                {
-                    ["chatHistory"] = chatHistory
-                },
-                cancellationToken: ct
+            var chatService = kernel.GetRequiredService<IChatCompletionService>();
+
+            var result = await chatService.GetChatMessageContentAsync(
+                chatHistory,
+                executionSettings,
+                kernel,
+                ct
             );
+
 
             var responseContent = result.ToString();
 
