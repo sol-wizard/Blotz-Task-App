@@ -6,10 +6,9 @@ import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset
 import { invalidateSelectedDayTask } from "./useTaskMutations";
 
 export type AddNoteToTaskParams = {
-  note: NoteDTO | null;
-  startTime?: Date;
-  endTime?: Date;
-  timeType?: number;
+  note: NoteDTO;
+  startTime: Date;
+  endTime: Date;
   onSuccess?: () => void;
 };
 
@@ -18,19 +17,18 @@ export const useAddNoteToTask = () => {
 
   const convertMutation = useMutation({
     mutationFn: async ({ note, startTime, endTime }: AddNoteToTaskParams) => {
-      if (!note) throw new Error("No note");
-      const start = startTime ?? new Date();
-      const end = endTime ?? new Date(start.getTime() + 60 * 60 * 1000);
-      const startTimeStr = convertToDateTimeOffset(start);
-      const endTimeStr = convertToDateTimeOffset(end);
+      const startTimeStr = convertToDateTimeOffset(startTime);
+      const endTimeStr = convertToDateTimeOffset(endTime);
       return convertNoteToTask(note.id, startTimeStr, endTimeStr);
     },
     onSuccess: (_taskId, variables) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: noteKeys.all });
-      const start = variables.startTime ?? new Date();
-      const end = variables.endTime ?? new Date(start.getTime() + 60 * 60 * 1000);
-      invalidateSelectedDayTask(queryClient, start.toISOString(), end.toISOString());
+      invalidateSelectedDayTask(
+        queryClient,
+        variables.startTime.toISOString(),
+        variables.endTime.toISOString(),
+      );
       variables.onSuccess?.();
     },
   });

@@ -42,8 +42,12 @@ export default function GashaponMachineScreen() {
 
   const handleDoNow = () => {
     if (!randomNote) return;
+    const start = new Date();
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
     addNoteToTask({
       note: randomNote,
+      startTime: start,
+      endTime: end,
       onSuccess: () => {
         router.push("/(protected)/(tabs)");
         setModalVisible(false);
