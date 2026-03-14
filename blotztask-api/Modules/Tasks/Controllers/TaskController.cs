@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Events;
+using BlotzTask.Modules.Tasks.Queries.Deadlines;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Shared.Events;
 using Microsoft.AspNetCore.Authorization;
@@ -109,16 +110,6 @@ public class TaskController(
 
         var query = new GetAllTasksQuery { UserId = userId };
         return await getAllTasksQueryHandler.Handle(query, ct);
-    }
-    
-    [HttpGet("ddl")]
-    public async Task<IEnumerable<AllDdlTaskItemDto>> GetAllDdlTasks(CancellationToken ct)
-    {
-        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
-            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
-
-        var query = new GetAllDdlTasksQuery { UserId = userId };
-        return await getAllDdlTasksQueryHandler.Handle(query, ct);
     }
 
     [HttpPost]

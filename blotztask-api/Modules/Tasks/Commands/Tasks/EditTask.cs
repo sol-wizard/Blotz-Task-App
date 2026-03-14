@@ -50,15 +50,13 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
 
         db.TaskItems.Update(task);
         
-        if (command.TaskDetails.IsDdl.HasValue)
+        switch (command.TaskDetails.IsDdl)
         {
-            if (command.TaskDetails.IsDdl.Value)
-            {
-                if (task.Deadline == null)
+            case true:
+                if (task.Deadline is null)
                 {
                     task.Deadline = new TaskDeadline
                     {
-                        TaskItemId = task.Id,
                         TaskItem = task,
                         DueAt = task.EndTime,
                         CreatedAt = DateTime.UtcNow,
@@ -71,14 +69,14 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
                     task.Deadline.DueAt = task.EndTime;
                     task.Deadline.UpdatedAt = DateTime.UtcNow;
                 }
-            }
-            else
-            {
-                if (task.Deadline != null)
-                {
-                    db.Remove(task.Deadline);
-                }
-            }
+                break;
+
+            case false when task.Deadline is not null:
+                db.Remove(task.Deadline);
+                break;
+
+            case null:
+                break;
         }
         await db.SaveChangesAsync(ct);
 

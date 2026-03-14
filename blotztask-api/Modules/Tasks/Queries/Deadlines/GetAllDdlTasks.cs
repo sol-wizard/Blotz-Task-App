@@ -2,7 +2,7 @@ using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Labels.DTOs;
 using Microsoft.EntityFrameworkCore;
 
-namespace BlotzTask.Modules.Tasks.Queries.Tasks;
+namespace BlotzTask.Modules.Tasks.Queries.Deadlines;
 
 public class GetAllDdlTasksQuery
 {
@@ -13,31 +13,26 @@ public class GetAllDdlTasksQueryHandler(
     BlotzTaskDbContext db,
     ILogger<GetAllDdlTasksQueryHandler> logger)
 {
-    public async Task<List<AllDdlTaskItemDto>> Handle(GetAllDdlTasksQuery query, CancellationToken ct = default)
+    public async Task<List<DeadlineTaskDto>> Handle(GetAllDdlTasksQuery query, CancellationToken ct = default)
     {
         logger.LogInformation("Fetching all DDL tasks for user {UserId}", query.UserId);
         
-        var now = DateTimeOffset.UtcNow;
-
         var ddlTasks = await db.TaskItems
             .Include(t => t.Deadline)
             .Include(t => t.Label)
             .Where(t => t.UserId == query.UserId 
                         && t.Deadline != null
-                        && t.Deadline.DueAt >= now)
-            .OrderBy(t => t.Deadline!.DueAt)
+                        && !t.IsDone)
+            .OrderByDescending(t => t.Deadline!.IsPinned)
+            .ThenBy(t => t.Deadline!.DueAt)
             .ThenBy(t => t.Title)
-            .Select(task => new AllDdlTaskItemDto
+            .Select(task => new DeadlineTaskDto
             {
                 Id = task.Id,
                 Title = task.Title,
-                Description = task.Description,
                 StartTime = task.StartTime,
                 EndTime = task.EndTime,
                 IsDone = task.IsDone,
-                NotificationId = task.NotificationId,
-                AlertTime = task.AlertTime,
-                IsDdl = true,
                 DueAt = task.Deadline!.DueAt,
                 IsPinned = task.Deadline.IsPinned,
                 Label = task.Label != null
@@ -49,6 +44,7 @@ public class GetAllDdlTasksQueryHandler(
                     }
                     : null
             })
+            .AsNoTracking()
             .ToListAsync(ct);
 
         logger.LogInformation(
@@ -60,19 +56,14 @@ public class GetAllDdlTasksQueryHandler(
     }
 }
 
-public class AllDdlTaskItemDto
+public class DeadlineTaskDto
 {
     public int Id { get; set; }
     public required string Title { get; set; }
-    public string? Description { get; set; }
     public DateTimeOffset? StartTime { get; set; }
     public DateTimeOffset? EndTime { get; set; }
     public bool IsDone { get; set; }
     public LabelDto? Label { get; set; }
-    public string? NotificationId { get; set; }
-    public DateTimeOffset? AlertTime { get; set; }
-
-    public bool IsDdl { get; set; }
     public DateTimeOffset DueAt { get; set; }
     public bool IsPinned { get; set; }
 }

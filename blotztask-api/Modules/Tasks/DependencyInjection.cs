@@ -2,6 +2,7 @@ using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 using BlotzTask.Modules.Tasks.Commands.SubTasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Events;
+using BlotzTask.Modules.Tasks.Queries.Deadlines;
 using BlotzTask.Modules.Tasks.Queries.SubTasks;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Shared.Events;
