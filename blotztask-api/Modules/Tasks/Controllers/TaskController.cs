@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Events;
-using BlotzTask.Modules.Tasks.Queries.Deadlines;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Shared.Events;
 using Microsoft.AspNetCore.Authorization;
