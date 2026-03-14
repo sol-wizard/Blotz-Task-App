@@ -45,7 +45,6 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
         };
 
         db.TaskItems.Add(newTask);
-        await db.SaveChangesAsync(ct);
         
         if (command.TaskDetails.IsDdl == true)
         {
