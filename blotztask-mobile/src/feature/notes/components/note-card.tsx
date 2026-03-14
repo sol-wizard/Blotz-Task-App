@@ -6,7 +6,6 @@ import { NoteDTO } from "../models/note-dto";
 export const NoteCard = ({
   note,
   isToggled,
-  onToggle,
   isDeleting,
   onDelete,
   onPressCard,
@@ -21,18 +20,17 @@ export const NoteCard = ({
   onAddToTask?: (note: NoteDTO) => void;
 }) => {
   return (
-    <View className="mb-4">
+    <View>
       <Pressable
-        onLongPress={onToggle}
         onPress={() => {
           if (isToggled) return;
           onPressCard(note);
         }}
       >
-        <View className={`bg-white rounded-3xl p-4 ${isToggled ? "border-2 border-info" : ""}`}>
+        <View className={`px-5 py-4 ${isToggled ? "border-2 border-info" : ""}`}>
           <Text className="text-xl font-semibold text-black font-baloo">{note.text}</Text>
-
-          <View className="mt-4 flex-row items-center justify-between">
+          
+          <View className="mt-2 flex-row items-center justify-between">
             <Text className="text-xs text-[#6B7280] font-balooThin">
               {note.createdAt && format(new Date(note.createdAt + "Z"), "dd MMM HH:mm")}
             </Text>
@@ -60,6 +58,7 @@ export const NoteCard = ({
             <View className="w-8 h-8 bg-[#E3EFFE] rounded-xl items-center justify-center ml-2">
               <MaterialCommunityIcons name="plus" color="#3D8DE0" size={18} />
             </View>
+          
           </Pressable>
         </View>
       )}
