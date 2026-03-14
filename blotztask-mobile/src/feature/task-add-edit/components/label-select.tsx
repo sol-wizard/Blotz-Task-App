@@ -1,11 +1,12 @@
 import React from "react";
 import { View, Pressable, Text } from "react-native";
-import { Controller } from "react-hook-form";
+import { Control, Controller } from "react-hook-form";
 import { LabelDTO } from "@/shared/models/label-dto";
 import { useTranslation } from "react-i18next";
+import { TaskFormField } from "../models/task-form-schema";
 
 interface LabelSelectProps {
-  control: any;
+  control: Control<TaskFormField>;
   labels: LabelDTO[];
 }
 

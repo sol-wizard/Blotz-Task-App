@@ -157,10 +157,10 @@ public class TaskController(
     }
 
     [HttpDelete("{id}")]
-    public async Task<string> DeleteTaskById(int id)
+    public async Task<string> DeleteTaskById(int id, CancellationToken ct)
     {
         var command = new DeleteTaskCommand { TaskId = id };
 
-        return await deleteTaskCommandHandler.Handle(command);
+        return await deleteTaskCommandHandler.Handle(command, ct);
     }
 }

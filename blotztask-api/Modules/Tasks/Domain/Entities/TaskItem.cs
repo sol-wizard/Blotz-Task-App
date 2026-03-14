@@ -24,4 +24,5 @@ public class TaskItem
     public ICollection<Subtask> Subtasks { get; set; } = new List<Subtask>();
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
+    public TaskDeadline? Deadline { get; set; }
 }
