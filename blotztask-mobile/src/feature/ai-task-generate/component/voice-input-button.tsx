@@ -21,7 +21,7 @@ const GradientText = ({ children }: { children: string }) => {
   return (
     <MaskedView
       maskElement={
-        <Text className="font-bold ml-2" style={{ backgroundColor: "transparent" }}>
+        <Text className="font-bold ml-2 text-lg" style={{ backgroundColor: "transparent" }}>
           {children}
         </Text>
       }
@@ -31,7 +31,7 @@ const GradientText = ({ children }: { children: string }) => {
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
       >
-        <Text className="font-bold ml-2 opacity-0">{children}</Text>
+        <Text className="font-bold ml-2 text-lg opacity-0">{children}</Text>
       </LinearGradient>
     </MaskedView>
   );
