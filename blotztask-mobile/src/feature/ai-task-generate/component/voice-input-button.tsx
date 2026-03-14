@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import LottieView from "lottie-react-native";
 import { ASSETS } from "@/shared/constants/assets";
 import { useTranslation } from "react-i18next";
+import MaskedView from "@react-native-masked-view/masked-view";
 
 type Props = {
   isListening: boolean;
@@ -15,6 +16,40 @@ type Props = {
   isAiGenerating: boolean;
   hasText: boolean;
   onGenerateTask: () => void;
+};
+const GradientText = ({ children }: { children: string }) => {
+  return (
+    <MaskedView
+      maskElement={
+        <Text className="font-bold ml-2" style={{ backgroundColor: "transparent" }}>
+          {children}
+        </Text>
+      }
+    >
+      <LinearGradient
+        colors={["#A3DC2F", "#2F80ED"]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+      >
+        <Text className="font-bold ml-2 opacity-0">{children}</Text>
+      </LinearGradient>
+    </MaskedView>
+  );
+};
+
+const GradiantMicIcon = () => {
+  return (
+    <MaskedView
+      maskElement={<MaterialCommunityIcons name="microphone-outline" size={20} color="black" />}
+    >
+      <LinearGradient
+        colors={["#A3DC2F", "#2F80ED"]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={{ width: 20, height: 20 }}
+      />
+    </MaskedView>
+  );
 };
 
 const VoiceInputButton = ({
@@ -110,12 +145,14 @@ const VoiceInputButton = ({
       }}
     >
       <Pressable
-        className="h-14 w-full rounded-full items-center justify-center flex-row"
+        className="h-14 w-full rounded-full bg-[#F4F4F4] items-center justify-center flex-row"
         onPress={startListening}
         accessibilityLabel={t("buttons.tapToSpeak")}
       >
-        <MaterialCommunityIcons name="microphone-outline" size={20} color="white" />
-        <Text className="font-bold ml-2 text-white">{t("buttons.tapToSpeak")}</Text>
+        <View className="flex-row items-center">
+          <GradiantMicIcon />
+          <GradientText>{t("buttons.tapToSpeak")}</GradientText>
+        </View>
       </Pressable>
     </LinearGradient>
   );
