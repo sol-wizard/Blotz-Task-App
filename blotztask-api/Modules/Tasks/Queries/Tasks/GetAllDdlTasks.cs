@@ -16,12 +16,16 @@ public class GetAllDdlTasksQueryHandler(
     public async Task<List<AllDdlTaskItemDto>> Handle(GetAllDdlTasksQuery query, CancellationToken ct = default)
     {
         logger.LogInformation("Fetching all DDL tasks for user {UserId}", query.UserId);
+        
+        var now = DateTimeOffset.UtcNow;
 
         var ddlTasks = await db.TaskItems
             .Include(t => t.Deadline)
             .Include(t => t.Label)
-            .Where(t => t.UserId == query.UserId && t.Deadline != null)
-            .OrderByDescending(t => t.StartTime)
+            .Where(t => t.UserId == query.UserId 
+                        && t.Deadline != null
+                        && t.Deadline.DueAt >= now)
+            .OrderBy(t => t.Deadline!.DueAt)
             .ThenBy(t => t.Title)
             .Select(task => new AllDdlTaskItemDto
             {

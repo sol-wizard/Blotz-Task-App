@@ -45,12 +45,12 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
         };
 
         db.TaskItems.Add(newTask);
+        await db.SaveChangesAsync(ct);
         
         if (command.TaskDetails.IsDdl == true)
         {
             var deadline = new TaskDeadline
             {
-                TaskItemId = newTask.Id,
                 TaskItem = newTask,
                 DueAt = newTask.EndTime,
                 CreatedAt = newTask.CreatedAt,
