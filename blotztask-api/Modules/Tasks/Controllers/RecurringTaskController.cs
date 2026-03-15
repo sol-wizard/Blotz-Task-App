@@ -5,17 +5,14 @@ namespace BlotzTask.Modules.Tasks.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class RecurringTaskController(GenerateRecurringTaskItemsCommandHandler generateRecurringTaskItemsCommandHandler) : ControllerBase
+public class RecurringTaskController(SaveRecurringOccurrenceCommandHandler saveRecurringOccurrenceCommandHandler) : ControllerBase
 {
-    [HttpPost("generate")]
-    public async Task<IActionResult> GenerateTaskItems(CancellationToken ct)
+    [HttpPost("occurrence/complete")]
+    public async Task<IActionResult> CompleteOccurrence(
+        [FromBody] SaveRecurringOccurrenceCommand command,
+        CancellationToken ct)
     {
-        var command = new GenerateRecurringTaskItemsCommand
-        {
-            Timestamp = DateTime.UtcNow
-        };
-        var result = await generateRecurringTaskItemsCommandHandler.Handle(command, ct);
-
-        return Ok(result);
+        var taskItemId = await saveRecurringOccurrenceCommandHandler.Handle(command, ct);
+        return Ok(new { taskItemId });
     }
 }
