@@ -23,11 +23,11 @@ public class AiTaskGenerateService(
         {
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                ResponseFormat = typeof(AiGenerateMessage)
+                ResponseFormat = typeof(AiGenerateMessage),
             };
 
             logger.LogInformation("TaskGeneration: Invoking AI with ServiceId=TaskGeneration");
-            var chatService = kernel.GetRequiredService<IChatCompletionService>();
+            var chatService = kernel.GetRequiredService<IChatCompletionService>("TaskGeneration");
 
             var result = await chatService.GetChatMessageContentAsync(
                 chatHistory,
@@ -36,11 +36,10 @@ public class AiTaskGenerateService(
                 ct
             );
 
+            logger.LogInformation("TaskGeneration: Response from ModelId={ModelId}", result.ModelId);
+            logger.LogInformation("TaskGeneration: Response content={Content}", result.Content);
 
-            var responseContent = result.ToString();
-
-            logger.LogInformation("TaskGeneration: Response from ModelId={ModelId}");
-            logger.LogInformation(responseContent);
+            var responseContent = result.Content;
 
             if (string.IsNullOrWhiteSpace(responseContent))
             {
