@@ -14,64 +14,26 @@ public class RecurringTaskGeneratorServiceTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public void GenerateTaskItems_DailyEveryDay_ShouldReturnAllDaysInRange()
+    public void IsOccurrenceOn_DailyEveryDay_ShouldReturnTrue()
     {
-        // Real-world example: "Take medication every day"
-        // Task starts Mar 1. Generate for Mar 1–5.
-        // Expected: Mar 1, 2, 3, 4, 5 — all 5 days.
+        // "Take medication every day" starting Mar 1
+        var task = MakeRecurringTask(RecurrenceFrequency.Daily, interval: 1, startDate: new DateOnly(2026, 3, 1));
 
-        // Arrange
-        var recurringTask = MakeRecurringTask(
-            frequency: RecurrenceFrequency.Daily,
-            interval: 1,
-            startDate: new DateOnly(2026, 3, 1));
-
-        var from = new DateOnly(2026, 3, 1);
-        var to   = new DateOnly(2026, 3, 5);
-
-        // Act
-        var result = _service.GenerateTaskItems(recurringTask, from, to);
-
-        // Assert
-        result.Should().HaveCount(5, because: "every day from Mar 1 to Mar 5 inclusive is a match");
-        result.Select(t => DateOnly.FromDateTime(t.StartTime.Date))
-              .Should().BeEquivalentTo([
-                  new DateOnly(2026, 3, 1),
-                  new DateOnly(2026, 3, 2),
-                  new DateOnly(2026, 3, 3),
-                  new DateOnly(2026, 3, 4),
-                  new DateOnly(2026, 3, 5),
-              ]);
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 1)).Should().BeTrue();
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 4)).Should().BeTrue();
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 10)).Should().BeTrue();
     }
 
     [Fact]
-    public void GenerateTaskItems_DailyEveryTwoDays_ShouldSkipAlternateDays()
+    public void IsOccurrenceOn_DailyEveryTwoDays_ShouldReturnTrueOnIntervalDaysOnly()
     {
-        // Real-world example: "Water the plants every 2 days"
-        // Task starts Mar 1 (interval=2). Generate for Mar 1–7.
-        // Expected: Mar 1, 3, 5, 7 — every other day.
+        // "Water the plants every 2 days" starting Mar 1 → Mar 1, 3, 5, 7 ...
+        var task = MakeRecurringTask(RecurrenceFrequency.Daily, interval: 2, startDate: new DateOnly(2026, 3, 1));
 
-        // Arrange
-        var recurringTask = MakeRecurringTask(
-            frequency: RecurrenceFrequency.Daily,
-            interval: 2,
-            startDate: new DateOnly(2026, 3, 1));
-
-        var from = new DateOnly(2026, 3, 1);
-        var to   = new DateOnly(2026, 3, 7);
-
-        // Act
-        var result = _service.GenerateTaskItems(recurringTask, from, to);
-
-        // Assert
-        result.Should().HaveCount(4, because: "with interval=2 starting Mar 1, matches are Mar 1, 3, 5, 7");
-        result.Select(t => DateOnly.FromDateTime(t.StartTime.Date))
-              .Should().BeEquivalentTo([
-                  new DateOnly(2026, 3, 1),
-                  new DateOnly(2026, 3, 3),
-                  new DateOnly(2026, 3, 5),
-                  new DateOnly(2026, 3, 7),
-              ]);
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 1)).Should().BeTrue("Mar 1 is the start");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 3)).Should().BeTrue("Mar 3 is +2 days");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 2)).Should().BeFalse("Mar 2 is skipped");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 4)).Should().BeFalse("Mar 4 is skipped");
     }
 
     // -----------------------------------------------------------------------
@@ -79,55 +41,30 @@ public class RecurringTaskGeneratorServiceTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public void GenerateTaskItems_WeeklyOnMonday_ShouldReturnOnlyMondays()
+    public void IsOccurrenceOn_WeeklyOnMonday_ShouldReturnTrueOnMondaysOnly()
     {
-        // Real-world example: "Weekly team standup every Monday"
-        // Task starts Mon Mar 2. Generate for Mar 2–22.
-        // Expected: Mar 2, 9, 16 — only Mondays.
+        // "Weekly standup every Monday" starting Mon Mar 2
+        var task = MakeRecurringTask(RecurrenceFrequency.Weekly, interval: 1,
+            daysOfWeek: (int)WeeklyDayFlags.Monday, startDate: new DateOnly(2026, 3, 2));
 
-        // Arrange
-        var recurringTask = MakeRecurringTask(
-            frequency: RecurrenceFrequency.Weekly,
-            interval: 1,
-            daysOfWeek: (int)WeeklyDayFlags.Monday,
-            startDate: new DateOnly(2026, 3, 2));
-
-        var from = new DateOnly(2026, 3, 2);
-        var to   = new DateOnly(2026, 3, 22);
-
-        // Act
-        var result = _service.GenerateTaskItems(recurringTask, from, to);
-
-        // Assert
-        result.Should().HaveCount(3, because: "Mondays in range: Mar 2, 9, 16");
-        result.All(t => t.StartTime.DayOfWeek == DayOfWeek.Monday)
-              .Should().BeTrue(because: "only Mondays should be generated");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 2)).Should().BeTrue("Mar 2 is a Monday");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 9)).Should().BeTrue("Mar 9 is a Monday");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 3)).Should().BeFalse("Mar 3 is Tuesday");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 8)).Should().BeFalse("Mar 8 is Sunday");
     }
 
     [Fact]
-    public void GenerateTaskItems_WeeklyOnMondayAndWednesday_ShouldReturnBothDays()
+    public void IsOccurrenceOn_WeeklyOnMondayAndWednesday_ShouldReturnTrueOnBothDays()
     {
-        // Real-world example: "Gym session every Monday and Wednesday"
-        // Task starts Mon Mar 2. Generate for Mar 2–8 (one week only).
-        // Expected: Mar 2 (Mon) and Mar 4 (Wed) — two sessions that week.
-
-        // Arrange
-        var recurringTask = MakeRecurringTask(
-            frequency: RecurrenceFrequency.Weekly,
-            interval: 1,
+        // "Gym every Mon and Wed"
+        var task = MakeRecurringTask(RecurrenceFrequency.Weekly, interval: 1,
             daysOfWeek: (int)(WeeklyDayFlags.Monday | WeeklyDayFlags.Wednesday),
             startDate: new DateOnly(2026, 3, 2));
 
-        var from = new DateOnly(2026, 3, 2);
-        var to   = new DateOnly(2026, 3, 8);
-
-        // Act
-        var result = _service.GenerateTaskItems(recurringTask, from, to);
-
-        // Assert
-        result.Should().HaveCount(2, because: "in the week of Mar 2–8, only Mon Mar 2 and Wed Mar 4 match");
-        result.Select(t => t.StartTime.DayOfWeek)
-              .Should().BeEquivalentTo([DayOfWeek.Monday, DayOfWeek.Wednesday]);
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 2)).Should().BeTrue("Monday");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 4)).Should().BeTrue("Wednesday");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 3)).Should().BeFalse("Tuesday");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 5)).Should().BeFalse("Thursday");
     }
 
     // -----------------------------------------------------------------------
@@ -135,33 +72,17 @@ public class RecurringTaskGeneratorServiceTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public void GenerateTaskItems_MonthlyOnThe15th_ShouldReturnOnly15thOfEachMonth()
+    public void IsOccurrenceOn_MonthlyOnThe15th_ShouldReturnTrueOn15thOnly()
     {
-        // Real-world example: "Pay rent on the 15th of every month"
-        // Task starts Jan 15. Generate for Jan 1–Mar 31.
-        // Expected: Jan 15, Feb 15, Mar 15 — one per month.
+        // "Pay rent on the 15th of every month"
+        var task = MakeRecurringTask(RecurrenceFrequency.Monthly, interval: 1,
+            dayOfMonth: 15, startDate: new DateOnly(2026, 1, 15));
 
-        // Arrange
-        var recurringTask = MakeRecurringTask(
-            frequency: RecurrenceFrequency.Monthly,
-            interval: 1,
-            dayOfMonth: 15,
-            startDate: new DateOnly(2026, 1, 15));
-
-        var from = new DateOnly(2026, 1, 1);
-        var to   = new DateOnly(2026, 3, 31);
-
-        // Act
-        var result = _service.GenerateTaskItems(recurringTask, from, to);
-
-        // Assert
-        result.Should().HaveCount(3, because: "the 15th falls in Jan, Feb, Mar within the range");
-        result.Select(t => DateOnly.FromDateTime(t.StartTime.Date))
-              .Should().BeEquivalentTo([
-                  new DateOnly(2026, 1, 15),
-                  new DateOnly(2026, 2, 15),
-                  new DateOnly(2026, 3, 15),
-              ]);
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 1, 15)).Should().BeTrue();
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 2, 15)).Should().BeTrue();
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 15)).Should().BeTrue();
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 1, 14)).Should().BeFalse();
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 1, 16)).Should().BeFalse();
     }
 
     // -----------------------------------------------------------------------
@@ -169,84 +90,29 @@ public class RecurringTaskGeneratorServiceTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public void GenerateTaskItems_YearlyOnMar14_ShouldReturnOneMar14PerYear()
+    public void IsOccurrenceOn_YearlyOnMar14_ShouldReturnTrueOnMar14EachYear()
     {
-        // Real-world example: "Remind me of my friend's birthday every year on Mar 14"
-        // Task starts Mar 14 2026. Generate for Mar 14 2026 – Mar 14 2028.
-        // Expected: Mar 14 2026, Mar 14 2027, Mar 14 2028 — one per year.
-
-        // Arrange
-        var recurringTask = MakeRecurringTask(
-            frequency: RecurrenceFrequency.Yearly,
-            interval: 1,
+        // "Friend's birthday every Mar 14"
+        var task = MakeRecurringTask(RecurrenceFrequency.Yearly, interval: 1,
             startDate: new DateOnly(2026, 3, 14));
 
-        var from = new DateOnly(2026, 3, 14);
-        var to   = new DateOnly(2028, 3, 14);
-
-        // Act
-        var result = _service.GenerateTaskItems(recurringTask, from, to);
-
-        // Assert
-        result.Should().HaveCount(3, because: "Mar 14 occurs in 2026, 2027, and 2028");
-        result.Select(t => DateOnly.FromDateTime(t.StartTime.Date))
-              .Should().BeEquivalentTo([
-                  new DateOnly(2026, 3, 14),
-                  new DateOnly(2027, 3, 14),
-                  new DateOnly(2028, 3, 14),
-              ]);
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 14)).Should().BeTrue();
+        _service.IsOccurrenceOn(task, new DateOnly(2027, 3, 14)).Should().BeTrue();
+        _service.IsOccurrenceOn(task, new DateOnly(2028, 3, 14)).Should().BeTrue();
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 13)).Should().BeFalse();
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 4, 14)).Should().BeFalse();
     }
 
     [Fact]
-    public void GenerateTaskItems_YearlyEveryTwoYears_ShouldSkipAlternateYears()
+    public void IsOccurrenceOn_YearlyEveryTwoYears_ShouldSkipAlternateYears()
     {
-        // Real-world example: "Biennial review — happens every 2 years starting 2026"
-        // Task starts Jan 1 2026 (interval=2). Generate for 2026–2029.
-        // Expected: Jan 1 2026, Jan 1 2028 — every other year.
-
-        // Arrange
-        var recurringTask = MakeRecurringTask(
-            frequency: RecurrenceFrequency.Yearly,
-            interval: 2,
+        // "Biennial review every 2 years starting 2026"
+        var task = MakeRecurringTask(RecurrenceFrequency.Yearly, interval: 2,
             startDate: new DateOnly(2026, 1, 1));
 
-        var from = new DateOnly(2026, 1, 1);
-        var to   = new DateOnly(2029, 12, 31);
-
-        // Act
-        var result = _service.GenerateTaskItems(recurringTask, from, to);
-
-        // Assert
-        result.Should().HaveCount(2, because: "with interval=2 starting 2026, matches are 2026 and 2028");
-        result.Select(t => DateOnly.FromDateTime(t.StartTime.Date))
-              .Should().BeEquivalentTo([
-                  new DateOnly(2026, 1, 1),
-                  new DateOnly(2028, 1, 1),
-              ]);
-    }
-
-    [Fact]
-    public void GenerateTaskItems_YearlyWhenWindowStartsBeforeAnniversaryDate_ShouldStillMatchThatYear()
-    {
-        // Real-world example: "Anniversary is Jun 15. Generator window opens Jun 10–Jun 20.
-        // The Jun 15 occurrence should still be picked up."
-        // Expected: Jun 15 2026 — window doesn't need to start on the exact day.
-
-        // Arrange
-        var recurringTask = MakeRecurringTask(
-            frequency: RecurrenceFrequency.Yearly,
-            interval: 1,
-            startDate: new DateOnly(2026, 6, 15));
-
-        var from = new DateOnly(2026, 6, 10);
-        var to   = new DateOnly(2026, 6, 20);
-
-        // Act
-        var result = _service.GenerateTaskItems(recurringTask, from, to);
-
-        // Assert
-        result.Should().HaveCount(1, because: "Jun 15 falls within the window");
-        DateOnly.FromDateTime(result[0].StartTime.Date).Should().Be(new DateOnly(2026, 6, 15));
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 1, 1)).Should().BeTrue();
+        _service.IsOccurrenceOn(task, new DateOnly(2028, 1, 1)).Should().BeTrue();
+        _service.IsOccurrenceOn(task, new DateOnly(2027, 1, 1)).Should().BeFalse("2027 is skipped");
     }
 
     // -----------------------------------------------------------------------
@@ -254,77 +120,26 @@ public class RecurringTaskGeneratorServiceTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public void GenerateTaskItems_WhenFromIsBeforeTaskStartDate_ShouldClampToStartDate()
+    public void IsOccurrenceOn_WhenDateIsBeforeTaskStartDate_ShouldReturnFalse()
     {
-        // Real-world example: "Daily morning run — user created it Mar 5, but the generator
-        // window starts Mar 1. No runs should appear before Mar 5."
-        // Expected: Mar 5, 6, 7 only — nothing before the task's own start date.
-
-        // Arrange
-        var recurringTask = MakeRecurringTask(
-            frequency: RecurrenceFrequency.Daily,
-            interval: 1,
+        var task = MakeRecurringTask(RecurrenceFrequency.Daily, interval: 1,
             startDate: new DateOnly(2026, 3, 5));
 
-        var from = new DateOnly(2026, 3, 1);
-        var to   = new DateOnly(2026, 3, 7);
-
-        // Act
-        var result = _service.GenerateTaskItems(recurringTask, from, to);
-
-        // Assert
-        result.Should().HaveCount(3, because: "task items should only start from Mar 5, not Mar 1");
-        result.All(t => DateOnly.FromDateTime(t.StartTime.Date) >= new DateOnly(2026, 3, 5))
-              .Should().BeTrue(because: "no TaskItem should be generated before the task's StartDate");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 1)).Should().BeFalse("before start date");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 4)).Should().BeFalse("day before start");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 5)).Should().BeTrue("start date itself");
     }
 
     [Fact]
-    public void GenerateTaskItems_WhenTaskHasEndDateInsideWindow_ShouldStopAtEndDate()
+    public void IsOccurrenceOn_WhenTaskHasEndDate_ShouldStillReturnTrueWithinRange()
     {
-        // Real-world example: "Daily check-in during a 3-day workshop (Mar 1–3).
-        // Generator window goes to Mar 7, but the task ends Mar 3."
-        // Expected: Mar 1, 2, 3 only — nothing after the task's end date.
+        // The EndDate guard is applied at query time (before IsOccurrenceOn is called),
+        // but IsOccurrenceOn itself is date-agnostic — this test documents that behaviour.
+        var task = MakeRecurringTask(RecurrenceFrequency.Daily, interval: 1,
+            startDate: new DateOnly(2026, 3, 1), endDate: new DateOnly(2026, 3, 3));
 
-        // Arrange
-        var recurringTask = MakeRecurringTask(
-            frequency: RecurrenceFrequency.Daily,
-            interval: 1,
-            startDate: new DateOnly(2026, 3, 1),
-            endDate: new DateOnly(2026, 3, 3));
-
-        var from = new DateOnly(2026, 3, 1);
-        var to   = new DateOnly(2026, 3, 7);
-
-        // Act
-        var result = _service.GenerateTaskItems(recurringTask, from, to);
-
-        // Assert
-        result.Should().HaveCount(3, because: "task ends Mar 3, so only Mar 1, 2, 3 are generated");
-        result.All(t => DateOnly.FromDateTime(t.StartTime.Date) <= new DateOnly(2026, 3, 3))
-              .Should().BeTrue(because: "no TaskItem should be generated after the task's EndDate");
-    }
-
-    [Fact]
-    public void GenerateTaskItems_WhenWindowIsEntirelyBeforeTaskStartDate_ShouldReturnEmpty()
-    {
-        // Real-world example: "Quarterly review starts Apr 1, but the generator is
-        // asked to fill March. There's nothing to generate yet."
-        // Expected: empty list.
-
-        // Arrange
-        var recurringTask = MakeRecurringTask(
-            frequency: RecurrenceFrequency.Daily,
-            interval: 1,
-            startDate: new DateOnly(2026, 4, 1));
-
-        var from = new DateOnly(2026, 3, 1);
-        var to   = new DateOnly(2026, 3, 31);
-
-        // Act
-        var result = _service.GenerateTaskItems(recurringTask, from, to);
-
-        // Assert
-        result.Should().BeEmpty(because: "the entire window is before the task's StartDate");
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 1)).Should().BeTrue();
+        _service.IsOccurrenceOn(task, new DateOnly(2026, 3, 3)).Should().BeTrue();
     }
 
     // -----------------------------------------------------------------------
