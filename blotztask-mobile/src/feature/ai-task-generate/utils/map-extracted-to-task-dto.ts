@@ -4,10 +4,13 @@ import { AiTaskDTO } from "../models/ai-task-dto";
 import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 import { LabelDTO } from "@/shared/models/label-dto";
 
-function sanitizeISOTime(raw: string | undefined): string {
+function validateISOTime(raw: string | undefined): string {
   if (!raw) return "";
   const parsed = parseISO(raw);
-  return isValid(parsed) ? raw : "";
+  if (!isValid(parsed)) {
+    throw new Error(`Invalid ISO 8601 date: "${raw}"`);
+  }
+  return raw;
 }
 
 export function mapExtractedTaskDTOToAiTaskDTO(
@@ -34,8 +37,8 @@ export function mapExtractedTaskDTOToAiTaskDTO(
     description: extractedTask.description ?? "",
     title: extractedTask.title,
     isAdded: false,
-    startTime: sanitizeISOTime(extractedTask.start_time),
-    endTime: sanitizeISOTime(extractedTask.end_time),
+    startTime: validateISOTime(extractedTask.start_time),
+    endTime: validateISOTime(extractedTask.end_time),
     label,
   };
 }
