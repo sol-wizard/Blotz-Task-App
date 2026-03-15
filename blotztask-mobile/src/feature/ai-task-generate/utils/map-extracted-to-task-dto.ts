@@ -1,7 +1,17 @@
 import uuid from "react-native-uuid";
+import { isValid, parseISO } from "date-fns";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 import { LabelDTO } from "@/shared/models/label-dto";
+
+function validateISOTime(raw: string | undefined): string {
+  if (!raw) return "";
+  const parsed = parseISO(raw);
+  if (!isValid(parsed)) {
+    throw new Error(`Invalid ISO 8601 date: "${raw}"`);
+  }
+  return raw;
+}
 
 export function mapExtractedTaskDTOToAiTaskDTO(
   extractedTask: ExtractedTaskDTO,
@@ -27,8 +37,8 @@ export function mapExtractedTaskDTOToAiTaskDTO(
     description: extractedTask.description ?? "",
     title: extractedTask.title,
     isAdded: false,
-    startTime: extractedTask.start_time,
-    endTime: extractedTask.end_time,
+    startTime: validateISOTime(extractedTask.start_time),
+    endTime: validateISOTime(extractedTask.end_time),
     label,
   };
 }

@@ -24,9 +24,15 @@ export const AiModalContent = ({
 
   const { labels } = useAllLabels();
 
-  const aiGeneratedTasks = (aiGeneratedMessage?.extractedTasks ?? []).map((task) =>
-    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
-  );
+  const aiGeneratedTasks = (aiGeneratedMessage?.extractedTasks ?? []).flatMap((task) => {
+    try {
+      return [mapExtractedTaskDTOToAiTaskDTO(task, labels ?? [])];
+    } catch (e) {
+      console.warn("Skipping task with invalid date:", e);
+      return [];
+    }
+  });
+
   const aiGeneratedNotes = (aiGeneratedMessage?.extractedNotes ?? []).map(mapExtractedNoteDTOToAiNoteDTO);
 
   switch (modalType) {
