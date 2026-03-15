@@ -90,12 +90,13 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   const isLoading = isToggling || isDeleting || isBreakingDown || isReplacingSubtasks;
 
   const navigateToTaskDetails = (t: TaskDetailDTO) => {
+    if (t.id == null) return;
     queryClient.setQueryData(["taskId", t.id], t);
     router.push({ pathname: "/(protected)/task-details", params: { taskId: t.id } });
   };
 
   const handleBreakdown = async () => {
-    if (isLoading) return;
+    if (isLoading || task.id == null) return;
 
     posthog.capture(EVENTS.BREAKDOWN_TASK);
 
@@ -190,6 +191,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                         className="border-2"
                         uncheckedColor="#D1D5DB"
                         onChange={async () => {
+                          if (task.id == null) return;
                           toggleTask({ taskId: task.id, selectedDay });
 
                           if (task.alertTime && new Date(task.alertTime) > new Date()) {
@@ -290,7 +292,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
           <View className="w-14" pointerEvents={"auto"}>
             <Pressable
               onPress={async () => {
-                if (isLoading) return;
+                if (isLoading || task.id == null) return;
                 await deleteTask(task);
 
                 if (task.alertTime && new Date(task.alertTime) > new Date()) {
