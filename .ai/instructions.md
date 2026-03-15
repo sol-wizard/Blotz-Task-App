@@ -4,8 +4,7 @@
 
 ## General Behaviour
 
-- If anything is unclear or ambiguous, always ask the user for clarification before proceeding.
-- Never make assumptions on your own — when in doubt, ask.
+> **MUST**: If anything is unclear or ambiguous, you MUST stop and ask the user for clarification before proceeding. This is non-negotiable — never guess, never assume, never proceed with uncertainty. When in doubt, ask.
 
 ## Backend & Frontend Judgement
 

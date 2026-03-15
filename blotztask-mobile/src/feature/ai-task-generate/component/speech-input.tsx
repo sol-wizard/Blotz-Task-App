@@ -1,5 +1,5 @@
 import { View, Text, TextInput } from "react-native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
@@ -8,7 +8,6 @@ import { useTranslation } from "react-i18next";
 import {
   RecordingPresets,
   requestRecordingPermissionsAsync,
-  getRecordingPermissionsAsync,
   setAudioModeAsync,
   useAudioRecorder,
 } from "expo-audio";
@@ -32,18 +31,9 @@ export const SpeechInput = ({
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
-  useEffect(() => {
-    void (async () => {
-      const permission = await requestRecordingPermissionsAsync();
-      if (!permission.granted) {
-        console.warn("[Mic] Permission not granted");
-      }
-    })();
-  }, []);
-
   const startListening = async () => {
     try {
-      const permission = await getRecordingPermissionsAsync();
+      const permission = await requestRecordingPermissionsAsync();
       if (!permission.granted) {
         console.warn("[Mic] Permission not granted");
         return;

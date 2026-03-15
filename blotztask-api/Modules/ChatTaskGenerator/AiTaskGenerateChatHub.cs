@@ -1,6 +1,10 @@
+using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
+using BlotzTask.Modules.Users.Enums;
+using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
+using BlotzTask.Shared.Store;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -10,22 +14,23 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 public class AiTaskGenerateChatHub : Hub
 {
     private readonly IAiTaskGenerateService _aiTaskGenerateService;
-    private readonly IChatHistoryManagerService _chatHistoryManagerService;
+    private readonly ChatHistoryStore _chatHistoryStore;
     private readonly DateTimeResolveService _dateTimeResolveService;
+    private readonly GetUserPreferencesQueryHandler _getUserPreferencesQueryHandler;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
-
 
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
-        IChatHistoryManagerService chatHistoryManagerService,
         IAiTaskGenerateService aiTaskGenerateService,
-        DateTimeResolveService dateTimeResolveService
-    )
+        DateTimeResolveService dateTimeResolveService,
+        ChatHistoryStore chatHistoryStore,
+        GetUserPreferencesQueryHandler getUserPreferencesQueryHandler)
     {
         _logger = logger;
-        _chatHistoryManagerService = chatHistoryManagerService;
         _aiTaskGenerateService = aiTaskGenerateService;
         _dateTimeResolveService = dateTimeResolveService;
+        _chatHistoryStore = chatHistoryStore;
+        _getUserPreferencesQueryHandler = getUserPreferencesQueryHandler;
     }
 
     public override async Task OnConnectedAsync()
@@ -51,53 +56,66 @@ public class AiTaskGenerateChatHub : Hub
 
         Context.Items["TimeZone"] = timeZone;
 
-        await _chatHistoryManagerService.InitializeNewConversation(userId);
+        var userPreferences = await _getUserPreferencesQueryHandler.Handle(
+            new GetUserPreferencesQuery { UserId = userId },
+            CancellationToken.None);
+
+        var preferredLanguage = userPreferences.PreferredLanguage switch
+        {
+            Language.En => "English",
+            Language.Zh => "Chinese (Simplified)",
+            _ => "English"
+        };
+
+        var chatHistory = _chatHistoryStore.GetOrCreate(Context.ConnectionId);
+        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage));
+
         await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var connectionId = Context.ConnectionId;
         _logger.LogInformation(
-            $"User disconnected: {connectionId}. Exception: {exception?.Message}"
-        );
-        _chatHistoryManagerService.RemoveConversation();
+            "User disconnected: {ConnectionId}. Exception: {Exception}",
+            Context.ConnectionId, exception?.Message);
+
+        _chatHistoryStore.Remove(Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }
 
-    //TODO: Do we need this user paramter in this function? check and test frontend after clean up
-    public async Task SendMessage(string user, string message)
+    public async Task SendMessage(string message)
     {
         var timeZone = Context.Items.TryGetValue("TimeZone", out var timeZoneObj) &&
                        timeZoneObj is TimeZoneInfo tz
             ? tz
             : TimeZoneInfo.Utc;
 
-        var resolveDateTimesRequest = new ResolveDateTimesRequest
-        {
-            Message = message,
-            TimeZone = timeZone
-        };
-
         try
         {
             var ct = Context.ConnectionAborted;
-            var chatHistory = _chatHistoryManagerService.GetChatHistory();
 
-            var resolvedMessage = _dateTimeResolveService.Resolve(resolveDateTimesRequest);
+            if (!_chatHistoryStore.TryGet(Context.ConnectionId, out var chatHistory) || chatHistory == null)
+                throw new HubException("Chat history not found for this connection.");
+
+            var resolvedMessage = _dateTimeResolveService.Resolve(new ResolveDateTimesRequest
+            {
+                Message = message,
+                TimeZone = timeZone
+            });
+
             chatHistory.AddUserMessage(resolvedMessage);
-            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(ct);
 
+
+            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
         }
         catch (AiTaskGenerationException ex)
         {
-            var aiServiceError = new AiGenerateMessage
+            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
             {
                 IsSuccess = false,
                 ErrorMessage = ex.Message
-            };
-            await Clients.Caller.SendAsync("ReceiveMessage", aiServiceError);
+            });
         }
     }
 }
