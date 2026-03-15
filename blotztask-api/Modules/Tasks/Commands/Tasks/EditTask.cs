@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Shared;
 using BlotzTask.Shared.Exceptions;
@@ -22,6 +23,7 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
         logger.LogInformation("Editing task {TaskId}", command.TaskId);
 
         var task = await db.TaskItems
+            .Include(t=>t.Deadline)
             .FirstOrDefaultAsync(t => t.Id == command.TaskId && t.UserId == command.UserId, ct);
 
         if (task == null) throw new NotFoundException($"Task with ID {command.TaskId} not found.");
@@ -47,6 +49,35 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
 
 
         db.TaskItems.Update(task);
+        
+        switch (command.TaskDetails.IsDdl)
+        {
+            case true:
+                if (task.Deadline is null)
+                {
+                    task.Deadline = new TaskDeadline
+                    {
+                        TaskItem = task,
+                        DueAt = task.EndTime,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                        IsPinned = false
+                    };
+                }
+                else
+                {
+                    task.Deadline.DueAt = task.EndTime;
+                    task.Deadline.UpdatedAt = DateTime.UtcNow;
+                }
+                break;
+
+            case false when task.Deadline is not null:
+                db.Remove(task.Deadline);
+                break;
+
+            case null:
+                break;
+        }
         await db.SaveChangesAsync(ct);
 
         logger.LogInformation("Task {TaskId} was successfully edited", command.TaskId);
@@ -68,4 +99,5 @@ public class EditTaskItemDto
     public int? LabelId { get; set; }
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
+    public bool? IsDdl { get; set; }
 }
