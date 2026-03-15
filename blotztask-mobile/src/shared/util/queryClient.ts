@@ -1,12 +1,20 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import Toast from "react-native-toast-message";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
+      if (
+        isAxiosError(error) &&
+        (error.response?.status === 401 || error.response?.status === 403)
+      ) {
+        return;
+      }
       if (query.meta?.silent) return;
 
       const msg = getErrorMessage(error);
+
       Toast.show({
         type: "error",
         text1: msg,
