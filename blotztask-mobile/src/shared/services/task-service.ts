@@ -17,8 +17,8 @@ export async function fetchTasksForDate(
   const url = `/Task/by-date?startDate=${encodeURIComponent(startDate)}&includeFloatingForToday=${includeFloatingForToday}`;
   try {
     return await apiClient.get(url);
-  } catch {
-    throw new Error("Failed to fetch tasks for selected day");
+  } catch (error) {
+    throw error;
   }
 }
 
@@ -29,8 +29,8 @@ export async function fetchWeeklyTaskAvailability(date: Date): Promise<DailyTask
 
   try {
     return await apiClient.get(url);
-  } catch {
-    throw new Error("Failed to fetch weekly task availability.");
+  } catch (error) {
+    throw error;
   }
 }
 
@@ -50,8 +50,8 @@ export async function fetchNotes(query?: string): Promise<NoteDTO[]> {
       params: query ? { query } : undefined,
     });
     return data;
-  } catch {
-    throw new Error("Failed to fetch floating tasks for Notes.");
+  } catch (error) {
+    throw error;
   }
 }
 
