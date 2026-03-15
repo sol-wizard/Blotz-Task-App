@@ -15,23 +15,14 @@ export async function fetchTasksForDate(
   const startDate = convertToDateTimeOffset(startOfDay(date));
 
   const url = `/Task/by-date?startDate=${encodeURIComponent(startDate)}&includeFloatingForToday=${includeFloatingForToday}`;
-  try {
-    return await apiClient.get(url);
-  } catch (error) {
-    throw error;
-  }
+  return apiClient.get(url);
 }
 
 export async function fetchWeeklyTaskAvailability(date: Date): Promise<DailyTaskIndicatorDTO[]> {
   const monday = convertToDateTimeOffset(startOfDay(date));
 
   const url = `/Task/weekly-task-availability?monday=${encodeURIComponent(monday)}`;
-
-  try {
-    return await apiClient.get(url);
-  } catch (error) {
-    throw error;
-  }
+  return apiClient.get(url);
 }
 
 export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
@@ -45,14 +36,9 @@ export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
 
 export async function fetchNotes(query?: string): Promise<NoteDTO[]> {
   const url = `/Task/notes`;
-  try {
-    const data: NoteDTO[] = await apiClient.get(url, {
-      params: query ? { query } : undefined,
-    });
-    return data;
-  } catch (error) {
-    throw error;
-  }
+  return apiClient.get(url, {
+    params: query ? { query } : undefined,
+  });
 }
 
 export async function toggleTaskCompletion(taskId: number): Promise<void> {
