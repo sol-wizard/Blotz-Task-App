@@ -8,11 +8,12 @@ import { View } from "react-native";
 
 
 type NoteActionsProps<TNote> = {
-  note?: TNote;
-  onAddToTask?: (note?: TNote) => void;
-  onDelete?: (note?: TNote) => void;
+  note: TNote;
+  onAddToTask: (note: TNote) => void;
+  onDelete: (note: TNote) => void;
   progress?: SharedValue<number>;
 };
+
 
 export function NoteActions<TNote>({
   note,

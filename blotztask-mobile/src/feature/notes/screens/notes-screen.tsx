@@ -133,11 +133,19 @@ export default function NotesScreen() {
               />
             </View>
           </View>
-          <View className="px-6 flex-1">
+            {!showLoading && notesSearchResult.length === 0 ? (
+              <View className="flex-1 items-center justify-center">
+                <Text className="text-center text-black font-balooBold text-2xl">
+                  {t("emptyNoteMessage.encouragingTitle")}
+                </Text>
+                <Text className="text-center text-black font-baloo text-xl mt-2">
+                  {t("emptyNoteMessage.encouragingDescription")}
+                </Text>
+              </View>
+            ) : (
+              <View className="px-6 flex-1">
               <View
-                className={`flex-1 rounded-3xl overflow-hidden ${
-                  notesSearchResult.length === 0 ? "" : "bg-white"
-                }`}>
+                className={`rounded-3xl overflow-hidden bg-white`}>
               <FlatList
                 data={showLoading ? [] : notesSearchResult}
                 keyExtractor={(item) => String(item.id)}
@@ -147,27 +155,16 @@ export default function NotesScreen() {
                     onPressNote={openEditModal}
                     onDelete={handleDelete}
                     onRowOpen={onRowOpen}
+                    onAddToTask={(note: NoteDTO) => {
+                      setSelectedNote(note);
+                      setNoteTimePickerSheetVisible(true);
+                      console.log("Selected note for time estimation:", note);
+                    }}
                   />
                 )}
                 ItemSeparatorComponent={() => (
                   <View className="h-[1px] bg-[#E7E7E7] mx-5" />
                 )}
-                ListEmptyComponent={
-                  !showLoading ? (
-                    <View className="flex-1 items-center justify-center px-10 py-20">
-                      <Text className="text-center text-black font-balooBold text-2xl">
-                        {t("emptyNoteMessage.encouragingTitle")}
-                      </Text>
-                      <Text className="text-center text-black font-baloo text-xl mt-2">
-                        {t("emptyNoteMessage.encouragingDescription")}
-                      </Text>
-                    </View>
-                  ) : null
-                }
-                contentContainerStyle={{ 
-                  flexGrow: 1,
-                  justifyContent: !showLoading && notesSearchResult.length === 0 ? "center" : "flex-start",
-               }}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
                 onScrollBeginDrag={closeAllRows}
@@ -177,6 +174,8 @@ export default function NotesScreen() {
               />
             </View>
           </View>
+          )}
+          
 
           <Pressable
             onPress={() => {

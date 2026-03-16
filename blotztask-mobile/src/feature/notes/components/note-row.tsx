@@ -16,12 +16,14 @@ export const NoteRow = ({
   note,
   onPressNote,
   onDelete,
-  onRowOpen
+  onRowOpen,
+  onAddToTask,
 }: {
   note: NoteDTO;
   onPressNote: (note: NoteDTO) => void;
   onDelete: (note: NoteDTO) => void;
   onRowOpen: (ref: SwipeableMethods | null) => void;
+  onAddToTask: (note: NoteDTO) => void;
 }) => {
 
   const [isSwiping, setIsSwiping] = useState(false);
@@ -49,7 +51,7 @@ export const NoteRow = ({
           <NoteActions
             note={note}
             progress={progress}
-            onAddToTask={() => handleAddToTask()}
+            onAddToTask={onAddToTask}
             onDelete={() => onDelete(note)}
           />
         )}
@@ -72,8 +74,6 @@ export const NoteRow = ({
             onPressCard={() => onPressNote(note)}
             isToggled={false}
             isDeleting={false}
-            onDelete={() => {}}
-            onToggle={() => {}}
           />
         </Animated.View>
       </ReanimatedSwipeable>
