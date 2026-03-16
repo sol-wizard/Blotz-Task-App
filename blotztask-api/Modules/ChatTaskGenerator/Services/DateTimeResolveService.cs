@@ -65,9 +65,10 @@ public class DateTimeResolveService
         if (resolution is not IDictionary<string, object> dict) return null;
         if (!dict.TryGetValue("values", out var valuesObj) || valuesObj is null) return null;
 
-        if (valuesObj is not List<Dictionary<string, string>> values || values.Count == 0) return null;
+    
+        if (valuesObj is not List<Dictionary<string, string>> values || values.Count != 1) return null;
 
-        var selectedTime = values.Count >= 2 ? values[1] : values[0];
+        var selectedTime = values[0];
 
         if (selectedTime.TryGetValue("value", out var v) && !string.IsNullOrWhiteSpace(v))
             return v;

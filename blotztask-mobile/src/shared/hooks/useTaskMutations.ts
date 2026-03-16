@@ -68,6 +68,7 @@ const useTaskMutations = () => {
   });
   return {
     addTask: addTaskMutation.mutate,
+    addTaskAsync: addTaskMutation.mutateAsync,
     toggleTask: toggleTaskMutation.mutate,
     deleteTask: deleteTaskMutation.mutate,
     updateTask: updateTaskMutation.mutate,
