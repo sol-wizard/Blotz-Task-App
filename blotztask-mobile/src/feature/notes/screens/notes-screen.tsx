@@ -128,7 +128,12 @@ export default function NotesScreen() {
                 onChangeText={setSearchQuery}
                 placeholder="Search notes"
                 placeholderTextColor="#9CA3AF"
-                className="ml-2 flex-1 text-base text-black font-baloo h-10"
+                className="ml-2 flex-1 h-10 text-base text-black"
+                style={{
+                  paddingTop: 0,
+                  paddingBottom: 12,
+                  includeFontPadding: false,
+                }}
                 textAlignVertical="center"
               />
             </View>
