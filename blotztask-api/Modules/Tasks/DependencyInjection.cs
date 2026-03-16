@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<RecurringTaskGeneratorService>();
         services.AddScoped<SaveRecurringOccurrenceCommandHandler>();
         services.AddScoped<UpdateSubtaskStatusCommandHandler>();
+        services.AddScoped<AddSubtaskCommandHandler>();
 
         // Event handlers
         services.AddScoped<IDomainEventHandler<TaskCompletedEvent>, TaskCompletedEventHandler>();
