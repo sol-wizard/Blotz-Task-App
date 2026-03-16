@@ -2,7 +2,6 @@ import React from "react";
 import { Pressable, View, Text } from "react-native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useTranslation } from "react-i18next";
-import { t } from "i18next";
 
 export enum ActionButtonType {
   Edit = "edit",

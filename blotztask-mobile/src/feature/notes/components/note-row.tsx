@@ -28,14 +28,9 @@ export const NoteRow = ({
 
   const [isSwiping, setIsSwiping] = useState(false);
   const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
-  const { estimateTime, isEstimating, estimationResult, estimationError } = useEstimateTaskTime();
+  const { isEstimating, estimationResult, estimationError } = useEstimateTaskTime();
 
   const swipeRef = useRef<SwipeableMethods | null>(null);
-
-  const handleAddToTask = () => {
-    setIsEstimateModalVisible(true);
-    estimateTime(note);
-  };
 
 
 
