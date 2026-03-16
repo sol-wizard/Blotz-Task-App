@@ -1,3 +1,4 @@
+using BlotzTask.Modules.Tasks.Commands.DeadlineTasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Queries.Deadlines;
 using Microsoft.AspNetCore.Authorization;
@@ -28,7 +29,7 @@ public class DeadlineController(
     }
 
     [HttpPatch("{taskId}/pin")]
-    public async Task<UpdateDeadlinePinDto> UpdatePin(int taskId,
+    public async Task<IActionResult> UpdatePin(int taskId,
         [FromBody] UpdateDeadlinePinDto updateDeadlinePin, CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
@@ -40,24 +41,16 @@ public class DeadlineController(
             IsPinned = updateDeadlinePin.IsPinned,
         };
         
-        var result = await updateDeadlinePinCommandHandler.Handle(command, ct);
-        
-        if (result is null)
-        {
-            throw new InvalidOperationException($"Deadline Task pin update failed: no valid data returned for task ID {taskId}.");
-        }
+        await updateDeadlinePinCommandHandler.Handle(command, ct);
 
-        return result;
-
+        return NoContent();
     }
 
-    [HttpDelete("{taskId}")]
-    public async Task<string> DeleteDeadlineTask(int taskId, CancellationToken ct)
+    [HttpDelete("{TaskId}")]
+    public async Task<string> DeleteDeadlineTask([FromRoute] DeleteDeadlineTaskCommand command, CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
-
-        var command = new DeleteDeadlineTaskCommand { TaskId = taskId };
         
         return await deleteDeadlineTaskCommandHandler.Handle(command, ct);
     }

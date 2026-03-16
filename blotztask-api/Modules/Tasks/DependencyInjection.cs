@@ -1,3 +1,4 @@
+using BlotzTask.Modules.Tasks.Commands.DeadlineTasks;
 using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 using BlotzTask.Modules.Tasks.Commands.SubTasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;

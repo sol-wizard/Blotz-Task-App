@@ -4,7 +4,7 @@ using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
-namespace BlotzTask.Modules.Tasks.Commands.Tasks;
+namespace BlotzTask.Modules.Tasks.Commands.DeadlineTasks;
 
 public class DeleteDeadlineTaskCommand
 {
