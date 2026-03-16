@@ -1,19 +1,18 @@
 import React, { useState } from "react";
 import { SharedValue } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
-import { ActionButton } from "./action-button";
+import { ActionButton, ActionButtonType } from "./action-button";
 import { View } from "react-native";
 
 
 
 
 type NoteActionsProps<TNote> = {
-  note: TNote;
-  onAddToTask: (note: TNote) => void;
-  onDelete: (note: TNote) => void;
+  note?: TNote;
+  onAddToTask?: (note?: TNote) => void;
+  onDelete?: (note?: TNote) => void;
   progress?: SharedValue<number>;
 };
-
 
 export function NoteActions<TNote>({
   note,
@@ -25,19 +24,13 @@ export function NoteActions<TNote>({
   return (
     <View className={`w-[190px] h-full flex-row items-center justify-end pr-4`} style={{ gap: 18 }}>
       <ActionButton
-        icon="calendar-plus"
-        label={t("noteActions.addToTask")}
-        bgColor="bg-[#8BC34A]"
-        onPress={() => onAddToTask?.(note)}
-        iconColor={""}        
+        type={ActionButtonType.Edit}
+        onPress={() => {onAddToTask?.(note)}}
       />
       <ActionButton
-        icon="trash-can-outline"
-        label={t("noteActions.delete")}
-        bgColor="bg-[#F0625F]"
+        type={ActionButtonType.Delete}
         onPress={() => onDelete?.(note)}
-        disabled={isDeleting}
-        isLoading={isDeleting} iconColor={""}        />
+      />
     </View>
   );
 };

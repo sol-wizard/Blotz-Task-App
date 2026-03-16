@@ -1,46 +1,61 @@
+import React from "react";
 import { Pressable, View, Text } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useTranslation } from "react-i18next";
+import { t } from "i18next";
 
-type ActionButtonProps = {
+export enum ActionButtonType {
+  Edit = "edit",
+  Delete = "delete",
+}
+
+type ActionButtonConfig = {
   icon: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
   label: string;
   bgColor: string;
   iconColor: string;
-  onPress: () => void;
-  disabled?: boolean;
-  className?: string;
-  isLoading?: boolean;
 };
 
-export const ActionButton = ({
-  icon,
-  label,
-  bgColor,
-  onPress,
-  disabled = false,
-  isLoading = false,
-}: ActionButtonProps) => {
+export const ACTION_BUTTON_CONFIG: Record<ActionButtonType, ActionButtonConfig> = {
+  [ActionButtonType.Edit]: {
+    icon: "calendar-plus",
+    label: "noteActions.addToTask",
+    bgColor: "#8BC34A",
+    iconColor: "#FFFFFF",
+  },
+  [ActionButtonType.Delete]: {
+    icon: "trash-can-outline",
+    label: "noteActions.delete",
+    bgColor: "#F0625F",
+    iconColor: "#FFFFFF",
+  },
+};
+
+type Props = {
+  type: ActionButtonType;
+  onPress: () => void;
+};
+
+export const ActionButton = ({ type, onPress }: Props) => {
+  const config = ACTION_BUTTON_CONFIG[type];
+  const { t } = useTranslation("notes");
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled || !onPress}
-      hitSlop={8}
-      className="items-center"
-    >
-      {isLoading ? (
-        <View
-          className={`h-10 w-10 items-center justify-center rounded-full ${bgColor} opacity-60`}
-        ></View>
-      ) : (
-        <View className="items-center">
-          <View
-            className={`h-10 w-10 items-center justify-center rounded-full ${bgColor} ${disabled ? "opacity-60" : ""}`}
-          >
-            <MaterialCommunityIcons name={icon} color="#FFFFFF" size={18} />
-          </View>
-          <Text className="mt-2 text-xs text-gray-500 font-baloo">{label}</Text>
-        </View>
-      )}
+    <Pressable onPress={onPress} className="items-center">
+      <View
+        className="w-[38px] h-[38px] rounded-full items-center justify-center"
+        style={{ backgroundColor: config.bgColor }}
+      >
+        <MaterialCommunityIcons
+          name={config.icon}
+          size={18}
+          color={config.iconColor}
+          label={config.label}
+        />
+      </View>
+
+      <Text className="mt-1 text-xs font-baloo text-gray-500">
+        {t(config.label)}
+      </Text>
     </Pressable>
   );
 };
