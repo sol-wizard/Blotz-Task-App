@@ -60,6 +60,12 @@ public class AiTaskGenerateService(
                     throw new AiInvalidJsonException(responseContent);
                 }
 
+                foreach (var task in aiGenerateMessage.ExtractedTasks ?? [])
+                {
+                    task.StartTime = DateTime.SpecifyKind(task.StartTime, DateTimeKind.Unspecified);
+                    task.EndTime = DateTime.SpecifyKind(task.EndTime, DateTimeKind.Unspecified);
+                }
+
                 return aiGenerateMessage;
             }
             catch (JsonException ex)
