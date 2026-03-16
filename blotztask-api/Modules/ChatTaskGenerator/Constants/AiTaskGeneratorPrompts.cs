@@ -13,8 +13,8 @@ public static class AiTaskGeneratorPrompts
                         - NOTE = an item with no time specified or inferred. Put in extractedNotes with the "text" field.
                         
                         Guidelines for TASK:
-                        - StartTime and EndTime must be in ISO 8601 format (yyyy-MM-ddTHH:mm:ss).
-                        - If user didn't provide time for the task, infer a reasonable time or time frame based on the task title and description.
+                        - StartTime and EndTime MUST ALWAYS be in UTC timezone without any offset assumed or added.
+                        - If user didn't provide a time for the task or only partially provided a time (like a date without a time), infer a reasonable time or time frame based on the task title and description.
 
                         isSuccess = true when at least one task OR one note; else false with errorMessage.
                 """;
