@@ -183,17 +183,25 @@ export default function NotesScreen() {
           
 
           <Pressable
-            onPress={() => {
-              closeAllRows();
-              setIsModalVisible(true);
-            }}
-            className="mx-6 mb-4 border-2 border-dashed rounded-2xl
-                      h-14 items-center justify-center bg-background"
-            style={{ borderColor: "#8C8C8C" }}
-          >
-            <Text className="font-baloo text-lg " style={{ color: "#8C8C8C" }}>
+              onPress={() => {
+                closeAllRows();
+                setIsModalVisible(true);
+              }}
+              className="mx-6 mb-4 border-2 border-dashed rounded-2xl
+              h-14 items-center justify-center bg-background"
+              style={{ borderColor: "#9AD513", backgroundColor: "#FBFFF6" }}
+            >
+            <View className="flex-row items-center">
+                <MaterialCommunityIcons
+                  name="pencil-minus-outline"
+                  size={18}
+                  color="#587E00"
+                  strokeWidth={0.8} 
+                />
+            <Text className="font-baloo text-lg ml-2" style={{ color: "#587E00" }}>
               {t("addNote")}
             </Text>
+            </View>
           </Pressable>
 
 
