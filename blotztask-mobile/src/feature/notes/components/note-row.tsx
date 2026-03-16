@@ -73,7 +73,6 @@ export const NoteRow = ({
             note={note}
             onPressCard={() => onPressNote(note)}
             isToggled={false}
-            isDeleting={false}
           />
         </Animated.View>
       </ReanimatedSwipeable>

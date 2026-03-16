@@ -6,13 +6,11 @@ import { NoteDTO } from "../models/note-dto";
 export const NoteCard = ({
   note,
   isToggled,
-  isDeleting,
   onPressCard,
   onAddToTask,
 }: {
   note: NoteDTO;
   isToggled: boolean;
-  isDeleting: boolean;
   onPressCard: (task: NoteDTO) => void;
   onAddToTask?: (note: NoteDTO) => void;
 }) => {
@@ -37,14 +35,6 @@ export const NoteCard = ({
 
       {isToggled && (
         <View className="flex-row justify-end mt-3">
-          <View className="w-8 h-8 bg-warning rounded-xl items-center justify-center">
-            {isDeleting ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <MaterialCommunityIcons name="trash-can-outline" color="#fff" size={18} />
-            )}
-          </View>
-
           <Pressable
             onPress={() => {
               onAddToTask?.(note);
