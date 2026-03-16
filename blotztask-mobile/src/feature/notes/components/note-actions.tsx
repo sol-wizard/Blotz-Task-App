@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { SharedValue } from "react-native-reanimated";
 import { ActionButton, ActionButtonType } from "./action-button";
 import { View } from "react-native";
