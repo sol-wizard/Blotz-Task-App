@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<DeleteSubtaskCommandHandler>();
         services.AddScoped<AddRecurringTaskCommandHandler>();
         services.AddScoped<UpdateSubtaskStatusCommandHandler>();
+        services.AddScoped<AddSubtaskCommandHandler>();
 
         // Event handlers
         services.AddScoped<IDomainEventHandler<TaskCompletedEvent>, TaskCompletedEventHandler>();
