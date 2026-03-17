@@ -27,9 +27,9 @@ export const EventTab = ({
   trigger,
   clearErrors,
 }: {
-  control: Control<any>;
-  trigger?: UseFormTrigger<any>;
-  clearErrors?: UseFormClearErrors<any>;
+  control: Control<TaskFormField>;
+  trigger?: UseFormTrigger<TaskFormField>;
+  clearErrors?: UseFormClearErrors<TaskFormField>;
 }) => {
   const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
     const start = combineDateTime(sd, st);

@@ -12,7 +12,7 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { ToggleSwitch } from "../../settings/components/toggle-switch";
 import { FormDivider } from "@/shared/components/ui/form-divider";
 
-export const ReminderTab = ({ control }: { control: Control<any> }) => {
+export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) => {
   const [activeSelector, setActiveSelector] = useState<
     "date" | "time" | "deadlineDate" | "deadlineTime" | null
   >(null);
