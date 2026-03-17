@@ -39,3 +39,16 @@ export const updateNote = async (editNoteDto: EditNoteDTO): Promise<NoteDTO> => 
     throw new Error("Failed to update note.");
   }
 };
+
+export const convertNoteToTask = async (
+  noteId: string,
+  startTime: string,
+  endTime: string,
+): Promise<{ taskId: number }> => {
+  const url = `/notes/${noteId}/convert-to-task`;
+  try {
+    return await apiClient.post<{ taskId: number }>(url, { startTime, endTime });
+  } catch {
+    throw new Error("Failed to convert note to task.");
+  }
+};

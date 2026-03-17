@@ -1,6 +1,7 @@
 import { Pressable, View, Text, ActivityIndicator } from "react-native";
 import Modal from "react-native-modal";
 import { useTranslation } from "react-i18next";
+import { theme } from "@/shared/constants/theme";
 import { NoteTimeEstimationResult } from "../models/note-time-estimation-result";
 import { formatDuration } from "date-fns";
 import { enUS, zhCN } from "date-fns/locale";
@@ -11,6 +12,8 @@ interface Props {
   estimateResult?: NoteTimeEstimationResult;
   estimationError: string | null;
   isEstimating?: boolean;
+  onStartNow?: (duration: string) => void;
+  isStartNowLoading?: boolean;
 }
 
 export const NoteTimeEstimateModal = ({
@@ -19,6 +22,8 @@ export const NoteTimeEstimateModal = ({
   isEstimating,
   estimateResult,
   estimationError,
+  onStartNow,
+  isStartNowLoading = false,
 }: Props) => {
   const { t, i18n } = useTranslation("notes");
 
@@ -69,15 +74,28 @@ export const NoteTimeEstimateModal = ({
                 .
               </Text>
 
-              {/* TODO: Add "Start Now" button functionality with the new endpoint */}
               <View className="mt-8 flex-row items-center justify-center">
                 <Pressable
-                  onPress={() => setIsModalVisible(false)}
-                  className="h-9 px-6 rounded-xl bg-highlight items-center justify-center"
+                  onPress={() => {
+                    if (estimateResult?.duration && onStartNow) {
+                      onStartNow(estimateResult.duration);
+                      // Parent closes modal in onSuccess after convert
+                    } else {
+                      setIsModalVisible(false);
+                    }
+                  }}
+                  disabled={isStartNowLoading}
+                  className={`h-9 px-6 rounded-xl items-center justify-center ${
+                    isStartNowLoading ? "bg-[#F3F4F6]" : "bg-highlight"
+                  }`}
                 >
-                  <Text className="text-sm text-onSurface font-baloo">
-                    {t("timeEstimate.startNow")}
-                  </Text>
+                  {isStartNowLoading ? (
+                    <ActivityIndicator size="small" color={theme.colors.onSurface} />
+                  ) : (
+                    <Text className="text-sm text-onSurface font-baloo">
+                      {t("timeEstimate.startNow")}
+                    </Text>
+                  )}
                 </Pressable>
               </View>
             </>

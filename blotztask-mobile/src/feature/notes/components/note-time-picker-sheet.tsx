@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import Modal from "react-native-modal";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -10,8 +10,8 @@ import { SegmentToggle } from "@/feature/task-add-edit/components/segment-toggle
 import { ReminderTab } from "@/feature/task-add-edit/components/reminder-tab";
 import { EventTab } from "@/feature/task-add-edit/components/event-tab";
 import { buildTaskTimePayload } from "@/feature/task-add-edit/util/time-convertion";
-import { useAddNoteToTask } from "@/shared/hooks/add-note-to-task";
-import { useNotesMutation } from "../hooks/useNotesMutation";
+import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
+import { theme } from "@/shared/constants/theme";
 import { addMinutes } from "date-fns/addMinutes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -38,8 +38,7 @@ export const NoteTimePickerSheet = ({
   handleAIEstimate: (note: NoteDTO | null) => void;
 }) => {
   const { t } = useTranslation("notes");
-  const addNoteToTask = useAddNoteToTask();
-  const { deleteNote } = useNotesMutation();
+  const { addNoteToTask, isConverting } = useAddNoteToTask();
 
   // Initialize form like TaskForm does
   const getDefaultValues = (): TaskFormField => {
@@ -83,7 +82,7 @@ export const NoteTimePickerSheet = ({
       return;
     }
 
-    const { startTime, endTime, timeType } = buildTaskTimePayload(
+    const { startTime, endTime } = buildTaskTimePayload(
       data.startDate,
       data.startTime,
       mode === "reminder" ? data.startDate : data.endDate,
@@ -94,14 +93,8 @@ export const NoteTimePickerSheet = ({
       note,
       startTime,
       endTime,
-      timeType,
       onSuccess: () => {
         onClose();
-        try {
-          deleteNote(note.id);
-        } catch (e) {
-          console.warn("Failed to delete note", e);
-        }
         router.push("/(protected)/(tabs)");
       },
     });
@@ -174,9 +167,16 @@ export const NoteTimePickerSheet = ({
             {/* Apply */}
             <Pressable
               onPress={onApply}
-              className="bg-lime-300 rounded-xl py-4 items-center justify-center"
+              disabled={isConverting}
+              className={`rounded-xl py-4 items-center justify-center ${
+                isConverting ? "bg-[#F3F4F6]" : "bg-lime-300"
+              }`}
             >
-              <Text className="font-balooBold text-lg text-black">{"Apply"}</Text>
+              {isConverting ? (
+                <ActivityIndicator size="small" color={theme.colors.onSurface} />
+              ) : (
+                <Text className="font-balooBold text-lg text-black">Apply</Text>
+              )}
             </Pressable>
           </ScrollView>
         </FormProvider>
