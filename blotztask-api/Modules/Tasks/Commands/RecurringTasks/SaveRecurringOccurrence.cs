@@ -23,9 +23,6 @@ public class SaveRecurringOccurrenceCommandHandler(
         if (template == null)
             throw new KeyNotFoundException($"RecurringTask {command.RecurringTaskId} not found.");
 
-        if (!generatorService.IsOccurrenceOn(template, command.OccurrenceDate))
-            throw new InvalidOperationException(
-                $"{command.OccurrenceDate} is not a valid occurrence for RecurringTask {command.RecurringTaskId}.");
 
         // Check if a row already exists for this (RecurringTaskId, date) — avoid duplicates.
         // Use the exact StartTime value that CreateTaskItem would produce for idempotency.
@@ -36,7 +33,7 @@ public class SaveRecurringOccurrenceCommandHandler(
 
         var existingId = await db.TaskItems
             .Where(t => t.RecurringTaskId == command.RecurringTaskId
-                && t.StartTime == expectedStartTime)
+                        && t.StartTime == expectedStartTime)
             .Select(t => (int?)t.Id)
             .FirstOrDefaultAsync(ct);
 
