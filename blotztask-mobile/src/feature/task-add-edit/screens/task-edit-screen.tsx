@@ -30,6 +30,7 @@ export default function TaskEditScreen() {
     timeType: selectedTask.timeType,
     notificationId: selectedTask.notificationId,
     alertTime: selectedTask.alertTime,
+    isDdl: selectedTask.isDdl,
   };
 
   const handleTaskSubmit = async (formValues: AddTaskItemDTO) => {

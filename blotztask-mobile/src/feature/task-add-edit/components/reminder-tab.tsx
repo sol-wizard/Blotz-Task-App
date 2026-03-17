@@ -9,9 +9,11 @@ import { SingleDateCalendar } from "./single-date-calendar";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { ToggleSwitch } from "@/feature/settings/components/toggle-switch";
+import { FormDivider } from "@/shared/components/ui/form-divider";
 
 export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) => {
-  const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
+  const [activeSelector, setActiveSelector] = useState<"date" | "time" | "deadlineDate" | "deadlineTime" | null>(null);
 
   const {
     field: { value: startDate, onChange: onStartDateChange },
@@ -35,10 +37,31 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
   });
 
   const {
-    field: { onChange: onEndTimeChange },
+    field: { value: endTime, onChange: onEndTimeChange },
   } = useController({
     control,
     name: "endTime",
+  });
+  
+  const {
+    field: { value: isDdl, onChange: onIsDdlChange },
+  } = useController({
+    control,
+    name: "isDdl",
+  });
+
+  const {
+    field: { value: deadlineDate, onChange: onDeadlineDateChange },
+  } = useController({
+    control,
+    name: "deadlineDate",
+  });
+
+  const {
+    field: { value: deadlineTime, onChange: onDeadlineTimeChange },
+  } = useController({
+    control,
+    name: "deadlineTime",
   });
 
   const { t, i18n } = useTranslation("tasks");
@@ -49,6 +72,13 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
     ? format(startDate, dateFormat, { locale })
     : t("form.selectDate");
   const timeDisplayText = startTime ? format(startTime, "hh:mm a") : t("form.selectTime");
+
+  const deadlineDateDisplayText = deadlineDate
+    ? format(deadlineDate, dateFormat, { locale })
+    : t("form.selectDate");
+  const deadlineTimeDisplayText = deadlineTime
+    ? format(deadlineTime, "hh:mm a")
+    : t("form.selectTime");
 
   return (
     <Animated.View
@@ -115,6 +145,71 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
           )}
         </View>
       </Animated.View>
+
+      <FormDivider />
+
+      <Animated.View className="flex-row justify-between items-center" layout={MotionAnimations.layout}>
+        <Text className="font-baloo text-secondary text-2xl">{t("form.markAsDeadline")}</Text>
+        <ToggleSwitch value={!!isDdl} onChange={() => onIsDdlChange(!isDdl)} />
+      </Animated.View>
+
+      {isDdl && (
+        <Animated.View 
+          entering={MotionAnimations.upEntering}
+          exiting={MotionAnimations.outExiting}
+          layout={MotionAnimations.layout}
+          className="mt-4"
+        >
+          <View className="flex-row justify-between">
+            <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.dueTime")}</Text>
+            
+            <View className="flex-row">
+              <Pressable
+                onPress={() => setActiveSelector((prev) => (prev === "deadlineDate" ? null : "deadlineDate"))}
+                className="bg-background px-4 py-2 rounded-xl mr-2"
+              >
+                <Text className="text-xl font-balooThin text-secondary">{deadlineDateDisplayText}</Text>
+              </Pressable>
+              
+              <Pressable
+                onPress={() => setActiveSelector((prev) => (prev === "deadlineTime" ? null : "deadlineTime"))}
+                className="bg-background px-4 py-2 rounded-xl"
+              >
+                <Text className="text-xl font-balooThin text-secondary">{deadlineTimeDisplayText}</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          {activeSelector === "deadlineDate" && (
+            <Animated.View
+              entering={MotionAnimations.upEntering}
+              exiting={MotionAnimations.outExiting}
+            >
+              <SingleDateCalendar
+                defaultStartDate={format(deadlineDate || new Date(), "yyyy-MM-dd")}
+                onStartDateChange={(nextDate: Date) => {
+                  onDeadlineDateChange(nextDate);
+                }}
+              />
+            </Animated.View>
+          )}
+
+          {activeSelector === "deadlineTime" && (
+            <Animated.View
+              entering={MotionAnimations.upEntering}
+              exiting={MotionAnimations.outExiting}
+              className="items-center"
+            >
+              <TimePicker
+                value={deadlineTime || new Date()}
+                onChange={(nextTime: Date) => {
+                  onDeadlineTimeChange(nextTime);
+                }}
+              />
+            </Animated.View>
+          )}
+        </Animated.View>
+      )}
     </Animated.View>
   );
 };

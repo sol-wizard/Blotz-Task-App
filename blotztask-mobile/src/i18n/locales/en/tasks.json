@@ -15,6 +15,8 @@
     "selectTime": "Select Time",
     "start": "Start",
     "end": "End",
+    "markAsDeadline": "Mark as deadline",
+    "dueTime": "Due Time",
     "invalidTimeRange": "Start time cannot be later than end time"
   },
   "details": {

@@ -19,6 +19,7 @@ import {
   calculateAlertSeconds,
   calculateAlertTime,
 } from "./util/time-convertion";
+import { combineDateTime } from "./util/combine-date-time";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
@@ -67,6 +68,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     endDate: dto?.endTime ? new Date(dto?.endTime) : now,
     endTime: dto?.endTime ? new Date(dto?.endTime) : now,
     alert: defaultAlert,
+    isDdl: dto?.isDdl ?? false,
+    deadlineDate: dto?.endTime ? new Date(dto.endTime) : now,
+    deadlineTime: dto?.endTime ? new Date(dto.endTime) : now,
   };
 
   const form = useForm<TaskFormField>({
@@ -93,8 +97,20 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     const { startTime, endTime, timeType } = buildTaskTimePayload(
       data.startDate,
       data.startTime,
-      isActiveTab === "reminder" ? data.startDate : data.endDate,
-      isActiveTab === "reminder" ? data.startTime : data.endTime,
+      isActiveTab === "reminder"
+        ? data.isDdl
+          ? data.deadlineDate!
+          : data.startDate
+        : data.isDdl
+          ? data.deadlineDate!
+          : data.endDate,
+      isActiveTab === "reminder"
+        ? data.isDdl
+          ? data.deadlineTime!
+          : data.startTime
+        : data.isDdl
+          ? data.deadlineTime!
+          : data.endTime,
     );
 
     let notificationId = null;
@@ -108,6 +124,11 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       alertTime = calculateAlertTime(data.startTime, data.alert);
     }
 
+    const dueAt =
+      data.isDdl && data.deadlineDate && data.deadlineTime
+        ? combineDateTime(data.deadlineDate, data.deadlineTime)
+        : undefined;
+
     const submitTask: AddTaskItemDTO = {
       title: data.title.trim(),
       description: data.description?.trim() ?? undefined,
@@ -117,6 +138,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       timeType,
       alertTime: alertTime ? convertToDateTimeOffset(alertTime) : undefined,
       notificationId,
+      isDdl: data.isDdl,
     };
 
     onSubmit(submitTask);

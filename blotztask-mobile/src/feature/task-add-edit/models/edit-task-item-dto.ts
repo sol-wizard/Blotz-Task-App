@@ -9,4 +9,5 @@ export interface EditTaskItemDTO {
   timeType: TaskTimeType | null;
   notificationId?: string | null;
   alertTime?: string;
+  isDdl?: boolean;
 }
