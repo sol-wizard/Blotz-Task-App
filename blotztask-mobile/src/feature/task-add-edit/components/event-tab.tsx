@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { Pressable, View, Text } from "react-native";
 import { SingleDateCalendar } from "./single-date-calendar";
-import { addDays, differenceInCalendarDays, format, isAfter, isSameDay, isBefore, isEqual } from "date-fns";
+import {
+  addDays,
+  differenceInCalendarDays,
+  format,
+  isAfter,
+  isSameDay,
+  isBefore,
+  isEqual,
+} from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
 import { Control, UseFormClearErrors, UseFormTrigger, useController } from "react-hook-form";
 import { TaskFormField } from "../models/task-form-schema";
@@ -11,8 +19,18 @@ import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { combineDateTime } from "../util/combine-date-time";
+import { ToggleSwitch } from "../../settings/components/toggle-switch";
+import { FormDivider } from "@/shared/components/ui/form-divider";
 
-export const EventTab = ({ control, trigger, clearErrors }: { control: Control<TaskFormField>; trigger: UseFormTrigger<TaskFormField>; clearErrors: UseFormClearErrors<TaskFormField> }) => {
+export const EventTab = ({
+  control,
+  trigger,
+  clearErrors,
+}: {
+  control: Control<any>;
+  trigger?: UseFormTrigger<any>;
+  clearErrors?: UseFormClearErrors<any>;
+}) => {
   const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
     const start = combineDateTime(sd, st);
     const end = combineDateTime(ed, et);
@@ -27,7 +45,7 @@ export const EventTab = ({ control, trigger, clearErrors }: { control: Control<T
   const locale = isChinese ? zhCN : enUS;
   const dateFormat = isChinese ? "yyyy年M月d日" : "MMM d, yyyy";
   const [activeSelector, setActiveSelector] = useState<
-    "startDate" | "startTime" | "endDate" | "endTime" | null
+    "startDate" | "startTime" | "endDate" | "endTime" | "deadlineDate" | "deadlineTime" | null
   >(null);
 
   const {
@@ -56,6 +74,24 @@ export const EventTab = ({ control, trigger, clearErrors }: { control: Control<T
   } = useController({
     control,
     name: "endTime",
+  });
+  const {
+    field: { value: isDdl, onChange: onIsDdlChange },
+  } = useController({
+    control,
+    name: "isDdl",
+  });
+  const {
+    field: { value: deadlineDate, onChange: onDeadlineDateChange },
+  } = useController({
+    control,
+    name: "deadlineDate",
+  });
+  const {
+    field: { value: deadlineTime, onChange: onDeadlineTimeChange },
+  } = useController({
+    control,
+    name: "deadlineTime",
   });
 
   const handleStartDateChange = (nextDate: Date) => {
@@ -87,6 +123,13 @@ export const EventTab = ({ control, trigger, clearErrors }: { control: Control<T
 
   const isTimeInvalid =
     isSameDate && endTimeValue && startTimeValue && isBefore(endTimeValue, startTimeValue);
+
+  const deadlineDateDisplayText = deadlineDate
+    ? format(deadlineDate, dateFormat, { locale })
+    : t("form.selectDate");
+  const deadlineTimeDisplayText = deadlineTime
+    ? format(deadlineTime, "hh:mm a")
+    : t("form.selectTime");
 
   return (
     <Animated.View
@@ -229,6 +272,76 @@ export const EventTab = ({ control, trigger, clearErrors }: { control: Control<T
           </Animated.View>
         )}
       </Animated.View>
+
+      <FormDivider />
+
+      {/* Deadline Toggle */}
+      <Animated.View
+        className="flex-row justify-between items-center mb-4"
+        layout={MotionAnimations.layout}
+      >
+        <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.markAsDeadline")}</Text>
+        <ToggleSwitch value={isDdl} onChange={() => onIsDdlChange(!isDdl)} />
+      </Animated.View>
+
+      {/* Due Time  */}
+      {isDdl && (
+        <Animated.View
+          entering={MotionAnimations.upEntering}
+          exiting={MotionAnimations.outExiting}
+          layout={MotionAnimations.layout}
+        >
+          <Animated.View className="mb-4" layout={MotionAnimations.layout}>
+            <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
+              <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.dueTime")}</Text>
+              <View className="flex-row">
+                <Pressable
+                  onPress={() =>
+                    setActiveSelector((prev) => (prev === "deadlineDate" ? null : "deadlineDate"))
+                  }
+                  className="bg-background px-4 py-2 rounded-xl mr-2"
+                >
+                  <Text className="text-xl font-balooThin text-secondary">
+                    {deadlineDateDisplayText}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() =>
+                    setActiveSelector((prev) => (prev === "deadlineTime" ? null : "deadlineTime"))
+                  }
+                  className="bg-background px-4 py-2 rounded-xl"
+                >
+                  <Text className="text-xl font-balooThin text-secondary">
+                    {deadlineTimeDisplayText}
+                  </Text>
+                </Pressable>
+              </View>
+            </Animated.View>
+
+            {activeSelector === "deadlineDate" && (
+              <Animated.View
+                entering={MotionAnimations.upEntering}
+                exiting={MotionAnimations.outExiting}
+              >
+                <SingleDateCalendar
+                  defaultStartDate={format(deadlineDate || new Date(), "yyyy-MM-dd")}
+                  onStartDateChange={onDeadlineDateChange}
+                />
+              </Animated.View>
+            )}
+
+            {activeSelector === "deadlineTime" && (
+              <Animated.View
+                entering={MotionAnimations.upEntering}
+                exiting={MotionAnimations.outExiting}
+                className="items-center"
+              >
+                <TimePicker value={deadlineTime || new Date()} onChange={onDeadlineTimeChange} />
+              </Animated.View>
+            )}
+          </Animated.View>
+        </Animated.View>
+      )}
     </Animated.View>
   );
 };
