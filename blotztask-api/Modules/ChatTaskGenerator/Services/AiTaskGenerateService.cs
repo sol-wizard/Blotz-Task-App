@@ -23,10 +23,11 @@ public class AiTaskGenerateService(
         {
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                ResponseFormat = typeof(AiGenerateMessage)
+                ResponseFormat = typeof(AiGenerateMessage),
             };
 
-            var chatService = kernel.GetRequiredService<IChatCompletionService>();
+            logger.LogInformation("TaskGeneration: Invoking AI with ServiceId=TaskGeneration");
+            var chatService = kernel.GetRequiredService<IChatCompletionService>("TaskGeneration");
 
             var result = await chatService.GetChatMessageContentAsync(
                 chatHistory,
@@ -35,10 +36,10 @@ public class AiTaskGenerateService(
                 ct
             );
 
+            logger.LogInformation("TaskGeneration: Response from ModelId={ModelId}", result.ModelId);
+            logger.LogInformation("TaskGeneration: Response content={Content}", result.Content);
 
-            var responseContent = result.ToString();
-
-            logger.LogInformation(responseContent);
+            var responseContent = result.Content;
 
             if (string.IsNullOrWhiteSpace(responseContent))
             {
@@ -57,6 +58,12 @@ public class AiTaskGenerateService(
                 {
                     logger.LogWarning("Deserialized object is null.");
                     throw new AiInvalidJsonException(responseContent);
+                }
+
+                foreach (var task in aiGenerateMessage.ExtractedTasks ?? [])
+                {
+                    task.StartTime = DateTime.SpecifyKind(task.StartTime, DateTimeKind.Unspecified);
+                    task.EndTime = DateTime.SpecifyKind(task.EndTime, DateTimeKind.Unspecified);
                 }
 
                 return aiGenerateMessage;

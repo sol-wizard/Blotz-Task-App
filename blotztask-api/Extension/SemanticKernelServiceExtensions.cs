@@ -4,32 +4,26 @@ namespace BlotzTask.Extension;
 
 public static class SemanticKernelServiceExtensions
 {
-    public static IServiceCollection AddSemanticKernelServices(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
+    public static IServiceCollection AddSemanticKernelServices(
+        this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<Kernel>(sp =>
+        var endpoint = configuration["AzureOpenAI:Endpoint"];
+        var taskGenerationDeploymentId = configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"];
+        var breakdownDeploymentId = configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"];
+        var apiKey = configuration["AzureOpenAI:ApiKey"];
+
+        if (string.IsNullOrWhiteSpace(endpoint) ||
+            string.IsNullOrWhiteSpace(taskGenerationDeploymentId) ||
+            string.IsNullOrWhiteSpace(breakdownDeploymentId) ||
+            string.IsNullOrWhiteSpace(apiKey))
         {
-            var endpoint = configuration["AzureOpenAI:Endpoint"];
-            var deploymentId = configuration["AzureOpenAI:DeploymentId"];
-            var apiKey = configuration["AzureOpenAI:ApiKey"];
+            throw new InvalidOperationException(
+                "Missing Azure OpenAI configuration. Set AzureOpenAI:Endpoint, AzureOpenAI:AiModels:TaskGeneration:DeploymentId, AzureOpenAI:AiModels:Breakdown:DeploymentId, and AzureOpenAI:ApiKey in configuration or via Key Vault reference.");
+        }
 
-            if (string.IsNullOrWhiteSpace(endpoint) ||
-                string.IsNullOrWhiteSpace(deploymentId) ||
-                string.IsNullOrWhiteSpace(apiKey))
-            {
-                throw new InvalidOperationException(
-                    "Missing Azure OpenAI configuration. Set AzureOpenAI:Endpoint, AzureOpenAI:DeploymentId, and AzureOpenAI:ApiKey in configuration or via Key Vault reference.");
-            }
-
-            var kernelBuilder = Kernel.CreateBuilder();
-
-            kernelBuilder.AddAzureOpenAIChatCompletion(
-                deploymentId,
-                endpoint,
-                apiKey
-            );
-
-            return kernelBuilder.Build();
-        });
+        services.AddKernel()
+            .AddAzureOpenAIChatCompletion(taskGenerationDeploymentId, endpoint, apiKey, serviceId: "TaskGeneration")
+            .AddAzureOpenAIChatCompletion(breakdownDeploymentId, endpoint, apiKey, serviceId: "Breakdown");
 
         return services;
     }
