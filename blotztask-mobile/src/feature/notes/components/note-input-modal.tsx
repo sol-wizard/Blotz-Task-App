@@ -53,7 +53,7 @@ export const NoteInputModal = ({
               }`}
             >
               {isSaving ? (
-                <ActivityIndicator size="small" color="#111827" />
+                <ActivityIndicator size="small" color={theme.colors.onSurface} />
               ) : (
                 <Text className="font-balooBold text-lg text-black rounded-xl items-center justify-center">
                   {t("save")}

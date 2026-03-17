@@ -14,7 +14,8 @@ public class NotesController(
     SearchNotesQueryHandler searchNotesQueryHandler,
     UpdateNoteCommandHandler updateNoteCommandHandler,
     DeleteNoteCommandHandler deleteNoteCommandHandler,
-    TimeEstimateCommandHandler timeEstimateCommandHandler
+    TimeEstimateCommandHandler timeEstimateCommandHandler,
+    ConvertNoteToTaskCommandHandler convertNoteToTaskCommandHandler
 ) : ControllerBase
 {
     [HttpPost]
@@ -81,5 +82,28 @@ public class NotesController(
         };
         await deleteNoteCommandHandler.Handle(command, ct);
         return NoContent();
+    }
+
+    [HttpPost("{id:guid}/convert-to-task")]
+    public async Task<IActionResult> ConvertNoteToTask(
+        Guid id,
+        [FromBody] Commands.ConvertNoteToTaskRequestDto? request,
+        CancellationToken ct)
+    {
+        if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
+            throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        if (request is null)
+            return BadRequest("Request body with StartTime and EndTime is required.");
+
+        var command = new ConvertNoteToTaskCommand
+        {
+            NoteId = id,
+            UserId = userId,
+            StartTime = request.StartTime,
+            EndTime = request.EndTime
+        };
+
+        var newTaskId = await convertNoteToTaskCommandHandler.Handle(command, ct);
+        return Ok(new { taskId = newTaskId });
     }
 }

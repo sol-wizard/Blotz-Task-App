@@ -19,7 +19,8 @@ import { NoteInputModal } from "@/feature/notes/components/note-input-modal";
 import { NoteTimePickerSheet } from "@/feature/notes/components/note-time-picker-sheet";
 import { NoteTimeEstimateModal } from "../components/note-time-estimate-modal";
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
-
+import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
+import { convertDurationToMinutes } from "@/shared/util/convert-duration";
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,6 +41,7 @@ export default function NotesScreen() {
   const [pendingEstimateNote, setPendingEstimateNote] = useState<NoteDTO | null>(null);
   const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
   const { estimateTime, isEstimating, estimationResult, estimationError } = useEstimateTaskTime();
+  const { addNoteToTask } = useAddNoteToTask();
 
   useFocusEffect(
     useCallback(() => {
@@ -103,11 +105,29 @@ export default function NotesScreen() {
     if (!pendingEstimateNote) return;
 
     const noteToEstimate = pendingEstimateNote;
-    setPendingEstimateNote(null);
     setIsEstimateModalVisible(true);
     estimateTime(noteToEstimate);
   };
 
+  const handleCloseEstimateModal = () => {
+    setIsEstimateModalVisible(false);
+    setPendingEstimateNote(null);
+  };
+
+  const handleStartNowFromEstimate = (duration: string) => {
+    if (!pendingEstimateNote) return;
+    const start = new Date();
+    const end = new Date(start.getTime() + convertDurationToMinutes(duration) * 60 * 1000);
+    addNoteToTask({
+      note: pendingEstimateNote,
+      startTime: start,
+      endTime: end,
+      onSuccess: () => {
+        handleCloseEstimateModal();
+        router.push("/(protected)/(tabs)");
+      },
+    });
+  };
 
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-background">
@@ -235,10 +255,14 @@ export default function NotesScreen() {
       />
       <NoteTimeEstimateModal
         visible={isEstimateModalVisible}
-        setIsModalVisible={setIsEstimateModalVisible}
+        setIsModalVisible={(v) => {
+          setIsEstimateModalVisible(v);
+          if (!v) setPendingEstimateNote(null);
+        }}
         isEstimating={isEstimating}
         estimateResult={estimationResult}
         estimationError={estimationError}
+        onStartNow={handleStartNowFromEstimate}
       />
     </SafeAreaView>
   );
