@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { format, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
@@ -48,6 +48,8 @@ interface TaskCardProps {
 }
 
 const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) => {
+  const isVirtualTask = task.id == null;
+
   const { t } = useTranslation("tasks");
   const { toggleTask, isToggling } = useTaskMutations();
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
@@ -109,7 +111,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
       }
 
       if (breakdownMessage.isSuccess === false) {
-        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), breakdownMessage.errorMessage);
+        showBreakdownErrorToast(
+          t("details.failedToRefreshSubtasks"),
+          breakdownMessage.errorMessage,
+        );
         return;
       }
 
@@ -124,12 +129,16 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
       }
     } catch (e) {
       console.error("Breakdown error:", e);
-      showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), e instanceof Error ? e.message : undefined);
+      showBreakdownErrorToast(
+        t("details.failedToRefreshSubtasks"),
+        e instanceof Error ? e.message : undefined,
+      );
     }
   };
 
   const pan = Gesture.Pan()
-    .enabled(!isLoading)
+    // to avoid left swipe for recurring task
+    .enabled(!isLoading && !isVirtualTask)
     .activeOffsetX([-10, 10])
     .failOffsetY([-10, 10])
     .onUpdate((e) => {
@@ -224,6 +233,15 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                           >
                             {task.title}
                           </Text>
+                          {isVirtualTask && (
+                            <View className="ml-1.5">
+                              <MaterialIcons
+                                name="autorenew"
+                                size={17}
+                                color="#9CA3AF"
+                              />
+                            </View>
+                          )}
                         </View>
 
                         {timePeriod && (
