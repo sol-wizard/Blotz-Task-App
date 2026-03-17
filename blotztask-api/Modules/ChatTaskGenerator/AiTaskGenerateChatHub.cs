@@ -67,8 +67,10 @@ public class AiTaskGenerateChatHub : Hub
             _ => "English"
         };
 
+        var userLocalNow = DateTimeOffset.Now;
+
         var chatHistory = _chatHistoryStore.GetOrCreate(Context.ConnectionId);
-        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage));
+        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalNow));
 
         await base.OnConnectedAsync();
     }
