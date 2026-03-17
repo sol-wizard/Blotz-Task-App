@@ -48,7 +48,7 @@ interface TaskCardProps {
 }
 
 const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) => {
-  const isVirtual = task.id == null;
+  const isVirtualTask = task.id == null;
 
   const { t } = useTranslation("tasks");
   const { toggleTask, isToggling } = useTaskMutations();
@@ -137,7 +137,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   };
 
   const pan = Gesture.Pan()
-    .enabled(!isLoading && !isVirtual)
+    // to avoid left swipe for recurring task
+    .enabled(!isLoading && !isVirtualTask)
     .activeOffsetX([-10, 10])
     .failOffsetY([-10, 10])
     .onUpdate((e) => {
@@ -232,13 +233,14 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                           >
                             {task.title}
                           </Text>
-                          {isVirtual && (
-                            <MaterialIcons
-                              name="autorenew"
-                              size={17}
-                              color="#9CA3AF"
-                              style={{ marginLeft: 5 }}
-                            />
+                          {isVirtualTask && (
+                            <View className="ml-1.5">
+                              <MaterialIcons
+                                name="autorenew"
+                                size={17}
+                                color="#9CA3AF"
+                              />
+                            </View>
                           )}
                         </View>
 
@@ -282,59 +284,55 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
             </Pressable>
           </View>
 
-          {!isVirtual && (
-            <>
-              <View className="w-2" />
+          <View className="w-2" />
 
-              {/* Breakdown Action */}
-              <View className="w-32" pointerEvents="auto">
-                <Pressable
-                  onPress={handleBreakdown}
-                  disabled={isLoading}
-                  android_ripple={{ color: "#DBEAFE", borderless: false }}
-                  style={{ height: actionHeight || 80 }}
-                  className={`w-32 rounded-xl bg-blue-500/10 items-center justify-center ${
-                    isBreakingDown || isReplacingSubtasks ? "opacity-50" : ""
-                  }`}
-                >
-                  {isBreakingDown || isReplacingSubtasks ? (
-                    <ActivityIndicator size="small" color="#3b82f6" />
-                  ) : (
-                    <Text className="text-info font-baloo font-semibold text-lg">Breakdown</Text>
-                  )}
-                </Pressable>
-              </View>
-              <View className="w-2" />
+          {/* Breakdown Action */}
+          <View className="w-32" pointerEvents="auto">
+            <Pressable
+              onPress={handleBreakdown}
+              disabled={isLoading}
+              android_ripple={{ color: "#DBEAFE", borderless: false }}
+              style={{ height: actionHeight || 80 }}
+              className={`w-32 rounded-xl bg-blue-500/10 items-center justify-center ${
+                isBreakingDown || isReplacingSubtasks ? "opacity-50" : ""
+              }`}
+            >
+              {isBreakingDown || isReplacingSubtasks ? (
+                <ActivityIndicator size="small" color="#3b82f6" />
+              ) : (
+                <Text className="text-info font-baloo font-semibold text-lg">Breakdown</Text>
+              )}
+            </Pressable>
+          </View>
+          <View className="w-2" />
 
-              {/* 2) Delete action */}
-              <View className="w-14" pointerEvents={"auto"}>
-                <Pressable
-                  onPress={async () => {
-                    if (isLoading || task.id == null) return;
-                    await deleteTask(task);
+          {/* 2) Delete action */}
+          <View className="w-14" pointerEvents={"auto"}>
+            <Pressable
+              onPress={async () => {
+                if (isLoading || task.id == null) return;
+                await deleteTask(task);
 
-                    if (task.alertTime && new Date(task.alertTime) > new Date()) {
-                      await cancelNotification({ notificationId: task?.notificationId });
-                    }
+                if (task.alertTime && new Date(task.alertTime) > new Date()) {
+                  await cancelNotification({ notificationId: task?.notificationId });
+                }
 
-                    taskCardTranslateX.value = withTiming(0, { duration: 160 });
-                  }}
-                  disabled={isLoading}
-                  android_ripple={{ color: "#FEE2E2", borderless: false }}
-                  style={{ height: actionHeight || 80 }}
-                  className={`w-14 rounded-xl bg-red-500/10 items-center justify-center ${
-                    isDeleting ? "opacity-50" : ""
-                  }`}
-                >
-                  {isDeleting ? (
-                    <ActivityIndicator size="small" color="#F56767" />
-                  ) : (
-                    <MaterialCommunityIcons name="trash-can-outline" size={24} color="#F56767" />
-                  )}
-                </Pressable>
-              </View>
-            </>
-          )}
+                taskCardTranslateX.value = withTiming(0, { duration: 160 });
+              }}
+              disabled={isLoading}
+              android_ripple={{ color: "#FEE2E2", borderless: false }}
+              style={{ height: actionHeight || 80 }}
+              className={`w-14 rounded-xl bg-red-500/10 items-center justify-center ${
+                isDeleting ? "opacity-50" : ""
+              }`}
+            >
+              {isDeleting ? (
+                <ActivityIndicator size="small" color="#F56767" />
+              ) : (
+                <MaterialCommunityIcons name="trash-can-outline" size={24} color="#F56767" />
+              )}
+            </Pressable>
+          </View>
         </Animated.View>
       </GestureDetector>
     </Animated.View>
