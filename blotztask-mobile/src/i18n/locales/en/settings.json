@@ -51,7 +51,6 @@
   "about": {
     "title": "About",
     "visitWebsite": "Visit Website",
-    "privacyPolicy": "Privacy Policy",
-    "privacyPolicyPlaceholder": "Privacy policy content coming soon."
+    "privacyPolicy": "Privacy Policy"
   }
 }

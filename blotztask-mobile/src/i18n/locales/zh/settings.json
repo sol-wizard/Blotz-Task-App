@@ -51,7 +51,6 @@
   "about": {
     "title": "关于",
     "visitWebsite": "访问官网",
-    "privacyPolicy": "隐私声明",
-    "privacyPolicyPlaceholder": "隐私声明内容即将上线。"
+    "privacyPolicy": "隐私声明"
   }
 }
