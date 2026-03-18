@@ -27,7 +27,7 @@ export const CustomDay = ({ date, state, marking, isMarked, onPressDay }: Custom
 
   const isToday = state === "today";
   const isSelected = state === "selected";
-  const textColorClass = isSelected ? "text-white" : isToday ? "text-black" : "text-[#8C8C8C]";
+  const textColorClass = isSelected ? "text-white" : isToday ? "text-highlight" : "text-[#8C8C8C]";
   const hasMark = isMarked ?? marking?.marked ?? false;
 
   return (
