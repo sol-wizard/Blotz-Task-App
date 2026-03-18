@@ -10,13 +10,13 @@ namespace BlotzTask.Modules.Tasks.Queries.Tasks;
 
 public class GetMonthlyTaskAvailabilityRequest
 {
-    [BindRequired] public DateTimeOffset firstDate { get; set; }
+    [BindRequired] public DateTimeOffset FirstDate { get; set; }
 }
 
 public class GetMonthlyTaskAvailabilityQuery
 {
     [Required] public required Guid UserId { get; init; }
-    [BindRequired] public DateTimeOffset firstDate { get; set; }
+    [BindRequired] public DateTimeOffset FirstDate { get; set; }
 }
 
 public class GetMonthlyTaskAvailabilityQueryHandler(
@@ -28,14 +28,14 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
         CancellationToken ct = default)
     {
         var stopwatch = Stopwatch.StartNew();
-        var monthStart = query.firstDate;
-        var monthEnd = query.firstDate.AddMonths(1);
+        var monthStart = query.FirstDate;
+        var monthEnd = query.FirstDate.AddMonths(1);
         var monthStartDate = DateOnly.FromDateTime(monthStart.Date);
         var monthEndDate = DateOnly.FromDateTime(monthEnd.Date);
         
         
-        var userNow = DateTimeOffset.UtcNow.ToOffset(query.firstDate.Offset);
-        var userTodayStart = new DateTimeOffset(userNow.Date, query.firstDate.Offset);
+        var userNow = DateTimeOffset.UtcNow.ToOffset(query.FirstDate.Offset);
+        var userTodayStart = new DateTimeOffset(userNow.Date, query.FirstDate.Offset);
         var userTodayEnd = userTodayStart.AddDays(1);
         var sevenDayWindowStart = userTodayEnd.AddDays(-7);
         
@@ -113,7 +113,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                 .Select(t => new TaskThumbnailDto
                 {
                     TaskTitle = t.Title,
-                    Label = t.Label // set this when you include label in query
+                    Label = t.Label
                 })
                 .ToList();
             var hasTask = dayTasks.Count > 0;
