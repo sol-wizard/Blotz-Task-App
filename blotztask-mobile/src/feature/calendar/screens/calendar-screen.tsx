@@ -10,18 +10,11 @@ import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetu
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { CustomDay, CustomDayProps } from "../components/custom-day";
+import { View } from "react-native";
 
-// Define the theme object outside the component to prevent re-renders
 const calendarTheme = {
   calendarBackground: theme.colors.background,
-  selectedDayBackgroundColor: "#EBF0FE",
-  selectedDayTextColor: "#333333",
-  todayTextColor: "#000000",
-  textDayFontWeight: "bold" as const,
-  dayTextColor: theme.colors.disabled,
-  textDayFontFamily: "InterBold",
-  textDayHeaderFontFamily: "InterThin",
-  textDayFontSize: 16,
 };
 
 export default function CalendarScreen() {
@@ -37,6 +30,10 @@ export default function CalendarScreen() {
   } else {
     markedDates = getSelectedDates({ selectedDay });
   }
+
+  const handleDayPress = (dateString: string) => {
+    setSelectedDay(new Date(dateString));
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
@@ -63,9 +60,18 @@ export default function CalendarScreen() {
           >
             <WeekCalendar
               theme={calendarTheme}
-              markedDates={markedDates}
               allowShadow={false}
+              calendarHeight={82}
               firstDay={1}
+              hideDayNames={true}
+              markedDates={markedDates}
+              dayComponent={(props: CustomDayProps) => (
+                <CustomDay
+                  {...props}
+                  isMarked={Boolean(props.marking?.marked)}
+                  onPressDay={handleDayPress}
+                />
+              )}
             />
           </Animated.View>
         )}
