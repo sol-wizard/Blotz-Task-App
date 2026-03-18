@@ -59,7 +59,13 @@ export const DeadlineSection = ({ control }: DeadlineSectionProps) => {
         layout={MotionAnimations.layout}
       >
         <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.markAsDeadline")}</Text>
-        <ToggleSwitch value={isDdl} onChange={() => onIsDdlChange(!isDdl)} />
+        <ToggleSwitch
+          value={isDdl}
+          onChange={() => {
+            onIsDdlChange(!isDdl);
+            setActiveSelector(null);
+          }}
+        />
       </Animated.View>
 
       {/* Due Time  */}
