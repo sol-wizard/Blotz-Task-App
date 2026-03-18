@@ -115,11 +115,12 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                     TaskTitle = t.Title,
                     Label = t.Label
                 })
+                .Take(3)
                 .ToList();
-            var hasTask = dayTasks.Count > 0;
             
-            if (!hasTask)
+            if (dayTasks.Count < 3)
             {
+                var offset = 3 -  dayTasks.Count;
                 var recurringThumbnails = recurringTasks
                     .Where(r => generatorService.IsOccurrenceOn(r, dayDate))
                     .Select(r => new TaskThumbnailDto
@@ -127,17 +128,16 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                         TaskTitle = r.Title,
                         Label = r.Label
                     })
+                    .Take(offset)
                     .ToList();
 
                 dayTasks.AddRange(recurringThumbnails);
-                hasTask = dayTasks.Count > 0;
             }
             
             result.Add(new MonthlyTaskIndicatorDto
             {
                 TaskThumbnails = dayTasks,
                 Date = dayStart,
-                HasTask = hasTask
             });
         }
 
@@ -154,7 +154,6 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
 public class MonthlyTaskIndicatorDto
 {
     public DateTimeOffset Date { get; set; }
-    public bool HasTask { get; set; }
     public List<TaskThumbnailDto> TaskThumbnails { get; set; }
 }
 
