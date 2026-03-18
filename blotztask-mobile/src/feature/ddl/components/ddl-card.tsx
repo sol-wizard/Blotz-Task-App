@@ -11,7 +11,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 const rubberBand = (x: number, limit: number) => {
