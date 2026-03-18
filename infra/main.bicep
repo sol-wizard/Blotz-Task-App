@@ -29,11 +29,11 @@ param alertEmail string
 param appServiceSkuName string
 param appServiceSkuTier string
 
-// Database (Serverless vCore model)
+// Database (DTU model)
 param dbMaxSizeGb int
-
-param dbAutoPauseDelayMinutes int = 60 // set to -1 to disable auto-pause
-param dbMaxVCores int = 1
+param dbSkuName string
+param dbSkuTier string
+param dbSkuCapacity int
 
 // Key Vault create mode - use 'recover' if Key Vault is soft-deleted
 @allowed(['default', 'recover'])
@@ -123,8 +123,9 @@ module sql 'modules/sqlserver.bicep' = {
     dbAdminUsername: dbAdminUsername
     dbAdminPassword: dbAdminPassword
     dbMaxSizeBytes: dbMaxSizeGb * 1073741824
-    dbAutoPauseDelayMinutes: dbAutoPauseDelayMinutes
-    dbMaxVCores: dbMaxVCores
+    dbSkuName: dbSkuName
+    dbSkuTier: dbSkuTier
+    dbSkuCapacity: dbSkuCapacity
   }
 }
 

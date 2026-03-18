@@ -12,15 +12,15 @@ param githubRepo = 'sol-wizard/Blotz-Task-App'
 param budgetAmount = 30
 param alertEmail = 'benjaminneoh2928@gmail.com'
 
-// App Service SKU (Basic tier for staging)
-param appServiceSkuName = 'B1'
-param appServiceSkuTier = 'Basic'
+// App Service SKU (Free tier for staging)
+param appServiceSkuName = 'F1'
+param appServiceSkuTier = 'Free'
 
-// Database (Serverless vCore for staging - auto-pauses when idle)
+// Database (DTU Basic - lowest tier, 5 DTUs, max 2GB)
 param dbMaxSizeGb = 2
-
-param dbAutoPauseDelayMinutes = 60
-param dbMaxVCores = 1
+param dbSkuName = 'Basic'
+param dbSkuTier = 'Basic'
+param dbSkuCapacity = 5
 
 // Entra ID dev group Object ID (rg-blotz-task-stag-devs)
 param devGroupId = 'aae34f6e-c28e-4064-9d5b-15336d8c147a'
