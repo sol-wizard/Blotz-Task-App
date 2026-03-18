@@ -6,7 +6,8 @@
     "taskHandling": "Task Handling",
     "notifications": "Notifications",
     "language": "Language",
-    "allTasks": "All tasks page (beta)"
+    "allTasks": "All tasks page (beta)",
+    "about": "About"
   },
   "account": {
     "title": "Account",
@@ -46,5 +47,11 @@
   "profile": {
     "title": "Profile",
     "editProfile": "Edit Profile"
+  },
+  "about": {
+    "title": "About",
+    "visitWebsite": "Visit Website",
+    "privacyPolicy": "Privacy Policy",
+    "privacyPolicyPlaceholder": "Privacy policy content coming soon."
   }
 }

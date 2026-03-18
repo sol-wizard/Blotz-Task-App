@@ -45,6 +45,12 @@ export default function SettingsScreen() {
       icon: "cog-outline",
       route: "/settings/all-tasks",
     },
+    {
+      key: "about",
+      label: t("menu.about"),
+      icon: "information-outline",
+      route: "/settings/about",
+    },
   ];
 
   const avatarSource = userProfile?.pictureUrl

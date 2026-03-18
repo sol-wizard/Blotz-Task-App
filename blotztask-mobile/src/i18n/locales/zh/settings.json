@@ -6,7 +6,8 @@
     "taskHandling": "任务处理",
     "notifications": "通知",
     "language": "语言",
-    "allTasks": "所有任务页面 (测试版)"
+    "allTasks": "所有任务页面 (测试版)",
+    "about": "关于"
   },
   "account": {
     "title": "账户",
@@ -46,5 +47,11 @@
   "profile": {
     "title": "个人资料",
     "editProfile": "编辑个人资料"
+  },
+  "about": {
+    "title": "关于",
+    "visitWebsite": "访问官网",
+    "privacyPolicy": "隐私声明",
+    "privacyPolicyPlaceholder": "隐私声明内容即将上线。"
   }
 }
