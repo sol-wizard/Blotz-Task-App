@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { DailyTaskIndicatorDTO } from "../models/daily-task-indicator-dto";
+import { theme } from "@/shared/constants/theme";
 
 export const getMarkedDates = ({
   weeklyTaskAvailability,
@@ -9,6 +10,12 @@ export const getMarkedDates = ({
   selectedDay: Date;
 }) => {
   const result: Record<string, any> = {};
+
+  //   selected day
+  const selectedDayStr = format(selectedDay, "yyyy-MM-dd");
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const isTodaySelected = selectedDayStr === todayStr;
+
   // day with tasks
   weeklyTaskAvailability.forEach((item) => {
     const dateStr = format(new Date(item.date), "yyyy-MM-dd");
@@ -19,14 +26,12 @@ export const getMarkedDates = ({
 
     if (item.hasTask) {
       result[dateStr].marked = true;
-      result[dateStr].dotColor = "#98C802";
+      result[dateStr].dotColor =
+        dateStr === selectedDayStr // 加这个判断
+          ? "#FFFFFF"
+          : theme.colors.highlight;
     }
   });
-
-  //   selected day
-  const selectedDayStr = format(selectedDay, "yyyy-MM-dd");
-  const todayStr = format(new Date(), "yyyy-MM-dd");
-  const isTodaySelected = selectedDayStr === todayStr;
 
   if (!result[selectedDayStr]) {
     result[selectedDayStr] = {};
@@ -34,8 +39,8 @@ export const getMarkedDates = ({
   result[selectedDayStr] = {
     ...result[selectedDayStr],
     selected: true,
-    selectedColor: "#EBF0FE",
-    selectedTextColor: isTodaySelected ? "#000000" : "#8C8C8C",
+    selectedColor: theme.colors.highlight,
+    selectedTextColor: "#FFFFFF",
   };
 
   //   today
@@ -66,8 +71,8 @@ export const getSelectedDates = ({ selectedDay }: { selectedDay: Date }) => {
   result[selectedDayStr] = {
     ...result[selectedDayStr],
     selected: true,
-    selectedColor: "#EBF0FE",
-    selectedTextColor: isTodaySelected ? "#000000" : "#8C8C8C",
+    selectedColor: theme.colors.highlight,
+    selectedTextColor: "#FFFFFF",
   };
 
   //   today
