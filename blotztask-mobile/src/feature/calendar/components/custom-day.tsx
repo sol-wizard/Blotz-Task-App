@@ -35,7 +35,10 @@ export const CustomDay = ({ date, state, marking, isMarked, onPressDay }: Custom
       onPress={() => onPressDay?.(date.dateString)}
       className={`items-center bg-background `}
     >
-      {hasMark && <View className="w-2 h-2 mb-1 rounded-full bg-highlight" />}
+      <View
+        className={`w-2 h-2 mb-1 rounded-full ${hasMark ? "bg-highlight" : "bg-transparent"}`}
+      />
+
       <View className={`items-center p-2 w-12 ${isSelected && " bg-highlight rounded-2xl"}`}>
         <Text className={`text-sm ${isToday && !isSelected && "font-bold"} ${textColorClass}`}>
           {weekLabel}
