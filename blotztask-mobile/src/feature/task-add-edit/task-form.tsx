@@ -13,6 +13,7 @@ import { SegmentToggle } from "./components/segment-toggle";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
 import { AlertSelect } from "./components/alert-select";
+import { DeadlineSection } from "./components/deadline-section";
 import { createNotificationFromAlert } from "./util/create-notification-from-alert";
 import {
   buildTaskTimePayload,
@@ -206,6 +207,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         {isActiveTab === "event" && (
           <EventTab control={control} trigger={trigger} clearErrors={clearErrors} />
         )}
+        <FormDivider />
+        <DeadlineSection control={control} />
         <FormDivider />
 
         <AlertSelect control={control} />
