@@ -1,5 +1,4 @@
 using BlotzTask.Modules.Tasks.Commands.DeadlineTasks;
-using BlotzTask.Modules.Tasks.Commands.Tasks;
 using BlotzTask.Modules.Tasks.Queries.Deadlines;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
-using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
