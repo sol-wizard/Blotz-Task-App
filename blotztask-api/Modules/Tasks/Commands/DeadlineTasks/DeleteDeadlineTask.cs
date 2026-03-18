@@ -18,7 +18,7 @@ public class DeleteDeadlineTaskCommandHandler (BlotzTaskDbContext db, ILogger<De
     {
         logger.LogInformation("Deleting task {TaskId}'s Deadline Task", command.TaskId);
         
-        var deadline = await db.Set<TaskDeadline>()
+        var deadline = await db.TaskDeadlines
             .Include(x => x.TaskItem)
             .FirstOrDefaultAsync(x => x.TaskItemId == command.TaskId, ct);
 

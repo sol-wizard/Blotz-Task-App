@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Shared.Exceptions;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Commands.DeadlineTasks;
@@ -15,11 +14,11 @@ public class UpdateDeadlinePinCommand
     public bool IsPinned { get; set; }
 }
 
-public class UpdateDeadlinePinCommandHandler(BlotzTaskDbContext dbcontext, ILogger<UpdateDeadlinePinCommandHandler> logger)
+public class UpdateDeadlinePinCommandHandler(BlotzTaskDbContext db, ILogger<UpdateDeadlinePinCommandHandler> logger)
 {
     public async Task<bool> Handle(UpdateDeadlinePinCommand command, CancellationToken ct)
     {
-        var deadline = await dbcontext.Set<TaskDeadline>()
+        var deadline = await db.TaskDeadlines
             .FirstOrDefaultAsync(x => x.TaskItemId == command.TaskId, ct);
 
         if (deadline == null)
@@ -29,16 +28,9 @@ public class UpdateDeadlinePinCommandHandler(BlotzTaskDbContext dbcontext, ILogg
         
         deadline.IsPinned = command.IsPinned;
         deadline.UpdatedAt = DateTime.UtcNow;
-        dbcontext.TaskDeadlines.Update(deadline);
-        await dbcontext.SaveChangesAsync(ct);
+        await db.SaveChangesAsync(ct);
         logger.LogInformation("Deadline Task {TaskId} Pin was successfully {IsPin}", command.TaskId, command.IsPinned);
         
         return true;
     }
-}
-
-public class UpdateDeadlinePinDto
-{
-    [Required]
-    public bool IsPinned { get; set; }
 }

@@ -30,16 +30,12 @@ public class DeadlineController(
 
     [HttpPatch("{taskId}/pin")]
     public async Task<IActionResult> UpdatePin(int taskId,
-        [FromBody] UpdateDeadlinePinDto updateDeadlinePin, CancellationToken ct)
+        [FromBody] UpdateDeadlinePinCommand command, CancellationToken ct)
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
-        var command = new UpdateDeadlinePinCommand
-        {
-            TaskId = taskId,
-            IsPinned = updateDeadlinePin.IsPinned,
-        };
+        command.TaskId = taskId;
         
         await updateDeadlinePinCommandHandler.Handle(command, ct);
 
