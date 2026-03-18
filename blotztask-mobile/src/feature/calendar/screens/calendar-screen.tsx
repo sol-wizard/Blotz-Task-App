@@ -5,13 +5,12 @@ import { theme } from "@/shared/constants/theme";
 import CalendarHeader from "../components/calendar-header";
 import { FilteredTaskList } from "../components/filtered-task-list";
 import { useTaskDays } from "../hooks/useTaskDays";
-import { getMarkedDates, getSelectedDates } from "../util/get-marked-dates";
+import { getMarkedDates } from "../util/get-marked-dates";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { CustomDay, CustomDayProps } from "../components/custom-day";
-import { View } from "react-native";
 
 const calendarTheme = {
   calendarBackground: theme.colors.background,
@@ -24,12 +23,7 @@ export default function CalendarScreen() {
   const progress = useSharedValue(isCalendarVisible ? 1 : 0);
   usePushNotificationSetup();
 
-  let markedDates;
-  if (!isLoading) {
-    markedDates = getMarkedDates({ selectedDay, weeklyTaskAvailability });
-  } else {
-    markedDates = getSelectedDates({ selectedDay });
-  }
+  const markedDates = isLoading ? {} : getMarkedDates({ weeklyTaskAvailability });
 
   const handleDayPress = (dateString: string) => {
     setSelectedDay(new Date(dateString));
