@@ -34,6 +34,38 @@ public class DataSeeder
         return userId;
     }
 
+    public async Task<RecurringTask> CreateRecurringTaskAsync(
+        Guid userId,
+        string title,
+        RecurrenceFrequency frequency,
+        DateOnly startDate,
+        DateTimeOffset templateStartTime,
+        int interval = 1,
+        int? daysOfWeek = null,
+        DateOnly? endDate = null)
+    {
+        var recurring = new RecurringTask
+        {
+            UserId = userId,
+            Title = title,
+            TimeType = TaskTimeType.SingleTime,
+            TemplateStartTime = templateStartTime,
+            StartDate = startDate,
+            EndDate = endDate,
+            IsActive = true,
+            Pattern = new RecurrencePattern
+            {
+                Frequency = frequency,
+                Interval = interval,
+                DaysOfWeek = daysOfWeek,
+            }
+        };
+
+        _context.RecurringTasks.Add(recurring);
+        await _context.SaveChangesAsync();
+        return recurring;
+    }
+
     public async Task<TaskItem> CreateTaskAsync(Guid userId, string title, DateTimeOffset start, DateTimeOffset end, DateTimeOffset? createdAt = null)
     {
         var task = new TaskItem

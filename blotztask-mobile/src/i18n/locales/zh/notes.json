@@ -29,5 +29,9 @@
     "encouragingTitle": "你已经完成了所有任务",
     "encouragingDescription": "当生活变得忙碌时，我们会帮你保留这些任务。",
     "gashaponTitle": "还没有足够的火花。等有更多的时候再来抽卡"
+  },
+  "noteActions": {
+    "delete": "删除笔记",
+    "addToTask": "添加到任务"
   }
 }

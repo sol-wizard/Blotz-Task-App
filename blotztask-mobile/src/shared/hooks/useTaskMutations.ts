@@ -83,7 +83,11 @@ const useTaskMutations = () => {
 
 export default useTaskMutations;
 
-function invalidateSelectedDayTask(queryClient: QueryClient, startTime: string, endTime: string) {
+export function invalidateSelectedDayTask(
+  queryClient: QueryClient,
+  startTime: string,
+  endTime: string,
+) {
   const start = startOfDay(new Date(startTime));
   const end = startOfDay(new Date(endTime));
   if (isSameDay(start, end)) {

@@ -29,5 +29,9 @@
     "encouragingTitle": "You're all caught up",
     "encouragingDescription": "We'll hold onto things when life gets busy.",
     "gashaponTitle": "Not enough sparks yet. Gacha opens when there's more"
+  },
+  "noteActions": {
+    "delete": "Delete",
+    "addToTask": "Add to Task"
   }
 }

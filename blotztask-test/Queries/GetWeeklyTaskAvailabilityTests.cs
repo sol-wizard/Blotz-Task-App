@@ -17,7 +17,7 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         _context = new BlotzTaskDbContext(fixture.Options);
         _seeder = new DataSeeder(_context);
         var logger = TestDbContextFactory.CreateLogger<GetWeeklyTaskAvailabilityQueryHandler>();
-        _handler = new GetWeeklyTaskAvailabilityQueryHandler(_context, logger);
+        _handler = new GetWeeklyTaskAvailabilityQueryHandler(_context, new(), logger);
     }
 
     [Fact]

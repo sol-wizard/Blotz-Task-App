@@ -17,6 +17,19 @@
 
 - Break changes into small, focused steps. Never rewrite multiple files in one go without walking the user through each change.
 
+## Database Migrations
+
+- **Never run `dotnet ef migrations add` or `dotnet ef database update` on behalf of the user.**
+- After making domain/entity changes that require a migration, stop and instruct the user to run it themselves with the exact command:
+  ```
+  dotnet ef migrations add <MigrationName>
+  ```
+- If the migration needs to be applied to the database, also provide:
+  ```
+  dotnet ef database update
+  ```
+- Briefly explain what the migration will change so the user can verify it looks correct before applying.
+
 ## TypeScript
 
 - Never use `any` as a type. Always use the most specific type possible (`unknown`, a concrete type, or a generic).
