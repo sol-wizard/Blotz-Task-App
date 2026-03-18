@@ -14,7 +14,6 @@ export const getMarkedDates = ({
   //   selected day
   const selectedDayStr = format(selectedDay, "yyyy-MM-dd");
   const todayStr = format(new Date(), "yyyy-MM-dd");
-  const isTodaySelected = selectedDayStr === todayStr;
 
   // day with tasks
   weeklyTaskAvailability.forEach((item) => {
@@ -63,7 +62,6 @@ export const getSelectedDates = ({ selectedDay }: { selectedDay: Date }) => {
   //   selected day
   const selectedDayStr = format(selectedDay, "yyyy-MM-dd");
   const todayStr = format(new Date(), "yyyy-MM-dd");
-  const isTodaySelected = selectedDayStr === todayStr;
 
   if (!result[selectedDayStr]) {
     result[selectedDayStr] = {};
