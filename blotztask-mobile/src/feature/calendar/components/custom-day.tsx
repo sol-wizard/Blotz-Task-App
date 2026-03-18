@@ -43,7 +43,7 @@ export const CustomDay = ({ date, state, marking, isMarked, onPressDay }: Custom
         <Text className={`text-sm ${isToday && !isSelected && "font-bold"} ${textColorClass}`}>
           {weekLabel}
         </Text>
-        <Text className={`text-xl font-bold mt-1 ${textColorClass}`}>{date.day}</Text>
+        <Text className={`text-[20px] font-bold mt-1 ${textColorClass}`}>{date.day}</Text>
       </View>
     </Pressable>
   );
