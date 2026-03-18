@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -21,21 +22,31 @@ public class GetMonthlyTaskAvailabilityQuery
 public class GetMonthlyTaskAvailabilityQueryHandler(
     BlotzTaskDbContext db,
     RecurringTaskGeneratorService generatorService,
-    ILogger<GetWeeklyTaskAvailabilityQueryHandler> logger)
+    ILogger<GetMonthlyTaskAvailabilityQueryHandler> logger)
 {
     public async Task<List<MonthlyTaskIndicatorDto>> Handle(GetMonthlyTaskAvailabilityQuery query,
         CancellationToken ct = default)
     {
+        var stopwatch = Stopwatch.StartNew();
         var monthStart = query.firstDate;
         var monthEnd = query.firstDate.AddMonths(1);
-        var weekStartDate = DateOnly.FromDateTime(monthStart.Date);
-        var weekEndDate = DateOnly.FromDateTime(monthEnd.Date);
+        var monthStartDate = DateOnly.FromDateTime(monthStart.Date);
+        var monthEndDate = DateOnly.FromDateTime(monthEnd.Date);
         
         
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.firstDate.Offset);
         var userTodayStart = new DateTimeOffset(userNow.Date, query.firstDate.Offset);
         var userTodayEnd = userTodayStart.AddDays(1);
         var sevenDayWindowStart = userTodayEnd.AddDays(-7);
+        
+        
+        logger.LogInformation(
+            "Fetching monthly task availability for user {UserId} from {MonthStart} to {MonthEnd}",
+            query.UserId,
+            monthStart,
+            monthEnd);
+        
+        var queryStopwatch = Stopwatch.StartNew();
         
         var tasks = await db.TaskItems
             .AsNoTracking()
@@ -64,6 +75,23 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
             })
             .ToListAsync(ct);
         
+        
+        var recurringTasks = await db.RecurringTasks
+            .AsNoTracking()
+            .Include(r => r.Label)
+            .Where(r => r.UserId == query.UserId
+                        && r.IsActive
+                        && r.StartDate <= monthEndDate
+                        && (r.EndDate == null || r.EndDate >= monthStartDate))
+            .ToListAsync(ct);
+
+        logger.LogInformation(
+            "Fetched {TaskCount} stored tasks, {RecurringCount} recurring templates for user {UserId} (DB query {DbElapsedMs}ms)",
+            tasks.Count,
+            recurringTasks.Count,
+            query.UserId,
+            queryStopwatch.ElapsedMilliseconds);
+        
         var result = new List<MonthlyTaskIndicatorDto>();
 
         for (var dayStart = monthStart; dayStart < monthEnd; dayStart = dayStart.AddDays(1))
@@ -88,14 +116,35 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                     Label = t.Label // set this when you include label in query
                 })
                 .ToList();
+            var hasTask = dayTasks.Count > 0;
+            
+            if (!hasTask)
+            {
+                var recurringThumbnails = recurringTasks
+                    .Where(r => generatorService.IsOccurrenceOn(r, dayDate))
+                    .Select(r => new TaskThumbnailDto
+                    {
+                        TaskTitle = r.Title,
+                        Label = r.Label
+                    })
+                    .ToList();
 
-            result.Add(new MonthlyTaskIndicatorDto()
+                dayTasks.AddRange(recurringThumbnails);
+                hasTask = dayTasks.Count > 0;
+            }
+            
+            result.Add(new MonthlyTaskIndicatorDto
             {
                 TaskThumbnails = dayTasks,
                 Date = dayStart,
-                HasTask = dayTasks.Count > 0
+                HasTask = hasTask
             });
         }
+
+        logger.LogInformation(
+            "Computed monthly task availability for user {UserId} in {ElapsedMs}ms",
+            query.UserId,
+            stopwatch.ElapsedMilliseconds);
         
         return result;
     }
