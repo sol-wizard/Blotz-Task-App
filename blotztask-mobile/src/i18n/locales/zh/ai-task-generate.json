@@ -22,6 +22,12 @@
   "errors": {
     "default": "哎呀，我有点搞不定了。请再试一次。"
   },
+  "consent": {
+    "title": "AI 任务建议使用提示",
+    "description": "为了生成任务建议，你的任务数据将被发送到 Azure OpenAI 进行处理，但这些数据不会被保存。请在继续之前确认你已同意。",
+    "accept": "我同意",
+    "decline": "取消"
+  },
   "taskCard": {
     "titlePlaceholder": "任务标题",
     "editTitleLabel": "编辑任务标题",

@@ -22,6 +22,12 @@
   "errors": {
     "default": "Oops something went over my head. Please try again."
   },
+  "consent": {
+    "title": "AI Task Suggestions Consent",
+    "description": "To generate task suggestions, your task data will be sent to Azure OpenAI for processing. The data will not be stored. Please confirm that you agree before continuing.",
+    "accept": "I Agree",
+    "decline": "Cancel"
+  },
   "taskCard": {
     "titlePlaceholder": "Task title",
     "editTitleLabel": "Edit task title",
