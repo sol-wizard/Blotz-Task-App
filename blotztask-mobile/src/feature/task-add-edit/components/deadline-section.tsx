@@ -13,9 +13,10 @@ import TimePicker from "./time-picker";
 
 interface DeadlineSectionProps {
   control: Control<any>;
+  getValues: (name: any) => any;
 }
 
-export const DeadlineSection = ({ control }: DeadlineSectionProps) => {
+export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) => {
   const { t, i18n } = useTranslation("tasks");
   const isChinese = i18n.language === "zh";
   const locale = isChinese ? zhCN : enUS;
@@ -64,7 +65,14 @@ export const DeadlineSection = ({ control }: DeadlineSectionProps) => {
         <ToggleSwitch
           value={isDdl}
           onChange={() => {
-            onIsDdlChange(!isDdl);
+            const nextValue = !isDdl;
+            onIsDdlChange(nextValue);
+
+            // Only sync when turning ON
+            if (nextValue) {
+              onDeadlineDateChange(getValues("endDate"));
+              onDeadlineTimeChange(getValues("endTime"));
+            }
             setActiveSelector(null);
           }}
         />

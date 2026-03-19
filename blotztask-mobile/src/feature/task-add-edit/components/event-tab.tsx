@@ -24,11 +24,20 @@ export const EventTab = ({
   control,
   trigger,
   clearErrors,
+  setValue,
 }: {
   control: Control<TaskFormField>;
   trigger?: UseFormTrigger<TaskFormField>;
   clearErrors?: UseFormClearErrors<TaskFormField>;
+  setValue: (name: keyof TaskFormField, value: any) => void;
 }) => {
+  const {
+    field: { value: isDdl },
+  } = useController({
+    control,
+    name: "isDdl",
+  });
+
   const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
     const start = combineDateTime(sd, st);
     const end = combineDateTime(ed, et);
@@ -161,7 +170,6 @@ export const EventTab = ({
               value={startTimeValue}
               onChange={(v: Date) => {
                 startTimeOnChange(v);
-                validateRange(startDateValue, v, endDateValue, endTimeValue);
               }}
             />
           </Animated.View>

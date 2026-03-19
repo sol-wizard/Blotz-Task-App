@@ -60,6 +60,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     : (initialAlertTime ?? null);
 
   const now = new Date();
+  const oneHourLater = new Date(now.getTime() + 3600000);
   const initialDueAt = dto?.dueAt ? new Date(dto.dueAt) : null;
 
   const defaultValues: TaskFormField = {
@@ -68,12 +69,12 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     labelId: dto?.labelId ?? null,
     startDate: dto?.startTime ? new Date(dto?.startTime) : now,
     startTime: dto?.startTime ? new Date(dto?.startTime) : now,
-    endDate: dto?.endTime ? new Date(dto?.endTime) : now,
-    endTime: dto?.endTime ? new Date(dto?.endTime) : now,
+    endDate: dto?.endTime ? new Date(dto?.endTime) : oneHourLater,
+    endTime: dto?.endTime ? new Date(dto?.endTime) : oneHourLater,
     alert: defaultAlert,
     isDdl: dto?.isDdl ?? !!initialDueAt,
-    deadlineDate: initialDueAt ?? now,
-    deadlineTime: initialDueAt ?? now,
+    deadlineDate: initialDueAt ?? oneHourLater,
+    deadlineTime: initialDueAt ?? oneHourLater,
   };
 
   const form = useForm<TaskFormField>({
@@ -199,12 +200,17 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             {t(formState.errors.endTime.message || "")}
           </Text>
         )}
-        {isActiveTab === "reminder" && <ReminderTab control={control} />}
+        {isActiveTab === "reminder" && <ReminderTab control={control} setValue={setValue} />}
         {isActiveTab === "event" && (
-          <EventTab control={control} trigger={trigger} clearErrors={clearErrors} />
+          <EventTab
+            control={control}
+            trigger={trigger}
+            clearErrors={clearErrors}
+            setValue={setValue}
+          />
         )}
         <FormDivider />
-        <DeadlineSection control={control} />
+        <DeadlineSection control={control} getValues={form.getValues} />
         <FormDivider />
 
         <AlertSelect control={control} />

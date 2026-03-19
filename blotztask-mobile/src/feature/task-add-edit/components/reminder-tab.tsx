@@ -10,7 +10,13 @@ import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 
-export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) => {
+export const ReminderTab = ({
+  control,
+  setValue,
+}: {
+  control: Control<TaskFormField>;
+  setValue: (name: keyof TaskFormField, value: any) => void;
+}) => {
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
   const {
