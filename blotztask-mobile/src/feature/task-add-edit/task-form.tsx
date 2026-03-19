@@ -44,7 +44,8 @@ type TaskFormProps =
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
-  const hasEventTimes = dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime;
+  const hasEventTimes =
+    dto?.timeType === 1 || (dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime);
   const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
   const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
   const { t } = useTranslation("tasks");
