@@ -45,6 +45,7 @@ export const PNGIMAGES = {
   onboardingBreakdownBackground: require("../../../assets/images-png/onboarding-breakdown-background.png"),
   onboardingNoteBackground: require("../../../assets/images-png/onboarding-note-background.png"),
   onboardingVoiceBackground: require("../../../assets/images-png/onboarding-voice-background.png"),
+  xhsLogo: require("../../../assets/images-png/xhs.jpg"),
 } as const;
 
 export const SVGIMAGES = {
