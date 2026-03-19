@@ -13,6 +13,10 @@ public class AddSubtaskCommand
     [Required(ErrorMessage = "Title is required")]
     public string Title { get; set; }
     public TimeSpan? Duration { get; set; }
+    
+    [Required(ErrorMessage = "Order is required.")]
+    [Range(1, int.MaxValue, ErrorMessage = "Order must be greater than 0.")]
+    public int Order { get; set; }
 }
 
 public class AddSubtaskCommandHandler(
@@ -30,18 +34,12 @@ public class AddSubtaskCommandHandler(
             logger.LogError("Parent task {TaskId} doesn't exist",  command.ParentTaskId);
             throw new NotFoundException($"Task {command.ParentTaskId} not found");
         }
-
-        var maxOrder = await db.Subtasks
-            .Where(s => s.ParentTaskId == command.ParentTaskId)
-            .Select(s => (int?)s.Order)
-            .MaxAsync(ct) ?? 0;
-
         var subtask = new Subtask
         {
             ParentTaskId = command.ParentTaskId,
             Title = command.Title,
             Duration = command.Duration,
-            Order = maxOrder + 1,
+            Order = command.Order,
             IsDone = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow

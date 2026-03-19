@@ -3,83 +3,18 @@ import { DailyTaskIndicatorDTO } from "../models/daily-task-indicator-dto";
 
 export const getMarkedDates = ({
   weeklyTaskAvailability,
-  selectedDay,
 }: {
   weeklyTaskAvailability: DailyTaskIndicatorDTO[];
-  selectedDay: Date;
 }) => {
-  const result: Record<string, any> = {};
-  // day with tasks
+  const result: Record<string, { marked: boolean }> = {};
+
   weeklyTaskAvailability.forEach((item) => {
     const dateStr = format(new Date(item.date), "yyyy-MM-dd");
 
-    if (!result[dateStr]) {
-      result[dateStr] = {};
-    }
-
     if (item.hasTask) {
-      result[dateStr].marked = true;
-      result[dateStr].dotColor = "#98C802";
+      result[dateStr] = { marked: true };
     }
   });
-
-  //   selected day
-  const selectedDayStr = format(selectedDay, "yyyy-MM-dd");
-  const todayStr = format(new Date(), "yyyy-MM-dd");
-  const isTodaySelected = selectedDayStr === todayStr;
-
-  if (!result[selectedDayStr]) {
-    result[selectedDayStr] = {};
-  }
-  result[selectedDayStr] = {
-    ...result[selectedDayStr],
-    selected: true,
-    selectedColor: "#EBF0FE",
-    selectedTextColor: isTodaySelected ? "#000000" : "#8C8C8C",
-  };
-
-  //   today
-  if (!result[todayStr]) {
-    result[todayStr] = {};
-  }
-  result[todayStr] = {
-    ...result[todayStr],
-    customTextStyle: {
-      color: "#000000",
-    },
-  };
-
-  return result;
-};
-
-export const getSelectedDates = ({ selectedDay }: { selectedDay: Date }) => {
-  const result: Record<string, any> = {};
-
-  //   selected day
-  const selectedDayStr = format(selectedDay, "yyyy-MM-dd");
-  const todayStr = format(new Date(), "yyyy-MM-dd");
-  const isTodaySelected = selectedDayStr === todayStr;
-
-  if (!result[selectedDayStr]) {
-    result[selectedDayStr] = {};
-  }
-  result[selectedDayStr] = {
-    ...result[selectedDayStr],
-    selected: true,
-    selectedColor: "#EBF0FE",
-    selectedTextColor: isTodaySelected ? "#000000" : "#8C8C8C",
-  };
-
-  //   today
-  if (!result[todayStr]) {
-    result[todayStr] = {};
-  }
-  result[todayStr] = {
-    ...result[todayStr],
-    customTextStyle: {
-      color: "#000000",
-    },
-  };
 
   return result;
 };
