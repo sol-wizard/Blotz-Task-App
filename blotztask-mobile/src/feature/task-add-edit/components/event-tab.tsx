@@ -31,13 +31,6 @@ export const EventTab = ({
   clearErrors?: UseFormClearErrors<TaskFormField>;
   setValue: (name: keyof TaskFormField, value: any) => void;
 }) => {
-  const {
-    field: { value: isDdl },
-  } = useController({
-    control,
-    name: "isDdl",
-  });
-
   const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
     const start = combineDateTime(sd, st);
     const end = combineDateTime(ed, et);
