@@ -11,9 +11,7 @@ import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) => {
-  const [activeSelector, setActiveSelector] = useState<
-    "date" | "time" | null
-  >(null);
+  const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
   const {
     field: { value: startDate, onChange: onStartDateChange },
@@ -43,7 +41,6 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
     name: "endTime",
   });
 
-
   const { t, i18n } = useTranslation("tasks");
   const isChinese = i18n.language === "zh";
   const locale = isChinese ? zhCN : enUS;
@@ -53,10 +50,8 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
     : t("form.selectDate");
   const timeDisplayText = startTime ? format(startTime, "hh:mm a") : t("form.selectTime");
 
-
   return (
     <Animated.View
-      className=""
       layout={MotionAnimations.layout}
       entering={MotionAnimations.rightEntering}
       exiting={MotionAnimations.leftExiting}
@@ -64,7 +59,7 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
       {/* Date  */}
       <Animated.View className="mb-4" layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.date")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.date")}</Text>
           <Pressable
             onPress={() => setActiveSelector((prev) => (prev === "date" ? null : "date"))}
             className="bg-background px-4 py-2 rounded-xl"
@@ -92,7 +87,7 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
       {/* Time  */}
       <Animated.View className="justify-center" layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.time")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.time")}</Text>
 
           <Pressable
             onPress={() => setActiveSelector((prev) => (prev === "time" ? null : "time"))}
@@ -119,7 +114,6 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
           )}
         </View>
       </Animated.View>
-
     </Animated.View>
   );
 };

@@ -104,17 +104,15 @@ export const EventTab = ({
   const isTimeInvalid =
     isSameDate && endTimeValue && startTimeValue && isBefore(endTimeValue, startTimeValue);
 
-
   return (
     <Animated.View
-      className=""
       layout={MotionAnimations.layout}
       entering={MotionAnimations.leftEntering}
       exiting={MotionAnimations.rightExiting}
     >
       <Animated.View className="mb-4" layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.start")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.start")}</Text>
 
           <View className="flex-row">
             <Pressable
@@ -172,7 +170,7 @@ export const EventTab = ({
 
       <Animated.View layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.end")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.end")}</Text>
 
           <View className="flex-row">
             <Pressable
@@ -246,7 +244,6 @@ export const EventTab = ({
           </Animated.View>
         )}
       </Animated.View>
-
     </Animated.View>
   );
 };

@@ -21,7 +21,9 @@ export const DeadlineSection = ({ control }: DeadlineSectionProps) => {
   const locale = isChinese ? zhCN : enUS;
   const dateFormat = isChinese ? "yyyy年M月d日" : "MMM d, yyyy";
 
-  const [activeSelector, setActiveSelector] = useState<"deadlineDate" | "deadlineTime" | null>(null);
+  const [activeSelector, setActiveSelector] = useState<"deadlineDate" | "deadlineTime" | null>(
+    null,
+  );
 
   const {
     field: { value: isDdl, onChange: onIsDdlChange },
@@ -58,7 +60,7 @@ export const DeadlineSection = ({ control }: DeadlineSectionProps) => {
         className={`flex-row justify-between items-center ${isDdl ? "mb-4" : ""}`}
         layout={MotionAnimations.layout}
       >
-        <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.markAsDeadline")}</Text>
+        <Text className="font-baloo text-secondary text-xl mt-1">{t("form.markAsDeadline")}</Text>
         <ToggleSwitch
           value={isDdl}
           onChange={() => {
@@ -75,9 +77,9 @@ export const DeadlineSection = ({ control }: DeadlineSectionProps) => {
           exiting={MotionAnimations.outExiting}
           layout={MotionAnimations.layout}
         >
-          <Animated.View className="mb-4" layout={MotionAnimations.layout}>
+          <Animated.View layout={MotionAnimations.layout}>
             <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-              <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.dueTime")}</Text>
+              <Text className="font-baloo text-secondary text-xl mt-1">{t("form.dueTime")}</Text>
               <View className="flex-row">
                 <Pressable
                   onPress={() =>

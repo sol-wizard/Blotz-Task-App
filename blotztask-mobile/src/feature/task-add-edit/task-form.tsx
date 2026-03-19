@@ -112,8 +112,10 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         alert: data.alert,
         title: data.title,
       });
-      alertTime = calculateAlertTime(data.startTime, data.alert);
+      alertTime = calculateAlertTime(startTime!, data.alert);
     }
+
+    const deadline = data.isDdl ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
 
     const submitTask: AddTaskItemDTO = {
       title: data.title.trim(),
@@ -125,14 +127,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       alertTime: alertTime ? convertToDateTimeOffset(alertTime) : undefined,
       notificationId,
       isDdl: data.isDdl,
+      dueAt: deadline ? convertToDateTimeOffset(deadline) : undefined,
     };
-
-    if (data.isDdl && data.deadlineDate && data.deadlineTime) {
-      const deadlineAt = combineDateTime(data.deadlineDate, data.deadlineTime);
-      if (deadlineAt) {
-        submitTask.dueAt = convertToDateTimeOffset(deadlineAt);
-      }
-    }
 
     onSubmit(submitTask);
   };
