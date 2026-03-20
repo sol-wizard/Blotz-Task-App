@@ -18,15 +18,14 @@ const DetailsView = ({
   const { t } = useTranslation();
 
   return (
-    <View className="bg-gray-100 rounded-xl p-4 min-h-32 w-full">
+    <View className="bg-gray-100 rounded-xl p-4 h-[190px] w-full">
       <TextInput
         value={taskDescription}
         onChangeText={setDescription}
         placeholder={t("tasks:details.addDetails")}
         multiline
-        scrollEnabled={false}
         textAlignVertical="top"
-        className="font-baloo text-[#3E4A5A] text-base flex-1 min-h-18 py-0"
+        className="font-baloo text-[#3E4A5A] text-base flex-1 py-0"
       />
       <View className="mt-3 items-end">
         <TouchableOpacity

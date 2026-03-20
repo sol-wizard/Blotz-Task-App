@@ -42,22 +42,20 @@ export default function SubtaskItem({
 
   const renderRightActions = () => {
     return (
-      <View style={{ justifyContent: "center", alignItems: "center", width: 70 }}>
+      <View className="w-[70px] items-center justify-center">
         <TouchableOpacity onPress={handleDelete} className="items-center">
           <View
-            style={{
-              backgroundColor: theme.colors.warning,
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              justifyContent: "center",
-              alignItems: "center",
-              marginBottom: 2,
-            }}
+            className="w-8 h-8 rounded-full items-center justify-center mb-0.5"
+            style={{ backgroundColor: theme.colors.warning }}
           >
             <MaterialIcons name="delete" size={18} color="white" />
           </View>
-          <Text className="text-[9px] font-balooBold text-center" style={{ color: theme.colors.warning }}>Delete</Text>
+          <Text
+            className="text-[9px] font-bold text-center"
+            style={{ color: theme.colors.warning }}
+          >
+            Delete
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -77,57 +75,53 @@ export default function SubtaskItem({
         onPress={() => !isEditMode && handleToggle()}
         onLongPress={isEditMode ? drag : undefined}
         style={{
-          backgroundColor: "#FFFFFF",
           borderRadius: 12,
           borderWidth: 1,
           borderColor: theme.colors.secondary,
-          flexDirection: "row",
-          alignItems: "center",
-          minHeight: 50,
-          paddingHorizontal: 12,
-          paddingVertical: 6,
+          backgroundColor: isChecked ? "rgba(200, 200, 200, 0.15)" : "#FFFFFF",
         }}
       >
-        {isChecked && (
-          <View
-            className="absolute top-0 left-0 right-0 bottom-0 z-10"
-            style={{ backgroundColor: "rgba(200, 200, 200, 0.1)", borderRadius: 12 }}
-            pointerEvents="none"
-          />
-        )}
+        <View className="flex-row items-center min-h-[50px] px-3 py-1.5">
+          <View style={{ width: 34, justifyContent: "center" }}>
+            <TasksCheckbox checked={isChecked} onChange={handleToggle} size={24} />
+          </View>
 
-        <View style={{ width: 34, justifyContent: "center" }}>
-          <TasksCheckbox checked={isChecked} onChange={handleToggle} size={24} />
-        </View>
-
-        <View style={{ flex: 1, marginLeft: 8, justifyContent: "center" }}>
-          {subtask.duration && (
+          <View style={{ flex: 1, marginLeft: 8, justifyContent: "center" }}>
+            {subtask.duration && (
+              <Text
+                className="text-[12px] font-bold"
+                style={{
+                  color: isChecked ? theme.colors.disabled : theme.colors.highlight,
+                  marginBottom: -1,
+                }}
+              >
+                {convertDurationToText(subtask.duration)}
+              </Text>
+            )}
             <Text
-              className="text-[12px] font-balooBold"
-              style={{ color: isChecked ? theme.colors.disabled : theme.colors.highlight, marginBottom: -1 }}
+              numberOfLines={2}
+              className={`text-base ${isChecked ? "line-through" : ""}`}
+              style={{ color: textColor }}
             >
-              {convertDurationToText(subtask.duration)}
+              {subtask?.title}
             </Text>
-          )}
-          <Text
-            numberOfLines={2}
-            className={`text-base font-baloo ${isChecked ? "line-through" : ""}`}
-            style={{ color: textColor }}
-          >
-            {subtask?.title}
-          </Text>
-        </View>
+          </View>
 
-        <View style={{ width: 32, alignItems: "center", justifyContent: "center" }}>
-          {isEditMode ? (
-            <TouchableOpacity onPressIn={drag} activeOpacity={1}>
-              <MaterialIcons name="unfold-more" size={26} color={theme.colors.disabled} />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={() => console.log("Edit subtask clicked")}>
-              <MaterialCommunityIcons name="pencil-minus-outline" size={22} color={theme.colors.disabled} />
-            </TouchableOpacity>
-          )}
+          <View style={{ width: 32, alignItems: "center", justifyContent: "center" }}>
+            {isEditMode ? (
+              <TouchableOpacity onPressIn={drag} activeOpacity={1}>
+                <MaterialIcons name="unfold-more" size={26} color={theme.colors.disabled} />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={() => console.log("Edit subtask clicked")}>
+                <MaterialCommunityIcons
+                  name="pencil-minus-outline"
+                  size={22}
+                  color={theme.colors.disabled}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </TouchableOpacity>
     </Swipeable>
