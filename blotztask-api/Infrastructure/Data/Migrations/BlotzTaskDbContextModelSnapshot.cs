@@ -464,7 +464,7 @@ namespace BlotzTask.Migrations
 
                     b.HasIndex("UserId", "StartTime", "EndTime");
 
-                    b.ToTable("TaskItems", null, t =>
+                    b.ToTable("TaskItems", t =>
                         {
                             t.HasCheckConstraint("CK_TaskItem_SingleTime_Equals", "([TimeType] IS NULL) OR ([TimeType] <> 0) OR ([StartTime] = [EndTime])");
 
@@ -511,7 +511,7 @@ namespace BlotzTask.Migrations
                     b.HasIndex("Auth0UserId")
                         .IsUnique();
 
-                    b.ToTable("AppUsers", (string)null);
+                    b.ToTable("AppUsers");
 
                     b.HasData(
                         new
@@ -703,7 +703,7 @@ namespace BlotzTask.Migrations
 
                             b1.HasKey("RecurringTaskId");
 
-                            b1.ToTable("RecurringTasks", (string)null);
+                            b1.ToTable("RecurringTasks");
 
                             b1.WithOwner()
                                 .HasForeignKey("RecurringTaskId");
