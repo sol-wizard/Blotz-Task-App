@@ -121,6 +121,27 @@ public class GetTasksByDateQueryHandler(
             tasks.Count,
             query.UserId,
             queryStopwatch.ElapsedMilliseconds);
+        
+        // Step 1.5: Fetch DDL status for task
+        var storedTaskIds = tasks
+            .Where(t => t.Id.HasValue)
+            .Select(t => t.Id!.Value)
+            .ToList();
+
+        HashSet<int> ddlTaskIds = [];
+        if (storedTaskIds.Count > 0)
+        {
+            ddlTaskIds = await db.TaskDeadlines
+                .AsNoTracking()
+                .Where(td => storedTaskIds.Contains(td.TaskItemId))
+                .Select(td => td.TaskItemId)
+                .ToHashSetAsync(ct);
+        }
+
+        foreach (var task in tasks)
+        {
+            task.TaskIsDDL = task.Id.HasValue && ddlTaskIds.Contains(task.Id.Value);
+        }
 
         // Step 2: Fetch active RecurringTasks for this user that could occur on requestedDate
         var recurringTasks = await db.RecurringTasks
@@ -174,7 +195,8 @@ public class GetTasksByDateQueryHandler(
                         Color = recurring.Label.Color
                     }
                     : null,
-                Subtasks = []
+                Subtasks = [],
+                TaskIsDDL = false
             });
         }
 
@@ -215,4 +237,5 @@ public class TaskByDateItemDto
     public List<SubtaskDetailDto> Subtasks { get; set; } = [];
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
+    public bool TaskIsDDL { get; set; }
 }
