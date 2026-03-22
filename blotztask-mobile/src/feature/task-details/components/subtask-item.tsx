@@ -78,7 +78,7 @@ export default function SubtaskItem({
           borderRadius: 12,
           borderWidth: 1,
           borderColor: theme.colors.secondary,
-          backgroundColor: isChecked ? "rgba(200, 200, 200, 0.15)" : "#FFFFFF",
+          backgroundColor: isChecked ? "#F2F2F2" : "#FFFFFF",
         }}
       >
         <View className="flex-row items-center min-h-[50px] px-3 py-1.5">
