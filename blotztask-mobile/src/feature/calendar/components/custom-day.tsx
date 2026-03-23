@@ -28,7 +28,6 @@ export type CustomDayProps = {
 const weekNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export const CustomDay = ({ date, state, marking, isMarked, onPressDay }: CustomDayProps) => {
-  console.log("Rendering day:", date?.dateString, "State:", state, "Marked:", isMarked);
   const isToday = state === "today";
   const isSelected = state === "selected";
   const textColorClass = isSelected ? "text-white" : isToday ? "text-highlight" : "text-[#8C8C8C]";

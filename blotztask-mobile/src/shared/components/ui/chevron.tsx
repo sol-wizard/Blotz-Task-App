@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
+import Animated, { DerivedValue, SharedValue, useAnimatedStyle } from "react-native-reanimated";
 
 export const AnimatedChevron = ({
   progress,
   color,
 }: {
-  progress: Readonly<SharedValue<number>>;
+  progress: Readonly<SharedValue<number>> | DerivedValue<0 | 1>;
   color: string;
 }) => {
   const iconStyle = useAnimatedStyle(() => ({
