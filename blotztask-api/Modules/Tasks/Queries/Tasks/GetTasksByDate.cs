@@ -95,6 +95,7 @@ public class GetTasksByDateQueryHandler(
                 TimeType = task.TimeType,
                 NotificationId = task.NotificationId,
                 AlertTime = task.AlertTime,
+                IsDeadline = db.TaskDeadlines.Any(td => td.TaskItemId == task.Id),
                 Label = task.Label != null
                     ? new LabelDto
                     {
@@ -174,7 +175,8 @@ public class GetTasksByDateQueryHandler(
                         Color = recurring.Label.Color
                     }
                     : null,
-                Subtasks = []
+                Subtasks = [],
+                IsDeadline = false
             });
         }
 
@@ -215,4 +217,5 @@ public class TaskByDateItemDto
     public List<SubtaskDetailDto> Subtasks { get; set; } = [];
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
+    public bool IsDeadline { get; set; }
 }
