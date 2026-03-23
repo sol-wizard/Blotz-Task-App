@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { RefObject } from "react";
 import Animated from "react-native-reanimated";
 import ReanimatedSwipeable, {
   SwipeableMethods,
@@ -22,7 +23,7 @@ export const NoteRow = ({
   note: NoteDTO;
   onPressNote: (note: NoteDTO) => void;
   onDelete: (note: NoteDTO) => void;
-  onRowOpen: (ref: SwipeableMethods | null) => void;
+  onRowOpen: (ref: RefObject<SwipeableMethods | null>) => void;
   onAddToTask: (note: NoteDTO) => void;
 }) => {
 
@@ -54,7 +55,7 @@ export const NoteRow = ({
         overshootRight={false}
         friction={2}
         onSwipeableWillOpen={() => {
-          onRowOpen(swipeRef.current);
+          onRowOpen(swipeRef);
           setIsSwiping(true);
         }}
         onSwipeableWillClose={() => {
