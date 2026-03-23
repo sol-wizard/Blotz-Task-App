@@ -1,9 +1,10 @@
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import TasksCheckbox from "./task-checkbox";
 import { theme } from "@/shared/constants/theme";
 import { convertDurationToText } from "../../../shared/util/convert-duration";
-import { Swipeable, TouchableOpacity } from "react-native-gesture-handler";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import { ActionButton, ActionButtonType } from "@/feature/notes/components/action-button";
 
 type SubtaskItemData = {
   id: number;
@@ -24,7 +25,6 @@ type SubtaskItemProps = {
 export default function SubtaskItem({
   item: subtask,
   onToggle,
-  color,
   isEditMode = false,
   onDelete,
   drag,
@@ -43,20 +43,13 @@ export default function SubtaskItem({
   const renderRightActions = () => {
     return (
       <View className="w-[70px] items-center justify-center">
-        <TouchableOpacity onPress={handleDelete} className="items-center">
-          <View
-            className="w-8 h-8 rounded-full items-center justify-center mb-0.5"
-            style={{ backgroundColor: theme.colors.warning }}
-          >
-            <MaterialIcons name="delete" size={18} color="white" />
-          </View>
-          <Text
-            className="text-[9px] font-bold text-center"
-            style={{ color: theme.colors.warning }}
-          >
-            Delete
-          </Text>
-        </TouchableOpacity>
+        <ActionButton
+          type={ActionButtonType.Delete}
+          onPress={handleDelete}
+          labelColor="#F56767"
+          containerSize={30}
+          iconSize={16}
+        />
       </View>
     );
   };
@@ -66,7 +59,7 @@ export default function SubtaskItem({
       renderRightActions={renderRightActions}
       friction={2}
       enabled={!isEditMode}
-      containerStyle={{ marginBottom: 12 }}
+      containerStyle={{ marginBottom: 8 }}
       activeOffsetX={[-10, 10]}
       failOffsetY={[-5, 5]}
     >
@@ -75,24 +68,25 @@ export default function SubtaskItem({
         onPress={() => !isEditMode && handleToggle()}
         onLongPress={isEditMode ? drag : undefined}
         style={{
-          borderRadius: 12,
+          borderRadius: 16,
           borderWidth: 1,
-          borderColor: theme.colors.secondary,
-          backgroundColor: isChecked ? "#F2F2F2" : "#FFFFFF",
+          borderColor: "#E5E7EB",
+          backgroundColor: "#FFFFFF",
         }}
       >
-        <View className="flex-row items-center min-h-[50px] px-3 py-1.5">
-          <View style={{ width: 34, justifyContent: "center" }}>
+        <View className="flex-row items-center min-h-[48px] px-3 py-1">
+          <View style={{ width: 32, justifyContent: "center" }}>
             <TasksCheckbox checked={isChecked} onChange={handleToggle} size={24} />
           </View>
 
-          <View style={{ flex: 1, marginLeft: 8, justifyContent: "center" }}>
+          <View style={{ flex: 1, marginLeft: 4, justifyContent: "center" }}>
             {subtask.duration && (
               <Text
                 className="text-[12px] font-bold"
                 style={{
-                  color: isChecked ? theme.colors.disabled : theme.colors.highlight,
-                  marginBottom: -1,
+                  color: isChecked ? "#BDE6A3" : theme.colors.highlight,
+                  marginBottom: -2,
+                  fontWeight: "700",
                 }}
               >
                 {convertDurationToText(subtask.duration)}
@@ -100,7 +94,7 @@ export default function SubtaskItem({
             )}
             <Text
               numberOfLines={2}
-              className={`text-base ${isChecked ? "line-through" : ""}`}
+              className={`text-base font-bold ${isChecked ? "line-through" : ""}`}
               style={{ color: textColor }}
             >
               {subtask?.title}
