@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, ViewStyle } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { theme } from "@/shared/constants/theme";
+import * as Haptics from "expo-haptics";
 
 type Props = {
   checked: boolean;
@@ -23,7 +24,7 @@ export default function TasksCheckbox({
   checked,
   onChange,
   disabled = false,
-  size = 24,
+  size = 22,
   color = GREEN,
   uncheckedColor = GREEN,
   className = "",
@@ -31,6 +32,7 @@ export default function TasksCheckbox({
 }: Props) {
   const handlePress = async () => {
     if (disabled) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await onChange(!checked);
   };
 
