@@ -60,8 +60,6 @@ export default function SubtaskItem({
       friction={2}
       enabled={!isEditMode}
       containerStyle={{ marginBottom: 8 }}
-      activeOffsetX={[-10, 10]}
-      failOffsetY={[-5, 5]}
     >
       <TouchableOpacity
         activeOpacity={0.8}
