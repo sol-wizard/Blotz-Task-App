@@ -9,11 +9,17 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
     public void Configure(EntityTypeBuilder<TaskItem> builder)
     {
         builder.HasIndex(t => new { t.UserId, t.StartTime, t.EndTime });
+        builder.HasIndex(t => t.RecurringTaskId);
 
         builder.HasOne(t => t.User)
             .WithMany()
             .HasForeignKey(t => t.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(t => t.RecurringTask)
+            .WithMany()
+            .HasForeignKey(t => t.RecurringTaskId)
+            .OnDelete(DeleteBehavior.NoAction);
 
         builder.ToTable(t =>
         {

@@ -7,7 +7,8 @@ export enum TaskTimeType {
 }
 
 export interface TaskDetailDTO {
-  id: number;
+  id: number | null;
+  recurringTaskId?: number | null;
   description?: string;
   title: string;
   isDone: boolean;

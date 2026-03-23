@@ -78,6 +78,16 @@ public class SyncUserCommandHandler(
                 UserId = row.Id
             };
             db.UserPreferences.Add(userPreference);
+
+            var pomodoroSetting = new PomodoroSetting
+            {
+                UserId = row.Id,
+                Timing = 25,
+                Sound = null,
+                IsCountdown = false
+            };
+            db.PomodoroSetting.Add(pomodoroSetting);
+            
             await db.SaveChangesAsync(ct);
 
             // Seed default tasks for new user

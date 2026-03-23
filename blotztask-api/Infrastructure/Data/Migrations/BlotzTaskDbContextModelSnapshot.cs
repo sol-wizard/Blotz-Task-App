@@ -260,6 +260,67 @@ namespace BlotzTask.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int?>("LabelId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset?>("TemplateEndTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("TemplateStartTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("TimeType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LabelId");
+
+                    b.HasIndex("UserId", "IsActive");
+
+                    b.ToTable("RecurringTasks", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.Subtask", b =>
                 {
                     b.Property<int>("Id")
@@ -376,6 +437,9 @@ namespace BlotzTask.Migrations
                     b.Property<string>("NotificationId")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("RecurringTaskId")
+                        .HasColumnType("int");
+
                     b.Property<DateTimeOffset>("StartTime")
                         .HasColumnType("datetimeoffset");
 
@@ -395,6 +459,8 @@ namespace BlotzTask.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("LabelId");
+
+                    b.HasIndex("RecurringTaskId");
 
                     b.HasIndex("UserId", "StartTime", "EndTime");
 
@@ -600,6 +666,57 @@ namespace BlotzTask.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Labels.Domain.Label", "Label")
+                        .WithMany()
+                        .HasForeignKey("LabelId");
+
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("BlotzTask.Modules.Tasks.Domain.Entities.RecurrencePattern", "Pattern", b1 =>
+                        {
+                            b1.Property<int>("RecurringTaskId")
+                                .HasColumnType("int");
+
+                            b1.Property<int?>("DayOfMonth")
+                                .HasColumnType("int")
+                                .HasColumnName("DayOfMonth");
+
+                            b1.Property<int?>("DaysOfWeek")
+                                .HasColumnType("int")
+                                .HasColumnName("DaysOfWeek");
+
+                            b1.Property<int>("Frequency")
+                                .HasColumnType("int")
+                                .HasColumnName("Frequency");
+
+                            b1.Property<int>("Interval")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int")
+                                .HasDefaultValue(1)
+                                .HasColumnName("Interval");
+
+                            b1.HasKey("RecurringTaskId");
+
+                            b1.ToTable("RecurringTasks");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RecurringTaskId");
+                        });
+
+                    b.Navigation("Label");
+
+                    b.Navigation("Pattern")
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.Subtask", b =>
                 {
                     b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", "ParentTask")
@@ -628,6 +745,11 @@ namespace BlotzTask.Migrations
                         .WithMany("TaskItems")
                         .HasForeignKey("LabelId");
 
+                    b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", "RecurringTask")
+                        .WithMany()
+                        .HasForeignKey("RecurringTaskId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -635,6 +757,8 @@ namespace BlotzTask.Migrations
                         .IsRequired();
 
                     b.Navigation("Label");
+
+                    b.Navigation("RecurringTask");
 
                     b.Navigation("User");
                 });
