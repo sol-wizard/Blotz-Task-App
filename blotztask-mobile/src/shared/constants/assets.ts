@@ -2,6 +2,8 @@ import DashedStar from "../../../assets/images-svg/star-dashed.svg";
 import DashedPlus from "../../../assets/images-svg/plus-dashed.svg";
 import DashedHouse from "../../../assets/images-svg/house-dashed.svg";
 import DashedSettings from "../../../assets/images-svg/settings-dashed.svg";
+import BunWhite from "../../../assets/images-svg/bun-white";
+import EditIcon from "../../../assets/images-svg/edit-icon.svg";
 
 /**
  * Centralized asset constants for the mobile app
@@ -18,8 +20,6 @@ export const LOTTIE_ANIMATIONS = {
 // Images
 export const PNGIMAGES = {
   blotzIcon: require("../../../assets/images-png/blotz-icon.png"),
-  blotzLogo: require("../../../assets/images-png/blotz-logo.png"),
-  whiteBun: require("../../../assets/images-png/bun-white.png"),
   greenBun: require("../../../assets/images-png/bun-green.png"),
   plusIcon: require("../../../assets/images-png/plus-icon.png"),
   loadingBun: require("../../../assets/images-png/loading-logo.png"),
@@ -53,6 +53,8 @@ export const SVGIMAGES = {
   dashedPlus: DashedPlus,
   dashedHouse: DashedHouse,
   dashedSettings: DashedSettings,
+  whiteBun: BunWhite,
+  editIcon: EditIcon,
 } as const;
 
 export const SOUNDS = {
