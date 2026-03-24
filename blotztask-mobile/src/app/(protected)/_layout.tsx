@@ -1,5 +1,6 @@
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
+import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { Stack } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 
@@ -8,6 +9,7 @@ export default function ProtectedLayout() {
 
   useLanguageInit();
   useTrackActiveUser5s(posthog);
+  usePushNotificationSetup();
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
