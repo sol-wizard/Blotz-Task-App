@@ -131,7 +131,6 @@ export default function NotesScreen() {
       <TouchableWithoutFeedback
         onPress={() => {
           Keyboard.dismiss();
-          closeAllRows();
         }}
         accessible={false}
       >
