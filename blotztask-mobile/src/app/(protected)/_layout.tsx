@@ -66,6 +66,7 @@ export default function ProtectedLayout() {
           fullScreenGestureEnabled: false,
         }}
       />
+      <Stack.Screen name="monthly-calendar" options={{ headerShown: false }} />
     </Stack>
   );
 }

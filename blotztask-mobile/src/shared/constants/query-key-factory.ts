@@ -16,6 +16,7 @@ export const taskKeys = {
   selectedDay: (date: string) => [...taskKeys.all, "selectedDay", date] as const,
   byId: (id: number) => [...taskKeys.all, "Id", id] as const,
   availability: (monday: string) => [...taskKeys.all, "availability", monday] as const,
+  monthAvailability: (month: string) => [...taskKeys.all, "monthAvailability", month] as const,
 } as const;
 
 export const subtaskKeys = {
