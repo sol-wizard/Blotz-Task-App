@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,8 @@ import {
 } from "./util/time-convertion";
 import { combineDateTime } from "./util/combine-date-time";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { isAfter } from "date-fns";
+import { DeadlineWarningAlert } from "./components/deadline-warning-alert";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
@@ -86,6 +88,25 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { handleSubmit, formState, control, setValue, clearErrors, trigger } = form;
   const { isSubmitting } = formState;
+
+  const { isDdl, startDate, startTime, endDate, endTime, deadlineDate, deadlineTime } = form.watch();
+  const currentReminderStart = combineDateTime(startDate, startTime);
+  const currentEventEnd = combineDateTime(endDate, endTime);
+  const currentDeadline = combineDateTime(deadlineDate, deadlineTime);
+  
+  const isInvalidTime = isActiveTab === "event"
+    ? currentEventEnd && currentDeadline && isAfter(currentEventEnd, currentDeadline)
+    : currentReminderStart && currentDeadline && isAfter(currentReminderStart, currentDeadline);
+
+  const isReminderAfterDeadline = !!(isDdl && isInvalidTime);
+
+  const [dismissedWarning, setDismissedWarning] = useState(false);
+
+  useEffect(() => {
+    if (isReminderAfterDeadline) {
+      setDismissedWarning(false);
+    }
+  }, [currentReminderStart?.getTime(), currentEventEnd?.getTime(), currentDeadline?.getTime(), isDdl, isActiveTab]);
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -211,7 +232,14 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           />
         )}
         <FormDivider />
-        <DeadlineSection control={control} getValues={form.getValues} />
+        <View className="relative z-50">
+          <DeadlineWarningAlert 
+            visible={isReminderAfterDeadline && !dismissedWarning} 
+            isEvent={isActiveTab === "event"}
+            onClose={() => setDismissedWarning(true)} 
+          />
+          <DeadlineSection control={control} getValues={form.getValues} />
+        </View>
         <FormDivider />
 
         <AlertSelect control={control} />

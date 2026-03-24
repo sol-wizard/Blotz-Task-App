@@ -17,7 +17,10 @@
     "end": "結束",
     "markAsDeadline": "设为截止任务",
     "dueTime": "截止时间",
-    "invalidTimeRange": "开始时间不能晚于结束时间"
+    "invalidTimeRange": "开始时间不能晚于结束时间",
+    "deadlineWarning": "温馨提示",
+    "deadlineWarningDesc": "您的提醒时间晚于截止时间！",
+    "eventWarningDesc": "您的事件结束时间晚于截止时间！"
   },
   "details": {
     "notFound": "未找到选定的任务。",
