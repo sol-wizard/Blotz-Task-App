@@ -15,6 +15,7 @@ export default function MonthlyCalendarScreen() {
     typeof params.selectedDate === "string" ? new Date(params.selectedDate) : new Date();
   const [selectedDay, setSelectedDay] = useState(initialSelectedDate);
   const selectedDate = format(selectedDay, "yyyy-MM-dd");
+  const selectedMonthKey = format(selectedDay, "yyyy-MM");
   const todayDate = format(new Date(), "yyyy-MM-dd");
   const shouldShowTodayButton = selectedDate !== todayDate;
   const { monthlyTaskAvailability } = useMonthlyTasks({ selectedDay });
@@ -72,6 +73,7 @@ export default function MonthlyCalendarScreen() {
       </View>
 
       <Calendar
+        key={selectedMonthKey}
         current={selectedDate}
         onMonthChange={(month: DateData) => {
           setSelectedDay(new Date(month.dateString));
