@@ -7,17 +7,7 @@ import { theme } from "@/shared/constants/theme";
 import { useMonthlyTasks } from "../hooks/useMonthlyTasks";
 import { router, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
-type MonthlyDayProps = {
-  date?: {
-    dateString: string;
-    day: number;
-    month: number;
-    year: number;
-    timestamp: number;
-  };
-  state?: "" | "selected" | "disabled" | "today" | "inactive";
-};
+import { MonthlyDay, MonthlyDayProps } from "../components/monthly-day";
 
 export default function MonthlyCalendarScreen() {
   const params = useLocalSearchParams<{ selectedDate?: string | string[] }>();
@@ -40,48 +30,20 @@ export default function MonthlyCalendarScreen() {
     return result;
   }, [monthlyTaskAvailability]);
 
+  const handleDayPress = useCallback((dateString: string) => {
+    router.replace({ pathname: "/(protected)/(tabs)", params: { selectedDate: dateString } });
+  }, []);
+
   const renderDay = useCallback(
-    ({ date, state }: MonthlyDayProps) => {
-      if (!date) return null;
-
-      const dayKey = date.dateString;
-      const isSelected = dayKey === selectedDate;
-      const isToday = state === "today";
-      const isInactive = state === "disabled" || state === "inactive";
-      const titles = thumbnailsByDate[dayKey] ?? [];
-      const visibleTitles = titles.slice(0, 3);
-
-      return (
-        <Pressable
-          onPress={() => {
-            router.replace(`/(protected)/(tabs)?selectedDate=${dayKey}`);
-          }}
-          className="px-1 py-1 min-h-[66px]"
-        >
-          <View
-            className={`w-7 h-7 rounded-full items-center justify-center mb-1 ${isSelected ? "bg-highlight" : "bg-transparent"}`}
-          >
-            <Text
-              className={`text-xs font-bold ${isSelected ? "text-white" : isInactive ? "text-gray-300" : isToday ? "text-highlight" : "text-gray-800"}`}
-            >
-              {date.day}
-            </Text>
-          </View>
-
-          {visibleTitles.map((title, index) => (
-            <Text
-              key={`${dayKey}-${index}`}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              className="text-[9px] leading-[11px] text-gray-600"
-            >
-              {title}
-            </Text>
-          ))}
-        </Pressable>
-      );
-    },
-    [selectedDate, thumbnailsByDate],
+    (props: MonthlyDayProps) => (
+      <MonthlyDay
+        {...props}
+        selectedDate={selectedDate}
+        titles={thumbnailsByDate[props.date?.dateString ?? ""] ?? []}
+        onPressDay={handleDayPress}
+      />
+    ),
+    [selectedDate, thumbnailsByDate, handleDayPress],
   );
 
   return (
@@ -89,7 +51,7 @@ export default function MonthlyCalendarScreen() {
       <View className="px-5 pb-3">
         <View className="flex-row justify-center items-center mb-1">
           <Pressable
-            onPress={() => router.replace(`/(protected)/(tabs)?selectedDate=${selectedDate}`)}
+            onPress={() => router.replace({ pathname: "/(protected)/(tabs)", params: { selectedDate } })}
             className="mr-2 p-1"
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
@@ -111,9 +73,6 @@ export default function MonthlyCalendarScreen() {
 
       <Calendar
         current={selectedDate}
-        onDayPress={(day: DateData) => {
-          setSelectedDay(new Date(day.dateString));
-        }}
         onMonthChange={(month: DateData) => {
           setSelectedDay(new Date(month.dateString));
         }}
