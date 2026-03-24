@@ -14,17 +14,15 @@ type Props = {
   checked: boolean;
   onChange: (next: boolean) => void | Promise<void>;
   disabled?: boolean;
-
   size?: number;
-
   color?: string;
   uncheckedColor?: string;
-
   className?: string;
   style?: ViewStyle;
 };
 
 const GREEN = theme.colors.checked;
+const GRAY = theme.colors.disabled;
 
 export default function TasksCheckbox({
   checked,
@@ -32,7 +30,7 @@ export default function TasksCheckbox({
   disabled = false,
   size = 22,
   color = GREEN,
-  uncheckedColor = GREEN,
+  uncheckedColor = GRAY,
   className = "",
   style,
 }: Props) {
@@ -62,7 +60,9 @@ export default function TasksCheckbox({
           width: size,
           height: size,
           borderRadius: size / 2,
+          borderWidth: 1.5,
           borderColor: checked ? color : uncheckedColor,
+          backgroundColor: "#FFFFFF",
         },
         style,
       ]}

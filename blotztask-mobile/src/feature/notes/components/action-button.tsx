@@ -33,26 +33,34 @@ export const ACTION_BUTTON_CONFIG: Record<ActionButtonType, ActionButtonConfig> 
 type Props = {
   type: ActionButtonType;
   onPress: () => void;
+  labelColor?: string;
+  containerSize?: number;
+  iconSize?: number;
 };
 
-export const ActionButton = ({ type, onPress }: Props) => {
+export const ActionButton = ({
+  type,
+  onPress,
+  labelColor,
+  containerSize = 38,
+  iconSize = 18,
+}: Props) => {
   const config = ACTION_BUTTON_CONFIG[type];
   const { t } = useTranslation("notes");
   return (
     <Pressable onPress={onPress} className="items-center">
       <View
-        className="w-[38px] h-[38px] rounded-full items-center justify-center"
-        style={{ backgroundColor: config.bgColor }}
+        className="rounded-full items-center justify-center"
+        style={{
+          backgroundColor: config.bgColor,
+          width: containerSize,
+          height: containerSize,
+        }}
       >
-        <MaterialCommunityIcons
-          name={config.icon}
-          size={18}
-          color={config.iconColor}
-          label={config.label}
-        />
+        <MaterialCommunityIcons name={config.icon} size={iconSize} color={config.iconColor} />
       </View>
 
-      <Text className="mt-1 text-xs font-baloo text-gray-500">
+      <Text className="mt-1 text-xs font-baloo" style={{ color: labelColor ?? "#6B7280" }}>
         {t(config.label)}
       </Text>
     </Pressable>
