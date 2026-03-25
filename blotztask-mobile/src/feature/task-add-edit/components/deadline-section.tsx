@@ -11,12 +11,15 @@ import { ToggleSwitch } from "../../settings/components/toggle-switch";
 import { SingleDateCalendar } from "./single-date-calendar";
 import TimePicker from "./time-picker";
 
+import { SegmentButtonValue } from "../models/segment-button-value";
+
 interface DeadlineSectionProps {
   control: Control<any>;
   getValues: (name: any) => any;
+  isActiveTab: SegmentButtonValue;
 }
 
-export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) => {
+export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSectionProps) => {
   const { t, i18n } = useTranslation("tasks");
   const isChinese = i18n.language === "zh";
   const locale = isChinese ? zhCN : enUS;
@@ -135,7 +138,13 @@ export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) =>
                   defaultStartDate={format(deadlineDate || new Date(), "yyyy-MM-dd")}
                   deadlineDate={deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
                   eventStartDate={startDate ? format(startDate, "yyyy-MM-dd") : undefined}
-                  eventEndDate={endDate ? format(endDate, "yyyy-MM-dd") : undefined}
+                  eventEndDate={
+                    isActiveTab === "event" && endDate
+                      ? format(endDate, "yyyy-MM-dd")
+                      : startDate
+                      ? format(startDate, "yyyy-MM-dd")
+                      : undefined
+                  }
                   isDeadlinePicker={true}
                   onStartDateChange={onDeadlineDateChange}
                 />

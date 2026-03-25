@@ -200,20 +200,12 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     setIsActiveTab(next);
     clearErrors(["endDate", "endTime"]);
 
-    if (mode === "edit" || next === "reminder") {
-      setValue("startDate", defaultValues.startDate);
-      setValue("startTime", defaultValues.startTime);
-      setValue("endDate", defaultValues.endDate);
-      setValue("endTime", defaultValues.endTime);
-      return;
+    if (next === "reminder") {
+      const currentEndDate = form.getValues("endDate");
+      const currentEndTime = form.getValues("endTime");
+      setValue("startDate", currentEndDate);
+      setValue("startTime", currentEndTime);
     }
-
-    const start = new Date();
-    const oneHourLater = new Date(start.getTime() + 3600000);
-    setValue("startDate", start);
-    setValue("startTime", start);
-    setValue("endDate", oneHourLater);
-    setValue("endTime", oneHourLater);
   };
 
   return (
@@ -272,7 +264,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           />
         )}
         <FormDivider />
-        <DeadlineSection control={control} getValues={form.getValues} />
+        <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
         <FormDivider />
 
         <AlertSelect control={control} />
