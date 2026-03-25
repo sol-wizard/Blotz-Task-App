@@ -1,8 +1,10 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import TasksCheckbox from "./task-checkbox";
 import { theme } from "@/shared/constants/theme";
 import { convertDurationToText } from "../../../shared/util/convert-duration";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import { ActionButton, ActionButtonType } from "@/feature/notes/components/action-button";
 
 type SubtaskItemData = {
   id: number;
@@ -17,14 +19,15 @@ type SubtaskItemProps = {
   color?: string;
   isEditMode?: boolean;
   onDelete?: (id: number) => void;
+  drag?: () => void;
 };
 
 export default function SubtaskItem({
   item: subtask,
   onToggle,
-  color,
   isEditMode = false,
   onDelete,
+  drag,
 }: SubtaskItemProps) {
   const isChecked = subtask?.isDone;
   const handleToggle = () => {
@@ -37,43 +40,82 @@ export default function SubtaskItem({
 
   const textColor = isChecked ? theme.colors.disabled : theme.colors.onSurface;
 
-  return (
-    <View
-      className="relative flex-row items-center py-2.5 px-3 mb-2"
-      style={{
-        backgroundColor: "#FFFFFF",
-        borderRadius: 10,
-      }}
-    >
-      {isEditMode ? (
-        <TouchableOpacity
+  const renderRightActions = () => {
+    return (
+      <View className="w-[70px] items-center justify-center">
+        <ActionButton
+          type={ActionButtonType.Delete}
           onPress={handleDelete}
-          className="w-6 h-6 mr-4 items-center justify-center"
-        >
-          <MaterialIcons name="delete-outline" size={20} color={"#3D8DE0"} />
-        </TouchableOpacity>
-      ) : (
-        <TasksCheckbox
-          checked={isChecked}
-          onChange={() => handleToggle()}
-          size={20}
-          className="border"
+          labelColor="#F56767"
+          containerSize={30}
+          iconSize={16}
         />
-      )}
-      <View className="flex-1 flex-row items-center justify-between ml-3">
-        <Text
-          className={`flex-1 text-[15px] font-baloo ${isChecked ? "line-through" : ""}`}
-          style={{ color: textColor }}
-        >
-          {subtask?.title}
-        </Text>
-
-        {subtask.duration && (
-          <Text className="text-sm font-baloo font-bold text-black ml-2">
-            {subtask.duration ? convertDurationToText(subtask.duration) : ""}
-          </Text>
-        )}
       </View>
-    </View>
+    );
+  };
+
+  return (
+    <Swipeable
+      renderRightActions={renderRightActions}
+      friction={2}
+      enabled={!isEditMode}
+      containerStyle={{ marginBottom: 8 }}
+    >
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => !isEditMode && handleToggle()}
+        onLongPress={isEditMode ? drag : undefined}
+        style={{
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: "#E5E7EB",
+          backgroundColor: "#FFFFFF",
+        }}
+      >
+        <View className="flex-row items-center min-h-[48px] px-3 py-1">
+          <View style={{ width: 32, justifyContent: "center" }}>
+            <TasksCheckbox checked={isChecked} onChange={handleToggle} size={24} />
+          </View>
+
+          <View style={{ flex: 1, marginLeft: 4, justifyContent: "center" }}>
+            {subtask.duration && (
+              <Text
+                className="text-[12px] font-bold"
+                style={{
+                  color: isChecked ? "#BDE6A3" : theme.colors.highlight,
+                  marginBottom: -2,
+                  fontWeight: "700",
+                }}
+              >
+                {convertDurationToText(subtask.duration)}
+              </Text>
+            )}
+            <Text
+              numberOfLines={2}
+              className={`text-base font-bold ${isChecked ? "line-through" : ""}`}
+              style={{ color: textColor }}
+            >
+              {subtask?.title}
+            </Text>
+          </View>
+
+          <View style={{ width: 32, alignItems: "center", justifyContent: "center" }}>
+            {isEditMode ? (
+              <TouchableOpacity onPressIn={drag} activeOpacity={1}>
+                <MaterialIcons name="unfold-more" size={26} color={theme.colors.disabled} />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity onPress={() => console.log("Edit subtask clicked")}>
+                <MaterialCommunityIcons
+                  name="pencil-minus-outline"
+                  size={22}
+                  color={theme.colors.disabled}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Swipeable>
   );
 }

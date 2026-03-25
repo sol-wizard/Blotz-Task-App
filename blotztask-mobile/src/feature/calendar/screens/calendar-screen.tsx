@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { format } from "date-fns";
 import { CalendarProvider, WeekCalendar } from "react-native-calendars";
 import { theme } from "@/shared/constants/theme";
@@ -25,9 +25,16 @@ export default function CalendarScreen() {
 
   const markedDates = isLoading ? {} : getMarkedDates({ weeklyTaskAvailability });
 
-  const handleDayPress = (dateString: string) => {
+  const handleDayPress = useCallback((dateString: string) => {
     setSelectedDay(new Date(dateString));
-  };
+  }, []);
+
+  const renderDay = useCallback(
+    (props: CustomDayProps) => (
+      <CustomDay {...props} isMarked={Boolean(props.marking?.marked)} onPressDay={handleDayPress} />
+    ),
+    [handleDayPress],
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
@@ -59,13 +66,7 @@ export default function CalendarScreen() {
               firstDay={1}
               hideDayNames={true}
               markedDates={markedDates}
-              dayComponent={(props: CustomDayProps) => (
-                <CustomDay
-                  {...props}
-                  isMarked={Boolean(props.marking?.marked)}
-                  onPressDay={handleDayPress}
-                />
-              )}
+              dayComponent={renderDay}
             />
           </Animated.View>
         )}

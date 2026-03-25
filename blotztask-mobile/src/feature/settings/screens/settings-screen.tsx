@@ -3,7 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
-import { PNGIMAGES } from "@/shared/constants/assets";
+import { ASSETS, PNGIMAGES } from "@/shared/constants/assets";
 import { FormDivider } from "@/shared/components/ui/form-divider";
 import { SettingsMenuItem } from "@/feature/settings/modals/settings-menu-item";
 import { useTranslation } from "react-i18next";
@@ -78,7 +78,7 @@ export default function SettingsScreen() {
             onPress={handleProfileEdit}
             className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-white items-center justify-center"
           >
-            <MaterialCommunityIcons name="pencil-minus-outline" size={18} color="#363853" />
+            <ASSETS.editIcon width={18} height={18} fill="#363853" />
           </Pressable>
         </View>
         <Text className="text-2xl font-balooBold text-secondary mt-5">

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { RefObject, useRef } from "react";
 import { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 
 /**
@@ -10,18 +10,18 @@ import { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeab
  * dismissing the keyboard).
  */
 export const useSwipeableManager = () => {
-  const openRef = useRef<SwipeableMethods | null>(null);
+  const openRefObject = useRef<RefObject<SwipeableMethods | null> | null>(null);
 
-  const onRowOpen = (ref: SwipeableMethods | null) => {
-    if (openRef.current && openRef.current !== ref) {
-      openRef.current.close();
+  const onRowOpen = (refObject: RefObject<SwipeableMethods | null>) => {
+    if (openRefObject.current && openRefObject.current !== refObject) {
+      openRefObject.current.current?.close();
     }
-    openRef.current = ref;
+    openRefObject.current = refObject;
   };
 
   const closeAllRows = () => {
-    openRef.current?.close();
-    openRef.current = null;
+    openRefObject.current?.current?.close();
+    openRefObject.current = null;
   };
 
   return { onRowOpen, closeAllRows };

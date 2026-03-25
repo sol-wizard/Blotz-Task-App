@@ -196,7 +196,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                       <TasksCheckbox
                         checked={task.isDone}
                         disabled={isLoading}
-                        size={30}
+                        size={26}
                         className="border-2"
                         uncheckedColor="#D1D5DB"
                         onChange={async () => {
@@ -235,11 +235,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                           </Text>
                           {isVirtualTask && (
                             <View className="ml-1.5">
-                              <MaterialIcons
-                                name="autorenew"
-                                size={17}
-                                color="#9CA3AF"
-                              />
+                              <MaterialIcons name="autorenew" size={17} color="#9CA3AF" />
                             </View>
                           )}
                         </View>
