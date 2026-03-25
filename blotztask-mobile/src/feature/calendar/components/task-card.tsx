@@ -28,6 +28,7 @@ import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { theme } from "@/shared/constants/theme";
 import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
+import { useRecurringTaskMutations } from "@/shared/hooks/useRecurringTaskMutations";
 
 const rubberBand = (x: number, limit: number) => {
   "worklet";
@@ -49,9 +50,11 @@ interface TaskCardProps {
 
 const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) => {
   const isVirtualTask = task.id == null;
+  const isRecurringTask = task.recurringTaskId != null;
 
   const { t } = useTranslation("tasks");
   const { toggleTask, isToggling } = useTaskMutations();
+  const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
     useSubtaskMutations();
   const posthog = usePostHog();
@@ -89,7 +92,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     };
   }, []);
 
-  const isLoading = isToggling || isDeleting || isBreakingDown || isReplacingSubtasks;
+  const isLoading =
+    isToggling || isDeleting || isBreakingDown || isReplacingSubtasks || isCompletingOccurrence;
 
   const navigateToTaskDetails = (t: TaskDetailDTO) => {
     if (t.id == null) return;
@@ -138,7 +142,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
 
   const pan = Gesture.Pan()
     // to avoid left swipe for recurring task
-    .enabled(!isLoading && !isVirtualTask)
+    .enabled(!isLoading && !isRecurringTask)
     .activeOffsetX([-10, 10])
     .failOffsetY([-10, 10])
     .onUpdate((e) => {
@@ -200,9 +204,14 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                         className="border-2"
                         uncheckedColor="#D1D5DB"
                         onChange={async () => {
-                          if (task.id == null) return;
-                          toggleTask({ taskId: task.id, selectedDay });
-
+                          if (isVirtualTask) {
+                            completeOccurrence({
+                              recurringTaskId: task.recurringTaskId!,
+                              occurrenceDate: format(selectedDay!, "yyyy-MM-dd"),
+                            });
+                            return;
+                          }
+                          toggleTask({ taskId: task.id!, selectedDay });
                           if (task.alertTime && new Date(task.alertTime) > new Date()) {
                             await cancelNotification({ notificationId: task?.notificationId });
                           }
@@ -233,7 +242,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                           >
                             {task.title}
                           </Text>
-                          {isVirtualTask && (
+                          {isRecurringTask && (
                             <View className="ml-1.5">
                               <MaterialIcons name="autorenew" size={17} color="#9CA3AF" />
                             </View>

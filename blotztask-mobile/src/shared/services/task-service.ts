@@ -88,3 +88,14 @@ export async function getAllTasks(): Promise<TaskDetailDTO[]> {
     throw new Error("Failed to fetch all tasks.");
   }
 }
+
+export async function saveRecurringOccurrence(payload: {
+  recurringTaskId: number;
+  occurrenceDate: string;
+}): Promise<number> {
+  try {
+    return await apiClient.post("/RecurringTask/occurrence/complete", payload);
+  } catch {
+    throw new Error("Failed to save recurring occurrence.");
+  }
+}
