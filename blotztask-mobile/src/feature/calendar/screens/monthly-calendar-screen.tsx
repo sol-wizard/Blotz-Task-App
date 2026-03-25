@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
@@ -10,7 +10,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { MonthlyDay, MonthlyDayProps } from "../components/monthly-day";
 
 export default function MonthlyCalendarScreen() {
-  const params = useLocalSearchParams<{ selectedDate?: string | string[] }>();
+  const params = useLocalSearchParams<{ selectedDate: string }>();
   const initialSelectedDate =
     typeof params.selectedDate === "string" ? new Date(params.selectedDate) : new Date();
   const [selectedDay, setSelectedDay] = useState(initialSelectedDate);
@@ -20,16 +20,12 @@ export default function MonthlyCalendarScreen() {
   const shouldShowTodayButton = selectedDate !== todayDate;
   const { monthlyTaskAvailability } = useMonthlyTasks({ selectedDay });
 
-  const thumbnailsByDate = useMemo(() => {
-    const result: Record<string, string[]> = {};
+  const thumbnailsByDate: Record<string, string[]> = {};
 
-    monthlyTaskAvailability.forEach((item) => {
-      const dateKey = format(new Date(item.date), "yyyy-MM-dd");
-      result[dateKey] = item.taskThumbnails.map((thumbnail) => thumbnail.taskTitle);
-    });
-
-    return result;
-  }, [monthlyTaskAvailability]);
+  monthlyTaskAvailability.forEach((item) => {
+    const dateKey = format(new Date(item.date), "yyyy-MM-dd");
+    thumbnailsByDate[dateKey] = item.taskThumbnails.map((thumbnail) => thumbnail.taskTitle);
+  });
 
   const handleDayPress = useCallback((dateString: string) => {
     router.replace({ pathname: "/(protected)/(tabs)", params: { selectedDate: dateString } });
@@ -44,7 +40,7 @@ export default function MonthlyCalendarScreen() {
         onPressDay={handleDayPress}
       />
     ),
-    [selectedDate, thumbnailsByDate, handleDayPress],
+    [handleDayPress],
   );
 
   return (
@@ -52,7 +48,9 @@ export default function MonthlyCalendarScreen() {
       <View className="px-5 pb-3">
         <View className="flex-row justify-center items-center mb-1">
           <Pressable
-            onPress={() => router.replace({ pathname: "/(protected)/(tabs)", params: { selectedDate } })}
+            onPress={() =>
+              router.replace({ pathname: "/(protected)/(tabs)", params: { selectedDate } })
+            }
             className="mr-2 p-1"
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
@@ -84,13 +82,9 @@ export default function MonthlyCalendarScreen() {
         dayComponent={renderDay}
         theme={{
           calendarBackground: theme.colors.background,
-          textDayFontFamily: "BalooBold",
           textDayHeaderFontFamily: "BalooBold",
           textMonthFontFamily: "BalooBold",
-          todayTextColor: theme.colors.highlight,
           arrowColor: theme.colors.highlight,
-          dayTextColor: "#333",
-          textDisabledColor: "#bbb",
         }}
       />
     </SafeAreaView>

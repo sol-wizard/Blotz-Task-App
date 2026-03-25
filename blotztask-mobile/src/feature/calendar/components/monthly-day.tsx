@@ -11,20 +11,22 @@ export type MonthlyDayProps = {
   onPressDay?: (dateString: string) => void;
 };
 
-export const MonthlyDay = ({ date, state, selectedDate, titles = [], onPressDay }: MonthlyDayProps) => {
+export const MonthlyDay = ({
+  date,
+  state,
+  selectedDate,
+  titles = [],
+  onPressDay,
+}: MonthlyDayProps) => {
   if (!date) return null;
 
   const dayKey = date.dateString;
   const isSelected = dayKey === selectedDate;
   const isToday = state === "today";
   const isInactive = state === "disabled" || state === "inactive";
-  const visibleTitles = titles.slice(0, 3);
 
   return (
-    <Pressable
-      onPress={() => onPressDay?.(dayKey)}
-      className="px-1 py-1 min-h-[66px]"
-    >
+    <Pressable onPress={() => onPressDay?.(dayKey)} className="px-1 py-1 min-h-[66px]">
       <View
         className={`w-7 h-7 rounded-full items-center justify-center mb-1 ${isSelected ? "bg-highlight" : "bg-transparent"}`}
       >
@@ -35,7 +37,7 @@ export const MonthlyDay = ({ date, state, selectedDate, titles = [], onPressDay 
         </Text>
       </View>
 
-      {visibleTitles.map((title, index) => (
+      {titles.map((title, index) => (
         <Text
           key={`${dayKey}-${index}`}
           numberOfLines={1}
