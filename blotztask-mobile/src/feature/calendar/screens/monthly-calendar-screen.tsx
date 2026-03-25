@@ -40,7 +40,7 @@ export default function MonthlyCalendarScreen() {
         onPressDay={handleDayPress}
       />
     ),
-    [handleDayPress],
+    [selectedDate, thumbnailsByDate, handleDayPress],
   );
 
   return (
@@ -74,7 +74,9 @@ export default function MonthlyCalendarScreen() {
         key={selectedMonthKey}
         current={selectedDate}
         onMonthChange={(month: DateData) => {
-          setSelectedDay(new Date(month.dateString));
+          const now = new Date();
+          const isCurrentMonth = month.year === now.getFullYear() && month.month === now.getMonth() + 1;
+          setSelectedDay(isCurrentMonth ? now : new Date(month.year, month.month - 1, 1));
         }}
         hideExtraDays
         firstDay={1}
