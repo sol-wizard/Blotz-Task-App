@@ -26,7 +26,8 @@ public static class DependencyInjection
         services.AddScoped<SaveRecurringOccurrenceCommandHandler>();
         services.AddScoped<UpdateSubtaskStatusCommandHandler>();
         services.AddScoped<AddSubtaskCommandHandler>();
-
+        services.AddScoped<GetMonthlyTaskAvailabilityQueryHandler>();
+        
         // Event handlers
         services.AddScoped<IDomainEventHandler<TaskCompletedEvent>, TaskCompletedEventHandler>();
 

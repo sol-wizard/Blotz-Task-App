@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { View, Text, Pressable, TouchableWithoutFeedback, Keyboard, FlatList, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
 import { useSwipeableManager } from "../hooks/useSwipeableManager";
@@ -30,10 +30,13 @@ export default function NotesScreen() {
 
   const posthog = usePostHog();
   const { t } = useTranslation("notes");
+  const router = useRouter();
+
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [editingNote, setEditingNote] = useState<NoteDTO | null>(null);
+  const [noteError, setNoteError] = useState("")
 
   // Bottom sheet state for add-to-task (managed at screen level)
   const [noteTimePickerSheetVisible, setNoteTimePickerSheetVisible] = useState(false);
@@ -51,9 +54,6 @@ export default function NotesScreen() {
 
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
   const { onRowOpen, closeAllRows } = useSwipeableManager();
-
-
-
   const openEditModal = (note: NoteDTO) => {
     closeAllRows();
     setEditingNote(note);
@@ -69,6 +69,11 @@ export default function NotesScreen() {
     const text = noteText.trim();
     if (!text) return;
 
+    if (text.length > 2000) {
+    setNoteError("Note text cannot exceed 2000 characters.");
+    return;
+    }
+  
     if (editingNote) {
       if (isNoteUpdating) return;
       updateNote(
@@ -78,6 +83,7 @@ export default function NotesScreen() {
             setIsModalVisible(false);
             setEditingNote(null);
             setNoteText("");
+            setNoteError("");
           },
         },
       );
@@ -89,9 +95,17 @@ export default function NotesScreen() {
       onSuccess: () => {
         setIsModalVisible(false);
         setNoteText("");
+        setNoteError("");
       },
     });
   };
+
+   const handleChangeNoteText = (text:string) =>{
+        setNoteText(text);
+        if (noteError && text.trim().length <= 2000) {
+        setNoteError("");
+    }
+    };
 
     const handleAIEstimate = (note: NoteDTO | null) => {
     if (!note) return;
@@ -183,7 +197,6 @@ export default function NotesScreen() {
                     onAddToTask={(note: NoteDTO) => {
                       setSelectedNote(note);
                       setNoteTimePickerSheetVisible(true);
-                      console.log("Selected note for time estimation:", note);
                     }}
                   />
                 )}
@@ -229,13 +242,15 @@ export default function NotesScreen() {
             visible={isModalVisible}
             noteText={noteText}
             isSaving={editingNote ? isNoteUpdating : isNoteCreating}
-            onChangeText={setNoteText}
+            onChangeText={handleChangeNoteText}
             onClose={() => {
               setIsModalVisible(false);
               setEditingNote(null);
               setNoteText("");
+              setNoteError("");
             }}
             onSave={handleSave}
+            errorMessage={noteError}
           />
 
           {showLoading && <LoadingScreen />}

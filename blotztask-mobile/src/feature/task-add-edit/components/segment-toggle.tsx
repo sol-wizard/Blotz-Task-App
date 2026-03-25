@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { SegmentButtonValue } from "../models/segment-button-value";
@@ -20,11 +20,20 @@ export function SegmentToggle({ value, setValue }: Props) {
   const onTabMovingAnimation = (index: number) => {
     const tabWidth = containerWidth / 2;
     tabPositionX.value = withTiming(tabWidth * index, {});
+
   };
 
   const tabAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: tabPositionX.value }],
   }));
+  useEffect(() => {
+    if (!containerWidth) return;
+     if (value === "event") {
+    onTabMovingAnimation(1);
+  } else {
+    onTabMovingAnimation(0);
+  }
+  }, [value, containerWidth]);
 
   return (
     <Animated.View
@@ -33,8 +42,13 @@ export function SegmentToggle({ value, setValue }: Props) {
       onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
     >
       <Animated.View
-        className="absolute bg-white rounded-xl w-28 h-10 shadow-sm shadow-gray-400"
-        style={tabAnimatedStyle}
+        className="absolute bg-white rounded-xl h-10 shadow-sm shadow-gray-400"
+        style={[
+          tabAnimatedStyle,
+        {
+          width: containerWidth / 2,
+        },
+      ]}
       />
       <AnimatedPressable
         className={`flex-1 justify-center items-center py-2 px-3 rounded-xl `}
