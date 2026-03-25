@@ -16,6 +16,7 @@ package-lock.json
 .cursor/notepads
 .cursor/mcp.json
 20260130-Blotz-onboarding.md
-
+# VScode
+.vscode/
 # bicep build outputs (generated)
 infra/main.json
