@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { theme } from "@/shared/constants/theme";
 import { parseISO } from "date-fns";
-import { Calendar, DateData } from "react-native-calendars";
+import { Calendar } from "react-native-calendars";
 import { renderCalendarHeader } from "@/feature/calendar/util/date-formatter";
 import { CustomCalendarDay } from "./custom-calendar-day";
 
