@@ -1,7 +1,7 @@
 import { theme } from "@/shared/constants/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Modal, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, Text, TextInput } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 interface NoteModalProps {
