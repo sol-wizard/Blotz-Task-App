@@ -40,15 +40,13 @@ export const CustomCalendarDay = ({
 
   const textColor = isInvalid
     ? "#FF4444"
-    : isSelected || isInRange || isRangeStart || isRangeEnd
+    : isDeadline
       ? theme.colors.highlight
-      : isDeadline
-        ? "#333"
-        : isDisabledState
-          ? "#bbb"
-          : isToday
-            ? "#BAD5FA"
-            : "#333";
+      : isDisabledState
+        ? "#bbb"
+        : isToday
+          ? "#BAD5FA"
+          : "#333";
 
   return (
     <TouchableOpacity
@@ -94,9 +92,9 @@ export const CustomCalendarDay = ({
       {/* Main Circle */}
       <View
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
+          width: 30,
+          height: 30,
+          borderRadius: 18,
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: circleBgColor,
@@ -121,12 +119,12 @@ export const CustomCalendarDay = ({
           pointerEvents="none"
           style={{
             position: "absolute",
-            width: 40,
-            height: 40,
-            borderRadius: 20,
+            width: 30,
+            height: 30,
+            borderRadius: 16,
             borderWidth: 2,
             borderColor: "#8fc351",
-            zIndex: 10, // Ensure strictly top layer
+            zIndex: 10,
           }}
         >
           <View
@@ -149,7 +147,7 @@ export const CustomCalendarDay = ({
                 color: "white",
                 fontSize: 8,
                 fontFamily: "BalooBold",
-                lineHeight: 10,
+                lineHeight: 12,
               }}
             >
               DDL
