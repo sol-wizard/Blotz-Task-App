@@ -26,7 +26,7 @@ export const MonthlyDay = ({
   const isInactive = state === "disabled" || state === "inactive";
 
   return (
-    <Pressable onPress={() => onPressDay?.(dayKey)} className="px-1 py-1 min-h-[66px]">
+    <Pressable onPress={() => onPressDay?.(dayKey)} className="flex-col items-center min-h-[72px]">
       <View
         className={`w-7 h-7 rounded-full items-center justify-center mb-1 ${isSelected ? "bg-highlight" : "bg-transparent"}`}
       >
@@ -36,13 +36,12 @@ export const MonthlyDay = ({
           {date.day}
         </Text>
       </View>
-
       {titles.map((title, index) => (
         <Text
           key={`${dayKey}-${index}`}
           numberOfLines={1}
           ellipsizeMode="tail"
-          className="text-[9px] leading-[11px] text-gray-600"
+          className="text-xs text-gray-600"
         >
           {title}
         </Text>
