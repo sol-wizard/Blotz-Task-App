@@ -47,6 +47,20 @@ export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) =>
     name: "deadlineTime",
   });
 
+  const {
+    field: { value: startDate },
+  } = useController({
+    control,
+    name: "startDate",
+  });
+
+  const {
+    field: { value: endDate },
+  } = useController({
+    control,
+    name: "endDate",
+  });
+
   const deadlineDateDisplayText = deadlineDate
     ? format(deadlineDate, dateFormat, { locale })
     : t("form.selectDate");
@@ -119,6 +133,10 @@ export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) =>
               >
                 <SingleDateCalendar
                   defaultStartDate={format(deadlineDate || new Date(), "yyyy-MM-dd")}
+                  deadlineDate={deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
+                  eventStartDate={startDate ? format(startDate, "yyyy-MM-dd") : undefined}
+                  eventEndDate={endDate ? format(endDate, "yyyy-MM-dd") : undefined}
+                  isDeadlinePicker={true}
                   onStartDateChange={onDeadlineDateChange}
                 />
               </Animated.View>

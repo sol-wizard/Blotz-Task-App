@@ -1,102 +1,30 @@
 import { View } from "react-native";
-import { Calendar, DateData } from "react-native-calendars";
-import { eachDayOfInterval, format, isBefore, isSameDay, parseISO } from "date-fns";
+import { Calendar } from "react-native-calendars";
+import { format, parseISO } from "date-fns";
 import { theme } from "@/shared/constants/theme";
 import { renderCalendarHeader } from "@/feature/calendar/util/date-formatter";
+import { CustomCalendarDay } from "./custom-calendar-day";
 
-type MarkedDate = {
-  color?: string;
-  textColor?: string;
-  startingDay?: boolean;
-  endingDay?: boolean;
-};
-
-type MarkedDates = Record<string, MarkedDate>;
-
-const DATE_COLORS = {
-  background: "#EEFBE1",
-  text: theme.colors.highlight,
-  invalidDate: "#FF4444",
-  invalidDateBackground: "#FFE5E5",
-};
+// Constants and types unused now
 
 const DoubleDatesCalendar = ({
   startDate,
   endDate,
+  deadlineDate,
+  disabledDates = [],
   setEndDate,
   current,
 }: {
   startDate: Date;
   endDate: Date;
+  deadlineDate?: string;
+  disabledDates?: string[];
   setEndDate: (v: Date) => void;
   current: string;
 }) => {
-  const getDatesInRange = (start: Date, end: Date): MarkedDates => {
-    const days = eachDayOfInterval({ start, end });
-    const dates: MarkedDates = {};
-
-    for (const d of days) {
-      const key = format(d, "yyyy-MM-dd");
-      dates[key] = {
-        color: DATE_COLORS.background,
-        textColor: DATE_COLORS.text,
-      };
-    }
-
-    const keys = Object.keys(dates);
-    if (keys.length > 0) {
-      dates[keys[0]].startingDay = true;
-      dates[keys[keys.length - 1]].endingDay = true;
-    }
-
-    return dates;
-  };
-
-  const markedDates: MarkedDates = (() => {
-    if (!endDate) {
-      return {
-        [format(startDate, "yyyy-MM-dd")]: {
-          startingDay: true,
-          endingDay: true,
-          color: DATE_COLORS.background,
-          textColor: DATE_COLORS.text,
-        },
-      };
-    }
-
-    // Ensure end date is not before start date
-    if (isBefore(endDate, startDate) && !isSameDay(endDate, startDate)) {
-      return {
-        [format(startDate, "yyyy-MM-dd")]: {
-          startingDay: true,
-          endingDay: true,
-          color: DATE_COLORS.background,
-          textColor: DATE_COLORS.text,
-        },
-        [format(endDate, "yyyy-MM-dd")]: {
-          startingDay: true,
-          endingDay: true,
-          color: DATE_COLORS.invalidDateBackground,
-          textColor: DATE_COLORS.invalidDate,
-        },
-      };
-    }
-
-    // Range selection → highlight with period
-    return getDatesInRange(startDate, endDate);
-  })();
-
-  const onDayPress = (day: DateData) => {
-    const selected = parseISO(day.dateString);
-    setEndDate(selected);
-  };
-
   return (
     <View className="w-full max-w-md rounded-2xl bg-white p-4 mx-auto">
       <Calendar
-        markingType="period"
-        markedDates={markedDates}
-        onDayPress={onDayPress}
         // show endDate's month if present, otherwise startDate's month
         current={current}
         theme={{
@@ -108,6 +36,46 @@ const DoubleDatesCalendar = ({
         }}
         renderHeader={renderCalendarHeader}
         enableSwipeMonths
+        dayComponent={({ date, state }: any) => {
+          const isDeadline = deadlineDate === date.dateString;
+          const isDisabled = disabledDates.includes(date.dateString);
+
+          const currentMs = parseISO(date.dateString).getTime();
+          const startMs = parseISO(format(startDate, "yyyy-MM-dd")).getTime();
+          const endMs = endDate ? parseISO(format(endDate, "yyyy-MM-dd")).getTime() : startMs;
+
+          let isRangeStart = false;
+          let isRangeEnd = false;
+          let isInRange = false;
+          let isInvalid = false;
+
+          if (endMs >= startMs) {
+            isRangeStart = currentMs === startMs;
+            isRangeEnd = currentMs === endMs;
+            isInRange = currentMs > startMs && currentMs < endMs;
+          } else {
+             // Invalid range selection
+            isRangeStart = currentMs === startMs;
+            if (currentMs === endMs) {
+              isInvalid = true;
+            }
+          }
+
+          return (
+            <CustomCalendarDay
+              date={date}
+              state={state}
+              isSelected={false}
+              isDeadline={isDeadline}
+              isRangeStart={isRangeStart}
+              isRangeEnd={isRangeEnd}
+              isInRange={isInRange}
+              isInvalid={isInvalid}
+              disabled={isDisabled}
+              onPress={(d) => setEndDate(d)}
+            />
+          );
+        }}
       />
     </View>
   );
