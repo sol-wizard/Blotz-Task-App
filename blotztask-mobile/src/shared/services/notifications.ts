@@ -18,8 +18,8 @@ export async function schedulePushNotification() {
   });
 }
 
-export async function registerForPushNotificationsAsync() {
-  let token;
+export async function registerForPushNotificationsAsync(): Promise<string | null> {
+  let token: string | null = null;
 
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("blotzNotificationChannel", {
@@ -39,7 +39,7 @@ export async function registerForPushNotificationsAsync() {
     }
     if (finalStatus !== "granted") {
       alert("Failed to get push token for push notification!");
-      return;
+      return null;
     }
 
     try {
