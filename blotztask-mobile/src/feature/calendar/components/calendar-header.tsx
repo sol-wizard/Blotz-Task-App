@@ -32,6 +32,19 @@ export default function CalendarHeader({ date, progress, onToggleCalendar }: Cal
         >
           <AnimatedChevron color="#1F2937" progress={progress} />
         </Pressable>
+
+        <Pressable
+          onPress={() => {
+            router.push({
+              pathname: "/(protected)/monthly-calendar",
+              params: { selectedDate: date },
+            });
+          }}
+          className="p-1"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <MaterialCommunityIcons name="calendar-month-outline" size={26} color="#1F2937" />
+        </Pressable>
       </View>
 
       <View className="flex-row items-center justify-end px-5">
