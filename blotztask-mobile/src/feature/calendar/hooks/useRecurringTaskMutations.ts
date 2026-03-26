@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { startOfDay } from "date-fns";
-import { taskKeys } from "../constants/query-key-factory";
-import { saveRecurringOccurrence } from "../services/task-service";
-import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
+import { taskKeys } from "@/shared/constants/query-key-factory";
+import { saveRecurringOccurrence } from "@/shared/services/task-service";
+import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 
 export function useRecurringTaskMutations() {
   const queryClient = useQueryClient();

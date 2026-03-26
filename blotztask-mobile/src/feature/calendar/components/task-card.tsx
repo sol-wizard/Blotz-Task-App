@@ -28,7 +28,7 @@ import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { theme } from "@/shared/constants/theme";
 import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
-import { useRecurringTaskMutations } from "@/shared/hooks/useRecurringTaskMutations";
+import { useRecurringTaskMutations } from "@/feature/calendar/hooks/useRecurringTaskMutations";
 
 const rubberBand = (x: number, limit: number) => {
   "worklet";

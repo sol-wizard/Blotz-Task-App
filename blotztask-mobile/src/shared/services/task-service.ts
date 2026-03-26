@@ -100,7 +100,7 @@ export async function getAllTasks(): Promise<TaskDetailDTO[]> {
 export async function saveRecurringOccurrence(payload: {
   recurringTaskId: number;
   occurrenceDate: string;
-}): Promise<number> {
+}): Promise<{ taskItemId: number }> {
   try {
     return await apiClient.post("/RecurringTask/occurrence/complete", payload);
   } catch {
