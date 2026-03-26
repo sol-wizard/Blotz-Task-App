@@ -52,12 +52,14 @@ public class GetTasksByDateQueryHandler(
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
         var userTodayStart = userNow.Date;
         var userTodayEnd = userTodayStart.AddDays(1);
-        var sevenDayWindowStart = userTodayEnd.AddDays(-7);
         var isFutureDay = query.StartDate.Date > userNow.Date;
 
+        var overdueCutoff = query.StartDate.Date == userNow.Date? userNow : selectedDayEnd;
+
+
         logger.LogInformation("StartDate received: {StartDate} (Offset={Offset})", query.StartDate, query.StartDate.Offset);
-        logger.LogInformation("Computed window: selectedDayStart={Start}, selectedDayEnd={End}, overdueWindowStart={OverdueStart}",
-            selectedDayStart, selectedDayEnd, sevenDayWindowStart);
+        logger.LogInformation("Computed window: selectedDayStart={Start}, selectedDayEnd={End}, isFutureDay={IsFutureDay}",
+            selectedDayStart, selectedDayEnd, isFutureDay);
 
         var queryStopwatch = Stopwatch.StartNew();
 
@@ -72,14 +74,12 @@ public class GetTasksByDateQueryHandler(
                                 && t.EndTime >= selectedDayStart
                             )
                             ||
-                            // Overdue tasks from [selectedDay-7, selectedDay) ONLY if AutoRollover == true
+                            // Overdue tasks are included only for today/past views when auto-rollover is enabled.
                             (
                                 autoRollover
                                 && !isFutureDay
-                                && t.EndTime < userNow
+                                && t.EndTime < overdueCutoff
                                 && !t.IsDone
-                                && t.StartTime < selectedDayEnd
-                                && t.EndTime >= sevenDayWindowStart
                             )
                         ))
             .OrderBy(t => t.StartTime).ThenBy(t => t.EndTime).ThenBy(t => t.Title)

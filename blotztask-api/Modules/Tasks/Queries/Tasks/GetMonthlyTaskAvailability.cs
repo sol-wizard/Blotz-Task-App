@@ -37,7 +37,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.FirstDate.Offset);
         var userTodayStart = new DateTimeOffset(userNow.Date, query.FirstDate.Offset);
         var userTodayEnd = userTodayStart.AddDays(1);
-        var sevenDayWindowStart = userTodayEnd.AddDays(-7);
+        var includeOverdueTasks = monthStart.Date <= userNow.Date;
         
         
         logger.LogInformation(
@@ -58,11 +58,11 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                                 && t.EndTime > monthStart
                             )
                             ||
-                            // Overdue tasks within 7 days (matching GetTasksByDateQuery)
+                            // Overdue tasks for today/past views only.
                             (
-                                !t.IsDone
+                                includeOverdueTasks
+                                && !t.IsDone
                                 && t.EndTime < userNow
-                                && t.EndTime >= sevenDayWindowStart
                             )
                         ))
             .Select(t => new
@@ -98,17 +98,17 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
         {
             var dayEnd = dayStart.AddDays(1);
             var dayDate = DateOnly.FromDateTime(dayStart.Date);
+            var isToday = dayStart.Date == userNow.Date;
+            var overdueCutoff = isToday ? userNow : dayEnd;
 
             var dayTasks = tasks
                 .Where(t =>
                     (t.StartTime < dayEnd && t.EndTime >= dayStart) ||
                     (
+                        includeOverdueTasks &&
                         dayStart < userTodayEnd &&
-                        dayStart >= sevenDayWindowStart &&
-                        t.StartTime < dayEnd &&
-                        t.EndTime >= sevenDayWindowStart &&
                         !t.IsDone &&
-                        t.EndTime < userNow
+                        t.EndTime < overdueCutoff
                     ))
                 .Select(t => new TaskThumbnailDto
                 {
@@ -162,5 +162,3 @@ public class TaskThumbnailDto
     public string TaskTitle { get; set; }
     public Label? Label { get; set; }
 }
-
-
