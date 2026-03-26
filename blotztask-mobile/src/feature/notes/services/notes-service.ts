@@ -24,8 +24,12 @@ export const deleteNote = async (noteId: string): Promise<void> => {
 
 export const createNote = async (text: string): Promise<NoteDTO> => {
   const url = `/notes`;
+  const trimmedText = text.trim();
+  if (trimmedText.length > 2000) {
+    throw new Error("Note text cannot exceed 2000 characters.");
+  }
   try {
-    return await apiClient.post(url, { text });
+    return await apiClient.post(url, { text: trimmedText });
   } catch {
     throw new Error("Failed to create note.");
   }
@@ -33,8 +37,12 @@ export const createNote = async (text: string): Promise<NoteDTO> => {
 
 export const updateNote = async (editNoteDto: EditNoteDTO): Promise<NoteDTO> => {
   const url = `/notes/${editNoteDto.id}`;
+  const trimmedText = editNoteDto.text.trim();
+  if (trimmedText.length > 2000) {
+    throw new Error("Note text cannot exceed 2000 characters.");
+  }
   try {
-    return await apiClient.put(url, { text: editNoteDto.text });
+    return await apiClient.put(url, { text: trimmedText });
   } catch {
     throw new Error("Failed to update note.");
   }

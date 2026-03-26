@@ -34,7 +34,6 @@ export default function NotesScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [editingNote, setEditingNote] = useState<NoteDTO | null>(null);
-  const [noteError, setNoteError] = useState("")
 
   // Bottom sheet state for add-to-task (managed at screen level)
   const [noteTimePickerSheetVisible, setNoteTimePickerSheetVisible] = useState(false);
@@ -46,8 +45,8 @@ export default function NotesScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      posthog.capture("screen_viewed", { screen_name: "Notes" });
-    }, []),
+      posthog.capture("screen_viewed", { screen_name: "Notes" }); // eslint-disable-line camelcase
+    }, [posthog]),
   );
 
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
@@ -68,11 +67,6 @@ export default function NotesScreen() {
     const text = noteText.trim();
     if (!text) return;
 
-    if (text.length > 2000) {
-    setNoteError("Note text cannot exceed 2000 characters.");
-    return;
-    }
-  
     if (editingNote) {
       if (isNoteUpdating) return;
       updateNote(
@@ -82,7 +76,6 @@ export default function NotesScreen() {
             setIsModalVisible(false);
             setEditingNote(null);
             setNoteText("");
-            setNoteError("");
           },
         },
       );
@@ -94,19 +87,15 @@ export default function NotesScreen() {
       onSuccess: () => {
         setIsModalVisible(false);
         setNoteText("");
-        setNoteError("");
       },
     });
   };
 
-   const handleChangeNoteText = (text:string) =>{
-        setNoteText(text);
-        if (noteError && text.trim().length <= 2000) {
-        setNoteError("");
-    }
-    };
+  const handleChangeNoteText = (text: string) => {
+    setNoteText(text);
+  };
 
-    const handleAIEstimate = (note: NoteDTO | null) => {
+  const handleAIEstimate = (note: NoteDTO | null) => {
     if (!note) return;
     setPendingEstimateNote(note);
     setNoteTimePickerSheetVisible(false);
@@ -218,10 +207,8 @@ export default function NotesScreen() {
               setIsModalVisible(false);
               setEditingNote(null);
               setNoteText("");
-              setNoteError("");
             }}
             onSave={handleSave}
-            errorMessage={noteError}
           />
 
           {showLoading && <LoadingScreen />}
