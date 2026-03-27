@@ -4,13 +4,9 @@ import { EditNoteDTO } from "../models/edit-note-dto";
 
 export const searchNotes = async (keyword: string): Promise<NoteDTO[]> => {
   const url = `/notes`;
-  try {
-    return await apiClient.get(url, {
-      params: keyword ? { query: keyword } : undefined,
-    });
-  } catch {
-    throw new Error("Failed to search notes.");
-  }
+  return await apiClient.get(url, {
+    params: keyword ? { query: keyword } : undefined,
+  });
 };
 
 export const deleteNote = async (noteId: string): Promise<void> => {
