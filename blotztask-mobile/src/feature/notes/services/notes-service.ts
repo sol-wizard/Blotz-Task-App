@@ -8,8 +8,8 @@ export const searchNotes = async (keyword: string): Promise<NoteDTO[]> => {
     return await apiClient.get(url, {
       params: keyword ? { query: keyword } : undefined,
     });
-  } catch {
-    throw new Error("Failed to search notes.");
+  } catch (error) {
+    throw error;
   }
 };
 
