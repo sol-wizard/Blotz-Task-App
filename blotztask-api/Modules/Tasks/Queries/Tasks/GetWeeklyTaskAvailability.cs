@@ -27,7 +27,15 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
     public async Task<List<DailyTaskIndicatorDto>> Handle(GetWeeklyTaskAvailabilityQuery query,
         CancellationToken ct = default)
     {
+        
         var stopwatch = Stopwatch.StartNew();
+        bool? autoRolloverEnabled = await db.UserPreferences
+            .AsNoTracking()
+            .Where(p => p.UserId == query.UserId)
+            .Select(p => p.AutoRollover)
+            .FirstOrDefaultAsync(ct);
+        var autoRollover = autoRolloverEnabled ?? true;
+        
         var weekStart = query.Monday;
         var weekEndExclusive = query.Monday.AddDays(7);
         var weekStartDate = DateOnly.FromDateTime(weekStart.Date);
@@ -105,6 +113,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                 // Overdue tasks should only decorate today/past cells, using the selected day's cutoff.
                 if (
                     includeOverdueTasks
+                    && autoRollover
                     && dayStart < userTodayEnd
                     && !t.IsDone
                     && t.EndTime < overdueCutoff

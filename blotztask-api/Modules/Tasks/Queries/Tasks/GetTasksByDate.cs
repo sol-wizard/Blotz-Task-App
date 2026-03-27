@@ -50,8 +50,6 @@ public class GetTasksByDateQueryHandler(
         var requestedDate = DateOnly.FromDateTime(query.StartDate.Date);
 
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.StartDate.Offset);
-        var userTodayStart = userNow.Date;
-        var userTodayEnd = userTodayStart.AddDays(1);
         var isFutureDay = query.StartDate.Date > userNow.Date;
 
         var overdueCutoff = query.StartDate.Date == userNow.Date? userNow : selectedDayEnd;

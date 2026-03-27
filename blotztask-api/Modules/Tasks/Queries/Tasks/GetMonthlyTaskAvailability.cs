@@ -28,6 +28,12 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
         CancellationToken ct = default)
     {
         var stopwatch = Stopwatch.StartNew();
+        bool? autoRolloverEnabled = await db.UserPreferences
+            .AsNoTracking()
+            .Where(p => p.UserId == query.UserId)
+            .Select(p => p.AutoRollover)
+            .FirstOrDefaultAsync(ct);
+        var autoRollover = autoRolloverEnabled ?? true;
         var monthStart = query.FirstDate;
         var monthEnd = query.FirstDate.AddMonths(1);
         var monthStartDate = DateOnly.FromDateTime(monthStart.Date);
@@ -105,7 +111,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                 .Where(t =>
                     (t.StartTime < dayEnd && t.EndTime >= dayStart) ||
                     (
-                        includeOverdueTasks &&
+                        includeOverdueTasks && autoRollover &&
                         dayStart < userTodayEnd &&
                         !t.IsDone &&
                         t.EndTime < overdueCutoff
