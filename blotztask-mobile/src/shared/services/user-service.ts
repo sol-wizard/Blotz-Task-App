@@ -5,12 +5,7 @@ import { UpdateUserProfileDTO } from "@/feature/settings/modals/update-user-prof
 
 export const fetchUserProfile = async (): Promise<UserProfileDTO> => {
   const url = `/User`;
-  try {
-    return await apiClient.get<UserProfileDTO>(url);
-  } catch (err: unknown) {
-    console.error("Fetch user profile failed:", err);
-    throw err;
-  }
+  return await apiClient.get<UserProfileDTO>(url);
 };
 
 export const updateUserProfile = async (userProfile: UpdateUserProfileDTO): Promise<string> => {
