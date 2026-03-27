@@ -9,7 +9,7 @@ export const fetchUserProfile = async (): Promise<UserProfileDTO> => {
     return await apiClient.get<UserProfileDTO>(url);
   } catch (err: unknown) {
     console.error("Fetch user profile failed:", err);
-    throw new Error("Failed to load user profile data");
+    throw err;
   }
 };
 
