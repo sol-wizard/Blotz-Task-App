@@ -1,12 +1,17 @@
 import { PostHog } from "posthog-react-native";
 
+const isProduction = process.env.EXPO_PUBLIC_APP_ENV === "production";
+
 const posthog = new PostHog(process.env.EXPO_PUBLIC_POSTHOG_API_KEY!, {
   host: "https://us.i.posthog.com",
-  enableSessionReplay: true,
+  enableSessionReplay: isProduction,
+  disabled: !isProduction,
 });
 
-void posthog.register({
-  env: process.env.EXPO_PUBLIC_APP_ENV ?? "unknown",
-});
+if (isProduction) {
+  void posthog.register({
+    env: "production",
+  });
+}
 
 export default posthog;
