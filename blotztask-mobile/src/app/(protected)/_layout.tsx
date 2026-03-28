@@ -3,9 +3,22 @@ import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { Stack } from "expo-router";
 import { usePostHog } from "posthog-react-native";
+import { useAuth0 } from "react-native-auth0";
+import { useEffect } from "react";
 
 export default function ProtectedLayout() {
   const posthog = usePostHog();
+  const { user } = useAuth0();
+
+  useEffect(() => {
+    if (user?.sub) {
+      const properties: Record<string, string> = {};
+      if (user.email) properties.email = user.email;
+      if (user.name) properties.name = user.name;
+
+      posthog.identify(user.sub, properties);
+    }
+  }, [user?.sub]);
 
   useLanguageInit();
   useTrackActiveUser5s(posthog);

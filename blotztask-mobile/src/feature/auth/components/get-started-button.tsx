@@ -3,7 +3,6 @@ import { useAuth0 } from "react-native-auth0";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/shared/constants/token-key";
-import { usePostHog } from "posthog-react-native";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/shared/hooks/useAuth";
 import { systemPreferredLanguage } from "../utils/system-preferred-language";
@@ -18,7 +17,6 @@ import {
 export default function GetStartedButton() {
   const { authorize, user } = useAuth0();
   const router = useRouter();
-  const posthog = usePostHog();
   const { t } = useTranslation("common");
   const { refreshAuthState } = useAuth();
   const AnimatedPressable = createAnimatedComponent(Pressable);
@@ -50,12 +48,6 @@ export default function GetStartedButton() {
 
         // Refresh auth state cache so dependent queries can start
         refreshAuthState();
-
-        if (user) {
-          posthog.identify(user.sub, {
-            env: process.env.EXPO_PUBLIC_APP_ENV ?? "unknown",
-          });
-        }
 
         router.replace("/(protected)");
       } else {
