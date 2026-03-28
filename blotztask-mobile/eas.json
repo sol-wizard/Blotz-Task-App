@@ -31,7 +31,7 @@
       "autoIncrement": true,
       "channel": "preview",
       "env": {
-        "BUNDLE_IDENTIFIER": "com.Blotz.BlotzTask.dev",
+        "BUNDLE_IDENTIFIER": "com.Blotz.BlotzTask.staging",
         "EXPO_PUBLIC_URL": "https://app-blotz-task-api-stag.azurewebsites.net/",
         "EXPO_PUBLIC_URL_WITH_API": "https://app-blotz-task-api-stag.azurewebsites.net/api",
         "EXPO_PUBLIC_AUTH0_AUDIENCE": "https://blotz-task-dev/api",
