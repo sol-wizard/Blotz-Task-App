@@ -16,12 +16,12 @@ export const TaskStatusButton = ({
     <Hanging active={isSelected}>
       <Pressable
         onPress={onChange}
-        className={`flex-row items-center gap-2 px-4 py-2 rounded-xl border ${
+        className={`flex-row items-center gap-2 px-4 py-2 rounded-3xl border ${
           isSelected ? "bg-black" : "bg-white border-gray-300"
         }`}
       >
         <Text
-          className={`${isSelected ? "text-white font-balooBold" : "text-gray-700 font-balooThin"}`}
+          className={`${isSelected ? "text-white font-inter" : "text-gray-700 font-inter"}`}
         >
           {statusName}
         </Text>
