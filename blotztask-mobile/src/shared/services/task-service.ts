@@ -35,28 +35,14 @@ export async function fetchMonthlyTaskAvailability(date: Date): Promise<MonthlyT
 
 export async function fetchTaskById(taskId: number): Promise<TaskDetailDTO> {
   const url = `/Task/${taskId}`;
-  try {
-    return await apiClient.get(url);
-  } catch {
-    throw new Error("Failed to fetch task by Id.");
-  }
-}
 
-export async function fetchNotes(query?: string): Promise<NoteDTO[]> {
-  const url = `/Task/notes`;
-  return apiClient.get(url, {
-    params: query ? { query } : undefined,
-  });
+  return await apiClient.get(url);
 }
 
 export async function toggleTaskCompletion(taskId: number): Promise<void> {
   const url = `/Task/task-completion-status/${taskId}`;
 
-  try {
-    await apiClient.put(url);
-  } catch {
-    throw new Error("Failed to toggle task.");
-  }
+  await apiClient.put(url);
 }
 
 export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<number> => {
@@ -70,21 +56,14 @@ export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<number> 
 };
 
 export async function updateTaskItem(taskId: number, updatedTask: EditTaskItemDTO): Promise<void> {
-  try {
-    const url = `/Task/${taskId}`;
-    await apiClient.put(url, updatedTask);
-  } catch {
-    throw new Error("Failed to update task.");
-  }
+  const url = `/Task/${taskId}`;
+  return await apiClient.put(url, updatedTask);
 }
 
 export async function deleteTask(taskId: number): Promise<void> {
   const url = `/Task/${taskId}`;
-  try {
-    await apiClient.delete(url);
-  } catch {
-    throw new Error("Failed to delete task.");
-  }
+
+  return await apiClient.delete(url);
 }
 
 export async function getAllTasks(): Promise<TaskDetailDTO[]> {
