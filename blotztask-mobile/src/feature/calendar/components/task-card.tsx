@@ -29,7 +29,6 @@ import { EVENTS } from "@/shared/constants/posthog-events";
 import { theme } from "@/shared/constants/theme";
 import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
 import { useRecurringTaskMutations } from "@/feature/calendar/hooks/useRecurringTaskMutations";
-// import ReanimatedSwipeable from "react-native-gesture-handler/lib/typescript/components/ReanimatedSwipeable/ReanimatedSwipeable";
 
 const rubberBand = (x: number, limit: number) => {
   "worklet";
@@ -186,15 +185,6 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     >
       <GestureDetector gesture={pan}>
         <Animated.View style={cardStyle} className="flex-row items-start">
-          {/* modes and focus buttons*/}
-          {/* <ReanimatedSwipeable
-      >
-        <Animated.View
-          className={`flex-1 overflow-hidden rounded-3xl`}
-        >
-          <Text>Swipe me</Text>
-        </Animated.View>
-      </ReanimatedSwipeable> */}
           {/* 1) Card */}
           <View style={{ width: screenWidth - 32 }}>
             <Pressable
@@ -226,6 +216,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                             await cancelNotification({ notificationId: task?.notificationId });
                           }
                         }}
+                      />
+                      <View
+                        className="w-[5px] h-10 rounded-full mx-3"
+                        style={{ backgroundColor: labelColor }}
                       />
                     </Animated.View>
 
