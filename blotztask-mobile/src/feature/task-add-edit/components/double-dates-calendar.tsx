@@ -28,9 +28,11 @@ const DoubleDatesCalendar = ({
       dates[format(d, "yyyy-MM-dd")] = { isInRange: true };
     }
     const keys = Object.keys(dates);
-    if (keys.length > 0) {
-      dates[keys[0]] = { isRangeStart: true, isInRange: true };
-      dates[keys[keys.length - 1]] = { isRangeEnd: true, isInRange: true };
+    if (keys.length === 1) {
+      dates[keys[0]] = { isRangeStart: true, isRangeEnd: true, isInRange: true };
+    } else if (keys.length > 1) {
+      dates[keys[0]] = { ...dates[keys[0]], isRangeStart: true };
+      dates[keys[keys.length - 1]] = { ...dates[keys[keys.length - 1]], isRangeEnd: true };
     }
     return dates;
   };

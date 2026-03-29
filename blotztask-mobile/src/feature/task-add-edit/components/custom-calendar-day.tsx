@@ -122,7 +122,7 @@ export const CustomCalendarDay = ({
             position: "absolute",
             width: 30,
             height: 30,
-            borderRadius: 14,
+            borderRadius: 12,
             borderWidth: 2,
             borderColor: "#8fc351",
             zIndex: 10,
