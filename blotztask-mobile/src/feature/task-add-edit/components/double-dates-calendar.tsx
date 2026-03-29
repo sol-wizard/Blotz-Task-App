@@ -1,11 +1,9 @@
 import { View } from "react-native";
-import { Calendar } from "react-native-calendars";
-import { format, parseISO } from "date-fns";
+import { Calendar, DateData } from "react-native-calendars";
+import { eachDayOfInterval, format, isBefore, isSameDay, parseISO } from "date-fns";
 import { theme } from "@/shared/constants/theme";
 import { renderCalendarHeader } from "@/feature/calendar/util/date-formatter";
 import { CustomCalendarDay } from "./custom-calendar-day";
-
-// Constants and types unused now
 
 const DoubleDatesCalendar = ({
   startDate,
@@ -22,10 +20,43 @@ const DoubleDatesCalendar = ({
   setEndDate: (v: Date) => void;
   current: string;
 }) => {
+  const getDatesInRange = (start: Date, end: Date) => {
+    const days = eachDayOfInterval({ start, end });
+    const dates: Record<string, any> = {};
+
+    for (const d of days) {
+      dates[format(d, "yyyy-MM-dd")] = { isInRange: true };
+    }
+    const keys = Object.keys(dates);
+    if (keys.length > 0) {
+      dates[keys[0]] = { isRangeStart: true, isInRange: true };
+      dates[keys[keys.length - 1]] = { isRangeEnd: true, isInRange: true };
+    }
+    return dates;
+  };
+
+  const markedDates: Record<string, any> = (() => {
+    if (!endDate) {
+      return { [format(startDate, "yyyy-MM-dd")]: { isRangeStart: true, isRangeEnd: true, isInRange: true } };
+    }
+    if (isBefore(endDate, startDate) && !isSameDay(endDate, startDate)) {
+      return {
+        [format(startDate, "yyyy-MM-dd")]: { isRangeStart: true, isRangeEnd: true, isInRange: true },
+        [format(endDate, "yyyy-MM-dd")]: { isInvalid: true, isRangeStart: true, isRangeEnd: true, isInRange: true },
+      };
+    }
+    return getDatesInRange(startDate, endDate);
+  })();
+
+  const onDayPress = (day: DateData) => {
+    const selected = parseISO(day.dateString);
+    setEndDate(selected);
+  };
+
   return (
     <View className="w-full max-w-md rounded-2xl bg-white p-4 mx-auto">
       <Calendar
-        // show endDate's month if present, otherwise startDate's month
+        onDayPress={onDayPress}
         current={current}
         theme={{
           todayTextColor: "#BAD5FA",
@@ -37,29 +68,9 @@ const DoubleDatesCalendar = ({
         renderHeader={renderCalendarHeader}
         enableSwipeMonths
         dayComponent={({ date, state }: any) => {
+          const props = markedDates[date.dateString] || {};
           const isDeadline = deadlineDate === date.dateString;
           const isDisabled = disabledDates.includes(date.dateString);
-
-          const currentMs = parseISO(date.dateString).getTime();
-          const startMs = parseISO(format(startDate, "yyyy-MM-dd")).getTime();
-          const endMs = endDate ? parseISO(format(endDate, "yyyy-MM-dd")).getTime() : startMs;
-
-          let isRangeStart = false;
-          let isRangeEnd = false;
-          let isInRange = false;
-          let isInvalid = false;
-
-          if (endMs >= startMs) {
-            isRangeStart = currentMs === startMs;
-            isRangeEnd = currentMs === endMs;
-            isInRange = currentMs > startMs && currentMs < endMs;
-          } else {
-             // Invalid range selection
-            isRangeStart = currentMs === startMs;
-            if (currentMs === endMs) {
-              isInvalid = true;
-            }
-          }
 
           return (
             <CustomCalendarDay
@@ -67,12 +78,12 @@ const DoubleDatesCalendar = ({
               state={state}
               isSelected={false}
               isDeadline={isDeadline}
-              isRangeStart={isRangeStart}
-              isRangeEnd={isRangeEnd}
-              isInRange={isInRange}
-              isInvalid={isInvalid}
+              isInRange={props.isInRange}
+              isRangeStart={props.isRangeStart}
+              isRangeEnd={props.isRangeEnd}
+              isInvalid={props.isInvalid}
               disabled={isDisabled}
-              onPress={(d) => setEndDate(d)}
+              onPress={() => onDayPress(date)}
             />
           );
         }}

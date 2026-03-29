@@ -26,14 +26,17 @@ export const SingleDateCalendar = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(defaultStartDate);
 
-  // keep selectedDate in sync when parent changes defaultStartDate
   useEffect(() => {
     setSelectedDate(defaultStartDate ?? null);
   }, [defaultStartDate]);
 
   return (
     <Calendar
-      // ensure calendar opens at the currently selected date/month
+      onDayPress={(day: any) => {
+        const asDate = parseISO(day.dateString);
+        setSelectedDate(day.dateString);
+        onStartDateChange(asDate);
+      }}
       current={selectedDate ?? undefined}
       theme={{
         todayTextColor: "#BAD5FA",

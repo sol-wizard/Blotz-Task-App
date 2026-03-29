@@ -55,8 +55,9 @@ export const CustomCalendarDay = ({
         if (!isDisabledState) onPress(parseISO(date.dateString));
       }}
       style={{
-        width: 48,
-        height: 48,
+        flex: 1, // Fluidly adapt to calendar sizing instead of breaking it with strict widths
+        alignSelf: "stretch",
+        height: 32, // Restored native row spacing! (was 48)
         alignItems: "center",
         justifyContent: "center",
         position: "relative",
@@ -69,9 +70,9 @@ export const CustomCalendarDay = ({
           style={{
             position: "absolute",
             left: -4,
-            width: 28,
-            top: 4,
-            bottom: 4,
+            right: "50%",
+            top: 1,
+            bottom: 1,
             backgroundColor: "#EEFBE1",
           }}
         />
@@ -80,10 +81,10 @@ export const CustomCalendarDay = ({
         <View
           style={{
             position: "absolute",
+            left: "50%",
             right: -4,
-            width: 28,
-            top: 4,
-            bottom: 4,
+            top: 1,
+            bottom: 1,
             backgroundColor: "#EEFBE1",
           }}
         />
@@ -94,7 +95,7 @@ export const CustomCalendarDay = ({
         style={{
           width: 30,
           height: 30,
-          borderRadius: 18,
+          borderRadius: 16,
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: circleBgColor,
@@ -121,7 +122,7 @@ export const CustomCalendarDay = ({
             position: "absolute",
             width: 30,
             height: 30,
-            borderRadius: 16,
+            borderRadius: 14,
             borderWidth: 2,
             borderColor: "#8fc351",
             zIndex: 10,
