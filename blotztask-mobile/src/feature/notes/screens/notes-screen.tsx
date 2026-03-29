@@ -3,6 +3,7 @@ import { View, Text, Pressable, TouchableWithoutFeedback, Keyboard, FlatList } f
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
+import { EVENTS, SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { useTranslation } from "react-i18next";
 import { useSwipeableManager } from "../hooks/useSwipeableManager";
 
@@ -44,7 +45,7 @@ export default function NotesScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      posthog.capture("screen_viewed", { screen_name: "Notes" });
+      posthog.capture(EVENTS.SCREEN_VIEWED, { screen_name: SCREEN_NAMES.NOTES });
     }, []),
   );
 

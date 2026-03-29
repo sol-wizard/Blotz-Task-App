@@ -14,6 +14,7 @@ import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
+import { EVENTS, SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
 import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
@@ -31,8 +32,8 @@ export default function GashaponMachineScreen() {
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
 
   useEffect(() => {
-    posthog.capture("screen_viewed", {
-      screen_name: "GashaponMachine",
+    posthog.capture(EVENTS.SCREEN_VIEWED, {
+      screen_name: SCREEN_NAMES.GASHAPON_MACHINE,
     });
   }, []);
 
