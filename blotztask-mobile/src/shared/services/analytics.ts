@@ -62,11 +62,15 @@ export const analytics = {
     userInput: string;
     generatedTaskCount: number;
     generatedNoteCount: number;
+    generatedTaskTitles: string[];
+    generatedNoteTexts: string[];
   }) {
     posthog.capture(EVENTS.AI_PREVIEW_SHOWN, {
       user_input: params.userInput,
       ai_generated_task_count: params.generatedTaskCount,
       ai_generated_note_count: params.generatedNoteCount,
+      ai_generated_task_titles: params.generatedTaskTitles,
+      ai_generated_note_texts: params.generatedNoteTexts,
     });
   },
 

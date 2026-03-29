@@ -41,6 +41,8 @@ export function AiTasksPreview({
       userInput,
       generatedTaskCount: aiTasks?.length ?? 0,
       generatedNoteCount: aiNotes?.length ?? 0,
+      generatedTaskTitles: aiTasks?.map((t) => t.title) ?? [],
+      generatedNoteTexts: aiNotes?.map((n) => n.text) ?? [],
     });
   }, []);
 
