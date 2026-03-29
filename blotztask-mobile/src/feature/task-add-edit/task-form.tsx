@@ -73,7 +73,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     endDate: dto?.endTime ? new Date(dto?.endTime) : oneHourLater,
     endTime: dto?.endTime ? new Date(dto?.endTime) : oneHourLater,
     alert: defaultAlert,
-    isDdl: dto?.isDdl ?? !!initialDueAt,
+    isDeadline: dto?.isDeadline ?? !!initialDueAt,
     deadlineDate: initialDueAt ?? oneHourLater,
     deadlineTime: initialDueAt ?? oneHourLater,
   };
@@ -117,7 +117,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       alertTime = calculateAlertTime(startTime!, data.alert);
     }
 
-    const deadline = data.isDdl ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
+    const deadline = data.isDeadline ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
 
     const submitTask: AddTaskItemDTO = {
       title: data.title.trim(),
@@ -128,7 +128,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       timeType,
       alertTime: alertTime ? convertToDateTimeOffset(alertTime) : undefined,
       notificationId,
-      isDdl: data.isDdl,
+      isDeadline: data.isDeadline,
       dueAt: deadline ? convertToDateTimeOffset(deadline) : undefined,
     };
 

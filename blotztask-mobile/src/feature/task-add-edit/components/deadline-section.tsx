@@ -27,10 +27,10 @@ export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) =>
   );
 
   const {
-    field: { value: isDdl, onChange: onIsDdlChange },
+    field: { value: isDeadline, onChange: onIsDeadlineChange },
   } = useController({
     control,
-    name: "isDdl",
+    name: "isDeadline",
   });
 
   const {
@@ -58,15 +58,15 @@ export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) =>
     <Animated.View layout={MotionAnimations.layout}>
       {/* Deadline Toggle */}
       <Animated.View
-        className={`flex-row justify-between items-center ${isDdl ? "mb-4" : ""}`}
+        className={`flex-row justify-between items-center ${isDeadline ? "mb-4" : ""}`}
         layout={MotionAnimations.layout}
       >
         <Text className="font-baloo text-secondary text-xl mt-1">{t("form.markAsDeadline")}</Text>
         <ToggleSwitch
-          value={isDdl}
+          value={isDeadline}
           onChange={() => {
-            const nextValue = !isDdl;
-            onIsDdlChange(nextValue);
+            const nextValue = !isDeadline;
+            onIsDeadlineChange(nextValue);
 
             // Only sync when turning ON
             if (nextValue) {
@@ -79,7 +79,7 @@ export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) =>
       </Animated.View>
 
       {/* Due Time  */}
-      {isDdl && (
+      {isDeadline && (
         <Animated.View
           entering={MotionAnimations.upEntering}
           exiting={MotionAnimations.outExiting}
