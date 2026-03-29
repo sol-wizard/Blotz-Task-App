@@ -7,11 +7,11 @@ import { AiNoteCard } from "./ai-note-card";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
-import { usePostHog } from "posthog-react-native";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { AiNoteDTO } from "../models/ai-note-dto";
 import { theme } from "@/shared/constants/theme";
-import { EVENTS, type AiTaskOutcome } from "@/shared/constants/posthog-events";
+import { type AiTaskOutcome } from "@/shared/constants/posthog-events";
+import { analytics } from "@/shared/services/analytics";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -36,13 +36,11 @@ export function AiTasksPreview({
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
-  const posthog = usePostHog();
-
   useEffect(() => {
-    posthog.capture(EVENTS.AI_PREVIEW_SHOWN, {
-      user_input: userInput,
-      ai_generated_task_count: aiTasks?.length ?? 0,
-      ai_generated_note_count: aiNotes?.length ?? 0,
+    analytics.trackUserUsedAiGeneration({
+      userInput,
+      generatedTaskCount: aiTasks?.length ?? 0,
+      generatedNoteCount: aiNotes?.length ?? 0,
     });
   }, []);
 
@@ -51,13 +49,13 @@ export function AiTasksPreview({
     addedTaskCount = 0,
     addedNoteCount = 0
   ) => {
-    posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-      user_input: userInput,
+    analytics.trackIfUserAcceptAiTask({
+      userInput,
       outcome,
-      ai_generated_task_count: aiTasks?.length ?? 0,
-      ai_generated_note_count: aiNotes?.length ?? 0,
-      user_add_task_count: addedTaskCount,
-      user_add_note_count: addedNoteCount,
+      generatedTaskCount: aiTasks?.length ?? 0,
+      generatedNoteCount: aiNotes?.length ?? 0,
+      addedTaskCount,
+      addedNoteCount,
     });
   };
 

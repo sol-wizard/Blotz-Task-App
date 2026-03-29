@@ -2,8 +2,8 @@ import { useCallback, useState } from "react";
 import { View, Text, Pressable, TouchableWithoutFeedback, Keyboard, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
-import { usePostHog } from "posthog-react-native";
-import { EVENTS, SCREEN_NAMES } from "@/shared/constants/posthog-events";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { useTranslation } from "react-i18next";
 import { useSwipeableManager } from "../hooks/useSwipeableManager";
 
@@ -28,7 +28,6 @@ export default function NotesScreen() {
 
   const { deleteNote, createNote, isNoteCreating, updateNote, isNoteUpdating } = useNotesMutation();
 
-  const posthog = usePostHog();
   const { t } = useTranslation("notes");
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -45,7 +44,7 @@ export default function NotesScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      posthog.capture(EVENTS.SCREEN_VIEWED, { screen_name: SCREEN_NAMES.NOTES });
+      analytics.trackScreenViewed(SCREEN_NAMES.NOTES);
     }, []),
   );
 

@@ -1,27 +1,22 @@
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
+import { analytics } from "@/shared/services/analytics";
 import { Stack } from "expo-router";
-import { usePostHog } from "posthog-react-native";
 import { useAuth0 } from "react-native-auth0";
 import { useEffect } from "react";
 
 export default function ProtectedLayout() {
-  const posthog = usePostHog();
   const { user } = useAuth0();
 
   useEffect(() => {
     if (user?.sub) {
-      const properties: Record<string, string> = {};
-      if (user.email) properties.email = user.email;
-      if (user.name) properties.name = user.name;
-
-      posthog.identify(user.sub, properties);
+      analytics.identifyUser(user.sub, { email: user.email, name: user.name });
     }
   }, [user?.sub]);
 
   useLanguageInit();
-  useTrackActiveUser5s(posthog);
+  useTrackActiveUser5s();
   usePushNotificationSetup();
 
   return (
