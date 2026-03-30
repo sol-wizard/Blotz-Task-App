@@ -11,6 +11,7 @@ interface NoteModalProps {
   onChangeText: (text: string) => void;
   onClose: () => void;
   onSave: () => void;
+  errorMessage: string;
 }
 
 export const NoteInputModal = ({
@@ -20,6 +21,7 @@ export const NoteInputModal = ({
   onChangeText,
   onClose,
   onSave,
+  errorMessage,
 }: NoteModalProps) => {
   const isSaveEnabled = noteText.trim().length > 0;
   const { t } = useTranslation("notes");
@@ -42,7 +44,7 @@ export const NoteInputModal = ({
     >
       <View className="justify-center items-center">
         <View className="w-11/12 bg-white rounded-2xl p-3">
-           <Pressable
+          <Pressable
             onPress={onClose}
             className="self-end w-10 h-10 rounded-full bg-[#F3F4F6] items-center justify-center"
           >
@@ -52,12 +54,17 @@ export const NoteInputModal = ({
           <TextInput
             value={noteText}
             onChangeText={onChangeText}
+            maxLength={2000}
             placeholder={t("notePlaceholder")}
             placeholderTextColor={theme.colors.primary}
             multiline
             //autoFocus
             className="mt-3 h-36 rounded-xl bg-background px-4 text-base mx-4"
           />
+
+          {errorMessage ? (
+            <Text className="mt-2 mx-4 text-sm text-red-500 font-baloo">{errorMessage}</Text>
+          ) : null}
 
           <Pressable
             disabled={!isSaveEnabled || isSaving}
