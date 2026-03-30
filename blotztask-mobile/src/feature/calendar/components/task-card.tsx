@@ -226,7 +226,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
 
                     {/* DDL Tag */}
                     {isDdlTag && (
-                      <View className="mr-2 px-2 py-0.5 rounded bg-highlight items-center justify-center">
+                      <View className="mr-2 -ml-3 px-1 py-0.5 rounded bg-highlight items-center justify-center">
                         <Text className="text-white font-balooBold text-xs mt-0.5">DDL</Text>
                       </View>
                     )}
