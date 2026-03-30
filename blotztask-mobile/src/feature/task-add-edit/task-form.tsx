@@ -148,8 +148,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     const startTime = getValues("startTime");
 
     if (next === "reminder") {
-      setValue("endDate", startDate, { shouldDirty: true, shouldValidate: false });
-      setValue("endTime", startTime, { shouldDirty: true, shouldValidate: false });
+      setValue("endDate", startDate, { shouldValidate: false });
+      setValue("endTime", startTime, { shouldValidate: false });
       clearErrors(["endDate", "endTime"]);
       return;
     }
