@@ -22,14 +22,14 @@ export const ReminderTab = ({
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
   const {
-    field: { value: startDate, onChange: onStartDateChange },
+    field: { value: startDate },
   } = useController({
     control,
     name: "startDate",
   });
 
   const {
-    field: { value: startTime, onChange: onStartTimeChange },
+    field: { value: startTime },
   } = useController({
     control,
     name: "startTime",
