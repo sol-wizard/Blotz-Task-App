@@ -64,14 +64,19 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const oneHourLater = new Date(now.getTime() + 3600000);
   const initialDueAt = dto?.dueAt ? new Date(dto.dueAt) : null;
 
+  const initialStartDate = dto?.startTime ? new Date(dto.startTime) : now;
+  const initialStartTime = dto?.startTime ? new Date(dto.startTime) : now;
+  const initialEndDate = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
+  const initialEndTime = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
+
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
     description: dto?.description ?? "",
     labelId: dto?.labelId ?? null,
-    startDate: dto?.startTime ? new Date(dto?.startTime) : now,
-    startTime: dto?.startTime ? new Date(dto?.startTime) : now,
-    endDate: dto?.endTime ? new Date(dto?.endTime) : oneHourLater,
-    endTime: dto?.endTime ? new Date(dto?.endTime) : oneHourLater,
+    startDate: initialStartDate,
+    startTime: initialStartTime,
+    endDate: initialTab === "reminder" ? initialStartDate : initialEndDate,
+    endTime: initialTab === "reminder" ? initialStartTime : initialEndTime,
     alert: defaultAlert,
     isDdl: dto?.isDdl ?? !!initialDueAt,
     deadlineDate: initialDueAt ?? oneHourLater,
@@ -84,7 +89,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     defaultValues: defaultValues,
   });
 
-  const { handleSubmit, formState, control, setValue, clearErrors, trigger } = form;
+  const { handleSubmit, formState, control, setValue, clearErrors, trigger, getValues } = form;
   const { isSubmitting } = formState;
 
   if (isUserPreferencesLoading) {
@@ -139,11 +144,15 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     setIsActiveTab(next);
     clearErrors(["endDate", "endTime"]);
 
-    if (mode === "edit" || next === "reminder") {
-      setValue("startDate", defaultValues.startDate);
-      setValue("startTime", defaultValues.startTime);
-      setValue("endDate", defaultValues.endDate);
-      setValue("endTime", defaultValues.endTime);
+    const startDate = getValues("startDate");
+    const startTime = getValues("startTime");
+    const endDate = getValues("endDate");
+    const endTime = getValues("endTime");
+
+    if (next === "reminder") {
+      setValue("endDate", startDate, { shouldDirty: true, shouldValidate: false });
+      setValue("endTime", startTime, { shouldDirty: true, shouldValidate: false });
+      clearErrors(["endDate", "endTime"]);
       return;
     }
 
@@ -153,6 +162,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     setValue("startTime", start);
     setValue("endDate", oneHourLater);
     setValue("endTime", oneHourLater);
+    trigger("endTime");
   };
 
   return (
@@ -196,12 +206,14 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
         <FormDivider />
         <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
-        {formState.errors.endTime && (
+        {isActiveTab === "event" && formState.errors.endTime && (
           <Text className="text-red-500 text-sm mb-4 font-baloo">
             {t(formState.errors.endTime.message || "")}
           </Text>
         )}
-        {isActiveTab === "reminder" && <ReminderTab control={control} setValue={setValue} />}
+        {isActiveTab === "reminder" && (
+          <ReminderTab control={control} setValue={setValue} clearErrors={clearErrors} />
+        )}
         {isActiveTab === "event" && (
           <EventTab
             control={control}
