@@ -19,8 +19,9 @@
     "dueTime": "Due Time",
     "invalidTimeRange": "Start time cannot be later than end time",
     "deadlineWarning": "Just a heads up",
-    "deadlineWarningDesc": "your reminder is set after the deadline!",
-    "eventWarningDesc": "your event ends after the deadline!"
+    "deadlineWarningDesc": "Your reminder is set after the deadline!",
+    "eventWarningDesc": "Your event ends after the deadline!",
+    "closeWarning": "Close warning"
   },
   "details": {
     "notFound": "Selected Task not found.",

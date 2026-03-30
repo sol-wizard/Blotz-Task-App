@@ -89,7 +89,16 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const { handleSubmit, formState, control, setValue, clearErrors, trigger } = form;
   const { isSubmitting } = formState;
 
-  const { isDdl, startDate, startTime, endDate, endTime, deadlineDate, deadlineTime } = form.watch();
+  const [isDdl, startDate, startTime, endDate, endTime, deadlineDate, deadlineTime] =
+    form.watch([
+      "isDdl",
+      "startDate",
+      "startTime",
+      "endDate",
+      "endTime",
+      "deadlineDate",
+      "deadlineTime",
+    ]);
   const currentReminderStart = combineDateTime(startDate, startTime);
   const currentEventEnd = combineDateTime(endDate, endTime);
   const currentDeadline = combineDateTime(deadlineDate, deadlineTime);
@@ -98,12 +107,12 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     ? currentEventEnd && currentDeadline && isAfter(currentEventEnd, currentDeadline)
     : currentReminderStart && currentDeadline && isAfter(currentReminderStart, currentDeadline);
 
-  const isReminderAfterDeadline = !!(isDdl && isInvalidTime);
+  const isEndTimeAfterDeadline = !!(isDdl && isInvalidTime);
 
   const [dismissedWarning, setDismissedWarning] = useState(false);
 
   useEffect(() => {
-    if (isReminderAfterDeadline) {
+    if (isEndTimeAfterDeadline) {
       setDismissedWarning(false);
     }
   }, [currentReminderStart?.getTime(), currentEventEnd?.getTime(), currentDeadline?.getTime(), isDdl, isActiveTab]);
@@ -234,7 +243,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         <FormDivider />
         <View className="relative z-50">
           <DeadlineWarningAlert 
-            visible={isReminderAfterDeadline && !dismissedWarning} 
+            visible={isEndTimeAfterDeadline && !dismissedWarning} 
             isEvent={isActiveTab === "event"}
             onClose={() => setDismissedWarning(true)} 
           />

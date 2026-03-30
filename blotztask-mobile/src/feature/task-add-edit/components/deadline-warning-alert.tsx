@@ -38,7 +38,13 @@ export const DeadlineWarningAlert = ({ visible, isEvent, onClose }: DeadlineWarn
           {isEvent ? t("form.eventWarningDesc") : t("form.deadlineWarningDesc")}
         </Text>
       </View>
-      <Pressable onPress={onClose} className="absolute top-4 right-4 p-1 bg-gray-100 rounded-full">
+      <Pressable 
+        onPress={onClose} 
+        className="absolute top-4 right-4 p-1 bg-gray-100 rounded-full"
+        accessibilityRole="button"
+        accessibilityLabel={t("form.closeWarning")}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
         <MaterialCommunityIcons name="close" size={16} color="#4B5563" />
       </Pressable>
     </Animated.View>
