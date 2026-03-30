@@ -7,7 +7,6 @@ import { DailyTaskIndicatorDTO } from "@/feature/calendar/models/daily-task-indi
 import { MonthlyTaskIndicatorDTO } from "@/feature/calendar/models/monthly-task-indicator-dto";
 import { startOfDay } from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
-import { NoteDTO } from "@/feature/notes/models/note-dto";
 
 export async function fetchTasksForDate(
   date: Date,
