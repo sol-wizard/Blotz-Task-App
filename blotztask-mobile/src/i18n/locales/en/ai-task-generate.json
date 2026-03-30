@@ -1,6 +1,6 @@
 {
   "input": {
-    "placeholder": "Type a task, or tap below to say it"
+    "placeholder": "Describe your task with a specific date and time, e.g. \"Submit report by Friday 5pm\""
   },
   "buttons": {
     "speak": "Speak",
