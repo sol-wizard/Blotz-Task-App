@@ -68,6 +68,7 @@ const useTaskMutations = () => {
   });
   return {
     addTask: addTaskMutation.mutate,
+    addTaskAsync: addTaskMutation.mutateAsync,
     toggleTask: toggleTaskMutation.mutate,
     deleteTask: deleteTaskMutation.mutate,
     updateTask: updateTaskMutation.mutate,
@@ -82,13 +83,11 @@ const useTaskMutations = () => {
 
 export default useTaskMutations;
 
-function invalidateSelectedDayTask(
+export function invalidateSelectedDayTask(
   queryClient: QueryClient,
-  startTime?: string | null,
-  endTime?: string | null,
+  startTime: string,
+  endTime: string,
 ) {
-  if (!startTime || !endTime) return;
-
   const start = startOfDay(new Date(startTime));
   const end = startOfDay(new Date(endTime));
   if (isSameDay(start, end)) {

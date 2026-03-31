@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { theme } from "@/shared/constants/theme";
@@ -7,25 +7,25 @@ import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "@/feature/task-details/hooks/useSubtasksByParentId";
 import { DraggableSubtaskList } from "@/feature/task-details/components/draggable-subtask-list";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
+import Toast from "react-native-toast-message";
 
 type SubtasksEditorProps = {
   parentTask: TaskDetailDTO;
+  onRefreshSubtasks: () => Promise<void>;
+  isBreakingDown: boolean;
+  isReplacingSubtasks: boolean;
 };
 
-const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
+const SubtasksEditor = ({
+  parentTask,
+  onRefreshSubtasks,
+  isBreakingDown,
+  isReplacingSubtasks,
+}: SubtasksEditorProps) => {
   const { t } = useTranslation(["tasks", "common"]);
   const { data: fetchedSubtasks, isLoading } = useSubtasksByParentId(parentTask.id);
 
-  const {
-    breakDownTask,
-    isBreakingDown,
-    replaceSubtasks,
-    isReplacingSubtasks,
-    deleteSubtask,
-    isDeletingSubtask,
-    isUpdatingSubtask,
-    toggleSubtaskStatus,
-  } = useSubtaskMutations();
+  const { deleteSubtask, isDeletingSubtask, toggleSubtaskStatus } = useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
   const taskColor = parentTask?.label?.color ?? theme.colors.disabled;
@@ -35,19 +35,7 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
   };
 
   const handleRefresh = async () => {
-    try {
-      const newSubtasks = await breakDownTask(parentTask.id);
-      if (newSubtasks && newSubtasks.length > 0) {
-        await replaceSubtasks({
-          taskId: parentTask.id,
-          subtasks: newSubtasks,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to refresh subtasks:", error);
-      // TODO: Implement error screen
-      Alert.alert(t("tasks:details.error"), t("tasks:details.failedToRefreshSubtasks"));
-    }
+    await onRefreshSubtasks();
   };
 
   const handleEdit = () => {
@@ -59,17 +47,14 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
       await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id });
     } catch (error) {
       console.error("Failed to delete subtask:", error);
-      Alert.alert(t("tasks:details.error"), t("tasks:details.failedToDeleteSubtask"));
+      Toast.show({
+        type: "error",
+        text1: t("tasks:details.failedToDeleteSubtask"),
+      });
     }
   };
 
-  if (
-    isLoading ||
-    isBreakingDown ||
-    isReplacingSubtasks ||
-    isDeletingSubtask ||
-    isUpdatingSubtask
-  ) {
+  if (isLoading || isBreakingDown || isReplacingSubtasks || isDeletingSubtask) {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-base font-baloo text-primary">
@@ -94,34 +79,32 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
 
   return (
     <View className="flex-1">
-      {/* Top Action Bar */}
-      <View className="flex-row justify-between items-center mb-4">
-        <Text className="font-balooBold text-xl text-[#3E4A5A]">{t("tasks:details.subtasks")}</Text>
+      <View className="flex-row justify-between items-center mb-6">
+        <Text className="font-balooBold text-2xl" style={{ color: theme.colors.onSurface }}>
+          {t("tasks:details.subtasks")}
+        </Text>
 
         <View className="flex-row items-center mr-1">
-          {isEditMode ? (
-            <TouchableOpacity onPress={onBack} className="p-2">
-              <MaterialIcons name="arrow-back" size={28} />
-            </TouchableOpacity>
-          ) : (
+          {!isEditMode && (
             <TouchableOpacity onPress={handleRefresh} className="p-2">
-              <MaterialIcons name="sync" size={24} />
+              <MaterialIcons name="sync" size={26} color={theme.colors.disabled} />
             </TouchableOpacity>
           )}
           {isEditMode ? (
-            <TouchableOpacity
-              onPress={handleEdit}
-              className="px-6 py-2 rounded-lg items-center justify-center"
-            >
-              <Text className="font-balooSemiBold text-base text-[#3d8de0]">
+            <TouchableOpacity onPress={handleEdit} className="px-2 py-1">
+              <Text className="font-balooBold text-lg" style={{ color: theme.colors.highlight }}>
                 {t("tasks:details.complete")}
               </Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity onPress={handleEdit}>
-              <MaterialIcons name="reorder" size={24} />
+            <TouchableOpacity onPress={handleEdit} className="p-2">
+              <MaterialIcons name="swap-vert" size={26} color={theme.colors.disabled} />
             </TouchableOpacity>
           )}
+
+          <TouchableOpacity onPress={() => console.log("Add subtask clicked")} className="p-2 ml-1">
+            <MaterialIcons name="add" size={28} color={theme.colors.disabled} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -136,9 +119,8 @@ const SubtasksEditor = ({ parentTask }: SubtasksEditorProps) => {
         />
       </View>
 
-      {/* Add More Subtasks Button / Drag to Reorder - Fixed at bottom */}
-      {isEditMode ?? (
-        <View className="mx-0 mb-10 mt-4 rounded-2xl py-2.5 items-center justify-center">
+      {isEditMode && (
+        <View className="mx-0 mb-10 mt-4 py-2.5 items-center justify-center">
           <Text className="font-baloo text-[#8BC34A] text-lg text-center">
             {t("tasks:details.dragToReorder")}
           </Text>

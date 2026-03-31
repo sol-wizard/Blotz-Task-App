@@ -20,12 +20,13 @@ export function handleAuthError(
         console.log("get new tokens");
         return api(originalRequest);
       })
-      .catch((refreshError) => {
+      .catch(() => {
         clearTokens();
         // Ensure auth state flips immediately for guards + redirects.
         queryClient.setQueryData(AUTH_QUERY_KEY, false);
         router.replace("/(auth)/signin");
-        return Promise.reject(refreshError);
+
+        return Promise.reject(error);
       });
   }
   return null;

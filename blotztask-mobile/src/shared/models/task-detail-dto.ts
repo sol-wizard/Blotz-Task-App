@@ -7,15 +7,17 @@ export enum TaskTimeType {
 }
 
 export interface TaskDetailDTO {
-  id: number;
+  id: number | null;
+  recurringTaskId?: number | null;
   description?: string;
   title: string;
   isDone: boolean;
   label?: LabelDTO;
-  startTime?: string;
-  endTime?: string;
+  startTime: string;
+  endTime: string;
   timeType: TaskTimeType | null;
   notificationId: string | null;
   subtasks?: SubtaskDTO[];
   alertTime?: string;
+  isDdl: boolean;
 }

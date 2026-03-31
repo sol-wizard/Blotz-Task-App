@@ -1,8 +1,13 @@
+using BlotzTask.Modules.Tasks.Commands.DeadlineTasks;
 using BlotzTask.Modules.Tasks.Commands.RecurringTasks;
 using BlotzTask.Modules.Tasks.Commands.SubTasks;
 using BlotzTask.Modules.Tasks.Commands.Tasks;
+using BlotzTask.Modules.Tasks.Domain.Services;
+using BlotzTask.Modules.Tasks.Events;
+using BlotzTask.Modules.Tasks.Queries.Deadlines;
 using BlotzTask.Modules.Tasks.Queries.SubTasks;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Shared.Events;
 
 namespace BlotzTask.Modules.Tasks;
 
@@ -18,15 +23,24 @@ public static class DependencyInjection
         services.AddScoped<DeleteTaskCommandHandler>();
         services.AddScoped<ReplaceSubtasksCommandHandler>();
         services.AddScoped<DeleteSubtaskCommandHandler>();
-        services.AddScoped<AddRecurringTaskCommandHandler>();
+        services.AddScoped<RecurringTaskGeneratorService>();
+        services.AddScoped<SaveRecurringOccurrenceCommandHandler>();
         services.AddScoped<UpdateSubtaskStatusCommandHandler>();
+        services.AddScoped<UpdateDeadlinePinCommandHandler>();
+        services.AddScoped<DeleteDeadlineTaskCommandHandler>();
+        services.AddScoped<AddSubtaskCommandHandler>();
 
-        // Manual registration of query handlers 
+        // Event handlers
+        services.AddScoped<IDomainEventHandler<TaskCompletedEvent>, TaskCompletedEventHandler>();
+
+        // Manual registration of query handlers
         services.AddScoped<GetTasksByDateQueryHandler>();
         services.AddScoped<GetTaskByIdQueryHandler>();
         services.AddScoped<GetAllTasksQueryHandler>();
         services.AddScoped<GetSubtasksByTaskIdQueryHandler>();
         services.AddScoped<GetWeeklyTaskAvailabilityQueryHandler>();
+        services.AddScoped<GetMonthlyTaskAvailabilityQueryHandler>();
+        services.AddScoped<GetAllDdlTasksQueryHandler>();
 
         return services;
     }

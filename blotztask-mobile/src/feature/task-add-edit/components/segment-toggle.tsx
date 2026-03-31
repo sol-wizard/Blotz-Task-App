@@ -14,10 +14,20 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function SegmentToggle({ value, setValue }: Props) {
   const { t } = useTranslation("tasks");
-  const tabPositionX = useSharedValue(0);
+  const tabPositionX = useSharedValue(value === "reminder" ? 0 : 224 / 2);
+  const [containerWidth, setContainerWidth] = React.useState(224);
+  const isInitialMount = React.useRef(true);
+  React.useEffect(() => {
+    if (containerWidth > 0) {
+      onTabMovingAnimation(value === "reminder" ? 0 : 1, !isInitialMount.current);
+      isInitialMount.current = false;
+    }
+  }, [value, containerWidth]);
 
-  const onTabMovingAnimation = (index: number) => {
-    tabPositionX.value = withTiming(104 * index, {});
+  const onTabMovingAnimation = (index: number, animate: boolean = true) => {
+    const tabWidth = containerWidth / 2;
+    const target = tabWidth * index;
+    tabPositionX.value = animate ? withTiming(target, { duration: 200 }) : target;
   };
 
   const tabAnimatedStyle = useAnimatedStyle(() => ({
@@ -28,6 +38,7 @@ export function SegmentToggle({ value, setValue }: Props) {
     <Animated.View
       className="flex-row bg-[#F4F6FA] p-1 rounded-xl mb-6 w-56 items-center"
       layout={MotionAnimations.layout}
+      onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
     >
       <Animated.View
         className="absolute bg-white rounded-xl w-28 h-10 shadow-sm shadow-gray-400"

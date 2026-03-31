@@ -9,6 +9,14 @@ param location string = resourceGroup().location
 param dbAdminUsername string
 @secure()
 param dbAdminPassword string
+@secure()
+param auth0ManagementClientSecret string
+
+// Auth0 Configuration
+param auth0Domain string
+param auth0Audience string
+param auth0ManagementClientId string
+param auth0ManagementAudience string
 
 param openAiDeploymentName string
 param openAiModelName string
@@ -21,11 +29,11 @@ param alertEmail string
 param appServiceSkuName string
 param appServiceSkuTier string
 
-// Database SKU settings
-param dbSkuName string
-param dbSkuTier string
-param dbSkuCapacity int
+// Database (Serverless vCore model)
 param dbMaxSizeGb int
+
+param dbAutoPauseDelayMinutes int = 60 // set to -1 to disable auto-pause
+param dbMaxVCores int = 1
 
 // Key Vault create mode - use 'recover' if Key Vault is soft-deleted
 @allowed(['default', 'recover'])
@@ -89,6 +97,10 @@ module webAppForAPI 'modules/appService.bicep' = {
     logAnalyticsWorkspaceId: logAnalytics.outputs.id
     appServiceSkuName: appServiceSkuName
     appServiceSkuTier: appServiceSkuTier
+    auth0Domain: auth0Domain
+    auth0Audience: auth0Audience
+    auth0ManagementClientId: auth0ManagementClientId
+    auth0ManagementAudience: auth0ManagementAudience
   }
 }
 
@@ -110,10 +122,9 @@ module sql 'modules/sqlserver.bicep' = {
     environment: environment
     dbAdminUsername: dbAdminUsername
     dbAdminPassword: dbAdminPassword
-    dbSkuName: dbSkuName
-    dbSkuTier: dbSkuTier
-    dbSkuCapacity: dbSkuCapacity
     dbMaxSizeBytes: dbMaxSizeGb * 1073741824
+    dbAutoPauseDelayMinutes: dbAutoPauseDelayMinutes
+    dbMaxVCores: dbMaxVCores
   }
 }
 
@@ -123,6 +134,15 @@ module storeConnectionString 'modules/keyVaultSecret.bicep' = {
     keyVaultName: kv.outputs.name
     secretName: 'sql-connection-string'
     secretValue: sql.outputs.connectionString
+  }
+}
+
+module storeAuth0ManagementClientSecret 'modules/keyVaultSecret.bicep' = {
+  name: '${namePrefix}-${environment}-store-auth0-mgmt-secret'
+  params: {
+    keyVaultName: kv.outputs.name
+    secretName: 'auth0-management-client-secret'
+    secretValue: auth0ManagementClientSecret
   }
 }
 

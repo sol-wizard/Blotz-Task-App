@@ -1,0 +1,186 @@
+import React, { useEffect, useState } from "react";
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import Modal from "react-native-modal";
+import { FormProvider, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { NoteDTO } from "../models/note-dto";
+import { router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { SegmentToggle } from "@/feature/task-add-edit/components/segment-toggle";
+import { ReminderTab } from "@/feature/task-add-edit/components/reminder-tab";
+import { EventTab } from "@/feature/task-add-edit/components/event-tab";
+import { buildTaskTimePayload } from "@/feature/task-add-edit/util/time-convertion";
+import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
+import { theme } from "@/shared/constants/theme";
+import { addMinutes } from "date-fns/addMinutes";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+
+type FormValues = {
+  startDate: Date;
+  startTime: Date;
+  endDate: Date;
+  endTime: Date;
+};
+
+type TaskFormField = FormValues;
+
+export const NoteTimePickerSheet = ({
+  visible,
+  note,
+  onClose,
+  onModalHide,
+  handleAIEstimate,
+}: {
+  visible: boolean;
+  note: NoteDTO | null;
+  onClose: () => void;
+  onModalHide?: () => void;
+  handleAIEstimate: (note: NoteDTO | null) => void;
+}) => {
+  const { t } = useTranslation("notes");
+  const { addNoteToTask, isConverting } = useAddNoteToTask();
+
+  // Initialize form like TaskForm does
+  const getDefaultValues = (): TaskFormField => {
+    const now = new Date();
+    return {
+      startDate: now,
+      startTime: now,
+      endDate: now,
+      endTime: addMinutes(now, 60),
+    };
+  };
+
+  const form = useForm<FormValues>({
+    defaultValues: getDefaultValues(),
+  });
+
+  const { handleSubmit, reset, control, setValue } = form;
+  const [mode, setMode] = useState<"reminder" | "event">("reminder");
+
+  useEffect(() => {
+    if (visible) {
+      reset(getDefaultValues());
+      setMode("reminder");
+    }
+  }, [visible]);
+
+  const handleTabChange = (next: "reminder" | "event") => {
+    setMode(next);
+    if (next === "reminder") {
+      setValue("startDate", getDefaultValues().startDate);
+      setValue("startTime", getDefaultValues().startTime);
+      setValue("endDate", getDefaultValues().endDate);
+      setValue("endTime", getDefaultValues().endTime);
+      return;
+    }
+  };
+
+  const onApply = handleSubmit((data) => {
+    if (!note) {
+      onClose();
+      return;
+    }
+
+    const { startTime, endTime } = buildTaskTimePayload(
+      data.startDate,
+      data.startTime,
+      mode === "reminder" ? data.startDate : data.endDate,
+      mode === "reminder" ? data.startTime : data.endTime,
+    );
+
+    addNoteToTask({
+      note,
+      startTime,
+      endTime,
+      onSuccess: () => {
+        onClose();
+        router.push("/(protected)/(tabs)");
+      },
+    });
+  });
+
+  return (
+    <Modal
+      isVisible={visible}
+      onBackdropPress={onClose}
+      onModalHide={onModalHide}
+      backdropOpacity={0.4}
+      animationIn="slideInUp"
+      animationOut="slideOutDown"
+      useNativeDriver
+      style={{ margin: 0 }}
+    >
+      <View className="bg-white rounded-t-3xl p-6 mt-auto ">
+        <FormProvider {...form}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+            {/* Header: mode toggle (reminder/event), AI estimate button, close (all inline) */}
+            <View className="flex-row items-center justify-between mb-6 gap-3 h-20">
+              {/* Left: toggle fills available horizontal space but stays vertically centered */}
+              <View className="flex-1 self-center pt-3 ml-1">
+                <SegmentToggle
+                  value={mode === "reminder" ? "reminder" : "event"}
+                  setValue={handleTabChange}
+                />
+              </View>
+              <View className="flex-row items-center ml-3 gap-x-2 -mt-3">
+                {/* AI button */}
+                <Pressable onPress={() => handleAIEstimate(note)}>
+                  <LinearGradient
+                    colors={["#9AD513", "#60B000", "#9AD513"]}
+                    start={{ x: 0.8, y: 0 }}
+                    end={{ x: 0, y: 0.5 }}
+                    style={{
+                      borderRadius: 20,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text className="text-white font-baloo text-m">
+                      {t("timeEstimate.estimateButton")}
+                    </Text>
+                  </LinearGradient>
+                </Pressable>
+
+                {/* Close button: vertically centered by parent */}
+                <Pressable onPress={onClose}>
+                  <MaterialCommunityIcons name="close" size={16} color="#4B5563" />
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Mode toggle (Reminder / Event) */}
+            <View className="mb-4">
+              {mode === "reminder" ? (
+                <View className="mb-6">
+                  <ReminderTab control={control} />
+                </View>
+              ) : (
+                <View className="mb-6">
+                  <EventTab control={control} />
+                </View>
+              )}
+            </View>
+
+            {/* Apply */}
+            <Pressable
+              onPress={onApply}
+              disabled={isConverting}
+              className={`rounded-xl py-4 items-center justify-center ${
+                isConverting ? "bg-[#F3F4F6]" : "bg-lime-300"
+              }`}
+            >
+              {isConverting ? (
+                <ActivityIndicator size="small" color={theme.colors.onSurface} />
+              ) : (
+                <Text className="font-balooBold text-lg text-black">Apply</Text>
+              )}
+            </Pressable>
+          </ScrollView>
+        </FormProvider>
+      </View>
+    </Modal>
+  );
+};

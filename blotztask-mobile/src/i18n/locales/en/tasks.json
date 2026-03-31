@@ -14,7 +14,10 @@
     "selectDate": "Select Date",
     "selectTime": "Select Time",
     "start": "Start",
-    "end": "End"
+    "end": "End",
+    "markAsDeadline": "Mark as deadline",
+    "dueTime": "Due Time",
+    "invalidTimeRange": "Start time cannot be later than end time"
   },
   "details": {
     "notFound": "Selected Task not found.",

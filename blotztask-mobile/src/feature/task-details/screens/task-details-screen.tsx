@@ -8,7 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { ASSETS } from "@/shared/constants/assets";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import {
   TaskRangeTimeCard,
@@ -33,7 +33,7 @@ export default function TaskDetailsScreen() {
   }, [selectedTask]);
 
   const handleUpdateDescription = async (newDescription: string) => {
-    if (!selectedTask) return;
+    if (!selectedTask || !selectedTask.id) return;
     if (newDescription === (selectedTask.description ?? "")) return;
 
     await updateTask({
@@ -41,12 +41,8 @@ export default function TaskDetailsScreen() {
       dto: {
         title: selectedTask.title,
         description: newDescription,
-        startTime: selectedTask.startTime
-          ? convertToDateTimeOffset(new Date(selectedTask.startTime))
-          : undefined,
-        endTime: selectedTask.endTime
-          ? convertToDateTimeOffset(new Date(selectedTask.endTime))
-          : undefined,
+        startTime: convertToDateTimeOffset(new Date(selectedTask.startTime)),
+        endTime: convertToDateTimeOffset(new Date(selectedTask.endTime)),
         labelId: selectedTask.label?.labelId,
         timeType: selectedTask.timeType ?? null,
       },
@@ -57,7 +53,7 @@ export default function TaskDetailsScreen() {
     return <LoadingScreen />;
   }
 
-  if (!selectedTask) {
+  if (!selectedTask || !selectedTask.id) {
     console.warn("No selected task found");
     return (
       <View className="flex-1 items-center justify-center">
@@ -117,30 +113,23 @@ export default function TaskDetailsScreen() {
             <Text className="flex-1 font-balooBold text-4xl leading-normal">
               {selectedTask.title}
             </Text>
-            <MaterialCommunityIcons
-              name="pencil-minus-outline"
+            <TouchableOpacity
               onPress={async () => {
                 router.push({
                   pathname: "/(protected)/task-edit",
                   params: { taskId: selectedTask.id },
                 });
               }}
-              size={28}
-            />
+            >
+              <ASSETS.editIcon width={28} height={28} fill="#444964" />
+            </TouchableOpacity>
           </View>
 
-          {selectedTask.startTime && selectedTask.startTime === selectedTask.endTime && (
+          {selectedTask.startTime === selectedTask.endTime ? (
             <TaskSingleTimeCard startTime={selectedTask.startTime} />
+          ) : (
+            <TaskRangeTimeCard startTime={selectedTask.startTime} endTime={selectedTask.endTime} />
           )}
-
-          {selectedTask.startTime &&
-            selectedTask.endTime &&
-            selectedTask.startTime !== selectedTask.endTime && (
-              <TaskRangeTimeCard
-                startTime={selectedTask.startTime}
-                endTime={selectedTask.endTime}
-              />
-            )}
         </View>
       </TouchableWithoutFeedback>
 

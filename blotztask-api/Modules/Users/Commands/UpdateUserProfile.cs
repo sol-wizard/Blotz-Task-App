@@ -1,5 +1,4 @@
 using BlotzTask.Infrastructure.Data;
-using BlotzTask.Modules.Users.Services;
 using BlotzTask.Shared.Exceptions;
 
 namespace BlotzTask.Modules.Users.Commands;
@@ -14,8 +13,7 @@ public class UpdateUserProfileCommand
 
 public class UpdateUserProfileCommandHandler(
     BlotzTaskDbContext db,
-    ILogger<UpdateUserProfileCommandHandler> logger,
-    IAuth0ManagementService auth0ManagementService)
+    ILogger<UpdateUserProfileCommandHandler> logger)
 {
     public async Task<string> Handle(UpdateUserProfileCommand profileCommand, CancellationToken ct = default)
     {
@@ -25,35 +23,32 @@ public class UpdateUserProfileCommandHandler(
 
         if (user == null) throw new NotFoundException($"User with ID {profileCommand.Id} not found.");
 
-        var hasProfileUpdate = !string.IsNullOrWhiteSpace(profileCommand.DisplayName) ||
-            !string.IsNullOrWhiteSpace(profileCommand.PictureUrl);
-        if (hasProfileUpdate)
+        var hasChange = false;
+
+        if (!string.IsNullOrWhiteSpace(profileCommand.DisplayName))
         {
-            var auth0UserId = user.Auth0UserId;
+            user.DisplayName = profileCommand.DisplayName;
+            hasChange = true;
+        }
 
-            await auth0ManagementService.UpdateUserProfileAsync(
-                auth0UserId,
-                profileCommand.DisplayName,
-                profileCommand.PictureUrl
-            );
-
-            logger.LogInformation("Updated User Profile for user {UserId} successfully in auth0.", profileCommand.Id);
-
-            var auth0User = await auth0ManagementService.GetUserAsync(auth0UserId, ct);
-            logger.LogInformation("Found User Profile for user {UserId} in auth0.", profileCommand.Id);
-            user.DisplayName = auth0User.FullName;
-            user.PictureUrl = auth0User.Picture;
+        if (!string.IsNullOrWhiteSpace(profileCommand.PictureUrl))
+        {
+            user.PictureUrl = profileCommand.PictureUrl;
+            hasChange = true;
         }
 
         if (profileCommand.IsOnboarded.HasValue)
         {
             user.IsOnboarded = profileCommand.IsOnboarded.Value;
+            hasChange = true;
         }
 
-        user.UpdatedAt = DateTime.UtcNow;
-        db.AppUsers.Update(user);
-        await db.SaveChangesAsync(ct);
-        logger.LogInformation("Updated User Profile for user {UserId} successfully in database.", user.Id);
+        if (hasChange)
+        {
+            user.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync(ct);
+            logger.LogInformation("Updated User Profile for user {UserId} successfully in database.", user.Id);
+        }
 
         return "User profile updated successfully.";
     }

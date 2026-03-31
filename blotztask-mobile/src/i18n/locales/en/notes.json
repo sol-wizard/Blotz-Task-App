@@ -9,7 +9,7 @@
     "revealTitle": "Reveal A New Task",
     "cancel": "Cancel",
     "doItNow": "Do it now",
-    "pickNote": "Let fate decide✨"
+    "pickNote": "Pick a note"
   },
 
   "notePlaceholder": "Add a Quick Note",
@@ -17,11 +17,21 @@
   "close": "Close",
 
   "timeEstimate": {
+    "estimateButton": "AI Time Estimate",
     "estimating": "Estimating time...",
     "estimatedMessage": "This task will take around ",
     "startNow": "Start now",
     "oops": "Oops!",
     "errorMessage": "Could not estimate time, please try again later.",
     "dismiss": "Dismiss"
+  },
+  "emptyNoteMessage": {
+    "encouragingTitle": "You're all caught up",
+    "encouragingDescription": "We'll hold onto things when life gets busy.",
+    "gashaponTitle": "Not enough sparks yet. Gacha opens when there's more"
+  },
+  "noteActions": {
+    "delete": "Delete",
+    "addToTask": "Add to Task"
   }
 }

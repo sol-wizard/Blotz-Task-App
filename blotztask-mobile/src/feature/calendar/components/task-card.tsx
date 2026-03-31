@@ -9,7 +9,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { format, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -26,6 +27,8 @@ import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { theme } from "@/shared/constants/theme";
+import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
+import { useRecurringTaskMutations } from "@/feature/calendar/hooks/useRecurringTaskMutations";
 
 const rubberBand = (x: number, limit: number) => {
   "worklet";
@@ -46,7 +49,12 @@ interface TaskCardProps {
 }
 
 const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) => {
+  const isVirtualTask = task.id == null;
+  const isRecurringTask = task.recurringTaskId != null;
+
+  const { t } = useTranslation("tasks");
   const { toggleTask, isToggling } = useTaskMutations();
+  const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
     useSubtaskMutations();
   const posthog = usePostHog();
@@ -60,6 +68,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
 
   // Expand / collapse
   const [isExpanded, setIsExpanded] = useState(false);
+  const [actionHeight, setActionHeight] = useState(0);
   // measured full height of subtask content
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
 
@@ -83,20 +92,37 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     };
   }, []);
 
-  const isLoading = isToggling || isDeleting || isBreakingDown || isReplacingSubtasks;
+  const isLoading =
+    isToggling || isDeleting || isBreakingDown || isReplacingSubtasks || isCompletingOccurrence;
 
   const navigateToTaskDetails = (t: TaskDetailDTO) => {
+    if (t.id == null) return;
     queryClient.setQueryData(["taskId", t.id], t);
     router.push({ pathname: "/(protected)/task-details", params: { taskId: t.id } });
   };
 
   const handleBreakdown = async () => {
-    if (isLoading) return;
+    if (isLoading || task.id == null) return;
 
     posthog.capture(EVENTS.BREAKDOWN_TASK);
 
     try {
-      const subtasks = (await breakDownTask(task.id)) ?? [];
+      const breakdownMessage = await breakDownTask(task.id);
+
+      if (!breakdownMessage) {
+        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"));
+        return;
+      }
+
+      if (breakdownMessage.isSuccess === false) {
+        showBreakdownErrorToast(
+          t("details.failedToRefreshSubtasks"),
+          breakdownMessage.errorMessage,
+        );
+        return;
+      }
+
+      const subtasks = breakdownMessage.subtasks ?? [];
       if (subtasks.length > 0) {
         await replaceSubtasks({
           taskId: task.id,
@@ -107,11 +133,16 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
       }
     } catch (e) {
       console.error("Breakdown error:", e);
+      showBreakdownErrorToast(
+        t("details.failedToRefreshSubtasks"),
+        e instanceof Error ? e.message : undefined,
+      );
     }
   };
 
   const pan = Gesture.Pan()
-    .enabled(!isLoading)
+    // to avoid left swipe for recurring task
+    .enabled(!isLoading && !isRecurringTask)
     .activeOffsetX([-10, 10])
     .failOffsetY([-10, 10])
     .onUpdate((e) => {
@@ -140,51 +171,60 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     selectedDay,
   });
 
-  const endDate = task.endTime ? parseISO(task.endTime) : null;
-  const isOverdue = !!endDate && endDate.getTime() <= new Date().getTime() && !task.isDone;
+  const endDate = parseISO(task.endTime);
+  const isOverdue = endDate.getTime() <= new Date().getTime() && !task.isDone;
 
   const labelColor = task.label?.color ?? theme.colors.disabled;
 
   return (
     <Animated.View
-      className="mx-4 my-2 overflow-hidden h-20"
+      className="mx-4 my-2 overflow-hidden"
       layout={MotionAnimations.layout}
       exiting={MotionAnimations.rightExiting}
       entering={MotionAnimations.upEntering}
     >
       <GestureDetector gesture={pan}>
-        <Animated.View style={cardStyle} className="flex-row items-stretch pt-1">
+        <Animated.View style={cardStyle} className="flex-row items-start">
           {/* 1) Card */}
-          <View style={{ width: screenWidth - 32 }} className="h-full">
+          <View style={{ width: screenWidth - 32 }}>
             <Pressable
               onPress={() => navigateToTaskDetails(task)}
               disabled={isLoading}
-              className="bg-white rounded-2xl overflow-hidden shadow-sm h-full"
+              className="bg-white rounded-2xl shadow-sm overflow-hidden"
             >
               <View className="flex-col">
-                {/* Header row */}
-                <View className={`flex-row items-center p-4 ${isLoading ? "opacity-70" : ""}`}>
-                  <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
-                    <TasksCheckbox
-                      checked={task.isDone}
-                      disabled={isLoading}
-                      size={32}
-                      uncheckedColor="#D1D5DB"
-                      onChange={async () => {
-                        toggleTask({ taskId: task.id, selectedDay });
-
-                        if (task.alertTime && new Date(task.alertTime) > new Date()) {
-                          await cancelNotification({ notificationId: task?.notificationId });
-                        }
-                      }}
-                    />
-                    <View
-                      className="w-[5px] h-10 rounded-full mx-3"
-                      style={{ backgroundColor: labelColor }}
-                    />
+                <View onLayout={(e) => setActionHeight(e.nativeEvent.layout.height)}>
+                  {/* Header row */}
+                  <View className={`flex-row items-center p-4 ${isLoading ? "opacity-70" : ""}`}>
+                    <Animated.View style={leftExtrasStyle} className="flex-row items-center mr-3">
+                      <TasksCheckbox
+                        checked={task.isDone}
+                        disabled={isLoading}
+                        size={26}
+                        className="border-2"
+                        uncheckedColor="#D1D5DB"
+                        onChange={async () => {
+                          if (isVirtualTask) {
+                            completeOccurrence({
+                              recurringTaskId: task.recurringTaskId!,
+                              occurrenceDate: format(selectedDay!, "yyyy-MM-dd"),
+                            });
+                            return;
+                          }
+                          toggleTask({ taskId: task.id!, selectedDay });
+                          if (task.alertTime && new Date(task.alertTime) > new Date()) {
+                            await cancelNotification({ notificationId: task?.notificationId });
+                          }
+                        }}
+                      />
+                      <View
+                        className="w-[5px] h-10 rounded-full mx-3"
+                        style={{ backgroundColor: labelColor }}
+                      />
+                    </Animated.View>
 
                     <View className="flex-1 flex-row justify-between items-center">
-                      <View className="justify-start flex-1">
+                      <View className="justify-start pt-0 flex-1">
                         <View className="flex-row items-center">
                           <Text
                             className={`text-xl font-baloo ${
@@ -202,25 +242,28 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                           >
                             {task.title}
                           </Text>
+                          {isRecurringTask && (
+                            <View className="ml-1.5">
+                              <MaterialIcons name="autorenew" size={17} color="#9CA3AF" />
+                            </View>
+                          )}
                         </View>
 
                         {timePeriod && (
-                          <Text className="text-[13px] text-neutral-400 font-semibold">
+                          <Text className="mt-1 text-[13px] text-neutral-400 font-semibold">
                             {timePeriod}
                           </Text>
                         )}
                       </View>
 
                       <View className="flex-row items-center">
-                        {endDate ? (
-                          <Text
-                            className={`${
-                              isOverdue ? "text-warning" : "text-primary"
-                            } font-baloo text-lg`}
-                          >
-                            {format(endDate, "H:mm")}
-                          </Text>
-                        ) : null}
+                        <Text
+                          className={`${
+                            isOverdue ? "text-warning" : "text-primary"
+                          } font-baloo text-lg`}
+                        >
+                          {format(endDate, "H:mm")}
+                        </Text>
 
                         {hasSubtasks && (
                           <Pressable
@@ -234,11 +277,11 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                         )}
                       </View>
                     </View>
-                  </Animated.View>
-                </View>
+                  </View>
 
-                {/* Progress bar shown only when collapsed */}
-                {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
+                  {/* Progress bar shown only when collapsed */}
+                  {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
+                </View>
 
                 {/* Subtask list */}
                 {hasSubtasks && <SubtaskList task={task} progress={progress} />}
@@ -246,13 +289,16 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
             </Pressable>
           </View>
 
+          <View className="w-2" />
+
           {/* Breakdown Action */}
-          <View className="w-32 mx-3 h-full" pointerEvents="auto">
+          <View className="w-32" pointerEvents="auto">
             <Pressable
               onPress={handleBreakdown}
               disabled={isLoading}
               android_ripple={{ color: "#DBEAFE", borderless: false }}
-              className={`w-32 h-full rounded-xl bg-blue-500/10 items-center justify-center ${
+              style={{ height: actionHeight || 80 }}
+              className={`w-32 rounded-xl bg-blue-500/10 items-center justify-center ${
                 isBreakingDown || isReplacingSubtasks ? "opacity-50" : ""
               }`}
             >
@@ -263,12 +309,13 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
               )}
             </Pressable>
           </View>
+          <View className="w-2" />
 
           {/* 2) Delete action */}
-          <View className="w-14 h-full" pointerEvents={"auto"}>
+          <View className="w-14" pointerEvents={"auto"}>
             <Pressable
               onPress={async () => {
-                if (isLoading) return;
+                if (isLoading || task.id == null) return;
                 await deleteTask(task);
 
                 if (task.alertTime && new Date(task.alertTime) > new Date()) {
@@ -279,7 +326,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
               }}
               disabled={isLoading}
               android_ripple={{ color: "#FEE2E2", borderless: false }}
-              className={`w-14 h-full rounded-xl bg-red-500/10 items-center justify-center ${
+              style={{ height: actionHeight || 80 }}
+              className={`w-14 rounded-xl bg-red-500/10 items-center justify-center ${
                 isDeleting ? "opacity-50" : ""
               }`}
             >

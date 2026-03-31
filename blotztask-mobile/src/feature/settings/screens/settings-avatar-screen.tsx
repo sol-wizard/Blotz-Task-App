@@ -1,14 +1,23 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ReturnButton } from "@/shared/components/ui/return-button";
-import avatarData from "@/shared/constants/avatar.json";
+import avatarDataDevelopment from "../constants/avatar-development.json";
+import avatarDataProduction from "../constants/avatar-production.json";
 import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AvatarDTO } from "@/feature/settings/modals/avatar-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 
+const appEnv = process.env.EXPO_PUBLIC_APP_ENV;
+
 export default function SettingsAvatarScreen() {
+  const avatarData =
+    appEnv === "production"
+      ? avatarDataProduction
+      : appEnv === "development"
+        ? avatarDataDevelopment
+        : avatarDataDevelopment;
   const avatars = avatarData.avatars;
   const { userProfile } = useUserProfile();
 

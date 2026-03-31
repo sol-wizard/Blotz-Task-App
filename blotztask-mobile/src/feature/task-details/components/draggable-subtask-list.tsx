@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import DraggableFlatList, { RenderItemParams } from "react-native-draggable-flatlist";
+import DraggableFlatList, { RenderItemParams, ScaleDecorator } from "react-native-draggable-flatlist";
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
-import { View, TouchableOpacity } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { View } from "react-native";
 import SubtaskItem from "@/feature/task-details/components/subtask-item";
 
 type DraggableSubtaskListProps = {
@@ -11,7 +10,7 @@ type DraggableSubtaskListProps = {
   onDelete?: (id: number) => void;
   onToggle?: (id: number) => void;
   color?: string;
-}
+};
 export const DraggableSubtaskList = ({
   subtasks,
   isEditMode = false,
@@ -25,16 +24,9 @@ export const DraggableSubtaskList = ({
     setData(subtasks);
   }, [subtasks]);
 
-  const renderItem = ({item, drag, isActive}: RenderItemParams<SubtaskDTO>) => {
+  const renderItem = ({ item, drag }: RenderItemParams<SubtaskDTO>) => {
     return (
-      <TouchableOpacity
-        style={[
-          { opacity: isActive ? 0.8 : 1.0 },
-        ]}
-        onLongPress={isEditMode ? drag : undefined}
-        disabled={isActive || !isEditMode}
-        activeOpacity={1}
-      >
+      <ScaleDecorator>
         <SubtaskItem
           item={{
             id: item.subTaskId,
@@ -46,23 +38,23 @@ export const DraggableSubtaskList = ({
           color={color}
           isEditMode={isEditMode}
           onDelete={onDelete}
+          drag={drag}
         />
-      </TouchableOpacity>
-    )
-  }
+      </ScaleDecorator>
+    );
+  };
 
   return (
-    <GestureHandlerRootView>
-      <View className="flex-1">
-        <DraggableFlatList
-          data={data}
-          onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setData(newData)}
-          keyExtractor={(item: SubtaskDTO) => item.subTaskId.toString()}
-          renderItem={renderItem}
-          autoscrollThreshold={40}
-          autoscrollSpeed={100}
-        />
-      </View>
-    </GestureHandlerRootView>
+    <View className="flex-1">
+      <DraggableFlatList
+        data={data}
+        onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setData(newData)}
+        keyExtractor={(item: SubtaskDTO) => item.subTaskId.toString()}
+        renderItem={renderItem}
+        autoscrollThreshold={40}
+        autoscrollSpeed={100}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
   );
-}
+};
