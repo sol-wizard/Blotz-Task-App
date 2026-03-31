@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, Dimensions } from "react-native";
 import { Control, useController } from "react-hook-form";
 import { format } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
@@ -69,11 +69,14 @@ export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSec
   useEffect(() => {
     if (!isDeadline) return;
     const formValues = getValues();
-    if (hasDeadlineWarning({ ...formValues, deadlineDate, deadlineTime }, isActiveTab === "reminder")) {
+    if (
+      hasDeadlineWarning({ ...formValues, deadlineDate, deadlineTime }, isActiveTab === "reminder")
+    ) {
       Toast.show({
-        type: "error",
-        text1: t(isActiveTab === "reminder" ? "form.warningReminderAfterDdl" : "form.warningEventAfterDdl"),
+        type: "warning",
+        text1: t("form.invalidDeadlineRange"),
         position: "top",
+        topOffset: Dimensions.get("window").height * 0.3,
       });
     }
   }, [deadlineDate, deadlineTime]);
@@ -156,8 +159,8 @@ export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSec
                     isActiveTab === "event" && endDate
                       ? format(endDate, "yyyy-MM-dd")
                       : startDate
-                      ? format(startDate, "yyyy-MM-dd")
-                      : undefined
+                        ? format(startDate, "yyyy-MM-dd")
+                        : undefined
                   }
                   isDeadlinePicker={true}
                   onStartDateChange={onDeadlineDateChange}

@@ -18,8 +18,7 @@
     "markAsDeadline": "Mark as deadline",
     "dueTime": "Due Time",
     "invalidTimeRange": "Start time cannot be later than end time",
-    "invalidDeadlineRange": "Deadline cannot be earlier than end time",
-    "warningEventAfterDdl": "Just a heads up, your deadline is set before the task end time."
+    "invalidDeadlineRange": "Just a heads up, your deadline is set before the task end time."
   },
   "details": {
     "notFound": "Selected Task not found.",
