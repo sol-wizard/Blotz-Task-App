@@ -1,6 +1,6 @@
 {
   "input": {
-    "placeholder": "点击说话或输入文字..."
+    "placeholder": "输入任务并包含具体时间，如\"周五下午5点前提交报告\""
   },
   "buttons": {
     "speak": "说话",

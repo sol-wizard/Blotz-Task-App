@@ -50,7 +50,7 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
 
         db.TaskItems.Update(task);
         
-        switch (command.TaskDetails.IsDdl)
+        switch (command.TaskDetails.IsDeadline)
         {
             case true:
                 if (task.Deadline is null)
@@ -99,5 +99,5 @@ public class EditTaskItemDto
     public int? LabelId { get; set; }
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
-    public bool? IsDdl { get; set; }
+    public bool? IsDeadline { get; set; }
 }
