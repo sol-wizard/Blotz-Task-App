@@ -227,7 +227,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                         <View className="flex-row items-center">
                           <Text
                             className={`text-xl font-semibold font-inter ${
-                              task.isDone ? "text-neutral-400 line-through" : "text-black"
+                              task.isDone ? "text-neutral-400 line-through" : "text-[#444964]"
                             }`}
                             style={
                               task.isDone
@@ -259,7 +259,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                         <Text
                           className={`${
                             isOverdue ? "text-warning" : "text-primary"
-                          } font-inter text-lg`}
+                          } font-inter font-semibold text-lg`}
                         >
                           {format(endDate, "H:mm")}
                         </Text>
