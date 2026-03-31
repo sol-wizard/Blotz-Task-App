@@ -7,8 +7,7 @@ import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import SubtasksEditor from "./subtasks-editor";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { usePostHog } from "posthog-react-native";
-import { EVENTS } from "@/shared/constants/posthog-events";
+import { analytics } from "@/shared/services/analytics";
 import { LABEL_COLOR_PALETTE_BY_ID } from "@/shared/util/label-colors";
 import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
 
@@ -20,8 +19,6 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const { t } = useTranslation("tasks");
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
     useSubtaskMutations();
-  const posthog = usePostHog();
-
   const { data: fetchedSubtasks, isLoading: isLoadingSubtasks } = useSubtasksByParentId(
     parentTask.id,
   );
@@ -30,24 +27,20 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const hasSubtasks = displaySubtasks.length > 0;
 
   const handleBreakDown = async () => {
-    if (isBreakingDown || isReplacingSubtasks) return;
+    if (isBreakingDown || isReplacingSubtasks || parentTask.id == null) return;
 
-    posthog.capture(EVENTS.BREAKDOWN_TASK);
+    const startTime = Date.now();
+    let result: Awaited<ReturnType<typeof breakDownTask>> | undefined;
 
     try {
-      const breakdownMessage = await breakDownTask(parentTask.id);
+      result = await breakDownTask(parentTask.id!);
 
-      if (!breakdownMessage) {
-        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"));
+      if (!result || result.isSuccess === false) {
+        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), result?.errorMessage);
         return;
       }
 
-      if (breakdownMessage.isSuccess === false) {
-        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), breakdownMessage.errorMessage);
-        return;
-      }
-
-      const subtasks = breakdownMessage.subtasks ?? [];
+      const subtasks = result.subtasks ?? [];
       if (subtasks.length > 0) {
         await replaceSubtasks({
           taskId: parentTask.id,
@@ -57,6 +50,12 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
     } catch (e) {
       console.error("Subtask error:", e);
       showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), e instanceof Error ? e.message : undefined);
+    } finally {
+      analytics.trackTaskBreakdown({
+        success: result?.isSuccess ?? false,
+        durationMs: Date.now() - startTime,
+        generatedSubtaskCount: result?.subtasks?.length ?? 0,
+      });
     }
   };
 
