@@ -56,7 +56,7 @@ export const CustomDay = ({ date, state, marking, isMarked, onPressDay }: Custom
         className={`w-2 h-2 mb-1 rounded-full ${hasMark ? "bg-highlight" : "bg-transparent"}`}
       />
 
-      <Animated.View className="items-center p-2 w-12 rounded-2xl" style={backgroundStyle}>
+      <Animated.View className="items-center p-2 w-[48px] rounded-2xl" style={backgroundStyle}>
         <Text className={`text-sm ${isToday && !isSelected && "font-bold"} ${textColorClass}`}>
           {weekLabel}
         </Text>
