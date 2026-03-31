@@ -24,8 +24,8 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
       setDraftTitle(task.title);
     }
 
-  Keyboard.dismiss();
-};
+    Keyboard.dismiss();
+  };
   const formatTime = formatAiTaskCardTime({ startTime: task.startTime, endTime: task.endTime });
   const formatDate = formatAiTaskCardDate({ startTime: task.startTime, endTime: task.endTime });
 
