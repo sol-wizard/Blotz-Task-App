@@ -29,7 +29,6 @@ import { EVENTS } from "@/shared/constants/posthog-events";
 import { theme } from "@/shared/constants/theme";
 import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
 import { useRecurringTaskMutations } from "@/feature/calendar/hooks/useRecurringTaskMutations";
-
 const rubberBand = (x: number, limit: number) => {
   "worklet";
   if (x >= 0) return 0;
@@ -227,7 +226,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                       <View className="justify-start pt-0 flex-1">
                         <View className="flex-row items-center">
                           <Text
-                            className={`text-xl font-inter ${
+                            className={`text-xl font-semibold font-inter ${
                               task.isDone ? "text-neutral-400 line-through" : "text-black"
                             }`}
                             style={
