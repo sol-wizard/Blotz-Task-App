@@ -27,7 +27,15 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
     public async Task<List<DailyTaskIndicatorDto>> Handle(GetWeeklyTaskAvailabilityQuery query,
         CancellationToken ct = default)
     {
+        
         var stopwatch = Stopwatch.StartNew();
+        bool? autoRolloverEnabled = await db.UserPreferences
+            .AsNoTracking()
+            .Where(p => p.UserId == query.UserId)
+            .Select(p => p.AutoRollover)
+            .FirstOrDefaultAsync(ct);
+        var autoRollover = autoRolloverEnabled ?? true;
+        
         var weekStart = query.Monday;
         var weekEndExclusive = query.Monday.AddDays(7);
         var weekStartDate = DateOnly.FromDateTime(weekStart.Date);
@@ -36,7 +44,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.Monday.Offset);
         var userTodayStart = new DateTimeOffset(userNow.Date, query.Monday.Offset);
         var userTodayEnd = userTodayStart.AddDays(1);
-        var sevenDayWindowStart = userTodayEnd.AddDays(-7);
+        var includeOverdueTasks = weekStart.Date <= userNow.Date;
 
         logger.LogInformation(
             "Fetching weekly task availability for user {UserId} from {weekStart} to {weekEndExclusive}",
@@ -57,11 +65,11 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                                 && t.EndTime > weekStart
                             )
                             ||
-                            // Overdue tasks within 7 days (matching GetTasksByDateQuery)
+                            // Overdue tasks for today/past views only.
                             (
-                               !t.IsDone
+                                includeOverdueTasks
+                                && !t.IsDone
                                 && t.EndTime < userNow
-                                && t.EndTime >= sevenDayWindowStart
                             )
                         ))
             .Select(t => new
@@ -94,17 +102,21 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         {
             var dayEnd = dayStart.AddDays(1);
             var dayDate = DateOnly.FromDateTime(dayStart.Date);
+            var isToday = dayStart.Date == userNow.Date;
+            var overdueCutoff = isToday ? userNow : dayEnd;
 
             var hasTask = tasks.Any(t =>
             {
                 // Tasks in date range
                 if (t.StartTime < dayEnd && t.EndTime >= dayStart) return true;
 
-                // Overdue tasks within 7 days
+                // Overdue tasks should only decorate today/past cells, using the selected day's cutoff.
                 if (
-                    dayStart < userTodayEnd && dayStart >= sevenDayWindowStart
-                    && t.StartTime < dayEnd && t.EndTime >= sevenDayWindowStart
-                    && !t.IsDone && t.EndTime < userNow
+                    includeOverdueTasks
+                    && autoRollover
+                    && dayStart < userTodayEnd
+                    && !t.IsDone
+                    && t.EndTime < overdueCutoff
                     )
                 {
                     return true;
