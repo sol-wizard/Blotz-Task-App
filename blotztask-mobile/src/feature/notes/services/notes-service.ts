@@ -20,22 +20,14 @@ export const deleteNote = async (noteId: string): Promise<void> => {
 
 export const createNote = async (text: string): Promise<NoteDTO> => {
   const url = `/notes`;
-  const trimmedText = text.trim();
-  try {
-    return await apiClient.post(url, { text: trimmedText });
-  } catch {
-    throw new Error("Failed to create note.");
-  }
+
+  return await apiClient.post(url, { text });
 };
 
 export const updateNote = async (editNoteDto: EditNoteDTO): Promise<NoteDTO> => {
   const url = `/notes/${editNoteDto.id}`;
-  const trimmedText = editNoteDto.text.trim();
-  try {
-    return await apiClient.put(url, { text: trimmedText });
-  } catch {
-    throw new Error("Failed to update note.");
-  }
+
+  return await apiClient.put(url, { text: editNoteDto.text });
 };
 
 export const convertNoteToTask = async (
