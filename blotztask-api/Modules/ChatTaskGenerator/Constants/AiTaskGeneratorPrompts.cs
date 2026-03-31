@@ -2,7 +2,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Constants;
 
 public static class AiTaskGeneratorPrompts
 {
-    public static string GetSystemMessage(string preferredLanguage)
+    public static string GetSystemMessage(string preferredLanguage, DateTime userLocalTime)
     {
         return $"""
                         Extract tasks and notes from user input. Respond in {preferredLanguage}.
@@ -13,7 +13,8 @@ public static class AiTaskGeneratorPrompts
                         - NOTE = an item with no time specified or inferred. Put in extractedNotes with the "text" field.
                         
                         Guidelines for TASK:
-                        - StartTime and EndTime MUST ALWAYS be in UTC timezone without any offset assumed or added.
+                        - The user's current date and time is {userLocalTime:yyyy-MM-dd HH:mm}. Use this as a reference when inferring dates and times for tasks.
+                        - Output all date/times as local times in the exact format yyyy-MM-ddTHH:mm:ss — never include a timezone offset (no +XX:00, no Z suffix).
                         - If user didn't provide a time for the task or only partially provided a time (like a date without a time), infer a reasonable time or time frame based on the task title and description.
 
                         isSuccess = true when at least one task OR one note; else false with errorMessage.

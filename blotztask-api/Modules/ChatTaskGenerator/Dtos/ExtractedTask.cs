@@ -19,12 +19,12 @@ public class ExtractedTask
 
     [JsonPropertyName("start_time")]
     [Description(
-        "The start time for the task in ISO 8601 format (yyyy-MM-ddTHH:mm:ss). For single-time tasks, this should equal end_time.")]
+        "The start time for the task as a local time in the format yyyy-MM-ddTHH:mm:ss. Do not include any timezone offset or Z suffix. For single-time tasks, this should equal end_time.")]
     public DateTime StartTime { get; set; }
 
     [JsonPropertyName("end_time")]
     [Description(
-        "The end time for the task in ISO 8601 format (yyyy-MM-ddTHH:mm:ss). For single-time tasks, this should equal start_time. For range tasks, this must be greater than start_time.")]
+        "The end time for the task as a local time in the format yyyy-MM-ddTHH:mm:ss. Do not include any timezone offset or Z suffix. For single-time tasks, this should equal start_time. For range tasks, this must be greater than start_time.")]
     public DateTime EndTime { get; set; }
 
     [JsonPropertyName("task_label")]
