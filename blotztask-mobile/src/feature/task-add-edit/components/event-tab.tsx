@@ -76,6 +76,22 @@ export const EventTab = ({
     name: "endTime",
   });
 
+  const {
+    field: { value: deadlineDate },
+  } = useController({
+    control,
+    name: "deadlineDate",
+  });
+
+  const {
+    field: { value: isDdl },
+  } = useController({
+    control,
+    name: "isDdl",
+  });
+
+  const ddlStr = isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined;
+
   const handleStartDateChange = (nextDate: Date) => {
     const previousSpan =
       startDateValue && endDateValue
@@ -151,6 +167,7 @@ export const EventTab = ({
             <SingleDateCalendar
               onStartDateChange={handleStartDateChange}
               defaultStartDate={format(new Date(startDateValue), "yyyy-MM-dd")}
+              deadlineDate={ddlStr}
             />
           </Animated.View>
         )}
@@ -217,6 +234,7 @@ export const EventTab = ({
             <DoubleDatesCalendar
               startDate={startDateValue}
               endDate={endDateValue}
+              deadlineDate={ddlStr}
               setEndDate={(v: Date) => {
                 endDateOnChange(v);
                 validateRange(startDateValue, startTimeValue, v, endTimeValue);
