@@ -36,13 +36,6 @@ export const ReminderTab = ({
   });
 
   const {
-    field: { onChange: onEndDateChange },
-  } = useController({
-    control,
-    name: "endDate",
-  });
-
-  const {
     field: { value: deadlineDate },
   } = useController({
     control,
@@ -54,13 +47,6 @@ export const ReminderTab = ({
   } = useController({
     control,
     name: "isDdl",
-  });
-
-  const {
-    field: { onChange: onEndTimeChange },
-  } = useController({
-    control,
-    name: "endTime",
   });
 
   const { t, i18n } = useTranslation("tasks");
