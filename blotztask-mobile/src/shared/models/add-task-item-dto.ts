@@ -9,4 +9,6 @@ export interface AddTaskItemDTO {
   timeType: TaskTimeType | null;
   notificationId?: string | null;
   alertTime?: string;
+  dueAt?: string;
+  isDdl: boolean;
 }

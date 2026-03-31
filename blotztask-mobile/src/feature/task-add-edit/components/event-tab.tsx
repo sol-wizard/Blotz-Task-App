@@ -1,16 +1,45 @@
 import { useState } from "react";
 import { Pressable, View, Text } from "react-native";
 import { SingleDateCalendar } from "./single-date-calendar";
-import { addDays, differenceInCalendarDays, format, isAfter } from "date-fns";
+import {
+  addDays,
+  differenceInCalendarDays,
+  format,
+  isAfter,
+  isSameDay,
+  isBefore,
+  isEqual,
+} from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
-import { useController } from "react-hook-form";
+import { Control, UseFormClearErrors, UseFormTrigger, useController } from "react-hook-form";
+import { TaskFormField } from "../models/task-form-schema";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { combineDateTime } from "../util/combine-date-time";
 
-export const EventTab = ({ control }: { control: any }) => {
+export const EventTab = ({
+  control,
+  trigger,
+  clearErrors,
+  setValue,
+}: {
+  control: Control<TaskFormField>;
+  trigger?: UseFormTrigger<TaskFormField>;
+  clearErrors?: UseFormClearErrors<TaskFormField>;
+  setValue: (name: keyof TaskFormField, value: any) => void;
+}) => {
+  const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
+    const start = combineDateTime(sd, st);
+    const end = combineDateTime(ed, et);
+    if (start && end && (isBefore(start, end) || isEqual(start, end))) {
+      clearErrors?.("endTime");
+    } else {
+      trigger?.("endTime");
+    }
+  };
   const { t, i18n } = useTranslation("tasks");
   const isChinese = i18n.language === "zh";
   const locale = isChinese ? zhCN : enUS;
@@ -55,21 +84,37 @@ export const EventTab = ({ control }: { control: any }) => {
 
     startDateOnChange(nextDate);
 
+    const nextEndDate =
+      endDateValue && isAfter(nextDate, endDateValue)
+        ? addDays(nextDate, previousSpan)
+        : endDateValue;
     if (endDateValue && isAfter(nextDate, endDateValue)) {
-      endDateOnChange(addDays(nextDate, previousSpan));
+      endDateOnChange(nextEndDate);
     }
+
+    validateRange(nextDate, startTimeValue, nextEndDate, endTimeValue);
   };
+
+  const isDateInvalid =
+    endDateValue &&
+    startDateValue &&
+    isBefore(endDateValue, startDateValue) &&
+    !isSameDay(endDateValue, startDateValue);
+
+  const isSameDate = endDateValue && startDateValue && isSameDay(endDateValue, startDateValue);
+
+  const isTimeInvalid =
+    isSameDate && endTimeValue && startTimeValue && isBefore(endTimeValue, startTimeValue);
 
   return (
     <Animated.View
-      className="mb-4"
       layout={MotionAnimations.layout}
       entering={MotionAnimations.leftEntering}
       exiting={MotionAnimations.rightExiting}
     >
       <Animated.View className="mb-4" layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.start")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.start")}</Text>
 
           <View className="flex-row">
             <Pressable
@@ -114,21 +159,34 @@ export const EventTab = ({ control }: { control: any }) => {
             entering={MotionAnimations.upEntering}
             exiting={MotionAnimations.outExiting}
           >
-            <TimePicker value={startTimeValue} onChange={(v: Date) => startTimeOnChange(v)} />
+            <TimePicker
+              value={startTimeValue}
+              onChange={(v: Date) => {
+                startTimeOnChange(v);
+              }}
+            />
           </Animated.View>
         )}
       </Animated.View>
 
       <Animated.View layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.end")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.end")}</Text>
 
           <View className="flex-row">
             <Pressable
               onPress={() => setActiveSelector((prev) => (prev === "endDate" ? null : "endDate"))}
               className="bg-background px-4 py-2 rounded-xl mr-2"
             >
-              <Text className="text-xl font-balooThin text-secondary">
+              <Text
+                className={`text-xl font-balooThin ${
+                  isDateInvalid
+                    ? "text-red-500 line-through"
+                    : isTimeInvalid
+                      ? "text-secondary line-through"
+                      : "text-secondary"
+                }`}
+              >
                 {endDateValue ? format(endDateValue, dateFormat, { locale }) : t("form.selectDate")}
               </Text>
             </Pressable>
@@ -137,7 +195,15 @@ export const EventTab = ({ control }: { control: any }) => {
               onPress={() => setActiveSelector((prev) => (prev === "endTime" ? null : "endTime"))}
               className="bg-background px-4 py-2 rounded-xl"
             >
-              <Text className="text-xl font-balooThin text-secondary ">
+              <Text
+                className={`text-xl font-balooThin ${
+                  isTimeInvalid
+                    ? "text-red-500 line-through"
+                    : isDateInvalid
+                      ? "text-secondary line-through"
+                      : "text-secondary"
+                }`}
+              >
                 {endTimeValue ? format(endTimeValue, "hh:mm a") : t("form.selectTime")}
               </Text>
             </Pressable>
@@ -151,7 +217,16 @@ export const EventTab = ({ control }: { control: any }) => {
             <DoubleDatesCalendar
               startDate={startDateValue}
               endDate={endDateValue}
-              setEndDate={endDateOnChange}
+              setEndDate={(v: Date) => {
+                endDateOnChange(v);
+                validateRange(startDateValue, startTimeValue, v, endTimeValue);
+              }}
+              current={format(
+                activeSelector === "endDate"
+                  ? (endDateValue ?? startDateValue ?? new Date())
+                  : (startDateValue ?? new Date()),
+                "yyyy-MM-dd",
+              )}
             />
           </Animated.View>
         )}
@@ -160,7 +235,13 @@ export const EventTab = ({ control }: { control: any }) => {
             entering={MotionAnimations.upEntering}
             exiting={MotionAnimations.outExiting}
           >
-            <TimePicker value={endTimeValue} onChange={(v: Date) => endTimeOnChange(v)} />
+            <TimePicker
+              value={endTimeValue}
+              onChange={(v: Date) => {
+                endTimeOnChange(v);
+                validateRange(startDateValue, startTimeValue, endDateValue, v);
+              }}
+            />
           </Animated.View>
         )}
       </Animated.View>

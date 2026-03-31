@@ -6,16 +6,13 @@ import {
   toggleSubtaskStatus,
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BreakdownSubtaskDTO } from "../models/breakdown-subtask-dto";
 import { subtaskKeys, taskKeys } from "@/shared/constants/query-key-factory";
+import { BreakdownResultDTO } from "../models/breakdown-result-dto";
 
 export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();
-  const breakdownMutation = useMutation<BreakdownSubtaskDTO[] | undefined, void, number>({
+  const breakdownMutation = useMutation<BreakdownResultDTO | undefined, void, number>({
     mutationFn: createBreakDownSubtasks,
-    onSuccess: (data) => {
-      console.log("Subtasks created:", data);
-    },
     onError: (error) => {
       console.error("Failed to create subtasks:", error);
     },
@@ -23,8 +20,12 @@ export const useSubtaskMutations = () => {
 
   const replaceSubtasksMutation = useMutation({
     mutationFn: replaceSubtasks,
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.taskId) });
+      await queryClient.refetchQueries({
+        queryKey: subtaskKeys.all(variables.taskId),
+        exact: true,
+      });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
     onError: (error) => {

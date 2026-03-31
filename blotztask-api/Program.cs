@@ -1,6 +1,8 @@
 using BlotzTask.Extension;
 using BlotzTask.Middleware;
+using BlotzTask.Modules.Badges;
 using BlotzTask.Modules.BreakDown;
+using BlotzTask.Shared.Events;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Notes;
@@ -25,12 +27,14 @@ builder.Services.AddLabelModule();
 builder.Services.AddTaskBreakdownModule();
 builder.Services.AddSpeechToTextModule(builder.Configuration);
 builder.Services.AddNotesModule();
+builder.Services.AddBadgeModule();
+builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
 
 builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 
 builder.Services.AddAuth0JwtBearerAuthentication(builder.Configuration);
 builder.Services.AddAzureOpenAi();
-builder.Services.AddSemanticKernelServices(builder.Configuration, builder.Environment);
+builder.Services.AddSemanticKernelServices(builder.Configuration);
 builder.Services.AddCustomCors();
 
 var app = builder.Build();

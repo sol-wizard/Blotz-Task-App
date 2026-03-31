@@ -3,7 +3,13 @@ import { Href } from "expo-router";
 import { ComponentProps } from "react";
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
-export type SettingsMenuKey = "account" | "task-handling" | "notifications" | "language" | "under-development";
+export type SettingsMenuKey =
+  | "account"
+  | "task-handling"
+  | "notifications"
+  | "language"
+  | "under-development"
+  | "about";
 export type SettingsMenuItem = {
   key: SettingsMenuKey;
   label: string;

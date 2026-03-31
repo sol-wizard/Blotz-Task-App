@@ -21,7 +21,7 @@ public class LabelDTO
     public Guid? UserId { get; set; }
 }
 
-public class GetAllLabelsQueryHandler(BlotzTaskDbContext db, ILogger<AddLabelCommandHandler> logger)
+public class GetAllLabelsQueryHandler(BlotzTaskDbContext db, ILogger<GetAllLabelsQueryHandler> logger)
 {
     public async Task<List<LabelDTO>> Handle(GetAllLabelsQuery query, CancellationToken ct = default)
     {

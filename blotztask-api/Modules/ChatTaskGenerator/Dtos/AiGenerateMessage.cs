@@ -11,12 +11,16 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Dtos;
 public class AiGenerateMessage
 {
     [JsonPropertyName("isSuccess")]
-    [Description("Indicates whether task extraction was successful. True if at least one actionable task was extracted, false otherwise.")]
+    [Description("Indicates whether extraction was successful. True if at least one task or one note was extracted, false otherwise.")]
     public bool IsSuccess { get; set; }
 
     [JsonPropertyName("extractedTasks")]
-    [Description("Array of tasks extracted from user input. Must contain at least one task when isSuccess is true. Empty array when isSuccess is false.")]
+    [Description("Array of tasks extracted from user input (items with date/time). Empty when none have time.")]
     public List<ExtractedTask> ExtractedTasks { get; set; } = new();
+
+    [JsonPropertyName("extractedNotes")]
+    [Description("Array of notes extracted from user input (items with no date/time). Empty when all have time.")]
+    public List<ExtractedNote> ExtractedNotes { get; set; } = new();
 
     [JsonPropertyName("errorMessage")]
     [Description("Error message explaining why task extraction failed. Empty string when isSuccess is true. Should be a brief, user-friendly explanation when isSuccess is false.")]

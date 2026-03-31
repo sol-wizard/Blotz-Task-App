@@ -31,6 +31,7 @@ export const useNotesMutation = () => {
     deleteNote: deleteNoteMutation.mutate,
     isNoteDeleting: deleteNoteMutation.isPending,
     createNote: createNoteMutation.mutate,
+    createNoteAsync: createNoteMutation.mutateAsync,
     isNoteCreating: createNoteMutation.isPending,
     updateNote: updateNoteMutation.mutate,
     isNoteUpdating: updateNoteMutation.isPending,

@@ -17,10 +17,10 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         _context = new BlotzTaskDbContext(fixture.Options);
         _seeder = new DataSeeder(_context);
         var logger = TestDbContextFactory.CreateLogger<GetWeeklyTaskAvailabilityQueryHandler>();
-        _handler = new GetWeeklyTaskAvailabilityQueryHandler(_context, logger);
+        _handler = new GetWeeklyTaskAvailabilityQueryHandler(_context, new(), logger);
     }
 
-    [Fact(Skip = "Expected failure until API excludes floating tasks from calendar green-dot logic; floating tasks belong in Reminder UI.")]
+    [Fact]
     public async Task Handle_ShouldReturnTrue_WhenUserHasTasksOnTheDate()
     {
         // Arrange

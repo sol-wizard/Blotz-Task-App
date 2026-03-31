@@ -1,4 +1,5 @@
-import { useController } from "react-hook-form";
+import { Control, useController } from "react-hook-form";
+import { TaskFormField } from "../models/task-form-schema";
 import { View, Text, Pressable } from "react-native";
 import { format } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
@@ -9,7 +10,13 @@ import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 
-export const ReminderTab = ({ control }: { control: any }) => {
+export const ReminderTab = ({
+  control,
+  setValue,
+}: {
+  control: Control<TaskFormField>;
+  setValue: (name: keyof TaskFormField, value: any) => void;
+}) => {
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
   const {
@@ -51,7 +58,6 @@ export const ReminderTab = ({ control }: { control: any }) => {
 
   return (
     <Animated.View
-      className="mb-4"
       layout={MotionAnimations.layout}
       entering={MotionAnimations.rightEntering}
       exiting={MotionAnimations.leftExiting}
@@ -59,7 +65,7 @@ export const ReminderTab = ({ control }: { control: any }) => {
       {/* Date  */}
       <Animated.View className="mb-4" layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.date")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.date")}</Text>
           <Pressable
             onPress={() => setActiveSelector((prev) => (prev === "date" ? null : "date"))}
             className="bg-background px-4 py-2 rounded-xl"
@@ -87,7 +93,7 @@ export const ReminderTab = ({ control }: { control: any }) => {
       {/* Time  */}
       <Animated.View className="justify-center" layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.time")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.time")}</Text>
 
           <Pressable
             onPress={() => setActiveSelector((prev) => (prev === "time" ? null : "time"))}

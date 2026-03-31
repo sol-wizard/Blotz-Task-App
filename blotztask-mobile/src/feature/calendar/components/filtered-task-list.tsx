@@ -63,7 +63,9 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
           className="flex-1"
           data={tasksOfSelectedStatus}
           renderItem={renderTask}
-          keyExtractor={(task) => task.id.toString()}
+          keyExtractor={(task) =>
+            task.id != null ? `task-${task.id}` : `virtual-${task.recurringTaskId}`
+          }
         />
       ) : (
         <TaskListPlaceholder selectedStatus={selectedStatus} />
