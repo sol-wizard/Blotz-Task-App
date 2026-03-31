@@ -1,5 +1,6 @@
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
+import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
 import { Stack } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 
@@ -8,6 +9,7 @@ export default function ProtectedLayout() {
 
   useLanguageInit();
   useTrackActiveUser5s(posthog);
+  usePushNotificationSetup();
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -16,15 +18,13 @@ export default function ProtectedLayout() {
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
 
       <Stack.Screen name="task-details" options={{ headerShown: false }} />
+
+      <Stack.Screen name="ddl" options={{ headerShown: false }} />
+
       <Stack.Screen
         name="task-edit"
         options={{
-          headerShown: true,
-          headerShadowVisible: false,
-          headerTitle: "",
-          headerBackVisible: true,
-          headerTintColor: "#8E8E93",
-          headerBackButtonDisplayMode: "minimal",
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -68,6 +68,7 @@ export default function ProtectedLayout() {
           fullScreenGestureEnabled: false,
         }}
       />
+      <Stack.Screen name="monthly-calendar" options={{ headerShown: false }} />
     </Stack>
   );
 }

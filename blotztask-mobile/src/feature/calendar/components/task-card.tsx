@@ -9,7 +9,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { format, parseISO } from "date-fns";
 import { formatDateRange } from "../util/format-date-range";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -26,6 +27,8 @@ import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import { usePostHog } from "posthog-react-native";
 import { EVENTS } from "@/shared/constants/posthog-events";
 import { theme } from "@/shared/constants/theme";
+import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
+import { useRecurringTaskMutations } from "@/feature/calendar/hooks/useRecurringTaskMutations";
 
 const rubberBand = (x: number, limit: number) => {
   "worklet";
@@ -46,7 +49,12 @@ interface TaskCardProps {
 }
 
 const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) => {
+  const isVirtualTask = task.id == null;
+  const isRecurringTask = task.recurringTaskId != null;
+
+  const { t } = useTranslation("tasks");
   const { toggleTask, isToggling } = useTaskMutations();
+  const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
     useSubtaskMutations();
   const posthog = usePostHog();
@@ -84,20 +92,37 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     };
   }, []);
 
-  const isLoading = isToggling || isDeleting || isBreakingDown || isReplacingSubtasks;
+  const isLoading =
+    isToggling || isDeleting || isBreakingDown || isReplacingSubtasks || isCompletingOccurrence;
 
   const navigateToTaskDetails = (t: TaskDetailDTO) => {
+    if (t.id == null) return;
     queryClient.setQueryData(["taskId", t.id], t);
     router.push({ pathname: "/(protected)/task-details", params: { taskId: t.id } });
   };
 
   const handleBreakdown = async () => {
-    if (isLoading) return;
+    if (isLoading || task.id == null) return;
 
     posthog.capture(EVENTS.BREAKDOWN_TASK);
 
     try {
-      const subtasks = (await breakDownTask(task.id)) ?? [];
+      const breakdownMessage = await breakDownTask(task.id);
+
+      if (!breakdownMessage) {
+        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"));
+        return;
+      }
+
+      if (breakdownMessage.isSuccess === false) {
+        showBreakdownErrorToast(
+          t("details.failedToRefreshSubtasks"),
+          breakdownMessage.errorMessage,
+        );
+        return;
+      }
+
+      const subtasks = breakdownMessage.subtasks ?? [];
       if (subtasks.length > 0) {
         await replaceSubtasks({
           taskId: task.id,
@@ -108,11 +133,16 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
       }
     } catch (e) {
       console.error("Breakdown error:", e);
+      showBreakdownErrorToast(
+        t("details.failedToRefreshSubtasks"),
+        e instanceof Error ? e.message : undefined,
+      );
     }
   };
 
   const pan = Gesture.Pan()
-    .enabled(!isLoading)
+    // to avoid left swipe for recurring task
+    .enabled(!isLoading && !isRecurringTask)
     .activeOffsetX([-10, 10])
     .failOffsetY([-10, 10])
     .onUpdate((e) => {
@@ -170,12 +200,18 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                       <TasksCheckbox
                         checked={task.isDone}
                         disabled={isLoading}
-                        size={30}
+                        size={26}
                         className="border-2"
                         uncheckedColor="#D1D5DB"
                         onChange={async () => {
-                          toggleTask({ taskId: task.id, selectedDay });
-
+                          if (isVirtualTask) {
+                            completeOccurrence({
+                              recurringTaskId: task.recurringTaskId!,
+                              occurrenceDate: format(selectedDay!, "yyyy-MM-dd"),
+                            });
+                            return;
+                          }
+                          toggleTask({ taskId: task.id!, selectedDay });
                           if (task.alertTime && new Date(task.alertTime) > new Date()) {
                             await cancelNotification({ notificationId: task?.notificationId });
                           }
@@ -206,6 +242,11 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                           >
                             {task.title}
                           </Text>
+                          {isRecurringTask && (
+                            <View className="ml-1.5">
+                              <MaterialIcons name="autorenew" size={17} color="#9CA3AF" />
+                            </View>
+                          )}
                         </View>
 
                         {timePeriod && (
@@ -274,7 +315,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
           <View className="w-14" pointerEvents={"auto"}>
             <Pressable
               onPress={async () => {
-                if (isLoading) return;
+                if (isLoading || task.id == null) return;
                 await deleteTask(task);
 
                 if (task.alertTime && new Date(task.alertTime) > new Date()) {

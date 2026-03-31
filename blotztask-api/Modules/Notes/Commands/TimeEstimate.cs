@@ -1,37 +1,61 @@
 using System.Text.Json;
 using BlotzTask.Modules.Notes.DTOs;
 using BlotzTask.Modules.Notes.Prompts;
+using BlotzTask.Modules.Users.Enums;
+using BlotzTask.Modules.Users.Queries;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace BlotzTask.Modules.Notes.Commands;
 
-public class NoteForEstimation
+public class NoteTimeEstimationDto
 {
     public Guid Id { get; set; }
+
     public required string Text { get; set; }
 }
 
-public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logger, Kernel kernel)
+public class NoteTimeEstimationRequest
 {
-    public async Task<NoteTimeEstimation?> Handle(NoteForEstimation note, CancellationToken ct = default)
+    public Guid NoteId { get; set; }
+    public Guid UserId { get; set; }
+    public required string Text { get; set; }
+}
+
+public class TimeEstimateCommandHandler(
+    ILogger<TimeEstimateCommandHandler> logger,
+    GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
+    Kernel kernel)
+{
+    public async Task<AITimeEstimationResult?> Handle(NoteTimeEstimationRequest request, CancellationToken ct = default)
     {
-        logger.LogInformation("AI is estimating time for floating task: {TaskId}", note.Id);
+        logger.LogInformation("AI is estimating time for floating task: {TaskId}", request.NoteId);
+
+        var userPreferencesQuery = new GetUserPreferencesQuery { UserId = request.UserId };
+        var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, ct);
+
+        var preferredLanguageString = userPreferences.PreferredLanguage switch
+        {
+            Language.En => "English",
+            Language.Zh => "Chinese (Simplified)",
+            _ => "English"
+        };
 
         try
         {
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                ResponseFormat = typeof(AITimeEstimation)
+                ResponseFormat = typeof(AITimeEstimationResult)
             };
 
             var arguments = new KernelArguments(executionSettings)
             {
-                ["text"] = note.Text
+                ["text"] = request.Text
             };
 
             var result = await kernel.InvokePromptAsync(
-                TaskTimeEstimatePrompts.Prompt,
+                TaskTimeEstimatePrompts.GetTimeEstimatePrompt(preferredLanguageString),
                 arguments,
                 cancellationToken: ct
             );
@@ -40,51 +64,69 @@ public class TimeEstimateCommandHandler(ILogger<TimeEstimateCommandHandler> logg
             if (string.IsNullOrEmpty(responseContent))
             {
                 logger.LogWarning("LLM returned no response for task time estimation.");
-                return null;
+                throw new AiEmptyResponseException("LLM returned no response for task time estimation.");
             }
 
             logger.LogInformation("AI time estimation result - raw: {Content}", responseContent);
 
-            var parsedResult = JsonSerializer.Deserialize<AITimeEstimation>(
+            var parsedResult = JsonSerializer.Deserialize<AITimeEstimationResult>(
                 responseContent,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             );
 
             if (parsedResult == null)
             {
-                logger.LogWarning("Failed to parse AI time estimation result into {Type}", nameof(AITimeEstimation));
-                return null;
+                logger.LogWarning("Failed to parse AI time estimation result into {Type}",
+                    nameof(AITimeEstimationResult));
+                throw new AiInvalidJsonException(responseContent);
             }
 
-            var timeEstimationResult = new NoteTimeEstimation
-            {
-                NoteId = note.Id,
-                Duration = parsedResult.Duration
-            };
-            return timeEstimationResult;
+
+            return parsedResult;
         }
         catch (JsonException ex)
         {
-            // Should rarely happen with structured output, but log if it does
             logger.LogError(ex, "Failed to parse LLM response JSON. Content might be malformed");
-            return null;
+            throw new AiInvalidJsonException("Malformed JSON response from time estimation model.", ex);
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException oce)
         {
-            // User or system canceled the request
-            logger.LogWarning("Task breakdown was canceled");
-            return null;
+            logger.LogWarning(oce, "Task time estimation was canceled");
+            throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
+        }
+        catch (HttpOperationException ex) when (
+            ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            logger.LogWarning(ex, "Token limit exceeded during task time estimation.");
+            throw new AiTokenLimitedException();
+        }
+        catch (HttpOperationException ex) when (
+            ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            logger.LogWarning(ex, "Request blocked by Azure OpenAI content filter during task time estimation.");
+            throw new AiContentFilterException();
+        }
+        catch (AiTaskGenerationException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
-            // Catch-all for unexpected errors (network issues, model errors, etc.)
             logger.LogError(
                 ex,
                 "Unexpected error during task time estimate. TaskId: {TaskId}, Exception: {Exception}",
-                note.Id,
+                request.NoteId,
                 ex.Message
             );
-            return null;
+            throw new AiTaskGenerationException(
+                AiErrorCode.Unknown,
+                "An unhandled exception occurred during task time estimate.",
+                ex
+            );
         }
     }
 }

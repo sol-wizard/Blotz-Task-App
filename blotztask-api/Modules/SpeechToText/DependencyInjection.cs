@@ -1,10 +1,11 @@
 using BlotzTask.Modules.SpeechToText.Dtos;
+using BlotzTask.Modules.SpeechToText.Services;
 
 namespace BlotzTask.Modules.SpeechToText;
 
 public static class DependencyInjection
 {
-    // Required to register Speech-to-Text services for token management.
+    // Required to register Speech-to-Text services.
     public static IServiceCollection AddSpeechToTextModule(
         this IServiceCollection services,
         IConfiguration configuration)
@@ -14,9 +15,7 @@ public static class DependencyInjection
             configuration.GetSection("AzureSpeech").Bind(options);
         });
 
-        services.AddHttpClient<SpeechTokenService>(client => { client.Timeout = TimeSpan.FromSeconds(10); });
-
-        services.AddSingleton<SpeechTokenService>();
+        services.AddHttpClient<SpeechTranscriptionService>(client => { client.Timeout = TimeSpan.FromMinutes(3); });
 
         return services;
     }

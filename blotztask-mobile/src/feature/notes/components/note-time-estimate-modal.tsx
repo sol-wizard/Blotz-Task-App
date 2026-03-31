@@ -1,38 +1,60 @@
 import { Pressable, View, Text, ActivityIndicator } from "react-native";
 import Modal from "react-native-modal";
 import { useTranslation } from "react-i18next";
+import { theme } from "@/shared/constants/theme";
+import { NoteTimeEstimationResult } from "../models/note-time-estimation-result";
+import { formatDuration } from "date-fns";
+import { enUS, zhCN } from "date-fns/locale";
 
 interface Props {
   visible: boolean;
   setIsModalVisible: (v: boolean) => void;
-  handleStartNow: () => void;
-  durationText?: string;
-  error?: string | null;
+  estimateResult?: NoteTimeEstimationResult;
+  estimationError: string | null;
   isEstimating?: boolean;
+  onStartNow?: (duration: string) => void;
+  isStartNowLoading?: boolean;
 }
 
 export const NoteTimeEstimateModal = ({
   visible,
   setIsModalVisible,
-  durationText,
-  handleStartNow,
-  error,
   isEstimating,
+  estimateResult,
+  estimationError,
+  onStartNow,
+  isStartNowLoading = false,
 }: Props) => {
-  const { t } = useTranslation("notes");
+  const { t, i18n } = useTranslation("notes");
+
+  const formatEstimateDuration = (rawDuration: string) => {
+    const [h, m, s] = rawDuration.split(":").map(Number);
+    if ([h, m, s].some((n) => Number.isNaN(n))) return rawDuration;
+
+    const totalMinutes = Math.round((h * 3600 + m * 60 + s) / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const isZh = i18n.language.toLowerCase().startsWith("zh");
+
+    const text = formatDuration(
+      { hours, minutes },
+      { format: ["hours", "minutes"], locale: isZh ? zhCN : enUS },
+    );
+
+    return text || (isZh ? "0分钟" : "0 minutes");
+  };
 
   return (
     <Modal
       isVisible={visible}
       onBackdropPress={() => setIsModalVisible(false)}
       backdropOpacity={0.4}
-      animationIn="fadeIn"
-      animationOut="fadeOut"
-      useNativeDriver
-      style={{ margin: 0 }}
+      animationIn="slideInUp"
+      animationOut="slideOutDown"
+      useNativeDriver={false}
     >
       <View className="flex-1 items-center justify-center px-6">
-        <View className="w-full max-w-[280px] rounded-3xl bg-background px-10 py-14">
+        <View className="w-full max-w-[280px] rounded-3xl bg-background p-10">
           {isEstimating && (
             <View className="items-center py-4">
               <ActivityIndicator size="large" />
@@ -42,38 +64,49 @@ export const NoteTimeEstimateModal = ({
             </View>
           )}
 
-          {!isEstimating && !error && durationText && (
+          {!isEstimating && estimateResult?.isSuccess && (
             <>
               <Text className="text-xl leading-6 text-onSurface font-baloo pt-2">
                 {t("timeEstimate.estimatedMessage")}
-                <Text className="text-highlight">{durationText}</Text>.
+                <Text className="text-highlight">
+                  {formatEstimateDuration(estimateResult.duration)}
+                </Text>
+                .
               </Text>
 
               <View className="mt-8 flex-row items-center justify-center">
                 <Pressable
-                  onPress={handleStartNow}
-                  className="h-9 px-6 rounded-xl bg-highlight items-center justify-center"
+                  onPress={() => {
+                    if (estimateResult?.duration && onStartNow) {
+                      onStartNow(estimateResult.duration);
+                      // Parent closes modal in onSuccess after convert
+                    } else {
+                      setIsModalVisible(false);
+                    }
+                  }}
+                  disabled={isStartNowLoading}
+                  className={`h-9 px-6 rounded-xl items-center justify-center ${
+                    isStartNowLoading ? "bg-[#F3F4F6]" : "bg-highlight"
+                  }`}
                 >
-                  <Text className="text-sm text-onSurface font-baloo">
-                    {t("timeEstimate.startNow")}
-                  </Text>
+                  {isStartNowLoading ? (
+                    <ActivityIndicator size="small" color={theme.colors.onSurface} />
+                  ) : (
+                    <Text className="text-sm text-onSurface font-baloo">
+                      {t("timeEstimate.startNow")}
+                    </Text>
+                  )}
                 </Pressable>
               </View>
             </>
           )}
 
-          {!isEstimating && error && (
+          {!isEstimating && estimationError && (
             <>
-              <Text className="text-lg text-gray-800 font-balooExtraBold mb-2">
-                {t("timeEstimate.oops")}
-              </Text>
-
-              <Text className="text-gray-600 font-baloo mb-6">
-                {t("timeEstimate.errorMessage")}
-              </Text>
+              <Text className="text-gray-600 font-baloo mb-6 text-lg">{estimationError}</Text>
 
               <Pressable onPress={() => setIsModalVisible(false)} className="items-center">
-                <Text className="text-sm text-gray-400 font-balooThin">
+                <Text className="text-lg text-gray-400 font-balooThin">
                   {t("timeEstimate.dismiss")}
                 </Text>
               </Pressable>

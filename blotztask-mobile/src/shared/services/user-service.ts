@@ -5,19 +5,14 @@ import { UpdateUserProfileDTO } from "@/feature/settings/modals/update-user-prof
 
 export const fetchUserProfile = async (): Promise<UserProfileDTO> => {
   const url = `/User`;
-  try {
-    return await apiClient.get<UserProfileDTO>(url);
-  } catch (err: any) {
-    console.error("Fetch user profile failed:", err);
-    throw new Error("Failed to load user profile data");
-  }
+  return await apiClient.get<UserProfileDTO>(url);
 };
 
 export const updateUserProfile = async (userProfile: UpdateUserProfileDTO): Promise<string> => {
   const url = `/User`;
   try {
     return await apiClient.put<string>(url, userProfile);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Update user profile failed:", err);
     throw new Error("Failed to update user profile data");
   }
@@ -27,7 +22,7 @@ export const fetchUserPreferences = async (): Promise<UserPreferencesDTO> => {
   const url = `/user-preferences`;
   try {
     return await apiClient.get(url);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Fetch user preferences failed:", err);
     throw new Error("Failed to load user preferences");
   }
@@ -37,7 +32,7 @@ export const updateUserPreferences = async (preferences: UserPreferencesDTO): Pr
   const url = `/user-preferences`;
   try {
     return await apiClient.put(url, preferences);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Update user preferences failed:", err);
     throw new Error("Failed to update user preferences");
   }
@@ -47,7 +42,7 @@ export const deleteUser = async (): Promise<void> => {
   const url = `/User`;
   try {
     await apiClient.delete<void>(url);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Delete user failed:", err);
     throw new Error("Failed to delete user");
   }

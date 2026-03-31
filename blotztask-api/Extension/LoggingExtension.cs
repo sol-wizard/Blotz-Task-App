@@ -1,6 +1,4 @@
 using Serilog;
-using Serilog.Events;
-using Serilog.Formatting.Compact;
 
 namespace BlotzTask.Extension;
 
@@ -8,19 +6,8 @@ public static class LoggingExtensions
 {
     public static WebApplicationBuilder AddSerilogLogging(this WebApplicationBuilder builder)
     {
-        var environment = builder.Environment;
-        var configuration = builder.Configuration;
         var loggerConfiguration = new LoggerConfiguration()
-            .ReadFrom.Configuration(configuration);
-
-        // Add Application Insights if connection string is provided
-        var appInsightsConnectionString = configuration["ApplicationInsights:ConnectionString"];
-        if (!string.IsNullOrEmpty(appInsightsConnectionString))
-        {
-            loggerConfiguration.WriteTo.ApplicationInsights(
-                appInsightsConnectionString,
-                TelemetryConverter.Traces);
-        }
+            .ReadFrom.Configuration(builder.Configuration);
 
         Log.Logger = loggerConfiguration.CreateLogger();
         builder.Host.UseSerilog();
@@ -42,6 +29,7 @@ public static class LoggingExtensions
                     options.EnableDebugLogger = true;
                 }
             });
+
         }
         return builder;
     }

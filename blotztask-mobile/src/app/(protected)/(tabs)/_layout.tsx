@@ -1,11 +1,18 @@
 import { Tabs, router } from "expo-router";
 import { Pressable, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image } from "expo-image";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
 import { theme } from "@/shared/constants/theme";
+
+function UnfocusedTabIcon({ children }: { children: React.ReactNode }) {
+  return (
+    <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center">
+      {children}
+    </View>
+  );
+}
 
 function getTabIcon(routeKey: string, focused: boolean) {
   const DashedStar = ASSETS.dashedStar;
@@ -16,37 +23,33 @@ function getTabIcon(routeKey: string, focused: boolean) {
   switch (routeKey) {
     case "calendar":
       return focused ? (
-        <BottomNavImage source={ASSETS.greenHouse} containerClassName="ml-14 mt-6" />
+        <BottomNavImage source={ASSETS.greenHouse} />
       ) : (
-        <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center ml-14 mt-6">
-          <DashedHouse width={20} height={20} />
-        </View>
+        <UnfocusedTabIcon>
+          <DashedHouse width={24} height={24} />
+        </UnfocusedTabIcon>
       );
     case "notes":
       return focused ? (
-        <BottomNavImage source={ASSETS.notes} containerClassName="mr-10 mt-6" />
+        <BottomNavImage source={ASSETS.notes} />
       ) : (
-        <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center mr-10 mt-6">
+        <UnfocusedTabIcon>
           <DashedStar width={24} height={24} />
-        </View>
+        </UnfocusedTabIcon>
       );
     case "createTask":
       return (
-        <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center ml-10">
+        <UnfocusedTabIcon>
           <DashedPlus width={24} height={24} />
-        </View>
+        </UnfocusedTabIcon>
       );
     case "settings":
       return focused ? (
-        <BottomNavImage
-          source={ASSETS.settingIcon}
-          imageClassName="w-8 h-8"
-          containerClassName="mr-14 mt-6"
-        />
+        <BottomNavImage source={ASSETS.settingIcon} />
       ) : (
-        <View className="w-12 h-12 rounded-full bg-[#E3EEFF] items-center justify-center mr-14 mt-6">
-          <DashedSettings width={27} height={27} />
-        </View>
+        <UnfocusedTabIcon>
+          <DashedSettings width={24} height={24} />
+        </UnfocusedTabIcon>
       );
     default:
       return null;
@@ -66,8 +69,13 @@ export default function ProtectedTabsLayout() {
             backgroundColor: theme.colors.background,
             height: Platform.OS === "ios" ? 60 : 60 + insets.bottom,
             marginBottom: Platform.OS === "ios" ? 40 : 0,
-            paddingBottom: Platform.OS === "ios" ? 0 : insets.bottom,
+            paddingBottom: Platform.OS === "ios" ? 5 : insets.bottom,
             borderTopWidth: 0,
+          },
+          tabBarIconStyle: {
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
           },
         }}
       >
@@ -84,15 +92,29 @@ export default function ProtectedTabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="ai-task"
+          options={{
+            tabBarButton: () => (
+              <Pressable
+                className="flex-1 items-center justify-center"
+                onPress={() => router.push("/ai-task-sheet")}
+              >
+                <GradientCircle size={58}>
+                  <ASSETS.whiteBun width={28} height={28} style={{ position: "absolute" } as const} />
+                </GradientCircle>
+              </Pressable>
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="create-task"
           options={{
-            tabBarButton: (props) => (
+            tabBarButton: () => (
               <Pressable
+                className="flex-1 items-center justify-center"
                 onPress={() => router.push("/task-create")}
-                className="ml-3"
-                style={{ marginTop: 8 }}
               >
-                {getTabIcon("createTask", false)}
+                {getTabIcon("createTask", true)}
               </Pressable>
             ),
           }}
@@ -104,22 +126,6 @@ export default function ProtectedTabsLayout() {
           }}
         />
       </Tabs>
-
-      <View
-        className="absolute left-4 right-4 items-center"
-        style={{ bottom: insets.bottom + (Platform.OS === "ios" ? 6 : 6), zIndex: 20 }}
-        pointerEvents="box-none"
-      >
-        <Pressable onPress={() => router.push("/ai-task-sheet")}>
-          <GradientCircle size={58}>
-            <Image
-              source={ASSETS.whiteBun}
-              contentFit="contain"
-              style={{ width: 28, height: 28, position: "absolute" }}
-            />
-          </GradientCircle>
-        </Pressable>
-      </View>
     </View>
   );
 }

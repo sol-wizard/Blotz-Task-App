@@ -1,18 +1,26 @@
 import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
 import React from "react";
-import { Modal, View, Text, Pressable } from "react-native";
+import { ActivityIndicator, Modal, View, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
+import { theme } from "@/shared/constants/theme";
 
 type NoteRevealModalProps = {
   visible: boolean;
   task: NoteDTO | null;
   onDoNow: () => void;
   onCancel?: () => void;
+  isDoNowLoading?: boolean;
 };
 
-export const NoteRevealModal = ({ visible, task, onCancel, onDoNow }: NoteRevealModalProps) => {
+export const NoteRevealModal = ({
+  visible,
+  task,
+  onCancel,
+  onDoNow,
+  isDoNowLoading = false,
+}: NoteRevealModalProps) => {
   const { t } = useTranslation("notes");
   const imageSource = task ? getStarIconAsBefore(task.id) : undefined;
   return (
@@ -49,11 +57,18 @@ export const NoteRevealModal = ({ visible, task, onCancel, onDoNow }: NoteReveal
 
             <Pressable
               onPress={onDoNow}
-              className="flex-1 ml-2 rounded-full h-11 items-center justify-center bg-[#99D612]"
+              disabled={isDoNowLoading}
+              className={`flex-1 ml-2 rounded-full h-11 items-center justify-center ${
+                isDoNowLoading ? "bg-[#F3F4F6]" : "bg-[#99D612]"
+              }`}
             >
-              <Text className="text-slate-900 font-semibold font-baloo">
-                {t("gashapon.doItNow")}
-              </Text>
+              {isDoNowLoading ? (
+                <ActivityIndicator size="small" color={theme.colors.onSurface} />
+              ) : (
+                <Text className="text-slate-900 font-semibold font-baloo">
+                  {t("gashapon.doItNow")}
+                </Text>
+              )}
             </Pressable>
           </View>
         </View>

@@ -74,7 +74,7 @@ public class UserController(
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
-        await deleteUserCommandHandler.Handle(userId, ct);
+        await deleteUserCommandHandler.Handle(new DeleteUserCommand { UserId = userId }, ct);
         return NoContent();
     }
 }

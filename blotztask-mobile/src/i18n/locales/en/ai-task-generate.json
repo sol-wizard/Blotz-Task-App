@@ -1,6 +1,6 @@
 {
   "input": {
-    "placeholder": "Type a task, or tap below to say it"
+    "placeholder": "Describe your task with a specific date and time, e.g. \"Submit report by Friday 5pm\""
   },
   "buttons": {
     "speak": "Speak",
@@ -8,10 +8,13 @@
     "tapToSpeak": "Tap to speak",
     "generateTask": "+ Generate Task",
     "addToTasks": "Add to tasks",
+    "addToNotes": "Add to notes",
+    "addAll": "Add all",
     "goBack": "Go back"
   },
   "labels": {
-    "newTask": "New Task"
+    "newTask": "New Task",
+    "notesSection": "Notes"
   },
   "success": {
     "taskAdded": "Yay! Task added!"
@@ -22,6 +25,12 @@
   "taskCard": {
     "titlePlaceholder": "Task title",
     "editTitleLabel": "Edit task title",
-    "editTitleHint": "Double tap to edit task title"
+    "editTitleHint": "Double tap to edit task title",
+    "today": "Today"
+  },
+  "noteCard": {
+    "textPlaceholder": "Note content",
+    "editTextLabel": "Edit note",
+    "editTextHint": "Double tap to edit note"
   }
 }

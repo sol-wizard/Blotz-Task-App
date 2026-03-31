@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, LayoutChangeEvent } from "react-native";
 import React from "react";
 import Animated, {
   DerivedValue,
@@ -31,7 +31,7 @@ const SubtaskList = ({ task, progress }: Props) => {
     await toggleSubtaskStatus({ subtaskId, parentTaskId: task.id });
   };
 
-  const onSubtaskContentLayout = (e: any) => {
+  const onSubtaskContentLayout = (e: LayoutChangeEvent) => {
     const h = e?.nativeEvent?.layout?.height ?? 0;
     if (h > 0 && contentHeight.value !== h) {
       contentHeight.value = h;

@@ -1,12 +1,20 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
 import Toast from "react-native-toast-message";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
+      if (
+        isAxiosError(error) &&
+        (error.response?.status === 401 || error.response?.status === 403)
+      ) {
+        return;
+      }
       if (query.meta?.silent) return;
 
       const msg = getErrorMessage(error);
+
       Toast.show({
         type: "error",
         text1: msg,
@@ -18,6 +26,7 @@ export const queryClient = new QueryClient({
       if (mutation.meta?.silent) return;
 
       const msg = getErrorMessage(error);
+
       Toast.show({
         type: "error",
         text1: msg,
@@ -46,13 +55,13 @@ export const queryClient = new QueryClient({
 });
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
+  if (isAxiosError(error)) {
+    return error.response?.data?.message || "Something went wrong";
+  }
 
-  const anyErr = error as any;
-  return (
-    anyErr?.response?.data?.message ||
-    anyErr?.response?.data?.error ||
-    anyErr?.message ||
-    "Something went wrong"
-  );
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Something went wrong";
 }

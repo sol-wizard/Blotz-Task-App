@@ -1,5 +1,4 @@
 using System.Text.Json;
-using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
@@ -10,74 +9,69 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct);
+    Task<AiGenerateMessage> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct);
 }
 
 public class AiTaskGenerateService(
-    IChatHistoryManagerService chatHistoryManagerService,
-    IChatCompletionService chatCompletionService,
     ILogger<AiTaskGenerateService> logger,
     Kernel kernel)
     : IAiTaskGenerateService
 {
-    public async Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct)
+    public async Task<AiGenerateMessage> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct)
     {
-        var chatHistory = chatHistoryManagerService.GetChatHistory();
-
         try
         {
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                ResponseFormat = typeof(AiGenerateMessage) // Enforces structured output via JSON Schema
+                ResponseFormat = typeof(AiGenerateMessage),
             };
 
-            var chatResults = await chatCompletionService.GetChatMessageContentsAsync(
+            logger.LogInformation("TaskGeneration: Invoking AI with ServiceId=TaskGeneration");
+            var chatService = kernel.GetRequiredService<IChatCompletionService>("TaskGeneration");
+
+            var result = await chatService.GetChatMessageContentAsync(
                 chatHistory,
                 executionSettings,
                 kernel,
                 ct
             );
 
-            var functionResultMessage = chatResults.LastOrDefault();
+            logger.LogInformation("TaskGeneration: Response from ModelId={ModelId}", result.ModelId);
+            logger.LogInformation("TaskGeneration: Response content={Content}", result.Content);
 
-            logger.LogInformation(functionResultMessage?.Content);
+            var responseContent = result.Content;
 
-            if (functionResultMessage == null)
+            if (string.IsNullOrWhiteSpace(responseContent))
             {
-                logger.LogWarning(
-                    "Chat completion returned no messages. ChatHistory count: {Count}, Model: {ModelId}",
-                    chatHistory.Count,
-                    executionSettings.ModelId ?? "unknown"
-                );
-                throw new AiNoMessageReturnedException();
-            }
-
-            if (string.IsNullOrWhiteSpace(functionResultMessage.Content))
-            {
-                logger.LogWarning("AI response content is empty.");
+                logger.LogWarning("AI response content is empty. ChatHistory count: {Count}", chatHistory.Count);
                 throw new AiEmptyResponseException();
             }
 
             try
             {
                 var aiGenerateMessage = JsonSerializer.Deserialize<AiGenerateMessage>(
-                    functionResultMessage.Content,
+                    responseContent,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                 );
 
                 if (aiGenerateMessage == null)
                 {
                     logger.LogWarning("Deserialized object is null.");
-                    throw new AiInvalidJsonException(functionResultMessage.Content);
+                    throw new AiInvalidJsonException(responseContent);
                 }
 
-                chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateMessage));
+                foreach (var task in aiGenerateMessage.ExtractedTasks ?? [])
+                {
+                    task.StartTime = DateTime.SpecifyKind(task.StartTime, DateTimeKind.Unspecified);
+                    task.EndTime = DateTime.SpecifyKind(task.EndTime, DateTimeKind.Unspecified);
+                }
+
                 return aiGenerateMessage;
             }
             catch (JsonException ex)
             {
-                logger.LogError(ex, "Failed to deserialize AI response: {Content}", functionResultMessage.Content);
-                throw new AiInvalidJsonException(functionResultMessage.Content, ex);
+                logger.LogError(ex, "Failed to deserialize AI response: {Content}", responseContent);
+                throw new AiInvalidJsonException(responseContent, ex);
             }
         }
         catch (OperationCanceledException oce)
@@ -85,7 +79,11 @@ public class AiTaskGenerateService(
             logger.LogInformation(oce, "AI task generation cancelled.");
             throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
         }
-        catch (TokenLimitExceededException ex)
+        catch (HttpOperationException ex) when (
+            ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase)
+        )
         {
             logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
             throw new AiTokenLimitedException();
