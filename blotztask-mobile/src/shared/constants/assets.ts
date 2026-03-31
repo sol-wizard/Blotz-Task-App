@@ -14,7 +14,6 @@ import EditIcon from "../../../assets/images-svg/edit-icon.svg";
 export const LOTTIE_ANIMATIONS = {
   emptyBox: require("../../../assets/animations/empty-box.json"),
   spinner: require("../../../assets/animations/spinner.json"),
-  voiceWave: require("../../../assets/animations/voice-wave.json"),
 } as const;
 
 // Images

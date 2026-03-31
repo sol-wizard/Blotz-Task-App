@@ -3,12 +3,12 @@ import React from "react";
 import { VoiceTimer } from "./voice-timer";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import LottieView from "lottie-react-native";
-import { ASSETS } from "@/shared/constants/assets";
 import { useTranslation } from "react-i18next";
 import MaskedView from "@react-native-masked-view/masked-view";
+import VoiceLevelAnimation from "./voice-level-animation";
 
 type Props = {
+  micLevel: number;
   isListening: boolean;
   startListening: () => void;
   abortListening: () => void;
@@ -53,6 +53,7 @@ const GradiantMicIcon = () => {
 };
 
 const VoiceInputButton = ({
+  micLevel,
   isListening,
   startListening,
   abortListening,
@@ -95,13 +96,7 @@ const VoiceInputButton = ({
               <MaterialCommunityIcons name="trash-can-outline" size={22} color="#A3DC2F" />
             </Pressable>
             <View className="flex-1 items-center justify-center mx-2">
-              <LottieView
-                source={ASSETS.voiceWave}
-                loop={true}
-                autoPlay={true}
-                style={{ width: "100%", height: 40 }}
-                resizeMode="contain"
-              ></LottieView>
+              <VoiceLevelAnimation level={micLevel} />
             </View>
             <VoiceTimer />
             <Pressable

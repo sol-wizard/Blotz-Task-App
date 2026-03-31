@@ -10,6 +10,7 @@ import {
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
   useAudioRecorder,
+  useAudioRecorderState,
 } from "expo-audio";
 import { transcribeAudioFile } from "../services/speech-transcription-service";
 
@@ -29,7 +30,11 @@ export const SpeechInput = ({
   const { t } = useTranslation(["aiTaskGenerate", "common"]);
   const [isListening, setIsListening] = useState(false);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorder = useAudioRecorder({
+    ...RecordingPresets.HIGH_QUALITY,
+    isMeteringEnabled: true,
+  });
+  const recorderState = useAudioRecorderState(recorder, 40);
 
   const startListening = async () => {
     try {
@@ -124,6 +129,7 @@ export const SpeechInput = ({
         <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
       )}
       <VoiceInputButton
+        micLevel={recorderState.metering ?? 0}
         isListening={isListening}
         startListening={startListening}
         abortListening={abortListening}
