@@ -12,14 +12,14 @@ param githubRepo = 'sol-wizard/Blotz-Task-App'
 param budgetAmount = 40 // AUD per month for production
 param alertEmail = 'benjaminneoh2928@gmail.com'
 
-param appServiceSkuName = 'B2'
+param appServiceSkuName = 'B1'
 param appServiceSkuTier = 'Basic'
 
-// Database (Serverless vCore for prod - auto-pauses when idle, geo-redundant backup)
-param dbMaxSizeGb = 5
-
-param dbAutoPauseDelayMinutes = 60
-param dbMaxVCores = 1
+// Database (DTU Standard S0 - 10 DTUs, max 250GB)
+param dbMaxSizeGb = 2
+param dbSkuName = 'S0'
+param dbSkuTier = 'Standard'
+param dbSkuCapacity = 10
 
 // Entra ID dev group Object ID - create a prod group and replace this
 param devGroupId = '5719a9e2-49bd-49eb-85d1-e4afd63ca04d'

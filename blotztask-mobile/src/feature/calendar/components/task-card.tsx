@@ -24,8 +24,7 @@ import SubtaskList from "./subtask-list";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
-import { usePostHog } from "posthog-react-native";
-import { EVENTS } from "@/shared/constants/posthog-events";
+import { analytics } from "@/shared/services/analytics";
 import { theme } from "@/shared/constants/theme";
 import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
 import { useRecurringTaskMutations } from "@/feature/calendar/hooks/useRecurringTaskMutations";
@@ -57,8 +56,6 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
   const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
     useSubtaskMutations();
-  const posthog = usePostHog();
-
   const queryClient = useQueryClient();
 
   const { width: screenWidth } = useWindowDimensions();
@@ -104,25 +101,21 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   const handleBreakdown = async () => {
     if (isLoading || task.id == null) return;
 
-    posthog.capture(EVENTS.BREAKDOWN_TASK);
+    const startTime = Date.now();
+    let result: Awaited<ReturnType<typeof breakDownTask>> | undefined;
 
     try {
-      const breakdownMessage = await breakDownTask(task.id);
+      result = await breakDownTask(task.id!);
 
-      if (!breakdownMessage) {
-        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"));
-        return;
-      }
-
-      if (breakdownMessage.isSuccess === false) {
+      if (!result || result.isSuccess === false) {
         showBreakdownErrorToast(
           t("details.failedToRefreshSubtasks"),
-          breakdownMessage.errorMessage,
+          result?.errorMessage,
         );
         return;
       }
 
-      const subtasks = breakdownMessage.subtasks ?? [];
+      const subtasks = result.subtasks ?? [];
       if (subtasks.length > 0) {
         await replaceSubtasks({
           taskId: task.id,
@@ -137,6 +130,12 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
         t("details.failedToRefreshSubtasks"),
         e instanceof Error ? e.message : undefined,
       );
+    } finally {
+      analytics.trackTaskBreakdown({
+        success: result?.isSuccess ?? false,
+        durationMs: Date.now() - startTime,
+        generatedSubtaskCount: result?.subtasks?.length ?? 0,
+      });
     }
   };
 
@@ -175,6 +174,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   const isOverdue = endDate.getTime() <= new Date().getTime() && !task.isDone;
 
   const labelColor = task.label?.color ?? theme.colors.disabled;
+  const isDdlTag = task.isDeadline;
 
   return (
     <Animated.View
@@ -222,6 +222,13 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                         style={{ backgroundColor: labelColor }}
                       />
                     </Animated.View>
+
+                    {/* DDL Tag */}
+                    {isDdlTag && (
+                      <View className="mr-2 -ml-3 px-1 py-0.5 rounded bg-highlight items-center justify-center">
+                        <Text className="text-white font-balooBold text-xs mt-0.5">DDL</Text>
+                      </View>
+                    )}
 
                     <View className="flex-1 flex-row justify-between items-center">
                       <View className="justify-start pt-0 flex-1">
