@@ -1,6 +1,5 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
-using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
 using FluentAssertions;
@@ -73,17 +72,13 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
         var monday = new DateTimeOffset(userNow.Date.AddDays(-daysSinceMonday), localOffset);
         var historicalMonday = monday.AddDays(-14);
         var nextMonday = monday.AddDays(7);
-        
-        _context.UserPreferences.Add(new UserPreference { UserId = userId, AutoRollover = true });
-        await _context.SaveChangesAsync();
 
-
-        var sevenDaysAgo = new DateTimeOffset(userNow.Date, localOffset).AddDays(-7);
+        var nineDaysAgo = new DateTimeOffset(userNow.Date, localOffset).AddDays(-9);
         await _seeder.CreateTaskAsync(
             userId,
             "Old Overdue Task",
-            new DateTimeOffset(sevenDaysAgo.Date.AddHours(9), localOffset),
-            new DateTimeOffset(sevenDaysAgo.Date.AddHours(10), localOffset));
+            new DateTimeOffset(nineDaysAgo.Date.AddHours(9), localOffset),
+            new DateTimeOffset(nineDaysAgo.Date.AddHours(10), localOffset));
 
         var scheduledFutureDay = nextMonday.AddDays(2);
         await _seeder.CreateTaskAsync(
@@ -116,8 +111,8 @@ public class GetWeeklyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
             "the current week should surface overdue tasks even when they became overdue more than seven days ago");
 
         historicalWeekResult.Should().OnlyContain(day => !day.HasTask,
-            because: "a week from 14 days ago should not show a task that did not become overdue until 7 days ago");
-        
+            because: "a week from 14 days ago should not show a task that did not become overdue until 9 days ago");
+
         futureWeekResult[2].HasTask.Should().BeTrue(
             "future week views should still show tasks scheduled during that future week");
         futureWeekResult[0].HasTask.Should().BeFalse(
