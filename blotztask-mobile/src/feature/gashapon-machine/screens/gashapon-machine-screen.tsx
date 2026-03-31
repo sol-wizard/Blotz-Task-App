@@ -13,7 +13,8 @@ import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star"
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
 import { router } from "expo-router";
-import { usePostHog } from "posthog-react-native";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
 import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
 import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
@@ -27,13 +28,10 @@ export default function GashaponMachineScreen() {
   const [randomNote, setRandomTask] = useState<NoteDTO | null>(null);
   const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
   const { addNoteToTask, isConverting } = useAddNoteToTask();
-  const posthog = usePostHog();
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
 
   useEffect(() => {
-    posthog.capture("screen_viewed", {
-      screen_name: "GashaponMachine",
-    });
+    analytics.trackScreenViewed(SCREEN_NAMES.GASHAPON_MACHINE);
   }, []);
 
   const MAX_STARS = 30;

@@ -28,6 +28,12 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
         CancellationToken ct = default)
     {
         var stopwatch = Stopwatch.StartNew();
+        bool? autoRolloverEnabled = await db.UserPreferences
+            .AsNoTracking()
+            .Where(p => p.UserId == query.UserId)
+            .Select(p => p.AutoRollover)
+            .FirstOrDefaultAsync(ct);
+        var autoRollover = autoRolloverEnabled ?? true;
         var monthStart = query.FirstDate;
         var monthEnd = query.FirstDate.AddMonths(1);
         var monthStartDate = DateOnly.FromDateTime(monthStart.Date);
@@ -37,7 +43,7 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.FirstDate.Offset);
         var userTodayStart = new DateTimeOffset(userNow.Date, query.FirstDate.Offset);
         var userTodayEnd = userTodayStart.AddDays(1);
-        var sevenDayWindowStart = userTodayEnd.AddDays(-7);
+        var includeOverdueTasks = monthStart.Date <= userNow.Date;
         
         
         logger.LogInformation(
@@ -58,11 +64,11 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                                 && t.EndTime > monthStart
                             )
                             ||
-                            // Overdue tasks within 7 days (matching GetTasksByDateQuery)
+                            // Overdue tasks for today/past views only.
                             (
-                                !t.IsDone
+                                includeOverdueTasks
+                                && !t.IsDone
                                 && t.EndTime < userNow
-                                && t.EndTime >= sevenDayWindowStart
                             )
                         ))
             .Select(t => new
@@ -98,17 +104,17 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
         {
             var dayEnd = dayStart.AddDays(1);
             var dayDate = DateOnly.FromDateTime(dayStart.Date);
+            var isToday = dayStart.Date == userNow.Date;
+            var overdueCutoff = isToday ? userNow : dayEnd;
 
             var dayTasks = tasks
                 .Where(t =>
                     (t.StartTime < dayEnd && t.EndTime >= dayStart) ||
                     (
+                        includeOverdueTasks && autoRollover &&
                         dayStart < userTodayEnd &&
-                        dayStart >= sevenDayWindowStart &&
-                        t.StartTime < dayEnd &&
-                        t.EndTime >= sevenDayWindowStart &&
                         !t.IsDone &&
-                        t.EndTime < userNow
+                        t.EndTime < overdueCutoff
                     ))
                 .Select(t => new TaskThumbnailDto
                 {
@@ -162,5 +168,3 @@ public class TaskThumbnailDto
     public string TaskTitle { get; set; }
     public Label? Label { get; set; }
 }
-
-
