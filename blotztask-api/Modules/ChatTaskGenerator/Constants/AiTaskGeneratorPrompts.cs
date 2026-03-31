@@ -15,7 +15,6 @@ public static class AiTaskGeneratorPrompts
                         Guidelines for TASK:
                         - The user's current date and time is {userLocalTime:yyyy-MM-dd HH:mm}. Use this as a reference when inferring dates and times for tasks.
                         - Output all date/times as local times in the exact format yyyy-MM-ddTHH:mm:ss — never include a timezone offset (no +XX:00, no Z suffix).
-                        - If user didn't provide a time for the task or only partially provided a time (like a date without a time), infer a reasonable time or time frame based on the task title and description.
 
                         isSuccess = true when at least one task OR one note; else false with errorMessage.
                 """;
