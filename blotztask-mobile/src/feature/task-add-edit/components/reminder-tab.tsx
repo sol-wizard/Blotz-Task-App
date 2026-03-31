@@ -46,7 +46,7 @@ export const ReminderTab = ({
     field: { value: isDdl },
   } = useController({
     control,
-    name: "isDdl",
+    name: "isDeadline",
   });
 
   const { t, i18n } = useTranslation("tasks");

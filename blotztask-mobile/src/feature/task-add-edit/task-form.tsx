@@ -98,7 +98,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const startTime = watch("startTime");
   const endDate = watch("endDate");
   const endTime = watch("endTime");
-  const isDdl = watch("isDdl");
+  const isDdl = watch("isDeadline");
   const deadlineDate = watch("deadlineDate");
   const deadlineTime = watch("deadlineTime");
 
