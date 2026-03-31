@@ -87,7 +87,7 @@ export const EventTab = ({
     field: { value: isDdl },
   } = useController({
     control,
-    name: "isDdl",
+    name: "isDeadline",
   });
 
   const ddlStr = isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined;
