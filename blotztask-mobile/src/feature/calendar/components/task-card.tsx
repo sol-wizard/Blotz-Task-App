@@ -175,6 +175,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   const isOverdue = endDate.getTime() <= new Date().getTime() && !task.isDone;
 
   const labelColor = task.label?.color ?? theme.colors.disabled;
+  const isDdlTag = task.isDeadline;
 
   return (
     <Animated.View
@@ -222,6 +223,13 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                         style={{ backgroundColor: labelColor }}
                       />
                     </Animated.View>
+
+                    {/* DDL Tag */}
+                    {isDdlTag && (
+                      <View className="mr-2 -ml-3 px-1 py-0.5 rounded bg-highlight items-center justify-center">
+                        <Text className="text-white font-balooBold text-xs mt-0.5">DDL</Text>
+                      </View>
+                    )}
 
                     <View className="flex-1 flex-row justify-between items-center">
                       <View className="justify-start pt-0 flex-1">
