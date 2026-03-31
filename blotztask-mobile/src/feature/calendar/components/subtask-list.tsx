@@ -56,7 +56,7 @@ const SubtaskList = ({ task, progress }: Props) => {
               onChange={() => handleToggleSubtask(subtask.subTaskId)}
             />
             <Text
-              className={`flex-1 text-base font-baloo ${
+              className={`flex-1 text-base font-inner ${
                 subtask.isDone ? "text-gray-400 line-through opacity-60" : "text-gray-700"
               }`}
               numberOfLines={1}
@@ -65,7 +65,7 @@ const SubtaskList = ({ task, progress }: Props) => {
             </Text>
 
             {subtask.duration && (
-              <Text className="text-sm text-gray-400 font-baloo ml-2">
+              <Text className="text-sm text-gray-400 font-inner ml-2">
                 {convertDurationToText(subtask.duration)}
               </Text>
             )}

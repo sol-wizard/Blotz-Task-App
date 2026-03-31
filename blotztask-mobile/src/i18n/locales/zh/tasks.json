@@ -15,7 +15,11 @@
     "selectTime": "选择时间",
     "start": "开始",
     "end": "結束",
-    "invalidTimeRange": "开始时间不能晚于结束时间"
+    "markAsDeadline": "设为截止任务",
+    "dueTime": "截止时间",
+    "invalidTimeRange": "开始时间不能晚于结束时间",
+    "warningReminderAfterDdl": "提醒您：您的提醒时间设置在截止时间之后。",
+    "warningEventAfterDdl": "提醒您：您的事件结束时间设置在截止时间之后。"
   },
   "details": {
     "notFound": "未找到选定的任务。",

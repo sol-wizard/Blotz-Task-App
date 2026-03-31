@@ -36,7 +36,7 @@ export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "alert
           className="flex-row items-center justify-between"
           layout={MotionAnimations.layout}
         >
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.alert")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.alert")}</Text>
 
           <AnimatedDropdown
             value={value}

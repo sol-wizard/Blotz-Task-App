@@ -19,4 +19,5 @@ export interface TaskDetailDTO {
   notificationId: string | null;
   subtasks?: SubtaskDTO[];
   alertTime?: string;
+  isDeadline: boolean;
 }

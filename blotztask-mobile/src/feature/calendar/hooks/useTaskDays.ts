@@ -8,7 +8,7 @@ export const useTaskDays = ({ selectedDay }: { selectedDay: Date }) => {
   const mondayKey = format(monday, "yyyy-MM-dd");
 
   const { data: weeklyTaskAvailability = [], isLoading } = useQuery({
-    queryKey: taskKeys.availability(mondayKey),
+    queryKey: taskKeys.weekAvailability(mondayKey),
     queryFn: () => fetchWeeklyTaskAvailability(monday),
   });
 

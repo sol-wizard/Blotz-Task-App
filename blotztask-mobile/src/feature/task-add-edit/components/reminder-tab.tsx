@@ -1,4 +1,4 @@
-import { Control, useController } from "react-hook-form";
+import { Control, useController, UseFormClearErrors, UseFormSetValue } from "react-hook-form";
 import { TaskFormField } from "../models/task-form-schema";
 import { View, Text, Pressable } from "react-native";
 import { format } from "date-fns";
@@ -10,35 +10,43 @@ import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 
-export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) => {
+export const ReminderTab = ({
+  control,
+  setValue,
+  clearErrors,
+}: {
+  control: Control<TaskFormField>;
+  setValue: UseFormSetValue<TaskFormField>;
+  clearErrors: UseFormClearErrors<TaskFormField>;
+}) => {
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
   const {
-    field: { value: startDate, onChange: onStartDateChange },
+    field: { value: startDate },
   } = useController({
     control,
     name: "startDate",
   });
 
   const {
-    field: { value: startTime, onChange: onStartTimeChange },
+    field: { value: startTime },
   } = useController({
     control,
     name: "startTime",
   });
 
   const {
-    field: { onChange: onEndDateChange },
+    field: { value: deadlineDate },
   } = useController({
     control,
-    name: "endDate",
+    name: "deadlineDate",
   });
 
   const {
-    field: { onChange: onEndTimeChange },
+    field: { value: isDdl },
   } = useController({
     control,
-    name: "endTime",
+    name: "isDeadline",
   });
 
   const { t, i18n } = useTranslation("tasks");
@@ -52,7 +60,6 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
 
   return (
     <Animated.View
-      className="mb-4"
       layout={MotionAnimations.layout}
       entering={MotionAnimations.rightEntering}
       exiting={MotionAnimations.leftExiting}
@@ -60,7 +67,7 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
       {/* Date  */}
       <Animated.View className="mb-4" layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.date")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.date")}</Text>
           <Pressable
             onPress={() => setActiveSelector((prev) => (prev === "date" ? null : "date"))}
             className="bg-background px-4 py-2 rounded-xl"
@@ -76,9 +83,11 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
           >
             <SingleDateCalendar
               defaultStartDate={format(startDate, "yyyy-MM-dd")}
+              deadlineDate={isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
               onStartDateChange={(nextDate: Date) => {
-                onStartDateChange(nextDate);
-                onEndDateChange(nextDate);
+                setValue("startDate", nextDate, { shouldValidate: false });
+                setValue("endDate", nextDate, { shouldValidate: false });
+                clearErrors(["endDate", "endTime"]);
               }}
             />
           </Animated.View>
@@ -88,7 +97,7 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
       {/* Time  */}
       <Animated.View className="justify-center" layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.time")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.time")}</Text>
 
           <Pressable
             onPress={() => setActiveSelector((prev) => (prev === "time" ? null : "time"))}
@@ -107,8 +116,9 @@ export const ReminderTab = ({ control }: { control: Control<TaskFormField> }) =>
               <TimePicker
                 value={startTime}
                 onChange={(nextTime: Date) => {
-                  onStartTimeChange(nextTime);
-                  onEndTimeChange(nextTime);
+                  setValue("startTime", nextTime, { shouldValidate: false });
+                  setValue("endTime", nextTime, { shouldValidate: false });
+                  clearErrors(["endDate", "endTime"]);
                 }}
               />
             </Animated.View>

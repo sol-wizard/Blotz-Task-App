@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { Pressable, View, Text } from "react-native";
 import { SingleDateCalendar } from "./single-date-calendar";
-import { addDays, differenceInCalendarDays, format, isAfter, isSameDay, isBefore, isEqual } from "date-fns";
+import {
+  addDays,
+  differenceInCalendarDays,
+  format,
+  isAfter,
+  isSameDay,
+  isBefore,
+  isEqual,
+} from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
 import { Control, UseFormClearErrors, UseFormTrigger, useController } from "react-hook-form";
 import { TaskFormField } from "../models/task-form-schema";
@@ -12,7 +20,17 @@ import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { combineDateTime } from "../util/combine-date-time";
 
-export const EventTab = ({ control, trigger, clearErrors }: { control: Control<TaskFormField>; trigger: UseFormTrigger<TaskFormField>; clearErrors: UseFormClearErrors<TaskFormField> }) => {
+export const EventTab = ({
+  control,
+  trigger,
+  clearErrors,
+  setValue,
+}: {
+  control: Control<TaskFormField>;
+  trigger?: UseFormTrigger<TaskFormField>;
+  clearErrors?: UseFormClearErrors<TaskFormField>;
+  setValue: (name: keyof TaskFormField, value: any) => void;
+}) => {
   const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
     const start = combineDateTime(sd, st);
     const end = combineDateTime(ed, et);
@@ -58,6 +76,22 @@ export const EventTab = ({ control, trigger, clearErrors }: { control: Control<T
     name: "endTime",
   });
 
+  const {
+    field: { value: deadlineDate },
+  } = useController({
+    control,
+    name: "deadlineDate",
+  });
+
+  const {
+    field: { value: isDdl },
+  } = useController({
+    control,
+    name: "isDeadline",
+  });
+
+  const ddlStr = isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined;
+
   const handleStartDateChange = (nextDate: Date) => {
     const previousSpan =
       startDateValue && endDateValue
@@ -90,14 +124,13 @@ export const EventTab = ({ control, trigger, clearErrors }: { control: Control<T
 
   return (
     <Animated.View
-      className="mb-4"
       layout={MotionAnimations.layout}
       entering={MotionAnimations.leftEntering}
       exiting={MotionAnimations.rightExiting}
     >
       <Animated.View className="mb-4" layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.start")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.start")}</Text>
 
           <View className="flex-row">
             <Pressable
@@ -134,6 +167,7 @@ export const EventTab = ({ control, trigger, clearErrors }: { control: Control<T
             <SingleDateCalendar
               onStartDateChange={handleStartDateChange}
               defaultStartDate={format(new Date(startDateValue), "yyyy-MM-dd")}
+              deadlineDate={ddlStr}
             />
           </Animated.View>
         )}
@@ -146,7 +180,6 @@ export const EventTab = ({ control, trigger, clearErrors }: { control: Control<T
               value={startTimeValue}
               onChange={(v: Date) => {
                 startTimeOnChange(v);
-                validateRange(startDateValue, v, endDateValue, endTimeValue);
               }}
             />
           </Animated.View>
@@ -155,7 +188,7 @@ export const EventTab = ({ control, trigger, clearErrors }: { control: Control<T
 
       <Animated.View layout={MotionAnimations.layout}>
         <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.end")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.end")}</Text>
 
           <View className="flex-row">
             <Pressable
@@ -201,6 +234,7 @@ export const EventTab = ({ control, trigger, clearErrors }: { control: Control<T
             <DoubleDatesCalendar
               startDate={startDateValue}
               endDate={endDateValue}
+              deadlineDate={ddlStr}
               setEndDate={(v: Date) => {
                 endDateOnChange(v);
                 validateRange(startDateValue, startTimeValue, v, endTimeValue);
