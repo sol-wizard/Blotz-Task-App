@@ -67,8 +67,10 @@ public class AiTaskGenerateChatHub : Hub
             _ => "English"
         };
 
+        var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
+
         var chatHistory = _chatHistoryStore.GetOrCreate(Context.ConnectionId);
-        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage));
+        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime));
 
         await base.OnConnectedAsync();
     }
