@@ -50,7 +50,7 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: 'DOTNETCORE|10.0'
-      alwaysOn: true
+      alwaysOn: appServiceSkuTier != 'Free'
       healthCheckPath: '/health'
       minTlsVersion: '1.2'
       ftpsState: 'Disabled'
