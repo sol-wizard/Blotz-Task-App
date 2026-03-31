@@ -3,6 +3,8 @@ import Toast from "react-native-toast-message";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
@@ -28,9 +30,16 @@ import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "expo-router";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { theme } from "@/shared/constants/theme";
+import RepeatSelectSheet, {
+  RepeatConfig,
+} from "@/feature/task-add-edit/components/repeat-select-sheet";
+import { taskKeys } from "@/shared/constants/query-key-factory";
+import { AddRecurringTaskDTO, RecurrenceFrequency } from "@/shared/models/add-recurring-task-dto";
+import { createRecurringTask } from "@/shared/services/task-service";
 
 type TaskFormProps =
   | {
@@ -45,6 +54,8 @@ type TaskFormProps =
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const hasEventTimes =
     dto?.timeType === 1 || (dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime);
   const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
@@ -52,6 +63,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const { t } = useTranslation("tasks");
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
+  const [isRepeatSheetOpen, setRepeatSheetOpen] = useState(false);
+  const [repeatConfig, setRepeatConfig] = useState<RepeatConfig | null>(null);
+  const [repeatSummary, setRepeatSummary] = useState<string | null>(null);
 
   const { labels = [], isLoading } = useAllLabels();
 
@@ -93,6 +107,27 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const { handleSubmit, formState, control, setValue, clearErrors, trigger, watch, getValues } =
     form;
   const { isSubmitting } = formState;
+  const selectedStartDate = form.watch("startDate");
+
+  const toDaysOfWeekMask = (days: number[]): number => {
+    return days.reduce((mask, day) => {
+      // 1..7 => Mon..Sun, mapped to flag bits 1,2,4,8,16,32,64
+      return mask | (1 << (day - 1));
+    }, 0);
+  };
+
+  const toRecurrenceFrequency = (frequency: RepeatConfig["frequency"]): RecurrenceFrequency => {
+    switch (frequency) {
+      case "daily":
+        return RecurrenceFrequency.Daily;
+      case "weekly":
+        return RecurrenceFrequency.Weekly;
+      case "monthly":
+        return RecurrenceFrequency.Monthly;
+      case "yearly":
+        return RecurrenceFrequency.Yearly;
+    }
+  };
 
   const startDate = watch("startDate");
   const startTime = watch("startTime");
@@ -174,6 +209,33 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
     const deadline = data.isDeadline ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
 
+    if (mode === "create" && repeatConfig) {
+      const recurringPayload: AddRecurringTaskDTO = {
+        title: data.title.trim(),
+        description: data.description?.trim() || undefined,
+        timeType,
+        labelId: data.labelId ?? undefined,
+        templateStartTime: convertToDateTimeOffset(startTime!),
+        templateEndTime: timeType === 1 && endTime ? convertToDateTimeOffset(endTime) : undefined,
+        frequency: toRecurrenceFrequency(repeatConfig.frequency),
+        interval: repeatConfig.interval,
+        daysOfWeek:
+          repeatConfig.frequency === "weekly"
+            ? toDaysOfWeekMask(repeatConfig.daysOfWeek)
+            : undefined,
+        dayOfMonth:
+          repeatConfig.frequency === "monthly" ? (repeatConfig.dayOfMonth ?? undefined) : undefined,
+        startDate: format(repeatConfig.startDate, "yyyy-MM-dd"),
+        endDate: repeatConfig.endDate ? format(repeatConfig.endDate, "yyyy-MM-dd") : undefined,
+      };
+
+      await createRecurringTask(recurringPayload);
+      setRepeatSheetOpen(false);
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      router.back();
+      return;
+    }
+
     const submitTask: AddTaskItemDTO = {
       title: data.title.trim(),
       description: data.description?.trim() ?? undefined,
@@ -218,7 +280,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Title */}
         <Animated.View className="mb-4 bg-white" layout={MotionAnimations.layout}>
-          <FormTextInput
+          <FormTextInput<TaskFormField>
             name="title"
             placeholder={t("form.newTask")}
             control={control}
@@ -241,7 +303,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           className="py-3 bg-background rounded-2xl px-4"
           layout={MotionAnimations.layout}
         >
-          <FormTextInput
+          <FormTextInput<TaskFormField>
             name="description"
             placeholder={t("form.addNote")}
             control={control}
@@ -277,6 +339,19 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         <AlertSelect control={control} />
         <FormDivider />
 
+        <Animated.View layout={MotionAnimations.layout}>
+          <Pressable
+            onPress={() => setRepeatSheetOpen(true)}
+            className="flex-row items-center justify-between"
+          >
+            <Text className="font-baloo text-secondary text-xl mt-1">{t("form.repeat")}</Text>
+            <Text className="font-baloo text-primary text-xl mt-1">
+              {repeatSummary ?? t("form.never")}
+            </Text>
+          </Pressable>
+        </Animated.View>
+        <FormDivider />
+
         {/* Label Select */}
         <Animated.View className="mb-8" layout={MotionAnimations.layout}>
           {isLoading ? (
@@ -303,6 +378,17 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           </Text>
         </Pressable>
       </View>
+
+      <RepeatSelectSheet
+        visible={isRepeatSheetOpen}
+        selectedDate={selectedStartDate ?? new Date()}
+        initialValue={repeatConfig}
+        onClose={() => setRepeatSheetOpen(false)}
+        onConfirm={(config, summary) => {
+          setRepeatConfig(config);
+          setRepeatSummary(summary);
+        }}
+      />
     </View>
   );
 };

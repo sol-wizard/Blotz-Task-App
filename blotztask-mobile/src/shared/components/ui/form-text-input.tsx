@@ -1,19 +1,21 @@
-import { Control, Controller, FieldValues } from "react-hook-form";
+import { Control, Controller, FieldValues, Path } from "react-hook-form";
 import { TextInput, TextInputProps } from "react-native";
 
-export function FormTextInput({
+type FormTextInputProps<TFieldValues extends FieldValues> = {
+  name: Path<TFieldValues>;
+  placeholder: string;
+  control: Control<TFieldValues>;
+  className?: string;
+  inputProps?: TextInputProps;
+};
+
+export function FormTextInput<TFieldValues extends FieldValues>({
   name,
   placeholder,
   control,
   className = "",
   inputProps,
-}: {
-  name: string;
-  placeholder: string;
-  control: Control<FieldValues>;
-  className?: string;
-  inputProps?: TextInputProps;
-}) {
+}: FormTextInputProps<TFieldValues>) {
   return (
     <Controller
       control={control}

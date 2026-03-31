@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<ReplaceSubtasksCommandHandler>();
         services.AddScoped<DeleteSubtaskCommandHandler>();
         services.AddScoped<RecurringTaskGeneratorService>();
+        services.AddScoped<AddRecurringTaskCommandHandler>();
         services.AddScoped<SaveRecurringOccurrenceCommandHandler>();
         services.AddScoped<UpdateSubtaskStatusCommandHandler>();
         services.AddScoped<UpdateDeadlinePinCommandHandler>();
