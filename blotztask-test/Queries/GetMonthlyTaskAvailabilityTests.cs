@@ -1,5 +1,6 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
+using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Tests.Fixtures;
 using BlotzTask.Tests.Helpers;
 using FluentAssertions;
@@ -24,11 +25,15 @@ public class GetMonthlyTaskAvailabilityTests : IClassFixture<DatabaseFixture>
     public async Task Handle_ShouldIncludeOverdueTasks_ForCurrentMonth_ButNotFutureOrTooEarlyHistoricalMonths()
     {
         var userId = await _seeder.CreateUserAsync();
+        
         var userNow = DateTimeOffset.Now;
         var localOffset = userNow.Offset;
         var currentMonthStart = new DateTimeOffset(userNow.Year, userNow.Month, 1, 0, 0, 0, localOffset);
         var historicalMonthStart = currentMonthStart.AddMonths(-1);
         var nextMonthStart = currentMonthStart.AddMonths(1);
+        
+        _context.UserPreferences.Add(new UserPreference { UserId = userId, AutoRollover = true });
+        await _context.SaveChangesAsync();
 
         var nineDaysAgo = new DateTimeOffset(userNow.Date, localOffset).AddDays(-9);
         await _seeder.CreateTaskAsync(
