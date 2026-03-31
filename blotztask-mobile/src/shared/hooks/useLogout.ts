@@ -4,14 +4,13 @@ import { useAuth } from "./useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from "../constants/token-key";
-import { usePostHog } from "posthog-react-native";
+import { analytics } from "@/shared/services/analytics";
 
 export function useLogout() {
   const router = useRouter();
   const { clearSession, clearCredentials } = useAuth0();
   const { clearAuthState } = useAuth();
   const qc = useQueryClient();
-  const posthog = usePostHog();
 
   return async () => {
     // Clear auth cache immediately so dependent queries stop
@@ -27,7 +26,7 @@ export function useLogout() {
       console.log("🎯 clear credentials successfully");
       await clearSession();
       console.log("🎯 clear session successfully");
-      posthog.reset();
+      analytics.resetUser();
       router.replace("/(auth)/signin");
     } catch (e) {
       console.log("clearSession error:", e);

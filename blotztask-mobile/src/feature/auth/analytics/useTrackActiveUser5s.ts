@@ -3,20 +3,21 @@ import { AppState, AppStateStatus } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { format } from "date-fns";
 import { EVENTS } from "@/shared/constants/posthog-events";
-import PostHog from "posthog-react-native";
+import { analytics } from "@/shared/services/analytics";
+
+const STORAGE_PREFIX = EVENTS.ACTIVE_USER_5S;
 
 async function alreadyActiveToday() {
-  const key = `${EVENTS.ACTIVE_USER_5S}_${format(new Date(), "yyyy-MM-dd")}`;
-  const v = await AsyncStorage.getItem(key);
-  return Boolean(v);
+  const key = `${STORAGE_PREFIX}_${format(new Date(), "yyyy-MM-dd")}`;
+  return Boolean(await AsyncStorage.getItem(key));
 }
 
 async function markActiveToday() {
-  const key = `${EVENTS.ACTIVE_USER_5S}_${format(new Date(), "yyyy-MM-dd")}`;
+  const key = `${STORAGE_PREFIX}_${format(new Date(), "yyyy-MM-dd")}`;
   await AsyncStorage.setItem(key, "1");
 }
 
-export function useTrackActiveUser5s(posthog: PostHog) {
+export function useTrackActiveUser5s() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startTimer = async () => {
@@ -24,12 +25,8 @@ export function useTrackActiveUser5s(posthog: PostHog) {
 
     timerRef.current = setTimeout(async () => {
       if (AppState.currentState !== "active") return;
-      posthog.capture(EVENTS.ACTIVE_USER_5S, {
-        seconds: 5,
-        day: format(new Date(), "yyyy-MM-dd"),
-        source: "foreground",
-      });
 
+      analytics.trackDailyActiveUser(format(new Date(), "yyyy-MM-dd"));
       await markActiveToday();
     }, 5000);
   };
