@@ -35,6 +35,34 @@ export const ReminderTab = ({
     name: "startTime",
   });
 
+  const {
+    field: { onChange: onEndDateChange },
+  } = useController({
+    control,
+    name: "endDate",
+  });
+
+  const {
+    field: { value: deadlineDate },
+  } = useController({
+    control,
+    name: "deadlineDate",
+  });
+
+  const {
+    field: { value: isDdl },
+  } = useController({
+    control,
+    name: "isDdl",
+  });
+
+  const {
+    field: { onChange: onEndTimeChange },
+  } = useController({
+    control,
+    name: "endTime",
+  });
+
   const { t, i18n } = useTranslation("tasks");
   const isChinese = i18n.language === "zh";
   const locale = isChinese ? zhCN : enUS;
@@ -69,6 +97,7 @@ export const ReminderTab = ({
           >
             <SingleDateCalendar
               defaultStartDate={format(startDate, "yyyy-MM-dd")}
+              deadlineDate={isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
               onStartDateChange={(nextDate: Date) => {
                 setValue("startDate", nextDate, { shouldValidate: false });
                 setValue("endDate", nextDate, { shouldValidate: false });

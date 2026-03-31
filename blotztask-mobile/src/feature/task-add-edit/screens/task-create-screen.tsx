@@ -1,22 +1,20 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
 import { useRouter } from "expo-router";
-import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { EVENTS } from "@/shared/constants/posthog-events";
+import { analytics } from "@/shared/services/analytics";
 
 export default function TaskCreateScreen() {
   const router = useRouter();
   const { addTask, isAdding } = useTaskMutations();
-  const posthog = usePostHog();
 
   const handleTaskSubmit = async (submitTask: AddTaskItemDTO) => {
     try {
       await addTask(submitTask);
 
-      posthog.capture(EVENTS.CREATE_TASK_MANUALLY);
+      analytics.trackManualTaskCreated();
 
       router.back();
       console.log("Task created successfully");

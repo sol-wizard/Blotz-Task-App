@@ -47,6 +47,7 @@
     },
     "production": {
       "autoIncrement": true,
+      "ios": { "credentialsSource": "remote" },
       "env": {
         "BUNDLE_IDENTIFIER": "com.Blotz.BlotzTask",
         "EXPO_PUBLIC_URL": "https://app-blotz-task-api-prod.azurewebsites.net/",
@@ -55,9 +56,6 @@
         "EXPO_PUBLIC_AUTH0_DOMAIN": "dev-k72xachs0fr6nebp.us.auth0.com",
         "EXPO_PUBLIC_AUTH0_CLIENT_ID": "Hxd6XhpfKR9eRDUFwS56Hghgdch0aUN9",
         "EXPO_PUBLIC_APP_ENV": "production",
-        "EXPO_ASC_API_KEY_PATH": "./keys/AuthKey_LX6WB2FK36.p8",
-        "EXPO_ASC_KEY_ID": "LX6WB2FK36",
-        "EXPO_ASC_ISSUER_ID": "5b2b45c7-e21d-4d66-85e3-d441763ad6fc",
         "EXPO_APPLE_TEAM_ID": "Z6GFDAYSP9",
         "EXPO_APPLE_TEAM_TYPE": "INDIVIDUAL"
       }

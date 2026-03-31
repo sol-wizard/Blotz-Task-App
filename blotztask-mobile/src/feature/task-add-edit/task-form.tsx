@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Toast from "react-native-toast-message";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -78,7 +79,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     endDate: initialTab === "reminder" ? initialStartDate : initialEndDate,
     endTime: initialTab === "reminder" ? initialStartTime : initialEndTime,
     alert: defaultAlert,
-    isDdl: dto?.isDdl ?? !!initialDueAt,
+    isDeadline: dto?.isDeadline ?? !!initialDueAt,
     deadlineDate: initialDueAt ?? oneHourLater,
     deadlineTime: initialDueAt ?? oneHourLater,
   };
@@ -89,8 +90,57 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     defaultValues: defaultValues,
   });
 
-  const { handleSubmit, formState, control, setValue, clearErrors, trigger, getValues } = form;
+  const { handleSubmit, formState, control, setValue, clearErrors, trigger, watch, getValues } =
+    form;
   const { isSubmitting } = formState;
+
+  const startDate = watch("startDate");
+  const startTime = watch("startTime");
+  const endDate = watch("endDate");
+  const endTime = watch("endTime");
+  const isDdl = watch("isDdl");
+  const deadlineDate = watch("deadlineDate");
+  const deadlineTime = watch("deadlineTime");
+
+  const prevHasWarned = useRef(false);
+
+  // If the deadline toggle is turned off and later back on, we want to be able
+  // to show the warning again for the (still) invalid date/time configuration.
+  useEffect(() => {
+    if (!isDdl) {
+      prevHasWarned.current = false;
+    }
+  }, [isDdl]);
+
+  useEffect(() => {
+    if (!isDdl || !deadlineDate || !deadlineTime) return;
+
+    const currentStartDate = isActiveTab === "reminder" ? startDate : endDate;
+    const currentStartTime = isActiveTab === "reminder" ? startTime : endTime;
+
+    if (!currentStartDate || !currentStartTime) return;
+
+    const currentDateTime = combineDateTime(currentStartDate, currentStartTime);
+    const ddlDateTime = combineDateTime(deadlineDate, deadlineTime);
+
+    if (!currentDateTime || !ddlDateTime) return;
+
+    if (currentDateTime > ddlDateTime) {
+      if (!prevHasWarned.current) {
+        const warningText = t(
+          isActiveTab === "reminder" ? "form.warningReminderAfterDdl" : "form.warningEventAfterDdl",
+        );
+        Toast.show({
+          type: "error",
+          text1: warningText,
+          position: "top",
+        });
+        prevHasWarned.current = true;
+      }
+    } else {
+      prevHasWarned.current = false;
+    }
+  }, [startDate, startTime, endDate, endTime, deadlineDate, deadlineTime, isDdl, isActiveTab, t]);
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -122,7 +172,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       alertTime = calculateAlertTime(startTime!, data.alert);
     }
 
-    const deadline = data.isDdl ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
+    const deadline = data.isDeadline ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
 
     const submitTask: AddTaskItemDTO = {
       title: data.title.trim(),
@@ -133,7 +183,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       timeType,
       alertTime: alertTime ? convertToDateTimeOffset(alertTime) : undefined,
       notificationId,
-      isDdl: data.isDdl,
+      isDeadline: data.isDeadline,
       dueAt: deadline ? convertToDateTimeOffset(deadline) : undefined,
     };
 
@@ -221,7 +271,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           />
         )}
         <FormDivider />
-        <DeadlineSection control={control} getValues={form.getValues} />
+        <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
         <FormDivider />
 
         <AlertSelect control={control} />

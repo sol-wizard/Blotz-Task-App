@@ -1,17 +1,17 @@
 /* eslint-disable camelcase */
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Pressable, ActivityIndicator, ScrollView, Text } from "react-native";
 import { AiTaskCard } from "./ai-task-card";
 import { AiNoteCard } from "./ai-note-card";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
-import { usePostHog } from "posthog-react-native";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { AiNoteDTO } from "../models/ai-note-dto";
 import { theme } from "@/shared/constants/theme";
-import { EVENTS } from "@/shared/constants/posthog-events";
+import { type AiTaskOutcome } from "@/shared/constants/posthog-events";
+import { analytics } from "@/shared/services/analytics";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -35,35 +35,31 @@ export function AiTasksPreview({
   const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes ?? []);
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
- 
 
-  const posthog = usePostHog();
+  useEffect(() => {
+    analytics.trackUserUsedAiGeneration({
+      userInput,
+      generatedTaskCount: aiTasks?.length ?? 0,
+      generatedNoteCount: aiNotes?.length ?? 0,
+      generatedTaskTitles: aiTasks?.map((t) => t.title) ?? [],
+      generatedNoteTexts: aiNotes?.map((n) => n.text) ?? [],
+    });
+  }, []);
 
   const captureOutcome = (
-    outcome: "accepted" | "go_back" | "abandoned",
+    outcome: AiTaskOutcome,
     addedTaskCount = 0,
     addedNoteCount = 0
   ) => {
-    posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-      ai_output: JSON.stringify({ tasks: localTasks, notes: localNotes }),
-      user_input: userInput,
+    analytics.trackIfUserAcceptAiTask({
+      userInput,
       outcome,
-      ai_generated_task_count: localTasks.length,
-      ai_generated_note_count: localNotes.length,
-      user_add_task_count: addedTaskCount,
-      user_add_note_count: addedNoteCount,
+      generatedTaskCount: aiTasks?.length ?? 0,
+      generatedNoteCount: aiNotes?.length ?? 0,
+      addedTaskCount,
+      addedNoteCount,
     });
   };
-
-  const finishedAllStepsRef = useRef<boolean>(false);
-
-  useEffect(() => {
-    return () => {
-      if (!finishedAllStepsRef.current) {
-        captureOutcome("abandoned");
-      }
-    };
-  }, [localTasks, localNotes]);
 
   const hasItems = localTasks.length > 0 || localNotes.length > 0;
   const addAllDisabled = (isAdding || isNoteCreating) || !hasItems;
@@ -101,7 +97,6 @@ export function AiTasksPreview({
         // invalidation handled by mutation
       }
 
-      finishedAllStepsRef.current = true;
       captureOutcome("accepted", localTasks.length, localNotes.length);
       setLocalTasks([]);
       setLocalNotes([]);

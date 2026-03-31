@@ -144,76 +144,97 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
     
 
     [Fact]
-    public async Task Handle_ShouldShowOverdueTask_WithinSevenDayWindow()
+    public async Task Handle_ShouldIncludeAllOverdueTasks_ForTodayAndPastDates_ButNotFutureDates()
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
-        
+
         // Create UserPreferences with AutoRollover enabled (required for overdue task rollover)
         _context.UserPreferences.Add(new UserPreference { UserId = userId, AutoRollover = true });
         await _context.SaveChangesAsync();
-        
-        // Use current time with local timezone to properly test overdue rollover
+
         var userNow = DateTimeOffset.Now;
         var localOffset = userNow.Offset;
         var userTodayStart = new DateTimeOffset(userNow.Date, localOffset);
-        var threeDaysAgo = userNow.AddDays(-3);
-        
-        // 1. Overdue task within 7-day window (ended 2 days ago, NOT done) -> SHOULD appear
-        var fourDaysAgo = userTodayStart.AddDays(-4);
-        await _seeder.CreateTaskAsync(userId, "Overdue Task Within Window",
-            new DateTimeOffset(fourDaysAgo.Date.AddHours(9), localOffset),
-            new DateTimeOffset(fourDaysAgo.Date.AddHours(10), localOffset));
-        
-        // 2. Overdue task outside 7-day window (ended 9 days ago) -> should NOT appear
+        var pastSelectedDate = userTodayStart.AddDays(-3);
+        var historicalPastSelectedDate = userTodayStart.AddDays(-12);
+        var futureSelectedDate = userTodayStart.AddDays(2);
+
         var nineDaysAgo = userTodayStart.AddDays(-9);
-        await _seeder.CreateTaskAsync(userId, "Overdue Task Outside Window",
+        await _seeder.CreateTaskAsync(
+            userId,
+            "Old Overdue Task",
             new DateTimeOffset(nineDaysAgo.Date.AddHours(9), localOffset),
             new DateTimeOffset(nineDaysAgo.Date.AddHours(10), localOffset));
-        
-        // 3. Completed overdue task within window -> should NOT appear (IsDone = true)
-        var completedTask = await _seeder.CreateTaskAsync(userId, "Completed Overdue Task",
-            new DateTimeOffset(fourDaysAgo.Date.AddHours(11), localOffset),
-            new DateTimeOffset(fourDaysAgo.Date.AddHours(12), localOffset));
+
+        var twoDaysAgo = userTodayStart.AddDays(-2);
+        var completedTask = await _seeder.CreateTaskAsync(
+            userId,
+            "Completed Overdue Task",
+            new DateTimeOffset(twoDaysAgo.Date.AddHours(11), localOffset),
+            new DateTimeOffset(twoDaysAgo.Date.AddHours(12), localOffset));
         completedTask.IsDone = true;
         await _context.SaveChangesAsync();
 
-        var query = new GetTasksByDateQuery
+        var futureScheduledDay = futureSelectedDate;
+        await _seeder.CreateTaskAsync(
+            userId,
+            "Future Scheduled Task",
+            new DateTimeOffset(futureScheduledDay.Date.AddHours(14), localOffset),
+            new DateTimeOffset(futureScheduledDay.Date.AddHours(15), localOffset));
+
+        var todayQuery = new GetTasksByDateQuery
         {
             UserId = userId,
             StartDate = userNow,
             IncludeFloatingForToday = false
         };
 
-        var threeDaysAgoQuery = new GetTasksByDateQuery
+        var pastQuery = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDate = threeDaysAgo,
+            StartDate = pastSelectedDate,
+            IncludeFloatingForToday = false
+        };
+
+        var historicalPastQuery = new GetTasksByDateQuery
+        {
+            UserId = userId,
+            StartDate = historicalPastSelectedDate,
+            IncludeFloatingForToday = false
+        };
+
+        var futureQuery = new GetTasksByDateQuery
+        {
+            UserId = userId,
+            StartDate = futureSelectedDate,
             IncludeFloatingForToday = false
         };
 
         // Act
-        var result = await _handler.Handle(query);
-        var threeDaysAgoResult = await _handler.Handle(threeDaysAgoQuery);
+        var todayResult = await _handler.Handle(todayQuery);
+        var pastResult = await _handler.Handle(pastQuery);
+        var historicalPastResult = await _handler.Handle(historicalPastQuery);
+        var futureResult = await _handler.Handle(futureQuery);
 
         // Assert
-        result.Should().Contain(t => t.Title == "Overdue Task Within Window",
-            because: "Overdue task within 7-day window should appear on today's date.");
-        
-        result.Should().NotContain(t => t.Title == "Overdue Task Outside Window",
-            because: "Overdue task outside the 7-day window should NOT appear.");
-        
-        result.Should().NotContain(t => t.Title == "Completed Overdue Task",
-            because: "Completed overdue tasks should NOT roll over.");
+        todayResult.Should().Contain(t => t.Title == "Old Overdue Task",
+            because: "today's view should include all overdue tasks, even when they are older than seven days");
+        todayResult.Should().NotContain(t => t.Title == "Completed Overdue Task",
+            because: "completed overdue tasks should not roll over");
 
-        threeDaysAgoResult.Should().Contain(t => t.Title == "Overdue Task Within Window",
-            because: "Overdue task within 7-day window should appear on three days ago's date.");
+        pastResult.Should().Contain(t => t.Title == "Old Overdue Task",
+            because: "past day views should also include all currently overdue tasks");
+        pastResult.Should().NotContain(t => t.Title == "Completed Overdue Task",
+            because: "completed overdue tasks should not appear in past day views either");
 
-        threeDaysAgoResult.Should().NotContain(t => t.Title == "Overdue Task Outside Window",
-            because: "Overdue task outside the 7-day window should NOT appear.");
+        historicalPastResult.Should().NotContain(t => t.Title == "Old Overdue Task",
+            because: "even older past day views should include tasks that are overdue at request time");
 
-        threeDaysAgoResult.Should().NotContain(t => t.Title == "Completed Overdue Task",
-            because: "Completed overdue tasks should NOT roll over three days ago.");
+        futureResult.Should().Contain(t => t.Title == "Future Scheduled Task",
+            because: "future day views should still show tasks scheduled in that selected period");
+        futureResult.Should().NotContain(t => t.Title == "Old Overdue Task",
+            because: "future day views must stay clean and exclude overdue tasks");
     }
 
     // -----------------------------------------------------------------------
