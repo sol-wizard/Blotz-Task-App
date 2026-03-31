@@ -41,6 +41,20 @@ export const ReminderTab = ({
   });
 
   const {
+    field: { value: deadlineDate },
+  } = useController({
+    control,
+    name: "deadlineDate",
+  });
+
+  const {
+    field: { value: isDdl },
+  } = useController({
+    control,
+    name: "isDdl",
+  });
+
+  const {
     field: { onChange: onEndTimeChange },
   } = useController({
     control,
@@ -81,6 +95,7 @@ export const ReminderTab = ({
           >
             <SingleDateCalendar
               defaultStartDate={format(startDate, "yyyy-MM-dd")}
+              deadlineDate={isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
               onStartDateChange={(nextDate: Date) => {
                 onStartDateChange(nextDate);
                 onEndDateChange(nextDate);
