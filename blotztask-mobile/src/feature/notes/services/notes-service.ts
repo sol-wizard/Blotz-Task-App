@@ -11,16 +11,14 @@ export const searchNotes = async (keyword: string): Promise<NoteDTO[]> => {
 
 export const deleteNote = async (noteId: string): Promise<void> => {
   const url = `/notes/${noteId}`;
-  try {
-    await apiClient.delete(url);
-  } catch {
-    throw new Error("Failed to delete note.");
-  }
+
+  return await apiClient.delete(url);
 };
 
 export const createNote = async (text: string): Promise<NoteDTO> => {
   const url = `/notes`;
   const trimmedText = text.trim();
+ 
   try {
     return await apiClient.post(url, { text: trimmedText });
   } catch {
@@ -31,6 +29,7 @@ export const createNote = async (text: string): Promise<NoteDTO> => {
 export const updateNote = async (editNoteDto: EditNoteDTO): Promise<NoteDTO> => {
   const url = `/notes/${editNoteDto.id}`;
   const trimmedText = editNoteDto.text.trim();
+  
   try {
     return await apiClient.put(url, { text: trimmedText });
   } catch {
@@ -44,9 +43,6 @@ export const convertNoteToTask = async (
   endTime: string,
 ): Promise<{ taskId: number }> => {
   const url = `/notes/${noteId}/convert-to-task`;
-  try {
-    return await apiClient.post<{ taskId: number }>(url, { startTime, endTime });
-  } catch {
-    throw new Error("Failed to convert note to task.");
-  }
+
+  return await apiClient.post<{ taskId: number }>(url, { startTime, endTime });
 };
