@@ -15,7 +15,7 @@ import {
 } from "react-native-reanimated";
 
 export default function GetStartedButton() {
-  const { authorize, user } = useAuth0();
+  const { authorize } = useAuth0();
   const router = useRouter();
   const { t } = useTranslation("common");
   const { refreshAuthState } = useAuth();
