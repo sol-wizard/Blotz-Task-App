@@ -28,7 +28,6 @@ import { analytics } from "@/shared/services/analytics";
 import { theme } from "@/shared/constants/theme";
 import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
 import { useRecurringTaskMutations } from "@/feature/calendar/hooks/useRecurringTaskMutations";
-
 const rubberBand = (x: number, limit: number) => {
   "worklet";
   if (x >= 0) return 0;
@@ -78,7 +77,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     const spacerWidth = 8; // w-2
 
     // Structure: [Card] [Spacer] ([Breakdown] [Spacer]) [Delete]
-    const totalWidth = spacerWidth + deleteWidth + breakdownWidth + spacerWidth;
+    const totalWidth = spacerWidth + ( deleteWidth / 2 ) + breakdownWidth + spacerWidth;
 
     return {
       actionWidth: totalWidth,
@@ -190,7 +189,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
             <Pressable
               onPress={() => navigateToTaskDetails(task)}
               disabled={isLoading}
-              className="bg-white rounded-2xl shadow-sm overflow-hidden"
+              className="bg-white rounded-3xl shadow-sm overflow-hidden"
             >
               <View className="flex-col">
                 <View onLayout={(e) => setActionHeight(e.nativeEvent.layout.height)}>
@@ -200,7 +199,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                       <TasksCheckbox
                         checked={task.isDone}
                         disabled={isLoading}
-                        size={26}
+                        size={22}
                         className="border-2"
                         uncheckedColor="#D1D5DB"
                         onChange={async () => {
@@ -234,8 +233,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                       <View className="justify-start pt-0 flex-1">
                         <View className="flex-row items-center">
                           <Text
-                            className={`text-xl font-baloo ${
-                              task.isDone ? "text-neutral-400 line-through" : "text-black"
+                            className={`text-xl font-semibold font-inter ${
+                              task.isDone ? "text-neutral-400 line-through" : "text-[#444964]"
                             }`}
                             style={
                               task.isDone
@@ -267,7 +266,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                         <Text
                           className={`${
                             isOverdue ? "text-warning" : "text-primary"
-                          } font-baloo text-lg`}
+                          } font-inter font-semibold text-lg`}
                         >
                           {format(endDate, "H:mm")}
                         </Text>
@@ -305,14 +304,14 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
               disabled={isLoading}
               android_ripple={{ color: "#DBEAFE", borderless: false }}
               style={{ height: actionHeight || 80 }}
-              className={`w-32 rounded-xl bg-blue-500/10 items-center justify-center ${
+              className={`w-32 rounded-3xl bg-blue-500/10 items-center justify-center ${
                 isBreakingDown || isReplacingSubtasks ? "opacity-50" : ""
               }`}
             >
               {isBreakingDown || isReplacingSubtasks ? (
                 <ActivityIndicator size="small" color="#3b82f6" />
               ) : (
-                <Text className="text-info font-baloo font-semibold text-lg">Breakdown</Text>
+                <Text className="text-info font-inter font-semibold text-lg">Breakdown</Text>
               )}
             </Pressable>
           </View>
@@ -334,7 +333,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
               disabled={isLoading}
               android_ripple={{ color: "#FEE2E2", borderless: false }}
               style={{ height: actionHeight || 80 }}
-              className={`w-14 rounded-xl bg-red-500/10 items-center justify-center ${
+              className={`w-14 rounded-3xl bg-red-500/10 items-center justify-center ${
                 isDeleting ? "opacity-50" : ""
               }`}
             >
