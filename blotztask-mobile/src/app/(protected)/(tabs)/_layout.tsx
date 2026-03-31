@@ -1,7 +1,6 @@
 import { Tabs, router } from "expo-router";
 import { Pressable, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image } from "expo-image";
 import { ASSETS } from "@/shared/constants/assets";
 import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
 import { GradientCircle } from "@/shared/components/common/gradient-circle";
@@ -101,11 +100,7 @@ export default function ProtectedTabsLayout() {
                 onPress={() => router.push("/ai-task-sheet")}
               >
                 <GradientCircle size={58}>
-                  <Image
-                    source={ASSETS.whiteBun}
-                    contentFit="contain"
-                    style={{ width: 28, height: 28, position: "absolute" }}
-                  />
+                  <ASSETS.whiteBun width={28} height={28} style={{ position: "absolute" } as const} />
                 </GradientCircle>
               </Pressable>
             ),

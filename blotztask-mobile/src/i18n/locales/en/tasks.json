@@ -15,7 +15,11 @@
     "selectTime": "Select Time",
     "start": "Start",
     "end": "End",
-    "invalidTimeRange": "Start time cannot be later than end time"
+    "markAsDeadline": "Mark as deadline",
+    "dueTime": "Due Time",
+    "invalidTimeRange": "Start time cannot be later than end time",
+    "warningReminderAfterDdl": "Just a heads up, your reminder is set for after the deadline (due time).",
+    "warningEventAfterDdl": "Just a heads up, your event end time is set for after the deadline (due time)."
   },
   "details": {
     "notFound": "Selected Task not found.",
