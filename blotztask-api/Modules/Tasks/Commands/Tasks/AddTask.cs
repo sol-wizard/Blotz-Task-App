@@ -46,7 +46,7 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
 
         db.TaskItems.Add(newTask);
         
-        if (command.TaskDetails.IsDdl == true)
+        if (command.TaskDetails.IsDeadline == true)
         {
             var deadline = new TaskDeadline
             {
@@ -77,5 +77,5 @@ public class AddTaskItemDto
     public int? LabelId { get; set; }
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
-    public bool? IsDdl { get; set; }
+    public bool? IsDeadline { get; set; }
 }
