@@ -2,6 +2,15 @@ import { z } from "zod";
 import { combineDateTime } from "../util/combine-date-time";
 import { isBefore, isEqual } from "date-fns";
 
+const repeatConfigSchema = z.object({
+  frequency: z.enum(["daily", "weekly", "monthly", "yearly"]),
+  interval: z.number().int().min(1),
+  daysOfWeek: z.array(z.number().int().min(1).max(7)),
+  dayOfMonth: z.number().int().min(1).max(31).nullable(),
+  startDate: z.date(),
+  endDate: z.date().nullable(),
+});
+
 export const taskFormSchema = z
   .object({
     title: z.string().trim().min(1, "Title is required").max(80, "Max 80 chars"),
@@ -15,6 +24,8 @@ export const taskFormSchema = z
     isDeadline: z.boolean(),
     deadlineDate: z.date(),
     deadlineTime: z.date(),
+    repeatConfig: repeatConfigSchema.nullable(),
+    repeatSummary: z.string().nullable(),
   })
   .refine(
     (data) => {

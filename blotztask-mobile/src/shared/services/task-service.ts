@@ -1,6 +1,7 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { EditTaskItemDTO } from "../../feature/task-add-edit/models/edit-task-item-dto";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { AddRecurringTaskDTO } from "@/shared/models/add-recurring-task-dto";
 import { apiClient } from "./api/client";
 
 import { DailyTaskIndicatorDTO } from "@/feature/calendar/models/daily-task-indicator-dto";
@@ -83,5 +84,14 @@ export async function saveRecurringOccurrence(payload: {
     return await apiClient.post("/RecurringTask/occurrence/complete", payload);
   } catch {
     throw new Error("Failed to save recurring occurrence.");
+  }
+}
+
+export async function createRecurringTask(payload: AddRecurringTaskDTO): Promise<number> {
+  try {
+    const result = await apiClient.post<{ id: number }>("/RecurringTask", payload);
+    return result.id;
+  } catch {
+    throw new Error("Failed to create recurring task.");
   }
 }

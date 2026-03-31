@@ -3,6 +3,8 @@ import Toast from "react-native-toast-message";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { FormTextInput } from "@/shared/components/ui/form-text-input";
@@ -28,9 +30,14 @@ import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "expo-router";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { theme } from "@/shared/constants/theme";
+import { taskKeys } from "@/shared/constants/query-key-factory";
+import { AddRecurringTaskDTO, RecurrenceFrequency } from "@/shared/models/add-recurring-task-dto";
+import { createRecurringTask } from "@/shared/services/task-service";
+import { RecurrenceSection } from "@/feature/task-add-edit/components/recurrence-section";
 
 type TaskFormProps =
   | {
@@ -45,6 +52,8 @@ type TaskFormProps =
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const hasEventTimes =
     dto?.timeType === 1 || (dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime);
   const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
@@ -82,6 +91,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     isDeadline: dto?.isDeadline ?? !!initialDueAt,
     deadlineDate: initialDueAt ?? oneHourLater,
     deadlineTime: initialDueAt ?? oneHourLater,
+    repeatConfig: null,
+    repeatSummary: null,
   };
 
   const form = useForm<TaskFormField>({
@@ -93,6 +104,29 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const { handleSubmit, formState, control, setValue, clearErrors, trigger, watch, getValues } =
     form;
   const { isSubmitting } = formState;
+  const selectedStartDate = form.watch("startDate");
+
+  const toDaysOfWeekMask = (days: number[]): number => {
+    return days.reduce((mask, day) => {
+      // 1..7 => Mon..Sun, mapped to flag bits 1,2,4,8,16,32,64
+      return mask | (1 << (day - 1));
+    }, 0);
+  };
+
+  const toRecurrenceFrequency = (
+    frequency: NonNullable<TaskFormField["repeatConfig"]>["frequency"],
+  ): RecurrenceFrequency => {
+    switch (frequency) {
+      case "daily":
+        return RecurrenceFrequency.Daily;
+      case "weekly":
+        return RecurrenceFrequency.Weekly;
+      case "monthly":
+        return RecurrenceFrequency.Monthly;
+      case "yearly":
+        return RecurrenceFrequency.Yearly;
+    }
+  };
 
   const startDate = watch("startDate");
   const startTime = watch("startTime");
@@ -101,6 +135,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const isDdl = watch("isDeadline");
   const deadlineDate = watch("deadlineDate");
   const deadlineTime = watch("deadlineTime");
+  const repeatConfig = watch("repeatConfig");
+  const repeatSummary = watch("repeatSummary");
 
   const prevHasWarned = useRef(false);
 
@@ -174,6 +210,32 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
     const deadline = data.isDeadline ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
 
+    if (mode === "create" && repeatConfig) {
+      const recurringPayload: AddRecurringTaskDTO = {
+        title: data.title.trim(),
+        description: data.description?.trim() || undefined,
+        timeType,
+        labelId: data.labelId ?? undefined,
+        templateStartTime: convertToDateTimeOffset(startTime!),
+        templateEndTime: timeType === 1 && endTime ? convertToDateTimeOffset(endTime) : undefined,
+        frequency: toRecurrenceFrequency(repeatConfig.frequency),
+        interval: repeatConfig.interval,
+        daysOfWeek:
+          repeatConfig.frequency === "weekly"
+            ? toDaysOfWeekMask(repeatConfig.daysOfWeek)
+            : undefined,
+        dayOfMonth:
+          repeatConfig.frequency === "monthly" ? (repeatConfig.dayOfMonth ?? undefined) : undefined,
+        startDate: format(repeatConfig.startDate, "yyyy-MM-dd"),
+        endDate: repeatConfig.endDate ? format(repeatConfig.endDate, "yyyy-MM-dd") : undefined,
+      };
+
+      await createRecurringTask(recurringPayload);
+      await queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      router.back();
+      return;
+    }
+
     const submitTask: AddTaskItemDTO = {
       title: data.title.trim(),
       description: data.description?.trim() ?? undefined,
@@ -218,7 +280,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Title */}
         <Animated.View className="mb-4 bg-white" layout={MotionAnimations.layout}>
-          <FormTextInput
+          <FormTextInput<TaskFormField>
             name="title"
             placeholder={t("form.newTask")}
             control={control}
@@ -241,7 +303,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           className="py-3 bg-background rounded-2xl px-4"
           layout={MotionAnimations.layout}
         >
-          <FormTextInput
+          <FormTextInput<TaskFormField>
             name="description"
             placeholder={t("form.addNote")}
             control={control}
@@ -276,6 +338,16 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
         <AlertSelect control={control} />
         <FormDivider />
+
+        <RecurrenceSection
+          selectedDate={selectedStartDate ?? new Date()}
+          repeatConfig={repeatConfig}
+          repeatSummary={repeatSummary}
+          onChange={(config, summary) => {
+            setValue("repeatConfig", config);
+            setValue("repeatSummary", summary);
+          }}
+        />
 
         {/* Label Select */}
         <Animated.View className="mb-8" layout={MotionAnimations.layout}>
