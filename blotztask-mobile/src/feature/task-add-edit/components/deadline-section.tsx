@@ -1,10 +1,12 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, Pressable } from "react-native";
 import { Control, useController } from "react-hook-form";
 import { format } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
+import Toast from "react-native-toast-message";
+import { hasDeadlineWarning } from "../models/task-form-schema";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { ToggleSwitch } from "../../settings/components/toggle-switch";
@@ -15,7 +17,7 @@ import { SegmentButtonValue } from "../models/segment-button-value";
 
 interface DeadlineSectionProps {
   control: Control<any>;
-  getValues: (name: any) => any;
+  getValues: (name?: any) => any;
   isActiveTab: SegmentButtonValue;
 }
 
@@ -63,6 +65,18 @@ export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSec
     control,
     name: "endDate",
   });
+
+  useEffect(() => {
+    if (!isDeadline) return;
+    const formValues = getValues();
+    if (hasDeadlineWarning({ ...formValues, deadlineDate, deadlineTime }, isActiveTab === "reminder")) {
+      Toast.show({
+        type: "error",
+        text1: t(isActiveTab === "reminder" ? "form.warningReminderAfterDdl" : "form.warningEventAfterDdl"),
+        position: "top",
+      });
+    }
+  }, [deadlineDate, deadlineTime]);
 
   const deadlineDateDisplayText = deadlineDate
     ? format(deadlineDate, dateFormat, { locale })

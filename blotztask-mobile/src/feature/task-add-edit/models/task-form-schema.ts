@@ -32,4 +32,16 @@ export const taskFormSchema = z
 
 export type TaskFormField = z.infer<typeof taskFormSchema>;
 
+export function hasDeadlineWarning(data: TaskFormField, isReminder: boolean): boolean {
+  if (!data.isDeadline) return false;
+
+  const endDate = isReminder ? data.startDate : data.endDate;
+  const endTime = isReminder ? data.startTime : data.endTime;
+  const end = combineDateTime(endDate, endTime);
+  const deadline = combineDateTime(data.deadlineDate, data.deadlineTime);
+  if (!end || !deadline) return false;
+
+  return end > deadline;
+}
+
 export default TaskFormField;
