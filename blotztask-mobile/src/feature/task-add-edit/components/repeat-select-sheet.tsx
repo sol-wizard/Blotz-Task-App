@@ -148,14 +148,18 @@ export const RepeatSelectSheet = ({
   const [draft, setDraft] = useState<RepeatConfig>(
     () => initialValue ?? createDefaultRepeatConfig(selectedDate),
   );
-  const [activeSelector, setActiveSelector] = useState<"startDate" | "endDate" | null>(null);
+  const [activeSelector, setActiveSelector] = useState<"endDate" | null>(null);
   const [intervalText, setIntervalText] = useState<string>(
     String(normalizeInterval(initialValue?.interval ?? 1)),
   );
 
   useEffect(() => {
     if (!visible) return;
-    const next = initialValue ?? createDefaultRepeatConfig(selectedDate);
+    const next = {
+      ...(initialValue ?? createDefaultRepeatConfig(selectedDate)),
+      // Start date follows the task start date from reminder/event section.
+      startDate: selectedDate,
+    };
     setDraft(next);
     setIntervalText(String(normalizeInterval(next.interval)));
     setActiveSelector(null);
@@ -291,7 +295,6 @@ export const RepeatSelectSheet = ({
     onClose();
   };
 
-  const startDateText = format(draft.startDate, dateFormat, { locale });
   const endDateText = draft.endDate ? format(draft.endDate, dateFormat, { locale }) : null;
 
   return (
@@ -401,38 +404,6 @@ export const RepeatSelectSheet = ({
               </View>
             </Animated.View>
           )}
-
-          <Animated.View className="mb-4" layout={MotionAnimations.layout}>
-            <View className="flex-row items-center justify-between">
-              <Text className="font-baloo text-secondary text-xl mt-1">
-                {t("repeat.startDate", { defaultValue: isChinese ? "开始日期" : "Start date" })}
-              </Text>
-              <Pressable
-                onPress={() =>
-                  setActiveSelector((prev) => (prev === "startDate" ? null : "startDate"))
-                }
-                className="bg-background px-4 py-2 rounded-xl"
-              >
-                <Text className="text-xl font-balooThin text-secondary">{startDateText}</Text>
-              </Pressable>
-            </View>
-
-            {activeSelector === "startDate" && (
-              <Animated.View
-                entering={MotionAnimations.upEntering}
-                exiting={MotionAnimations.outExiting}
-                className="mt-2"
-              >
-                <SingleDateCalendar
-                  defaultStartDate={format(draft.startDate, "yyyy-MM-dd")}
-                  onStartDateChange={(nextDate) => {
-                    setDraft((prev) => ({ ...prev, startDate: nextDate }));
-                    setActiveSelector(null);
-                  }}
-                />
-              </Animated.View>
-            )}
-          </Animated.View>
 
           <Animated.View className="mb-6" layout={MotionAnimations.layout}>
             <View className="flex-row items-center justify-between">

@@ -34,12 +34,10 @@ import { useRouter } from "expo-router";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { theme } from "@/shared/constants/theme";
-import RepeatSelectSheet, {
-  RepeatConfig,
-} from "@/feature/task-add-edit/components/repeat-select-sheet";
 import { taskKeys } from "@/shared/constants/query-key-factory";
 import { AddRecurringTaskDTO, RecurrenceFrequency } from "@/shared/models/add-recurring-task-dto";
 import { createRecurringTask } from "@/shared/services/task-service";
+import { RecurrenceSection } from "@/feature/task-add-edit/components/recurrence-section";
 
 type TaskFormProps =
   | {
@@ -63,9 +61,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const { t } = useTranslation("tasks");
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
-  const [isRepeatSheetOpen, setRepeatSheetOpen] = useState(false);
-  const [repeatConfig, setRepeatConfig] = useState<RepeatConfig | null>(null);
-  const [repeatSummary, setRepeatSummary] = useState<string | null>(null);
 
   const { labels = [], isLoading } = useAllLabels();
 
@@ -96,6 +91,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     isDeadline: dto?.isDeadline ?? !!initialDueAt,
     deadlineDate: initialDueAt ?? oneHourLater,
     deadlineTime: initialDueAt ?? oneHourLater,
+    repeatConfig: null,
+    repeatSummary: null,
   };
 
   const form = useForm<TaskFormField>({
@@ -116,7 +113,9 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     }, 0);
   };
 
-  const toRecurrenceFrequency = (frequency: RepeatConfig["frequency"]): RecurrenceFrequency => {
+  const toRecurrenceFrequency = (
+    frequency: NonNullable<TaskFormField["repeatConfig"]>["frequency"],
+  ): RecurrenceFrequency => {
     switch (frequency) {
       case "daily":
         return RecurrenceFrequency.Daily;
@@ -136,6 +135,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const isDdl = watch("isDeadline");
   const deadlineDate = watch("deadlineDate");
   const deadlineTime = watch("deadlineTime");
+  const repeatConfig = watch("repeatConfig");
+  const repeatSummary = watch("repeatSummary");
 
   const prevHasWarned = useRef(false);
 
@@ -230,7 +231,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       };
 
       await createRecurringTask(recurringPayload);
-      setRepeatSheetOpen(false);
       await queryClient.invalidateQueries({ queryKey: taskKeys.all });
       router.back();
       return;
@@ -339,18 +339,15 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         <AlertSelect control={control} />
         <FormDivider />
 
-        <Animated.View layout={MotionAnimations.layout}>
-          <Pressable
-            onPress={() => setRepeatSheetOpen(true)}
-            className="flex-row items-center justify-between"
-          >
-            <Text className="font-baloo text-secondary text-xl mt-1">{t("form.repeat")}</Text>
-            <Text className="font-baloo text-primary text-xl mt-1">
-              {repeatSummary ?? t("form.never")}
-            </Text>
-          </Pressable>
-        </Animated.View>
-        <FormDivider />
+        <RecurrenceSection
+          selectedDate={selectedStartDate ?? new Date()}
+          repeatConfig={repeatConfig}
+          repeatSummary={repeatSummary}
+          onChange={(config, summary) => {
+            setValue("repeatConfig", config);
+            setValue("repeatSummary", summary);
+          }}
+        />
 
         {/* Label Select */}
         <Animated.View className="mb-8" layout={MotionAnimations.layout}>
@@ -378,17 +375,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           </Text>
         </Pressable>
       </View>
-
-      <RepeatSelectSheet
-        visible={isRepeatSheetOpen}
-        selectedDate={selectedStartDate ?? new Date()}
-        initialValue={repeatConfig}
-        onClose={() => setRepeatSheetOpen(false)}
-        onConfirm={(config, summary) => {
-          setRepeatConfig(config);
-          setRepeatSummary(summary);
-        }}
-      />
     </View>
   );
 };
