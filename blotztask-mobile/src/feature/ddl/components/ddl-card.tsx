@@ -8,6 +8,7 @@ import { differenceInCalendarDays } from "date-fns";
 import TasksCheckbox from "@/shared/components/ui/task-checkbox";
 import { DeadlineTaskDTO } from "../models/deadline-task-dto";
 import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   task: DeadlineTaskDTO;
@@ -15,6 +16,7 @@ type Props = {
 
 const DdlCard = ({ task }: Props) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
+  const { t } = useTranslation("deadline");
 
   const daysLeft = Math.max(0, differenceInCalendarDays(new Date(task.dueAt), new Date()));
 
@@ -91,7 +93,7 @@ const DdlCard = ({ task }: Props) => {
         {/* Days left */}
         <View className="items-center">
           <Text className="font-baloo text-3xl text-gray-800 leading-none pt-2">{daysLeft}</Text>
-          <Text className="font-balooThin text-xs text-gray-400">days</Text>
+          <Text className="font-balooThin text-xs text-gray-400">{t("days")}</Text>
         </View>
       </View>
     </ReanimatedSwipeable>
