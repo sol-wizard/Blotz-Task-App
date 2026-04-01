@@ -13,7 +13,7 @@ export default function DdlScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-row px-6 mt-6 items-center">
-        <ReturnButton />
+        <ReturnButton className="mb-3" />
         <Text className="font-baloo text-4xl text-secondary font-bold px-6 py-2">{t("title")}</Text>
       </View>
 
