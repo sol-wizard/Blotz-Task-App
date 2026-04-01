@@ -112,65 +112,63 @@ export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSec
           exiting={MotionAnimations.outExiting}
           layout={MotionAnimations.layout}
         >
-          <Animated.View layout={MotionAnimations.layout}>
-            <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
-              <Text className="font-baloo text-secondary text-xl mt-1">{t("form.dueTime")}</Text>
-              <View className="flex-row">
-                <Pressable
-                  onPress={() =>
-                    setActiveSelector((prev) => (prev === "deadlineDate" ? null : "deadlineDate"))
-                  }
-                  className="bg-background px-4 py-2 rounded-xl mr-2"
-                >
-                  <Text className="text-xl font-balooThin text-secondary">
-                    {deadlineDateDisplayText}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() =>
-                    setActiveSelector((prev) => (prev === "deadlineTime" ? null : "deadlineTime"))
-                  }
-                  className="bg-background px-4 py-2 rounded-xl"
-                >
-                  <Text className="text-xl font-balooThin text-secondary">
-                    {deadlineTimeDisplayText}
-                  </Text>
-                </Pressable>
-              </View>
-            </Animated.View>
-
-            {activeSelector === "deadlineDate" && (
-              <Animated.View
-                entering={MotionAnimations.upEntering}
-                exiting={MotionAnimations.outExiting}
+          <Animated.View className="flex-row justify-between" layout={MotionAnimations.layout}>
+            <Text className="font-baloo text-secondary text-xl mt-1">{t("form.dueTime")}</Text>
+            <View className="flex-row">
+              <Pressable
+                onPress={() =>
+                  setActiveSelector((prev) => (prev === "deadlineDate" ? null : "deadlineDate"))
+                }
+                className="bg-background px-4 py-2 rounded-xl mr-2"
               >
-                <SingleDateCalendar
-                  defaultStartDate={format(deadlineDate || new Date(), "yyyy-MM-dd")}
-                  deadlineDate={deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
-                  eventStartDate={startDate ? format(startDate, "yyyy-MM-dd") : undefined}
-                  eventEndDate={
-                    isActiveTab === "event" && endDate
-                      ? format(endDate, "yyyy-MM-dd")
-                      : startDate
-                        ? format(startDate, "yyyy-MM-dd")
-                        : undefined
-                  }
-                  isDeadlinePicker={true}
-                  onStartDateChange={onDeadlineDateChange}
-                />
-              </Animated.View>
-            )}
-
-            {activeSelector === "deadlineTime" && (
-              <Animated.View
-                entering={MotionAnimations.upEntering}
-                exiting={MotionAnimations.outExiting}
-                className="items-center"
+                <Text className="text-xl font-balooThin text-secondary">
+                  {deadlineDateDisplayText}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() =>
+                  setActiveSelector((prev) => (prev === "deadlineTime" ? null : "deadlineTime"))
+                }
+                className="bg-background px-4 py-2 rounded-xl"
               >
-                <TimePicker value={deadlineTime || new Date()} onChange={onDeadlineTimeChange} />
-              </Animated.View>
-            )}
+                <Text className="text-xl font-balooThin text-secondary">
+                  {deadlineTimeDisplayText}
+                </Text>
+              </Pressable>
+            </View>
           </Animated.View>
+
+          {activeSelector === "deadlineDate" && (
+            <Animated.View
+              entering={MotionAnimations.upEntering}
+              exiting={MotionAnimations.outExiting}
+            >
+              <SingleDateCalendar
+                defaultStartDate={format(deadlineDate || new Date(), "yyyy-MM-dd")}
+                deadlineDate={deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
+                eventStartDate={startDate ? format(startDate, "yyyy-MM-dd") : undefined}
+                eventEndDate={
+                  isActiveTab === "event" && endDate
+                    ? format(endDate, "yyyy-MM-dd")
+                    : startDate
+                      ? format(startDate, "yyyy-MM-dd")
+                      : undefined
+                }
+                isDeadlinePicker={true}
+                onStartDateChange={onDeadlineDateChange}
+              />
+            </Animated.View>
+          )}
+
+          {activeSelector === "deadlineTime" && (
+            <Animated.View
+              entering={MotionAnimations.upEntering}
+              exiting={MotionAnimations.outExiting}
+              className="items-center"
+            >
+              <TimePicker value={deadlineTime || new Date()} onChange={onDeadlineTimeChange} />
+            </Animated.View>
+          )}
         </Animated.View>
       )}
     </Animated.View>
