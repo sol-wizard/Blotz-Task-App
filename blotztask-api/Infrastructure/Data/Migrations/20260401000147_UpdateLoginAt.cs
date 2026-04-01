@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BlotzTask.Migrations
 {
     /// <inheritdoc />
-    public partial class addLoginTime : Migration
+    public partial class UpdateLoginAt : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,15 +15,14 @@ namespace BlotzTask.Migrations
                 name: "LoginAt",
                 table: "AppUsers",
                 type: "datetime2",
-                nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                nullable: true);
 
             migrationBuilder.UpdateData(
                 table: "AppUsers",
                 keyColumn: "Id",
                 keyValue: new Guid("718ccb8f-ce52-4e51-8cfe-2a44cdca77d1"),
                 column: "LoginAt",
-                value: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                value: new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc));
         }
 
         /// <inheritdoc />
