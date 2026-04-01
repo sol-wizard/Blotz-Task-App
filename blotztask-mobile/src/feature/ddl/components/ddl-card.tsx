@@ -78,22 +78,19 @@ const DdlCard = ({ task }: Props) => {
         <TasksCheckbox checked={task.isDone} onChange={() => {}} />
 
         {/* Vertical label colour bar */}
-        <View
-          className="rounded-full"
-          style={{ width: 3, height: 36, backgroundColor: labelColor }}
-        />
+        <View className="h-10 w-1.5 rounded-full" style={{ backgroundColor: labelColor }} />
 
         {/* Title + date */}
         <View className="flex-1">
-          <Text className="font-baloo text-base text-gray-800" numberOfLines={1}>
+          <Text className="font-baloo text-lg text-gray-800" numberOfLines={1}>
             {task.title}
           </Text>
-          <Text className="font-balooThin text-xs text-gray-400">{endTimeDisplay}</Text>
+          <Text className="font-balooThin text-gray-400">{endTimeDisplay}</Text>
         </View>
 
         {/* Days left */}
         <View className="items-center">
-          <Text className="font-baloo text-3xl text-gray-800 leading-none">{daysLeft}</Text>
+          <Text className="font-baloo text-3xl text-gray-800 leading-none pt-2">{daysLeft}</Text>
           <Text className="font-balooThin text-xs text-gray-400">days</Text>
         </View>
       </View>
