@@ -40,7 +40,7 @@ const SubtaskList = ({ task, progress }: Props) => {
 
   return (
     <Animated.View style={[{ overflow: "hidden" }, subtaskClipStyle]}>
-      <View className="px-5 pb-4" onLayout={onSubtaskContentLayout}>
+      <View onLayout={onSubtaskContentLayout}>
         {task.subtasks?.map((subtask: SubtaskDTO) => (
           <Pressable
             key={subtask.subTaskId}

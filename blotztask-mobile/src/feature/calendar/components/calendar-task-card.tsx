@@ -27,6 +27,7 @@ import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toas
 import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import { analytics } from "@/shared/services/analytics";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
+import SubtaskList from "./subtask-list";
 
 type RightActionsProps = {
   progress: SharedValue<number>;
@@ -163,8 +164,8 @@ const CalendarTaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCar
       friction={2}
       dragOffsetFromLeftEdge={8}
     >
-      <View className="flex-col">
-        <View className="bg-white rounded-2xl px-4 py-3 items-center h-20 justify-center">
+      <View className="flex-col bg-white rounded-2xl px-4 py-3">
+        <View className="items-center justify-center">
           <View className="flex-row items-center" style={{ gap: 12 }}>
             {/* Checkbox */}
             <TasksCheckbox
@@ -250,6 +251,7 @@ const CalendarTaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCar
           </View>
           {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
         </View>
+        {hasSubtasks && <SubtaskList task={task} progress={progress} />}
       </View>
     </ReanimatedSwipeable>
   );
