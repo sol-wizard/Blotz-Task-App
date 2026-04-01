@@ -5,10 +5,15 @@ import { useTranslation } from "react-i18next";
 import { useAllDdl } from "../hooks/useAllDdl";
 import DdlCard from "../components/ddl-card";
 import { DeadlineTaskDTO } from "../models/deadline-task-dto";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
 
 export default function DdlScreen() {
   const { t } = useTranslation("deadline");
   const { ddlTasks, isLoading } = useAllDdl();
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background">
