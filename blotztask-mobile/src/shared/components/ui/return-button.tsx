@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Pressable } from "react-native";
 
-export const ReturnButton = () => {
+export const ReturnButton = ({ className = "" }: { className?: string }) => {
   const router = useRouter();
   return (
     <Pressable
@@ -14,7 +14,7 @@ export const ReturnButton = () => {
         }
       }}
       hitSlop={10}
-      className="w-8 h-8 rounded-full border border-gray-300 items-center justify-center"
+      className={`w-8 h-8 rounded-full border border-gray-300 items-center justify-center ${className}`}
     >
       <MaterialCommunityIcons name="chevron-left" size={22} color="#6B7280" />
     </Pressable>
