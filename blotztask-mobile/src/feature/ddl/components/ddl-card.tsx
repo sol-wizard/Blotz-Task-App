@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { differenceInCalendarDays } from "date-fns";
 import TasksCheckbox from "@/shared/components/ui/task-checkbox";
 import { DeadlineTaskDTO } from "../models/deadline-task-dto";
+import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
 
 type Props = {
   task: DeadlineTaskDTO;
@@ -27,41 +28,52 @@ const DdlCard = ({ task }: Props) => {
       })
     : "—";
 
-  const renderRightActions = () => (
-    <View className="flex-row items-center justify-end pr-4" style={{ gap: 12, width: 120 }}>
-      <Pressable
-        onPress={() => {
-          console.log("Pin task", task.id, "isPinned:", !task.isPinned);
-          swipeRef.current?.close();
-        }}
-        className="rounded-2xl items-center justify-center"
-        style={{ backgroundColor: "#DCF5C7", width: 52, height: 52 }}
-      >
-        <MaterialCommunityIcons name="arrow-up-bold" size={22} color="#5B9E2E" />
-      </Pressable>
+  const renderRightActions = (progress: SharedValue<number>) => {
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ translateX: 120 * (1 - progress.value) }],
+    }));
 
-      <Pressable
-        onPress={() => {
-          console.log("Delete task", task.id);
-          swipeRef.current?.close();
-        }}
-        className="rounded-2xl items-center justify-center"
-        style={{ backgroundColor: "#FCE4E4", width: 52, height: 52 }}
+    return (
+      <Animated.View
+        className="w-52 flex-row items-center justify-end gap-3 pr-4"
+        style={animatedStyle}
       >
-        <MaterialCommunityIcons name="trash-can-outline" size={22} color="#E05C5C" />
-      </Pressable>
-    </View>
-  );
+        <Pressable
+          onPress={() => {
+            console.log("Pin task", task.id);
+            swipeRef.current?.close();
+          }}
+          className="h-20 w-20 items-center justify-center rounded-2xl bg-[#DCF5C7]"
+        >
+          <MaterialCommunityIcons name="arrow-up-bold" size={22} color="#5B9E2E" />
+        </Pressable>
+
+        <Pressable
+          onPress={() => {
+            console.log("Delete task", task.id);
+            swipeRef.current?.close();
+          }}
+          className="h-20 w-20 items-center justify-center rounded-2xl bg-[#FCE4E4]"
+        >
+          <MaterialCommunityIcons name="trash-can-outline" size={22} color="#E05C5C" />
+        </Pressable>
+      </Animated.View>
+    );
+  };
 
   return (
     <ReanimatedSwipeable
       ref={swipeRef}
       renderRightActions={renderRightActions}
-      rightThreshold={32}
+      rightThreshold={12}
       overshootRight={false}
       friction={2}
+      dragOffsetFromLeftEdge={8}
     >
-      <View className="bg-white rounded-2xl px-4 py-3 flex-row items-center" style={{ gap: 12 }}>
+      <View
+        className="bg-white rounded-2xl px-4 py-3 flex-row items-center h-20"
+        style={{ gap: 12 }}
+      >
         {/* Checkbox */}
         <TasksCheckbox checked={task.isDone} onChange={() => {}} />
 
