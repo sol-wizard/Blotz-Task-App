@@ -30,6 +30,7 @@ export default function TaskEditScreen() {
     timeType: selectedTask.timeType,
     notificationId: selectedTask.notificationId,
     alertTime: selectedTask.alertTime,
+    isDeadline: selectedTask.isDeadline,
   };
 
   const handleTaskSubmit = async (formValues: AddTaskItemDTO) => {
@@ -47,7 +48,6 @@ export default function TaskEditScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top", "bottom"]}>
-      
       <View
         style={{
           paddingTop: 8,
@@ -60,7 +60,6 @@ export default function TaskEditScreen() {
       <View style={{ flex: 1 }}>
         <TaskForm mode="edit" dto={taskEditData} onSubmit={handleTaskSubmit} />
       </View>
-
     </SafeAreaView>
   );
 }

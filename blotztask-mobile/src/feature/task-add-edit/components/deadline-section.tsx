@@ -11,12 +11,15 @@ import { ToggleSwitch } from "../../settings/components/toggle-switch";
 import { SingleDateCalendar } from "./single-date-calendar";
 import TimePicker from "./time-picker";
 
+import { SegmentButtonValue } from "../models/segment-button-value";
+
 interface DeadlineSectionProps {
   control: Control<any>;
   getValues: (name: any) => any;
+  isActiveTab: SegmentButtonValue;
 }
 
-export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) => {
+export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSectionProps) => {
   const { t, i18n } = useTranslation("tasks");
   const isChinese = i18n.language === "zh";
   const locale = isChinese ? zhCN : enUS;
@@ -27,10 +30,10 @@ export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) =>
   );
 
   const {
-    field: { value: isDdl, onChange: onIsDdlChange },
+    field: { value: isDeadline, onChange: onIsDeadlineChange },
   } = useController({
     control,
-    name: "isDdl",
+    name: "isDeadline",
   });
 
   const {
@@ -47,6 +50,20 @@ export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) =>
     name: "deadlineTime",
   });
 
+  const {
+    field: { value: startDate },
+  } = useController({
+    control,
+    name: "startDate",
+  });
+
+  const {
+    field: { value: endDate },
+  } = useController({
+    control,
+    name: "endDate",
+  });
+
   const deadlineDateDisplayText = deadlineDate
     ? format(deadlineDate, dateFormat, { locale })
     : t("form.selectDate");
@@ -58,15 +75,15 @@ export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) =>
     <Animated.View layout={MotionAnimations.layout}>
       {/* Deadline Toggle */}
       <Animated.View
-        className={`flex-row justify-between items-center ${isDdl ? "mb-4" : ""}`}
+        className={`flex-row justify-between items-center ${isDeadline ? "mb-4" : ""}`}
         layout={MotionAnimations.layout}
       >
         <Text className="font-baloo text-secondary text-xl mt-1">{t("form.markAsDeadline")}</Text>
         <ToggleSwitch
-          value={isDdl}
+          value={isDeadline}
           onChange={() => {
-            const nextValue = !isDdl;
-            onIsDdlChange(nextValue);
+            const nextValue = !isDeadline;
+            onIsDeadlineChange(nextValue);
 
             // Only sync when turning ON
             if (nextValue) {
@@ -79,7 +96,7 @@ export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) =>
       </Animated.View>
 
       {/* Due Time  */}
-      {isDdl && (
+      {isDeadline && (
         <Animated.View
           entering={MotionAnimations.upEntering}
           exiting={MotionAnimations.outExiting}
@@ -119,6 +136,16 @@ export const DeadlineSection = ({ control, getValues }: DeadlineSectionProps) =>
               >
                 <SingleDateCalendar
                   defaultStartDate={format(deadlineDate || new Date(), "yyyy-MM-dd")}
+                  deadlineDate={deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
+                  eventStartDate={startDate ? format(startDate, "yyyy-MM-dd") : undefined}
+                  eventEndDate={
+                    isActiveTab === "event" && endDate
+                      ? format(endDate, "yyyy-MM-dd")
+                      : startDate
+                      ? format(startDate, "yyyy-MM-dd")
+                      : undefined
+                  }
+                  isDeadlinePicker={true}
                   onStartDateChange={onDeadlineDateChange}
                 />
               </Animated.View>

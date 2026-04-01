@@ -10,5 +10,5 @@ export interface EditTaskItemDTO {
   notificationId?: string | null;
   alertTime?: string;
   dueAt?: string;
-  isDdl?: boolean;
+  isDeadline: boolean;
 }

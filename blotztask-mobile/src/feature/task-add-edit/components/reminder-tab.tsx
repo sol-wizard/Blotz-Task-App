@@ -1,4 +1,4 @@
-import { Control, useController } from "react-hook-form";
+import { Control, useController, UseFormClearErrors, UseFormSetValue } from "react-hook-form";
 import { TaskFormField } from "../models/task-form-schema";
 import { View, Text, Pressable } from "react-native";
 import { format } from "date-fns";
@@ -13,38 +13,40 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 export const ReminderTab = ({
   control,
   setValue,
+  clearErrors,
 }: {
   control: Control<TaskFormField>;
-  setValue: (name: keyof TaskFormField, value: any) => void;
+  setValue: UseFormSetValue<TaskFormField>;
+  clearErrors: UseFormClearErrors<TaskFormField>;
 }) => {
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
   const {
-    field: { value: startDate, onChange: onStartDateChange },
+    field: { value: startDate },
   } = useController({
     control,
     name: "startDate",
   });
 
   const {
-    field: { value: startTime, onChange: onStartTimeChange },
+    field: { value: startTime },
   } = useController({
     control,
     name: "startTime",
   });
 
   const {
-    field: { onChange: onEndDateChange },
+    field: { value: deadlineDate },
   } = useController({
     control,
-    name: "endDate",
+    name: "deadlineDate",
   });
 
   const {
-    field: { onChange: onEndTimeChange },
+    field: { value: isDdl },
   } = useController({
     control,
-    name: "endTime",
+    name: "isDeadline",
   });
 
   const { t, i18n } = useTranslation("tasks");
@@ -81,9 +83,11 @@ export const ReminderTab = ({
           >
             <SingleDateCalendar
               defaultStartDate={format(startDate, "yyyy-MM-dd")}
+              deadlineDate={isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
               onStartDateChange={(nextDate: Date) => {
-                onStartDateChange(nextDate);
-                onEndDateChange(nextDate);
+                setValue("startDate", nextDate, { shouldValidate: false });
+                setValue("endDate", nextDate, { shouldValidate: false });
+                clearErrors(["endDate", "endTime"]);
               }}
             />
           </Animated.View>
@@ -112,8 +116,9 @@ export const ReminderTab = ({
               <TimePicker
                 value={startTime}
                 onChange={(nextTime: Date) => {
-                  onStartTimeChange(nextTime);
-                  onEndTimeChange(nextTime);
+                  setValue("startTime", nextTime, { shouldValidate: false });
+                  setValue("endTime", nextTime, { shouldValidate: false });
+                  clearErrors(["endDate", "endTime"]);
                 }}
               />
             </Animated.View>

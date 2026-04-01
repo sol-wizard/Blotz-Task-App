@@ -7,9 +7,10 @@ param dbAdminUsername string
 @secure()
 param dbAdminPassword string
 
-param dbMaxSizeBytes int = 1073741824 // 1GB
-param dbAutoPauseDelayMinutes int = 60 // set to -1 to disable auto-pause
-param dbMaxVCores int = 1
+param dbMaxSizeBytes int = 1073741824
+param dbSkuName string
+param dbSkuTier string
+param dbSkuCapacity int
 
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: 'sql-${projectName}-${environment}'
@@ -31,15 +32,12 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
     name: 'sqldb-${projectName}-${environment}'
     location: location
     sku: {
-      name: 'GP_S_Gen5_${dbMaxVCores}'
-      tier: 'GeneralPurpose'
-      family: 'Gen5'
-      capacity: dbMaxVCores
+      name: dbSkuName
+      tier: dbSkuTier
+      capacity: dbSkuCapacity
     }
     properties: {
       maxSizeBytes: dbMaxSizeBytes
-      autoPauseDelay: dbAutoPauseDelayMinutes
-      minCapacity: json('0.5')
       requestedBackupStorageRedundancy: 'Local'
     }
   }

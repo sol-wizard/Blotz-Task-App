@@ -1,13 +1,23 @@
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
+import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
+import { analytics } from "@/shared/services/analytics";
 import { Stack } from "expo-router";
-import { usePostHog } from "posthog-react-native";
+import { useAuth0 } from "react-native-auth0";
+import { useEffect } from "react";
 
 export default function ProtectedLayout() {
-  const posthog = usePostHog();
+  const { user } = useAuth0();
+
+  useEffect(() => {
+    if (user?.sub) {
+      analytics.identifyUser(user.sub, { email: user.email, name: user.name });
+    }
+  }, [user?.sub]);
 
   useLanguageInit();
-  useTrackActiveUser5s(posthog);
+  useTrackActiveUser5s();
+  usePushNotificationSetup();
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -66,6 +76,7 @@ export default function ProtectedLayout() {
           fullScreenGestureEnabled: false,
         }}
       />
+      <Stack.Screen name="monthly-calendar" options={{ headerShown: false }} />
     </Stack>
   );
 }

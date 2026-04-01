@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Toast from "react-native-toast-message";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -66,16 +67,21 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const oneHourLater = new Date(now.getTime() + 3600000);
   const initialDueAt = dto?.dueAt ? new Date(dto.dueAt) : null;
 
+  const initialStartDate = dto?.startTime ? new Date(dto.startTime) : now;
+  const initialStartTime = dto?.startTime ? new Date(dto.startTime) : now;
+  const initialEndDate = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
+  const initialEndTime = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
+
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
     description: dto?.description ?? "",
     labelId: dto?.labelId ?? null,
-    startDate: dto?.startTime ? new Date(dto?.startTime) : now,
-    startTime: dto?.startTime ? new Date(dto?.startTime) : now,
-    endDate: dto?.endTime ? new Date(dto?.endTime) : oneHourLater,
-    endTime: dto?.endTime ? new Date(dto?.endTime) : oneHourLater,
+    startDate: initialStartDate,
+    startTime: initialStartTime,
+    endDate: initialTab === "reminder" ? initialStartDate : initialEndDate,
+    endTime: initialTab === "reminder" ? initialStartTime : initialEndTime,
     alert: defaultAlert,
-    isDdl: dto?.isDdl ?? !!initialDueAt,
+    isDeadline: dto?.isDeadline ?? !!initialDueAt,
     deadlineDate: initialDueAt ?? oneHourLater,
     deadlineTime: initialDueAt ?? oneHourLater,
   };
@@ -86,7 +92,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     defaultValues: defaultValues,
   });
 
-  const { handleSubmit, formState, control, setValue, clearErrors, trigger } = form;
+  const { handleSubmit, formState, control, setValue, clearErrors, trigger, watch, getValues } =
+    form;
   const { isSubmitting } = formState;
 
   const [isDdl, startDate, startTime, endDate, endTime, deadlineDate, deadlineTime] =
@@ -147,7 +154,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       alertTime = calculateAlertTime(startTime!, data.alert);
     }
 
-    const deadline = data.isDdl ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
+    const deadline = data.isDeadline ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
 
     const submitTask: AddTaskItemDTO = {
       title: data.title.trim(),
@@ -158,7 +165,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       timeType,
       alertTime: alertTime ? convertToDateTimeOffset(alertTime) : undefined,
       notificationId,
-      isDdl: data.isDdl,
+      isDeadline: data.isDeadline,
       dueAt: deadline ? convertToDateTimeOffset(deadline) : undefined,
     };
 
@@ -169,11 +176,13 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     setIsActiveTab(next);
     clearErrors(["endDate", "endTime"]);
 
-    if (mode === "edit" || next === "reminder") {
-      setValue("startDate", defaultValues.startDate);
-      setValue("startTime", defaultValues.startTime);
-      setValue("endDate", defaultValues.endDate);
-      setValue("endTime", defaultValues.endTime);
+    const startDate = getValues("startDate");
+    const startTime = getValues("startTime");
+
+    if (next === "reminder") {
+      setValue("endDate", startDate, { shouldValidate: false });
+      setValue("endTime", startTime, { shouldValidate: false });
+      clearErrors(["endDate", "endTime"]);
       return;
     }
 
@@ -183,6 +192,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     setValue("startTime", start);
     setValue("endDate", oneHourLater);
     setValue("endTime", oneHourLater);
+    trigger("endTime");
   };
 
   return (
@@ -226,12 +236,14 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
         <FormDivider />
         <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
-        {formState.errors.endTime && (
+        {isActiveTab === "event" && formState.errors.endTime && (
           <Text className="text-red-500 text-sm mb-4 font-baloo">
             {t(formState.errors.endTime.message || "")}
           </Text>
         )}
-        {isActiveTab === "reminder" && <ReminderTab control={control} setValue={setValue} />}
+        {isActiveTab === "reminder" && (
+          <ReminderTab control={control} setValue={setValue} clearErrors={clearErrors} />
+        )}
         {isActiveTab === "event" && (
           <EventTab
             control={control}
