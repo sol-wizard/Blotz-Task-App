@@ -4,7 +4,7 @@ import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { differenceInCalendarDays } from "date-fns";
+import { differenceInCalendarDays, format } from "date-fns";
 import TasksCheckbox from "@/shared/components/ui/task-checkbox";
 import { DeadlineTaskDTO } from "../models/deadline-task-dto";
 import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
@@ -57,13 +57,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
 
   const labelColor = task.label?.color ?? "#D1D1D6";
 
-  const endTimeDisplay = task.endTime
-    ? new Date(task.endTime).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "2-digit",
-      })
-    : "—";
+  const endTimeDisplay = task.endTime ? format(new Date(task.endTime), "dd/MM/yy") : "—";
 
   const renderRightActions = (progress: SharedValue<number>) => {
     return (
