@@ -35,7 +35,7 @@ const DdlCard = ({ task }: Props) => {
 
     return (
       <Animated.View
-        className="w-52 flex-row items-center justify-end gap-3 pr-4"
+        className="w-50 flex-row items-center justify-end gap-3 pl-4"
         style={animatedStyle}
       >
         <Pressable
