@@ -58,7 +58,7 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
                     task.Deadline = new TaskDeadline
                     {
                         TaskItem = task,
-                        DueAt = task.EndTime,
+                        DueAt = command.TaskDetails.DueAt ?? task.EndTime,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow,
                         IsPinned = false
@@ -66,7 +66,7 @@ public class EditTaskCommandHandler(BlotzTaskDbContext db, ILogger<EditTaskComma
                 }
                 else
                 {
-                    task.Deadline.DueAt = task.EndTime;
+                    task.Deadline.DueAt = command.TaskDetails.DueAt ?? task.EndTime;
                     task.Deadline.UpdatedAt = DateTime.UtcNow;
                 }
                 break;
@@ -100,4 +100,5 @@ public class EditTaskItemDto
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
     public bool? IsDeadline { get; set; }
+    public DateTimeOffset? DueAt { get; set; }
 }

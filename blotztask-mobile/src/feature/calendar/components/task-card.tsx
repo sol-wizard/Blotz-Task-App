@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Pressable, Text, ActivityIndicator, useWindowDimensions } from "react-native";
-import TasksCheckbox from "@/feature/task-details/components/task-checkbox";
+import TasksCheckbox from "@/shared/components/ui/task-checkbox";
 import Animated, {
   useAnimatedStyle,
   useDerivedValue,
@@ -77,7 +77,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     const spacerWidth = 8; // w-2
 
     // Structure: [Card] [Spacer] ([Breakdown] [Spacer]) [Delete]
-    const totalWidth = spacerWidth + ( deleteWidth / 2 ) + breakdownWidth + spacerWidth;
+    const totalWidth = spacerWidth + deleteWidth / 2 + breakdownWidth + spacerWidth;
 
     return {
       actionWidth: totalWidth,
@@ -107,10 +107,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
       result = await breakDownTask(task.id!);
 
       if (!result || result.isSuccess === false) {
-        showBreakdownErrorToast(
-          t("details.failedToRefreshSubtasks"),
-          result?.errorMessage,
-        );
+        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), result?.errorMessage);
         return;
       }
 
