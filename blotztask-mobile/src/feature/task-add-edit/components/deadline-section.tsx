@@ -1,13 +1,13 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { View, Text, Pressable, TouchableOpacity } from "react-native";
+import { View, Text, Pressable } from "react-native";
+import Toast from "react-native-toast-message";
 import { Control, useController } from "react-hook-form";
 import { format } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { hasDeadlineWarning } from "../models/task-form-schema";
-import Animated, { SlideInRight, SlideOutRight } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { ToggleSwitch } from "../../settings/components/toggle-switch";
 import { SingleDateCalendar } from "./single-date-calendar";
@@ -66,21 +66,13 @@ export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSec
     name: "endDate",
   });
 
-  const [showWarning, setShowWarning] = useState(false);
-
   useEffect(() => {
-    if (!isDeadline) { setShowWarning(false); return; }
+    if (!isDeadline) return;
     const formValues = getValues();
-    setShowWarning(
-      hasDeadlineWarning({ ...formValues, deadlineDate, deadlineTime }, isActiveTab === "reminder"),
-    );
+    if (hasDeadlineWarning({ ...formValues })) {
+      Toast.show({ type: "warning", text1: t("form.invalidDeadlineRange"), visibilityTime: 3000 });
+    }
   }, [deadlineDate, deadlineTime]);
-
-  useEffect(() => {
-    if (!showWarning) return;
-    const timer = setTimeout(() => setShowWarning(false), 3000);
-    return () => clearTimeout(timer);
-  }, [showWarning]);
 
   const deadlineDateDisplayText = deadlineDate
     ? format(deadlineDate, dateFormat, { locale })
@@ -146,25 +138,6 @@ export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSec
                 </Pressable>
               </View>
             </Animated.View>
-
-            {showWarning && (
-              <Animated.View
-                entering={SlideInRight}
-                exiting={SlideOutRight}
-                style={{ backgroundColor: "#FFF2E1" }}
-                className="flex-row items-center rounded-xl px-3 py-2 mt-2"
-              >
-                <Text style={{ color: "#FFAA4A" }} className="flex-1 font-baloo text-sm">
-                  {t("form.invalidDeadlineRange")}
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setShowWarning(false)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <MaterialCommunityIcons name="close" size={16} color="#FFAA4A" />
-                </TouchableOpacity>
-              </Animated.View>
-            )}
 
             {activeSelector === "deadlineDate" && (
               <Animated.View

@@ -19,4 +19,20 @@ export const toastConfig = {
       </TouchableOpacity>
     </View>
   ),
+  warning: (props: any) => (
+    <View
+      style={{ elevation: 0, backgroundColor: "#FFF2E1" }}
+      className="flex-row items-center rounded-xl px-3 py-2 w-96 shadow-none"
+    >
+      <Text style={{ color: "#FFAA4A" }} className="flex-1 font-baloo text-sm">
+        {props.text1}
+      </Text>
+      <TouchableOpacity
+        onPress={() => Toast.hide()}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <MaterialCommunityIcons name="close" size={16} color="#FFAA4A" />
+      </TouchableOpacity>
+    </View>
+  ),
 };
