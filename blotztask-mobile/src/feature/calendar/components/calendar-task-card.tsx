@@ -197,11 +197,11 @@ const CalendarTaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCar
 
             {/* Title + date */}
             <Pressable
-              className="flex-1"
+              className="flex-1 "
               onPress={() => navigateToTaskDetails(task)}
               disabled={isLoading}
             >
-              <View className="flex-row">
+              <View className="flex-row items-center" style={{ gap: 4 }}>
                 <Text
                   className={`text-xl font-semibold font-inter ${
                     task.isDone ? "text-neutral-400 line-through" : "text-[#444964]"
