@@ -11,6 +11,7 @@ import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import CalendarTaskCard from "./calendar-task-card";
 
 export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
@@ -32,7 +33,7 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
     <View className="shadow shadow-gray-300">
-      <TaskCard
+      <CalendarTaskCard
         task={item}
         deleteTask={deleteTask}
         isDeleting={isDeleting}
@@ -62,6 +63,7 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
         <FlatList
           className="flex-1"
           data={tasksOfSelectedStatus}
+          contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12 }}
           renderItem={renderTask}
           keyExtractor={(task) =>
             task.id != null ? `task-${task.id}` : `virtual-${task.recurringTaskId}`
