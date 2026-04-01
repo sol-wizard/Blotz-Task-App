@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
-import Toast from "react-native-toast-message";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -92,13 +91,13 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     defaultValues: defaultValues,
   });
 
-  const { handleSubmit, formState, control, setValue, clearErrors, trigger, watch, getValues } =
+  const { handleSubmit, formState, control, setValue, clearErrors, trigger, getValues } =
     form;
   const { isSubmitting } = formState;
 
-  const [isDdl, startDate, startTime, endDate, endTime, deadlineDate, deadlineTime] =
+  const [isDeadline, startDate, startTime, endDate, endTime, deadlineDate, deadlineTime] =
     form.watch([
-      "isDdl",
+      "isDeadline",
       "startDate",
       "startTime",
       "endDate",
@@ -114,7 +113,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     ? currentEventEnd && currentDeadline && isAfter(currentEventEnd, currentDeadline)
     : currentReminderStart && currentDeadline && isAfter(currentReminderStart, currentDeadline);
 
-  const isEndTimeAfterDeadline = !!(isDdl && isInvalidTime);
+  const isEndTimeAfterDeadline = !!(isDeadline && isInvalidTime);
 
   const [dismissedWarning, setDismissedWarning] = useState(false);
 
@@ -122,7 +121,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     if (isEndTimeAfterDeadline) {
       setDismissedWarning(false);
     }
-  }, [currentReminderStart?.getTime(), currentEventEnd?.getTime(), currentDeadline?.getTime(), isDdl, isActiveTab]);
+  }, [currentReminderStart?.getTime(), currentEventEnd?.getTime(), currentDeadline?.getTime(), isDeadline, isActiveTab]);
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -259,7 +258,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             isEvent={isActiveTab === "event"}
             onClose={() => setDismissedWarning(true)} 
           />
-          <DeadlineSection control={control} getValues={form.getValues} />
+          <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
         </View>
         <FormDivider />
 
