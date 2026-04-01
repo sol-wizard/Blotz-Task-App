@@ -57,7 +57,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
 
   const labelColor = task.label?.color ?? "#D1D1D6";
 
-  const endTimeDisplay = task.endTime ? format(new Date(task.endTime), "dd/MM/yy") : "—";
+  const endTimeDisplay = task.dueAt ? format(new Date(task.dueAt), "dd/MM/yy") : "—";
 
   const renderRightActions = (progress: SharedValue<number>) => {
     return (
@@ -79,7 +79,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
       dragOffsetFromLeftEdge={8}
     >
       <View
-        className="bg-white rounded-2xl px-4 py-3 flex-row items-center h-20"
+        className="bg-white rounded-2xl px-4 py-3 flex-row items-center h-20 justify-center"
         style={{ gap: 12 }}
       >
         {/* Checkbox */}
@@ -97,9 +97,9 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
         </View>
 
         {/* Days left */}
-        <View className="items-center">
-          <Text className="font-baloo text-3xl text-gray-800 leading-none pt-2">{daysLeft}</Text>
-          <Text className="font-balooThin text-xs text-gray-400">{t("days")}</Text>
+        <View className="flex-row items-center justify-center pt-3">
+          <Text className="font-baloo text-4xl text-secondary leading-none pt-2">{daysLeft}</Text>
+          <Text className="ml-1 font-balooThin text-xs text-gray-400">{t("days")}</Text>
         </View>
       </View>
     </ReanimatedSwipeable>
