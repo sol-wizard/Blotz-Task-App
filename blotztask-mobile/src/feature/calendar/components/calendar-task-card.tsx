@@ -3,16 +3,11 @@ import { View, Text, Pressable } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
-import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
 import TasksCheckbox from "@/shared/components/ui/task-checkbox";
 
-import Animated, {
-  SharedValue,
-  useAnimatedStyle,
-  useDerivedValue,
-  withTiming,
-} from "react-native-reanimated";
+import { SharedValue, useDerivedValue, withTiming } from "react-native-reanimated";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { queryClient } from "@/shared/util/queryClient";
 import { router } from "expo-router";
