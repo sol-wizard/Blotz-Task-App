@@ -47,16 +47,9 @@ export const useSubtaskMutations = () => {
         });
       }
     },
-    onSuccess: async (result, taskId) => {
-      if (!result?.isSuccess || !result.subtasks?.length) {
-        return;
-      }
-
+    onSuccess: async (_, taskId) => {
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(taskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
-    },
-    onError: (error) => {
-      console.error("Failed to break down and replace subtasks:", error);
     },
   });
 
