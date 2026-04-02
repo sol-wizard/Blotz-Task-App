@@ -13,7 +13,6 @@ import Animated, {
   useDerivedValue,
   withTiming,
 } from "react-native-reanimated";
-import { useTranslation } from "react-i18next";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { queryClient } from "@/shared/util/queryClient";
 import { router } from "expo-router";
@@ -23,7 +22,6 @@ import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMuta
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { formatDateRange } from "../util/format-date-range";
 import { AnimatedChevron } from "@/shared/components/ui/chevron";
-import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
@@ -71,13 +69,7 @@ const CalendarTaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCar
 
     try {
       const result = await breakDownAndReplaceSubtasks(task.id);
-
-      if (!result || result.isSuccess === false) {
-        return;
-      }
-
-      const subtasks = result.subtasks ?? [];
-      if (subtasks.length > 0) {
+      if (result?.subtasks?.length) {
         setIsExpanded(true);
         swipeRef.current?.close();
       }
