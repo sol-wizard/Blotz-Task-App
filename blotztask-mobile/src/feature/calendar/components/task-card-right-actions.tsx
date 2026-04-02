@@ -11,8 +11,7 @@ type RightActionsProps = {
   handleBreakdown: () => void | Promise<void>;
   isLoading: boolean;
   isDeleting: boolean;
-  isBreakingDown: boolean;
-  isReplacingSubtasks: boolean;
+  isRefreshingSubtasks: boolean;
   onClose: () => void;
 };
 export const TaskCardRightActions = ({
@@ -22,8 +21,7 @@ export const TaskCardRightActions = ({
   handleBreakdown,
   isLoading,
   isDeleting,
-  isBreakingDown,
-  isReplacingSubtasks,
+  isRefreshingSubtasks,
   onClose,
 }: RightActionsProps) => {
   const animatedStyle = useAnimatedStyle(() => ({
@@ -39,10 +37,10 @@ export const TaskCardRightActions = ({
         onPress={handleBreakdown}
         disabled={isLoading}
         className={`h-20 w-32 rounded-3xl bg-blue-500/10 items-center justify-center ${
-          isBreakingDown || isReplacingSubtasks ? "opacity-50" : ""
+          isRefreshingSubtasks ? "opacity-50" : ""
         }`}
       >
-        {isBreakingDown || isReplacingSubtasks ? (
+        {isRefreshingSubtasks ? (
           <ActivityIndicator size="small" color="#3b82f6" />
         ) : (
           <Text className="text-info font-inter font-semibold text-lg">Breakdown</Text>

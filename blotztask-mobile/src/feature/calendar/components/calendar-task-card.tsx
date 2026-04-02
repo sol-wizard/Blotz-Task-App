@@ -24,8 +24,6 @@ import { cancelNotification } from "@/shared/util/cancel-notification";
 import { formatDateRange } from "../util/format-date-range";
 import { AnimatedChevron } from "@/shared/components/ui/chevron";
 import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
-import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
-import { analytics } from "@/shared/services/analytics";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
@@ -47,13 +45,11 @@ const CalendarTaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCar
   const isVirtualTask = task.id == null;
   const isRecurringTask = task.recurringTaskId != null;
 
-  const { t } = useTranslation("tasks");
   const { toggleTask, isToggling } = useTaskMutations();
   const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
-  const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
-    useSubtaskMutations();
+  const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
   const isLoading =
-    isToggling || isDeleting || isBreakingDown || isReplacingSubtasks || isCompletingOccurrence;
+    isToggling || isDeleting || isBreakingDownAndReplacingSubtasks || isCompletingOccurrence;
 
   const navigateToTaskDetails = (t: TaskDetailDTO) => {
     if (t.id == null) return;
@@ -73,51 +69,33 @@ const CalendarTaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCar
   const handleBreakdown = async () => {
     if (isLoading || task.id == null) return;
 
-    const startTime = Date.now();
-    let result: Awaited<ReturnType<typeof breakDownTask>> | undefined;
-
     try {
-      result = await breakDownTask(task.id!);
+      const result = await breakDownAndReplaceSubtasks(task.id);
 
       if (!result || result.isSuccess === false) {
-        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), result?.errorMessage);
         return;
       }
 
       const subtasks = result.subtasks ?? [];
       if (subtasks.length > 0) {
-        await replaceSubtasks({
-          taskId: task.id,
-          subtasks: subtasks.map((subtask: AddSubtaskDTO) => ({ ...subtask })),
-        });
         setIsExpanded(true);
+        swipeRef.current?.close();
       }
     } catch (e) {
       console.error("Breakdown error:", e);
-      showBreakdownErrorToast(
-        t("details.failedToRefreshSubtasks"),
-        e instanceof Error ? e.message : undefined,
-      );
-    } finally {
-      analytics.trackTaskBreakdown({
-        success: result?.isSuccess ?? false,
-        durationMs: Date.now() - startTime,
-        generatedSubtaskCount: result?.subtasks?.length ?? 0,
-      });
     }
   };
 
-  const renderRightActions = (progress: SharedValue<number>) => {
+  const renderRightActions = (rightActionsProgress: SharedValue<number>) => {
     return (
       <TaskCardRightActions
-        progress={progress}
+        progress={rightActionsProgress}
         task={task}
         deleteTask={deleteTask}
         handleBreakdown={handleBreakdown}
         isLoading={isLoading}
         isDeleting={isDeleting}
-        isBreakingDown={isBreakingDown}
-        isReplacingSubtasks={isReplacingSubtasks}
+        isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
         onClose={() => swipeRef.current?.close()}
       />
     );

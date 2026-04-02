@@ -1,5 +1,5 @@
 import {
-  replaceSubtasks,
+  replaceSubtasks as replaceSubtasksService,
   createBreakDownSubtasks,
   deleteSubtask,
   updateSubtask,
@@ -8,9 +8,11 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { subtaskKeys, taskKeys } from "@/shared/constants/query-key-factory";
 import { BreakdownResultDTO } from "../models/breakdown-result-dto";
+import { analytics } from "@/shared/services/analytics";
 
 export const useSubtaskMutations = () => {
   const queryClient = useQueryClient();
+
   const breakdownMutation = useMutation<BreakdownResultDTO | undefined, void, number>({
     mutationFn: createBreakDownSubtasks,
     onError: (error) => {
@@ -18,18 +20,53 @@ export const useSubtaskMutations = () => {
     },
   });
 
-  const replaceSubtasksMutation = useMutation({
-    mutationFn: replaceSubtasks,
-    onSuccess: async (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.taskId) });
+  const breakDownAndReplaceSubtasksMutation = useMutation<
+    BreakdownResultDTO | undefined,
+    Error,
+    number
+  >({
+    mutationFn: async (taskId: number) => {
+      const startTime = Date.now();
+      let result: BreakdownResultDTO | undefined;
+
+      try {
+        result = await createBreakDownSubtasks(taskId);
+
+        if (!result || result.isSuccess === false) {
+          return result;
+        }
+
+        const subtasks = result.subtasks ?? [];
+        if (subtasks.length > 0) {
+          await replaceSubtasksService({
+            taskId,
+            subtasks: subtasks.map((subtask) => ({ ...subtask })),
+          });
+        }
+
+        return result;
+      } finally {
+        analytics.trackTaskBreakdown({
+          success: result?.isSuccess ?? false,
+          durationMs: Date.now() - startTime,
+          generatedSubtaskCount: result?.subtasks?.length ?? 0,
+        });
+      }
+    },
+    onSuccess: async (result, taskId) => {
+      if (!result || result.isSuccess === false || (result.subtasks?.length ?? 0) === 0) {
+        return;
+      }
+
+      queryClient.invalidateQueries({ queryKey: subtaskKeys.all(taskId) });
       await queryClient.refetchQueries({
-        queryKey: subtaskKeys.all(variables.taskId),
+        queryKey: subtaskKeys.all(taskId),
         exact: true,
       });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
     onError: (error) => {
-      console.error("Failed to add subtasks:", error);
+      console.error("Failed to break down and replace subtasks:", error);
     },
   });
 
@@ -74,9 +111,8 @@ export const useSubtaskMutations = () => {
     breakDownTask: breakdownMutation.mutateAsync,
     isBreakingDown: breakdownMutation.isPending,
 
-    // Add/Replace subtasks
-    replaceSubtasks: replaceSubtasksMutation.mutateAsync,
-    isReplacingSubtasks: replaceSubtasksMutation.isPending,
+    breakDownAndReplaceSubtasks: breakDownAndReplaceSubtasksMutation.mutateAsync,
+    isBreakingDownAndReplacingSubtasks: breakDownAndReplaceSubtasksMutation.isPending,
 
     // Delete subtask
     deleteSubtask: deleteSubtaskMutation.mutateAsync,

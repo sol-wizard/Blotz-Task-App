@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, View, Text, Pressable } from "react-native";
 import { TaskStatusRow } from "@/shared/components/ui/task-status-row";
-import TaskCard from "@/feature/calendar/components/task-card";
+
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
 import { getAllTasks } from "@/shared/services/task-service";
 import { TaskStatusType } from "@/feature/calendar/models/task-status-type";
@@ -12,6 +12,7 @@ import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { ReturnButton } from "@/shared/components/ui/return-button";
 import { SafeAreaView } from "react-native-safe-area-context";
+import CalendarTaskCard from "@/feature/calendar/components/calendar-task-card";
 
 export default function SettingsAllTasksScreen() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
@@ -42,7 +43,7 @@ export default function SettingsAllTasksScreen() {
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
     <View className="shadow shadow-gray-300">
-      <TaskCard task={item} deleteTask={deleteTask} isDeleting={isDeleting} />
+      <CalendarTaskCard task={item} deleteTask={deleteTask} isDeleting={isDeleting} />
     </View>
   );
 
