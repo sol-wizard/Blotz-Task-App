@@ -19,7 +19,7 @@ export function useAiTaskGenerator({
     if (!connection) throw new Error("Cannot transcribe: Not connected.");
 
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
-    const binary = new Uint8Array(arrayBuffer);
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
     return new Promise((resolve, reject) => {
       const handler = (text: string) => {
@@ -27,12 +27,10 @@ export function useAiTaskGenerator({
         resolve(text);
       };
       connection.on("ReceiveTranscription", handler);
-      signalRService
-        .invoke(connection, "TranscribeAudio", binary)
-        .catch((error: unknown) => {
-          connection.off("ReceiveTranscription", handler);
-          reject(error);
-        });
+      signalRService.invoke(connection, "TranscribeAudio", base64).catch((error: unknown) => {
+        connection.off("ReceiveTranscription", handler);
+        reject(error);
+      });
     });
   };
 
