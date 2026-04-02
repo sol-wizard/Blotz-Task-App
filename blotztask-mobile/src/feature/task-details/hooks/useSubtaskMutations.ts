@@ -31,16 +31,10 @@ export const useSubtaskMutations = () => {
 
       try {
         result = await createBreakDownSubtasks(taskId);
-
-        if (!result || result.isSuccess === false) {
-          return result;
-        }
-
-        const subtasks = result.subtasks ?? [];
-        if (subtasks.length > 0) {
+        if (result?.isSuccess && result.subtasks?.length) {
           await replaceSubtasksService({
             taskId,
-            subtasks: subtasks.map((subtask) => ({ ...subtask })),
+            subtasks: result.subtasks.map((subtask) => ({ ...subtask })),
           });
         }
 
@@ -54,15 +48,12 @@ export const useSubtaskMutations = () => {
       }
     },
     onSuccess: async (result, taskId) => {
-      if (!result || result.isSuccess === false || (result.subtasks?.length ?? 0) === 0) {
+      if (!result?.isSuccess || !result.subtasks?.length) {
         return;
       }
 
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(taskId) });
-      await queryClient.refetchQueries({
-        queryKey: subtaskKeys.all(taskId),
-        exact: true,
-      });
+
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
     onError: (error) => {
