@@ -28,7 +28,7 @@ interface TaskCardProps {
   selectedDay?: Date;
 }
 
-const CalendarTaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) => {
+const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
@@ -199,4 +199,4 @@ const CalendarTaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCar
   );
 };
 
-export default CalendarTaskCard;
+export default TaskCard;

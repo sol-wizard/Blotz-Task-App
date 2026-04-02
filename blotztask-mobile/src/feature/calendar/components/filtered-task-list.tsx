@@ -2,7 +2,6 @@ import { FlatList, View } from "react-native";
 import { TaskStatusRow } from "../../../shared/components/ui/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import TaskCard from "./task-card";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useState } from "react";
 import { TaskStatusType } from "../models/task-status-type";
@@ -11,7 +10,7 @@ import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
-import CalendarTaskCard from "./calendar-task-card";
+import TaskCard from "./task-card";
 
 export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
@@ -33,7 +32,7 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
     <View className="shadow shadow-gray-300">
-      <CalendarTaskCard
+      <TaskCard
         task={item}
         deleteTask={deleteTask}
         isDeleting={isDeleting}

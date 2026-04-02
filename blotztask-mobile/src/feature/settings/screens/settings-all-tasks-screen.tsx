@@ -12,7 +12,7 @@ import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { ReturnButton } from "@/shared/components/ui/return-button";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CalendarTaskCard from "@/feature/calendar/components/calendar-task-card";
+import TaskCard from "@/feature/calendar/components/task-card";
 
 export default function SettingsAllTasksScreen() {
   const [tasks, setTasks] = useState<TaskDetailDTO[]>([]);
@@ -43,7 +43,7 @@ export default function SettingsAllTasksScreen() {
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
     <View className="shadow shadow-gray-300">
-      <CalendarTaskCard task={item} deleteTask={deleteTask} isDeleting={isDeleting} />
+      <TaskCard task={item} deleteTask={deleteTask} isDeleting={isDeleting} />
     </View>
   );
 
