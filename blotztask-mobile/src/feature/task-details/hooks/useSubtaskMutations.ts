@@ -53,7 +53,6 @@ export const useSubtaskMutations = () => {
       }
 
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(taskId) });
-
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
     onError: (error) => {
