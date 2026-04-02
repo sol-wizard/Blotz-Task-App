@@ -19,7 +19,12 @@ export function useAiTaskGenerator({
     if (!connection) throw new Error("Cannot transcribe: Not connected.");
 
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
 
     return new Promise((resolve, reject) => {
       const handler = (text: string) => {
