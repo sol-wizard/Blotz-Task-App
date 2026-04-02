@@ -86,6 +86,7 @@ export default function SettingsAllTasksScreen() {
           data={tasksOfSelectedStatus}
           renderItem={renderTask}
           keyExtractor={(task) => task.id.toString()}
+          contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12 }}
         />
       ) : (
         <TaskListPlaceholder selectedStatus={selectedStatus} />
