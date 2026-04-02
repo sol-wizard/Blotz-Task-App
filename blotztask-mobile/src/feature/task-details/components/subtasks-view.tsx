@@ -4,12 +4,9 @@ import { useTranslation } from "react-i18next";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
-import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import SubtasksEditor from "./subtasks-editor";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { analytics } from "@/shared/services/analytics";
 import { LABEL_COLOR_PALETTE_BY_ID } from "@/shared/util/label-colors";
-import { showBreakdownErrorToast } from "@/shared/util/show-breakdown-error-toast";
 
 type SubtaskViewProps = {
   parentTask: TaskDetailDTO;
@@ -17,8 +14,7 @@ type SubtaskViewProps = {
 
 const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const { t } = useTranslation("tasks");
-  const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
-    useSubtaskMutations();
+  const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
   const { data: fetchedSubtasks, isLoading: isLoadingSubtasks } = useSubtasksByParentId(
     parentTask.id,
   );
@@ -27,39 +23,12 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const hasSubtasks = displaySubtasks.length > 0;
 
   const handleBreakDown = async () => {
-    if (isBreakingDown || isReplacingSubtasks || parentTask.id == null) return;
+    if (isBreakingDownAndReplacingSubtasks || parentTask.id == null) return;
 
-    const startTime = Date.now();
-    let result: Awaited<ReturnType<typeof breakDownTask>> | undefined;
-
-    try {
-      result = await breakDownTask(parentTask.id!);
-
-      if (!result || result.isSuccess === false) {
-        showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), result?.errorMessage);
-        return;
-      }
-
-      const subtasks = result.subtasks ?? [];
-      if (subtasks.length > 0) {
-        await replaceSubtasks({
-          taskId: parentTask.id,
-          subtasks: subtasks.map((subtask: AddSubtaskDTO) => ({ ...subtask })),
-        });
-      }
-    } catch (e) {
-      console.error("Subtask error:", e);
-      showBreakdownErrorToast(t("details.failedToRefreshSubtasks"), e instanceof Error ? e.message : undefined);
-    } finally {
-      analytics.trackTaskBreakdown({
-        success: result?.isSuccess ?? false,
-        durationMs: Date.now() - startTime,
-        generatedSubtaskCount: result?.subtasks?.length ?? 0,
-      });
-    }
+    return await breakDownAndReplaceSubtasks(parentTask.id);
   };
 
-  const isLoading = isBreakingDown || isReplacingSubtasks || isLoadingSubtasks;
+  const isLoading = isBreakingDownAndReplacingSubtasks || isLoadingSubtasks;
 
   const fallbackBg = "#EBF0FE";
   const labelId = parentTask.label?.labelId;
@@ -83,8 +52,7 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
       <SubtasksEditor
         parentTask={parentTask}
         onRefreshSubtasks={handleBreakDown}
-        isBreakingDown={isBreakingDown}
-        isReplacingSubtasks={isReplacingSubtasks}
+        isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
       />
     );
   }

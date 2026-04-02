@@ -2,7 +2,6 @@ import { FlatList, View } from "react-native";
 import { TaskStatusRow } from "../../../shared/components/ui/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import TaskCard from "./task-card";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useState } from "react";
 import { TaskStatusType } from "../models/task-status-type";
@@ -11,6 +10,7 @@ import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import TaskCard from "./task-card";
 
 export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
@@ -62,6 +62,7 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
         <FlatList
           className="flex-1"
           data={tasksOfSelectedStatus}
+          contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12 }}
           renderItem={renderTask}
           keyExtractor={(task) =>
             task.id != null ? `task-${task.id}` : `virtual-${task.recurringTaskId}`

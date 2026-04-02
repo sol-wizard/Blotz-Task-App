@@ -9,7 +9,7 @@ export const formatDateRange = ({
   endTime: string;
   selectedDay?: Date;
 }) => {
-  const formatToken = "dd/MM/yyyy";
+  const formatToken = "dd/MM/yy";
   const selectedDate = selectedDay ?? new Date();
 
   if (startTime === endTime) {

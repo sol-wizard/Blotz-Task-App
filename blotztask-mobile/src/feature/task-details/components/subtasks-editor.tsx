@@ -8,20 +8,15 @@ import { useSubtasksByParentId } from "@/feature/task-details/hooks/useSubtasksB
 import { DraggableSubtaskList } from "@/feature/task-details/components/draggable-subtask-list";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import Toast from "react-native-toast-message";
+import { BreakdownResultDTO } from "../models/breakdown-result-dto";
 
 type SubtasksEditorProps = {
   parentTask: TaskDetailDTO;
-  onRefreshSubtasks: () => Promise<void>;
-  isBreakingDown: boolean;
-  isReplacingSubtasks: boolean;
+  onRefreshSubtasks: () => Promise<BreakdownResultDTO | undefined>;
+  isRefreshingSubtasks: boolean;
 };
 
-const SubtasksEditor = ({
-  parentTask,
-  onRefreshSubtasks,
-  isBreakingDown,
-  isReplacingSubtasks,
-}: SubtasksEditorProps) => {
+const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }: SubtasksEditorProps) => {
   const { t } = useTranslation(["tasks", "common"]);
   const { data: fetchedSubtasks, isLoading } = useSubtasksByParentId(parentTask.id);
 
@@ -54,7 +49,7 @@ const SubtasksEditor = ({
     }
   };
 
-  if (isLoading || isBreakingDown || isReplacingSubtasks || isDeletingSubtask) {
+  if (isLoading || isRefreshingSubtasks || isDeletingSubtask) {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-base font-baloo text-primary">

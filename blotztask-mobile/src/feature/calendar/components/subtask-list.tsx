@@ -23,8 +23,12 @@ const SubtaskList = ({ task, progress }: Props) => {
   const { toggleSubtaskStatus, isTogglingSubtaskStatus } = useSubtaskMutations();
 
   const subtaskClipStyle = useAnimatedStyle(() => ({
-    height: interpolate(progress.value, [0, 1], [0, contentHeight.value], Extrapolation.CLAMP),
+    height:
+      contentHeight.value === 0
+        ? undefined
+        : interpolate(progress.value, [0, 1], [0, contentHeight.value], Extrapolation.CLAMP),
     opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
+    overflow: "hidden",
   }));
 
   const handleToggleSubtask = async (subtaskId: number) => {
@@ -38,41 +42,46 @@ const SubtaskList = ({ task, progress }: Props) => {
     }
   };
 
-  return (
-    <Animated.View style={[{ overflow: "hidden" }, subtaskClipStyle]}>
-      <View className="px-5 pb-4" onLayout={onSubtaskContentLayout}>
-        {task.subtasks?.map((subtask: SubtaskDTO) => (
-          <Pressable
-            key={subtask.subTaskId}
-            onPress={() => handleToggleSubtask(subtask.subTaskId)}
-            disabled={isTogglingSubtaskStatus}
-            className={`flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
-          >
-            <TasksCheckbox
-              checked={subtask.isDone}
-              disabled={isTogglingSubtaskStatus}
-              size={20}
-              className="mr-3 border"
-              onChange={() => handleToggleSubtask(subtask.subTaskId)}
-            />
-            <Text
-              className={`flex-1 text-base font-inner ${
-                subtask.isDone ? "text-gray-400 line-through opacity-60" : "text-gray-700"
-              }`}
-              numberOfLines={1}
-            >
-              {subtask.title}
-            </Text>
+  const subtaskItems = task.subtasks?.map((subtask: SubtaskDTO) => (
+    <Pressable
+      key={subtask.subTaskId}
+      onPress={() => handleToggleSubtask(subtask.subTaskId)}
+      disabled={isTogglingSubtaskStatus}
+      className={`flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
+    >
+      <TasksCheckbox
+        checked={subtask.isDone}
+        disabled={isTogglingSubtaskStatus}
+        size={20}
+        className="mr-3 border"
+        onChange={() => handleToggleSubtask(subtask.subTaskId)}
+      />
+      <Text
+        className={`flex-1 text-base font-inner ${
+          subtask.isDone ? "text-gray-400 line-through opacity-60" : "text-gray-700"
+        }`}
+        numberOfLines={1}
+      >
+        {subtask.title}
+      </Text>
+      {subtask.duration && (
+        <Text className="text-sm text-gray-400 font-inner ml-2">
+          {convertDurationToText(subtask.duration)}
+        </Text>
+      )}
+    </Pressable>
+  ));
 
-            {subtask.duration && (
-              <Text className="text-sm text-gray-400 font-inner ml-2">
-                {convertDurationToText(subtask.duration)}
-              </Text>
-            )}
-          </Pressable>
-        ))}
+  return (
+    <View>
+      <View
+        style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}
+        onLayout={onSubtaskContentLayout}
+      >
+        {subtaskItems}
       </View>
-    </Animated.View>
+      <Animated.View style={subtaskClipStyle}>{subtaskItems}</Animated.View>
+    </View>
   );
 };
 export default SubtaskList;
