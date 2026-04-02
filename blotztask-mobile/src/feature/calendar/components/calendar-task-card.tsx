@@ -28,7 +28,7 @@ import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import { analytics } from "@/shared/services/analytics";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
-import { RightActions } from "./task-card-right-actions";
+import { TaskCardRightActions } from "./task-card-right-actions";
 
 interface TaskCardProps {
   task: TaskDetailDTO;
@@ -109,9 +109,15 @@ const CalendarTaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCar
 
   const renderRightActions = (progress: SharedValue<number>) => {
     return (
-      <RightActions
+      <TaskCardRightActions
         progress={progress}
-        taskId={task.id}
+        task={task}
+        deleteTask={deleteTask}
+        handleBreakdown={handleBreakdown}
+        isLoading={isLoading}
+        isDeleting={isDeleting}
+        isBreakingDown={isBreakingDown}
+        isReplacingSubtasks={isReplacingSubtasks}
         onClose={() => swipeRef.current?.close()}
       />
     );
