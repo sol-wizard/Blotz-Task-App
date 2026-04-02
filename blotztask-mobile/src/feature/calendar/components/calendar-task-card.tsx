@@ -73,17 +73,26 @@ const CalendarTaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCar
     }
   };
 
+  const handleDelete = async () => {
+    if (isLoading || task.id == null) return;
+
+    await deleteTask(task);
+
+    if (task.alertTime && new Date(task.alertTime) > new Date()) {
+      await cancelNotification({ notificationId: task.notificationId });
+    }
+
+    swipeRef.current?.close();
+  };
+
   const renderRightActions = (rightActionsProgress: SharedValue<number>) => {
     return (
       <TaskCardRightActions
         progress={rightActionsProgress}
-        task={task}
-        deleteTask={deleteTask}
-        handleBreakdown={handleBreakdown}
-        isLoading={isLoading}
+        onBreakdown={handleBreakdown}
+        onDelete={handleDelete}
         isDeleting={isDeleting}
         isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
-        onClose={() => swipeRef.current?.close()}
       />
     );
   };
