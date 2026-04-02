@@ -1,11 +1,13 @@
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
+using BlotzTask.Modules.SpeechToText.Services;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
 using BlotzTask.Shared.Store;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
@@ -17,6 +19,7 @@ public class AiTaskGenerateChatHub : Hub
     private readonly ChatHistoryStore _chatHistoryStore;
     private readonly DateTimeResolveService _dateTimeResolveService;
     private readonly GetUserPreferencesQueryHandler _getUserPreferencesQueryHandler;
+    private readonly SpeechTranscriptionService _speechTranscriptionService;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
 
     public AiTaskGenerateChatHub(
@@ -24,13 +27,15 @@ public class AiTaskGenerateChatHub : Hub
         IAiTaskGenerateService aiTaskGenerateService,
         DateTimeResolveService dateTimeResolveService,
         ChatHistoryStore chatHistoryStore,
-        GetUserPreferencesQueryHandler getUserPreferencesQueryHandler)
+        GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
+        SpeechTranscriptionService speechTranscriptionService)
     {
         _logger = logger;
         _aiTaskGenerateService = aiTaskGenerateService;
         _dateTimeResolveService = dateTimeResolveService;
         _chatHistoryStore = chatHistoryStore;
         _getUserPreferencesQueryHandler = getUserPreferencesQueryHandler;
+        _speechTranscriptionService = speechTranscriptionService;
     }
 
     public override async Task OnConnectedAsync()
@@ -119,5 +124,24 @@ public class AiTaskGenerateChatHub : Hub
                 ErrorMessage = ex.Message
             });
         }
+    }
+
+    public async Task TranscribeAudio(byte[] audioData)
+    {
+        var ct = Context.ConnectionAborted;
+
+        var formFile = new FormFile(
+            new MemoryStream(audioData),
+            baseStreamOffset: 0,
+            length: audioData.Length,
+            name: "audio",
+            fileName: "audio.wav")
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = "audio/wav"
+        };
+
+        var transcript = await _speechTranscriptionService.TranscribeAsync(formFile, ct);
+        await Clients.Caller.SendAsync("ReceiveTranscription", transcript, ct);
     }
 }

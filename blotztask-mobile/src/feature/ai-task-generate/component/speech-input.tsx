@@ -11,7 +11,6 @@ import {
   setAudioModeAsync,
   useAudioRecorder,
 } from "expo-audio";
-import { transcribeAudioFile } from "../services/speech-transcription-service";
 
 export const SpeechInput = ({
   text,
@@ -19,12 +18,14 @@ export const SpeechInput = ({
   sendMessage,
   isAiGenerating,
   aiGeneratedMessage,
+  transcribeAudio,
 }: {
   text: string;
   setText: (v: string) => void;
   sendMessage: (v: string) => void;
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
+  transcribeAudio: (uri: string) => Promise<string>;
 }) => {
   const { t } = useTranslation(["aiTaskGenerate", "common"]);
   const [isListening, setIsListening] = useState(false);
@@ -69,9 +70,7 @@ export const SpeechInput = ({
         return;
       }
 
-      const transcribedText = await transcribeAudioFile({
-        uri,
-      });
+      const transcribedText = await transcribeAudio(uri);
       setText(transcribedText);
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
