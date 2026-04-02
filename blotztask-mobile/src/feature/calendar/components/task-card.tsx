@@ -21,6 +21,7 @@ import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
 
+// Props
 interface TaskCardProps {
   task: TaskDetailDTO;
   deleteTask: (task: TaskDetailDTO) => void;
@@ -33,31 +34,30 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
 
-  const labelColor = task.label?.color ?? "#D1D1D6";
-
-  const isVirtualTask = task.id == null;
-  const isRecurringTask = task.recurringTaskId != null;
-
+  // Mutations
   const { toggleTask, isToggling } = useTaskMutations();
   const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
   const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
-  const isLoading =
-    isToggling || isDeleting || isBreakingDownAndReplacingSubtasks || isCompletingOccurrence;
 
-  const navigateToTaskDetails = (t: TaskDetailDTO) => {
-    if (t.id == null) return;
-    queryClient.setQueryData(["taskId", t.id], t);
-    router.push({ pathname: "/(protected)/task-details", params: { taskId: t.id } });
-  };
-
+  // Derived values
+  const labelColor = task.label?.color ?? "#D1D1D6";
+  const hasSubtasks = !!task.subtasks?.length;
   const timePeriod = formatDateRange({
     startTime: task.startTime,
     endTime: task.endTime,
     selectedDay,
   });
-
   const isOverdue = parseISO(task.endTime).getTime() <= new Date().getTime() && !task.isDone;
-  const hasSubtasks = !!task.subtasks?.length;
+  const isLoading =
+    isToggling || isDeleting || isBreakingDownAndReplacingSubtasks || isCompletingOccurrence;
+
+  // Functions
+  const handleOpenTaskDetails = () => {
+    if (task.id == null) return;
+
+    queryClient.setQueryData(["taskId", task.id], task);
+    router.push({ pathname: "/(protected)/task-details", params: { taskId: task.id } });
+  };
 
   const handleBreakdown = async () => {
     if (isLoading || task.id == null) return;
@@ -85,22 +85,18 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     swipeRef.current?.close();
   };
 
-  const renderRightActions = (rightActionsProgress: SharedValue<number>) => {
-    return (
-      <TaskCardRightActions
-        progress={rightActionsProgress}
-        onBreakdown={handleBreakdown}
-        onDelete={handleDelete}
-        isDeleting={isDeleting}
-        isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
-      />
-    );
-  };
-
   return (
     <ReanimatedSwipeable
       ref={swipeRef}
-      renderRightActions={renderRightActions}
+      renderRightActions={(rightActionsProgress: SharedValue<number>) => (
+        <TaskCardRightActions
+          progress={rightActionsProgress}
+          onBreakdown={handleBreakdown}
+          onDelete={handleDelete}
+          isDeleting={isDeleting}
+          isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
+        />
+      )}
       rightThreshold={12}
       overshootRight={false}
       friction={2}
@@ -114,7 +110,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
               checked={task.isDone}
               disabled={isLoading}
               onChange={async () => {
-                if (isVirtualTask) {
+                if (!task.id) {
                   completeOccurrence({
                     recurringTaskId: task.recurringTaskId!,
                     occurrenceDate: format(selectedDay!, "yyyy-MM-dd"),
@@ -139,11 +135,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
             )}
 
             {/* Title + date */}
-            <Pressable
-              className="flex-1 "
-              onPress={() => navigateToTaskDetails(task)}
-              disabled={isLoading}
-            >
+            <Pressable className="flex-1 " onPress={handleOpenTaskDetails} disabled={isLoading}>
               <View className="flex-row items-center" style={{ gap: 4 }}>
                 <Text
                   className={`text-xl font-semibold font-inter ${
@@ -161,7 +153,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                 >
                   {task.title}
                 </Text>
-                {isRecurringTask && (
+                {task.recurringTaskId && (
                   <View className="ml-1.5">
                     <MaterialIcons name="autorenew" size={17} color="#9CA3AF" />
                   </View>
