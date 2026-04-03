@@ -57,8 +57,7 @@
     "weekly": "Every Week",
     "biweekly": "Every 2 Weeks",
     "monthly": "Every Month",
-    "yearly": "Every Year",
-    "custom": "Custom"
+    "yearly": "Every Year"
   },
   "categories": {
     "work": "Work",
