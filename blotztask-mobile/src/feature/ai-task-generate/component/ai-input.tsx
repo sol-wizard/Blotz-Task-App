@@ -1,107 +1,28 @@
 import { View, Text, TextInput } from "react-native";
-import { useState } from "react";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 import { ErrorMessageCard } from "./error-message-card";
 import { theme } from "@/shared/constants/theme";
 import VoiceInputButton from "./voice-input-button";
 import { useTranslation } from "react-i18next";
-import {
-  RecordingPresets,
-  requestRecordingPermissionsAsync,
-  setAudioModeAsync,
-  useAudioRecorder,
-} from "expo-audio";
-import { File as ExpoFile } from "expo-file-system";
+import { BottomSheetType } from "../models/bottom-sheet-type";
 
 export const AiInput = ({
   text,
   setText,
   isAiGenerating,
   aiGeneratedMessage,
-  transcribeAudio,
+  setModalType,
 }: {
   text: string;
   setText: (v: string) => void;
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
-  transcribeAudio: (uri: string) => Promise<void>;
+  setModalType: (type: BottomSheetType) => void;
 }) => {
   const { t } = useTranslation(["aiTaskGenerate", "common"]);
-  const [isListening, setIsListening] = useState(false);
-  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-
-  const startListening = async () => {
-    try {
-      const permission = await requestRecordingPermissionsAsync();
-      if (!permission.granted) {
-        console.warn("[Mic] Permission not granted");
-        return;
-      }
-
-      await setAudioModeAsync({
-        allowsRecording: true,
-        playsInSilentMode: true,
-      });
-
-      await recorder.prepareToRecordAsync();
-      recorder.record();
-      setIsListening(true);
-    } catch (error) {
-      console.warn("[Mic] Error creating recording.", error);
-    }
-  };
-
-  const uploadAudio = async () => {
-    try {
-      if (!isListening) {
-        console.warn("[Mic] No active recording");
-        return;
-      }
-
-      setIsUploadingAudio(true);
-      await recorder.stop();
-      const uri = recorder.uri;
-      setIsListening(false);
-
-      if (!uri) {
-        console.warn("[Mic] No recording URI found");
-        return;
-      }
-
-      await transcribeAudio(uri);
-      new ExpoFile(uri).delete();
-    } catch (error) {
-      console.warn("[Mic] Error stopping recording.", error);
-    } finally {
-      await setAudioModeAsync({
-        allowsRecording: false,
-        playsInSilentMode: true,
-      }).catch(() => undefined);
-      setIsUploadingAudio(false);
-    }
-  };
-
-  const abortListening = () => {
-    setIsListening(false);
-    setText("");
-
-    void (async () => {
-      try {
-        if (recorder.isRecording) {
-          await recorder.stop();
-        }
-      } finally {
-        await setAudioModeAsync({
-          allowsRecording: false,
-          playsInSilentMode: true,
-        }).catch(() => undefined);
-      }
-    })();
-  };
 
   return (
-    <View className="mb-8">
+    <View className="mb-8 mx-4">
       <View className="items-center mb-4">
         <View className="w-12 h-1 rounded-full bg-[#ECECEC]" />
       </View>
@@ -122,13 +43,8 @@ export const AiInput = ({
         <ErrorMessageCard errorMessage={aiGeneratedMessage.errorMessage} />
       )}
       <VoiceInputButton
-        isListening={isListening}
-        startListening={startListening}
-        abortListening={abortListening}
-        stopListening={uploadAudio}
-        isAiGenerating={isAiGenerating || isUploadingAudio}
-        hasText={text.trim() !== ""}
-        onGenerateTask={() => {}}
+        isAiGenerating={isAiGenerating}
+        startListening={() => setModalType("voice-input")}
       />
     </View>
   );

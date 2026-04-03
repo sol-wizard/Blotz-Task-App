@@ -6,6 +6,7 @@ import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-d
 import { mapExtractedNoteDTOToAiNoteDTO } from "../utils/map-extracted-to-note-dto";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
+import { AiVoiceInput } from "./ai-voice-input";
 
 export const AiModalContent = ({
   modalType,
@@ -43,6 +44,9 @@ export const AiModalContent = ({
         />
       );
 
+    case "voice-input":
+      return <AiVoiceInput transcribeAudio={transcribeAudio} onStop={() => setModalType("input")} />;
+
     case "input":
     default:
       return (
@@ -51,7 +55,7 @@ export const AiModalContent = ({
           setText={setText}
           isAiGenerating={isAiGenerating}
           aiGeneratedMessage={aiGeneratedMessage}
-          transcribeAudio={transcribeAudio}
+          setModalType={setModalType}
         />
       );
   }

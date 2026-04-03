@@ -1,1 +1,1 @@
-export type BottomSheetType = "input" | "task-preview";
+export type BottomSheetType = "input" | "task-preview" | "voice-input";
