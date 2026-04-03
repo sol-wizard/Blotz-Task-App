@@ -1,5 +1,4 @@
 using BlotzTask.Modules.Pomodoro.Commands;
-using BlotzTask.Modules.Users.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +18,9 @@ public class PomodoroController(
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userIdObj) || userIdObj is not Guid userId)
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
+        
+        logger.LogInformation("Updating Pomodoro Setting for user {UserId}", userId);
+        
         var command = new UpdatePomodoroSettingCommand
         {
             UserId = userId,
