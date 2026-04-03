@@ -1,5 +1,4 @@
 using BlotzTask.Modules.Pomodoro.Domain;
-using BlotzTask.Modules.Users.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
