@@ -20,6 +20,7 @@ import { AnimatedChevron } from "@/shared/components/ui/chevron";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
+import { TaskCardLeftActions } from "./task-card-left-actions";
 
 // Props
 interface TaskCardProps {
@@ -33,11 +34,12 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
-
   // Mutations
   const { toggleTask, isToggling } = useTaskMutations();
   const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
   const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
+  const [isFocusing, setIsFocusing] = useState(false);
+  const [isModesting, setIsModesting] = useState(false);
 
   // Derived values
   const labelColor = task.label?.color ?? "#D1D1D6";
@@ -85,9 +87,42 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     swipeRef.current?.close();
   };
 
+  const handleFocus = async () => {
+    setIsFocusing(true);
+    try {
+      console.log("Focus action triggered");
+    } finally {
+      setIsFocusing(false);
+      swipeRef.current?.close();
+    }
+  };
+
+  const handleModest = async () => {
+    setIsModesting(true);
+    try {
+      console.log("Modest action triggered");
+      // TODO: Implement modest action logic here
+    } finally {
+      setIsModesting(false);
+      swipeRef.current?.close();
+    }
+  };
+
   return (
     <ReanimatedSwipeable
       ref={swipeRef}
+      renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
+        <TaskCardLeftActions
+          progress={leftActionsProgress}
+          onFocus={handleFocus}
+          onModest={handleModest}
+          isFocusing={isFocusing}
+          isModesting={isModesting}
+        />
+      )}
+      leftThreshold={12}
+      overshootLeft={false}
+      dragOffsetFromRightEdge={8}
       renderRightActions={(rightActionsProgress: SharedValue<number>) => (
         <TaskCardRightActions
           progress={rightActionsProgress}
