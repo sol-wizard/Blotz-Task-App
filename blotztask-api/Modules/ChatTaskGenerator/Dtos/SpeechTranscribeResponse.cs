@@ -1,13 +1,11 @@
-// response dto
 using System.Text.Json.Serialization;
 
-namespace BlotzTask.Modules.SpeechToText.Dtos;
+namespace BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
 public class SpeechTranscribeResponse
 {
     [JsonPropertyName("combinedPhrases")]
     public List<SpeechCombinedPhrase> CombinedPhrases { get; set; } = new();
-    
 }
 
 public class SpeechCombinedPhrase

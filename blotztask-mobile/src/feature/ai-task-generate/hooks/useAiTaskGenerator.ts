@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import * as signalR from "@microsoft/signalr";
+import { File as ExpoFile } from "expo-file-system";
 import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
@@ -13,6 +14,30 @@ export function useAiTaskGenerator({
 }) {
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
+
+  const transcribeAudio = async (uri: string): Promise<string> => {
+    if (!connection) throw new Error("Cannot transcribe: Not connected.");
+
+    const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
+
+    return new Promise((resolve, reject) => {
+      const handler = (text: string) => {
+        connection.off("ReceiveTranscription", handler);
+        resolve(text);
+      };
+      connection.on("ReceiveTranscription", handler);
+      signalRService.invoke(connection, "TranscribeAudio", base64).catch((error: unknown) => {
+        connection.off("ReceiveTranscription", handler);
+        reject(error);
+      });
+    });
+  };
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -77,5 +102,6 @@ export function useAiTaskGenerator({
     aiGeneratedMessage,
     sendMessage,
     setAiGeneratedMessage,
+    transcribeAudio,
   };
 }

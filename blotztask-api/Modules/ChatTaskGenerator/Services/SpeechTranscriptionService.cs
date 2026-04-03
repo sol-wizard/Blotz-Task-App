@@ -1,10 +1,9 @@
-// service
 using System.Net.Http.Headers;
 using System.Text.Json;
-using BlotzTask.Modules.SpeechToText.Dtos;
+using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using Microsoft.Extensions.Options;
 
-namespace BlotzTask.Modules.SpeechToText.Services;
+namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public sealed class SpeechTranscriptionService
 {
@@ -29,7 +28,7 @@ public sealed class SpeechTranscriptionService
         if (audio.Length <= 0) throw new ArgumentException("Audio file cannot be empty.", nameof(audio));
 
         var endpoint = $"https://{_settings.Region}.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version={_settings.ApiVersion}";
-        
+
         _logger.LogInformation(
             "Starting speech transcription. FileName: {FileName}, ContentType: {ContentType}, SizeBytes: {SizeBytes}, Endpoint: {Endpoint}",
             audio.FileName,
@@ -37,7 +36,6 @@ public sealed class SpeechTranscriptionService
             audio.Length,
             endpoint);
 
-        // Build HTTP POST request and attaches an audio file as form-data
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
         request.Headers.Add("Ocp-Apim-Subscription-Key", _settings.Key);
 
@@ -47,10 +45,9 @@ public sealed class SpeechTranscriptionService
         var contentType = string.IsNullOrWhiteSpace(audio.ContentType) ? "application/octet-stream" : audio.ContentType;
         audioContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
         formData.Add(audioContent, "audio", audio.FileName);
-        
+
         request.Content = formData;
 
-        // Send the transcription request and return result
         using var response = await _http.SendAsync(request, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
 
@@ -74,7 +71,6 @@ public sealed class SpeechTranscriptionService
                     .Select(v => v.Text)
                     .Where(text => !string.IsNullOrWhiteSpace(text))
             ).Trim();
-    
 
         return text ?? throw new InvalidOperationException("Speech transcribe response is empty.");
     }
