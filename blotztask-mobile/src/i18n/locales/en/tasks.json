@@ -7,6 +7,7 @@
     "reminder": "Reminder",
     "event": "Event",
     "alert": "Alert",
+    "repeat": "Repeat",
     "category": "Category",
     "noCategory": "No Category",
     "date": "Date",
@@ -49,6 +50,14 @@
     "2hours": "2 hours before",
     "1day": "1 day before",
     "2days": "2 days before"
+  },
+  "recurrence": {
+    "never": "Never",
+    "daily": "Every Day",
+    "weekly": "Every Week",
+    "biweekly": "Every 2 Weeks",
+    "monthly": "Every Month",
+    "yearly": "Every Year"
   },
   "categories": {
     "work": "Work",

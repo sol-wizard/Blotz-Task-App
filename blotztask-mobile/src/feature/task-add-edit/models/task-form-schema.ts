@@ -2,6 +2,16 @@ import { z } from "zod";
 import { combineDateTime } from "../util/combine-date-time";
 import { isBefore, isEqual } from "date-fns";
 
+export const recurrenceValues = [
+  "never",
+  "daily",
+  "weekly",
+  "biweekly",
+  "monthly",
+  "yearly",
+  "custom",
+] as const;
+
 export const taskFormSchema = z
   .object({
     title: z.string().trim().min(1, "Title is required").max(80, "Max 80 chars"),
@@ -12,6 +22,7 @@ export const taskFormSchema = z
     endTime: z.date(),
     labelId: z.number().nullable(),
     alert: z.number().nullable(),
+    recurrence: z.enum(recurrenceValues),
     isDeadline: z.boolean(),
     deadlineDate: z.date(),
     deadlineTime: z.date(),

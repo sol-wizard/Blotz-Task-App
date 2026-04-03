@@ -7,6 +7,7 @@
     "reminder": "提醒",
     "event": "事件",
     "alert": "提醒",
+    "repeat": "重复",
     "category": "分类",
     "noCategory": "无分类",
     "date": "日期",
@@ -49,6 +50,15 @@
     "2hours": "提前2小时",
     "1day": "提前1天",
     "2days": "提前2天"
+  },
+  "recurrence": {
+    "never": "永不",
+    "daily": "每天",
+    "weekly": "每周",
+    "biweekly": "每2周",
+    "monthly": "每月",
+    "yearly": "每年",
+    "custom": "自定义"
   },
   "categories": {
     "work": "工作",
