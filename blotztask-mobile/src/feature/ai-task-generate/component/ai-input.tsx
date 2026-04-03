@@ -13,7 +13,7 @@ import {
 } from "expo-audio";
 import { File as ExpoFile } from "expo-file-system";
 
-export const SpeechInput = ({
+export const AiInput = ({
   text,
   setText,
   isAiGenerating,

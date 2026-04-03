@@ -5,7 +5,7 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { mapExtractedNoteDTOToAiNoteDTO } from "../utils/map-extracted-to-note-dto";
 import { AiTasksPreview } from "./ai-tasks-preview";
-import { SpeechInput } from "./speech-input";
+import { AiInput } from "./ai-input";
 
 export const AiModalContent = ({
   modalType,
@@ -27,7 +27,9 @@ export const AiModalContent = ({
   const aiGeneratedTasks = (aiGeneratedMessage?.extractedTasks ?? []).map((task) =>
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
   );
-  const aiGeneratedNotes = (aiGeneratedMessage?.extractedNotes ?? []).map(mapExtractedNoteDTOToAiNoteDTO);
+  const aiGeneratedNotes = (aiGeneratedMessage?.extractedNotes ?? []).map(
+    mapExtractedNoteDTOToAiNoteDTO,
+  );
 
   switch (modalType) {
     case "task-preview":
@@ -44,7 +46,7 @@ export const AiModalContent = ({
     case "input":
     default:
       return (
-        <SpeechInput
+        <AiInput
           text={text}
           setText={setText}
           isAiGenerating={isAiGenerating}
