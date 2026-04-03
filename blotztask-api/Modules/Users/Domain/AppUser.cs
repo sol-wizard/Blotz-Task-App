@@ -1,3 +1,5 @@
+using BlotzTask.Modules.Pomodoro.Domain;
+
 namespace BlotzTask.Modules.Users.Domain;
 
 public class AppUser

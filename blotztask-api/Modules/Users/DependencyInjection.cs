@@ -23,7 +23,6 @@ public static class DependencyInjection
         services.AddScoped<UpdateUserPreferenceCommandHandler>();
         services.AddScoped<GetUserPreferencesQueryHandler>();
         services.AddScoped<IAuth0ManagementService, Auth0ManagementService>();
-        services.AddScoped<UpdatePomodoroSettingCommandHandler>();
         // Manual registration of query handlers 
         return services;
     }

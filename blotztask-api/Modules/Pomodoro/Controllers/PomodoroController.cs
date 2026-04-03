@@ -1,8 +1,9 @@
+using BlotzTask.Modules.Pomodoro.Commands;
 using BlotzTask.Modules.Users.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BlotzTask.Modules.Users;
+namespace BlotzTask.Modules.Pomodoro.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

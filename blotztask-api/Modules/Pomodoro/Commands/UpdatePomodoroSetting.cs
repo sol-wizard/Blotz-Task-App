@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using BlotzTask.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
-namespace BlotzTask.Modules.Users.Commands;
+namespace BlotzTask.Modules.Pomodoro.Commands;
 
 public class UpdatePomodoroSettingCommand
 {
