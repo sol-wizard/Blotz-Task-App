@@ -6,6 +6,7 @@ using BlotzTask.Shared.Events;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Notes;
+using BlotzTask.Modules.Pomodoro;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Users;
 using Serilog;
@@ -26,6 +27,7 @@ builder.Services.AddLabelModule();
 builder.Services.AddTaskBreakdownModule();
 builder.Services.AddNotesModule();
 builder.Services.AddBadgeModule();
+builder.Services.AddPomodoroModule();
 builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
 
 builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);

@@ -1,4 +1,6 @@
-namespace BlotzTask.Modules.Users.Domain
+using BlotzTask.Modules.Users.Domain;
+
+namespace BlotzTask.Modules.Pomodoro.Domain
 {
     public class PomodoroSetting
     {
