@@ -7,7 +7,10 @@ public static class CoreServiceExtensions
     public static IServiceCollection AddCoreServices(this IServiceCollection services)
     {
         services.AddMemoryCache();
-        services.AddSignalR();
+        services.AddSignalR(options =>
+        {
+            options.MaximumReceiveMessageSize = 4 * 1024 * 1024; // 4 MB, supports up to ~1 min WAV audio
+        });
         services.AddControllers()
             .AddJsonOptions(options =>
             {

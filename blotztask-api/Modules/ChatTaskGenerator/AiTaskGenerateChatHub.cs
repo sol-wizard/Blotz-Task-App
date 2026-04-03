@@ -18,19 +18,22 @@ public class AiTaskGenerateChatHub : Hub
     private readonly DateTimeResolveService _dateTimeResolveService;
     private readonly GetUserPreferencesQueryHandler _getUserPreferencesQueryHandler;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
+    private readonly SpeechTranscriptionService _speechTranscriptionService;
 
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
         IAiTaskGenerateService aiTaskGenerateService,
         DateTimeResolveService dateTimeResolveService,
         ChatHistoryStore chatHistoryStore,
-        GetUserPreferencesQueryHandler getUserPreferencesQueryHandler)
+        GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
+        SpeechTranscriptionService speechTranscriptionService)
     {
         _logger = logger;
         _aiTaskGenerateService = aiTaskGenerateService;
         _dateTimeResolveService = dateTimeResolveService;
         _chatHistoryStore = chatHistoryStore;
         _getUserPreferencesQueryHandler = getUserPreferencesQueryHandler;
+        _speechTranscriptionService = speechTranscriptionService;
     }
 
     public override async Task OnConnectedAsync()
@@ -118,6 +121,37 @@ public class AiTaskGenerateChatHub : Hub
                 IsSuccess = false,
                 ErrorMessage = ex.Message
             });
+        }
+    }
+
+    public async Task TranscribeAudio(byte[] audioData)
+    {
+        var ct = Context.ConnectionAborted;
+
+        try
+        {
+            if (audioData is null || audioData.Length == 0)
+                throw new HubException("Audio data is empty.");
+
+
+            var formFile = new FormFile(
+                new MemoryStream(audioData),
+                0,
+                audioData.Length,
+                "audio",
+                "audio.wav")
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "audio/wav"
+            };
+
+            var transcript = await _speechTranscriptionService.TranscribeAsync(formFile, ct);
+            await Clients.Caller.SendAsync("ReceiveTranscription", transcript, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TranscribeAudio failed.");
+            throw new HubException(ex.Message);
         }
     }
 }

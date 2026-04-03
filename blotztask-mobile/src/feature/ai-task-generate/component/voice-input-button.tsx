@@ -103,7 +103,7 @@ const VoiceInputButton = ({
                 resizeMode="contain"
               ></LottieView>
             </View>
-            <VoiceTimer />
+            <VoiceTimer onTimeout={stopListening} />
             <Pressable
               className="rounded-full bg-[#F4F4F4] items-center border border-[#ECECEC] justify-center w-20 h-11"
               disabled={isAiGenerating}

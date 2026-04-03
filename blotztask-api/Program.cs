@@ -6,7 +6,6 @@ using BlotzTask.Shared.Events;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Notes;
-using BlotzTask.Modules.SpeechToText;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Users;
 using Serilog;
@@ -19,13 +18,12 @@ builder
 
 // Add services to the container.
 builder.Services.AddCoreServices();
-builder.Services.AddChatTaskGeneratorModule();
+builder.Services.AddChatTaskGeneratorModule(builder.Configuration);
 
 builder.Services.AddTaskModule();
 builder.Services.AddUserModule(builder.Configuration);
 builder.Services.AddLabelModule();
 builder.Services.AddTaskBreakdownModule();
-builder.Services.AddSpeechToTextModule(builder.Configuration);
 builder.Services.AddNotesModule();
 builder.Services.AddBadgeModule();
 builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();

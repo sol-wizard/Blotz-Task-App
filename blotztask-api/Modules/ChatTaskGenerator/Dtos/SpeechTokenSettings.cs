@@ -1,5 +1,4 @@
-// setting dto
-namespace BlotzTask.Modules.SpeechToText.Dtos;
+namespace BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
 public class SpeechTokenSettings
 {
