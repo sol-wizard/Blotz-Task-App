@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, Pressable, useWindowDimensions, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -23,7 +23,18 @@ export const AiVoiceInput = ({
   const { isListening, startListening, uploadAudio, abortListening } =
     useVoiceRecorder(transcribeAudio);
 
-  const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
+  const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks);
+  const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes);
+
+  const onDeleteTask = (taskId: string) => {
+    setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
+  };
+
+  const onDeleteNote = (noteId: string) => {
+    setLocalNotes((prev) => prev.filter((n) => n.id !== noteId));
+  };
+
+  const hasResults = localTasks.length > 0 || localNotes.length > 0;
 
   const handleToggleListen = () => {
     if (isListening) {
@@ -52,21 +63,21 @@ export const AiVoiceInput = ({
         <View className="flex-1 w-full items-center justify-center px-8">
           {hasResults ? (
             <ScrollView className="w-full" showsVerticalScrollIndicator={false}>
-              {aiTasks.map((task) => (
+              {localTasks.map((task) => (
                 <AiTaskCard
                   key={task.id}
                   task={task}
-                  handleTaskDelete={() => {}}
+                  handleTaskDelete={onDeleteTask}
                 />
               ))}
-              {aiNotes.length > 0 && (
+              {localNotes.length > 0 && (
                 <>
                   <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">Notes</Text>
-                  {aiNotes.map((note) => (
+                  {localNotes.map((note) => (
                     <AiNoteCard
                       key={note.id}
                       note={note}
-                      handleNoteDelete={() => {}}
+                      handleNoteDelete={onDeleteNote}
                     />
                   ))}
                 </>
