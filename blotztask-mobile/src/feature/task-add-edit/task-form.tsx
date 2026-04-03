@@ -14,6 +14,7 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
 import { AlertSelect } from "./components/alert-select";
 import { DeadlineSection } from "./components/deadline-section";
+import { RecurrenceSelect } from "./components/recurrence-select";
 import { createNotificationFromAlert } from "./util/create-notification-from-alert";
 import {
   buildTaskTimePayload,
@@ -78,6 +79,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     endDate: initialTab === "reminder" ? initialStartDate : initialEndDate,
     endTime: initialTab === "reminder" ? initialStartTime : initialEndTime,
     alert: defaultAlert,
+    recurrence: "never",
     isDeadline: dto?.isDeadline ?? !!initialDueAt,
     deadlineDate: initialDueAt ?? oneHourLater,
     deadlineTime: initialDueAt ?? oneHourLater,
@@ -91,7 +93,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { handleSubmit, formState, control, setValue, clearErrors, trigger, getValues } = form;
   const { isSubmitting } = formState;
-
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -221,6 +222,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             setValue={setValue}
           />
         )}
+        <FormDivider />
+        <RecurrenceSelect control={control} />
         <FormDivider />
         <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
         <FormDivider />
