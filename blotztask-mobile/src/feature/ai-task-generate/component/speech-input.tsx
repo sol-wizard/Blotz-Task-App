@@ -11,6 +11,7 @@ import {
   setAudioModeAsync,
   useAudioRecorder,
 } from "expo-audio";
+import { File as ExpoFile } from "expo-file-system";
 
 export const SpeechInput = ({
   text,
@@ -72,6 +73,7 @@ export const SpeechInput = ({
 
       const transcribedText = await transcribeAudio(uri);
       setText(transcribedText);
+      new ExpoFile(uri).delete();
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
     } finally {
