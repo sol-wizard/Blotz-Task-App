@@ -15,7 +15,7 @@ export function useAiTaskGenerator({
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
 
-  const transcribeAudio = async (uri: string): Promise<string> => {
+  const transcribeAudio = async (uri: string): Promise<void> => {
     if (!connection) throw new Error("Cannot transcribe: Not connected.");
 
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
@@ -26,48 +26,22 @@ export function useAiTaskGenerator({
     }
     const base64 = btoa(binary);
 
-    return new Promise((resolve, reject) => {
-      const handler = (text: string) => {
-        connection.off("ReceiveTranscription", handler);
-        resolve(text);
-      };
-      connection.on("ReceiveTranscription", handler);
-      signalRService.invoke(connection, "TranscribeAudio", base64).catch((error: unknown) => {
-        connection.off("ReceiveTranscription", handler);
-        reject(error);
-      });
-    });
-  };
-
-  const sendMessage = async (text: string) => {
-    if (!text.trim()) return;
-
     setIsAiGenerating(true);
-    if (connection) {
-      try {
-        await signalRService.invoke(connection, "SendMessage", text);
-      } catch (error) {
-        console.error("Error invoking SendMessage:", error);
-        setIsAiGenerating(false);
-        setModalType("input");
-      }
-    } else {
-      console.warn("Cannot send message: Not connected.");
-      setIsAiGenerating(false);
-      setModalType("input");
-    }
+    await signalRService.invoke(connection, "TranscribeAudio", base64);
   };
 
-  useEffect(() => {
+useEffect(() => {
     let newConnection: signalR.HubConnection | null = null;
 
     const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
       setAiGeneratedMessage(receivedAiMessage);
       if (!receivedAiMessage.isSuccess) {
         setIsAiGenerating(false);
-        setModalType("input");
+        console.warn("AI processing failed:", receivedAiMessage.errorMessage);
+        // setModalType("input");
       } else {
-        setModalType("task-preview");
+        console.log("AI processing succeeded:", receivedAiMessage);
+        // setModalType("task-preview");
         setIsAiGenerating(false);
       }
     };
@@ -100,7 +74,6 @@ export function useAiTaskGenerator({
   }, []);
   return {
     aiGeneratedMessage,
-    sendMessage,
     setAiGeneratedMessage,
     transcribeAudio,
   };

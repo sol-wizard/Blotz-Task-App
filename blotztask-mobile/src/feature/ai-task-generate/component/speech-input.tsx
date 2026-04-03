@@ -16,17 +16,15 @@ import { File as ExpoFile } from "expo-file-system";
 export const SpeechInput = ({
   text,
   setText,
-  sendMessage,
   isAiGenerating,
   aiGeneratedMessage,
   transcribeAudio,
 }: {
   text: string;
   setText: (v: string) => void;
-  sendMessage: (v: string) => void;
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
-  transcribeAudio: (uri: string) => Promise<string>;
+  transcribeAudio: (uri: string) => Promise<void>;
 }) => {
   const { t } = useTranslation(["aiTaskGenerate", "common"]);
   const [isListening, setIsListening] = useState(false);
@@ -71,8 +69,7 @@ export const SpeechInput = ({
         return;
       }
 
-      const transcribedText = await transcribeAudio(uri);
-      setText(transcribedText);
+      await transcribeAudio(uri);
       new ExpoFile(uri).delete();
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
@@ -131,7 +128,7 @@ export const SpeechInput = ({
         stopListening={uploadAudio}
         isAiGenerating={isAiGenerating || isUploadingAudio}
         hasText={text.trim() !== ""}
-        onGenerateTask={() => sendMessage(text)}
+        onGenerateTask={() => {}}
       />
     </View>
   );

@@ -17,7 +17,7 @@ export const AiModalContent = ({
   const [text, setText] = useState("");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
 
-  const { aiGeneratedMessage, sendMessage, setAiGeneratedMessage, transcribeAudio } = useAiTaskGenerator({
+  const { aiGeneratedMessage, setAiGeneratedMessage, transcribeAudio } = useAiTaskGenerator({
     setIsAiGenerating,
     setModalType,
   });
@@ -47,7 +47,6 @@ export const AiModalContent = ({
         <SpeechInput
           text={text}
           setText={setText}
-          sendMessage={sendMessage}
           isAiGenerating={isAiGenerating}
           aiGeneratedMessage={aiGeneratedMessage}
           transcribeAudio={transcribeAudio}

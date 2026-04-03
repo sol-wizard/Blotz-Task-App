@@ -88,43 +88,7 @@ public class AiTaskGenerateChatHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task SendMessage(string message)
-    {
-        var timeZone = Context.Items.TryGetValue("TimeZone", out var timeZoneObj) &&
-                       timeZoneObj is TimeZoneInfo tz
-            ? tz
-            : TimeZoneInfo.Utc;
-
-        try
-        {
-            var ct = Context.ConnectionAborted;
-
-            if (!_chatHistoryStore.TryGet(Context.ConnectionId, out var chatHistory) || chatHistory == null)
-                throw new HubException("Chat history not found for this connection.");
-
-            var resolvedMessage = _dateTimeResolveService.Resolve(new ResolveDateTimesRequest
-            {
-                Message = message,
-                TimeZone = timeZone
-            });
-
-            chatHistory.AddUserMessage(resolvedMessage);
-
-
-            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
-        }
-        catch (AiTaskGenerationException ex)
-        {
-            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
-            {
-                IsSuccess = false,
-                ErrorMessage = ex.Message
-            });
-        }
-    }
-
-    public async Task TranscribeAudio(byte[] audioData)
+public async Task TranscribeAudio(byte[] audioData)
     {
         var ct = Context.ConnectionAborted;
 
@@ -146,7 +110,32 @@ public class AiTaskGenerateChatHub : Hub
             };
 
             var transcript = await _speechTranscriptionService.TranscribeAsync(formFile, ct);
-            await Clients.Caller.SendAsync("ReceiveTranscription", transcript, ct);
+
+            if (!_chatHistoryStore.TryGet(Context.ConnectionId, out var chatHistory) || chatHistory == null)
+                throw new HubException("Chat history not found for this connection.");
+
+            var timeZone = Context.Items.TryGetValue("TimeZone", out var timeZoneObj) && timeZoneObj is TimeZoneInfo tz
+                ? tz
+                : TimeZoneInfo.Utc;
+
+            var resolvedMessage = _dateTimeResolveService.Resolve(new ResolveDateTimesRequest
+            {
+                Message = transcript,
+                TimeZone = timeZone
+            });
+
+            chatHistory.AddUserMessage(resolvedMessage);
+
+            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
+            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
+        }
+        catch (AiTaskGenerationException ex)
+        {
+            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
+            {
+                IsSuccess = false,
+                ErrorMessage = ex.Message
+            });
         }
         catch (Exception ex)
         {
