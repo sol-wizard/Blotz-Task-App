@@ -4,8 +4,8 @@ export default {
     icon: "./assets/images-png/blotz-icon.png",
     slug: "BlotzTask",
     owner: "blotz",
-    version: "1.0.0",
-    runtimeVersion: "1.0.0",
+    version: process.env.APP_VERSION ?? "1.0.0",
+    runtimeVersion: process.env.APP_VERSION ?? "1.0.0",
     orientation: "portrait",
     scheme: "blotztask",
     userInterfaceStyle: "light",
@@ -36,10 +36,7 @@ export default {
     },
     android: {
       package: "com.blotz.blotztask",
-      permissions: [
-        "android.permission.RECORD_AUDIO",
-        "android.permission.ACCESS_FINE_LOCATION",
-      ],
+      permissions: ["android.permission.RECORD_AUDIO", "android.permission.ACCESS_FINE_LOCATION"],
     },
     web: {
       bundler: "metro",
