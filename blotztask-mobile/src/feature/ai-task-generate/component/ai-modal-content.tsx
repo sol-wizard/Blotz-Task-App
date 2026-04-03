@@ -45,7 +45,13 @@ export const AiModalContent = ({
       );
 
     case "voice-input":
-      return <AiVoiceInput transcribeAudio={transcribeAudio} onStop={() => setModalType("input")} />;
+      return (
+        <AiVoiceInput
+          transcribeAudio={transcribeAudio}
+          aiTasks={aiGeneratedTasks}
+          aiNotes={aiGeneratedNotes}
+        />
+      );
 
     case "input":
     default:

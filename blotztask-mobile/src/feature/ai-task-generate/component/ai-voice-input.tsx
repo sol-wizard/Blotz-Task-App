@@ -1,21 +1,29 @@
 import React from "react";
-import { View, Text, Pressable, useWindowDimensions } from "react-native";
+import { View, Text, Pressable, useWindowDimensions, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
 import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
+import { AiTaskDTO } from "../models/ai-task-dto";
+import { AiNoteDTO } from "../models/ai-note-dto";
+import { AiTaskCard } from "./ai-task-card";
+import { AiNoteCard } from "./ai-note-card";
 
 export const AiVoiceInput = ({
   transcribeAudio,
-  onStop,
+  aiTasks = [],
+  aiNotes = [],
 }: {
   transcribeAudio: (uri: string) => Promise<void>;
-  onStop: () => void;
+  aiTasks?: AiTaskDTO[];
+  aiNotes?: AiNoteDTO[];
 }) => {
   const { height } = useWindowDimensions();
   const { isListening, startListening, uploadAudio, abortListening } =
     useVoiceRecorder(transcribeAudio);
+
+  const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
 
   const handleToggleListen = () => {
     if (isListening) {
@@ -23,11 +31,6 @@ export const AiVoiceInput = ({
     } else {
       void startListening();
     }
-  };
-
-  const handleStop = () => {
-    void abortListening();
-    onStop();
   };
 
   return (
@@ -40,17 +43,43 @@ export const AiVoiceInput = ({
       <View className="flex-1 items-center">
         {/* Top row - dismiss button */}
         <View className="w-full items-end px-6 pt-4 pb-2">
-          <Pressable onPress={handleStop} accessibilityLabel="Stop">
+          <Pressable onPress={() => void abortListening()} accessibilityLabel="Stop">
             <MaterialCommunityIcons name="chevron-down" size={32} color="white" />
           </Pressable>
         </View>
 
         {/* Center content */}
-        <View className="flex-1 items-center justify-center px-8">
-          <Text className="text-white font-balooBold text-3xl mb-3">Listening ...</Text>
-          <Text className="text-white/80 font-baloo text-base text-center">
-            Say everything you need to get done.
-          </Text>
+        <View className="flex-1 w-full items-center justify-center px-8">
+          {hasResults ? (
+            <ScrollView className="w-full" showsVerticalScrollIndicator={false}>
+              {aiTasks.map((task) => (
+                <AiTaskCard
+                  key={task.id}
+                  task={task}
+                  handleTaskDelete={() => {}}
+                />
+              ))}
+              {aiNotes.length > 0 && (
+                <>
+                  <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">Notes</Text>
+                  {aiNotes.map((note) => (
+                    <AiNoteCard
+                      key={note.id}
+                      note={note}
+                      handleNoteDelete={() => {}}
+                    />
+                  ))}
+                </>
+              )}
+            </ScrollView>
+          ) : (
+            <>
+              <Text className="text-white font-balooBold text-3xl mb-3">Listening ...</Text>
+              <Text className="text-white/80 font-baloo text-base text-center">
+                Say everything you need to get done.
+              </Text>
+            </>
+          )}
         </View>
 
         {/* Bottom controls */}
@@ -81,11 +110,7 @@ export const AiVoiceInput = ({
                   <View
                     key={i}
                     className="rounded-full"
-                    style={{
-                      width: 3,
-                      height: 16,
-                      backgroundColor: "rgba(255,255,255,0.5)",
-                    }}
+                    style={{ width: 3, height: 16, backgroundColor: "rgba(255,255,255,0.5)" }}
                   />
                 ))}
               </View>
