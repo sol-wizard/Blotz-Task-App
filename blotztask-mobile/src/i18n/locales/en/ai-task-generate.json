@@ -39,6 +39,7 @@
   },
   "voiceListening": {
     "title": "Listening ...",
+    "aiThinking": "AI is thinking ...",
     "subtitle": "Say everything you need to get done."
   }
 }

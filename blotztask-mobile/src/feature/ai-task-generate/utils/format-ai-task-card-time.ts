@@ -46,8 +46,10 @@ export const formatAiTaskCardTime = ({
   if (!startTime && !endTime) {
     return "";
   } else if (startTime && endTime && startTime === endTime) {
+    console.log("Formatting time for single timestamp:", startTime);
     return `${format(parseISO(startTime), "H:mm")}`;
   } else if (startTime && endTime && startTime !== endTime) {
+    console.log("Formatting time for range:", startTime, endTime);
     return `${format(parseISO(startTime), "H:mm")} - ${format(parseISO(endTime), "H:mm")}`;
   }
 };

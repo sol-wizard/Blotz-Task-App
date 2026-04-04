@@ -29,7 +29,7 @@ export function AiNoteCard({ note, handleNoteDelete, onTextChange }: Props) {
 
   return (
     <Animated.View
-      entering={MotionAnimations.zoomEntering}
+      entering={MotionAnimations.upEntering}
       exiting={MotionAnimations.outExiting}
       layout={MotionAnimations.layout}
       className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] min-h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4"

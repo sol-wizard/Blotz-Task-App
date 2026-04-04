@@ -27,10 +27,11 @@ export function useAiTaskGenerator({
     const base64 = btoa(binary);
 
     setIsAiGenerating(true);
+    console.log("isAiGenerating in transcribeAudio set to true");
     await signalRService.invoke(connection, "TranscribeAudio", base64);
   };
 
-useEffect(() => {
+  useEffect(() => {
     let newConnection: signalR.HubConnection | null = null;
 
     const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {

@@ -50,6 +50,7 @@ export const AiModalContent = ({
           transcribeAudio={transcribeAudio}
           aiTasks={aiGeneratedTasks}
           aiNotes={aiGeneratedNotes}
+          isAiGenerating={isAiGenerating}
         />
       );
 

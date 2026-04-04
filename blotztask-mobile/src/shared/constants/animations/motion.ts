@@ -5,7 +5,6 @@ import {
   FadeOut,
   FadeOutLeft,
   FadeOutRight,
-  ZoomIn,
   LinearTransition,
 } from "react-native-reanimated";
 
@@ -14,7 +13,7 @@ const _stiffness = 400;
 
 export const MotionAnimations = {
   upEntering: FadeInUp.springify().damping(_damping),
-  zoomEntering: ZoomIn.springify().damping(30),
+
   leftEntering: FadeInLeft.springify().damping(_damping),
   rightEntering: FadeInRight.springify().damping(_damping),
   outExiting: FadeOut.springify().damping(_damping),

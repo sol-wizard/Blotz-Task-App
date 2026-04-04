@@ -17,15 +17,16 @@ export const AiVoiceInput = ({
   transcribeAudio,
   aiTasks = [],
   aiNotes = [],
+  isAiGenerating = false,
 }: {
   transcribeAudio: (uri: string) => Promise<void>;
   aiTasks?: AiTaskDTO[];
   aiNotes?: AiNoteDTO[];
+  isAiGenerating?: boolean;
 }) => {
   const { t } = useTranslation("aiTaskGenerate");
   const { height } = useWindowDimensions();
-  const { isListening, uploadAudio, listeningBreak, startListening, abortListening } =
-    useVoiceRecorder(transcribeAudio);
+  const { isListening, startListening, stopAndUpload } = useVoiceRecorder(transcribeAudio);
 
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks);
   const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes);
@@ -34,12 +35,6 @@ export const AiVoiceInput = ({
     setLocalTasks(aiTasks);
     setLocalNotes(aiNotes);
   }, [aiTasks, aiNotes]);
-
-  useEffect(() => {
-    return () => {
-      void abortListening();
-    };
-  }, []);
 
   const onDeleteTask = (taskId: string) => {
     setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
@@ -61,7 +56,7 @@ export const AiVoiceInput = ({
       <View className="flex-1 items-center">
         {/* Top row - dismiss button */}
         <View className="w-full items-end px-6 pt-4 pb-2">
-          <Pressable onPress={() => void listeningBreak()} accessibilityLabel="Stop">
+          <Pressable onPress={() => void stopAndUpload()} accessibilityLabel="Stop">
             <MaterialCommunityIcons name="chevron-down" size={32} color="white" />
           </Pressable>
         </View>
@@ -90,13 +85,13 @@ export const AiVoiceInput = ({
         <View className="items-center px-8 pb-4">
           <Text
             className="text-white font-balooBold text-xl mb-1"
-            style={{ opacity: isListening ? 1 : 0 }}
+            style={{ opacity: isListening || isAiGenerating ? 1 : 0 }}
           >
-            {t("voiceListening.title")}
+            {isAiGenerating ? t("voiceListening.aiThinking") : t("voiceListening.title")}
           </Text>
           <Text
             className="text-white/70 font-baloo text-sm text-center"
-            style={{ opacity: isListening ? 1 : 0 }}
+            style={{ opacity: isListening || isAiGenerating ? 1 : 0 }}
           >
             {t("voiceListening.subtitle")}
           </Text>
@@ -104,14 +99,15 @@ export const AiVoiceInput = ({
 
         {/* Bottom controls */}
         <View className="w-full flex-row items-center px-6 gap-4 pb-8">
-          {/* Play / Pause toggle */}
+          {/* Microphone hold-to-record */}
           <Pressable
-            onPress={() => (isListening ? void listeningBreak() : void startListening())}
-            accessibilityLabel={isListening ? "Stop" : "Start listening"}
+            onLongPress={() => void startListening()}
+            onPressOut={() => void stopAndUpload()}
+            accessibilityLabel="Hold to record"
             className="w-14 h-14 rounded-full items-center justify-center"
-            style={{ backgroundColor: "rgba(255,255,255,0.25)" }}
+            style={{ backgroundColor: isListening ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.25)" }}
           >
-            <MaterialCommunityIcons name={isListening ? "pause" : "play"} size={28} color="white" />
+            <MaterialCommunityIcons name="microphone" size={28} color="white" />
           </Pressable>
 
           {/* Waveform */}
