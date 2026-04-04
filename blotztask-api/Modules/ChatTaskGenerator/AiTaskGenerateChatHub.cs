@@ -145,32 +145,7 @@ public async Task SendMessage(string message)
             };
 
             var transcript = await _speechTranscriptionService.TranscribeAsync(formFile, ct);
-
-            if (!_chatHistoryStore.TryGet(Context.ConnectionId, out var chatHistory) || chatHistory == null)
-                throw new HubException("Chat history not found for this connection.");
-
-            var timeZone = Context.Items.TryGetValue("TimeZone", out var timeZoneObj) && timeZoneObj is TimeZoneInfo tz
-                ? tz
-                : TimeZoneInfo.Utc;
-
-            var resolvedMessage = _dateTimeResolveService.Resolve(new ResolveDateTimesRequest
-            {
-                Message = transcript,
-                TimeZone = timeZone
-            });
-
-            chatHistory.AddUserMessage(resolvedMessage);
-
-            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
-        }
-        catch (AiTaskGenerationException ex)
-        {
-            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
-            {
-                IsSuccess = false,
-                ErrorMessage = ex.Message
-            });
+            await SendMessage(transcript);
         }
         catch (Exception ex)
         {
