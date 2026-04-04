@@ -23,6 +23,7 @@ export function useVoiceRecorder(transcribeAudio: (uri: string) => Promise<void>
     if (!recorder.isRecording) return;
     try {
       await recorder.stop();
+      setIsListening(false);
       const uri = recorder.uri;
       if (uri) {
         await transcribeAudio(uri);
@@ -31,8 +32,9 @@ export function useVoiceRecorder(transcribeAudio: (uri: string) => Promise<void>
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
     } finally {
-      setIsListening(false);
-      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(() => undefined);
+      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(
+        () => undefined,
+      );
     }
   };
 
