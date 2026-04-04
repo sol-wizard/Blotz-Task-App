@@ -18,10 +18,11 @@ export const AiModalContent = ({
   const [text, setText] = useState("");
   const [isAiGenerating, setIsAiGenerating] = useState(false);
 
-  const { aiGeneratedMessage, setAiGeneratedMessage, transcribeAudio } = useAiTaskGenerator({
-    setIsAiGenerating,
-    setModalType,
-  });
+  const { aiGeneratedMessage, setAiGeneratedMessage, transcribeAudio, sendMessage } =
+    useAiTaskGenerator({
+      setIsAiGenerating,
+      setModalType,
+    });
 
   const { labels } = useAllLabels();
 
@@ -63,6 +64,10 @@ export const AiModalContent = ({
           isAiGenerating={isAiGenerating}
           aiGeneratedMessage={aiGeneratedMessage}
           setModalType={setModalType}
+          onGenerateTask={async () => {
+            await sendMessage(text);
+            setModalType("task-preview");
+          }}
         />
       );
   }

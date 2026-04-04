@@ -39,10 +39,9 @@ export function useAiTaskGenerator({
       if (!receivedAiMessage.isSuccess) {
         setIsAiGenerating(false);
         console.warn("AI processing failed:", receivedAiMessage.errorMessage);
-        // setModalType("input");
       } else {
         console.log("AI processing succeeded:", receivedAiMessage);
-        // setModalType("task-preview");
+
         setIsAiGenerating(false);
       }
     };
@@ -73,9 +72,29 @@ export function useAiTaskGenerator({
       }
     };
   }, []);
+  const sendMessage = async (text: string) => {
+    if (!text.trim()) return;
+
+    setIsAiGenerating(true);
+    if (connection) {
+      try {
+        await signalRService.invoke(connection, "SendMessage", text);
+      } catch (error) {
+        console.error("Error invoking SendMessage:", error);
+        setIsAiGenerating(false);
+        setModalType("input");
+      }
+    } else {
+      console.warn("Cannot send message: Not connected.");
+      setIsAiGenerating(false);
+      setModalType("input");
+    }
+  };
+
   return {
     aiGeneratedMessage,
     setAiGeneratedMessage,
     transcribeAudio,
+    sendMessage,
   };
 }

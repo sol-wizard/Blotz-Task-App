@@ -12,12 +12,14 @@ export const AiInput = ({
   isAiGenerating,
   aiGeneratedMessage,
   setModalType,
+  onGenerateTask,
 }: {
   text: string;
   setText: (v: string) => void;
   isAiGenerating: boolean;
   aiGeneratedMessage?: AiResultMessageDTO;
   setModalType: (type: BottomSheetType) => void;
+  onGenerateTask: () => void;
 }) => {
   const { t } = useTranslation(["aiTaskGenerate", "common"]);
 
@@ -45,6 +47,8 @@ export const AiInput = ({
       <VoiceInputButton
         isAiGenerating={isAiGenerating}
         startListening={() => setModalType("voice-input")}
+        hasText={!!text.trim()}
+        onGenerateTask={onGenerateTask}
       />
     </View>
   );

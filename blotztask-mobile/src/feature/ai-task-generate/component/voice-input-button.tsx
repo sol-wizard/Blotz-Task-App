@@ -9,6 +9,8 @@ import { Text } from "react-native";
 type Props = {
   isAiGenerating: boolean;
   startListening: () => void;
+  hasText: boolean;
+  onGenerateTask: () => void;
 };
 
 const GradientText = ({ children }: { children: string }) => {
@@ -46,7 +48,7 @@ const GradiantMicIcon = () => {
   );
 };
 
-const VoiceInputButton = ({ isAiGenerating, startListening }: Props) => {
+const VoiceInputButton = ({ isAiGenerating, startListening, hasText, onGenerateTask }: Props) => {
   const { t } = useTranslation("aiTaskGenerate");
 
   if (isAiGenerating) {
@@ -54,6 +56,17 @@ const VoiceInputButton = ({ isAiGenerating, startListening }: Props) => {
       <View className="mt-4 h-14 w-full rounded-full bg-[#F2F2F2] border border-[#ECECEC] items-center justify-center">
         <ActivityIndicator size="small" color="#2F80ED" />
       </View>
+    );
+  }
+  if (hasText) {
+    return (
+      <Pressable
+        className="mt-4 h-14 w-full bg-[#F4F4F4] border border-[#ECECEC] rounded-full items-center justify-center flex-row"
+        onPress={onGenerateTask}
+        accessibilityLabel={t("buttons.generateTask")}
+      >
+        <Text className="font-bold">{t("buttons.generateTask")}</Text>
+      </Pressable>
     );
   }
 
