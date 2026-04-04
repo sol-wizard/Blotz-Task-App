@@ -90,10 +90,12 @@ export const AiVoiceInput = ({
           </ScrollView>
         )}
 
-        {/* Listening text — smaller, pushed toward bottom */}
+        {/* Listening text — always occupies space, hidden when not listening */}
         <View className="items-center px-8 pb-4">
-          <Text className="text-white font-balooBold text-xl mb-1">{t("voiceListening.title")}</Text>
-          <Text className="text-white/70 font-baloo text-sm text-center">
+          <Text className={`text-white font-balooBold text-xl mb-1 ${isListening ? "opacity-100" : "opacity-0"}`}>
+            {t("voiceListening.title")}
+          </Text>
+          <Text className={`text-white/70 font-baloo text-sm text-center ${isListening ? "opacity-100" : "opacity-0"}`}>
             {t("voiceListening.subtitle")}
           </Text>
         </View>
