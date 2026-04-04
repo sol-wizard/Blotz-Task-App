@@ -32,5 +32,13 @@
     "textPlaceholder": "Note content",
     "editTextLabel": "Edit note",
     "editTextHint": "Double tap to edit note"
+  },
+  "voiceHint": {
+    "trySaying": "Try saying",
+    "hintText": "\"Attend the U.S. presidential election tomorrow at 8 AM\""
+  },
+  "voiceListening": {
+    "title": "Listening ...",
+    "subtitle": "Say everything you need to get done."
   }
 }

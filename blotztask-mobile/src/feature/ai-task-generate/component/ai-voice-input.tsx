@@ -9,6 +9,8 @@ import { AiTaskDTO } from "../models/ai-task-dto";
 import { AiNoteDTO } from "../models/ai-note-dto";
 import { AiTaskCard } from "./ai-task-card";
 import { AiNoteCard } from "./ai-note-card";
+import { VoiceHintText } from "./voice-hint-text";
+import { useTranslation } from "react-i18next";
 
 export const AiVoiceInput = ({
   transcribeAudio,
@@ -19,6 +21,7 @@ export const AiVoiceInput = ({
   aiTasks?: AiTaskDTO[];
   aiNotes?: AiNoteDTO[];
 }) => {
+  const { t } = useTranslation("aiTaskGenerate");
   const { height } = useWindowDimensions();
   const { isListening, startListening, uploadAudio, abortListening } =
     useVoiceRecorder(transcribeAudio);
@@ -60,14 +63,7 @@ export const AiVoiceInput = ({
         </View>
 
         {/* Hint text (no results) — centered, large */}
-        {!hasResults && (
-          <View className="flex-1 w-full items-center justify-center px-8">
-            <Text className="text-white/60 font-baloo text-base mb-2">Try saying</Text>
-            <Text className="text-white font-balooBold text-2xl text-center">
-              "Schedule all of these tasks for tomorrow"
-            </Text>
-          </View>
-        )}
+        {!hasResults && <VoiceHintText />}
 
         {/* Task cards (has results) */}
         {hasResults && (
@@ -96,9 +92,9 @@ export const AiVoiceInput = ({
 
         {/* Listening text — smaller, pushed toward bottom */}
         <View className="items-center px-8 pb-4">
-          <Text className="text-white font-balooBold text-xl mb-1">Listening ...</Text>
+          <Text className="text-white font-balooBold text-xl mb-1">{t("voiceListening.title")}</Text>
           <Text className="text-white/70 font-baloo text-sm text-center">
-            Say everything you need to get done.
+            {t("voiceListening.subtitle")}
           </Text>
         </View>
 
