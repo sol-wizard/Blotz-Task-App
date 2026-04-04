@@ -11,7 +11,7 @@ import { AiTaskCard } from "./ai-task-card";
 import { AiNoteCard } from "./ai-note-card";
 import { VoiceHintText } from "./voice-hint-text";
 import { useTranslation } from "react-i18next";
-import { useVoiceRecording } from "../hooks/useVoiceRecording";
+import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 
 export const AiVoiceInput = ({
   transcribeAudio,
@@ -25,7 +25,7 @@ export const AiVoiceInput = ({
   const { t } = useTranslation("aiTaskGenerate");
   const { height } = useWindowDimensions();
   const { isListening, uploadAudio, listeningBreak, startListening, abortListening } =
-    useVoiceRecording(transcribeAudio);
+    useVoiceRecorder(transcribeAudio);
 
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks);
   const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes);

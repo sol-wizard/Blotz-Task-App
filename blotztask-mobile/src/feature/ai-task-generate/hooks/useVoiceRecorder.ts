@@ -9,7 +9,7 @@ import { File as ExpoFile } from "expo-file-system";
 
 const RECORD_OPTIONS = { ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true };
 
-export function useVoiceRecording(transcribeAudio: (uri: string) => Promise<void>) {
+export function useVoiceRecorder(transcribeAudio: (uri: string) => Promise<void>) {
   const [isListening, setIsListening] = useState(false);
   const recorder = useAudioRecorder(RECORD_OPTIONS);
   const hasFoundVoice = useRef(false);
