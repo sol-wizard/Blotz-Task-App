@@ -12,6 +12,10 @@ import { AiNoteCard } from "./ai-note-card";
 import { VoiceHintText } from "./voice-hint-text";
 import { useTranslation } from "react-i18next";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
+import { convertAiTaskToAddTaskItemDTO } from "../utils/map-aitask-to-addtaskitem-dto";
+import useTaskMutations from "@/shared/hooks/useTaskMutations";
+import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
+import { router } from "expo-router";
 
 export const AiVoiceInput = ({
   transcribeAudio,
@@ -27,6 +31,24 @@ export const AiVoiceInput = ({
   const { t } = useTranslation("aiTaskGenerate");
   const { height } = useWindowDimensions();
   const { isListening, startListening, stopAndUpload } = useVoiceRecorder(transcribeAudio);
+  const { addTaskAsync, isAdding } = useTaskMutations();
+  const { createNoteAsync, isNoteCreating } = useNotesMutation();
+
+  const handleAddAll = async () => {
+    if (isAdding || isNoteCreating) return;
+    try {
+      if (localTasks.length > 0) {
+        const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
+        await Promise.all(payloads.map((payload) => addTaskAsync(payload)));
+      }
+      if (localNotes.length > 0) {
+        await Promise.all(localNotes.map((n) => createNoteAsync(n.text)));
+      }
+      router.back();
+    } catch (error) {
+      console.error("Add tasks/notes failed", error);
+    }
+  };
 
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks);
   const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes);
@@ -133,9 +155,9 @@ export const AiVoiceInput = ({
             )}
           </View>
 
-          {/* Confirm button — force-sends the current recording */}
+          {/* Confirm button — adds all tasks */}
           <Pressable
-            onPress={() => {}}
+            onPress={() => void handleAddAll()}
             accessibilityLabel="Confirm"
             className="w-14 h-14 rounded-full items-center justify-center"
             style={{ backgroundColor: "rgba(255,255,255,0.25)" }}
