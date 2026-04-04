@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
+import { Toast } from "react-native-toast-message/lib/src/Toast";
 
 export function AiTasksPreview({
   aiTasks,
@@ -46,11 +47,7 @@ export function AiTasksPreview({
     });
   }, []);
 
-  const captureOutcome = (
-    outcome: AiTaskOutcome,
-    addedTaskCount = 0,
-    addedNoteCount = 0
-  ) => {
+  const captureOutcome = (outcome: AiTaskOutcome, addedTaskCount = 0, addedNoteCount = 0) => {
     analytics.trackIfUserAcceptAiTask({
       userInput,
       outcome,
@@ -62,7 +59,7 @@ export function AiTasksPreview({
   };
 
   const hasItems = localTasks.length > 0 || localNotes.length > 0;
-  const addAllDisabled = (isAdding || isNoteCreating) || !hasItems;
+  const addAllDisabled = isAdding || isNoteCreating || !hasItems;
 
   const onDeleteNote = (noteId: string) => {
     setLocalNotes((prev) => prev.filter((n) => n.id !== noteId));
@@ -101,6 +98,7 @@ export function AiTasksPreview({
       setLocalTasks([]);
       setLocalNotes([]);
       router.back();
+      Toast.show({ type: "warning", text1: t("success.taskAdded") });
     } catch (error) {
       console.error("Add tasks/notes failed", error);
     }
@@ -145,7 +143,6 @@ export function AiTasksPreview({
         )}
       </ScrollView>
 
-     
       <View className="flex-row justify-center items-center mt-4 mb-10 flex-wrap gap-2">
         <Pressable
           onPress={handleGoBack}
@@ -167,7 +164,7 @@ export function AiTasksPreview({
           accessibilityRole="button"
           accessibilityLabel={t("buttons.addAll")}
         >
-          {(isAdding || isNoteCreating) ? (
+          {isAdding || isNoteCreating ? (
             <ActivityIndicator size="small" />
           ) : (
             <Text className="font-baloo text-sm">{t("buttons.addAll")}</Text>

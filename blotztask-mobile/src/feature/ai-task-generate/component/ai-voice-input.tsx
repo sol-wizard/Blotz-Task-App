@@ -16,6 +16,7 @@ import { convertAiTaskToAddTaskItemDTO } from "../utils/map-aitask-to-addtaskite
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import { router } from "expo-router";
+import Toast from "react-native-toast-message";
 
 export const AiVoiceInput = ({
   transcribeAudio,
@@ -44,7 +45,9 @@ export const AiVoiceInput = ({
       if (localNotes.length > 0) {
         await Promise.all(localNotes.map((n) => createNoteAsync(n.text)));
       }
+
       router.back();
+      Toast.show({ type: "warning", text1: t("success.taskAdded") });
     } catch (error) {
       console.error("Add tasks/notes failed", error);
     }
