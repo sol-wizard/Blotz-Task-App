@@ -78,7 +78,7 @@ export const AiVoiceInput = ({
       <View className="flex-1 items-center">
         {/* Top row - dismiss button */}
         <View className="w-full items-end px-6 pt-4 pb-2">
-          <Pressable onPress={() => void stopAndUpload()} accessibilityLabel="Stop">
+          <Pressable onPress={() => router.back()} accessibilityLabel="Stop">
             <MaterialCommunityIcons name="chevron-down" size={32} color="white" />
           </Pressable>
         </View>
@@ -127,7 +127,9 @@ export const AiVoiceInput = ({
             onPressOut={() => void stopAndUpload()}
             accessibilityLabel="Hold to record"
             className="w-14 h-14 rounded-full items-center justify-center"
-            style={{ backgroundColor: isListening ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.25)" }}
+            style={{
+              backgroundColor: isListening ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.25)",
+            }}
           >
             <MaterialCommunityIcons name="microphone" size={28} color="white" />
           </Pressable>
