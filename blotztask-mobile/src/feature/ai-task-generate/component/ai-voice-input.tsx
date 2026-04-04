@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, useWindowDimensions, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -28,6 +28,11 @@ export const AiVoiceInput = ({
 
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks);
   const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes);
+
+  useEffect(() => {
+    setLocalTasks(aiTasks);
+    setLocalNotes(aiNotes);
+  }, [aiTasks, aiNotes]);
 
   const onDeleteTask = (taskId: string) => {
     setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
