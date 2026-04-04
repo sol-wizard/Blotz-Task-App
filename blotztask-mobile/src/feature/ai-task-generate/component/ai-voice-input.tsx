@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Pressable, useWindowDimensions, ScrollView } from "react-native";
+import { View, Text, Pressable, useWindowDimensions } from "react-native";
+import Animated from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
@@ -72,7 +73,10 @@ export const AiVoiceInput = ({
 
         {/* Task cards (has results) */}
         {hasResults && (
-          <ScrollView className="w-full flex-1" showsVerticalScrollIndicator={false}>
+          <Animated.ScrollView
+            className="w-full flex-1"
+            showsVerticalScrollIndicator={false}
+          >
             {localTasks.map((task) => (
               <AiTaskCard
                 key={task.id}
@@ -92,7 +96,7 @@ export const AiVoiceInput = ({
                 ))}
               </>
             )}
-          </ScrollView>
+          </Animated.ScrollView>
         )}
 
         {/* Listening text — always occupies space, hidden when not listening */}

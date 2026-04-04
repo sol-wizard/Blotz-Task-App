@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, Keyboard, TextInput } from "react-native";
+import Animated from "react-native-reanimated";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import { theme } from "@/shared/constants/theme";
@@ -30,7 +32,12 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
   const formatDate = formatAiTaskCardDate({ startTime: task.startTime, endTime: task.endTime });
 
   return (
-    <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] min-h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
+    <Animated.View
+      entering={MotionAnimations.zoomEntering}
+      exiting={MotionAnimations.outExiting}
+      layout={MotionAnimations.layout}
+      className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] min-h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4"
+    >
       <View
         className="w-2 h-full rounded-full"
         style={{ backgroundColor: task.label?.color ?? theme.colors.disabled }}
@@ -71,6 +78,6 @@ export function AiTaskCard({ task, handleTaskDelete, onTitleChange }: Props) {
       >
         <MaterialCommunityIcons name={"close"} size={20} color="#2F3640" />
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }

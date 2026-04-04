@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { View, TextInput, Pressable, Keyboard } from "react-native";
+import Animated from "react-native-reanimated";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "@/shared/constants/theme";
 import { useTranslation } from "react-i18next";
@@ -26,7 +28,12 @@ export function AiNoteCard({ note, handleNoteDelete, onTextChange }: Props) {
   };
 
   return (
-    <View className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] min-h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4">
+    <Animated.View
+      entering={MotionAnimations.zoomEntering}
+      exiting={MotionAnimations.outExiting}
+      layout={MotionAnimations.layout}
+      className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] min-h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4"
+    >
       <View className="flex-1 flex-row items-center ml-4">
         <TextInput
           value={draftText}
@@ -53,6 +60,6 @@ export function AiNoteCard({ note, handleNoteDelete, onTextChange }: Props) {
       >
         <MaterialCommunityIcons name="close" size={20} color="#2F3640" />
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
