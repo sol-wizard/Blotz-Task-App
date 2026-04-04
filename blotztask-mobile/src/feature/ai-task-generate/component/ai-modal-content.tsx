@@ -7,7 +7,6 @@ import { mapExtractedNoteDTOToAiNoteDTO } from "../utils/map-extracted-to-note-d
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
 import { AiVoiceInput } from "./ai-voice-input";
-import { se } from "date-fns/locale";
 
 export const AiModalContent = ({
   modalType,
@@ -73,7 +72,6 @@ export const AiModalContent = ({
           setModalType={setModalType}
           onGenerateTask={async () => {
             await sendMessage(text);
-            setModalType("task-preview");
           }}
         />
       );
