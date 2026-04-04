@@ -59,38 +59,47 @@ export const AiVoiceInput = ({
           </Pressable>
         </View>
 
-        {/* Center content */}
-        <View className="flex-1 w-full items-center justify-center px-8">
-          {hasResults ? (
-            <ScrollView className="w-full" showsVerticalScrollIndicator={false}>
-              {localTasks.map((task) => (
-                <AiTaskCard
-                  key={task.id}
-                  task={task}
-                  handleTaskDelete={onDeleteTask}
-                />
-              ))}
-              {localNotes.length > 0 && (
-                <>
-                  <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">Notes</Text>
-                  {localNotes.map((note) => (
-                    <AiNoteCard
-                      key={note.id}
-                      note={note}
-                      handleNoteDelete={onDeleteNote}
-                    />
-                  ))}
-                </>
-              )}
-            </ScrollView>
-          ) : (
-            <>
-              <Text className="text-white font-balooBold text-3xl mb-3">Listening ...</Text>
-              <Text className="text-white/80 font-baloo text-base text-center">
-                Say everything you need to get done.
-              </Text>
-            </>
-          )}
+        {/* Hint text (no results) — centered, large */}
+        {!hasResults && (
+          <View className="flex-1 w-full items-center justify-center px-8">
+            <Text className="text-white/60 font-baloo text-base mb-2">Try saying</Text>
+            <Text className="text-white font-balooBold text-2xl text-center">
+              "Schedule all of these tasks for tomorrow"
+            </Text>
+          </View>
+        )}
+
+        {/* Task cards (has results) */}
+        {hasResults && (
+          <ScrollView className="w-full flex-1" showsVerticalScrollIndicator={false}>
+            {localTasks.map((task) => (
+              <AiTaskCard
+                key={task.id}
+                task={task}
+                handleTaskDelete={onDeleteTask}
+              />
+            ))}
+            {localNotes.length > 0 && (
+              <>
+                <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">Notes</Text>
+                {localNotes.map((note) => (
+                  <AiNoteCard
+                    key={note.id}
+                    note={note}
+                    handleNoteDelete={onDeleteNote}
+                  />
+                ))}
+              </>
+            )}
+          </ScrollView>
+        )}
+
+        {/* Listening text — smaller, pushed toward bottom */}
+        <View className="items-center px-8 pb-4">
+          <Text className="text-white font-balooBold text-xl mb-1">Listening ...</Text>
+          <Text className="text-white/70 font-baloo text-sm text-center">
+            Say everything you need to get done.
+          </Text>
         </View>
 
         {/* Bottom controls */}
