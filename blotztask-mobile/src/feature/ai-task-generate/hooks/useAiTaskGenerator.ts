@@ -27,7 +27,7 @@ export function useAiTaskGenerator({
     const base64 = btoa(binary);
 
     setIsAiGenerating(true);
-    console.log("isAiGenerating in transcribeAudio set to true");
+
     await signalRService.invoke(connection, "TranscribeAudio", base64);
   };
 
@@ -40,8 +40,6 @@ export function useAiTaskGenerator({
         setIsAiGenerating(false);
         console.warn("AI processing failed:", receivedAiMessage.errorMessage);
       } else {
-        console.log("AI processing succeeded:", receivedAiMessage);
-
         setIsAiGenerating(false);
       }
     };
