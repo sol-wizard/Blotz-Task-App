@@ -36,12 +36,8 @@ export function useAiTaskGenerator({
 
     const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
       setAiGeneratedMessage(receivedAiMessage);
-      if (!receivedAiMessage.isSuccess) {
-        setIsAiGenerating(false);
-        console.warn("AI processing failed:", receivedAiMessage.errorMessage);
-      } else {
-        setIsAiGenerating(false);
-      }
+
+      setIsAiGenerating(false);
     };
 
     const startConnection = async () => {
