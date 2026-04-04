@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BottomSheetType } from "../models/bottom-sheet-type";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
@@ -7,6 +7,7 @@ import { mapExtractedNoteDTOToAiNoteDTO } from "../utils/map-extracted-to-note-d
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
 import { AiVoiceInput } from "./ai-voice-input";
+import { se } from "date-fns/locale";
 
 export const AiModalContent = ({
   modalType,
@@ -32,6 +33,12 @@ export const AiModalContent = ({
   const aiGeneratedNotes = (aiGeneratedMessage?.extractedNotes ?? []).map(
     mapExtractedNoteDTOToAiNoteDTO,
   );
+
+  useEffect(() => {
+    if (aiGeneratedMessage?.isSuccess && !isAiGenerating && modalType === "input") {
+      setModalType("task-preview");
+    }
+  }, [isAiGenerating]);
 
   switch (modalType) {
     case "task-preview":
