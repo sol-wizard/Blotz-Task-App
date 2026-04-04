@@ -5,13 +5,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
 import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
-import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { AiNoteDTO } from "../models/ai-note-dto";
 import { AiTaskCard } from "./ai-task-card";
 import { AiNoteCard } from "./ai-note-card";
 import { VoiceHintText } from "./voice-hint-text";
 import { useTranslation } from "react-i18next";
+import { useVoiceRecording } from "../hooks/useVoiceRecording";
 
 export const AiVoiceInput = ({
   transcribeAudio,
@@ -24,8 +24,8 @@ export const AiVoiceInput = ({
 }) => {
   const { t } = useTranslation("aiTaskGenerate");
   const { height } = useWindowDimensions();
-  const { isListening, startListening, uploadAudio, abortListening } =
-    useVoiceRecorder(transcribeAudio);
+  const { isListening, uploadAudio, listeningBreak, startListening, abortListening } =
+    useVoiceRecording(transcribeAudio);
 
   const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>(aiTasks);
   const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>(aiNotes);
@@ -34,6 +34,12 @@ export const AiVoiceInput = ({
     setLocalTasks(aiTasks);
     setLocalNotes(aiNotes);
   }, [aiTasks, aiNotes]);
+
+  useEffect(() => {
+    return () => {
+      void abortListening();
+    };
+  }, []);
 
   const onDeleteTask = (taskId: string) => {
     setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
@@ -45,14 +51,6 @@ export const AiVoiceInput = ({
 
   const hasResults = localTasks.length > 0 || localNotes.length > 0;
 
-  const handleToggleListen = () => {
-    if (isListening) {
-      void abortListening();
-    } else {
-      void startListening();
-    }
-  };
-
   return (
     <LinearGradient
       colors={["#A3DC2F", "#2F80ED"]}
@@ -63,48 +61,43 @@ export const AiVoiceInput = ({
       <View className="flex-1 items-center">
         {/* Top row - dismiss button */}
         <View className="w-full items-end px-6 pt-4 pb-2">
-          <Pressable onPress={() => void abortListening()} accessibilityLabel="Stop">
+          <Pressable onPress={() => void listeningBreak()} accessibilityLabel="Stop">
             <MaterialCommunityIcons name="chevron-down" size={32} color="white" />
           </Pressable>
         </View>
 
-        {/* Hint text (no results) — centered, large */}
+        {/* Hint text (no results) */}
         {!hasResults && <VoiceHintText />}
 
-        {/* Task cards (has results) */}
+        {/* Task / note cards (has results) */}
         {hasResults && (
-          <Animated.ScrollView
-            className="w-full flex-1"
-            showsVerticalScrollIndicator={false}
-          >
+          <Animated.ScrollView className="w-full flex-1" showsVerticalScrollIndicator={false}>
             {localTasks.map((task) => (
-              <AiTaskCard
-                key={task.id}
-                task={task}
-                handleTaskDelete={onDeleteTask}
-              />
+              <AiTaskCard key={task.id} task={task} handleTaskDelete={onDeleteTask} />
             ))}
             {localNotes.length > 0 && (
               <>
                 <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">Notes</Text>
                 {localNotes.map((note) => (
-                  <AiNoteCard
-                    key={note.id}
-                    note={note}
-                    handleNoteDelete={onDeleteNote}
-                  />
+                  <AiNoteCard key={note.id} note={note} handleNoteDelete={onDeleteNote} />
                 ))}
               </>
             )}
           </Animated.ScrollView>
         )}
 
-        {/* Listening text — always occupies space, hidden when not listening */}
+        {/* Listening indicator — always occupies space to prevent layout shift */}
         <View className="items-center px-8 pb-4">
-          <Text className={`text-white font-balooBold text-xl mb-1 ${isListening ? "opacity-100" : "opacity-0"}`}>
+          <Text
+            className="text-white font-balooBold text-xl mb-1"
+            style={{ opacity: isListening ? 1 : 0 }}
+          >
             {t("voiceListening.title")}
           </Text>
-          <Text className={`text-white/70 font-baloo text-sm text-center ${isListening ? "opacity-100" : "opacity-0"}`}>
+          <Text
+            className="text-white/70 font-baloo text-sm text-center"
+            style={{ opacity: isListening ? 1 : 0 }}
+          >
             {t("voiceListening.subtitle")}
           </Text>
         </View>
@@ -113,8 +106,8 @@ export const AiVoiceInput = ({
         <View className="w-full flex-row items-center px-6 gap-4 pb-8">
           {/* Play / Pause toggle */}
           <Pressable
-            onPress={handleToggleListen}
-            accessibilityLabel={isListening ? "Pause" : "Start listening"}
+            onPress={() => (isListening ? void listeningBreak() : void startListening())}
+            accessibilityLabel={isListening ? "Stop" : "Start listening"}
             className="w-14 h-14 rounded-full items-center justify-center"
             style={{ backgroundColor: "rgba(255,255,255,0.25)" }}
           >
@@ -144,9 +137,9 @@ export const AiVoiceInput = ({
             )}
           </View>
 
-          {/* Confirm button */}
+          {/* Confirm button — force-sends the current recording */}
           <Pressable
-            onPress={() => void uploadAudio()}
+            onPress={() => {}}
             accessibilityLabel="Confirm"
             className="w-14 h-14 rounded-full items-center justify-center"
             style={{ backgroundColor: "rgba(255,255,255,0.25)" }}
