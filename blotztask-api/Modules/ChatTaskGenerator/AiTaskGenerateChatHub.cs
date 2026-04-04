@@ -88,7 +88,7 @@ public class AiTaskGenerateChatHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-public async Task SendMessage(string message)
+    public async Task SendMessage(string message)
     {
         var timeZone = Context.Items.TryGetValue("TimeZone", out var timeZoneObj) &&
                        timeZoneObj is TimeZoneInfo tz
