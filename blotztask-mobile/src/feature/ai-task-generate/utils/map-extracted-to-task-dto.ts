@@ -1,4 +1,3 @@
-import uuid from "react-native-uuid";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 import { LabelDTO } from "@/shared/models/label-dto";
@@ -23,7 +22,7 @@ export function mapExtractedTaskDTOToAiTaskDTO(
     : undefined;
 
   return {
-    id: uuid.v4().toString(),
+    id: extractedTask.id,
     description: extractedTask.description ?? "",
     title: extractedTask.title,
     isAdded: false,

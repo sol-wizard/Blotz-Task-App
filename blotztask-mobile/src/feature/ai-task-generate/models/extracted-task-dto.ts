@@ -1,5 +1,6 @@
 // This data type is passed from the ai chat endpoint
 export interface ExtractedTaskDTO {
+  id: string;
   title: string;
   isValidTask: boolean;
   description: string;

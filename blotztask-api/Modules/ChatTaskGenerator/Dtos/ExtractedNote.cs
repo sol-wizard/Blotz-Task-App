@@ -8,6 +8,9 @@ namespace BlotzTask.Modules.ChatTaskGenerator.DTOs;
 /// </summary>
 public class ExtractedNote
 {
+    [JsonIgnore]
+    public Guid Id { get; set; }
+
     [JsonPropertyName("text")]
     [Description("The main content of the note. Use the user's words or a concise summary. This is the body text that will be saved as the note.")]
     public string Text { get; set; } = "";

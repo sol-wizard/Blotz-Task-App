@@ -1,9 +1,9 @@
 import { ExtractedTaskDTO } from "./extracted-task-dto";
-import { ExtractedNoteDTO } from "./extracted-note-dto";
+import { AiNoteDTO } from "./ai-note-dto";
 
 export interface AiResultMessageDTO {
   isSuccess: boolean;
   extractedTasks?: ExtractedTaskDTO[];
-  extractedNotes?: ExtractedNoteDTO[];
+  extractedNotes?: AiNoteDTO[];
   errorMessage?: string;
 }

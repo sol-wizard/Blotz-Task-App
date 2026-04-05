@@ -8,6 +8,9 @@ namespace BlotzTask.Modules.ChatTaskGenerator.DTOs;
 /// </summary>
 public class ExtractedTask
 {
+    [JsonIgnore]
+    public Guid Id { get; set; }
+
     [JsonPropertyName("title")]
     [Description("A short, descriptive name for the task")]
     public string Title { get; set; }

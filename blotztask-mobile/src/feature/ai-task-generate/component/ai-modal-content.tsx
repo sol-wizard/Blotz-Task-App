@@ -3,7 +3,6 @@ import { BottomSheetType } from "../models/bottom-sheet-type";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
-import { mapExtractedNoteDTOToAiNoteDTO } from "../utils/map-extracted-to-note-dto";
 import { AiTasksPreview } from "./ai-tasks-preview";
 import { AiInput } from "./ai-input";
 import { AiVoiceInput } from "./ai-voice-input";
@@ -29,9 +28,7 @@ export const AiModalContent = ({
   const aiGeneratedTasks = (aiGeneratedMessage?.extractedTasks ?? []).map((task) =>
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
   );
-  const aiGeneratedNotes = (aiGeneratedMessage?.extractedNotes ?? []).map(
-    mapExtractedNoteDTOToAiNoteDTO,
-  );
+  const aiGeneratedNotes = aiGeneratedMessage?.extractedNotes ?? [];
 
   useEffect(() => {
     if (aiGeneratedMessage?.isSuccess && !isAiGenerating && modalType === "input") {
