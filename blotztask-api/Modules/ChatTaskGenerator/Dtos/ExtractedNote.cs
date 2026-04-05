@@ -8,7 +8,6 @@ namespace BlotzTask.Modules.ChatTaskGenerator.DTOs;
 /// </summary>
 public class ExtractedNote
 {
-    [JsonIgnore]
     public Guid Id { get; set; }
 
     [JsonPropertyName("text")]
