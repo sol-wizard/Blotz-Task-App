@@ -97,7 +97,8 @@ public class AiTaskGenerateChatHub : Hub
 
         try
         {
-            var ct = Context.ConnectionAborted;
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var ct = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, Context.ConnectionAborted);
 
             if (!_chatHistoryStore.TryGet(Context.ConnectionId, out var chatHistory) || chatHistory == null)
                 throw new HubException("Chat history not found for this connection.");
@@ -107,11 +108,15 @@ public class AiTaskGenerateChatHub : Hub
                 Message = message,
                 TimeZone = timeZone
             });
-
+            Console.WriteLine("Sending message to chat history");
             chatHistory.AddUserMessage(resolvedMessage);
 
-            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
+            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct.Token);
+
+            Console.WriteLine($"Get result message: {resultMessage}");
+            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct.Token);
+
+            Console.WriteLine("Send AI result back to frontend");
         }
         catch (AiTaskGenerationException ex)
         {
