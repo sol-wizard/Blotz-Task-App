@@ -6,6 +6,8 @@ export const useAllLabels = () => {
   const { data: labels, isLoading } = useQuery({
     queryKey: labelKeys.all,
     queryFn: () => fetchAllLabel(),
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   return {
