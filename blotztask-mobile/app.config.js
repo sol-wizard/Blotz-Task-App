@@ -68,7 +68,7 @@ export default {
           organization: "nicoles-project",
         },
       ],
-      "expo-audio",
+      ["expo-audio", { enableBackgroundPlayback: false }],
       ["./plugins/withCustomGradleProperties"],
       ["./plugins/withAzureSpeechAndroid"],
       "expo-asset",
