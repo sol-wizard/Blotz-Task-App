@@ -7,6 +7,7 @@ using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.AiUsage.Entities;
 using BlotzTask.Modules.Notes.Domain;
+using BlotzTask.Modules.Pomodoro.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Infrastructure.Data;

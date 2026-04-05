@@ -4,6 +4,7 @@ using System.Text.Json;
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiUsage.Entities;
 using BlotzTask.Modules.Notes.Domain;
+using BlotzTask.Modules.Pomodoro.Domain;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Users.Domain;
