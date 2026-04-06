@@ -28,40 +28,6 @@ export function useAiTaskGenerator({
     await signalRService.invoke(connection, "TranscribeAudio", base64);
   };
 
-  useEffect(() => {
-    let newConnection: signalR.HubConnection | null = null;
-
-    const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
-      setAiGeneratedMessage(receivedAiMessage);
-      setIsAiGenerating(false);
-    };
-
-    const startConnection = async () => {
-      try {
-        newConnection = await signalRService.createConnection();
-        setConnection(newConnection);
-        await newConnection.start();
-        newConnection.on("ReceiveMessage", receiveMessageHandler);
-        console.log("Connected to SignalR hub!");
-      } catch (error) {
-        console.error("Error connecting to SignalR:", error);
-      }
-    };
-    startConnection();
-    return () => {
-      if (newConnection) {
-        newConnection
-          .stop()
-          .then(() => {
-            console.log("SignalR Connection Stopped.");
-            setAiGeneratedMessage(undefined);
-            newConnection!.off("ReceiveMessage", receiveMessageHandler);
-          })
-          .catch((error) => console.error("Error stopping SignalR connection:", error));
-      }
-    };
-  }, []);
-
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
 
@@ -78,6 +44,53 @@ export function useAiTaskGenerator({
       setIsAiGenerating(false);
     }
   };
+
+  const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
+    setAiGeneratedMessage(receivedAiMessage);
+    setIsAiGenerating(false);
+  };
+
+  const startConnection = async (
+    receiveMessage: (msg: AiResultMessageDTO) => void,
+    onConnectionReady: (conn: signalR.HubConnection) => void,
+  ) => {
+    try {
+      const conn = await signalRService.createConnection();
+      onConnectionReady(conn);
+      await conn.start();
+      conn.on("ReceiveMessage", receiveMessage);
+      console.log("Connected to SignalR hub!");
+      return conn;
+    } catch (error) {
+      console.error("Error connecting to SignalR:", error);
+      return null;
+    }
+  };
+
+  const stopConnection = (
+    conn: signalR.HubConnection,
+    receiveMessage: (msg: AiResultMessageDTO) => void,
+  ) => {
+    conn
+      .stop()
+      .then(() => {
+        console.log("SignalR Connection Stopped.");
+        setAiGeneratedMessage(undefined);
+        conn.off("ReceiveMessage", receiveMessage);
+      })
+      .catch((error) => console.error("Error stopping SignalR connection:", error));
+  };
+
+  useEffect(() => {
+    let newConnection: signalR.HubConnection | null = null;
+    startConnection(receiveMessageHandler, (conn) => {
+      newConnection = conn;
+      setConnection(conn);
+    });
+    return () => {
+      if (newConnection) stopConnection(newConnection, receiveMessageHandler);
+    };
+  }, []);
 
   return {
     aiGeneratedMessage,
