@@ -107,15 +107,13 @@ public class AiTaskGenerateChatHub : Hub
                 Message = message,
                 TimeZone = timeZone
             });
-            Console.WriteLine("Sending message to chat history");
+            
             chatHistory.AddUserMessage(resolvedMessage);
 
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
-
-            Console.WriteLine($"Get result message: {resultMessage}");
+            
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
 
-            Console.WriteLine("Send AI result back to frontend");
         }
         catch (AiTaskGenerationException ex)
         {
