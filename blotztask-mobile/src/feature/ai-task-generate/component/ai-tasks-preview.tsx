@@ -2,8 +2,7 @@
 import { AiTaskDTO } from "@/feature/ai-task-generate/models/ai-task-dto";
 import React, { useEffect, useState } from "react";
 import { View, Pressable, ActivityIndicator, ScrollView, Text } from "react-native";
-import { AiTaskCard } from "./ai-task-card";
-import { AiNoteCard } from "./ai-note-card";
+import { AiItemCard } from "./ai-item-card";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
@@ -117,11 +116,15 @@ export function AiTasksPreview({
         {localTasks.length > 0 && (
           <>
             {localTasks.map((task) => (
-              <AiTaskCard
+              <AiItemCard
                 key={task.id}
-                task={task}
-                handleTaskDelete={onDeleteTask}
-                onTitleChange={onTitleChange}
+                id={task.id}
+                text={task.title}
+                onDelete={onDeleteTask}
+                label={task.label}
+                startTime={task.startTime}
+                endTime={task.endTime}
+                onTextChange={onTitleChange}
               />
             ))}
           </>
@@ -132,10 +135,11 @@ export function AiTasksPreview({
               {t("labels.notesSection")}
             </Text>
             {localNotes.map((note) => (
-              <AiNoteCard
+              <AiItemCard
                 key={note.id}
-                note={note}
-                handleNoteDelete={onDeleteNote}
+                id={note.id}
+                text={note.text}
+                onDelete={onDeleteNote}
                 onTextChange={onNoteTextChange}
               />
             ))}
