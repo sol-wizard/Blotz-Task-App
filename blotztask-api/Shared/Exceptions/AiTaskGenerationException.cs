@@ -44,7 +44,7 @@ public sealed class AiInvalidJsonException
 public sealed class AiTokenLimitedException
     : AiTaskGenerationException
 {
-    public AiTokenLimitedException(string message = "You have exceeded token rate limit of your current pricing tier.")
+    public AiTokenLimitedException(string message = "You have exceeded token rate limit of your current Azure OpenAI pricing tier.")
         : base(AiErrorCode.TokenLimited, message)
     {
     }
