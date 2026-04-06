@@ -20,17 +20,17 @@ import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import Toast from "react-native-toast-message";
 
 export default function AiTaskSheetScreen() {
+  // --- Hooks ---
   const { t } = useTranslation("aiTaskGenerate");
   const { height } = useWindowDimensions();
-
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const { aiGeneratedMessage, setAiGeneratedMessage, transcribeAudio } = useAiTaskGenerator({ setIsAiGenerating });
   const { labels } = useAllLabels();
-
   const { isListening, startListening, stopAndUpload } = useVoiceRecorder(transcribeAudio);
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
+  // Request mic permission on mount; navigate back if denied
   useEffect(() => {
     void (async () => {
       const { granted } = await requestRecordingPermissionsAsync();
@@ -41,11 +41,14 @@ export default function AiTaskSheetScreen() {
     })();
   }, []);
 
+  // --- Derived data ---
   const aiTasks = (aiGeneratedMessage?.extractedTasks ?? []).map((task) =>
     mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
   );
   const aiNotes = aiGeneratedMessage?.extractedNotes ?? [];
+  const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
 
+  // --- Handlers ---
   const onDeleteTask = (taskId: string) => {
     setAiGeneratedMessage((prev) =>
       prev ? { ...prev, extractedTasks: prev.extractedTasks?.filter((t) => t.id !== taskId) } : prev,
@@ -75,8 +78,6 @@ export default function AiTaskSheetScreen() {
       console.error("Add tasks/notes failed", error);
     }
   };
-
-  const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
 
   return (
     <View className="flex-1 bg-transparent">
