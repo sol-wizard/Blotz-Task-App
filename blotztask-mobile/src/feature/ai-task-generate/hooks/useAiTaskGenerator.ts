@@ -4,6 +4,12 @@ import { File as ExpoFile } from "expo-file-system";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
 
+/**
+ * AI task generation over SignalR. There are two ways to send input to the hub:
+ * - Audio: `submitAudioForTranscription` → `TranscribeAudio` (recording as Base64).
+ * - Text: `sendTextMessage` → `SendMessage`.
+ * The model replies on `ReceiveMessage`, surfaced as `aiGeneratedMessage`.
+ */
 export function useAiTaskGenerator({
   setIsAiGenerating,
 }: {
@@ -12,35 +18,25 @@ export function useAiTaskGenerator({
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
 
-  const transcribeAudio = async (uri: string): Promise<void> => {
-    if (!connection) throw new Error("Cannot transcribe: Not connected.");
+  const submitAudioForTranscription = async (uri: string): Promise<void> => {
+    if (!connection) throw new Error("Cannot submit audio: not connected.");
 
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    let binary = "";
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    const base64 = btoa(binary);
+    const base64 = arrayBufferToBase64(arrayBuffer);
 
     setIsAiGenerating(true);
 
     await signalRService.invoke(connection, "TranscribeAudio", base64);
   };
 
-  const sendMessage = async (text: string) => {
-    if (!text.trim()) return;
+  const sendTextMessage = async (text: string) => {
+    if (!text.trim() || !connection) return;
 
     setIsAiGenerating(true);
-    if (connection) {
-      try {
-        await signalRService.invoke(connection, "SendMessage", text);
-      } catch (error) {
-        console.error("Error invoking SendMessage:", error);
-        setIsAiGenerating(false);
-      }
-    } else {
-      console.warn("Cannot send message: Not connected.");
+    try {
+      await signalRService.invoke(connection, "SendMessage", text);
+    } catch (error) {
+      console.error("Error sending text message:", error);
       setIsAiGenerating(false);
     }
   };
@@ -50,52 +46,40 @@ export function useAiTaskGenerator({
     setIsAiGenerating(false);
   };
 
-  const startConnection = async (
-    receiveMessage: (msg: AiResultMessageDTO) => void,
-    onConnectionReady: (conn: signalR.HubConnection) => void,
-  ) => {
-    try {
-      const conn = await signalRService.createConnection();
-      onConnectionReady(conn);
-      await conn.start();
-      conn.on("ReceiveMessage", receiveMessage);
-      console.log("Connected to SignalR hub!");
-      return conn;
-    } catch (error) {
-      console.error("Error connecting to SignalR:", error);
-      return null;
-    }
-  };
-
-  const stopConnection = (
-    conn: signalR.HubConnection,
-    receiveMessage: (msg: AiResultMessageDTO) => void,
-  ) => {
-    conn
-      .stop()
-      .then(() => {
-        console.log("SignalR Connection Stopped.");
-        setAiGeneratedMessage(undefined);
-        conn.off("ReceiveMessage", receiveMessage);
-      })
-      .catch((error) => console.error("Error stopping SignalR connection:", error));
-  };
-
   useEffect(() => {
-    let newConnection: signalR.HubConnection | null = null;
-    startConnection(receiveMessageHandler, (conn) => {
-      newConnection = conn;
-      setConnection(conn);
-    });
+    let conn: signalR.HubConnection | null = null;
+
+    signalRService
+      .createConnection()
+      .then((newConn) => {
+        conn = newConn;
+        setConnection(conn);
+        conn.on("ReceiveMessage", receiveMessageHandler);
+        return conn.start();
+      })
+      .catch((error) => console.error("Error connecting to SignalR:", error));
+
     return () => {
-      if (newConnection) stopConnection(newConnection, receiveMessageHandler);
+      if (conn) {
+        conn.off("ReceiveMessage", receiveMessageHandler);
+        conn.stop().catch((error) => console.error("Error stopping SignalR connection:", error));
+      }
     };
   }, []);
 
   return {
     aiGeneratedMessage,
     setAiGeneratedMessage,
-    transcribeAudio,
-    sendMessage,
+    submitAudioForTranscription,
+    sendTextMessage,
   };
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }

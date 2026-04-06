@@ -4,7 +4,7 @@ import { File as ExpoFile } from "expo-file-system";
 
 const RECORD_OPTIONS = { ...RecordingPresets.HIGH_QUALITY };
 
-export function useVoiceRecorder(transcribeAudio: (uri: string) => Promise<void>) {
+export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
   const [isListening, setIsListening] = useState(false);
   const recorder = useAudioRecorder(RECORD_OPTIONS);
 
@@ -26,7 +26,7 @@ export function useVoiceRecorder(transcribeAudio: (uri: string) => Promise<void>
       setIsListening(false);
       const uri = recorder.uri;
       if (uri) {
-        await transcribeAudio(uri);
+        await submitAudioForTranscription(uri);
         new ExpoFile(uri).delete();
       }
     } catch (error) {

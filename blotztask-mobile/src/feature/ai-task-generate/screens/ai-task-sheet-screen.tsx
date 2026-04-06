@@ -24,9 +24,10 @@ export default function AiTaskSheetScreen() {
   const { t } = useTranslation("aiTaskGenerate");
   const { height } = useWindowDimensions();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const { aiGeneratedMessage, setAiGeneratedMessage, transcribeAudio } = useAiTaskGenerator({ setIsAiGenerating });
+  const { aiGeneratedMessage, setAiGeneratedMessage, submitAudioForTranscription } =
+    useAiTaskGenerator({ setIsAiGenerating });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload } = useVoiceRecorder(transcribeAudio);
+  const { isListening, startListening, stopAndUpload } = useVoiceRecorder(submitAudioForTranscription);
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
