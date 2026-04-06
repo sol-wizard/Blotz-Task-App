@@ -84,13 +84,6 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                     { 2, 500000, "Pro" }
                 });
 
-            migrationBuilder.Sql(@"
-                INSERT INTO UserSubscriptions (Id, UserId, PlanId, CreatedAt)
-                SELECT NEWID(), Id, 1, GETUTCDATE()
-                FROM AppUsers
-                WHERE Id NOT IN (SELECT UserId FROM UserSubscriptions)
-            ");
-
             migrationBuilder.CreateIndex(
                 name: "IX_AiUsageRecords_UserId_CreatedAt",
                 table: "AiUsageRecords",
