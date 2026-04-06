@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, useWindowDimensions } from "react-native";
 import Animated from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,8 +8,6 @@ import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { router } from "expo-router";
 import { requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
-import { AiTaskDTO } from "../models/ai-task-dto";
-import { AiNoteDTO } from "../models/ai-result-message-dto";
 import { AiResultCard } from "../component/ai-result-card";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
@@ -26,29 +24,12 @@ export default function AiTaskSheetScreen() {
   const { height } = useWindowDimensions();
 
   const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const { aiGeneratedMessage, transcribeAudio } = useAiTaskGenerator({ setIsAiGenerating });
+  const { aiGeneratedMessage, setAiGeneratedMessage, transcribeAudio } = useAiTaskGenerator({ setIsAiGenerating });
   const { labels } = useAllLabels();
 
   const { isListening, startListening, stopAndUpload } = useVoiceRecorder(transcribeAudio);
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
-
-  const [localTasks, setLocalTasks] = useState<AiTaskDTO[]>([]);
-  const [localNotes, setLocalNotes] = useState<AiNoteDTO[]>([]);
-
-  const aiTasks = useMemo(
-    () =>
-      (aiGeneratedMessage?.extractedTasks ?? []).map((task) =>
-        mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
-      ),
-    [aiGeneratedMessage, labels],
-  );
-  const aiNotes = useMemo(() => aiGeneratedMessage?.extractedNotes ?? [], [aiGeneratedMessage]);
-
-  useEffect(() => {
-    setLocalTasks(aiTasks);
-    setLocalNotes(aiNotes);
-  }, [aiTasks, aiNotes]);
 
   useEffect(() => {
     void (async () => {
@@ -60,23 +41,32 @@ export default function AiTaskSheetScreen() {
     })();
   }, []);
 
+  const aiTasks = (aiGeneratedMessage?.extractedTasks ?? []).map((task) =>
+    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
+  );
+  const aiNotes = aiGeneratedMessage?.extractedNotes ?? [];
+
   const onDeleteTask = (taskId: string) => {
-    setLocalTasks((prev) => prev.filter((t) => t.id !== taskId));
+    setAiGeneratedMessage((prev) =>
+      prev ? { ...prev, extractedTasks: prev.extractedTasks?.filter((t) => t.id !== taskId) } : prev,
+    );
   };
 
   const onDeleteNote = (noteId: string) => {
-    setLocalNotes((prev) => prev.filter((n) => n.id !== noteId));
+    setAiGeneratedMessage((prev) =>
+      prev ? { ...prev, extractedNotes: prev.extractedNotes?.filter((n) => n.id !== noteId) } : prev,
+    );
   };
 
   const handleAddAll = async () => {
     if (isAdding || isNoteCreating) return;
     try {
-      if (localTasks.length > 0) {
-        const payloads = localTasks.map(convertAiTaskToAddTaskItemDTO);
+      if (aiTasks.length > 0) {
+        const payloads = aiTasks.map(convertAiTaskToAddTaskItemDTO);
         await Promise.all(payloads.map((payload) => addTaskAsync(payload)));
       }
-      if (localNotes.length > 0) {
-        await Promise.all(localNotes.map((n) => createNoteAsync(n.text)));
+      if (aiNotes.length > 0) {
+        await Promise.all(aiNotes.map((n) => createNoteAsync(n.text)));
       }
 
       router.back();
@@ -86,7 +76,7 @@ export default function AiTaskSheetScreen() {
     }
   };
 
-  const hasResults = localTasks.length > 0 || localNotes.length > 0;
+  const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
 
   return (
     <View className="flex-1 bg-transparent">
@@ -112,7 +102,7 @@ export default function AiTaskSheetScreen() {
             {/* Task / note cards (has results) */}
             {hasResults && (
               <Animated.ScrollView className="w-full flex-1" showsVerticalScrollIndicator={false}>
-                {localTasks.map((task) => (
+                {aiTasks.map((task) => (
                   <AiResultCard
                     key={task.id}
                     id={task.id}
@@ -123,10 +113,10 @@ export default function AiTaskSheetScreen() {
                     endTime={task.endTime}
                   />
                 ))}
-                {localNotes.length > 0 && (
+                {aiNotes.length > 0 && (
                   <>
                     <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">Notes</Text>
-                    {localNotes.map((note) => (
+                    {aiNotes.map((note) => (
                       <AiResultCard
                         key={note.id}
                         id={note.id}
