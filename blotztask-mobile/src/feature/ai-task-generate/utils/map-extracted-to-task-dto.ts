@@ -3,6 +3,7 @@ import { ExtractedTaskDTO } from "../models/ai-result-message-dto";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { LabelDTO } from "@/shared/models/label-dto";
 
+// fix the date string from backend by stripping the offset, since the AI still return the date with offset.
 const stripOffset = (isoString: string): string =>
   format(parseISO(isoString.replace(/(\.\d+)?([+-]\d{2}:\d{2}|Z)$/, "")), "yyyy-MM-dd'T'HH:mm:ss");
 
