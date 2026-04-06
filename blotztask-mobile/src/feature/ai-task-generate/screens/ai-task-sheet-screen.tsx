@@ -33,13 +33,12 @@ export default function AiTaskSheetScreen() {
 
   // Request mic permission on mount; navigate back if denied
   useEffect(() => {
-    void (async () => {
-      const { granted } = await requestRecordingPermissionsAsync();
+    requestRecordingPermissionsAsync().then(({ granted }) => {
       if (!granted) {
         console.warn("[Mic] Permission not granted");
         router.back();
       }
-    })();
+    });
   }, []);
 
   // --- Derived data ---
@@ -65,14 +64,10 @@ export default function AiTaskSheetScreen() {
   const handleAddAll = async () => {
     if (isAdding || isNoteCreating) return;
     try {
-      if (aiTasks.length > 0) {
-        const payloads = aiTasks.map(convertAiTaskToAddTaskItemDTO);
-        await Promise.all(payloads.map((payload) => addTaskAsync(payload)));
-      }
-      if (aiNotes.length > 0) {
-        await Promise.all(aiNotes.map((n) => createNoteAsync(n.text)));
-      }
-
+      await Promise.all([
+        ...aiTasks.map((task) => addTaskAsync(convertAiTaskToAddTaskItemDTO(task))),
+        ...aiNotes.map((n) => createNoteAsync(n.text)),
+      ]);
       router.back();
       Toast.show({ type: "warning", text1: t("success.taskAdded") });
     } catch (error) {
