@@ -171,16 +171,18 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                 {format(parseISO(task.endTime), "H:mm")}
               </Text>
 
-              {hasSubtasks && (
-                <Pressable
-                  onPress={() => setIsExpanded((v) => !v)}
-                  className="ml-2 p-1"
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  disabled={isLoading}
-                >
-                  <AnimatedChevron color="#9CA3AF" progress={progress} />
-                </Pressable>
-              )}
+              <View className="ml-2 w-6 items-center justify-center">
+                {hasSubtasks && (
+                  <Pressable
+                    onPress={() => setIsExpanded((v) => !v)}
+                    className="p-1"
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    disabled={isLoading}
+                  >
+                    <AnimatedChevron color="#9CA3AF" progress={progress} />
+                  </Pressable>
+                )}
+              </View>
             </View>
           </View>
           {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
