@@ -1,12 +1,11 @@
-import React, { useState } from "react";
-import { View, Text, Pressable, Keyboard, TextInput } from "react-native";
+import React from "react";
+import { View, Text, Pressable } from "react-native";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "@/shared/constants/theme";
 import { LabelDTO } from "@/shared/models/label-dto";
 import { formatAiTaskCardDate, formatAiTaskCardTime } from "../utils/format-ai-task-card-time";
-import { useTranslation } from "react-i18next";
 
 type Props = {
   id: string;
@@ -15,31 +14,9 @@ type Props = {
   label?: LabelDTO;
   startTime?: string;
   endTime?: string;
-  onTextChange?: (id: string, newText: string) => void;
 };
 
-export function AiResultCard({
-  id,
-  text,
-  onDelete,
-  label,
-  startTime,
-  endTime,
-  onTextChange,
-}: Props) {
-  const { t } = useTranslation("aiTaskGenerate");
-  const [draftText, setDraftText] = useState(text);
-
-  const handleEdit = () => {
-    const trimmed = draftText.trim();
-    if (trimmed && trimmed !== text) {
-      onTextChange?.(id, trimmed);
-    } else if (!trimmed) {
-      setDraftText(text);
-    }
-    Keyboard.dismiss();
-  };
-
+export function AiResultCard({ id, text, onDelete, label, startTime, endTime }: Props) {
   const isTask = startTime !== undefined;
   const formatTime = isTask ? formatAiTaskCardTime({ startTime: startTime!, endTime: endTime! }) : null;
   const formatDate = isTask ? formatAiTaskCardDate({ startTime: startTime!, endTime: endTime! }) : null;
@@ -59,19 +36,12 @@ export function AiResultCard({
       )}
 
       <View className="flex-1 flex-row items-center ml-4">
-        <TextInput
-          value={draftText}
-          onChangeText={setDraftText}
-          onBlur={handleEdit}
-          onSubmitEditing={handleEdit}
-          returnKeyType="done"
-          multiline
+        <Text
           className="flex-1 mr-3 text-lg font-baloo leading-5"
           style={{ color: theme.colors.onSurface }}
-          placeholder={isTask ? t("taskCard.titlePlaceholder") : t("noteCard.textPlaceholder")}
-          placeholderTextColor={theme.colors.disabled}
-          autoFocus={false}
-        />
+        >
+          {text}
+        </Text>
 
         {isTask && (
           <View className="items-center ml-2 flex-shrink-0">

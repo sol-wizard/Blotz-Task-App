@@ -29,7 +29,6 @@ export function useVoiceRecorder(transcribeAudio: (uri: string) => Promise<void>
         await transcribeAudio(uri);
         new ExpoFile(uri).delete();
       }
-      console.log("[Mic] Recording stopped and uploaded:", uri);
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
     } finally {
