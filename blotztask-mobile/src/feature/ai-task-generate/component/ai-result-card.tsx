@@ -18,7 +18,7 @@ type Props = {
   onTextChange?: (id: string, newText: string) => void;
 };
 
-export function AiItemCard({
+export function AiResultCard({
   id,
   text,
   onDelete,

@@ -7,7 +7,7 @@ import LottieView from "lottie-react-native";
 import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { AiNoteDTO } from "../models/ai-note-dto";
-import { AiItemCard } from "./ai-item-card";
+import { AiResultCard } from "./ai-result-card";
 import { VoiceHintText } from "./voice-hint-text";
 import { useTranslation } from "react-i18next";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
@@ -92,7 +92,7 @@ export const AiVoiceInput = ({
         {hasResults && (
           <Animated.ScrollView className="w-full flex-1" showsVerticalScrollIndicator={false}>
             {localTasks.map((task) => (
-              <AiItemCard
+              <AiResultCard
                 key={task.id}
                 id={task.id}
                 text={task.title}
@@ -106,7 +106,7 @@ export const AiVoiceInput = ({
               <>
                 <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">Notes</Text>
                 {localNotes.map((note) => (
-                  <AiItemCard
+                  <AiResultCard
                     key={note.id}
                     id={note.id}
                     text={note.text}
