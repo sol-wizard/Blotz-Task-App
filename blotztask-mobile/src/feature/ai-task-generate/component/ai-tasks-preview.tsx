@@ -6,8 +6,8 @@ import { AiResultCard } from "./ai-result-card";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { convertAiTaskToAddTaskItemDTO } from "@/feature/ai-task-generate/utils/map-aitask-to-addtaskitem-dto";
 import { BottomSheetType } from "../models/bottom-sheet-type";
-import { AiResultMessageDTO } from "../models/ai-result-message-dto";
-import { AiNoteDTO } from "../models/ai-note-dto";
+import { AiNoteDTO, AiResultMessageDTO } from "../models/ai-result-message-dto";
+
 import { theme } from "@/shared/constants/theme";
 import { type AiTaskOutcome } from "@/shared/constants/posthog-events";
 import { analytics } from "@/shared/services/analytics";

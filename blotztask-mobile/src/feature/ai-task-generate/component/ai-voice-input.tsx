@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
 import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { AiTaskDTO } from "../models/ai-task-dto";
-import { AiNoteDTO } from "../models/ai-note-dto";
+
 import { AiResultCard } from "./ai-result-card";
 import { VoiceHintText } from "./voice-hint-text";
 import { useTranslation } from "react-i18next";
@@ -16,6 +16,7 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import { router } from "expo-router";
 import Toast from "react-native-toast-message";
+import { AiNoteDTO } from "../models/ai-result-message-dto";
 
 export const AiVoiceInput = ({
   transcribeAudio,
