@@ -171,7 +171,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                 {format(parseISO(task.endTime), "H:mm")}
               </Text>
 
-              <View className="ml-2 w-6 items-center justify-center">
+              <View className="ml-1 w-6 items-center justify-center">
                 {hasSubtasks && (
                   <Pressable
                     onPress={() => setIsExpanded((v) => !v)}
