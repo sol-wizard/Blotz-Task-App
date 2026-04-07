@@ -32,5 +32,14 @@
     "textPlaceholder": "笔记内容",
     "editTextLabel": "编辑笔记",
     "editTextHint": "双击编辑笔记"
+  },
+  "voiceHint": {
+    "trySaying": "试试说",
+    "hintText": "\"明天早上 8 点参加美国总统选举\""
+  },
+  "voiceListening": {
+    "title": "聆听中 ...",
+    "aiThinking": "AI 思考中 ...",
+    "subtitle": "说出所有你需要完成的事情。"
   }
 }

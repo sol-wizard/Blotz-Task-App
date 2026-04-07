@@ -55,5 +55,8 @@
     "life": "生活",
     "learning": "学习",
     "health": "健康"
+  },
+  "success": {
+    "taskCreated": "任务创建成功"
   }
 }

@@ -62,8 +62,12 @@ public class AiTaskGenerateService(
 
                 foreach (var task in aiGenerateMessage.ExtractedTasks ?? [])
                 {
-                    task.StartTime = DateTime.SpecifyKind(task.StartTime, DateTimeKind.Unspecified);
-                    task.EndTime = DateTime.SpecifyKind(task.EndTime, DateTimeKind.Unspecified);
+                    task.Id = Guid.NewGuid();
+                }
+
+                foreach (var note in aiGenerateMessage.ExtractedNotes ?? [])
+                {
+                    note.Id = Guid.NewGuid();
                 }
 
                 return aiGenerateMessage;

@@ -107,12 +107,13 @@ public class AiTaskGenerateChatHub : Hub
                 Message = message,
                 TimeZone = timeZone
             });
-
+            
             chatHistory.AddUserMessage(resolvedMessage);
 
-
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
+            
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
+
         }
         catch (AiTaskGenerationException ex)
         {
@@ -146,7 +147,7 @@ public class AiTaskGenerateChatHub : Hub
             };
 
             var transcript = await _speechTranscriptionService.TranscribeAsync(formFile, ct);
-            await Clients.Caller.SendAsync("ReceiveTranscription", transcript, ct);
+            await SendMessage(transcript);
         }
         catch (Exception ex)
         {
