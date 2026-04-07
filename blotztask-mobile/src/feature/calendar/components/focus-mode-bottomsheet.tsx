@@ -42,17 +42,15 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
   const [selectedDuration, setSelectedDuration] = useState(1);
   const [selectedSoundscape, setSelectedSoundscape] = useState(1);
 
-  // 用无限的数据伪造环形，我们把它重复 5 次
-  const GALLERY_ITEMS = [
-    ...SOUNDSCAPES,
-    ...SOUNDSCAPES,
-    ...SOUNDSCAPES,
-    ...SOUNDSCAPES,
-    ...SOUNDSCAPES,
-  ];
+  const LOOP_MULTIPLIER = 5;
+
+  const GALLERY_ITEMS = Array(LOOP_MULTIPLIER).fill(SOUNDSCAPES).flat();
+
+  const SINGLE_LENGTH = SOUNDSCAPES.length;
+  const MIDDLE_INDEX = SINGLE_LENGTH * Math.floor(LOOP_MULTIPLIER / 2);
 
   // 从中间那一组（第三段）开始渲染
-  const INITIAL_INDEX = Math.floor(GALLERY_ITEMS.length / 2);
+  const INITIAL_INDEX = MIDDLE_INDEX;
 
   const flatListRef = useRef<Animated.FlatList<any>>(null);
   const scrollX = useRef(new Animated.Value(INITIAL_INDEX * SNAP_INTERVAL)).current;
@@ -61,11 +59,25 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
   const handleMomentumScrollEnd = (event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / SNAP_INTERVAL);
-    const safeIndex = Math.max(0, Math.min(index, GALLERY_ITEMS.length - 1));
-    const newId = GALLERY_ITEMS[safeIndex].id;
+
+    const realIndex = ((index % SINGLE_LENGTH) + SINGLE_LENGTH) % SINGLE_LENGTH;
+    const newId = SOUNDSCAPES[realIndex].id;
 
     if (selectedSoundscape !== newId) {
       setSelectedSoundscape(newId);
+    }
+
+    // ⭐关键：边界重置（真正无限）
+    if (index < SINGLE_LENGTH || index >= SINGLE_LENGTH * (LOOP_MULTIPLIER - 1)) {
+      const newIndex = MIDDLE_INDEX + realIndex;
+
+      flatListRef.current?.scrollToOffset({
+        offset: newIndex * SNAP_INTERVAL,
+        animated: false, // ⚠️ 必须 false
+      });
+
+      // ⭐同步动画值（否则动画会跳）
+      scrollX.setValue(newIndex * SNAP_INTERVAL);
     }
   };
 
