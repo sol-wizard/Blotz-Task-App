@@ -46,6 +46,12 @@ export const PNGIMAGES = {
   onboardingNoteBackground: require("../../../assets/images-png/onboarding-note-background.png"),
   onboardingVoiceBackground: require("../../../assets/images-png/onboarding-voice-background.png"),
   xhsLogo: require("../../../assets/images-png/xhs.jpg"),
+  pomodoroSoundEasyFocus: require("../../../assets/images-png/pomodoro-sound-easyFocus.png"),
+  pomodoroSoundDeepWork: require("../../../assets/images-png/pomodoro-sound-deepWork.png"),
+  pomodoroSoundTaskFlow: require("../../../assets/images-png/pomodoro-sound-taskFlow.png"),
+  pomodoroSoundCalmMind: require("../../../assets/images-png/pomodoro-sound-calmMind.png"),
+  pomodoroSoundCafeVibe: require("../../../assets/images-png/pomodoro-sound-cafeVibe.png"),
+  pomodoroSoundChoose: require("../../../assets/images-png/pomodoro-sound-choose.png"),
 } as const;
 
 export const SVGIMAGES = {

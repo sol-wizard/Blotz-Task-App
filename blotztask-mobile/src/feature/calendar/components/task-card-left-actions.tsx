@@ -23,13 +23,13 @@ export const TaskCardLeftActions = ({
   return (
     <Animated.View className="flex-row items-start justify-start gap-2 pr-4" style={animatedStyle}>
       <Pressable
-        onPress={onFocus}
+        onPress={onModest}
         disabled={isFocusing || isModesting}
         className={`h-20 w-24 rounded-3xl bg-blue-50 border border-blue-300 items-center justify-center ${
-          isFocusing ? "opacity-50" : ""
+          isModesting ? "opacity-50" : ""
         }`}
       >
-        {isFocusing ? (
+        {isModesting ? (
           <ActivityIndicator size="small" color="#53A8FF26" />
         ) : (
           <View className="items-center gap-1">
@@ -40,13 +40,13 @@ export const TaskCardLeftActions = ({
       </Pressable>
 
       <Pressable
-        onPress={onModest}
+        onPress={onFocus}
         disabled={isFocusing || isModesting}
         className={`h-20 w-24 rounded-3xl bg-orange-50 border border-orange-300  items-center justify-center ${
-          isModesting ? "opacity-50" : ""
+          isFocusing ? "opacity-50" : ""
         }`}
       >
-        {isModesting ? (
+        {isFocusing ? (
           <ActivityIndicator size="small" color="#FFAA4A" />
         ) : (
           <View className="items-center gap-1">
