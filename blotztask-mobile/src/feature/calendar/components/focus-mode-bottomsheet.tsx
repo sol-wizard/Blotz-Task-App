@@ -22,7 +22,6 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 const ITEM_WIDTH = 80;
 const ITEM_GAP = 12;
 const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
-// 外层卡片有 mx-4 所以屏幕宽度减掉 32 才是内部实际宽度
 const PADDING_HORIZONTAL = (SCREEN_WIDTH - 32) / 2 - ITEM_WIDTH / 2;
 
 const DURATIONS = [
@@ -50,14 +49,11 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
 
   const SINGLE_LENGTH = SOUNDSCAPES.length;
   const MIDDLE_INDEX = SINGLE_LENGTH * Math.floor(LOOP_MULTIPLIER / 2);
-
-  // 从中间那一组（第三段）开始渲染
   const INITIAL_INDEX = MIDDLE_INDEX;
 
   const flatListRef = useRef<Animated.FlatList<any>>(null);
   const scrollX = useRef(new Animated.Value(INITIAL_INDEX * SNAP_INTERVAL)).current;
 
-  // 这里的监听：主要用于松手或滑动完成时更新逻辑的状态（让其他地方知道你选了哪个）
   const handleMomentumScrollEnd = (event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / SNAP_INTERVAL);
@@ -69,16 +65,14 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
       setSelectedSoundscape(newId);
     }
 
-    // ⭐关键：边界重置（真正无限）
     if (index < SINGLE_LENGTH || index >= SINGLE_LENGTH * (LOOP_MULTIPLIER - 1)) {
       const newIndex = MIDDLE_INDEX + realIndex;
 
       flatListRef.current?.scrollToOffset({
         offset: newIndex * SNAP_INTERVAL,
-        animated: false, // ⚠️ 必须 false
+        animated: false,
       });
 
-      // ⭐同步动画值（否则动画会跳）
       scrollX.setValue(newIndex * SNAP_INTERVAL);
     }
   };
@@ -93,21 +87,18 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
 
   const renderItem = useCallback(
     ({ item, index }: { item: any; index: number }) => {
-      // 为每个 Item 计算相对于当前滚动进度的位置
       const inputRange = [
         (index - 1) * SNAP_INTERVAL,
         index * SNAP_INTERVAL,
         (index + 1) * SNAP_INTERVAL,
       ];
 
-      // 当图片在正中间时， translateY 变成负数（上升），其余为 0
       const translateY = scrollX.interpolate({
         inputRange,
-        outputRange: [0, -12, 0], // 中间的项上浮 12 像素
+        outputRange: [0, -12, 0],
         extrapolate: "clamp",
       });
 
-      // 可选：让旁边的稍微变小点
       const scale = scrollX.interpolate({
         inputRange,
         outputRange: [0.95, 1, 0.95],
@@ -139,11 +130,10 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
             <ImageBackground
               source={item.imageUrl}
               className="w-20 h-24 border-2 border-white justify-end p-2 bg-gray-200"
-              // 防止 iOS 背景图越界
               imageStyle={{ borderRadius: 16, resizeMode: "cover" }}
               style={{ borderRadius: 16, overflow: "hidden" }}
             >
-              <Text className="text-white font-inter font-bold text-md text-center leading-tight shadow-sm shadow-black">
+              <Text className="text-white font-inter font-bold font-baloo text-md text-center leading-tight shadow-sm shadow-black">
                 {item.name}
               </Text>
             </ImageBackground>
@@ -157,8 +147,7 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
   return (
     <Modal visible={isOpen} transparent animationType="slide">
       <View className="flex-1 bg-black/50 justify-end">
-        {/* 底部灰色 */}
-        <View className="bg-[#F5F9FA] rounded-t-[32px] pt-6 pb-12">
+        <View className="bg-background rounded-t-3xl pt-6 pb-12">
           {/* Header */}
           <View className="flex-row justify-between items-center mb-6 px-6">
             <Pressable
@@ -177,23 +166,23 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
           </View>
 
           {/* Duration Section */}
-          <Text className="text-[#444964] font-inter font-bold mb-3 mx-6 text-[15px]">
+          <Text className="text-[#444964] font-inter font-bold font-baloo mb-3 mx-6 text-xl">
             Duration
           </Text>
-          <View className="bg-white mx-4 rounded-[20px] p-5 mb-6 shadow-sm shadow-gray-200">
+          <View className="bg-white mx-4 rounded-3xl p-5 mb-6 shadow-sm shadow-gray-200">
             <View className="flex-row gap-3">
               {DURATIONS.map((duration) => (
                 <Pressable
                   key={duration.id}
                   onPress={() => setSelectedDuration(duration.id)}
-                  className={`px-6 py-2.5 rounded-2xl border-[1.5px] ${
+                  className={`px-4 h-10 item-center justify-center rounded-2xl border-2 ${
                     selectedDuration === duration.id
                       ? "bg-[#9AD513] border-[#9AD513]"
                       : "bg-white border-[#9AD513]"
                   }`}
                 >
                   <Text
-                    className={`font-inter font-bold text-[14px] ${
+                    className={`font-inter font-bold font-baloo text-lg ${
                       selectedDuration === duration.id ? "text-white" : "text-[#9AD513]"
                     }`}
                   >
@@ -205,12 +194,12 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
           </View>
 
           {/* Soundscapes Section */}
-          <Text className="text-[#444964] font-inter font-bold mb-3 mx-6 text-[15px]">
+          <Text className="text-[#444964] font-inter font-bold font-baloo mb-3 mx-6 text-xl">
             Soundscapes
           </Text>
 
           <View className="bg-white mx-4 rounded-3xl p-5 pb-6 shadow-sm shadow-gray-200">
-            {/* 画廊容器 */}
+            {/* Gallery */}
             <View className="relative h-32 -mx-5">
               <Animated.FlatList
                 ref={flatListRef}
@@ -223,17 +212,14 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
                 decelerationRate="fast"
                 contentContainerStyle={{
                   paddingHorizontal: PADDING_HORIZONTAL,
-                  alignItems: "flex-end", // 靠下对齐，使得向上的弹跳空间够大
-                  paddingBottom: 15, // 给卡片下方留出阴影和按压形变的空间
+                  alignItems: "flex-end",
+                  paddingBottom: 15,
                 }}
-                // 滑动松开手、并且动效停止时触发的状态更新
                 onMomentumScrollEnd={handleMomentumScrollEnd}
-                // 原生的滚动事件绑定到 scrollX 变量，利用它驱动所有的插值动画，60帧不卡顿！
                 onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
                   useNativeDriver: true,
                 })}
                 scrollEventThrottle={16}
-                // 默认滚到中间去
                 initialScrollIndex={INITIAL_INDEX}
                 getItemLayout={(_, index) => ({
                   length: SNAP_INTERVAL,
@@ -242,24 +228,23 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
                 })}
               />
 
-              {/* 渐变遮罩放在外部 View 保证不被列表滚动带着跑 */}
-              {/* === 左侧白色发散渐变 === */}
+              {/* === left gradient === */}
               <View
                 pointerEvents="none"
                 className="absolute left-0 top-0 bottom-0 w-12 z-10"
                 style={{
-                  elevation: 10, // ⭐ 仅保留 elevation 确保 Android 层级正确
+                  elevation: 10, // for Android to ensure it appears above the list items
                 }}
               >
                 <LinearGradient
-                  colors={["#FFFFFFFF", "#FFFFFF00"]} // 纯白 到 纯透明
+                  colors={["#FFFFFFFF", "#FFFFFF00"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{ flex: 1 }}
                 />
               </View>
 
-              {/* === 右侧白色发散渐变 === */}
+              {/* === right gradient === */}
               <View
                 pointerEvents="none"
                 className="absolute right-0 top-0 bottom-0 w-12 z-10"
@@ -268,7 +253,7 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
                 }}
               >
                 <LinearGradient
-                  colors={["#FFFFFF00", "#FFFFFFFF"]} // 纯透明 到 纯白
+                  colors={["#FFFFFF00", "#FFFFFFFF"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={{ flex: 1 }}
@@ -276,7 +261,7 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
               </View>
             </View>
 
-            {/* 自定义 Choose */}
+            {/* pic for soundscape */}
             <Pressable
               className="items-center -mt-8 relative"
               onPress={() => setSelectedSoundscape(6)}
