@@ -1,14 +1,14 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, Dimensions } from "react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import TasksCheckbox from "../../../shared/components/ui/task-checkbox";
 import { theme } from "@/shared/constants/theme";
 import { convertDurationToText } from "../../../shared/util/convert-duration";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { ActionButton, ActionButtonType } from "@/feature/notes/components/action-button";
-import { useState } from "react";
-import { set } from "date-fns";
-import { is } from "date-fns/locale";
+import { useMemo, useRef, useState } from "react";
 import { TextInput } from "react-native-gesture-handler";
+import WheelPicker, { type PickerItem } from "@quidone/react-native-wheel-picker";
+import Modal from "react-native-modal";
 
 type SubtaskItemData = {
   id: number;
@@ -45,11 +45,67 @@ export default function SubtaskItem({
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const [titleValue, setTitleValue] = useState(subtask.title);
 
+  const durationTriggerRef = useRef<View>(null);
+  const [pickerPosition, setPickerPosition] = useState({ x: 0, y: 0 });
+  const [isDurationPickerVisible, setIsDurationPickerVisible] = useState(false);
+  
+  const parsedDuration = useMemo(() => {
+    const [hoursString = "0", minutesString = "0"] = (subtask.duration ?? "00:00:00").split(":");
+    return {
+      hours: Number(hoursString) || 0,
+      minutes: Number(minutesString) || 0,
+    };
+  }, [subtask.duration]);
+  const [selectedHours, setSelectedHours] = useState(parsedDuration.hours);
+  const [selectedMinutes, setSelectedMinutes] = useState(parsedDuration.minutes);
+  const durationText =
+    selectedHours > 0 ? `${selectedHours} h ${selectedMinutes} min` : `${selectedMinutes} min`;
+
   const handleInlineEditToggle = () => {
     if (!isInlineEditing) {
       setTitleValue(subtask.title);
     }
     setIsInlineEditing((prev) => !prev);
+  };
+
+
+  const hourItems: PickerItem<number>[] = useMemo(
+    () =>
+      Array.from({ length: 24 }, (_, index) => ({
+        value: index,
+        label: index.toString().padStart(2, "0"),
+      })),
+    [],
+  );
+
+  const minuteItems: PickerItem<number>[] = useMemo(
+    () =>
+      Array.from({ length: 60 }, (_, index) => ({
+        value: index,
+        label: index.toString().padStart(2, "0"),
+      })),
+    [],
+  );
+
+  const PICKER_WIDTH = 120;
+  const PICKER_HEIGHT = 84;
+
+  const openDurationPicker = () => {
+    durationTriggerRef.current?.measureInWindow((x, y, width, height) => {
+      const left = x + width / 2 - PICKER_WIDTH / 2;
+      const top = y + height / 2 - PICKER_HEIGHT / 2;
+
+      setPickerPosition({
+        x: Math.max(12, left),
+        y: Math.max(12, top),
+      });
+
+      setIsDurationPickerVisible(true);
+    });
+  };
+
+  const closePicker = () => {
+    setIsDurationPickerVisible(false);
   };
 
   const textColor = isChecked ? theme.colors.disabled : theme.colors.onSurface;
@@ -68,7 +124,10 @@ export default function SubtaskItem({
     );
   };
 
+
+
   return (
+  <>
     <Swipeable
       renderRightActions={renderRightActions}
       friction={2}
@@ -96,16 +155,16 @@ export default function SubtaskItem({
             <>
               <View className="flex-row items-center gap-4">
                 {subtask.duration && (
-                  <Text
-                    className="text-[12px] font-bold"
-                    style={{
-                      color: isChecked ? "#BDE6A3" : theme.colors.highlight,
-                      marginBottom: -2,
-                      fontWeight: "700",
-                    }}
-                  >
-                    {convertDurationToText(subtask.duration)}
-                  </Text>
+                  <View ref={durationTriggerRef} collapsable={false}>
+                    <TouchableOpacity onPress={openDurationPicker} activeOpacity={0.8}>
+                      <Text
+                        className="text-[12px] font-bold"
+                        style={{ color: theme.colors.highlight, fontWeight: "700" }}
+                      >
+                        {durationText}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
                 <TextInput
                   value={titleValue}
@@ -173,5 +232,97 @@ export default function SubtaskItem({
         </View>
       </TouchableOpacity>
     </Swipeable>
+    
+    <Modal
+      isVisible={isDurationPickerVisible}
+      onBackdropPress={closePicker}
+      onBackButtonPress={closePicker}
+      animationIn="fadeIn"
+      animationOut="fadeOut"
+      backdropOpacity={0.08}
+      useNativeDriver
+      style={{ margin: 0 }}
+    >
+      <View
+        style={{
+          position: "absolute",
+          left: pickerPosition.x,
+          top: pickerPosition.y,
+          width: PICKER_WIDTH,
+          height: PICKER_HEIGHT,
+          backgroundColor: "white",
+          borderRadius: 24,
+          paddingHorizontal: 10,
+          paddingVertical: 6,
+          shadowColor: "#000",
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 5,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100%",
+          }}
+        >
+          <WheelPicker
+            data={hourItems}
+            value={selectedHours}
+            width={34}
+            itemHeight={26}
+            visibleItemCount={3}
+            enableScrollByTapOnItem
+            onValueChanged={({ item }) => setSelectedHours(item.value as number)}
+            itemTextStyle={{
+              color: theme.colors.highlight,
+              fontSize: 16,
+              fontWeight: "700",
+            }}
+          />
+
+          <Text
+            style={{
+              color: "#B7BBC7",
+              fontSize: 12,
+              fontWeight: "700",
+              marginHorizontal: 2,
+            }}
+          >
+            h
+          </Text>
+
+          <WheelPicker
+            data={minuteItems}
+            value={selectedMinutes}
+            width={38}
+            itemHeight={28}
+            visibleItemCount={3}
+            enableScrollByTapOnItem
+            onValueChanged={({ item }) => setSelectedMinutes(item.value as number)}
+            itemTextStyle={{
+              color: theme.colors.highlight,
+              fontSize: 16,
+              fontWeight: "700",
+            }}
+          />
+
+          <Text
+            style={{
+              color: "#B7BBC7",
+              fontSize: 12,
+              fontWeight: "700",
+              marginLeft: 2,
+            }}
+          >
+            min
+          </Text>
+        </View>
+      </View>
+    </Modal>
+    </>
   );
 }
