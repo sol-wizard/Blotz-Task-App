@@ -129,6 +129,11 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
               transform: [{ translateY }, { scale }],
               alignItems: "center",
               opacity,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 6,
             }}
           >
             <ImageBackground
@@ -138,7 +143,7 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
               imageStyle={{ borderRadius: 16, resizeMode: "cover" }}
               style={{ borderRadius: 16, overflow: "hidden" }}
             >
-              <Text className="text-white font-inter font-bold text-[11px] text-center leading-tight shadow-sm shadow-black">
+              <Text className="text-white font-inter font-bold text-md text-center leading-tight shadow-sm shadow-black">
                 {item.name}
               </Text>
             </ImageBackground>
@@ -241,14 +246,9 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
               {/* === 左侧白色发散渐变 === */}
               <View
                 pointerEvents="none"
+                className="absolute left-0 top-0 bottom-0 w-12 z-10"
                 style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 60, // 遮罩宽度，可微调
-                  zIndex: 99,
-                  elevation: 99, // ⭐ 关键：必须比卡片的 elevation 更大
+                  elevation: 10, // ⭐ 仅保留 elevation 确保 Android 层级正确
                 }}
               >
                 <LinearGradient
@@ -262,14 +262,9 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
               {/* === 右侧白色发散渐变 === */}
               <View
                 pointerEvents="none"
+                className="absolute right-0 top-0 bottom-0 w-12 z-10"
                 style={{
-                  position: "absolute",
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 60,
-                  zIndex: 99,
-                  elevation: 99, // ⭐ 关键
+                  elevation: 10,
                 }}
               >
                 <LinearGradient
