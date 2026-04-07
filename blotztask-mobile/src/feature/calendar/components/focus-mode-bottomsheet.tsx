@@ -115,12 +115,8 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
       });
 
       const opacity = scrollX.interpolate({
-        inputRange: [
-          (index - 1) * SNAP_INTERVAL,
-          index * SNAP_INTERVAL,
-          (index + 1) * SNAP_INTERVAL,
-        ],
-        outputRange: [0.3, 1, 0.3],
+        inputRange,
+        outputRange: [0.9, 1, 0.9],
         extrapolate: "clamp",
       });
 
@@ -242,22 +238,47 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
               />
 
               {/* 渐变遮罩放在外部 View 保证不被列表滚动带着跑 */}
-              <LinearGradient
-                colors={["rgba(255,255,255,1)", "rgba(255,255,255,0)"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                // w-16 改成 w-24 或 w-28 让雾化边缘变宽，包裹感更强
-                className="absolute left-0 top-0 bottom-0 w-24 z-10"
+              {/* === 左侧白色发散渐变 === */}
+              <View
                 pointerEvents="none"
-              />
-              <LinearGradient
-                colors={["rgba(255,255,255,0)", "rgba(255,255,255,1)"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                // 这里也改成 w-24
-                className="absolute right-0 top-0 bottom-0 w-24 z-10"
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 60, // 遮罩宽度，可微调
+                  zIndex: 99,
+                  elevation: 99, // ⭐ 关键：必须比卡片的 elevation 更大
+                }}
+              >
+                <LinearGradient
+                  colors={["#FFFFFFFF", "#FFFFFF00"]} // 纯白 到 纯透明
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ flex: 1 }}
+                />
+              </View>
+
+              {/* === 右侧白色发散渐变 === */}
+              <View
                 pointerEvents="none"
-              />
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 60,
+                  zIndex: 99,
+                  elevation: 99, // ⭐ 关键
+                }}
+              >
+                <LinearGradient
+                  colors={["#FFFFFF00", "#FFFFFFFF"]} // 纯透明 到 纯白
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={{ flex: 1 }}
+                />
+              </View>
             </View>
 
             {/* 自定义 Choose */}
