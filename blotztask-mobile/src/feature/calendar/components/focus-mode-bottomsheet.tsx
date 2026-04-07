@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -44,7 +44,9 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
 
   const LOOP_MULTIPLIER = 5;
 
-  const GALLERY_ITEMS = Array(LOOP_MULTIPLIER).fill(SOUNDSCAPES).flat();
+  const GALLERY_ITEMS = useMemo(() => {
+    return Array(LOOP_MULTIPLIER).fill(SOUNDSCAPES).flat();
+  }, []);
 
   const SINGLE_LENGTH = SOUNDSCAPES.length;
   const MIDDLE_INDEX = SINGLE_LENGTH * Math.floor(LOOP_MULTIPLIER / 2);
@@ -89,53 +91,67 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
     });
   };
 
-  const renderItem = ({ item, index }: { item: any; index: number }) => {
-    // 为每个 Item 计算相对于当前滚动进度的位置
-    const inputRange = [
-      (index - 1) * SNAP_INTERVAL,
-      index * SNAP_INTERVAL,
-      (index + 1) * SNAP_INTERVAL,
-    ];
+  const renderItem = useCallback(
+    ({ item, index }: { item: any; index: number }) => {
+      // 为每个 Item 计算相对于当前滚动进度的位置
+      const inputRange = [
+        (index - 1) * SNAP_INTERVAL,
+        index * SNAP_INTERVAL,
+        (index + 1) * SNAP_INTERVAL,
+      ];
 
-    // 当图片在正中间时， translateY 变成负数（上升），其余为 0
-    const translateY = scrollX.interpolate({
-      inputRange,
-      outputRange: [0, -12, 0], // 中间的项上浮 12 像素
-      extrapolate: "clamp",
-    });
+      // 当图片在正中间时， translateY 变成负数（上升），其余为 0
+      const translateY = scrollX.interpolate({
+        inputRange,
+        outputRange: [0, -12, 0], // 中间的项上浮 12 像素
+        extrapolate: "clamp",
+      });
 
-    // 可选：让旁边的稍微变小点
-    const scale = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.95, 1, 0.95],
-      extrapolate: "clamp",
-    });
+      // 可选：让旁边的稍微变小点
+      const scale = scrollX.interpolate({
+        inputRange,
+        outputRange: [0.95, 1, 0.95],
+        extrapolate: "clamp",
+      });
 
-    return (
-      <Pressable onPress={() => handleItemPress(index, item.id)}>
-        <Animated.View
-          style={{
-            width: ITEM_WIDTH,
-            marginRight: ITEM_GAP,
-            transform: [{ translateY }, { scale }],
-            alignItems: "center",
-          }}
-        >
-          <ImageBackground
-            source={item.imageUrl}
-            className="w-20 h-24 border-2 border-white justify-end p-2 bg-gray-200"
-            // 防止 iOS 背景图越界
-            imageStyle={{ borderRadius: 16, resizeMode: "cover" }}
-            style={{ borderRadius: 16, overflow: "hidden" }}
+      const opacity = scrollX.interpolate({
+        inputRange: [
+          (index - 1) * SNAP_INTERVAL,
+          index * SNAP_INTERVAL,
+          (index + 1) * SNAP_INTERVAL,
+        ],
+        outputRange: [0.3, 1, 0.3],
+        extrapolate: "clamp",
+      });
+
+      return (
+        <Pressable onPress={() => handleItemPress(index, item.id)}>
+          <Animated.View
+            style={{
+              width: ITEM_WIDTH,
+              marginRight: ITEM_GAP,
+              transform: [{ translateY }, { scale }],
+              alignItems: "center",
+              opacity,
+            }}
           >
-            <Text className="text-white font-inter font-bold text-[11px] text-center leading-tight shadow-sm shadow-black">
-              {item.name}
-            </Text>
-          </ImageBackground>
-        </Animated.View>
-      </Pressable>
-    );
-  };
+            <ImageBackground
+              source={item.imageUrl}
+              className="w-20 h-24 border-2 border-white justify-end p-2 bg-gray-200"
+              // 防止 iOS 背景图越界
+              imageStyle={{ borderRadius: 16, resizeMode: "cover" }}
+              style={{ borderRadius: 16, overflow: "hidden" }}
+            >
+              <Text className="text-white font-inter font-bold text-[11px] text-center leading-tight shadow-sm shadow-black">
+                {item.name}
+              </Text>
+            </ImageBackground>
+          </Animated.View>
+        </Pressable>
+      );
+    },
+    [scrollX],
+  );
 
   return (
     <Modal visible={isOpen} transparent animationType="slide">
@@ -230,14 +246,16 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
                 colors={["rgba(255,255,255,1)", "rgba(255,255,255,0)"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                className="absolute left-0 top-0 bottom-0 w-16 z-10"
+                // w-16 改成 w-24 或 w-28 让雾化边缘变宽，包裹感更强
+                className="absolute left-0 top-0 bottom-0 w-24 z-10"
                 pointerEvents="none"
               />
               <LinearGradient
                 colors={["rgba(255,255,255,0)", "rgba(255,255,255,1)"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                className="absolute right-0 top-0 bottom-0 w-16 z-10"
+                // 这里也改成 w-24
+                className="absolute right-0 top-0 bottom-0 w-24 z-10"
                 pointerEvents="none"
               />
             </View>
