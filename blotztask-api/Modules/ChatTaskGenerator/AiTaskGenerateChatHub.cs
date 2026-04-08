@@ -1,10 +1,9 @@
-using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
-using BlotzTask.Shared.Store;
+using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -14,7 +13,6 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 public class AiTaskGenerateChatHub : Hub
 {
     private readonly IAiTaskGenerateService _aiTaskGenerateService;
-    private readonly ChatHistoryStore _chatHistoryStore;
     private readonly DateTimeResolveService _dateTimeResolveService;
     private readonly GetUserPreferencesQueryHandler _getUserPreferencesQueryHandler;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
@@ -24,14 +22,12 @@ public class AiTaskGenerateChatHub : Hub
         ILogger<AiTaskGenerateChatHub> logger,
         IAiTaskGenerateService aiTaskGenerateService,
         DateTimeResolveService dateTimeResolveService,
-        ChatHistoryStore chatHistoryStore,
         GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
         SpeechTranscriptionService speechTranscriptionService)
     {
         _logger = logger;
         _aiTaskGenerateService = aiTaskGenerateService;
         _dateTimeResolveService = dateTimeResolveService;
-        _chatHistoryStore = chatHistoryStore;
         _getUserPreferencesQueryHandler = getUserPreferencesQueryHandler;
         _speechTranscriptionService = speechTranscriptionService;
     }
@@ -57,8 +53,6 @@ public class AiTaskGenerateChatHub : Hub
             _logger.LogWarning(ex, "Invalid time zone '{TimeZoneId}'. Using UTC.", timeZoneId);
         }
 
-        Context.Items["TimeZone"] = timeZone;
-
         var userPreferences = await _getUserPreferencesQueryHandler.Handle(
             new GetUserPreferencesQuery { UserId = userId },
             CancellationToken.None);
@@ -70,10 +64,9 @@ public class AiTaskGenerateChatHub : Hub
             _ => "English"
         };
 
-        var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
-
-        var chatHistory = _chatHistoryStore.GetOrCreate(Context.ConnectionId);
-        chatHistory.AddSystemMessage(AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime));
+        Context.Items["TimeZone"] = timeZone;
+        Context.Items["PreferredLanguage"] = preferredLanguage;
+        Context.Items["Session"] = null;
 
         await base.OnConnectedAsync();
     }
@@ -84,36 +77,41 @@ public class AiTaskGenerateChatHub : Hub
             "User disconnected: {ConnectionId}. Exception: {Exception}",
             Context.ConnectionId, exception?.Message);
 
-        _chatHistoryStore.Remove(Context.ConnectionId);
+        Context.Items.Remove("Session");
         await base.OnDisconnectedAsync(exception);
     }
 
     public async Task SendMessage(string message)
     {
-        var timeZone = Context.Items.TryGetValue("TimeZone", out var timeZoneObj) &&
-                       timeZoneObj is TimeZoneInfo tz
+        var timeZone = Context.Items.TryGetValue("TimeZone", out var tzObj) && tzObj is TimeZoneInfo tz
             ? tz
             : TimeZoneInfo.Utc;
+
+        var preferredLanguage = Context.Items.TryGetValue("PreferredLanguage", out var langObj) && langObj is string lang
+            ? lang
+            : "English";
 
         try
         {
             var ct = Context.ConnectionAborted;
 
-            if (!_chatHistoryStore.TryGet(Context.ConnectionId, out var chatHistory) || chatHistory == null)
-                throw new HubException("Chat history not found for this connection.");
+            Context.Items.TryGetValue("Session", out var sessionObj);
+            var session = sessionObj as AgentSession;
+
+            var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
 
             var resolvedMessage = _dateTimeResolveService.Resolve(new ResolveDateTimesRequest
             {
                 Message = message,
                 TimeZone = timeZone
             });
-            
-            chatHistory.AddUserMessage(resolvedMessage);
 
-            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
-            
+            var (resultMessage, updatedSession) = await _aiTaskGenerateService.GenerateAiResponse(
+                resolvedMessage, session, preferredLanguage, userLocalTime, ct);
+
+            Context.Items["Session"] = updatedSession;
+
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
-
         }
         catch (AiTaskGenerationException ex)
         {
@@ -133,7 +131,6 @@ public class AiTaskGenerateChatHub : Hub
         {
             if (audioData is null || audioData.Length == 0)
                 throw new HubException("Audio data is empty.");
-
 
             var formFile = new FormFile(
                 new MemoryStream(audioData),

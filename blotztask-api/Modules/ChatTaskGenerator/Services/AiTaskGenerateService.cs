@@ -5,15 +5,16 @@ using BlotzTask.Modules.ChatTaskGenerator.DTOs;
 using BlotzTask.Modules.ChatTaskGenerator.Functions;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.Agents.AI;
+using Microsoft.Agents.AI.Foundry;
 using Microsoft.Extensions.AI;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<AiGenerateMessage> GenerateAiResponse(
+    Task<(AiGenerateMessage Message, AgentSession Session)> GenerateAiResponse(
         string userMessage,
-        AgentSession session,
+        AgentSession? session,
         string preferredLanguage,
         DateTime userLocalTime,
         CancellationToken ct);
@@ -29,9 +30,9 @@ public class AiTaskGenerateService(
         configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
         ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
 
-    public async Task<AiGenerateMessage> GenerateAiResponse(
+    public async Task<(AiGenerateMessage Message, AgentSession Session)> GenerateAiResponse(
         string userMessage,
-        AgentSession session,
+        AgentSession? session,
         string preferredLanguage,
         DateTime userLocalTime,
         CancellationToken ct)
@@ -49,6 +50,13 @@ public class AiTaskGenerateService(
                 instructions: instructions,
                 tools: [AIFunctionFactory.Create(tools.CreateTask), AIFunctionFactory.Create(tools.CreateNote)]);
 
+            // if (session == null)
+            // {                                           
+            //     session = await
+            // agent.CreateSessionAsync();
+            // }
+            session ??= await agent.CreateSessionAsync();
+
             logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
             await agent.RunAsync(userMessage, session, cancellationToken: ct);
@@ -58,13 +66,15 @@ public class AiTaskGenerateService(
 
             var isSuccess = collectedTasks.Count > 0 || collectedNotes.Count > 0;
 
-            return new AiGenerateMessage
+            var message = new AiGenerateMessage
             {
                 IsSuccess = isSuccess,
                 ExtractedTasks = collectedTasks,
                 ExtractedNotes = collectedNotes,
                 ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input."
             };
+
+            return (message, session);
         }
         catch (OperationCanceledException oce)
         {
