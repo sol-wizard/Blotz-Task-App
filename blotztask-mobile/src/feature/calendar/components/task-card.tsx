@@ -4,7 +4,7 @@ import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { MaterialIcons } from "@expo/vector-icons";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, set } from "date-fns";
 import TasksCheckbox from "@/shared/components/ui/task-checkbox";
 
 import { SharedValue, useDerivedValue, withTiming } from "react-native-reanimated";
@@ -21,7 +21,6 @@ import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
 import { TaskCardLeftActions } from "./task-card-left-actions";
-import { FocusModeBottomSheet } from "./focus-mode-bottomsheet";
 
 // Props
 interface TaskCardProps {
@@ -29,9 +28,18 @@ interface TaskCardProps {
   deleteTask: (task: TaskDetailDTO) => void;
   isDeleting: boolean;
   selectedDay?: Date;
+  onOpenFocus: () => void;
+  onOpenMode: () => void;
 }
 
-const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) => {
+const TaskCard = ({
+  task,
+  deleteTask,
+  isDeleting,
+  selectedDay,
+  onOpenFocus,
+  onOpenMode,
+}: TaskCardProps) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
@@ -39,9 +47,6 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   const { toggleTask, isToggling } = useTaskMutations();
   const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
   const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
-  const [isFocusing, setIsFocusing] = useState(false);
-  const [isModesting, setIsModesting] = useState(false);
-  const [showFocusModeSheet, setShowFocusModeSheet] = useState(false);
 
   // Derived values
   const labelColor = task.label?.color ?? "#D1D1D6";
@@ -89,151 +94,119 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
     swipeRef.current?.close();
   };
 
-  const handleFocus = async () => {
-    setIsFocusing(true);
-    try {
-      console.log("Focus action triggered");
-      if (isLoading || task.id == null) return;
-
-      setShowFocusModeSheet(true);
-    } finally {
-      setIsFocusing(false);
-      swipeRef.current?.close();
-    }
-  };
-
-  const handleModest = async () => {
-    setIsModesting(true);
-    try {
-      console.log("Modest action triggered");
-      // TODO: Implement modest action logic here
-    } finally {
-      setIsModesting(false);
-      swipeRef.current?.close();
-    }
-  };
-
   return (
-    <>
-      <ReanimatedSwipeable
-        ref={swipeRef}
-        renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
-          <TaskCardLeftActions
-            progress={leftActionsProgress}
-            onFocus={handleFocus}
-            onModest={handleModest}
-            isFocusing={isFocusing}
-            isModesting={isModesting}
-          />
-        )}
-        leftThreshold={12}
-        overshootLeft={false}
-        dragOffsetFromRightEdge={8}
-        renderRightActions={(rightActionsProgress: SharedValue<number>) => (
-          <TaskCardRightActions
-            progress={rightActionsProgress}
-            onBreakdown={handleBreakdown}
-            onDelete={handleDelete}
-            isDeleting={isDeleting}
-            isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
-          />
-        )}
-        rightThreshold={12}
-        overshootRight={false}
-        friction={2}
-        dragOffsetFromLeftEdge={8}
-      >
-        <View className="flex-col bg-white rounded-2xl px-4 py-3 min-h-20 justify-center">
-          <View className="justify-center">
-            <View className="flex-row items-center" style={{ gap: 12 }}>
-              {/* Checkbox */}
-              <TasksCheckbox
-                checked={task.isDone}
-                disabled={isLoading}
-                onChange={async () => {
-                  if (!task.id) {
-                    completeOccurrence({
-                      recurringTaskId: task.recurringTaskId!,
-                      occurrenceDate: format(selectedDay!, "yyyy-MM-dd"),
-                    });
-                    return;
-                  }
-                  toggleTask({ taskId: task.id!, selectedDay });
-                  if (task.alertTime && new Date(task.alertTime) > new Date()) {
-                    await cancelNotification({ notificationId: task?.notificationId });
-                  }
-                }}
-              />
+    <ReanimatedSwipeable
+      ref={swipeRef}
+      renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
+        <TaskCardLeftActions
+          progress={leftActionsProgress}
+          onFocus={onOpenFocus}
+          onModest={onOpenMode}
+        />
+      )}
+      leftThreshold={12}
+      overshootLeft={false}
+      dragOffsetFromRightEdge={8}
+      renderRightActions={(rightActionsProgress: SharedValue<number>) => (
+        <TaskCardRightActions
+          progress={rightActionsProgress}
+          onBreakdown={handleBreakdown}
+          onDelete={handleDelete}
+          isDeleting={isDeleting}
+          isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
+        />
+      )}
+      rightThreshold={12}
+      overshootRight={false}
+      friction={2}
+      dragOffsetFromLeftEdge={8}
+    >
+      <View className="flex-col bg-white rounded-2xl px-4 py-3 min-h-20 justify-center">
+        <View className="justify-center">
+          <View className="flex-row items-center" style={{ gap: 12 }}>
+            {/* Checkbox */}
+            <TasksCheckbox
+              checked={task.isDone}
+              disabled={isLoading}
+              onChange={async () => {
+                if (!task.id) {
+                  completeOccurrence({
+                    recurringTaskId: task.recurringTaskId!,
+                    occurrenceDate: format(selectedDay!, "yyyy-MM-dd"),
+                  });
+                  return;
+                }
+                toggleTask({ taskId: task.id!, selectedDay });
+                if (task.alertTime && new Date(task.alertTime) > new Date()) {
+                  await cancelNotification({ notificationId: task?.notificationId });
+                }
+              }}
+            />
 
-              {/* Vertical label colour bar */}
-              <View className="h-10 w-1.5 rounded-full" style={{ backgroundColor: labelColor }} />
+            {/* Vertical label colour bar */}
+            <View className="h-10 w-1.5 rounded-full" style={{ backgroundColor: labelColor }} />
 
-              {/* DDL Tag */}
-              {task.isDeadline && (
-                <View className="px-1 py-0.5 rounded bg-highlight items-center justify-center">
-                  <Text className="text-white font-balooBold text-xs mt-0.5">DDL</Text>
-                </View>
-              )}
+            {/* DDL Tag */}
+            {task.isDeadline && (
+              <View className="px-1 py-0.5 rounded bg-highlight items-center justify-center">
+                <Text className="text-white font-balooBold text-xs mt-0.5">DDL</Text>
+              </View>
+            )}
 
-              {/* Title + date */}
-              <Pressable className="flex-1 " onPress={handleOpenTaskDetails} disabled={isLoading}>
-                <View className="flex-row items-center" style={{ gap: 4 }}>
-                  <Text
-                    className={`text-xl font-semibold font-inter ${
-                      task.isDone ? "text-neutral-400 line-through" : "text-[#444964]"
-                    }`}
-                    style={
-                      task.isDone
-                        ? {
-                            textDecorationLine: "line-through",
-                            textDecorationColor: "#9CA3AF",
-                          }
-                        : undefined
-                    }
-                    numberOfLines={1}
-                  >
-                    {task.title}
-                  </Text>
-                  {task.recurringTaskId && (
-                    <View className="ml-1.5">
-                      <MaterialIcons name="autorenew" size={17} color="#9CA3AF" />
-                    </View>
-                  )}
-                </View>
-                {timePeriod && <Text className="font-balooThin text-gray-400">{timePeriod}</Text>}
-              </Pressable>
-
-              <View className="flex-row items-center">
+            {/* Title + date */}
+            <Pressable className="flex-1 " onPress={handleOpenTaskDetails} disabled={isLoading}>
+              <View className="flex-row items-center" style={{ gap: 4 }}>
                 <Text
-                  className={`${
-                    isOverdue ? "text-warning" : "text-primary"
-                  } font-inter font-semibold text-lg`}
+                  className={`text-xl font-semibold font-inter ${
+                    task.isDone ? "text-neutral-400 line-through" : "text-[#444964]"
+                  }`}
+                  style={
+                    task.isDone
+                      ? {
+                          textDecorationLine: "line-through",
+                          textDecorationColor: "#9CA3AF",
+                        }
+                      : undefined
+                  }
+                  numberOfLines={1}
                 >
-                  {format(parseISO(task.endTime), "H:mm")}
+                  {task.title}
                 </Text>
-
-                {hasSubtasks && (
-                  <Pressable
-                    onPress={() => setIsExpanded((v) => !v)}
-                    className="ml-2 p-1"
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    disabled={isLoading}
-                  >
-                    <AnimatedChevron color="#9CA3AF" progress={progress} />
-                  </Pressable>
+                {task.recurringTaskId && (
+                  <View className="ml-1.5">
+                    <MaterialIcons name="autorenew" size={17} color="#9CA3AF" />
+                  </View>
                 )}
               </View>
+              {timePeriod && <Text className="font-balooThin text-gray-400">{timePeriod}</Text>}
+            </Pressable>
+
+            <View className="flex-row items-center">
+              <Text
+                className={`${
+                  isOverdue ? "text-warning" : "text-primary"
+                } font-inter font-semibold text-lg`}
+              >
+                {format(parseISO(task.endTime), "H:mm")}
+              </Text>
+
+              {hasSubtasks && (
+                <Pressable
+                  onPress={() => setIsExpanded((v) => !v)}
+                  className="ml-2 p-1"
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  disabled={isLoading}
+                >
+                  <AnimatedChevron color="#9CA3AF" progress={progress} />
+                </Pressable>
+              )}
             </View>
-            {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
           </View>
-          {hasSubtasks && <SubtaskList task={task} progress={progress} />}
+          {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
         </View>
-      </ReanimatedSwipeable>
-      <FocusModeBottomSheet
-        isOpen={showFocusModeSheet}
-        onClose={() => setShowFocusModeSheet(false)}
-      />
-    </>
+        {hasSubtasks && <SubtaskList task={task} progress={progress} />}
+      </View>
+    </ReanimatedSwipeable>
   );
 };
 

@@ -12,7 +12,15 @@ import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import TaskCard from "./task-card";
 
-export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
+export const FilteredTaskList = ({
+  selectedDay,
+  onOpenFocus,
+  onOpenMode,
+}: {
+  selectedDay: Date;
+  onOpenFocus: () => void;
+  onOpenMode: () => void;
+}) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
 
   const { deleteTask, isDeleting } = useTaskMutations();
@@ -37,6 +45,8 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
         deleteTask={deleteTask}
         isDeleting={isDeleting}
         selectedDay={selectedDay}
+        onOpenFocus={onOpenFocus}
+        onOpenMode={onOpenMode}
       />
     </View>
   );

@@ -18,12 +18,6 @@ interface FocusModeBottomSheetProps {
   onClose: () => void;
 }
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const ITEM_WIDTH = 80;
-const ITEM_GAP = 12;
-const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
-const PADDING_HORIZONTAL = (SCREEN_WIDTH - 32) / 2 - ITEM_WIDTH / 2;
-
 const DURATIONS = [
   { id: 1, label: "25m" },
   { id: 2, label: "flow" },
@@ -37,15 +31,17 @@ const SOUNDSCAPES = [
   { id: 5, name: "Cafe\nVibes", imageUrl: ASSETS.pomodoroSoundCafeVibe },
 ];
 
-export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetProps) => {
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const ITEM_WIDTH = 80;
+const ITEM_GAP = 12;
+const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
+const PADDING_HORIZONTAL = (SCREEN_WIDTH - 32) / 2 - ITEM_WIDTH / 2;
+const LOOP_MULTIPLIER = 5;
+const GALLERY_ITEMS = Array(LOOP_MULTIPLIER).fill(SOUNDSCAPES).flat();
+
+export const FocusBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetProps) => {
   const [selectedDuration, setSelectedDuration] = useState(1);
   const [selectedSoundscape, setSelectedSoundscape] = useState(1);
-
-  const LOOP_MULTIPLIER = 5;
-
-  const GALLERY_ITEMS = useMemo(() => {
-    return Array(LOOP_MULTIPLIER).fill(SOUNDSCAPES).flat();
-  }, []);
 
   const SINGLE_LENGTH = SOUNDSCAPES.length;
   const MIDDLE_INDEX = SINGLE_LENGTH * Math.floor(LOOP_MULTIPLIER / 2);
@@ -105,12 +101,6 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
         extrapolate: "clamp",
       });
 
-      const opacity = scrollX.interpolate({
-        inputRange,
-        outputRange: [0.9, 1, 0.9],
-        extrapolate: "clamp",
-      });
-
       return (
         <Pressable onPress={() => handleItemPress(index, item.id)}>
           <Animated.View
@@ -119,7 +109,6 @@ export const FocusModeBottomSheet = ({ isOpen, onClose }: FocusModeBottomSheetPr
               marginRight: ITEM_GAP,
               transform: [{ translateY }, { scale }],
               alignItems: "center",
-              opacity,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.15,
