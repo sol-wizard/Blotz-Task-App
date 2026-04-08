@@ -2,29 +2,17 @@ namespace BlotzTask.Modules.Notes.Prompts;
 
 public static class TaskTimeEstimatePrompts
 {
-    public static string GetTimeEstimatePrompt(string preferredLanguage)
+    public static string GetTimeEstimatePrompt(string preferredLanguage, string text)
     {
-        return $$$"""
-                  Estimate how long it will take to handle a short personal note. Respond in {{{preferredLanguage}}}.
+        return $"""
+                Respond in {preferredLanguage}. Estimate how long it takes to handle this note.
 
-                  Note Content:
-                  {{$text}}
+                Note: {text}
 
-                  Instructions:
-                  - Treat the note as a single focused session not a long term goal.
-                  - If the note does not include full details, use reasonable assumptions to infer a likely handling time.
-                  - Return the estimated duration using .NET TimeSpan "c" format (hh:mm:ss).
-                  - If the note is non-actionable gibberish, return isSuccess=false and provide a short errorMessage.
-
-                  Output language rule:
-                  - If isSuccess=false, errorMessage MUST be written in {{$preferredLanguage}}.
-
-                  Response format (JSON only):
-                  {
-                    "duration": "hh:mm:ss",
-                    "isSuccess": boolean,
-                    "errorMessage": ""
-                  }
-                  """;
+                - Treat it as a single focused session, not a long-term goal.
+                - Use reasonable assumptions if details are missing.
+                - Call SetTimeEstimate with duration in hh:mm:ss format.
+                - If non-actionable gibberish, call with isSuccess=false and errorMessage in {preferredLanguage}.
+                """;
     }
 }
