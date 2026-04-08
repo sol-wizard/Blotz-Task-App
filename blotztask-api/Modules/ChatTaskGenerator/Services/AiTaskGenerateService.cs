@@ -1,102 +1,88 @@
-using System.Text.Json;
+using Azure.AI.Projects;
+using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
+using BlotzTask.Modules.ChatTaskGenerator.DTOs;
+using BlotzTask.Modules.ChatTaskGenerator.Functions;
 using BlotzTask.Shared.Exceptions;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<AiGenerateMessage> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct);
+    Task<AiGenerateMessage> GenerateAiResponse(
+        string userMessage,
+        AgentSession session,
+        string preferredLanguage,
+        DateTime userLocalTime,
+        CancellationToken ct);
 }
 
 public class AiTaskGenerateService(
     ILogger<AiTaskGenerateService> logger,
-    Kernel kernel)
+    AIProjectClient projectClient,
+    IConfiguration configuration)
     : IAiTaskGenerateService
 {
-    public async Task<AiGenerateMessage> GenerateAiResponse(ChatHistory chatHistory, CancellationToken ct)
+    private readonly string _deploymentId =
+        configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
+        ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
+
+    public async Task<AiGenerateMessage> GenerateAiResponse(
+        string userMessage,
+        AgentSession session,
+        string preferredLanguage,
+        DateTime userLocalTime,
+        CancellationToken ct)
     {
+        var collectedTasks = new List<ExtractedTask>();
+        var collectedNotes = new List<ExtractedNote>();
+        var tools = new TaskGenerationTools(collectedTasks, collectedNotes);
+
         try
         {
-            var executionSettings = new OpenAIPromptExecutionSettings
+            var instructions = AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime);
+
+            var agent = projectClient.AsAIAgent(
+                model: _deploymentId,
+                instructions: instructions,
+                tools: [AIFunctionFactory.Create(tools.CreateTask), AIFunctionFactory.Create(tools.CreateNote)]);
+
+            logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
+
+            await agent.RunAsync(userMessage, session, cancellationToken: ct);
+
+            logger.LogInformation("TaskGeneration: Collected {TaskCount} tasks, {NoteCount} notes",
+                collectedTasks.Count, collectedNotes.Count);
+
+            var isSuccess = collectedTasks.Count > 0 || collectedNotes.Count > 0;
+
+            return new AiGenerateMessage
             {
-                ResponseFormat = typeof(AiGenerateMessage),
+                IsSuccess = isSuccess,
+                ExtractedTasks = collectedTasks,
+                ExtractedNotes = collectedNotes,
+                ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input."
             };
-
-            logger.LogInformation("TaskGeneration: Invoking AI with ServiceId=TaskGeneration");
-            var chatService = kernel.GetRequiredService<IChatCompletionService>("TaskGeneration");
-
-            var result = await chatService.GetChatMessageContentAsync(
-                chatHistory,
-                executionSettings,
-                kernel,
-                ct
-            );
-
-            logger.LogInformation("TaskGeneration: Response from ModelId={ModelId}", result.ModelId);
-            logger.LogInformation("TaskGeneration: Response content={Content}", result.Content);
-
-            var responseContent = result.Content;
-
-            if (string.IsNullOrWhiteSpace(responseContent))
-            {
-                logger.LogWarning("AI response content is empty. ChatHistory count: {Count}", chatHistory.Count);
-                throw new AiEmptyResponseException();
-            }
-
-            try
-            {
-                var aiGenerateMessage = JsonSerializer.Deserialize<AiGenerateMessage>(
-                    responseContent,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                );
-
-                if (aiGenerateMessage == null)
-                {
-                    logger.LogWarning("Deserialized object is null.");
-                    throw new AiInvalidJsonException(responseContent);
-                }
-
-                foreach (var task in aiGenerateMessage.ExtractedTasks ?? [])
-                {
-                    task.Id = Guid.NewGuid();
-                }
-
-                foreach (var note in aiGenerateMessage.ExtractedNotes ?? [])
-                {
-                    note.Id = Guid.NewGuid();
-                }
-
-                return aiGenerateMessage;
-            }
-            catch (JsonException ex)
-            {
-                logger.LogError(ex, "Failed to deserialize AI response: {Content}", responseContent);
-                throw new AiInvalidJsonException(responseContent, ex);
-            }
         }
         catch (OperationCanceledException oce)
         {
             logger.LogInformation(oce, "AI task generation cancelled.");
             throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
         }
-        catch (HttpOperationException ex) when (
+        catch (Exception ex) when (
             ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase) ||
             ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase)
-        )
+            ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase))
         {
             logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
             throw new AiTokenLimitedException();
         }
-        catch (HttpOperationException ex) when (
-            ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase)
-        )
+        catch (Exception ex) when (
+            ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase))
         {
-            logger.LogWarning(ex, "Request blocked by Azure OpenAI content filter.");
+            logger.LogWarning(ex, "Request blocked by content filter.");
             throw new AiContentFilterException();
         }
         catch (Exception ex)
