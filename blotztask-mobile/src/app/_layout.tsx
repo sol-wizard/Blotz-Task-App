@@ -58,7 +58,7 @@ export default function RootLayout() {
             <SafeAreaProvider>
               <KeyboardProvider>
                 <RootStack />
-                <Toast config={toastConfig} position="bottom" bottomOffset={110} />
+                <Toast config={toastConfig} position="bottom" bottomOffset={120} />
               </KeyboardProvider>
             </SafeAreaProvider>
           </QueryClientProvider>
