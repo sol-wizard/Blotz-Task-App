@@ -26,13 +26,14 @@ public class AiTaskGenerateService(
             var createTask = new CreateTask(createTaskLogger);
             var createNote = new CreateNote(createNoteLogger);
 
+            // kernel is registered as singleton
             var requestKernel = kernel.Clone();
             requestKernel.Plugins.AddFromObject(createTask, "CreateTask");
             requestKernel.Plugins.AddFromObject(createNote, "CreateNote");
 
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+                FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(autoInvoke: false)
             };
 
             logger.LogInformation("TaskGeneration: Invoking AI with ServiceId=TaskGeneration");
@@ -46,6 +47,14 @@ public class AiTaskGenerateService(
             );
 
             logger.LogInformation("TaskGeneration: Response from ModelId={ModelId}", result.ModelId);
+            logger.LogInformation("TaskGeneration: Response content={Content}", result.Content);
+
+            var functionCalls = result.Items.OfType<FunctionCallContent>().ToList();
+
+            logger.LogInformation("TaskGeneration: Processing {Count} function call(s)", functionCalls.Count);
+
+            foreach (var functionCall in functionCalls)
+                await functionCall.InvokeAsync(requestKernel, ct);
 
             var tasks = createTask.CollectedTasks;
             var notes = createNote.CollectedNotes;
