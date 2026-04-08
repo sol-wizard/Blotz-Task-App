@@ -49,6 +49,7 @@ public class AiTaskGenerateService(
             logger.LogInformation("TaskGeneration: Response from ModelId={ModelId}", result.ModelId);
             logger.LogInformation("TaskGeneration: Response content={Content}", result.Content);
 
+            // get all function need to be called
             var functionCalls = result.Items.OfType<FunctionCallContent>().ToList();
 
             logger.LogInformation("TaskGeneration: Processing {Count} function call(s)", functionCalls.Count);
