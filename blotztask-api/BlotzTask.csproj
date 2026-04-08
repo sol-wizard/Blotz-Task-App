@@ -10,7 +10,9 @@
         <PackageReference Include="Auth0.AuthenticationApi" Version="7.43.0" />
         <PackageReference Include="Auth0.ManagementApi" Version="7.43.0" />
         <PackageReference Include="Azure.AI.OpenAI" Version="2.8.0-beta.1" />
+        <PackageReference Include="Azure.AI.Projects" Version="2.0.0" />
         <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.4.0" />
+        <PackageReference Include="Microsoft.Agents.AI.Foundry" Version="1.0.0" />
         <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1">
@@ -25,7 +27,6 @@
         </PackageReference>
         <PackageReference Include="Microsoft.Recognizers.Text" Version="1.8.13" />
         <PackageReference Include="Microsoft.Recognizers.Text.DateTime" Version="1.8.13" />
-        <PackageReference Include="Microsoft.SemanticKernel" Version="1.72.0" />
         <PackageReference Include="NuGet.CommandLine" Version="7.3.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -38,5 +39,6 @@
     <ItemGroup>
       <Folder Include="Modules\Badges\Domain\" />
       <Folder Include="Modules\Badges\Enum\" />
+      <Folder Include="Modules\ChatTaskGenerator\Functions\" />
     </ItemGroup>
 </Project>
