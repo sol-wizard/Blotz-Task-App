@@ -1,4 +1,5 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 namespace BlotzTask.Modules.AiUsage.Queries;
 
@@ -22,7 +23,7 @@ public class GetAiUsageSummaryQueryHandler(BlotzTaskDbContext db)
     {
          var subscription = await db.UserSubscriptions
             .Include(s => s.Plan)
-            .FirstOrDefaultAsync(s => s.UserId == query.UserId, ct) ?? throw new KeyNotFoundException("User has no active subscription.");
+            .FirstOrDefaultAsync(s => s.UserId == query.UserId, ct) ?? throw new NotFoundException("User has no active subscription.");
         var periodStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var periodEnd = periodStart.AddMonths(1).AddSeconds(-1);
         var usedTokens = await db.AiUsageRecords
@@ -36,8 +37,5 @@ public class GetAiUsageSummaryQueryHandler(BlotzTaskDbContext db)
             PeriodStartDate: periodStart,
             PeriodEndDate: periodEnd
         );
-        // Note: to be implemented
-
-        throw new NotImplementedException();
     }
 }
