@@ -1,18 +1,10 @@
 import React, { useState, useRef, useMemo, useCallback } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  Modal,
-  ImageBackground,
-  Image,
-  Dimensions,
-  Animated,
-} from "react-native";
+import { View, Text, Pressable, Modal, Image, Dimensions, Animated } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ASSETS } from "@/shared/constants/assets";
 import { LinearGradient } from "expo-linear-gradient";
 import { SoundscapeCard } from "./sound-scape";
+import { useTranslation } from "react-i18next";
 
 interface ModeBottomSheetProps {
   isOpen: boolean;
@@ -20,16 +12,16 @@ interface ModeBottomSheetProps {
 }
 
 const DURATIONS = [
-  { id: 1, label: "25m" },
-  { id: 2, label: "flow" },
+  { id: 1, key: "25m" },
+  { id: 2, key: "flow" },
 ];
 
 const SOUNDSCAPES = [
-  { id: 1, name: "Easy\nFocus", imageUrl: ASSETS.pomodoroSoundEasyFocus },
-  { id: 2, name: "Deep\nWork", imageUrl: ASSETS.pomodoroSoundDeepWork },
-  { id: 3, name: "Task\nFlow", imageUrl: ASSETS.pomodoroSoundTaskFlow },
-  { id: 4, name: "Calm\nVibes", imageUrl: ASSETS.pomodoroSoundCalmMind },
-  { id: 5, name: "Cafe\nVibes", imageUrl: ASSETS.pomodoroSoundCafeVibe },
+  { id: 1, key: "easyFocus", imageUrl: ASSETS.pomodoroSoundEasyFocus },
+  { id: 2, key: "deepWork", imageUrl: ASSETS.pomodoroSoundDeepWork },
+  { id: 3, key: "taskFlow", imageUrl: ASSETS.pomodoroSoundTaskFlow },
+  { id: 4, key: "calmVibes", imageUrl: ASSETS.pomodoroSoundCalmMind },
+  { id: 5, key: "cafeVibes", imageUrl: ASSETS.pomodoroSoundCafeVibe },
 ];
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -43,6 +35,7 @@ const GALLERY_ITEMS = Array(LOOP_MULTIPLIER).fill(SOUNDSCAPES).flat();
 export const ModeBottomSheet = ({ isOpen, onClose }: ModeBottomSheetProps) => {
   const [selectedDuration, setSelectedDuration] = useState(1);
   const [selectedSoundscape, setSelectedSoundscape] = useState(1);
+  const { t } = useTranslation("pomodoro");
 
   const SINGLE_LENGTH = SOUNDSCAPES.length;
   const MIDDLE_INDEX = SINGLE_LENGTH * Math.floor(LOOP_MULTIPLIER / 2);
@@ -88,61 +81,59 @@ export const ModeBottomSheet = ({ isOpen, onClose }: ModeBottomSheetProps) => {
         <SoundscapeCard item={item} index={index} scrollX={scrollX} onPress={handleItemPress} />
       );
     },
-    [scrollX], // 注意这里依赖项只留 scrollX，不需要加 handleItemPress（因为如果你没用 useCallback 包裹 handleItemPress，加进去会引起死循环）
+    [scrollX],
   );
 
   return (
     <Modal visible={isOpen} transparent animationType="slide">
       <View className="flex-1 bg-black/50 justify-end">
-        <View className="bg-background rounded-t-3xl pt-6 pb-12">
+        <View className="bg-background rounded-t-3xl pt-4 pb-12">
           {/* Header */}
-          <View className="flex-row justify-between items-center mb-6 px-6">
+          <View className="flex-row justify-between items-center mb-6 px-4">
             <Pressable
               onPress={onClose}
-              className="w-8 h-8 bg-gray-200/60 rounded-full items-center justify-center"
+              className="w-12 h-12 bg-gray-200/60 rounded-full items-center justify-center"
             >
-              <MaterialIcons name="close" size={20} color="#8C8C8C" />
+              <MaterialIcons name="close" size={24} color="#8C8C8C" />
             </Pressable>
-            <Text className="text-lg font-inter font-bold text-[#444964]">Focus Mode</Text>
+            <Text className="text-lg font-baloo text-[#444964]">{t("focusMode.title")}</Text>
             <Pressable
               onPress={onClose}
-              className="w-8 h-8 bg-gray-200/60 rounded-full items-center justify-center"
+              className="w-12 h-12 bg-gray-200/60 rounded-full items-center justify-center"
             >
-              <MaterialIcons name="check" size={20} color="#8C8C8C" />
+              <MaterialIcons name="check" size={24} color="#8C8C8C" />
             </Pressable>
           </View>
 
           {/* Duration Section */}
           <Text className="text-[#444964] font-inter font-bold font-baloo mb-3 mx-6 text-xl">
-            Duration
+            {t("focusMode.duration")}
           </Text>
-          <View className="bg-white mx-4 rounded-3xl p-5 mb-6 shadow-sm shadow-gray-200">
-            <View className="flex-row gap-3">
-              {DURATIONS.map((duration) => (
-                <Pressable
-                  key={duration.id}
-                  onPress={() => setSelectedDuration(duration.id)}
-                  className={`px-4 h-10 item-center justify-center rounded-2xl border-2 ${
-                    selectedDuration === duration.id
-                      ? "bg-[#9AD513] border-[#9AD513]"
-                      : "bg-white border-[#9AD513]"
+          <View className="bg-white mx-4 rounded-3xl p-5 mb-6 shadow-sm shadow-gray-200 flex-row gap-3">
+            {DURATIONS.map((duration) => (
+              <Pressable
+                key={duration.id}
+                onPress={() => setSelectedDuration(duration.id)}
+                className={`px-4 h-10 item-center justify-center rounded-2xl border-2 ${
+                  selectedDuration === duration.id
+                    ? "bg-[#9AD513] border-[#9AD513]"
+                    : "bg-white border-[#9AD513]"
+                }`}
+              >
+                <Text
+                  className={`font-baloo text-lg ${
+                    selectedDuration === duration.id ? "text-white" : "text-[#9AD513]"
                   }`}
                 >
-                  <Text
-                    className={`font-inter font-bold font-baloo text-lg ${
-                      selectedDuration === duration.id ? "text-white" : "text-[#9AD513]"
-                    }`}
-                  >
-                    {duration.label === "flow" ? `∞ flow` : duration.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+                  {duration.key === "flow" ? t("focusMode.flow") : duration.key}
+                </Text>
+              </Pressable>
+            ))}
           </View>
 
           {/* Soundscapes Section */}
-          <Text className="text-[#444964] font-inter font-bold font-baloo mb-3 mx-6 text-xl">
-            Soundscapes
+          <Text className="text-[#444964] font-baloo mb-3 mx-6 text-xl">
+            {t("focusMode.soundscapes")}
           </Text>
 
           <View className="bg-white mx-4 rounded-3xl p-5 pb-6 shadow-sm shadow-gray-200">

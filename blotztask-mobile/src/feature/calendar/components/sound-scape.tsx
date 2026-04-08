@@ -1,17 +1,11 @@
-import { ASSETS } from "@/shared/constants/assets";
 import { Animated, Dimensions, ImageBackground, Pressable, Text } from "react-native";
 import { SNAP_INTERVAL, ITEM_WIDTH, ITEM_GAP } from "./mode-bottomsheet";
-
-// const SCREEN_WIDTH = Dimensions.get("window").width;
-// const ITEM_WIDTH = 80;
-// const ITEM_GAP = 12;
-// const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
-// const PADDING_HORIZONTAL = (SCREEN_WIDTH - 32) / 2 - ITEM_WIDTH / 2;
-// const LOOP_MULTIPLIER = 5;
-// const GALLERY_ITEMS = Array(LOOP_MULTIPLIER).fill(SOUNDSCAPES).flat();
+import { useTranslation } from "react-i18next";
 
 // 直接定义为一个普通的组件，不套 React.memo
 export const SoundscapeCard = ({ item, index, scrollX, onPress }: any) => {
+  const { t } = useTranslation("pomodoro");
+
   const inputRange = [
     (index - 1) * SNAP_INTERVAL,
     index * SNAP_INTERVAL,
@@ -51,7 +45,7 @@ export const SoundscapeCard = ({ item, index, scrollX, onPress }: any) => {
           style={{ borderRadius: 20, overflow: "hidden" }}
         >
           <Text className="text-white font-baloo text-[11px] text-center leading-tight shadow-sm shadow-black">
-            {item.name}
+            {t(`soundscape.${item.key}`)}
           </Text>
         </ImageBackground>
       </Animated.View>
