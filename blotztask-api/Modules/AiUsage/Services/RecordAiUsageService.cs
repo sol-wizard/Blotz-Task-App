@@ -1,4 +1,5 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.AiUsage.Entities;
 
 namespace BlotzTask.Modules.AiUsage.Services;
 
@@ -11,9 +12,18 @@ public class RecordAiUsageRequest
 
 public class RecordAiUsageService(BlotzTaskDbContext db)
 {
-    public Task RecordAiUsageAsync(RecordAiUsageRequest request, CancellationToken ct = default)
+    public async Task RecordAiUsageAsync(RecordAiUsageRequest request, CancellationToken ct = default)
     {
-        // Note: to be implemented
-        throw new NotImplementedException();
+        var usageRecord = new AiUsageRecord
+        {
+            UserId = request.UserId,
+            PromptTokens = request.PromptTokens,
+            CompletionTokens = request.CompletionTokens,
+            TotalTokens = request.PromptTokens + request.CompletionTokens,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        db.AiUsageRecords.Add(usageRecord);
+        await db.SaveChangesAsync(ct);
     }
 }
