@@ -14,6 +14,8 @@ public interface IAiTaskGenerateService
 
 public class AiTaskGenerateService(
     ILogger<AiTaskGenerateService> logger,
+    ILogger<CreateTask> createTaskLogger,
+    ILogger<CreateNote> createNoteLogger,
     Kernel kernel)
     : IAiTaskGenerateService
 {
@@ -21,8 +23,8 @@ public class AiTaskGenerateService(
     {
         try
         {
-            var createTask = new CreateTask();
-            var createNote = new CreateNote();
+            var createTask = new CreateTask(createTaskLogger);
+            var createNote = new CreateNote(createNoteLogger);
 
             var requestKernel = kernel.Clone();
             requestKernel.Plugins.AddFromObject(createTask, "CreateTask");

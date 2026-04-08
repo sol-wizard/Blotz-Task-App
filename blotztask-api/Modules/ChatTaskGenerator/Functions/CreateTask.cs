@@ -4,7 +4,7 @@ using Microsoft.SemanticKernel;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Functions;
 
-public class CreateTask
+public class CreateTask(ILogger<CreateTask> logger)
 {
     public List<ExtractedTask> CollectedTasks { get; } = new();
 
@@ -17,6 +17,9 @@ public class CreateTask
         [Description("The end time for the task as a local time in the format yyyy-MM-ddTHH:mm:ss. For single-time tasks, this should equal startTime. For range tasks, this must be greater than startTime.")] DateTime endTime,
         [Description("The label for the task. Must be one of: Work, Life, Learning, Health")] LabelNameEnum labelName)
     {
+        logger.LogInformation("FunctionCall: CreateTask called with Title={Title}, StartTime={StartTime}, EndTime={EndTime}, Label={Label}",
+            title, startTime, endTime, labelName);
+
         CollectedTasks.Add(new ExtractedTask
         {
             Id = Guid.NewGuid(),
