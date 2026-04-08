@@ -35,7 +35,6 @@ builder.Services.AddAiUsageModule();
 builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 
 builder.Services.AddAuth0JwtBearerAuthentication(builder.Configuration);
-builder.Services.AddAzureOpenAi();
 builder.Services.AddAgentFrameworkServices(builder.Configuration);
 builder.Services.AddCustomCors();
 

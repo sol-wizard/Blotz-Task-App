@@ -7,7 +7,6 @@ using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
-using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Foundry;
 using Microsoft.Extensions.AI;
 
