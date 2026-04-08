@@ -29,7 +29,8 @@ public static class DependencyInjection
         services.AddScoped<UpdateDeadlinePinCommandHandler>();
         services.AddScoped<DeleteDeadlineTaskCommandHandler>();
         services.AddScoped<AddSubtaskCommandHandler>();
-
+        services.AddScoped<GetMonthlyTaskAvailabilityQueryHandler>();
+        
         // Event handlers
         services.AddScoped<IDomainEventHandler<TaskCompletedEvent>, TaskCompletedEventHandler>();
 

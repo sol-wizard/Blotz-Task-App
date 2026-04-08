@@ -4,6 +4,8 @@ import { AnimatedChevron } from "@/shared/components/ui/chevron";
 import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SharedValue } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
+
 
 interface CalendarHeaderProps {
   date: string;
@@ -12,7 +14,9 @@ interface CalendarHeaderProps {
 }
 
 export default function CalendarHeader({ date, progress, onToggleCalendar }: CalendarHeaderProps) {
-  const { dayOfWeek } = formatCalendarDate(date);
+  const { t, i18n } = useTranslation("calendar");
+  const { dayOfWeek } = formatCalendarDate(date, i18n.language, t("header.today"));
+
 
   return (
     <View className="flex-row items-center justify-between px-5">

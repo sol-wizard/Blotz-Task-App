@@ -33,6 +33,7 @@ export default function NotesScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [editingNote, setEditingNote] = useState<NoteDTO | null>(null);
+  const [noteError, setNoteError] = useState("");
 
   // Bottom sheet state for add-to-task (managed at screen level)
   const [noteTimePickerSheetVisible, setNoteTimePickerSheetVisible] = useState(false);
@@ -65,6 +66,10 @@ export default function NotesScreen() {
   const handleSave = () => {
     const text = noteText.trim();
     if (!text) return;
+    if (text.length > 2000) {
+      setNoteError("Note text cannot exceed 2000 characters.");
+      return;
+    }
 
     if (editingNote) {
       if (isNoteUpdating) return;
@@ -75,6 +80,7 @@ export default function NotesScreen() {
             setIsModalVisible(false);
             setEditingNote(null);
             setNoteText("");
+            setNoteError("");
           },
         },
       );
@@ -86,8 +92,19 @@ export default function NotesScreen() {
       onSuccess: () => {
         setIsModalVisible(false);
         setNoteText("");
+        setNoteError("");
       },
     });
+  };
+
+  const handleChangeNoteText = (text: string) => {
+    setNoteText(text);
+    if (text.trim().length >= 2000) {
+      setNoteError("Note text cannot exceed 2000 characters.");
+      return;
+    }
+
+    setNoteError("");
   };
 
   const handleAIEstimate = (note: NoteDTO | null) => {
@@ -161,7 +178,6 @@ export default function NotesScreen() {
                       onAddToTask={(note: NoteDTO) => {
                         setSelectedNote(note);
                         setNoteTimePickerSheetVisible(true);
-                        console.log("Selected note for time estimation:", note);
                       }}
                     />
                   )}
@@ -198,13 +214,15 @@ export default function NotesScreen() {
             visible={isModalVisible}
             noteText={noteText}
             isSaving={editingNote ? isNoteUpdating : isNoteCreating}
-            onChangeText={setNoteText}
+            onChangeText={handleChangeNoteText}
             onClose={() => {
               setIsModalVisible(false);
               setEditingNote(null);
               setNoteText("");
+              setNoteError("");
             }}
             onSave={handleSave}
+            errorMessage={noteError}
           />
 
           {showLoading && <LoadingScreen />}

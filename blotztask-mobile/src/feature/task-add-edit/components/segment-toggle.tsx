@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Text, Pressable } from "react-native";
 import { useTranslation } from "react-i18next";
 import { SegmentButtonValue } from "../models/segment-button-value";
@@ -17,23 +17,22 @@ export function SegmentToggle({ value, setValue }: Props) {
   const tabPositionX = useSharedValue(value === "reminder" ? 0 : 224 / 2);
   const [containerWidth, setContainerWidth] = React.useState(224);
   const isInitialMount = React.useRef(true);
+  const onTabMovingAnimation = useCallback((index: number, animate: boolean = true) => {
+    const tabWidth = containerWidth / 2;
+    const target = tabWidth * index;
+    tabPositionX.value = animate ? withTiming(target, { duration: 200 }) : target;
+  }, [containerWidth, tabPositionX]);
+
   React.useEffect(() => {
     if (containerWidth > 0) {
       onTabMovingAnimation(value === "reminder" ? 0 : 1, !isInitialMount.current);
       isInitialMount.current = false;
     }
-  }, [value, containerWidth]);
-
-  const onTabMovingAnimation = (index: number, animate: boolean = true) => {
-    const tabWidth = containerWidth / 2;
-    const target = tabWidth * index;
-    tabPositionX.value = animate ? withTiming(target, { duration: 200 }) : target;
-  };
+  }, [containerWidth, onTabMovingAnimation, value]);
 
   const tabAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: tabPositionX.value }],
   }));
-
   return (
     <Animated.View
       className="flex-row bg-[#F4F6FA] p-1 rounded-xl mb-6 w-56 items-center"
@@ -41,8 +40,13 @@ export function SegmentToggle({ value, setValue }: Props) {
       onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
     >
       <Animated.View
-        className="absolute bg-white rounded-xl w-28 h-10 shadow-sm shadow-gray-400"
-        style={tabAnimatedStyle}
+        className="absolute bg-white rounded-xl h-10 shadow-sm shadow-gray-400"
+        style={[
+          tabAnimatedStyle,
+        {
+          width: containerWidth / 2,
+        },
+      ]}
       />
       <AnimatedPressable
         className={`flex-1 justify-center items-center py-2 px-3 rounded-xl `}
