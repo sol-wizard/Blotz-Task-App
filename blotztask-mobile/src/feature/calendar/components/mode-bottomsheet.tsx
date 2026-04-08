@@ -12,6 +12,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { ASSETS } from "@/shared/constants/assets";
 import { LinearGradient } from "expo-linear-gradient";
+import { SoundscapeCard } from "./sound-scape";
 
 interface ModeBottomSheetProps {
   isOpen: boolean;
@@ -32,9 +33,9 @@ const SOUNDSCAPES = [
 ];
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
-const ITEM_WIDTH = 80;
-const ITEM_GAP = 12;
-const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
+export const ITEM_WIDTH = 80;
+export const ITEM_GAP = 12;
+export const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
 const PADDING_HORIZONTAL = (SCREEN_WIDTH - 32) / 2 - ITEM_WIDTH / 2;
 const LOOP_MULTIPLIER = 5;
 const GALLERY_ITEMS = Array(LOOP_MULTIPLIER).fill(SOUNDSCAPES).flat();
@@ -83,54 +84,11 @@ export const ModeBottomSheet = ({ isOpen, onClose }: ModeBottomSheetProps) => {
 
   const renderItem = useCallback(
     ({ item, index }: { item: any; index: number }) => {
-      const inputRange = [
-        (index - 1) * SNAP_INTERVAL,
-        index * SNAP_INTERVAL,
-        (index + 1) * SNAP_INTERVAL,
-      ];
-
-      const translateY = scrollX.interpolate({
-        inputRange,
-        outputRange: [0, -12, 0],
-        extrapolate: "clamp",
-      });
-
-      const scale = scrollX.interpolate({
-        inputRange,
-        outputRange: [0.95, 1, 0.95],
-        extrapolate: "clamp",
-      });
-
       return (
-        <Pressable onPress={() => handleItemPress(index, item.id)}>
-          <Animated.View
-            style={{
-              width: ITEM_WIDTH,
-              marginRight: ITEM_GAP,
-              transform: [{ translateY }, { scale }],
-              alignItems: "center",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 8,
-              elevation: 6,
-            }}
-          >
-            <ImageBackground
-              source={item.imageUrl}
-              className="w-20 h-24 border-2 border-white justify-end p-2 bg-gray-200"
-              imageStyle={{ borderRadius: 16, resizeMode: "cover" }}
-              style={{ borderRadius: 16, overflow: "hidden" }}
-            >
-              <Text className="text-white font-inter font-bold font-baloo text-md text-center leading-tight shadow-sm shadow-black">
-                {item.name}
-              </Text>
-            </ImageBackground>
-          </Animated.View>
-        </Pressable>
+        <SoundscapeCard item={item} index={index} scrollX={scrollX} onPress={handleItemPress} />
       );
     },
-    [scrollX],
+    [scrollX], // 注意这里依赖项只留 scrollX，不需要加 handleItemPress（因为如果你没用 useCallback 包裹 handleItemPress，加进去会引起死循环）
   );
 
   return (

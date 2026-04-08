@@ -11,7 +11,6 @@ import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { CustomDay, CustomDayProps } from "../components/custom-day";
 import { useLocalSearchParams } from "expo-router";
-import { FocusBottomSheet } from "../components/focus-bottomsheet";
 import { ModeBottomSheet } from "../components/mode-bottomsheet";
 
 const calendarTheme = {
