@@ -12,6 +12,7 @@
         <PackageReference Include="Azure.AI.OpenAI" Version="2.8.0-beta.1" />
         <PackageReference Include="Azure.AI.Projects" Version="2.0.0" />
         <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.4.0" />
+        <PackageReference Include="Microsoft.Agents.AI" Version="1.0.0" />
         <PackageReference Include="Microsoft.Agents.AI.Foundry" Version="1.0.0" />
         <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.1" />
@@ -20,6 +21,7 @@
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.1" />
+        <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.4.1" />
         <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.1" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.1">
             <PrivateAssets>all</PrivateAssets>
