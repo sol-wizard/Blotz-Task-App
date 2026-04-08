@@ -1,5 +1,5 @@
-using System.Text.Json;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
+using BlotzTask.Modules.ChatTaskGenerator.Functions;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -21,62 +21,43 @@ public class AiTaskGenerateService(
     {
         try
         {
+            var createTask = new CreateTask();
+            var createNote = new CreateNote();
+
+            var requestKernel = kernel.Clone();
+            requestKernel.Plugins.AddFromObject(createTask, "CreateTask");
+            requestKernel.Plugins.AddFromObject(createNote, "CreateNote");
+
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                ResponseFormat = typeof(AiGenerateMessage),
+                FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
             };
 
             logger.LogInformation("TaskGeneration: Invoking AI with ServiceId=TaskGeneration");
-            var chatService = kernel.GetRequiredService<IChatCompletionService>("TaskGeneration");
+            var chatService = requestKernel.GetRequiredService<IChatCompletionService>("TaskGeneration");
 
             var result = await chatService.GetChatMessageContentAsync(
                 chatHistory,
                 executionSettings,
-                kernel,
+                requestKernel,
                 ct
             );
 
             logger.LogInformation("TaskGeneration: Response from ModelId={ModelId}", result.ModelId);
-            logger.LogInformation("TaskGeneration: Response content={Content}", result.Content);
 
-            var responseContent = result.Content;
+            var tasks = createTask.CollectedTasks;
+            var notes = createNote.CollectedNotes;
+            var isSuccess = tasks.Count > 0 || notes.Count > 0;
 
-            if (string.IsNullOrWhiteSpace(responseContent))
+            logger.LogInformation("TaskGeneration: Extracted {TaskCount} tasks and {NoteCount} notes", tasks.Count, notes.Count);
+
+            return new AiGenerateMessage
             {
-                logger.LogWarning("AI response content is empty. ChatHistory count: {Count}", chatHistory.Count);
-                throw new AiEmptyResponseException();
-            }
-
-            try
-            {
-                var aiGenerateMessage = JsonSerializer.Deserialize<AiGenerateMessage>(
-                    responseContent,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                );
-
-                if (aiGenerateMessage == null)
-                {
-                    logger.LogWarning("Deserialized object is null.");
-                    throw new AiInvalidJsonException(responseContent);
-                }
-
-                foreach (var task in aiGenerateMessage.ExtractedTasks ?? [])
-                {
-                    task.Id = Guid.NewGuid();
-                }
-
-                foreach (var note in aiGenerateMessage.ExtractedNotes ?? [])
-                {
-                    note.Id = Guid.NewGuid();
-                }
-
-                return aiGenerateMessage;
-            }
-            catch (JsonException ex)
-            {
-                logger.LogError(ex, "Failed to deserialize AI response: {Content}", responseContent);
-                throw new AiInvalidJsonException(responseContent, ex);
-            }
+                IsSuccess = isSuccess,
+                ExtractedTasks = tasks,
+                ExtractedNotes = notes,
+                ErrorMessage = isSuccess ? "" : "No tasks or notes could be extracted from your input."
+            };
         }
         catch (OperationCanceledException oce)
         {
