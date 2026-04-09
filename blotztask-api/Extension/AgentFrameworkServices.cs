@@ -8,13 +8,9 @@ public static class AgentFrameworkServiceExtensions
     public static IServiceCollection AddAgentFrameworkServices(
         this IServiceCollection services, IConfiguration configuration)
     {
-        var projectEndpoint = configuration["AzureAI:ProjectEndpoint"];
-        var taskGenerationDeploymentId = configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"];
-        var breakdownDeploymentId = configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"];
+        var projectEndpoint = configuration["AzureOpenAI:Endpoint"];
 
-        if (string.IsNullOrWhiteSpace(projectEndpoint) ||
-            string.IsNullOrWhiteSpace(taskGenerationDeploymentId) ||
-            string.IsNullOrWhiteSpace(breakdownDeploymentId))
+        if (string.IsNullOrWhiteSpace(projectEndpoint))
         {
             throw new InvalidOperationException(
                 "Missing Azure AI configuration. Set AzureAI:ProjectEndpoint, AzureOpenAI:AiModels:TaskGeneration:DeploymentId, and AzureOpenAI:AiModels:Breakdown:DeploymentId in configuration.");
