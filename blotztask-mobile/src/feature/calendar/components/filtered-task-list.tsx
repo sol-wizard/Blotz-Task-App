@@ -31,7 +31,7 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
-    <View className="shadow shadow-gray-300">
+    <View className="shadow shadow-gray-200">
       <TaskCard
         task={item}
         deleteTask={deleteTask}

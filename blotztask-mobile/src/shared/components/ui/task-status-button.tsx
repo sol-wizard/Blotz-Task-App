@@ -1,5 +1,13 @@
-import { Pressable, Text, View } from "react-native";
-import { Hanging } from "../common/hanging";
+import { useEffect } from "react";
+import { Pressable } from "react-native";
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export const TaskStatusButton = ({
   isSelected,
@@ -12,27 +20,29 @@ export const TaskStatusButton = ({
   statusName: string;
   taskCount: number;
 }) => {
+  const progress = useSharedValue(isSelected ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(isSelected ? 1 : 0, { duration: 250 });
+  }, [isSelected]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(progress.value, [0, 1], ["#e5e7eb", "#000000"]),
+  }));
+
+  const animatedTextStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(progress.value, [0, 1], ["#4b5563", "#ffffff"]),
+  }));
+
   return (
-    <Hanging active={isSelected}>
-      <Pressable
-        onPress={onChange}
-        className={`flex-row items-center gap-2 px-4 py-2 rounded-3xl border ${
-          isSelected ? "bg-black" : "bg-white border-gray-300"
-        }`}
-      >
-        <Text
-          className={`${isSelected ? "text-white font-inter" : "text-gray-700 font-inter"}`}
-        >
-          {statusName}
-        </Text>
-        <View className={`px-2 py-0.5 rounded-full ${isSelected ? "bg-white" : "bg-gray-400"}`}>
-          <Text
-            className={`text-xs font-semibold ${isSelected ? "text-black font-bold" : "text-white"}`}
-          >
-            {taskCount}
-          </Text>
-        </View>
-      </Pressable>
-    </Hanging>
+    <AnimatedPressable
+      onPress={onChange}
+      className="px-4 py-2 rounded-3xl"
+      style={animatedStyle}
+    >
+      <Animated.Text className={`font-inter ${isSelected ? "font-bold" : ""}`} style={animatedTextStyle}>
+        {statusName} ({taskCount})
+      </Animated.Text>
+    </AnimatedPressable>
   );
 };

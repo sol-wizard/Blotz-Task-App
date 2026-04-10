@@ -102,7 +102,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
       friction={2}
       dragOffsetFromLeftEdge={8}
     >
-      <View className="flex-col bg-white rounded-2xl px-4 py-3 min-h-20 justify-center">
+      <View className="flex-col bg-white rounded-3xl px-4 py-3 min-h-20 justify-center">
         <View className="justify-center">
           <View className="flex-row items-center" style={{ gap: 12 }}>
             {/* Checkbox */}
