@@ -107,6 +107,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
           <View className="flex-row items-center" style={{ gap: 12 }}>
             {/* Checkbox */}
             <TasksCheckbox
+              type="task"
               checked={task.isDone}
               disabled={isLoading}
               onChange={async () => {

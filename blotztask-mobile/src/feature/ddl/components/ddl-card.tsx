@@ -83,7 +83,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
         style={{ gap: 12 }}
       >
         {/* Checkbox */}
-        <TasksCheckbox checked={task.isDone} onChange={() => {}} />
+        <TasksCheckbox type="task" checked={task.isDone} onChange={() => {}} />
 
         {/* Vertical label colour bar */}
         <View className="h-10 w-1.5 rounded-full" style={{ backgroundColor: labelColor }} />

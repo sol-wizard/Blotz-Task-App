@@ -50,10 +50,10 @@ const SubtaskList = ({ task, progress }: Props) => {
       className={`flex-row items-center py-2 ${isTogglingSubtaskStatus ? "opacity-50" : ""}`}
     >
       <TasksCheckbox
+        type="subtask"
         checked={subtask.isDone}
         disabled={isTogglingSubtaskStatus}
-        size={20}
-        className="mr-3 border "
+        className="mr-3"
         onChange={() => handleToggleSubtask(subtask.subTaskId)}
       />
       <Text

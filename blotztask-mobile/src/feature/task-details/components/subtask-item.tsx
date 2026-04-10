@@ -74,7 +74,7 @@ export default function SubtaskItem({
       >
         <View className="flex-row items-center min-h-[48px] px-3 py-1">
           <View style={{ width: 32, justifyContent: "center" }}>
-            <TasksCheckbox checked={isChecked} onChange={handleToggle} size={24} />
+            <TasksCheckbox type="subtask" checked={isChecked} onChange={handleToggle} />
           </View>
 
           <View style={{ flex: 1, marginLeft: 4, justifyContent: "center" }}>

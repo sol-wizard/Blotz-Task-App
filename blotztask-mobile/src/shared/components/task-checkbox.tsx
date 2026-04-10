@@ -11,34 +11,39 @@ import Animated, {
 } from "react-native-reanimated";
 
 type Props = {
+  type: "task" | "subtask";
   checked: boolean;
   onChange: (next: boolean) => void | Promise<void>;
   disabled?: boolean;
-  size?: number;
-  color?: string;
-  uncheckedColor?: string;
   className?: string;
   style?: ViewStyle;
 };
 
+const TASK_SIZE = 22;
+const SUBTASK_SIZE = 20;
+const GREEN = theme.colors.checked;
+const GRAY = theme.colors.disabled;
+
 export default function TasksCheckbox({
+  type,
   checked,
   onChange,
   disabled = false,
-  size = 22,
-  color = theme.colors.checked,
-  uncheckedColor = theme.colors.disabled,
   className = "",
   style,
 }: Props) {
+  const isTask = type === "task";
+  const size = isTask ? TASK_SIZE : SUBTASK_SIZE;
+
   const progress = useSharedValue(checked ? 1 : 0);
 
   useEffect(() => {
     progress.value = withTiming(checked ? 1 : 0, { duration: 200 });
   }, [checked]);
 
-  const bgStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(progress.value, [0, 1], ["#FFFFFF", color]),
+  // Task: bg animates white → green. Subtask: bg always transparent.
+  const filledBgStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(progress.value, [0, 1], ["#FFFFFF", GREEN]),
   }));
 
   const handlePress = async () => {
@@ -62,16 +67,24 @@ export default function TasksCheckbox({
           height: size,
           borderRadius: size / 2,
           borderWidth: 1.5,
-          borderColor: checked ? color : uncheckedColor,
-          backgroundColor: "#FFFFFF",
+          borderColor: checked ? GREEN : GRAY,
+          backgroundColor: "transparent",
         },
         style,
       ]}
     >
-      <Animated.View
-        style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, bgStyle]}
-      />
-      {checked && <MaterialIcons name="check" size={Math.round(size * 0.6)} color="#FFFFFF" />}
+      {isTask && (
+        <Animated.View
+          style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, filledBgStyle]}
+        />
+      )}
+      {checked && (
+        <MaterialIcons
+          name="check"
+          size={Math.round(size * 0.6)}
+          color={isTask ? "#FFFFFF" : GREEN}
+        />
+      )}
     </Pressable>
   );
 }
