@@ -12,7 +12,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, CancellationToken ct);
+    Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct);
     Task<AiGenerateMessage> GenerateAiResponse(string userMessage, AiChatContext context, CancellationToken ct);
 }
 
@@ -26,11 +26,11 @@ public class AiTaskGenerateService(
         configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
         ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
 
-    public async Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, CancellationToken ct)
+    public async Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct)
     {
-        var collectedTasks = new List<ExtractedTask>();
-        var collectedNotes = new List<ExtractedNote>();
-        var tools = new TaskGenerationTools(collectedTasks, collectedNotes);
+        var tasks = new List<ExtractedTask>();
+        var notes = new List<ExtractedNote>();
+        var tools = new TaskGenerationTools(tasks, notes);
 
         var instructions = AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime);
 
@@ -56,8 +56,9 @@ public class AiTaskGenerateService(
             Agent = agent,
             Session = session,
             Tools = tools,
-            CollectedTasks = collectedTasks,
-            CollectedNotes = collectedNotes
+            Tasks = tasks,
+            Notes = notes,
+            TimeZone = timeZone
         };
     }
 
@@ -75,15 +76,15 @@ public class AiTaskGenerateService(
             await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
 
             logger.LogInformation("TaskGeneration: Tool calls this turn={ToolCallCount}, total tasks={TaskCount}, notes={NoteCount}",
-                context.Tools.ToolCallCount, context.CollectedTasks.Count, context.CollectedNotes.Count);
+                context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
 
             var isSuccess = context.Tools.ToolCallCount > 0;
 
             return new AiGenerateMessage
             {
                 IsSuccess = isSuccess,
-                ExtractedTasks = context.CollectedTasks,
-                ExtractedNotes = context.CollectedNotes,
+                ExtractedTasks = context.Tasks,
+                ExtractedNotes = context.Notes,
                 ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input."
             };
         }

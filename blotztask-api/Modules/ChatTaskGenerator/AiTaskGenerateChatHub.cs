@@ -65,9 +65,8 @@ public class AiTaskGenerateChatHub : Hub
 
         var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
 
-        var chatContext = await _aiTaskGenerateService.InitializeAsync(preferredLanguage, userLocalTime, CancellationToken.None);
+        var chatContext = await _aiTaskGenerateService.InitializeAsync(preferredLanguage, userLocalTime, timeZone, CancellationToken.None);
 
-        Context.Items["TimeZone"] = timeZone;
         Context.Items["ChatContext"] = chatContext;
 
         await base.OnConnectedAsync();
@@ -85,19 +84,7 @@ public class AiTaskGenerateChatHub : Hub
 
     public async Task SendMessage(string message)
     {
-        var timeZone = Context.Items.TryGetValue("TimeZone", out var tzObj) && tzObj is TimeZoneInfo tz
-            ? tz
-            : TimeZoneInfo.Utc;
-
-        if (Context.Items.TryGetValue("ChatContext", out var contextObj) is false || contextObj is not AiChatContext chatContext)
-        {
-            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
-            {
-                IsSuccess = false,
-                ErrorMessage = "Session not initialized."
-            });
-            return;
-        }
+        var chatContext = (AiChatContext)Context.Items["ChatContext"]!;
 
         try
         {
@@ -106,7 +93,7 @@ public class AiTaskGenerateChatHub : Hub
             var resolvedMessage = _dateTimeResolveService.Resolve(new ResolveDateTimesRequest
             {
                 Message = message,
-                TimeZone = timeZone
+                TimeZone = chatContext.TimeZone
             });
 
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(resolvedMessage, chatContext, ct);

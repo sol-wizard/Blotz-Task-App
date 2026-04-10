@@ -9,6 +9,7 @@ public class AiChatContext
     public required AIAgent Agent { get; init; }
     public required AgentSession Session { get; init; }
     public required TaskGenerationTools Tools { get; init; }
-    public required List<ExtractedTask> CollectedTasks { get; init; }
-    public required List<ExtractedNote> CollectedNotes { get; init; }
+    public required List<ExtractedTask> Tasks { get; init; }
+    public required List<ExtractedNote> Notes { get; init; }
+    public required TimeZoneInfo TimeZone { get; init; }
 }
