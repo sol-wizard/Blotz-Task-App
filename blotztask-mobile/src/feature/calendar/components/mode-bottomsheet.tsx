@@ -1,10 +1,6 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import React, { useState, useRef } from "react";
 import { View, Text, Pressable, Modal, Image, Dimensions } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedScrollHandler,
-  runOnJS,
-} from "react-native-reanimated";
+import Animated, { useSharedValue, useAnimatedScrollHandler } from "react-native-reanimated";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ASSETS } from "@/shared/constants/assets";
 import { LinearGradient } from "expo-linear-gradient";

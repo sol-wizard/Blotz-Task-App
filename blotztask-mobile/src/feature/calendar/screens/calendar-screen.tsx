@@ -24,7 +24,6 @@ export default function CalendarScreen() {
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const { weeklyTaskAvailability, isLoading } = useTaskDays({ selectedDay });
   const progress = useSharedValue(isCalendarVisible ? 1 : 0);
-  const [isFocusSheetOpen, setIsFocusSheetOpen] = useState(false);
   const [isModeSheetOpen, setIsModeSheetOpen] = useState(false);
 
   const markedDates = isLoading ? {} : getMarkedDates({ weeklyTaskAvailability });

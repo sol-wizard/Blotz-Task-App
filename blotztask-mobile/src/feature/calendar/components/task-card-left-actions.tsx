@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
 
 type LeftActionsProps = {

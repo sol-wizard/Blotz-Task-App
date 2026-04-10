@@ -4,7 +4,7 @@ import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { MaterialIcons } from "@expo/vector-icons";
-import { format, parseISO, set } from "date-fns";
+import { format, parseISO } from "date-fns";
 import TasksCheckbox from "@/shared/components/ui/task-checkbox";
 
 import { SharedValue, useDerivedValue, withTiming } from "react-native-reanimated";
