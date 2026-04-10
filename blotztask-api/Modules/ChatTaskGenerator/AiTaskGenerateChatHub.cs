@@ -3,7 +3,6 @@ using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
-using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -64,9 +63,12 @@ public class AiTaskGenerateChatHub : Hub
             _ => "English"
         };
 
+        var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
+
+        var chatContext = await _aiTaskGenerateService.InitializeAsync(preferredLanguage, userLocalTime, CancellationToken.None);
+
         Context.Items["TimeZone"] = timeZone;
-        Context.Items["PreferredLanguage"] = preferredLanguage;
-        Context.Items["Session"] = null;
+        Context.Items["ChatContext"] = chatContext;
 
         await base.OnConnectedAsync();
     }
@@ -77,7 +79,7 @@ public class AiTaskGenerateChatHub : Hub
             "User disconnected: {ConnectionId}. Exception: {Exception}",
             Context.ConnectionId, exception?.Message);
 
-        Context.Items.Remove("Session");
+        Context.Items.Remove("ChatContext");
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -87,18 +89,19 @@ public class AiTaskGenerateChatHub : Hub
             ? tz
             : TimeZoneInfo.Utc;
 
-        var preferredLanguage = Context.Items.TryGetValue("PreferredLanguage", out var langObj) && langObj is string lang
-            ? lang
-            : "English";
+        if (Context.Items.TryGetValue("ChatContext", out var contextObj) is false || contextObj is not AiChatContext chatContext)
+        {
+            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
+            {
+                IsSuccess = false,
+                ErrorMessage = "Session not initialized."
+            });
+            return;
+        }
 
         try
         {
             var ct = Context.ConnectionAborted;
-
-            Context.Items.TryGetValue("Session", out var sessionObj);
-            var session = sessionObj as AgentSession;
-
-            var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
 
             var resolvedMessage = _dateTimeResolveService.Resolve(new ResolveDateTimesRequest
             {
@@ -106,10 +109,7 @@ public class AiTaskGenerateChatHub : Hub
                 TimeZone = timeZone
             });
 
-            var (resultMessage, updatedSession) = await _aiTaskGenerateService.GenerateAiResponse(
-                resolvedMessage, session, preferredLanguage, userLocalTime, ct);
-
-            Context.Items["Session"] = updatedSession;
+            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(resolvedMessage, chatContext, ct);
 
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
         }

@@ -12,12 +12,8 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<(AiGenerateMessage Message, AgentSession Session)> GenerateAiResponse(
-        string userMessage,
-        AgentSession? session,
-        string preferredLanguage,
-        DateTime userLocalTime,
-        CancellationToken ct);
+    Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, CancellationToken ct);
+    Task<AiGenerateMessage> GenerateAiResponse(string userMessage, AiChatContext context, CancellationToken ct);
 }
 
 public class AiTaskGenerateService(
@@ -30,51 +26,66 @@ public class AiTaskGenerateService(
         configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
         ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
 
-    public async Task<(AiGenerateMessage Message, AgentSession Session)> GenerateAiResponse(
-        string userMessage,
-        AgentSession? session,
-        string preferredLanguage,
-        DateTime userLocalTime,
-        CancellationToken ct)
+    public async Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, CancellationToken ct)
     {
         var collectedTasks = new List<ExtractedTask>();
         var collectedNotes = new List<ExtractedNote>();
         var tools = new TaskGenerationTools(collectedTasks, collectedNotes);
 
+        var instructions = AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime);
+
+        var agent = projectClient.AsAIAgent(
+            model: _deploymentId,
+            instructions: instructions,
+            tools:
+            [
+                AIFunctionFactory.Create(tools.CreateTask),
+                AIFunctionFactory.Create(tools.CreateNote),
+                AIFunctionFactory.Create(tools.RemoveTask),
+                AIFunctionFactory.Create(tools.UpdateTask),
+                AIFunctionFactory.Create(tools.RemoveNote),
+                AIFunctionFactory.Create(tools.UpdateNote)
+            ]);
+
+        var session = await agent.CreateSessionAsync();
+
+        logger.LogInformation("TaskGeneration: Session initialized for deployment={DeploymentId}", _deploymentId);
+
+        return new AiChatContext
+        {
+            Agent = agent,
+            Session = session,
+            Tools = tools,
+            CollectedTasks = collectedTasks,
+            CollectedNotes = collectedNotes
+        };
+    }
+
+    public async Task<AiGenerateMessage> GenerateAiResponse(
+        string userMessage,
+        AiChatContext context,
+        CancellationToken ct)
+    {
+        context.Tools.ResetCallCount();
+
         try
         {
-            var instructions = AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime);
-
-            var agent = projectClient.AsAIAgent(
-                model: _deploymentId,
-                instructions: instructions,
-                tools: [AIFunctionFactory.Create(tools.CreateTask), AIFunctionFactory.Create(tools.CreateNote)]);
-
-            // if (session == null)
-            // {                                           
-            //     session = await
-            // agent.CreateSessionAsync();
-            // }
-            session ??= await agent.CreateSessionAsync();
-
             logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
-            await agent.RunAsync(userMessage, session, cancellationToken: ct);
+            await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
 
-            logger.LogInformation("TaskGeneration: Collected {TaskCount} tasks, {NoteCount} notes",
-                collectedTasks.Count, collectedNotes.Count);
+            logger.LogInformation("TaskGeneration: Tool calls this turn={ToolCallCount}, total tasks={TaskCount}, notes={NoteCount}",
+                context.Tools.ToolCallCount, context.CollectedTasks.Count, context.CollectedNotes.Count);
 
-            var isSuccess = collectedTasks.Count > 0 || collectedNotes.Count > 0;
+            var isSuccess = context.Tools.ToolCallCount > 0;
 
-            var message = new AiGenerateMessage
+            return new AiGenerateMessage
             {
                 IsSuccess = isSuccess,
-                ExtractedTasks = collectedTasks,
-                ExtractedNotes = collectedNotes,
+                ExtractedTasks = context.CollectedTasks,
+                ExtractedNotes = context.CollectedNotes,
                 ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input."
             };
-
-            return (message, session);
         }
         catch (OperationCanceledException oce)
         {
