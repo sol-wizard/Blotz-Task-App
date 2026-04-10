@@ -1,41 +1,33 @@
-import { Animated, Dimensions, ImageBackground, Pressable, Text } from "react-native";
-import { SNAP_INTERVAL, ITEM_WIDTH, ITEM_GAP } from "./mode-bottomsheet";
+import { ImageBackground, Pressable, Text } from "react-native";
+import { ITEM_WIDTH, ITEM_GAP } from "./mode-bottomsheet";
 import { useTranslation } from "react-i18next";
+import Animated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
 
-// 直接定义为一个普通的组件，不套 React.memo
 export const SoundscapeCard = ({ item, index, scrollX, onPress }: any) => {
   const { t } = useTranslation("pomodoro");
 
-  const inputRange = [
-    (index - 1) * SNAP_INTERVAL,
-    index * SNAP_INTERVAL,
-    (index + 1) * SNAP_INTERVAL,
-  ];
+  const animatedStyle = useAnimatedStyle(() => {
+    const inputRange = [index - 1, index, index + 1];
 
-  const translateY = scrollX.interpolate({
-    inputRange,
-    outputRange: [0, -12, 0],
-    extrapolate: "clamp",
-  });
-
-  const scale = scrollX.interpolate({
-    inputRange,
-    outputRange: [0.95, 1, 0.95],
-    extrapolate: "clamp",
+    return {
+      transform: [
+        { translateY: interpolate(scrollX.value, inputRange, [0, -12, 0], "clamp") },
+        { scale: interpolate(scrollX.value, inputRange, [0.95, 1, 0.95], "clamp") },
+      ],
+    };
   });
 
   return (
     <Pressable onPress={() => onPress(index, item.id)}>
       <Animated.View
-        style={{
-          width: ITEM_WIDTH,
-          marginRight: ITEM_GAP,
-          alignItems: "center",
-          transform: [{ translateY }, { scale }],
-          // Android 需要保留 elevation
-          elevation: 6,
-        }}
-        // Tailwind 控制阴影
+        style={[
+          animatedStyle,
+          {
+            width: ITEM_WIDTH,
+            marginRight: ITEM_GAP,
+            elevation: 6,
+          },
+        ]}
         className="shadow-md shadow-black/15"
       >
         <ImageBackground

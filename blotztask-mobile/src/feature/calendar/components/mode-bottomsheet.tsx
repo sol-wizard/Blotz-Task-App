@@ -1,5 +1,10 @@
 import React, { useState, useRef, useMemo, useCallback } from "react";
-import { View, Text, Pressable, Modal, Image, Dimensions, Animated } from "react-native";
+import { View, Text, Pressable, Modal, Image, Dimensions } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  runOnJS,
+} from "react-native-reanimated";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ASSETS } from "@/shared/constants/assets";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,7 +32,7 @@ const SOUNDSCAPES = [
 const SCREEN_WIDTH = Dimensions.get("window").width;
 export const ITEM_WIDTH = 80;
 export const ITEM_GAP = 12;
-export const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
+const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
 const PADDING_HORIZONTAL = (SCREEN_WIDTH - 32) / 2 - ITEM_WIDTH / 2;
 const LOOP_MULTIPLIER = 5;
 const GALLERY_ITEMS = Array(LOOP_MULTIPLIER).fill(SOUNDSCAPES).flat();
@@ -38,11 +43,13 @@ export const ModeBottomSheet = ({ isOpen, onClose }: ModeBottomSheetProps) => {
   const { t } = useTranslation("pomodoro");
 
   const SINGLE_LENGTH = SOUNDSCAPES.length;
-  const MIDDLE_INDEX = SINGLE_LENGTH * Math.floor(LOOP_MULTIPLIER / 2);
-  const INITIAL_INDEX = MIDDLE_INDEX;
+  const INITIAL_INDEX = SINGLE_LENGTH * Math.floor(LOOP_MULTIPLIER / 2);
+  const scrollX = useSharedValue(INITIAL_INDEX);
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollX.value = event.contentOffset.x / SNAP_INTERVAL;
+  });
 
   const flatListRef = useRef<Animated.FlatList<any>>(null);
-  const scrollX = useRef(new Animated.Value(INITIAL_INDEX * SNAP_INTERVAL)).current;
 
   const handleMomentumScrollEnd = (event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
@@ -56,14 +63,14 @@ export const ModeBottomSheet = ({ isOpen, onClose }: ModeBottomSheetProps) => {
     }
 
     if (index < SINGLE_LENGTH || index >= SINGLE_LENGTH * (LOOP_MULTIPLIER - 1)) {
-      const newIndex = MIDDLE_INDEX + realIndex;
+      const newIndex = INITIAL_INDEX + realIndex;
 
       flatListRef.current?.scrollToOffset({
         offset: newIndex * SNAP_INTERVAL,
         animated: false,
       });
 
-      scrollX.setValue(newIndex * SNAP_INTERVAL);
+      scrollX.value = newIndex;
     }
   };
 
@@ -74,15 +81,6 @@ export const ModeBottomSheet = ({ isOpen, onClose }: ModeBottomSheetProps) => {
       animated: true,
     });
   };
-
-  const renderItem = useCallback(
-    ({ item, index }: { item: any; index: number }) => {
-      return (
-        <SoundscapeCard item={item} index={index} scrollX={scrollX} onPress={handleItemPress} />
-      );
-    },
-    [scrollX],
-  );
 
   return (
     <Modal visible={isOpen} transparent animationType="slide">
@@ -136,27 +134,32 @@ export const ModeBottomSheet = ({ isOpen, onClose }: ModeBottomSheetProps) => {
             {t("focusMode.soundscapes")}
           </Text>
 
-          <View className="bg-white mx-4 rounded-3xl p-5 pb-6 shadow-sm shadow-gray-200">
+          <View className="bg-white mx-4 rounded-3xl p-4 shadow-sm shadow-gray-200">
             {/* Gallery */}
-            <View className="relative h-32 -mx-5">
+            <View className="relative h-44 -mx-5">
               <Animated.FlatList
                 ref={flatListRef}
                 data={GALLERY_ITEMS}
                 keyExtractor={(_, index) => index.toString()}
-                renderItem={renderItem}
+                renderItem={({ item, index }) => (
+                  <SoundscapeCard
+                    item={item}
+                    index={index}
+                    scrollX={scrollX}
+                    onPress={handleItemPress}
+                  />
+                )}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 snapToInterval={SNAP_INTERVAL}
                 decelerationRate="fast"
                 contentContainerStyle={{
                   paddingHorizontal: PADDING_HORIZONTAL,
-                  alignItems: "flex-end",
-                  paddingBottom: 15,
+                  alignItems: "center",
+                  paddingBottom: 0,
                 }}
                 onMomentumScrollEnd={handleMomentumScrollEnd}
-                onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
-                  useNativeDriver: true,
-                })}
+                onScroll={onScroll}
                 scrollEventThrottle={16}
                 initialScrollIndex={INITIAL_INDEX}
                 getItemLayout={(_, index) => ({
@@ -201,7 +204,7 @@ export const ModeBottomSheet = ({ isOpen, onClose }: ModeBottomSheetProps) => {
 
             {/* pic for soundscape */}
             <Pressable
-              className="items-center -mt-8 relative"
+              className="items-center -mt-12 relative"
               onPress={() => setSelectedSoundscape(6)}
             >
               <Image
