@@ -7,7 +7,7 @@ import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { useTranslation } from "react-i18next";
 import { useSwipeableManager } from "../hooks/useSwipeableManager";
 
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import { NoteHeader } from "@/feature/notes/components/note-header";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";

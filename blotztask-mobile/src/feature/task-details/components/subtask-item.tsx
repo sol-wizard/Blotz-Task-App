@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
-import TasksCheckbox from "../../../shared/components/ui/task-checkbox";
+import TasksCheckbox from "../../../shared/components/task-checkbox";
 import { theme } from "@/shared/constants/theme";
 import { convertDurationToText } from "../../../shared/util/convert-duration";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";

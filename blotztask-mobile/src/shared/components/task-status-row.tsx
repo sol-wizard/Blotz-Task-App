@@ -1,8 +1,8 @@
 import React from "react";
 import { View, ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
-import { TaskStatusType } from "../../../feature/calendar/models/task-status-type";
-import { TaskStatusButton } from "@/shared/components/ui/task-status-button";
+import { TaskStatusType } from "../../feature/calendar/models/task-status-type";
+import { TaskStatusButton } from "@/shared/components/task-status-button";
 import { startOfDay, isBefore, isAfter } from "date-fns";
 
 export function TaskStatusRow({
@@ -25,7 +25,7 @@ export function TaskStatusRow({
   selectedDay?: Date;
 }) {
   const { t } = useTranslation("calendar");
-  
+
   // Determine if the selected day is past, today, or future
   const today = startOfDay(new Date());
   const selectedDate = selectedDay ? startOfDay(selectedDay) : today;

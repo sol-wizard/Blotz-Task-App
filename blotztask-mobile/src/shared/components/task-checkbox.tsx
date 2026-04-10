@@ -21,16 +21,13 @@ type Props = {
   style?: ViewStyle;
 };
 
-const GREEN = theme.colors.checked;
-const GRAY = theme.colors.disabled;
-
 export default function TasksCheckbox({
   checked,
   onChange,
   disabled = false,
   size = 22,
-  color = GREEN,
-  uncheckedColor = GRAY,
+  color = theme.colors.checked,
+  uncheckedColor = theme.colors.disabled,
   className = "",
   style,
 }: Props) {
@@ -54,7 +51,11 @@ export default function TasksCheckbox({
     <Pressable
       onPress={handlePress}
       disabled={disabled}
-      className={["items-center justify-center overflow-hidden", disabled ? "opacity-50" : "", className].join(" ")}
+      className={[
+        "items-center justify-center overflow-hidden",
+        disabled ? "opacity-50" : "",
+        className,
+      ].join(" ")}
       style={[
         {
           width: size,
@@ -67,7 +68,9 @@ export default function TasksCheckbox({
         style,
       ]}
     >
-      <Animated.View style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, bgStyle]} />
+      <Animated.View
+        style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }, bgStyle]}
+      />
       {checked && <MaterialIcons name="check" size={Math.round(size * 0.6)} color="#FFFFFF" />}
     </Pressable>
   );
