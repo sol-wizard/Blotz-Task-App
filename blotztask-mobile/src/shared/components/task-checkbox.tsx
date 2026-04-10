@@ -48,7 +48,9 @@ export default function TasksCheckbox({
 
   const handlePress = async () => {
     if (disabled) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (!checked) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     await onChange(!checked);
   };
 
