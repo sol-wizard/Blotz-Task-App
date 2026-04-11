@@ -87,7 +87,7 @@ export default function CalendarScreen() {
 
         <FilteredTaskList
           selectedDay={selectedDay}
-          onOpenFocus={() => console.log("open focus sheet")}
+          onOpenFocus={() => setIsModeSheetOpen(true)}
           onOpenMode={() => setIsModeSheetOpen(true)}
         />
       </CalendarProvider>

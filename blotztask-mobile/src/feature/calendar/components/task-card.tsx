@@ -100,7 +100,7 @@ const TaskCard = ({
       renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
         <TaskCardLeftActions
           progress={leftActionsProgress}
-          onFocus={onOpenFocus}
+          onFocus={() => console.log("Focus pressed", { taskId: task.id })}
           onMode={onOpenMode}
         />
       )}
