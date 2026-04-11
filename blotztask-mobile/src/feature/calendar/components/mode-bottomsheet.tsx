@@ -23,6 +23,7 @@ const SOUNDSCAPES = [
   { id: 3, key: "taskFlow", imageUrl: ASSETS.pomodoroSoundTaskFlow },
   { id: 4, key: "calmVibes", imageUrl: ASSETS.pomodoroSoundCalmMind },
   { id: 5, key: "cafeVibes", imageUrl: ASSETS.pomodoroSoundCafeVibe },
+  { id: 6, key: "noSound", imageUrl: ASSETS.pomodoroSoundNoSound },
 ];
 
 const SCREEN_WIDTH = Dimensions.get("window").width;

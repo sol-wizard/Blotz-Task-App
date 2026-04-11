@@ -10,10 +10,7 @@ export const SoundscapeCard = ({ item, index, scrollX, onPress }: any) => {
     const inputRange = [index - 1, index, index + 1];
 
     return {
-      transform: [
-        { translateY: interpolate(scrollX.value, inputRange, [0, -12, 0], "clamp") },
-        { scale: interpolate(scrollX.value, inputRange, [0.95, 1, 0.95], "clamp") },
-      ],
+      transform: [{ translateY: interpolate(scrollX.value, inputRange, [0, -12, 0], "clamp") }],
     };
   });
 
@@ -32,7 +29,7 @@ export const SoundscapeCard = ({ item, index, scrollX, onPress }: any) => {
       >
         <ImageBackground
           source={item.imageUrl}
-          className="w-full h-[100px] border-[3px] border-white justify-end p-2 bg-gray-200"
+          className="w-full h-[100px] border-[3px] border-white justify-end p-2 bg-white"
           imageStyle={{ borderRadius: 20, resizeMode: "cover" }}
           style={{ borderRadius: 20, overflow: "hidden" }}
         >

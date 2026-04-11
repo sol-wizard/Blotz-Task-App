@@ -52,6 +52,7 @@ export const PNGIMAGES = {
   pomodoroSoundCalmMind: require("../../../assets/images-png/pomodoro-sound-calmMind.png"),
   pomodoroSoundCafeVibe: require("../../../assets/images-png/pomodoro-sound-cafeVibe.png"),
   pomodoroSoundChoose: require("../../../assets/images-png/pomodoro-sound-choose.png"),
+  pomodoroSoundNoSound: require("../../../assets/images-png/pomodoro-sound-noSound.png"),
 } as const;
 
 export const SVGIMAGES = {
