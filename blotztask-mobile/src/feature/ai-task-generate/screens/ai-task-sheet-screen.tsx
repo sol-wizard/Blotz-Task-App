@@ -27,7 +27,9 @@ export default function AiTaskSheetScreen() {
   const { aiGeneratedMessage, setAiGeneratedMessage, submitAudioForTranscription } =
     useAiTaskGenerator({ setIsAiGenerating });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload } = useVoiceRecorder(submitAudioForTranscription);
+  const { isListening, startListening, stopAndUpload } = useVoiceRecorder(
+    submitAudioForTranscription,
+  );
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
@@ -51,13 +53,17 @@ export default function AiTaskSheetScreen() {
   // --- Handlers ---
   const onDeleteTask = (taskId: string) => {
     setAiGeneratedMessage((prev) =>
-      prev ? { ...prev, extractedTasks: prev.extractedTasks?.filter((t) => t.id !== taskId) } : prev,
+      prev
+        ? { ...prev, extractedTasks: prev.extractedTasks?.filter((t) => t.id !== taskId) }
+        : prev,
     );
   };
 
   const onDeleteNote = (noteId: string) => {
     setAiGeneratedMessage((prev) =>
-      prev ? { ...prev, extractedNotes: prev.extractedNotes?.filter((n) => n.id !== noteId) } : prev,
+      prev
+        ? { ...prev, extractedNotes: prev.extractedNotes?.filter((n) => n.id !== noteId) }
+        : prev,
     );
   };
 
@@ -99,30 +105,35 @@ export default function AiTaskSheetScreen() {
             {/* Task / note cards (has results) */}
             {hasResults && (
               <Animated.ScrollView className="w-full flex-1" showsVerticalScrollIndicator={false}>
-                {aiTasks.map((task) => (
-                  <AiResultCard
-                    key={task.id}
-                    id={task.id}
-                    text={task.title}
-                    onDelete={onDeleteTask}
-                    label={task.label}
-                    startTime={task.startTime}
-                    endTime={task.endTime}
-                  />
-                ))}
-                {aiNotes.length > 0 && (
-                  <>
-                    <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">Notes</Text>
-                    {aiNotes.map((note) => (
-                      <AiResultCard
-                        key={note.id}
-                        id={note.id}
-                        text={note.text}
-                        onDelete={onDeleteNote}
-                      />
-                    ))}
-                  </>
-                )}
+                <View className="items-center">
+                  {aiTasks.map((task) => (
+                    <AiResultCard
+                      key={task.id}
+                      id={task.id}
+                      text={task.title}
+                      onDelete={onDeleteTask}
+                      label={task.label}
+                      startTime={task.startTime}
+                      endTime={task.endTime}
+                    />
+                  ))}
+
+                  {aiNotes.length > 0 && (
+                    <>
+                      <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">
+                        Notes
+                      </Text>
+                      {aiNotes.map((note) => (
+                        <AiResultCard
+                          key={note.id}
+                          id={note.id}
+                          text={note.text}
+                          onDelete={onDeleteNote}
+                        />
+                      ))}
+                    </>
+                  )}
+                </View>
               </Animated.ScrollView>
             )}
 

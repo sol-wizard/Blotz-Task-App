@@ -18,7 +18,8 @@ public class AiTaskGenerateChatHub : Hub
     private readonly DateTimeResolveService _dateTimeResolveService;
     private readonly GetUserPreferencesQueryHandler _getUserPreferencesQueryHandler;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
-    private readonly SpeechTranscriptionService _speechTranscriptionService;
+
+    private readonly SpeechTranscription _speechTranscription;
 
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
@@ -26,14 +27,14 @@ public class AiTaskGenerateChatHub : Hub
         DateTimeResolveService dateTimeResolveService,
         ChatHistoryStore chatHistoryStore,
         GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
-        SpeechTranscriptionService speechTranscriptionService)
+        SpeechTranscription speechTranscription)
     {
         _logger = logger;
         _aiTaskGenerateService = aiTaskGenerateService;
         _dateTimeResolveService = dateTimeResolveService;
         _chatHistoryStore = chatHistoryStore;
         _getUserPreferencesQueryHandler = getUserPreferencesQueryHandler;
-        _speechTranscriptionService = speechTranscriptionService;
+        _speechTranscription = speechTranscription;
     }
 
     public override async Task OnConnectedAsync()
@@ -107,13 +108,12 @@ public class AiTaskGenerateChatHub : Hub
                 Message = message,
                 TimeZone = timeZone
             });
-            
+
             chatHistory.AddUserMessage(resolvedMessage);
 
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
-            
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
 
+            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
         }
         catch (AiTaskGenerationException ex)
         {
@@ -140,13 +140,13 @@ public class AiTaskGenerateChatHub : Hub
                 0,
                 audioData.Length,
                 "audio",
-                "audio.wav")
+                "audio.m4a")
             {
                 Headers = new HeaderDictionary(),
-                ContentType = "audio/wav"
+                ContentType = "audio/mp4"
             };
 
-            var transcript = await _speechTranscriptionService.TranscribeAsync(formFile, ct);
+            var transcript = await _speechTranscription.TranscribeAsync(formFile, ct);
             await SendMessage(transcript);
         }
         catch (Exception ex)
