@@ -10,7 +10,12 @@ public class RecordAiUsageRequest
     public required int CompletionTokens { get; init; }
 }
 
-public class RecordAiUsageService(BlotzTaskDbContext db)
+public interface IRecordAiUsageService
+{
+    Task RecordAiUsageAsync(RecordAiUsageRequest request, CancellationToken ct = default);
+}
+
+public class RecordAiUsageService(BlotzTaskDbContext db) : IRecordAiUsageService
 {
     public async Task RecordAiUsageAsync(RecordAiUsageRequest request, CancellationToken ct = default)
     {

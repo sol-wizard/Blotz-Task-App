@@ -2,29 +2,29 @@ using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiUsage.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
-namespace BlotzTask.Modules.AiUsage.Queries;
+namespace BlotzTask.Modules.AiUsage.Services;
 
-public class CheckAiQuotaQuery
+public interface ICheckAiQuotaService
 {
-    public required Guid UserId { get; init; }
+    Task CheckQuotaAsync(Guid userId, CancellationToken ct = default);
 }
 
-public class CheckAiQuotaQueryHandler(BlotzTaskDbContext db)
+public class CheckAiQuotaService(BlotzTaskDbContext db) : ICheckAiQuotaService
 {
-    public async Task Handle(CheckAiQuotaQuery query, CancellationToken ct = default)
+    public async Task CheckQuotaAsync(Guid userId, CancellationToken ct = default)
     {
         var subscription = await db.UserSubscriptions
             .Include(s => s.Plan)
-            .FirstOrDefaultAsync(s => s.UserId == query.UserId, ct);
+            .FirstOrDefaultAsync(s => s.UserId == userId, ct);
 
         if (subscription is null)
         {
-            throw new InvalidOperationException($"No subscription found for user {query.UserId}.");
+            throw new InvalidOperationException($"No subscription found for user {userId}.");
         }
 
         var currentMonthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
         var usedTokens = await db.AiUsageRecords
-            .Where(r => r.UserId == query.UserId && r.CreatedAt >= currentMonthStart)
+            .Where(r => r.UserId == userId && r.CreatedAt >= currentMonthStart)
             .SumAsync(r => r.TotalTokens, ct);
 
         if (usedTokens >= subscription.Plan.MonthlyTokenLimit)
