@@ -65,8 +65,9 @@ export const CustomDay = ({ date, state, marking, isMarked, onPressDay }: Custom
           {weekLabel}
         </Text>
         <Text
-          className={`text-2xl font-bold mt-1 numberOfLines={1}
-          adjustsFontSizeToFit ${textColorClass}`}
+          className={`text-2xl font-bold mt-1 ${textColorClass}`}
+          numberOfLines={1}
+          adjustsFontSizeToFit
         >
           {date.day}
         </Text>
