@@ -64,7 +64,12 @@ export const CustomDay = ({ date, state, marking, isMarked, onPressDay }: Custom
         >
           {weekLabel}
         </Text>
-        <Text className={`text-[20px] font-bold mt-1 ${textColorClass}`}>{date.day}</Text>
+        <Text
+          className={`text-2xl font-bold mt-1 numberOfLines={1}
+          adjustsFontSizeToFit ${textColorClass}`}
+        >
+          {date.day}
+        </Text>
       </Animated.View>
     </Pressable>
   );
