@@ -18,7 +18,7 @@ public static class DependencyInjection
         ));
 
 
-        services.AddScoped<SpeechTranscription>();
+        services.AddScoped<SpeechTranscriptionService>();
 
         return services;
     }

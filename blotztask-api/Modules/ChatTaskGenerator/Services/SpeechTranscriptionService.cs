@@ -4,12 +4,12 @@ using OpenAI.Audio;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
-public class SpeechTranscription
+public class SpeechTranscriptionService
 {
     private readonly AudioClient _audioClient;
-    private readonly ILogger<SpeechTranscription> _logger;
+    private readonly ILogger<SpeechTranscriptionService> _logger;
 
-    public SpeechTranscription(IConfiguration configuration, ILogger<SpeechTranscription> logger)
+    public SpeechTranscriptionService(IConfiguration configuration, ILogger<SpeechTranscriptionService> logger)
     {
         _logger = logger;
 
@@ -42,7 +42,6 @@ public class SpeechTranscription
         {
             await using var stream = audio.OpenReadStream();
 
-            _logger.LogInformation("Calling Azure OpenAI TranscribeAudioAsync...");
 
             var result = await _audioClient.TranscribeAudioAsync(
                 stream,
@@ -54,17 +53,14 @@ public class SpeechTranscription
                 ct
             );
 
-            _logger.LogInformation("TranscribeAudioAsync returned successfully.");
 
             var text = result.Value.Text;
 
-            _logger.LogInformation("Raw transcription text: [{Text}]", text);
 
             if (string.IsNullOrWhiteSpace(text))
                 throw new InvalidOperationException("Whisper transcription returned empty text.");
 
             _logger.LogInformation("Whisper transcription completed. Characters: {Length}", text.Length);
-            Console.WriteLine($"speech text from whisper {text}");
 
             return text.Trim();
         }

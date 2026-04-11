@@ -19,7 +19,7 @@ public class AiTaskGenerateChatHub : Hub
     private readonly GetUserPreferencesQueryHandler _getUserPreferencesQueryHandler;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
 
-    private readonly SpeechTranscription _speechTranscription;
+    private readonly SpeechTranscriptionService _speechTranscriptionService;
 
     public AiTaskGenerateChatHub(
         ILogger<AiTaskGenerateChatHub> logger,
@@ -27,14 +27,14 @@ public class AiTaskGenerateChatHub : Hub
         DateTimeResolveService dateTimeResolveService,
         ChatHistoryStore chatHistoryStore,
         GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
-        SpeechTranscription speechTranscription)
+        SpeechTranscriptionService speechTranscriptionService)
     {
         _logger = logger;
         _aiTaskGenerateService = aiTaskGenerateService;
         _dateTimeResolveService = dateTimeResolveService;
         _chatHistoryStore = chatHistoryStore;
         _getUserPreferencesQueryHandler = getUserPreferencesQueryHandler;
-        _speechTranscription = speechTranscription;
+        _speechTranscriptionService = speechTranscriptionService;
     }
 
     public override async Task OnConnectedAsync()
@@ -146,7 +146,7 @@ public class AiTaskGenerateChatHub : Hub
                 ContentType = "audio/mp4"
             };
 
-            var transcript = await _speechTranscription.TranscribeAsync(formFile, ct);
+            var transcript = await _speechTranscriptionService.TranscribeAsync(formFile, ct);
             await SendMessage(transcript);
         }
         catch (Exception ex)
