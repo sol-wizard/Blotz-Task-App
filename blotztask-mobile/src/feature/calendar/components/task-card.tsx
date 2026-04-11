@@ -101,7 +101,7 @@ const TaskCard = ({
         <TaskCardLeftActions
           progress={leftActionsProgress}
           onFocus={onOpenFocus}
-          onModest={onOpenMode}
+          onMode={onOpenMode}
         />
       )}
       leftThreshold={12}

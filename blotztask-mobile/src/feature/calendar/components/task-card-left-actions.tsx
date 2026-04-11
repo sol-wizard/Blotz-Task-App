@@ -6,9 +6,9 @@ import { useTranslation } from "react-i18next";
 type LeftActionsProps = {
   progress: SharedValue<number>;
   onFocus: () => void;
-  onModest: () => void;
+  onMode: () => void;
 };
-export const TaskCardLeftActions = ({ progress, onFocus, onModest }: LeftActionsProps) => {
+export const TaskCardLeftActions = ({ progress, onFocus, onMode }: LeftActionsProps) => {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: -120 * (1 - progress.value) }],
   }));
@@ -17,7 +17,7 @@ export const TaskCardLeftActions = ({ progress, onFocus, onModest }: LeftActions
   return (
     <Animated.View className="flex-row items-start justify-start gap-2 pr-4" style={animatedStyle}>
       <Pressable
-        onPress={onModest}
+        onPress={onMode}
         className="h-20 w-24 rounded-3xl bg-blue-50 border border-blue-300 items-center justify-center"
       >
         <View className="items-center gap-1">
