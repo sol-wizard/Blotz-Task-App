@@ -18,6 +18,7 @@ import { convertAiTaskToAddTaskItemDTO } from "../utils/map-aitask-to-addtaskite
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import Toast from "react-native-toast-message";
+import { analytics } from "@/shared/services/analytics";
 
 export default function AiTaskSheetScreen() {
   // --- Hooks ---
@@ -61,6 +62,17 @@ export default function AiTaskSheetScreen() {
     );
   };
 
+  const handleDismiss = () => {
+    analytics.trackIfUserAcceptAiTask({
+      outcome: hasResults ? "rejected" : "abandoned",
+      generatedTaskCount: aiTasks.length,
+      generatedNoteCount: aiNotes.length,
+      addedTaskCount: 0,
+      addedNoteCount: 0,
+    });
+    router.back();
+  };
+
   const handleAddAll = async () => {
     if (isAdding || isNoteCreating) return;
     try {
@@ -68,6 +80,13 @@ export default function AiTaskSheetScreen() {
         ...aiTasks.map((task) => addTaskAsync(convertAiTaskToAddTaskItemDTO(task))),
         ...aiNotes.map((n) => createNoteAsync(n.text)),
       ]);
+      analytics.trackIfUserAcceptAiTask({
+        outcome: "accepted",
+        generatedTaskCount: aiTasks.length,
+        generatedNoteCount: aiNotes.length,
+        addedTaskCount: aiTasks.length,
+        addedNoteCount: aiNotes.length,
+      });
       router.back();
       Toast.show({ type: "warning", text1: t("success.taskAdded") });
     } catch (error) {
@@ -77,7 +96,7 @@ export default function AiTaskSheetScreen() {
 
   return (
     <View className="flex-1 bg-transparent">
-      <Pressable className="absolute inset-0" onPress={() => router.back()} pointerEvents="auto" />
+      <Pressable className="absolute inset-0" onPress={handleDismiss} pointerEvents="auto" />
       <View style={{ flex: 1, justifyContent: "flex-end" }} pointerEvents="box-none">
         <LinearGradient
           colors={["#A3DC2F", "#2F80ED"]}
@@ -88,7 +107,7 @@ export default function AiTaskSheetScreen() {
           <View className="flex-1 items-center">
             {/* Top row - dismiss button */}
             <View className="w-full items-end px-6 pt-4 pb-2">
-              <Pressable onPress={() => router.back()} accessibilityLabel="Stop">
+              <Pressable onPress={handleDismiss} accessibilityLabel="Stop">
                 <MaterialCommunityIcons name="chevron-down" size={32} color="white" />
               </Pressable>
             </View>

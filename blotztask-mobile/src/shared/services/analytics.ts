@@ -81,7 +81,7 @@ export const analytics = {
    * from previews with no corresponding outcome event.
    */
   trackIfUserAcceptAiTask(params: {
-    userInput: string;
+    userInput?: string;
     outcome: AiTaskOutcome;
     generatedTaskCount: number;
     generatedNoteCount: number;
@@ -89,7 +89,7 @@ export const analytics = {
     addedNoteCount: number;
   }) {
     posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-      user_input: params.userInput,
+      ...(params.userInput !== undefined && { user_input: params.userInput }),
       outcome: params.outcome,
       ai_generated_task_count: params.generatedTaskCount,
       ai_generated_note_count: params.generatedNoteCount,
