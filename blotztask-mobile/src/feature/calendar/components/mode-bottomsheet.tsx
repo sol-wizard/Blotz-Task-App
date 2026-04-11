@@ -110,8 +110,8 @@ export const ModeBottomSheet = ({ isOpen, onClose }: ModeBottomSheetProps) => {
                 onPress={() => setSelectedDuration(duration.id)}
                 className={`px-4 h-10 item-center justify-center rounded-2xl border-2 ${
                   selectedDuration === duration.id
-                    ? "bg-[#9AD513] border-[#9AD513]"
-                    : "bg-white border-[#9AD513]"
+                    ? "bg-highlight border-highlight"
+                    : "bg-white border-highlight"
                 }`}
               >
                 <Text

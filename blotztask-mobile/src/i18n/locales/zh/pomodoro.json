@@ -1,4 +1,8 @@
 {
+  "taskCard": {
+    "modes": "模式",
+    "focus": "专注"
+  },
   "focusMode": {
     "title": "专注模式",
     "duration": "专注时长",

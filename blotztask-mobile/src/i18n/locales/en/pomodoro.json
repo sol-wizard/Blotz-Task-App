@@ -1,4 +1,8 @@
 {
+  "taskCard": {
+    "modes": "Modes",
+    "focus": "Focus"
+  },
   "focusMode": {
     "title": "Focus Mode",
     "duration": "Duration",
