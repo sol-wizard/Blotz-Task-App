@@ -23,7 +23,7 @@ public class SpeechTranscriptionService
 
         if (string.IsNullOrWhiteSpace(deploymentId))
             throw new InvalidOperationException(
-                "Missing Whisper deployment. Set AzureOpenAI:AiModels:Whisper:DeploymentId.");
+                "Missing Whisper deployment. Set AzureOpenAI:AiModels:Speech:DeploymentId.");
 
         var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
         _audioClient = client.GetAudioClient(deploymentId);
