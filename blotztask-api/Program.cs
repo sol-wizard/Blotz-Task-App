@@ -10,6 +10,7 @@ using BlotzTask.Modules.AiUsage;
 using BlotzTask.Modules.Pomodoro;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Users;
+using BlotzTask.Modules.AiUsage;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +32,7 @@ builder.Services.AddBadgeModule();
 builder.Services.AddPomodoroModule();
 builder.Services.AddAiUsageModule();
 builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
+builder.Services.AddAiUsageModule();
 
 builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 
