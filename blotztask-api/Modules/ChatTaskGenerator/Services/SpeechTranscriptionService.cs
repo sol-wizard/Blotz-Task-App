@@ -54,15 +54,15 @@ public class SpeechTranscriptionService
             );
 
 
-            var text = result.Value.Text;
+            var transcriptionResult = result.Value.Text;
 
 
-            if (string.IsNullOrWhiteSpace(text))
-                throw new InvalidOperationException("Whisper transcription returned empty text.");
+            if (string.IsNullOrWhiteSpace(transcriptionResult))
+                throw new InvalidOperationException("Transcription returned empty text.");
 
-            _logger.LogInformation("Whisper transcription completed. Characters: {Length}", text.Length);
+            _logger.LogInformation("Whisper transcription completed. Characters: {Length}", transcriptionResult.Length);
 
-            return text.Trim();
+            return transcriptionResult.Trim();
         }
         catch (Exception ex)
         {
