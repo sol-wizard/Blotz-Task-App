@@ -6,7 +6,7 @@ import SubtasksView from "@/feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { ASSETS } from "@/shared/constants/assets";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
@@ -15,7 +15,7 @@ import {
   TaskSingleTimeCard,
 } from "@/feature/task-details/components/task-time-card";
 import { useTranslation } from "react-i18next";
-import { ReturnButton } from "@/shared/components/ui/return-button";
+import { ReturnButton } from "@/shared/components/return-button";
 
 export default function TaskDetailsScreen() {
   const router = useRouter();

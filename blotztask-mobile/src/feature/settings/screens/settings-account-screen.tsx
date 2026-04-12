@@ -1,12 +1,12 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useState } from "react";
-import { ReturnButton } from "@/shared/components/ui/return-button";
+import { ReturnButton } from "@/shared/components/return-button";
 import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { FormDivider } from "@/shared/components/ui/form-divider";
+import { FormDivider } from "@/shared/components/form-divider";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import { useLogout } from "@/shared/hooks/useLogout";
 import { useTranslation } from "react-i18next";
 import Modal from "react-native-modal";

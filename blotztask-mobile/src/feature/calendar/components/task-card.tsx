@@ -5,7 +5,7 @@ import ReanimatedSwipeable, {
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { MaterialIcons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
-import TasksCheckbox from "@/shared/components/ui/task-checkbox";
+import TasksCheckbox from "@/shared/components/task-checkbox";
 
 import { SharedValue, useDerivedValue, withTiming } from "react-native-reanimated";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -16,7 +16,7 @@ import { useRecurringTaskMutations } from "../hooks/useRecurringTaskMutations";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { formatDateRange } from "../util/format-date-range";
-import { AnimatedChevron } from "@/shared/components/ui/chevron";
+import { AnimatedChevron } from "@/shared/components/chevron";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
@@ -109,11 +109,12 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
       friction={2}
       dragOffsetFromLeftEdge={8}
     >
-      <View className="flex-col bg-white rounded-2xl px-4 py-3 min-h-20 justify-center">
+      <View className="flex-col bg-white rounded-3xl px-4 py-3 min-h-20 justify-center">
         <View className="justify-center">
           <View className="flex-row items-center" style={{ gap: 12 }}>
             {/* Checkbox */}
             <TasksCheckbox
+              type="task"
               checked={task.isDone}
               disabled={isLoading}
               onChange={async () => {

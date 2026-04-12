@@ -1,5 +1,5 @@
 import { FlatList, View } from "react-native";
-import { TaskStatusRow } from "../../../shared/components/ui/task-status-row";
+import { TaskStatusRow } from "../../../shared/components/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -7,7 +7,7 @@ import { useState } from "react";
 import { TaskStatusType } from "../models/task-status-type";
 import { filterSelectedTask } from "../util/task-counts";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import TaskCard from "./task-card";
@@ -37,7 +37,7 @@ export const FilteredTaskList = ({
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
-    <View className="shadow shadow-gray-300">
+    <View className="shadow shadow-gray-200">
       <TaskCard
         task={item}
         deleteTask={deleteTask}
