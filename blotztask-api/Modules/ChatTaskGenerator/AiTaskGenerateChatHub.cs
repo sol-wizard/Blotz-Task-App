@@ -121,12 +121,8 @@ public class AiTaskGenerateChatHub : Hub
             if (audioData is null || audioData.Length == 0)
                 throw new HubException("Audio data is empty.");
 
-            var formFile = new FormFile(
-                new MemoryStream(audioData),
-                0,
-                audioData.Length,
-                "audio",
-                "audio.m4a")
+            await using var stream = new MemoryStream(audioData);
+            var formFile = new FormFile(stream, 0, audioData.Length, "audio", "audio.m4a")
             {
                 Headers = new HeaderDictionary(),
                 ContentType = "audio/mp4"
