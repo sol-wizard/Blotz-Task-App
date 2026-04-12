@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Pressable, useWindowDimensions } from "react-native";
-import Animated from "react-native-reanimated";
+import { View, Text, Pressable, useWindowDimensions, Keyboard } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import LottieView from "lottie-react-native";
-import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { router } from "expo-router";
+
 import { requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
-import { AiResultCard } from "../component/ai-result-card";
+import { AiInputBar } from "../component/ai-input-bar";
+import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
@@ -18,16 +17,20 @@ import { convertAiTaskToAddTaskItemDTO } from "../utils/map-aitask-to-addtaskite
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import Toast from "react-native-toast-message";
+import { analytics } from "@/shared/services/analytics";
 
 export default function AiTaskSheetScreen() {
   // --- Hooks ---
   const { t } = useTranslation("aiTaskGenerate");
   const { height } = useWindowDimensions();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const { aiGeneratedMessage, setAiGeneratedMessage, submitAudioForTranscription } =
+  const [textInput, setTextInput] = useState("");
+  const { aiGeneratedMessage, setAiGeneratedMessage, submitAudioForTranscription, sendTextMessage } =
     useAiTaskGenerator({ setIsAiGenerating });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload } = useVoiceRecorder(submitAudioForTranscription);
+  const { isListening, startListening, stopAndUpload } = useVoiceRecorder(
+    submitAudioForTranscription,
+  );
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
@@ -48,17 +51,42 @@ export default function AiTaskSheetScreen() {
   const aiNotes = aiGeneratedMessage?.extractedNotes ?? [];
   const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
 
+  const analyticsResultsPayload = {
+    userInput: aiGeneratedMessage?.userInput,
+    generatedTaskTitles: aiTasks.map((t) => t.title),
+    generatedNoteTexts: aiNotes.map((n) => n.text),
+  };
+
   // --- Handlers ---
   const onDeleteTask = (taskId: string) => {
     setAiGeneratedMessage((prev) =>
-      prev ? { ...prev, extractedTasks: prev.extractedTasks?.filter((t) => t.id !== taskId) } : prev,
+      prev
+        ? { ...prev, extractedTasks: prev.extractedTasks?.filter((t) => t.id !== taskId) }
+        : prev,
     );
   };
 
   const onDeleteNote = (noteId: string) => {
     setAiGeneratedMessage((prev) =>
-      prev ? { ...prev, extractedNotes: prev.extractedNotes?.filter((n) => n.id !== noteId) } : prev,
+      prev
+        ? { ...prev, extractedNotes: prev.extractedNotes?.filter((n) => n.id !== noteId) }
+        : prev,
     );
+  };
+
+  const handleDismiss = () => {
+    analytics.trackIfUserAcceptAiTask({
+      ...analyticsResultsPayload,
+      outcome: hasResults ? "rejected" : "abandoned",
+    });
+    router.back();
+  };
+
+  const handleSubmitText = async () => {
+    if (!textInput.trim() || isAiGenerating) return;
+    Keyboard.dismiss();
+    await sendTextMessage(textInput.trim());
+    setTextInput("");
   };
 
   const handleAddAll = async () => {
@@ -68,6 +96,10 @@ export default function AiTaskSheetScreen() {
         ...aiTasks.map((task) => addTaskAsync(convertAiTaskToAddTaskItemDTO(task))),
         ...aiNotes.map((n) => createNoteAsync(n.text)),
       ]);
+      analytics.trackIfUserAcceptAiTask({
+        ...analyticsResultsPayload,
+        outcome: "accepted",
+      });
       router.back();
       Toast.show({ type: "warning", text1: t("success.taskAdded") });
     } catch (error) {
@@ -75,9 +107,14 @@ export default function AiTaskSheetScreen() {
     }
   };
 
+  const handleMicPressIn = () => {
+    Keyboard.dismiss();
+    void startListening();
+  };
+
   return (
     <View className="flex-1 bg-transparent">
-      <Pressable className="absolute inset-0" onPress={() => router.back()} pointerEvents="auto" />
+      <Pressable className="absolute inset-0" onPress={handleDismiss} pointerEvents="auto" />
       <View style={{ flex: 1, justifyContent: "flex-end" }} pointerEvents="box-none">
         <LinearGradient
           colors={["#A3DC2F", "#2F80ED"]}
@@ -88,7 +125,7 @@ export default function AiTaskSheetScreen() {
           <View className="flex-1 items-center">
             {/* Top row - dismiss button */}
             <View className="w-full items-end px-6 pt-4 pb-2">
-              <Pressable onPress={() => router.back()} accessibilityLabel="Stop">
+              <Pressable onPress={handleDismiss} accessibilityLabel="Stop">
                 <MaterialCommunityIcons name="chevron-down" size={32} color="white" />
               </Pressable>
             </View>
@@ -98,32 +135,12 @@ export default function AiTaskSheetScreen() {
 
             {/* Task / note cards (has results) */}
             {hasResults && (
-              <Animated.ScrollView className="w-full flex-1" showsVerticalScrollIndicator={false}>
-                {aiTasks.map((task) => (
-                  <AiResultCard
-                    key={task.id}
-                    id={task.id}
-                    text={task.title}
-                    onDelete={onDeleteTask}
-                    label={task.label}
-                    startTime={task.startTime}
-                    endTime={task.endTime}
-                  />
-                ))}
-                {aiNotes.length > 0 && (
-                  <>
-                    <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">Notes</Text>
-                    {aiNotes.map((note) => (
-                      <AiResultCard
-                        key={note.id}
-                        id={note.id}
-                        text={note.text}
-                        onDelete={onDeleteNote}
-                      />
-                    ))}
-                  </>
-                )}
-              </Animated.ScrollView>
+              <AiResultList
+                aiTasks={aiTasks}
+                aiNotes={aiNotes}
+                onDeleteTask={onDeleteTask}
+                onDeleteNote={onDeleteNote}
+              />
             )}
 
             {/* Listening indicator */}
@@ -143,53 +160,16 @@ export default function AiTaskSheetScreen() {
             </View>
 
             {/* Bottom controls */}
-            <View className="w-full flex-row items-center px-6 gap-4 pb-8">
-              {/* Microphone hold-to-record */}
-              <Pressable
-                onLongPress={() => void startListening()}
-                onPressOut={() => void stopAndUpload()}
-                accessibilityLabel="Hold to record"
-                className="w-14 h-14 rounded-full items-center justify-center"
-                style={{
-                  backgroundColor: isListening ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.25)",
-                }}
-              >
-                <MaterialCommunityIcons name="microphone" size={28} color="white" />
-              </Pressable>
-
-              {/* Waveform */}
-              <View className="flex-1 items-center justify-center">
-                {isListening ? (
-                  <LottieView
-                    source={LOTTIE_ANIMATIONS.voiceWave}
-                    loop
-                    autoPlay
-                    style={{ width: "100%", height: 40 }}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <View className="flex-row items-center gap-1">
-                    {Array.from({ length: 20 }).map((_, i) => (
-                      <View
-                        key={i}
-                        className="rounded-full"
-                        style={{ width: 3, height: 16, backgroundColor: "rgba(255,255,255,0.5)" }}
-                      />
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {/* Confirm button */}
-              <Pressable
-                onPress={() => void handleAddAll()}
-                accessibilityLabel="Confirm"
-                className="w-14 h-14 rounded-full items-center justify-center"
-                style={{ backgroundColor: "rgba(255,255,255,0.25)" }}
-              >
-                <MaterialCommunityIcons name="check" size={28} color="white" />
-              </Pressable>
-            </View>
+            <AiInputBar
+              textInput={textInput}
+              isListening={isListening}
+              hasResults={hasResults}
+              onChangeText={setTextInput}
+              onSubmitText={() => void handleSubmitText()}
+              onMicPressIn={handleMicPressIn}
+              onMicPressOut={() => void stopAndUpload()}
+              onConfirm={() => void handleAddAll()}
+            />
           </View>
         </LinearGradient>
       </View>
