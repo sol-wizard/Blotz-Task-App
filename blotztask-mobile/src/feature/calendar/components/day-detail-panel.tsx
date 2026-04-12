@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, ScrollView, Dimensions } from "react-native";
 import { format, parseISO } from "date-fns";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
-import LoadingScreen from "../../../shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { theme } from "@/shared/constants/theme";
 
 export const DayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
