@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, useWindowDimensions, Keyboard } from "react-native";
-import { KeyboardAvoidingView, KeyboardStickyView } from "react-native-keyboard-controller";
+import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
