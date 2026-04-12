@@ -1,0 +1,81 @@
+import React from "react";
+import { View, Text, ScrollView, Dimensions } from "react-native";
+import { format, parseISO } from "date-fns";
+import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
+import LoadingScreen from "@/shared/components/ui/loading-screen";
+
+export const DayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
+  const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
+
+  return (
+    <View className="flex-1 px-5">
+      {isLoading ? (
+        <LoadingScreen />
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: Dimensions.get("window").height * 0.4 }}
+        >
+          {selectedDayTasks.length > 0 ? (
+            selectedDayTasks.map((task, index) => {
+              const start = task.startTime ? parseISO(task.startTime) : null;
+              const end = task.endTime ? parseISO(task.endTime) : null;
+              const isSameTime = task.startTime === task.endTime;
+
+              return (
+                <View
+                  key={task.id || index}
+                  className="flex-row items-center bg-white border border-gray-100 rounded-[16px] mb-2 py-2.5 px-4 shadow-xs"
+                >
+                  {/* Column 1: Time */}
+                  <View className="w-[60px]">
+                    {start ? (
+                      <>
+                        <View className="flex-row items-baseline">
+                          <Text className="text-[16px] font-baloo text-[#444964]">
+                            {format(start, "h:mm")}
+                          </Text>
+                          <Text className="text-[12px] font-baloo text-[#444964] ml-0.5 uppercase">
+                            {format(start, "a")}
+                          </Text>
+                        </View>
+                        {end && !isSameTime && (
+                          <View className="flex-row items-baseline mt-0 opacity-50">
+                            <Text className="text-[14px] font-baloo text-[#444964]">
+                              {format(end, "h:mm")}
+                            </Text>
+                            <Text className="text-[11px] font-baloo text-[#444964] ml-0.5 uppercase">
+                              {format(end, "a")}
+                            </Text>
+                          </View>
+                        )}
+                      </>
+                    ) : (
+                      <Text className="text-[12px] font-baloo text-[#444964]">All Day</Text>
+                    )}
+                  </View>
+
+                  {/* Column 2: Color Bar */}
+                  <View
+                    className="w-1 h-6 rounded-full mx-3"
+                    style={{ backgroundColor: task.label?.color ?? "#D1D1D6" }}
+                  />
+
+                  {/* Column 3: Title */}
+                  <View className="flex-1">
+                    <Text className="text-[15px] font-baloo text-[#444964] leading-tight">
+                      {task.title}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })
+          ) : (
+            <Text className="text-center text-gray-400 mt-10">No tasks for this day</Text>
+          )}
+        </ScrollView>
+      )}
+    </View>
+  );
+};
