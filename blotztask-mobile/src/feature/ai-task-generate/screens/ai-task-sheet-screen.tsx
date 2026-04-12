@@ -49,6 +49,12 @@ export default function AiTaskSheetScreen() {
   const aiNotes = aiGeneratedMessage?.extractedNotes ?? [];
   const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
 
+  const analyticsResultsPayload = {
+    userInput: aiGeneratedMessage?.userInput,
+    generatedTaskTitles: aiTasks.map((t) => t.title),
+    generatedNoteTexts: aiNotes.map((n) => n.text),
+  };
+
   // --- Handlers ---
   const onDeleteTask = (taskId: string) => {
     setAiGeneratedMessage((prev) =>
@@ -64,10 +70,8 @@ export default function AiTaskSheetScreen() {
 
   const handleDismiss = () => {
     analytics.trackIfUserAcceptAiTask({
-      userInput: aiGeneratedMessage?.userInput,
+      ...analyticsResultsPayload,
       outcome: hasResults ? "rejected" : "abandoned",
-      generatedTaskTitles: aiTasks.map((t) => t.title),
-      generatedNoteTexts: aiNotes.map((n) => n.text),
     });
     router.back();
   };
@@ -87,10 +91,8 @@ export default function AiTaskSheetScreen() {
         ...aiNotes.map((n) => createNoteAsync(n.text)),
       ]);
       analytics.trackIfUserAcceptAiTask({
-        userInput: aiGeneratedMessage?.userInput,
+        ...analyticsResultsPayload,
         outcome: "accepted",
-        generatedTaskTitles: aiTasks.map((t) => t.title),
-        generatedNoteTexts: aiNotes.map((n) => n.text),
       });
       router.back();
       Toast.show({ type: "warning", text1: t("success.taskAdded") });
