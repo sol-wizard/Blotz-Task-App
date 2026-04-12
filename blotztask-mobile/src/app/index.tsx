@@ -1,7 +1,7 @@
 import { Redirect } from "expo-router";
 import * as Notifications from "expo-notifications";
 import { useAuth } from "@/shared/hooks/useAuth";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 
 // Configure notification handling
 Notifications.setNotificationHandler({

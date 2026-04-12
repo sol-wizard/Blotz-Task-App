@@ -17,7 +17,7 @@ export const NoteCard = ({
         }}
       >
         <View className={`px-5 py-4`}>
-          <Text className="text-xl font-semibold text-black font-baloo">{note.text}</Text>
+          <Text className="text-xl font-semibold text-black font-baloo" numberOfLines={1} ellipsizeMode="tail">{note.text}</Text>
 
           <View className="mt-2 flex-row items-center justify-between">
             <Text className="text-xs text-[#6B7280] font-balooThin">
