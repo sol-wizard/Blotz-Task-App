@@ -1,6 +1,7 @@
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
+using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
@@ -18,6 +19,7 @@ public class AiTaskGenerateChatHub : Hub
     private readonly DateTimeResolveService _dateTimeResolveService;
     private readonly GetUserPreferencesQueryHandler _getUserPreferencesQueryHandler;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
+
     private readonly SpeechTranscriptionService _speechTranscriptionService;
 
     public AiTaskGenerateChatHub(
@@ -107,13 +109,21 @@ public class AiTaskGenerateChatHub : Hub
                 Message = message,
                 TimeZone = timeZone
             });
-            
+
             chatHistory.AddUserMessage(resolvedMessage);
 
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
-            
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
+            resultMessage.UserInput = message;
 
+            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
+        }
+        catch (AiQuotaExceededException ex)
+        {
+            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
+            {
+                IsSuccess = false,
+                ErrorMessage = ex.Message
+            });
         }
         catch (AiTaskGenerationException ex)
         {
@@ -140,10 +150,10 @@ public class AiTaskGenerateChatHub : Hub
                 0,
                 audioData.Length,
                 "audio",
-                "audio.wav")
+                "audio.m4a")
             {
                 Headers = new HeaderDictionary(),
-                ContentType = "audio/wav"
+                ContentType = "audio/mp4"
             };
 
             var transcript = await _speechTranscriptionService.TranscribeAsync(formFile, ct);
