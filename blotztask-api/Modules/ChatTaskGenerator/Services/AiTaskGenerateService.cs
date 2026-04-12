@@ -3,8 +3,6 @@ using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Functions;
 using BlotzTask.Shared.Exceptions;
-using Microsoft.Agents.AI;
-using Microsoft.Agents.AI.Foundry;
 using Microsoft.Extensions.AI;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
@@ -21,21 +19,21 @@ public class AiTaskGenerateService(
     IConfiguration configuration)
     : IAiTaskGenerateService
 {
+    //TODO: This should not be here ? should be at DI?
     private readonly string _deploymentId =
         configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
         ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
 
     public async Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct)
     {
+        //TODO: Do we have a better way of manage those list ?
         var tasks = new List<ExtractedTask>();
         var notes = new List<ExtractedNote>();
         var tools = new TaskGenerationTools(tasks, notes);
-
-        var instructions = AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime);
-
+        
         var agent = projectClient.AsAIAgent(
             model: _deploymentId,
-            instructions: instructions,
+            instructions: AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime),
             tools:
             [
                 AIFunctionFactory.Create(tools.CreateTask),
@@ -45,7 +43,7 @@ public class AiTaskGenerateService(
                 AIFunctionFactory.Create(tools.RemoveNote),
                 AIFunctionFactory.Create(tools.UpdateNote)
             ]);
-
+        //TODO: De we need cancellation token here ?
         var session = await agent.CreateSessionAsync();
 
         logger.LogInformation("TaskGeneration: Session initialized for deployment={DeploymentId}", _deploymentId);

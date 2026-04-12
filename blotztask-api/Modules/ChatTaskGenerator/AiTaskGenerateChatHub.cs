@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
 
+//TODO: Remove the deployment id from the app settings , we only want to store that in the environment variable and the local development json 
+//so we need to update the onboarding documents
 [Authorize]
 public class AiTaskGenerateChatHub(
     ILogger<AiTaskGenerateChatHub> logger,
@@ -27,6 +29,7 @@ public class AiTaskGenerateChatHub(
             throw new HubException("UserId not found in HttpContext. Connection rejected.");
         }
 
+        //TODO: If this is a default please leave a comment so easier to read for later person, please double check why we need those timezone
         var timeZone = TimeZoneInfo.Utc;
         var timeZoneId = httpContext?.Request.Query["timeZone"].ToString();
         try
@@ -41,7 +44,6 @@ public class AiTaskGenerateChatHub(
         var userPreferences = await getUserPreferencesQueryHandler.Handle(
             new GetUserPreferencesQuery { UserId = userId },
             CancellationToken.None);
-
         var preferredLanguage = userPreferences.PreferredLanguage.ToDisplayName();
 
         var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);

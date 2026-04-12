@@ -26,6 +26,7 @@ public class BreakdownTaskCommandHandler(
     AIProjectClient projectClient,
     IConfiguration configuration)
 {
+    //TODO: IF we want to support different deployment id , that should be done on the dependency injection layer
     private readonly string _deploymentId =
         configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"]
         ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:Breakdown:DeploymentId config.");
@@ -39,6 +40,7 @@ public class BreakdownTaskCommandHandler(
 
         if (task == null) throw new ArgumentException($"Task with ID {command.TaskId} not found.");
 
+        //TODO: I think we should better handle this query because it undermines the whole point of using CQRS
         var userPreferencesQuery = new GetUserPreferencesQuery { UserId = command.UserId };
         var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, ct);
 
@@ -46,6 +48,7 @@ public class BreakdownTaskCommandHandler(
 
         var collectedSubTasks = new List<GeneratedSubTask>();
 
+        //TODO: Please do more testing if not revert to the old pattern, please test the different in terms of AI accuracy
         [Description("Add a subtask to the breakdown result")]
         void AddSubTask(
             [Description("A short, descriptive name for the subtask")] string title,
@@ -62,6 +65,7 @@ public class BreakdownTaskCommandHandler(
 
         try
         {
+            //TODO: Investigate if we need so much details prompt here 
             var prompt = TaskBreakdownPrompts.GetBreakdownPrompt(
                 preferredLanguage,
                 task.Title,
@@ -74,12 +78,11 @@ public class BreakdownTaskCommandHandler(
                 instructions: prompt,
                 tools: [AIFunctionFactory.Create(AddSubTask)]);
 
-            logger.LogInformation("Breakdown: Invoking AI with deployment={DeploymentId}", _deploymentId);
-
             await agent.RunAsync("Break down this task into subtasks.", cancellationToken: ct);
 
             logger.LogInformation("Breakdown: Collected {Count} subtasks", collectedSubTasks.Count);
 
+            //TODO: Please review this logic if we want to count this as success criteria 
             var isSuccess = collectedSubTasks.Count > 0;
 
             return new BreakdownResult

@@ -19,6 +19,7 @@ public static class AgentFrameworkServiceExtensions
         // AIProjectClient is shared — one client, two deployment targets.
         // AIAgent is NOT created here because instructions are user-specific
         // (language + local time) and must be set per-session in the service layer.
+        // TODO : We can revise this because this is not the standard way of adding DI.
         var projectClient = new AIProjectClient(new Uri(projectEndpoint), new DefaultAzureCredential());
         services.AddSingleton(projectClient);
 

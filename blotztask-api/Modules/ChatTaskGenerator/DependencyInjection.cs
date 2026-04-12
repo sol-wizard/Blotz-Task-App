@@ -10,9 +10,6 @@ public static class DependencyInjection
     {
         services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
         services.AddScoped<DateTimeResolveService>();
-        
-
-
         services.AddScoped<SpeechTranscriptionService>();
 
         return services;

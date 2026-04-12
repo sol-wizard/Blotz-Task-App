@@ -3,6 +3,7 @@ using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Functions;
 
+//TODO: Do we really need so many CRUD to do the operation ? Please research if we really need function tools here
 public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> notes)
 {
     public int ToolCallCount { get; private set; }
