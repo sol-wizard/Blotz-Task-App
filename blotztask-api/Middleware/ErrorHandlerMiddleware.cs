@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Shared.Exceptions;
 using BlotzTask.Shared.Responses;
 using Microsoft.EntityFrameworkCore;
@@ -63,6 +64,16 @@ public class ErrorHandlingMiddleware
         {
             _logger.LogWarning(ex, "Bad request: {Message}", ex.Message);
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            await context.Response.WriteAsJsonAsync(new ApiResponse<object>
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
+        catch (AiQuotaExceededException ex)
+        {
+            _logger.LogWarning(ex, "AI quota exceeded: {Message}", ex.Message);
+            context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
             await context.Response.WriteAsJsonAsync(new ApiResponse<object>
             {
                 Success = false,

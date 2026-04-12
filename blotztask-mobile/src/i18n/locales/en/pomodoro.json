@@ -1,0 +1,20 @@
+{
+  "taskCard": {
+    "modes": "Modes",
+    "focus": "Focus"
+  },
+  "focusMode": {
+    "title": "Focus Mode",
+    "duration": "Duration",
+    "soundscapes": "Soundscapes",
+    "flow": "∞ flow"
+  },
+  "soundscape": {
+    "easyFocus": "Easy\nFocus",
+    "deepWork": "Deep\nWork",
+    "taskFlow": "Task\nFlow",
+    "calmVibes": "Calm\nVibes",
+    "cafeVibes": "Cafe\nVibes",
+    "noSound": "No\nSound"
+  }
+}
