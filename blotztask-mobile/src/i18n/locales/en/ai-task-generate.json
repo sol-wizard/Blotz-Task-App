@@ -20,7 +20,13 @@
     "taskAdded": "Yay! Task added!"
   },
   "errors": {
-    "default": "Oops something went over my head. Please try again."
+    "default": "Oops something went over my head. Please try again.",
+    "transcriptionFailed": "Could not understand the audio. Please try again.",
+    "emptyAudio": "No audio was recorded. Please try again.",
+    "tokenLimited": "You've hit the usage limit. Please try again later.",
+    "contentFilter": "Your message was flagged. Please rephrase and try again.",
+    "canceled": "The request was canceled.",
+    "noTasksExtracted": "I couldn't find any tasks in that. Please try again."
   },
   "taskCard": {
     "titlePlaceholder": "Task title",

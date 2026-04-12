@@ -1,5 +1,6 @@
 using Azure;
 using Azure.AI.OpenAI;
+using BlotzTask.Shared.Exceptions;
 using OpenAI.Audio;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
@@ -64,14 +65,19 @@ public class SpeechTranscriptionService
 
             return transcriptionResult.Trim();
         }
+        catch (RequestFailedException ex)
+        {
+            _logger.LogError(ex,
+                "Whisper API request failed. Status: {Status}, ErrorCode: {ErrorCode}",
+                ex.Status, ex.ErrorCode);
+            throw new AiTranscriptionException("Whisper API request failed.", ex);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Whisper transcription failed. ExceptionType: {ExceptionType}, Message: {Message}, InnerException: {InnerMessage}",
-                ex.GetType().FullName,
-                ex.Message,
-                ex.InnerException?.Message);
-            throw;
+                "Whisper transcription failed. ExceptionType: {ExceptionType}, Message: {Message}",
+                ex.GetType().FullName, ex.Message);
+            throw new AiTranscriptionException("Whisper transcription failed unexpectedly.", ex);
         }
     }
 }

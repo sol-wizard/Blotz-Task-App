@@ -3,6 +3,7 @@ export interface AiResultMessageDTO {
   userInput?: string;
   extractedTasks?: ExtractedTaskDTO[];
   extractedNotes?: AiNoteDTO[];
+  errorCode?: string;
   errorMessage?: string;
 }
 

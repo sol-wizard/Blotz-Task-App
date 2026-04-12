@@ -107,6 +107,7 @@ public class AiTaskGenerateChatHub : Hub
             await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
             {
                 IsSuccess = false,
+                ErrorCode = ex.Code.ToString(),
                 ErrorMessage = ex.Message
             });
         }
@@ -119,7 +120,7 @@ public class AiTaskGenerateChatHub : Hub
         try
         {
             if (audioData is null || audioData.Length == 0)
-                throw new HubException("Audio data is empty.");
+                throw new AiTaskGenerationException(AiErrorCode.EmptyAudio, "No audio was received.");
 
             await using var stream = new MemoryStream(audioData);
             var formFile = new FormFile(stream, 0, audioData.Length, "audio", "audio.m4a")
@@ -131,10 +132,25 @@ public class AiTaskGenerateChatHub : Hub
             var transcript = await _speechTranscriptionService.TranscribeAsync(formFile, ct);
             await SendMessage(transcript);
         }
+        catch (AiTaskGenerationException ex)
+        {
+            _logger.LogError(ex, "TranscribeAudio failed. ErrorCode: {ErrorCode}", ex.Code);
+            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
+            {
+                IsSuccess = false,
+                ErrorCode = ex.Code.ToString(),
+                ErrorMessage = ex.Message
+            });
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "TranscribeAudio failed.");
-            throw new HubException(ex.Message);
+            _logger.LogError(ex, "TranscribeAudio failed with an unexpected error.");
+            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
+            {
+                IsSuccess = false,
+                ErrorCode = AiErrorCode.Unknown.ToString(),
+                ErrorMessage = ex.Message
+            });
         }
     }
 }
