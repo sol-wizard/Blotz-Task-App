@@ -96,10 +96,7 @@ public class AiTaskGenerateChatHub : Hub
                 Message = message,
                 TimeZone = chatContext.TimeZone
             });
-
-
-            chatHistory.AddUserMessage(resolvedMessage);
-
+            
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(resolvedMessage, chatContext, ct);
             resultMessage.UserInput = message;
 
