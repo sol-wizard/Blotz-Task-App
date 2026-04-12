@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Pressable, Text, View, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
@@ -58,12 +58,14 @@ export default function MonthlyCalendarScreen() {
 
   const { monthlyTaskAvailability } = useMonthlyTasks({ selectedDay });
 
-  const dataByDate: Record<string, TaskThumbnailDTO[]> = {};
-
-  monthlyTaskAvailability.forEach((item) => {
-    const dateKey = item.date.substring(0, 10);
-    dataByDate[dateKey] = item.taskThumbnails;
-  });
+  const dataByDate = useMemo(() => {
+    const data: Record<string, TaskThumbnailDTO[]> = {};
+    monthlyTaskAvailability.forEach((item) => {
+      const dateKey = item.date.substring(0, 10);
+      data[dateKey] = item.taskThumbnails;
+    });
+    return data;
+  }, [monthlyTaskAvailability]);
 
   const handleDayPress = useCallback((dateString: string) => {
     setSelectedDay(new Date(dateString));
