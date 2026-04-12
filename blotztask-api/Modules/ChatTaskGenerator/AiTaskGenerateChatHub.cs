@@ -9,35 +9,20 @@ using Microsoft.AspNetCore.SignalR;
 namespace BlotzTask.Modules.ChatTaskGenerator;
 
 [Authorize]
-public class AiTaskGenerateChatHub : Hub
+public class AiTaskGenerateChatHub(
+    ILogger<AiTaskGenerateChatHub> logger,
+    IAiTaskGenerateService aiTaskGenerateService,
+    DateTimeResolveService dateTimeResolveService,
+    GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
+    SpeechTranscriptionService speechTranscriptionService) : Hub
 {
-    private readonly IAiTaskGenerateService _aiTaskGenerateService;
-    private readonly DateTimeResolveService _dateTimeResolveService;
-    private readonly GetUserPreferencesQueryHandler _getUserPreferencesQueryHandler;
-    private readonly ILogger<AiTaskGenerateChatHub> _logger;
-
-    private readonly SpeechTranscriptionService _speechTranscriptionService;
-
-    public AiTaskGenerateChatHub(
-        ILogger<AiTaskGenerateChatHub> logger,
-        IAiTaskGenerateService aiTaskGenerateService,
-        DateTimeResolveService dateTimeResolveService,
-        GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
-        SpeechTranscriptionService speechTranscriptionService)
-    {
-        _logger = logger;
-        _aiTaskGenerateService = aiTaskGenerateService;
-        _dateTimeResolveService = dateTimeResolveService;
-        _getUserPreferencesQueryHandler = getUserPreferencesQueryHandler;
-        _speechTranscriptionService = speechTranscriptionService;
-    }
 
     public override async Task OnConnectedAsync()
     {
         var httpContext = Context.GetHttpContext();
         if (httpContext?.Items.TryGetValue("UserId", out var userIdObj) != true || userIdObj is not Guid userId)
         {
-            _logger.LogWarning("UserId not found in HttpContext.Items. ConnectionId: {ConnectionId}",
+            logger.LogWarning("UserId not found in HttpContext.Items. ConnectionId: {ConnectionId}",
                 Context.ConnectionId);
             throw new HubException("UserId not found in HttpContext. Connection rejected.");
         }
@@ -50,23 +35,18 @@ public class AiTaskGenerateChatHub : Hub
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Invalid time zone '{TimeZoneId}'. Using UTC.", timeZoneId);
+            logger.LogWarning(ex, "Invalid time zone '{TimeZoneId}'. Using UTC.", timeZoneId);
         }
 
-        var userPreferences = await _getUserPreferencesQueryHandler.Handle(
+        var userPreferences = await getUserPreferencesQueryHandler.Handle(
             new GetUserPreferencesQuery { UserId = userId },
             CancellationToken.None);
 
-        var preferredLanguage = userPreferences.PreferredLanguage switch
-        {
-            Language.En => "English",
-            Language.Zh => "Chinese (Simplified)",
-            _ => "English"
-        };
+        var preferredLanguage = userPreferences.PreferredLanguage.ToDisplayName();
 
         var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
 
-        var chatContext = await _aiTaskGenerateService.InitializeAsync(preferredLanguage, userLocalTime, timeZone, CancellationToken.None);
+        var chatContext = await aiTaskGenerateService.InitializeAsync(preferredLanguage, userLocalTime, timeZone, Context.ConnectionAborted);
 
         Context.Items["ChatContext"] = chatContext;
 
@@ -75,7 +55,7 @@ public class AiTaskGenerateChatHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _logger.LogInformation(
+        logger.LogInformation(
             "User disconnected: {ConnectionId}. Exception: {Exception}",
             Context.ConnectionId, exception?.Message);
 
@@ -91,13 +71,13 @@ public class AiTaskGenerateChatHub : Hub
         {
             var ct = Context.ConnectionAborted;
 
-            var resolvedMessage = _dateTimeResolveService.Resolve(new ResolveDateTimesRequest
+            var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
             {
                 Message = message,
                 TimeZone = chatContext.TimeZone
             });
             
-            var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(resolvedMessage, chatContext, ct);
+            var resultMessage = await aiTaskGenerateService.GenerateAiResponse(resolvedMessage, chatContext, ct);
             resultMessage.UserInput = message;
 
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
@@ -129,12 +109,12 @@ public class AiTaskGenerateChatHub : Hub
                 ContentType = "audio/mp4"
             };
 
-            var transcript = await _speechTranscriptionService.TranscribeAsync(formFile, ct);
+            var transcript = await speechTranscriptionService.TranscribeAsync(formFile, ct);
             await SendMessage(transcript);
         }
         catch (AiTaskGenerationException ex)
         {
-            _logger.LogError(ex, "TranscribeAudio failed. ErrorCode: {ErrorCode}", ex.Code);
+            logger.LogError(ex, "TranscribeAudio failed. ErrorCode: {ErrorCode}", ex.Code);
             await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
             {
                 IsSuccess = false,
@@ -144,7 +124,7 @@ public class AiTaskGenerateChatHub : Hub
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "TranscribeAudio failed with an unexpected error.");
+            logger.LogError(ex, "TranscribeAudio failed with an unexpected error.");
             await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
             {
                 IsSuccess = false,

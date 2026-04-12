@@ -42,12 +42,7 @@ public class BreakdownTaskCommandHandler(
         var userPreferencesQuery = new GetUserPreferencesQuery { UserId = command.UserId };
         var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, ct);
 
-        var preferredLanguage = userPreferences.PreferredLanguage switch
-        {
-            Language.En => "English",
-            Language.Zh => "Chinese (Simplified)",
-            _ => "English"
-        };
+        var preferredLanguage = userPreferences.PreferredLanguage.ToDisplayName();
 
         var collectedSubTasks = new List<GeneratedSubTask>();
 

@@ -1,7 +1,6 @@
 using Azure.AI.Projects;
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
-using BlotzTask.Modules.ChatTaskGenerator.DTOs;
 using BlotzTask.Modules.ChatTaskGenerator.Functions;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.Agents.AI;
@@ -83,6 +82,7 @@ public class AiTaskGenerateService(
             return new AiGenerateMessage
             {
                 IsSuccess = isSuccess,
+                ErrorCode = isSuccess ? "" : AiErrorCode.NoTasksExtracted.ToString(),
                 ExtractedTasks = context.Tasks,
                 ExtractedNotes = context.Notes,
                 ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input."

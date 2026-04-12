@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
-using BlotzTask.Modules.ChatTaskGenerator.DTOs;
+using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Dtos;
 

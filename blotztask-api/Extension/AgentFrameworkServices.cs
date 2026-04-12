@@ -13,7 +13,7 @@ public static class AgentFrameworkServiceExtensions
         if (string.IsNullOrWhiteSpace(projectEndpoint))
         {
             throw new InvalidOperationException(
-                "Missing Azure AI configuration. Set AzureAI:ProjectEndpoint, AzureOpenAI:AiModels:TaskGeneration:DeploymentId, and AzureOpenAI:AiModels:Breakdown:DeploymentId in configuration.");
+                "Missing Azure AI configuration. Set AzureOpenAI:Endpoint, AzureOpenAI:AiModels:TaskGeneration:DeploymentId, and AzureOpenAI:AiModels:Breakdown:DeploymentId in configuration.");
         }
 
         // AIProjectClient is shared — one client, two deployment targets.

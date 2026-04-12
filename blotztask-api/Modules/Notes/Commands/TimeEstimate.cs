@@ -40,12 +40,7 @@ public class TimeEstimateCommandHandler(
         var userPreferencesQuery = new GetUserPreferencesQuery { UserId = request.UserId };
         var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, ct);
 
-        var preferredLanguage = userPreferences.PreferredLanguage switch
-        {
-            Language.En => "English",
-            Language.Zh => "Chinese (Simplified)",
-            _ => "English"
-        };
+        var preferredLanguage = userPreferences.PreferredLanguage.ToDisplayName();
 
         AITimeEstimationResult? captured = null;
 
@@ -79,7 +74,7 @@ public class TimeEstimateCommandHandler(
             if (captured == null)
             {
                 logger.LogWarning("AI did not call SetTimeEstimate for note {NoteId}", request.NoteId);
-                throw new AiEmptyResponseException("AI did not return a time estimate.");
+                throw new AiTaskGenerationException(AiErrorCode.Unknown, "AI did not return a time estimate.");
             }
 
             logger.LogInformation("TimeEstimate result: {Duration}, success={IsSuccess}", captured.Duration, captured.IsSuccess);

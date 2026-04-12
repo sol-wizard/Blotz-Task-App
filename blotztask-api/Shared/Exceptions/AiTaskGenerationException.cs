@@ -26,24 +26,6 @@ public class AiTaskGenerationException : HubException
     public AiErrorCode Code { get; }
 }
 
-public sealed class AiEmptyResponseException
-    : AiTaskGenerationException
-{
-    public AiEmptyResponseException(string message = "AI response content is empty.")
-        : base(AiErrorCode.EmptyResponse, message)
-    {
-    }
-}
-
-public sealed class AiInvalidJsonException
-    : AiTaskGenerationException
-{
-    public AiInvalidJsonException(string content, Exception? inner = null)
-        : base(AiErrorCode.InvalidJson, "AI returned invalid JSON format.", inner)
-    {
-    }
-}
-
 public sealed class AiTokenLimitedException
     : AiTaskGenerationException
 {
