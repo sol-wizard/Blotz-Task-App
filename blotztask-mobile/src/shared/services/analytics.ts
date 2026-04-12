@@ -83,18 +83,14 @@ export const analytics = {
   trackIfUserAcceptAiTask(params: {
     userInput?: string;
     outcome: AiTaskOutcome;
-    generatedTaskCount: number;
-    generatedNoteCount: number;
-    addedTaskCount: number;
-    addedNoteCount: number;
+    generatedTaskTitles: string[];
+    generatedNoteTexts: string[];
   }) {
     posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
       ...(params.userInput !== undefined && { user_input: params.userInput }),
       outcome: params.outcome,
-      ai_generated_task_count: params.generatedTaskCount,
-      ai_generated_note_count: params.generatedNoteCount,
-      user_add_task_count: params.addedTaskCount,
-      user_add_note_count: params.addedNoteCount,
+      ai_generated_task_titles: params.generatedTaskTitles,
+      ai_generated_note_texts: params.generatedNoteTexts,
     });
   },
 

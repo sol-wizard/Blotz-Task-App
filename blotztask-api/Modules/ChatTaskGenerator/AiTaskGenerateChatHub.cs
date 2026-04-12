@@ -111,7 +111,8 @@ public class AiTaskGenerateChatHub : Hub
             chatHistory.AddUserMessage(resolvedMessage);
 
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(chatHistory, ct);
-            
+            resultMessage.UserInput = message;
+
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
 
         }
