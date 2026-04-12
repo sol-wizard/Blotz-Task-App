@@ -8,11 +8,9 @@ import { AiNoteDTO } from "../models/ai-result-message-dto";
 type Props = {
   aiTasks: AiTaskDTO[];
   aiNotes: AiNoteDTO[];
-  onDeleteTask: (id: string) => void;
-  onDeleteNote: (id: string) => void;
 };
 
-export function AiResultList({ aiTasks, aiNotes, onDeleteTask, onDeleteNote }: Props) {
+export function AiResultList({ aiTasks, aiNotes }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
 
   return (
@@ -21,9 +19,7 @@ export function AiResultList({ aiTasks, aiNotes, onDeleteTask, onDeleteNote }: P
         {aiTasks.map((task) => (
           <AiResultCard
             key={task.id}
-            id={task.id}
             text={task.title}
-            onDelete={onDeleteTask}
             label={task.label}
             startTime={task.startTime}
             endTime={task.endTime}
@@ -37,9 +33,7 @@ export function AiResultList({ aiTasks, aiNotes, onDeleteTask, onDeleteNote }: P
             {aiNotes.map((note) => (
               <AiResultCard
                 key={note.id}
-                id={note.id}
                 text={note.text}
-                onDelete={onDeleteNote}
               />
             ))}
           </>

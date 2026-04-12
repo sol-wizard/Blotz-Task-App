@@ -69,7 +69,6 @@ export function useAiTaskGenerator({
 
   return {
     aiGeneratedMessage,
-    setAiGeneratedMessage,
     submitAudioForTranscription,
     sendTextMessage,
   };

@@ -25,7 +25,7 @@ export default function AiTaskSheetScreen() {
   const { height } = useWindowDimensions();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
-  const { aiGeneratedMessage, setAiGeneratedMessage, submitAudioForTranscription, sendTextMessage } =
+  const { aiGeneratedMessage, submitAudioForTranscription, sendTextMessage } =
     useAiTaskGenerator({ setIsAiGenerating });
   const { labels } = useAllLabels();
   const { isListening, startListening, stopAndUpload } = useVoiceRecorder(
@@ -58,22 +58,6 @@ export default function AiTaskSheetScreen() {
   };
 
   // --- Handlers ---
-  const onDeleteTask = (taskId: string) => {
-    setAiGeneratedMessage((prev) =>
-      prev
-        ? { ...prev, extractedTasks: prev.extractedTasks?.filter((t) => t.id !== taskId) }
-        : prev,
-    );
-  };
-
-  const onDeleteNote = (noteId: string) => {
-    setAiGeneratedMessage((prev) =>
-      prev
-        ? { ...prev, extractedNotes: prev.extractedNotes?.filter((n) => n.id !== noteId) }
-        : prev,
-    );
-  };
-
   const handleDismiss = () => {
     analytics.trackIfUserAcceptAiTask({
       ...analyticsResultsPayload,
@@ -138,8 +122,6 @@ export default function AiTaskSheetScreen() {
               <AiResultList
                 aiTasks={aiTasks}
                 aiNotes={aiNotes}
-                onDeleteTask={onDeleteTask}
-                onDeleteNote={onDeleteNote}
               />
             )}
 
