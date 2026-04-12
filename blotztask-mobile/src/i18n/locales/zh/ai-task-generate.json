@@ -1,6 +1,6 @@
 {
   "input": {
-    "placeholder": "输入任务并包含具体时间，如\"周五下午5点前提交报告\""
+    "placeholder": "在这里输入..."
   },
   "buttons": {
     "speak": "说话",
@@ -34,7 +34,7 @@
     "editTextHint": "双击编辑笔记"
   },
   "voiceHint": {
-    "trySaying": "试试说",
+    "trySaying": "试试说话或输入",
     "hintText": "\"明天早上 8 点参加美国总统选举\""
   },
   "voiceListening": {

@@ -14,6 +14,9 @@ public class AiGenerateMessage
     [Description("Indicates whether extraction was successful. True if at least one task or one note was extracted, false otherwise.")]
     public bool IsSuccess { get; set; }
 
+    [JsonPropertyName("userInput")]
+    public string UserInput { get; set; } = "";
+
     [JsonPropertyName("extractedTasks")]
     [Description("Array of tasks extracted from user input (items with date/time). Empty when none have time.")]
     public List<ExtractedTask> ExtractedTasks { get; set; } = new();
