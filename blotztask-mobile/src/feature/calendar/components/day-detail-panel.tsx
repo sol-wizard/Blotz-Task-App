@@ -1,8 +1,6 @@
-import React from "react";
-import { View, Text, ScrollView, Dimensions } from "react-native";
+import { View, Text, ScrollView, Dimensions, ActivityIndicator } from "react-native";
 import { format, parseISO } from "date-fns";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
 import { theme } from "@/shared/constants/theme";
 
 export const DayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
@@ -11,7 +9,7 @@ export const DayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
   return (
     <View className="flex-1 px-5">
       {isLoading ? (
-        <LoadingScreen />
+        <ActivityIndicator size="large" color={theme.colors.onSurface} className="mt-10" />
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
