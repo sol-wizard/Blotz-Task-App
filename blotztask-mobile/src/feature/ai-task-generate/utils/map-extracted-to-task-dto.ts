@@ -1,7 +1,11 @@
-import uuid from "react-native-uuid";
+import { parseISO, format } from "date-fns";
+import { ExtractedTaskDTO } from "../models/ai-result-message-dto";
 import { AiTaskDTO } from "../models/ai-task-dto";
-import { ExtractedTaskDTO } from "../models/extracted-task-dto";
 import { LabelDTO } from "@/shared/models/label-dto";
+
+// fix the date string from backend by stripping the offset, since the AI still return the date with offset.
+const stripOffset = (isoString: string): string =>
+  format(parseISO(isoString.replace(/(\.\d+)?([+-]\d{2}:\d{2}|Z)$/, "")), "yyyy-MM-dd'T'HH:mm:ss");
 
 export function mapExtractedTaskDTOToAiTaskDTO(
   extractedTask: ExtractedTaskDTO,
@@ -23,12 +27,11 @@ export function mapExtractedTaskDTOToAiTaskDTO(
     : undefined;
 
   return {
-    id: uuid.v4().toString(),
+    id: extractedTask.id,
     description: extractedTask.description ?? "",
     title: extractedTask.title,
-    isAdded: false,
-    startTime: extractedTask.start_time,
-    endTime: extractedTask.end_time,
+    startTime: stripOffset(extractedTask.start_time),
+    endTime: stripOffset(extractedTask.end_time),
     label,
   };
 }

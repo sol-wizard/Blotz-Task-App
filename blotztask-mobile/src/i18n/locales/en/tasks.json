@@ -55,5 +55,8 @@
     "life": "Life",
     "learning": "Learning",
     "health": "Health"
+  },
+  "success": {
+    "taskCreated": "Task created successfully"
   }
 }

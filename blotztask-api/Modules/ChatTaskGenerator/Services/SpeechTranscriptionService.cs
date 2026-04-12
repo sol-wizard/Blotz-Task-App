@@ -1,77 +1,77 @@
-using System.Net.Http.Headers;
-using System.Text.Json;
-using BlotzTask.Modules.ChatTaskGenerator.Dtos;
-using Microsoft.Extensions.Options;
+using Azure;
+using Azure.AI.OpenAI;
+using OpenAI.Audio;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
-public sealed class SpeechTranscriptionService
+public class SpeechTranscriptionService
 {
-    private readonly HttpClient _http;
-    private readonly SpeechTokenSettings _settings;
+    private readonly AudioClient _audioClient;
     private readonly ILogger<SpeechTranscriptionService> _logger;
 
-    public SpeechTranscriptionService(
-        HttpClient http,
-        IOptions<SpeechTokenSettings> settings,
-        ILogger<SpeechTranscriptionService> logger)
+    public SpeechTranscriptionService(IConfiguration configuration, ILogger<SpeechTranscriptionService> logger)
     {
-        _http = http;
-        _settings = settings.Value;
         _logger = logger;
+
+        var endpoint = configuration["AzureOpenAI:Endpoint"];
+        var apiKey = configuration["AzureOpenAI:ApiKey"];
+        var deploymentId = configuration["AzureOpenAI:AiModels:Speech:DeploymentId"];
+
+        if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
+            throw new InvalidOperationException(
+                "Missing Azure OpenAI configuration. Set AzureOpenAI:Endpoint and AzureOpenAI:ApiKey.");
+
+        if (string.IsNullOrWhiteSpace(deploymentId))
+            throw new InvalidOperationException(
+                "Missing Whisper deployment. Set AzureOpenAI:AiModels:Speech:DeploymentId.");
+
+        var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
+        _audioClient = client.GetAudioClient(deploymentId);
     }
 
-    public async Task<String> TranscribeAsync(
-        IFormFile audio,
-        CancellationToken ct = default)
+    public async Task<string> TranscribeAsync(IFormFile audio, CancellationToken ct = default)
     {
-        if (audio.Length <= 0) throw new ArgumentException("Audio file cannot be empty.", nameof(audio));
-
-        var endpoint = $"https://{_settings.Region}.api.cognitive.microsoft.com/speechtotext/transcriptions:transcribe?api-version={_settings.ApiVersion}";
+        if (audio.Length <= 0)
+            throw new ArgumentException("Audio file cannot be empty.", nameof(audio));
 
         _logger.LogInformation(
-            "Starting speech transcription. FileName: {FileName}, ContentType: {ContentType}, SizeBytes: {SizeBytes}, Endpoint: {Endpoint}",
-            audio.FileName,
-            audio.ContentType,
-            audio.Length,
-            endpoint);
+            "Starting Whisper transcription. FileName: {FileName}, ContentType: {ContentType}, SizeBytes: {SizeBytes}",
+            audio.FileName, audio.ContentType, audio.Length);
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-        request.Headers.Add("Ocp-Apim-Subscription-Key", _settings.Key);
-
-        using var formData = new MultipartFormDataContent();
-        using var stream = audio.OpenReadStream();
-        using var audioContent = new StreamContent(stream);
-        var contentType = string.IsNullOrWhiteSpace(audio.ContentType) ? "application/octet-stream" : audio.ContentType;
-        audioContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-        formData.Add(audioContent, "audio", audio.FileName);
-
-        request.Content = formData;
-
-        using var response = await _http.SendAsync(request, ct);
-        var body = await response.Content.ReadAsStringAsync(ct);
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            _logger.LogWarning(
-                "Speech transcription failed. StatusCode: {StatusCode}, Reason: {ReasonPhrase}",
-                (int)response.StatusCode,
-                response.ReasonPhrase);
-            throw new InvalidOperationException(
-                $"Speech transcribe request failed: {(int)response.StatusCode} {response.ReasonPhrase}. Body: {body}");
+            await using var stream = audio.OpenReadStream();
+
+
+            var result = await _audioClient.TranscribeAudioAsync(
+                stream,
+                audio.FileName,
+                new AudioTranscriptionOptions
+                {
+                    ResponseFormat = AudioTranscriptionFormat.Text
+                },
+                ct
+            );
+
+
+            var transcriptionResult = result.Value.Text;
+
+
+            if (string.IsNullOrWhiteSpace(transcriptionResult))
+                throw new InvalidOperationException("Transcription returned empty text.");
+
+            _logger.LogInformation("Whisper transcription completed. Characters: {Length}", transcriptionResult.Length);
+
+            return transcriptionResult.Trim();
         }
-
-        var result = JsonSerializer.Deserialize<SpeechTranscribeResponse>(
-            body,
-            new JsonSerializerOptions(JsonSerializerDefaults.Web));
-        var text = result.CombinedPhrases == null
-            ? null
-            : string.Join(" ",
-                result.CombinedPhrases
-                    .Select(v => v.Text)
-                    .Where(text => !string.IsNullOrWhiteSpace(text))
-            ).Trim();
-
-        return text ?? throw new InvalidOperationException("Speech transcribe response is empty.");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Whisper transcription failed. ExceptionType: {ExceptionType}, Message: {Message}, InnerException: {InnerMessage}",
+                ex.GetType().FullName,
+                ex.Message,
+                ex.InnerException?.Message);
+            throw;
+        }
     }
 }

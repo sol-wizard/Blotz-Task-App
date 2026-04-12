@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text.Json;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.AiUsage.Entities;
 using BlotzTask.Modules.Notes.Domain;
 using BlotzTask.Modules.Pomodoro.Domain;
 using BlotzTask.Modules.Tasks.Domain.Entities;
@@ -88,7 +89,15 @@ public class SyncUserCommandHandler(
                 IsCountdown = false
             };
             db.PomodoroSetting.Add(pomodoroSetting);
-            
+
+            var subscription = new UserSubscription
+            {
+                UserId = row.Id,
+                PlanId = 1,
+                CreatedAt = utcNow
+            };
+            db.UserSubscriptions.Add(subscription);
+
             await db.SaveChangesAsync(ct);
 
             // Seed default tasks for new user

@@ -12,4 +12,4 @@ export const SCREEN_NAMES = {
   GASHAPON_MACHINE: "GashaponMachine",
 } as const;
 
-export type AiTaskOutcome = "accepted" | "go_back" | "abandoned";
+export type AiTaskOutcome = "accepted" | "rejected" | "abandoned";

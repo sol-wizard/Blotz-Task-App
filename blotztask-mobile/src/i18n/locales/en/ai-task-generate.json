@@ -1,6 +1,6 @@
 {
   "input": {
-    "placeholder": "Describe your task with a specific date and time, e.g. \"Submit report by Friday 5pm\""
+    "placeholder": "Type here..."
   },
   "buttons": {
     "speak": "Speak",
@@ -32,5 +32,14 @@
     "textPlaceholder": "Note content",
     "editTextLabel": "Edit note",
     "editTextHint": "Double tap to edit note"
+  },
+  "voiceHint": {
+    "trySaying": "Try speaking or typing",
+    "hintText": "\"Attend the U.S. presidential election tomorrow at 8 AM\""
+  },
+  "voiceListening": {
+    "title": "Listening ...",
+    "aiThinking": "AI is thinking ...",
+    "subtitle": "Say everything you need to get done."
   }
 }
