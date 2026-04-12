@@ -1,6 +1,7 @@
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
+using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
@@ -115,6 +116,14 @@ public class AiTaskGenerateChatHub : Hub
             resultMessage.UserInput = message;
 
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
+        }
+        catch (AiQuotaExceededException ex)
+        {
+            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
+            {
+                IsSuccess = false,
+                ErrorMessage = ex.Message
+            });
         }
         catch (AiTaskGenerationException ex)
         {
