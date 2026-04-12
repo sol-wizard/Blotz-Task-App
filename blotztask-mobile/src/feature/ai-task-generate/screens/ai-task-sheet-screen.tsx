@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Pressable, useWindowDimensions } from "react-native";
+import { View, Text, Pressable, useWindowDimensions, Keyboard } from "react-native";
 import Animated from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import LottieView from "lottie-react-native";
-import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { router } from "expo-router";
+
 import { requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
+import { AiInputBar } from "../component/ai-input-bar";
 import { AiResultCard } from "../component/ai-result-card";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
@@ -25,7 +25,8 @@ export default function AiTaskSheetScreen() {
   const { t } = useTranslation("aiTaskGenerate");
   const { height } = useWindowDimensions();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const { aiGeneratedMessage, setAiGeneratedMessage, submitAudioForTranscription } =
+  const [textInput, setTextInput] = useState("");
+  const { aiGeneratedMessage, setAiGeneratedMessage, submitAudioForTranscription, sendTextMessage } =
     useAiTaskGenerator({ setIsAiGenerating });
   const { labels } = useAllLabels();
   const { isListening, startListening, stopAndUpload } = useVoiceRecorder(submitAudioForTranscription);
@@ -72,6 +73,13 @@ export default function AiTaskSheetScreen() {
     router.back();
   };
 
+  const handleSubmitText = async () => {
+    if (!textInput.trim() || isAiGenerating) return;
+    Keyboard.dismiss();
+    await sendTextMessage(textInput.trim());
+    setTextInput("");
+  };
+
   const handleAddAll = async () => {
     if (isAdding || isNoteCreating) return;
     try {
@@ -90,6 +98,11 @@ export default function AiTaskSheetScreen() {
     } catch (error) {
       console.error("Add tasks/notes failed", error);
     }
+  };
+
+  const handleMicPressIn = () => {
+    Keyboard.dismiss();
+    void startListening();
   };
 
   return (
@@ -160,53 +173,16 @@ export default function AiTaskSheetScreen() {
             </View>
 
             {/* Bottom controls */}
-            <View className="w-full flex-row items-center px-6 gap-4 pb-8">
-              {/* Microphone hold-to-record */}
-              <Pressable
-                onLongPress={() => void startListening()}
-                onPressOut={() => void stopAndUpload()}
-                accessibilityLabel="Hold to record"
-                className="w-14 h-14 rounded-full items-center justify-center"
-                style={{
-                  backgroundColor: isListening ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.25)",
-                }}
-              >
-                <MaterialCommunityIcons name="microphone" size={28} color="white" />
-              </Pressable>
-
-              {/* Waveform */}
-              <View className="flex-1 items-center justify-center">
-                {isListening ? (
-                  <LottieView
-                    source={LOTTIE_ANIMATIONS.voiceWave}
-                    loop
-                    autoPlay
-                    style={{ width: "100%", height: 40 }}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <View className="flex-row items-center gap-1">
-                    {Array.from({ length: 20 }).map((_, i) => (
-                      <View
-                        key={i}
-                        className="rounded-full"
-                        style={{ width: 3, height: 16, backgroundColor: "rgba(255,255,255,0.5)" }}
-                      />
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {/* Confirm button */}
-              <Pressable
-                onPress={() => void handleAddAll()}
-                accessibilityLabel="Confirm"
-                className="w-14 h-14 rounded-full items-center justify-center"
-                style={{ backgroundColor: "rgba(255,255,255,0.25)" }}
-              >
-                <MaterialCommunityIcons name="check" size={28} color="white" />
-              </Pressable>
-            </View>
+            <AiInputBar
+              textInput={textInput}
+              isListening={isListening}
+              hasResults={hasResults}
+              onChangeText={setTextInput}
+              onSubmitText={() => void handleSubmitText()}
+              onMicPressIn={handleMicPressIn}
+              onMicPressOut={() => void stopAndUpload()}
+              onConfirm={() => void handleAddAll()}
+            />
           </View>
         </LinearGradient>
       </View>
