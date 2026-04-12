@@ -85,11 +85,7 @@ export default function CalendarScreen() {
           </Animated.View>
         )}
 
-        <FilteredTaskList
-          selectedDay={selectedDay}
-          onOpenFocus={() => setIsModeSheetOpen(true)}
-          onOpenMode={() => setIsModeSheetOpen(true)}
-        />
+        <FilteredTaskList selectedDay={selectedDay} onOpenMode={() => setIsModeSheetOpen(true)} />
       </CalendarProvider>
       <ModeBottomSheet isOpen={isModeSheetOpen} onClose={() => setIsModeSheetOpen(false)} />
     </SafeAreaView>

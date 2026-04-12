@@ -28,18 +28,10 @@ interface TaskCardProps {
   deleteTask: (task: TaskDetailDTO) => void;
   isDeleting: boolean;
   selectedDay?: Date;
-  onOpenFocus: () => void;
   onOpenMode: () => void;
 }
 
-const TaskCard = ({
-  task,
-  deleteTask,
-  isDeleting,
-  selectedDay,
-  onOpenFocus,
-  onOpenMode,
-}: TaskCardProps) => {
+const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: TaskCardProps) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
@@ -98,11 +90,7 @@ const TaskCard = ({
     <ReanimatedSwipeable
       ref={swipeRef}
       renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
-        <TaskCardLeftActions
-          progress={leftActionsProgress}
-          onFocus={() => console.log("Focus pressed", { taskId: task.id })}
-          onMode={onOpenMode}
-        />
+        <TaskCardLeftActions progress={leftActionsProgress} onMode={onOpenMode} />
       )}
       leftThreshold={12}
       overshootLeft={false}

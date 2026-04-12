@@ -5,14 +5,18 @@ import { useTranslation } from "react-i18next";
 
 type LeftActionsProps = {
   progress: SharedValue<number>;
-  onFocus: () => void;
   onMode: () => void;
 };
-export const TaskCardLeftActions = ({ progress, onFocus, onMode }: LeftActionsProps) => {
+export const TaskCardLeftActions = ({ progress, onMode }: LeftActionsProps) => {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: -120 * (1 - progress.value) }],
   }));
   const { t } = useTranslation("pomodoro");
+
+  const handleOnFocus = () => {
+    // TODO: Implement focus mode functionality
+    console.log("Focus pressed");
+  };
 
   return (
     <Animated.View className="flex-row items-start justify-start gap-2 pr-4" style={animatedStyle}>
@@ -29,7 +33,7 @@ export const TaskCardLeftActions = ({ progress, onFocus, onMode }: LeftActionsPr
       </Pressable>
 
       <Pressable
-        onPress={onFocus}
+        onPress={handleOnFocus} // TODO: implement focus mode
         className="h-20 w-24 rounded-3xl bg-orange-50 border border-orange-300 items-center justify-center"
       >
         <View className="items-center gap-1">

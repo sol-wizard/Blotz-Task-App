@@ -14,11 +14,9 @@ import TaskCard from "./task-card";
 
 export const FilteredTaskList = ({
   selectedDay,
-  onOpenFocus,
   onOpenMode,
 }: {
   selectedDay: Date;
-  onOpenFocus: () => void;
   onOpenMode: () => void;
 }) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
@@ -45,7 +43,6 @@ export const FilteredTaskList = ({
         deleteTask={deleteTask}
         isDeleting={isDeleting}
         selectedDay={selectedDay}
-        onOpenFocus={onOpenFocus}
         onOpenMode={onOpenMode}
       />
     </View>
