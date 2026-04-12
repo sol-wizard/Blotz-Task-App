@@ -15,6 +15,7 @@ public class AiTaskGenerateChatHub : Hub
     private readonly DateTimeResolveService _dateTimeResolveService;
     private readonly GetUserPreferencesQueryHandler _getUserPreferencesQueryHandler;
     private readonly ILogger<AiTaskGenerateChatHub> _logger;
+
     private readonly SpeechTranscriptionService _speechTranscriptionService;
 
     public AiTaskGenerateChatHub(
@@ -96,7 +97,11 @@ public class AiTaskGenerateChatHub : Hub
                 TimeZone = chatContext.TimeZone
             });
 
+
+            chatHistory.AddUserMessage(resolvedMessage);
+
             var resultMessage = await _aiTaskGenerateService.GenerateAiResponse(resolvedMessage, chatContext, ct);
+            resultMessage.UserInput = message;
 
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
         }
@@ -124,10 +129,10 @@ public class AiTaskGenerateChatHub : Hub
                 0,
                 audioData.Length,
                 "audio",
-                "audio.wav")
+                "audio.m4a")
             {
                 Headers = new HeaderDictionary(),
-                ContentType = "audio/wav"
+                ContentType = "audio/mp4"
             };
 
             var transcript = await _speechTranscriptionService.TranscribeAsync(formFile, ct);

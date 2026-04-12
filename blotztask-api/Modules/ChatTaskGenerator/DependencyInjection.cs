@@ -1,4 +1,3 @@
-using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
@@ -13,15 +12,8 @@ public static class DependencyInjection
         services.AddScoped<DateTimeResolveService>();
         
 
-        services.Configure<SpeechTokenSettings>(options =>
-        {
-            configuration.GetSection("AzureSpeech").Bind(options);
-        });
 
-        services.AddHttpClient<SpeechTranscriptionService>(client =>
-        {
-            client.Timeout = TimeSpan.FromMinutes(3);
-        });
+        services.AddScoped<SpeechTranscriptionService>();
 
         return services;
     }
