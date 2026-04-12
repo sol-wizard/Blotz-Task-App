@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, useWindowDimensions, Keyboard } from "react-native";
+import { KeyboardAvoidingView, KeyboardStickyView } from "react-native-keyboard-controller";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -25,8 +26,12 @@ export default function AiTaskSheetScreen() {
   const { height } = useWindowDimensions();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
-  const { aiGeneratedMessage, setAiGeneratedMessage, submitAudioForTranscription, sendTextMessage } =
-    useAiTaskGenerator({ setIsAiGenerating });
+  const {
+    aiGeneratedMessage,
+    setAiGeneratedMessage,
+    submitAudioForTranscription,
+    sendTextMessage,
+  } = useAiTaskGenerator({ setIsAiGenerating });
   const { labels } = useAllLabels();
   const { isListening, startListening, stopAndUpload } = useVoiceRecorder(
     submitAudioForTranscription,
@@ -122,55 +127,57 @@ export default function AiTaskSheetScreen() {
           end={{ x: 0.7, y: 1 }}
           style={{ height: height * 0.8, borderRadius: 20 }}
         >
-          <View className="flex-1 items-center">
-            {/* Top row - dismiss button */}
-            <View className="w-full items-end px-6 pt-4 pb-2">
-              <Pressable onPress={handleDismiss} accessibilityLabel="Stop">
-                <MaterialCommunityIcons name="chevron-down" size={32} color="white" />
-              </Pressable>
-            </View>
+          <KeyboardStickyView style={{ flex: 1 }}>
+            <View className="flex-1 items-center">
+              {/* Top row - dismiss button */}
+              <View className="w-full items-end px-6 pt-4 pb-2">
+                <Pressable onPress={handleDismiss} accessibilityLabel="Stop">
+                  <MaterialCommunityIcons name="chevron-down" size={32} color="white" />
+                </Pressable>
+              </View>
 
-            {/* Hint text (no results) */}
-            {!hasResults && <VoiceHintText />}
+              {/* Hint text (no results) */}
+              {!hasResults && <VoiceHintText />}
 
-            {/* Task / note cards (has results) */}
-            {hasResults && (
-              <AiResultList
-                aiTasks={aiTasks}
-                aiNotes={aiNotes}
-                onDeleteTask={onDeleteTask}
-                onDeleteNote={onDeleteNote}
+              {/* Task / note cards (has results) */}
+              {hasResults && (
+                <AiResultList
+                  aiTasks={aiTasks}
+                  aiNotes={aiNotes}
+                  onDeleteTask={onDeleteTask}
+                  onDeleteNote={onDeleteNote}
+                />
+              )}
+
+              {/* Listening indicator */}
+              <View className="items-center px-8 pb-4">
+                <Text
+                  className="text-white font-balooBold text-xl mb-1"
+                  style={{ opacity: isListening || isAiGenerating ? 1 : 0 }}
+                >
+                  {isAiGenerating ? t("voiceListening.aiThinking") : t("voiceListening.title")}
+                </Text>
+                <Text
+                  className="text-white/70 font-baloo text-sm text-center"
+                  style={{ opacity: isListening || isAiGenerating ? 1 : 0 }}
+                >
+                  {t("voiceListening.subtitle")}
+                </Text>
+              </View>
+
+              {/* Bottom controls */}
+              <AiInputBar
+                textInput={textInput}
+                isListening={isListening}
+                hasResults={hasResults}
+                onChangeText={setTextInput}
+                onSubmitText={() => void handleSubmitText()}
+                onMicPressIn={handleMicPressIn}
+                onMicPressOut={() => void stopAndUpload()}
+                onConfirm={() => void handleAddAll()}
               />
-            )}
-
-            {/* Listening indicator */}
-            <View className="items-center px-8 pb-4">
-              <Text
-                className="text-white font-balooBold text-xl mb-1"
-                style={{ opacity: isListening || isAiGenerating ? 1 : 0 }}
-              >
-                {isAiGenerating ? t("voiceListening.aiThinking") : t("voiceListening.title")}
-              </Text>
-              <Text
-                className="text-white/70 font-baloo text-sm text-center"
-                style={{ opacity: isListening || isAiGenerating ? 1 : 0 }}
-              >
-                {t("voiceListening.subtitle")}
-              </Text>
             </View>
-
-            {/* Bottom controls */}
-            <AiInputBar
-              textInput={textInput}
-              isListening={isListening}
-              hasResults={hasResults}
-              onChangeText={setTextInput}
-              onSubmitText={() => void handleSubmitText()}
-              onMicPressIn={handleMicPressIn}
-              onMicPressOut={() => void stopAndUpload()}
-              onConfirm={() => void handleAddAll()}
-            />
-          </View>
+          </KeyboardStickyView>
         </LinearGradient>
       </View>
     </View>
