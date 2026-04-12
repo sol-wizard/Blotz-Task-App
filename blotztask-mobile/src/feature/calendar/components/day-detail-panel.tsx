@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Dimensions } from "react-native";
 import { format, parseISO } from "date-fns";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import LoadingScreen from "@/shared/components/ui/loading-screen";
+import { theme } from "@/shared/constants/theme";
 
 export const DayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
   const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
@@ -33,38 +34,38 @@ export const DayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
                     {start ? (
                       <>
                         <View className="flex-row items-baseline">
-                          <Text className="text-[16px] font-baloo text-[#444964]">
+                          <Text className="text-[16px] font-baloo text-secondary">
                             {format(start, "h:mm")}
                           </Text>
-                          <Text className="text-[12px] font-baloo text-[#444964] ml-0.5 uppercase">
+                          <Text className="text-[12px] font-baloo text-secondary ml-0.5 uppercase">
                             {format(start, "a")}
                           </Text>
                         </View>
                         {end && !isSameTime && (
                           <View className="flex-row items-baseline mt-0 opacity-50">
-                            <Text className="text-[14px] font-baloo text-[#444964]">
+                            <Text className="text-[14px] font-baloo text-secondary">
                               {format(end, "h:mm")}
                             </Text>
-                            <Text className="text-[11px] font-baloo text-[#444964] ml-0.5 uppercase">
+                            <Text className="text-[11px] font-baloo text-secondary ml-0.5 uppercase">
                               {format(end, "a")}
                             </Text>
                           </View>
                         )}
                       </>
                     ) : (
-                      <Text className="text-[12px] font-baloo text-[#444964]">All Day</Text>
+                      <Text className="text-[12px] font-baloo text-secondary">All Day</Text>
                     )}
                   </View>
 
                   {/* Column 2: Color Bar */}
                   <View
                     className="w-1 h-6 rounded-full mx-3"
-                    style={{ backgroundColor: task.label?.color ?? "#D1D1D6" }}
+                    style={{ backgroundColor: task.label?.color ?? theme.colors.disabled }}
                   />
 
                   {/* Column 3: Title */}
                   <View className="flex-1">
-                    <Text className="text-[15px] font-baloo text-[#444964] leading-tight">
+                    <Text className="text-[15px] font-baloo text-secondary leading-tight">
                       {task.title}
                     </Text>
                   </View>
