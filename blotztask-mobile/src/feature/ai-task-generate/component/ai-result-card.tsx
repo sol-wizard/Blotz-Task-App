@@ -18,26 +18,30 @@ type Props = {
 
 export function AiResultCard({ id, text, onDelete, label, startTime, endTime }: Props) {
   const isTask = startTime !== undefined;
-  const formatTime = isTask ? formatAiTaskCardTime({ startTime: startTime!, endTime: endTime! }) : null;
-  const formatDate = isTask ? formatAiTaskCardDate({ startTime: startTime!, endTime: endTime! }) : null;
+  const formatTime = isTask
+    ? formatAiTaskCardTime({ startTime: startTime!, endTime: endTime! })
+    : null;
+  const formatDate = isTask
+    ? formatAiTaskCardDate({ startTime: startTime!, endTime: endTime! })
+    : null;
 
   return (
     <Animated.View
       entering={MotionAnimations.upEntering}
       exiting={MotionAnimations.outExiting}
       layout={MotionAnimations.layout}
-      className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] min-h-20 justify-between pr-3 ml-7 mt-4 mb-4 py-4 pl-6 mx-4"
+      className="bg-white rounded-2xl flex-row items-center shadow-md w-[88%] justify-between pl-6 pt-4 pb-3 my-4 mx-4"
     >
       {isTask && (
         <View
-          className="w-2 h-full rounded-full"
+          className="w-1.5 h-10 rounded-full"
           style={{ backgroundColor: label?.color ?? theme.colors.disabled }}
         />
       )}
 
       <View className="flex-1 flex-row items-center ml-4">
         <Text
-          className="flex-1 mr-3 text-lg font-baloo leading-5"
+          className="flex-1 text-lg font-baloo leading-5 py-2"
           style={{ color: theme.colors.onSurface }}
         >
           {text}
@@ -58,7 +62,7 @@ export function AiResultCard({ id, text, onDelete, label, startTime, endTime }: 
       <Pressable
         onPress={() => onDelete(id)}
         hitSlop={10}
-        className="justify-center w-8 h-8 rounded-full ml-3"
+        className="justify-center w-8 h-8 rounded-full ml-2"
         android_ripple={{ color: "rgba(0,0,0,0.08)", borderless: false }}
       >
         <MaterialCommunityIcons name="close" size={20} color="#2F3640" />
