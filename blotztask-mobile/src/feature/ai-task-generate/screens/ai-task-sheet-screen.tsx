@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, useWindowDimensions, Keyboard } from "react-native";
-import Animated from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -8,7 +7,7 @@ import { router } from "expo-router";
 import { requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
 import { AiInputBar } from "../component/ai-input-bar";
-import { AiResultCard } from "../component/ai-result-card";
+import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
@@ -128,32 +127,12 @@ export default function AiTaskSheetScreen() {
 
             {/* Task / note cards (has results) */}
             {hasResults && (
-              <Animated.ScrollView className="w-full flex-1" showsVerticalScrollIndicator={false}>
-                {aiTasks.map((task) => (
-                  <AiResultCard
-                    key={task.id}
-                    id={task.id}
-                    text={task.title}
-                    onDelete={onDeleteTask}
-                    label={task.label}
-                    startTime={task.startTime}
-                    endTime={task.endTime}
-                  />
-                ))}
-                {aiNotes.length > 0 && (
-                  <>
-                    <Text className="text-white/80 font-baloo text-base ml-7 mt-4 mb-2">Notes</Text>
-                    {aiNotes.map((note) => (
-                      <AiResultCard
-                        key={note.id}
-                        id={note.id}
-                        text={note.text}
-                        onDelete={onDeleteNote}
-                      />
-                    ))}
-                  </>
-                )}
-              </Animated.ScrollView>
+              <AiResultList
+                aiTasks={aiTasks}
+                aiNotes={aiNotes}
+                onDeleteTask={onDeleteTask}
+                onDeleteNote={onDeleteNote}
+              />
             )}
 
             {/* Listening indicator */}
