@@ -28,7 +28,9 @@ export default function AiTaskSheetScreen() {
   const { aiGeneratedMessage, setAiGeneratedMessage, submitAudioForTranscription, sendTextMessage } =
     useAiTaskGenerator({ setIsAiGenerating });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload } = useVoiceRecorder(submitAudioForTranscription);
+  const { isListening, startListening, stopAndUpload } = useVoiceRecorder(
+    submitAudioForTranscription,
+  );
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
@@ -58,13 +60,17 @@ export default function AiTaskSheetScreen() {
   // --- Handlers ---
   const onDeleteTask = (taskId: string) => {
     setAiGeneratedMessage((prev) =>
-      prev ? { ...prev, extractedTasks: prev.extractedTasks?.filter((t) => t.id !== taskId) } : prev,
+      prev
+        ? { ...prev, extractedTasks: prev.extractedTasks?.filter((t) => t.id !== taskId) }
+        : prev,
     );
   };
 
   const onDeleteNote = (noteId: string) => {
     setAiGeneratedMessage((prev) =>
-      prev ? { ...prev, extractedNotes: prev.extractedNotes?.filter((n) => n.id !== noteId) } : prev,
+      prev
+        ? { ...prev, extractedNotes: prev.extractedNotes?.filter((n) => n.id !== noteId) }
+        : prev,
     );
   };
 
