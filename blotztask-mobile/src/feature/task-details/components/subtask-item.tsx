@@ -9,7 +9,6 @@ import { useMemo, useRef, useState } from "react";
 import { TextInput } from "react-native-gesture-handler";
 import WheelPicker, { type PickerItem } from "@quidone/react-native-wheel-picker";
 import Modal from "react-native-modal";
-import { SubtaskDTO } from "../models/subtask-dto";
 import { updateSubtask } from "../services/subtask-service";
 
 type SubtaskItemData = {
@@ -226,7 +225,7 @@ console.log("subtask.id:", subtask.id);
                     className={`text-base font-bold ${isChecked ? "line-through" : ""}`}
                     style={{ color: textColor }}
                   >
-                    {subtask?.title}
+                    {titleValue}
                   </Text>
                 </>
               )}
