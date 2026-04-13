@@ -122,12 +122,12 @@ public class GetMonthlyTaskAvailabilityQueryHandler(
                     TaskTitle = t.Title,
                     Label = t.Label
                 })
-                .Take(3)
+                .Take(4)
                 .ToList();
             
-            if (dayTasks.Count < 3)
+            if (dayTasks.Count < 4)
             {
-                var offset = 3 -  dayTasks.Count;
+                var offset = 4 -  dayTasks.Count;
                 var recurringThumbnails = recurringTasks
                     .Where(r => generatorService.IsOccurrenceOn(r, dayDate))
                     .OrderBy(r => r.TemplateStartTime)
