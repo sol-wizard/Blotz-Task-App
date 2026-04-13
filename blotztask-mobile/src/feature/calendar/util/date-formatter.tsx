@@ -64,3 +64,20 @@ export const renderCalendarHeader = (date?: any) => {
     </Text>
   );
 };
+
+/**
+ * Formats a date for the Monthly Calendar BottomSheet display
+ * @param date - Date object or date string
+ * @returns Formatted date string (English: Mon, 15 Apr 2026 | Chinese: 4月15日)
+ */
+export const formatBottomSheetDate = (date?: any) => {
+  if (!date) return "";
+  const dateObj = date instanceof Date ? date : new Date(date.toString());
+  const isChinese = i18n.language === "zh";
+
+  if (isChinese) {
+    return format(dateObj, "yyyy年M月d日 EEE", { locale: zhCN });
+  }
+
+  return format(dateObj, "E, d MMM yyyy", { locale: enUS });
+};
