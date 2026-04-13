@@ -111,6 +111,7 @@ const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }:
           onDelete={handleDelete}
           onToggle={(subtaskId) => toggleSubtaskStatus({ subtaskId, parentTaskId: parentTask.id })}
           color={taskColor}
+          parentTaskId={parentTask.id}
         />
       </View>
 

@@ -10,6 +10,7 @@ type DraggableSubtaskListProps = {
   onDelete?: (id: number) => void;
   onToggle?: (id: number) => void;
   color?: string;
+  parentTaskId: number; 
 };
 export const DraggableSubtaskList = ({
   subtasks,
@@ -17,6 +18,7 @@ export const DraggableSubtaskList = ({
   onDelete,
   onToggle,
   color,
+  parentTaskId,
 }: DraggableSubtaskListProps) => {
   const [data, setData] = useState(subtasks);
 
@@ -33,12 +35,14 @@ export const DraggableSubtaskList = ({
             title: item.title,
             duration: item.duration,
             isDone: item.isDone,
+            order: item.order,
           }}
           onToggle={(id) => onToggle?.(id)}
           color={color}
           isEditMode={isEditMode}
           onDelete={onDelete}
           drag={drag}
+          parentTaskId={parentTaskId}
         />
       </ScaleDecorator>
     );

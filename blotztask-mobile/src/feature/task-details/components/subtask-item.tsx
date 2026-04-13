@@ -9,12 +9,15 @@ import { useMemo, useRef, useState } from "react";
 import { TextInput } from "react-native-gesture-handler";
 import WheelPicker, { type PickerItem } from "@quidone/react-native-wheel-picker";
 import Modal from "react-native-modal";
+import { SubtaskDTO } from "../models/subtask-dto";
+import { updateSubtask } from "../services/subtask-service";
 
 type SubtaskItemData = {
   id: number;
   title: string;
   duration?: string;
   isDone: boolean;
+  order: number;
 };
 
 type SubtaskItemProps = {
@@ -23,6 +26,8 @@ type SubtaskItemProps = {
   color?: string;
   isEditMode?: boolean;
   onDelete?: (id: number) => void;
+  onDurationChange?: (id: number, duration: string) => void;
+  parentTaskId: number;
   drag?: () => void;
 };
 
@@ -31,6 +36,8 @@ export default function SubtaskItem({
   onToggle,
   isEditMode = false,
   onDelete,
+  onDurationChange,
+  parentTaskId,
   drag,
 }: SubtaskItemProps) {
   const isChecked = subtask?.isDone;
@@ -44,30 +51,47 @@ export default function SubtaskItem({
 
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const [titleValue, setTitleValue] = useState(subtask.title);
+  const [localDuration, setLocalDuration] = useState(subtask.duration ?? "PT0H0M");
 
   const durationTriggerRef = useRef<View>(null);
   const [pickerPosition, setPickerPosition] = useState({ x: 0, y: 0 });
   const [isDurationPickerVisible, setIsDurationPickerVisible] = useState(false);
-  
-  const parsedDuration = useMemo(() => {
-    const [hoursString = "0", minutesString = "0"] = (subtask.duration ?? "00:00:00").split(":");
-    return {
-      hours: Number(hoursString) || 0,
-      minutes: Number(minutesString) || 0,
-    };
-  }, [subtask.duration]);
+
+  const [h = "0", m = "0"] = localDuration.split(":");
+  const parsedDuration = {
+    hours: Number(h) || 0,
+    minutes: Number(m) || 0,
+  };
+
   const [selectedHours, setSelectedHours] = useState(parsedDuration.hours);
   const [selectedMinutes, setSelectedMinutes] = useState(parsedDuration.minutes);
-  const durationText =
-    selectedHours > 0 ? `${selectedHours} h ${selectedMinutes} min` : `${selectedMinutes} min`;
+
+  function mergeToDate(hour: number, minute: number) {
+    const h = hour.toString().padStart(2, "0");
+    const m = minute.toString().padStart(2, "0");
+    return `${h}:${m}:00`;
+  }
+
+  const combineWheelValue = (_: Partial<{ hour: number; minute: number }>) => {
+    const base = mergeToDate(selectedHours, selectedMinutes);
+    onDurationChange?.(subtask.id, base);
+  };
+
+console.log("subtask.id:", subtask.id);
 
   const handleInlineEditToggle = () => {
-    if (!isInlineEditing) {
-      setTitleValue(subtask.title);
+    if (isInlineEditing) {
+      updateSubtask?.({
+        subTaskId: subtask.id,
+        parentTaskId: parentTaskId,
+        title: titleValue,
+        duration: localDuration ?? undefined,
+        order: subtask.order,
+        isDone: subtask.isDone,
+      });
     }
     setIsInlineEditing((prev) => !prev);
   };
-
 
   const hourItems: PickerItem<number>[] = useMemo(
     () =>
@@ -105,6 +129,9 @@ export default function SubtaskItem({
   };
 
   const closePicker = () => {
+    const next_duration = mergeToDate(selectedHours, selectedMinutes);
+    setLocalDuration(next_duration);
+    onDurationChange?.(subtask.id, next_duration);
     setIsDurationPickerVisible(false);
   };
 
@@ -124,205 +151,208 @@ export default function SubtaskItem({
     );
   };
 
-
-
   return (
-  <>
-    <Swipeable
-      renderRightActions={renderRightActions}
-      friction={2}
-      enabled={!isEditMode}
-      containerStyle={{ marginBottom: 8 }}
-    >
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={() => !isEditMode && handleToggle()}
-        onLongPress={isEditMode ? drag : undefined}
-        style={{
-          borderRadius: 16,
-          borderWidth: 1,
-          borderColor: "#E5E7EB",
-          backgroundColor: "#FFFFFF",
-        }}
+    <>
+      <Swipeable
+        renderRightActions={renderRightActions}
+        friction={2}
+        enabled={!isEditMode}
+        containerStyle={{ marginBottom: 8 }}
       >
-        <View className="flex-row items-center px-4 py-1">
-          <View style={{ width: 32, justifyContent: "center" }}>
-            <TasksCheckbox checked={isChecked} onChange={handleToggle} size={24} />
-          </View>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => !isEditMode && handleToggle()}
+          onLongPress={isEditMode ? drag : undefined}
+          style={{
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: "#E5E7EB",
+            backgroundColor: "#FFFFFF",
+          }}
+        >
+          <View className="flex-row items-center px-4 py-1">
+            <View style={{ width: 32, justifyContent: "center" }}>
+              <TasksCheckbox checked={isChecked} onChange={handleToggle} size={24} />
+            </View>
 
-          <View style={{ flex: 1, marginLeft: 4 }}>
-          {isInlineEditing ? (
-            <>
-              <View className="flex-row items-center gap-4">
-                {subtask.duration && (
-                  <View ref={durationTriggerRef} collapsable={false}>
-                    <TouchableOpacity onPress={openDurationPicker} activeOpacity={0.8}>
-                      <Text
-                        className="text-[12px] font-bold"
-                        style={{ color: theme.colors.highlight, fontWeight: "700" }}
-                      >
-                        {durationText}
-                      </Text>
-                    </TouchableOpacity>
+            <View style={{ flex: 1, marginLeft: 4 }}>
+              {isInlineEditing ? (
+                <>
+                  <View className="flex-row items-center gap-4">
+                    {localDuration && (
+                      <View ref={durationTriggerRef} collapsable={false}>
+                        <TouchableOpacity onPress={openDurationPicker} activeOpacity={0.8}>
+                          <Text
+                            className="text-[12px] font-bold"
+                            style={{ color: theme.colors.highlight, fontWeight: "700" }}
+                          >
+                            {convertDurationToText(localDuration)}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                    <TextInput
+                      value={titleValue}
+                      onChangeText={setTitleValue}
+                      placeholder="Subtask Title"
+                      multiline
+                      className="text-3 font-bold"
+                      style={{
+                        color: theme.colors.onSurface,
+                        paddingVertical: 8,
+                        paddingRight: 4,
+                        textAlignVertical: "top",
+                        flexShrink: 1,
+                      }}
+                    />
                   </View>
-                )}
-                <TextInput
-                  value={titleValue}
-                  onChangeText={setTitleValue}
-                  placeholder="Subtask Title"
-                  multiline
-                  className="text-3 font-bold"
-                  style={{
-                    color: theme.colors.onSurface,
-                    paddingVertical: 8,
-                    paddingRight: 4,
-                    textAlignVertical: "top",
-                    flexShrink: 1,
-                  }}
-                />
-              </View>
-            </>
-            ) : (
-              <>
-                {subtask.duration && (
+                </>
+              ) : (
+                <>
+                  {localDuration && (
+                    <Text
+                      className="text-[12px] font-bold"
+                      style={{
+                        color: isChecked ? "#BDE6A3" : theme.colors.highlight,
+                        marginBottom: -2,
+                        fontWeight: "700",
+                      }}
+                    >
+                      {convertDurationToText(localDuration)}
+                    </Text>
+                  )}
                   <Text
-                    className="text-[12px] font-bold"
-                    style={{
-                      color: isChecked ? "#BDE6A3" : theme.colors.highlight,
-                      marginBottom: -2,
-                      fontWeight: "700",
-                    }}
+                    numberOfLines={2}
+                    className={`text-base font-bold ${isChecked ? "line-through" : ""}`}
+                    style={{ color: textColor }}
                   >
-                    {convertDurationToText(subtask.duration)}
+                    {subtask?.title}
                   </Text>
-                )}
-                <Text
-                  numberOfLines={2}
-                  className={`text-base font-bold ${isChecked ? "line-through" : ""}`}
-                  style={{ color: textColor }}
-                >
-                  {subtask?.title}
-                </Text>
-            </>
-            )}
-          </View>
+                </>
+              )}
+            </View>
 
-          <View style={{ width: 32, alignItems: "center", justifyContent: "center" }}>
-            {isEditMode ? (
-              <TouchableOpacity onPressIn={drag} activeOpacity={1}>
-                <MaterialIcons name="unfold-more" size={26} color={theme.colors.disabled} />
-              </TouchableOpacity>
-            ) : isInlineEditing ? (
+            <View style={{ width: 32, alignItems: "center", justifyContent: "center" }}>
+              {isEditMode ? (
+                <TouchableOpacity onPressIn={drag} activeOpacity={1}>
+                  <MaterialIcons name="unfold-more" size={26} color={theme.colors.disabled} />
+                </TouchableOpacity>
+              ) : isInlineEditing ? (
                 <TouchableOpacity onPress={handleInlineEditToggle}>
-                <Text className="text-sm font-bold" style={{ color: theme.colors.highlight }}>
-                  Done
-                </Text>
-              </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity onPress={handleInlineEditToggle}>
+                  <Text className="text-sm font-bold" style={{ color: theme.colors.highlight }}>
+                    Done
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity onPress={handleInlineEditToggle}>
                   <MaterialCommunityIcons
                     name="pencil-minus-outline"
                     size={22}
                     color={theme.colors.disabled}
                   />
                 </TouchableOpacity>
-              )
-            }
+              )}
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
-    </Swipeable>
-    
-    <Modal
-      isVisible={isDurationPickerVisible}
-      onBackdropPress={closePicker}
-      onBackButtonPress={closePicker}
-      animationIn="fadeIn"
-      animationOut="fadeOut"
-      backdropOpacity={0.08}
-      useNativeDriver
-      style={{ margin: 0 }}
-    >
-      <View
-        style={{
-          position: "absolute",
-          left: pickerPosition.x,
-          top: pickerPosition.y,
-          width: PICKER_WIDTH,
-          height: PICKER_HEIGHT,
-          backgroundColor: "white",
-          borderRadius: 24,
-          paddingHorizontal: 10,
-          paddingVertical: 6,
-          shadowColor: "#000",
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 5,
-        }}
+        </TouchableOpacity>
+      </Swipeable>
+
+      <Modal
+        isVisible={isDurationPickerVisible}
+        onBackdropPress={closePicker}
+        onBackButtonPress={closePicker}
+        animationIn="fadeIn"
+        animationOut="fadeOut"
+        backdropOpacity={0.08}
+        useNativeDriver
+        style={{ margin: 0 }}
       >
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
+            position: "absolute",
+            left: pickerPosition.x,
+            top: pickerPosition.y,
+            width: PICKER_WIDTH,
+            height: PICKER_HEIGHT,
+            backgroundColor: "white",
+            borderRadius: 24,
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            shadowColor: "#000",
+            shadowOpacity: 0.08,
+            shadowRadius: 12,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 5,
           }}
         >
-          <WheelPicker
-            data={hourItems}
-            value={selectedHours}
-            width={34}
-            itemHeight={26}
-            visibleItemCount={3}
-            enableScrollByTapOnItem
-            onValueChanged={({ item }) => setSelectedHours(item.value as number)}
-            itemTextStyle={{
-              color: theme.colors.highlight,
-              fontSize: 16,
-              fontWeight: "700",
-            }}
-          />
-
-          <Text
+          <View
             style={{
-              color: "#B7BBC7",
-              fontSize: 12,
-              fontWeight: "700",
-              marginHorizontal: 2,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
             }}
           >
-            h
-          </Text>
+            <WheelPicker
+              data={hourItems}
+              value={selectedHours}
+              width={34}
+              itemHeight={26}
+              visibleItemCount={3}
+              enableScrollByTapOnItem
+              onValueChanged={({ item }) => {
+                setSelectedHours(item.value as number);
+                combineWheelValue({ hour: item.value });
+              }}
+              itemTextStyle={{
+                color: theme.colors.highlight,
+                fontSize: 16,
+                fontWeight: "700",
+              }}
+            />
 
-          <WheelPicker
-            data={minuteItems}
-            value={selectedMinutes}
-            width={38}
-            itemHeight={28}
-            visibleItemCount={3}
-            enableScrollByTapOnItem
-            onValueChanged={({ item }) => setSelectedMinutes(item.value as number)}
-            itemTextStyle={{
-              color: theme.colors.highlight,
-              fontSize: 16,
-              fontWeight: "700",
-            }}
-          />
+            <Text
+              style={{
+                color: "#B7BBC7",
+                fontSize: 12,
+                fontWeight: "700",
+                marginHorizontal: 2,
+              }}
+            >
+              h
+            </Text>
 
-          <Text
-            style={{
-              color: "#B7BBC7",
-              fontSize: 12,
-              fontWeight: "700",
-              marginLeft: 2,
-            }}
-          >
-            min
-          </Text>
+            <WheelPicker
+              data={minuteItems}
+              value={selectedMinutes}
+              width={38}
+              itemHeight={28}
+              visibleItemCount={3}
+              enableScrollByTapOnItem
+              onValueChanged={({ item }) => {
+                setSelectedMinutes(item.value as number);
+                combineWheelValue({ minute: item.value });
+              }}
+              itemTextStyle={{
+                color: theme.colors.highlight,
+                fontSize: 16,
+                fontWeight: "700",
+              }}
+            />
+
+            <Text
+              style={{
+                color: "#B7BBC7",
+                fontSize: 12,
+                fontWeight: "700",
+                marginLeft: 2,
+              }}
+            >
+              min
+            </Text>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
     </>
   );
 }
