@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
-using BlotzTask.Modules.ChatTaskGenerator.DTOs;
+using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
@@ -25,7 +25,11 @@ public class AiGenerateMessage
     [Description("Array of notes extracted from user input (items with no date/time). Empty when all have time.")]
     public List<ExtractedNote> ExtractedNotes { get; set; } = new();
 
+    [JsonPropertyName("errorCode")]
+    [Description("Machine-readable error code identifying the failure type. Empty string when isSuccess is true.")]
+    public string ErrorCode { get; set; } = "";
+
     [JsonPropertyName("errorMessage")]
-    [Description("Error message explaining why task extraction failed. Empty string when isSuccess is true. Should be a brief, user-friendly explanation when isSuccess is false.")]
+    [Description("Error message explaining why task extraction failed. Empty string when isSuccess is true.")]
     public string ErrorMessage { get; set; } = "";
 }
