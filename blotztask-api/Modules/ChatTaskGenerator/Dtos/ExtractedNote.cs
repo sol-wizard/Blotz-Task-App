@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace BlotzTask.Modules.ChatTaskGenerator.DTOs;
+namespace BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
 /// <summary>
 ///     Represents a single extracted note from user input (no date/time specified).

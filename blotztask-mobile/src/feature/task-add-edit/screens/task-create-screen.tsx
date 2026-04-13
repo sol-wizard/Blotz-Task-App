@@ -1,7 +1,7 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
 import { useRouter } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { analytics } from "@/shared/services/analytics";

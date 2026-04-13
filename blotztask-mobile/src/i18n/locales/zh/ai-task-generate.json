@@ -1,6 +1,6 @@
 {
   "input": {
-    "placeholder": "输入任务并包含具体时间，如\"周五下午5点前提交报告\""
+    "placeholder": "在这里输入..."
   },
   "buttons": {
     "speak": "说话",
@@ -20,7 +20,13 @@
     "taskAdded": "太棒了！任务已添加！"
   },
   "errors": {
-    "default": "哎呀，我有点搞不定了。请再试一次。"
+    "default": "哎呀，我有点搞不定了。请再试一次。",
+    "transcriptionFailed": "无法理解音频，请再试一次。",
+    "emptyAudio": "未录制到音频，请再试一次。",
+    "tokenLimited": "您已达到使用限制，请稍后再试。",
+    "contentFilter": "您的消息被系统拦截，请换一种说法再试。",
+    "canceled": "请求已取消。",
+    "noTasksExtracted": "我没有找到任何任务，请再试一次。"
   },
   "taskCard": {
     "titlePlaceholder": "任务标题",
@@ -34,7 +40,7 @@
     "editTextHint": "双击编辑笔记"
   },
   "voiceHint": {
-    "trySaying": "试试说",
+    "trySaying": "试试说话或输入",
     "hintText": "\"明天早上 8 点参加美国总统选举\""
   },
   "voiceListening": {

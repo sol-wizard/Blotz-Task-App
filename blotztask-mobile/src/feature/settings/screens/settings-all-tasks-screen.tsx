@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, View, Text, Pressable } from "react-native";
-import { TaskStatusRow } from "@/shared/components/ui/task-status-row";
+import { TaskStatusRow } from "@/shared/components/task-status-row";
 
 import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
 import { getAllTasks } from "@/shared/services/task-service";
@@ -10,7 +10,7 @@ import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { filterSelectedTask } from "@/feature/calendar/util/task-counts";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { ReturnButton } from "@/shared/components/ui/return-button";
+import { ReturnButton } from "@/shared/components/return-button";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TaskCard from "@/feature/calendar/components/task-card";
 

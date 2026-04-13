@@ -6,6 +6,7 @@ using BlotzTask.Shared.Events;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.Labels;
 using BlotzTask.Modules.Notes;
+using BlotzTask.Modules.AiUsage;
 using BlotzTask.Modules.Pomodoro;
 using BlotzTask.Modules.Tasks;
 using BlotzTask.Modules.Users;
@@ -29,14 +30,14 @@ builder.Services.AddTaskBreakdownModule();
 builder.Services.AddNotesModule();
 builder.Services.AddBadgeModule();
 builder.Services.AddPomodoroModule();
+builder.Services.AddAiUsageModule();
 builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
 builder.Services.AddAiUsageModule();
 
 builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 
 builder.Services.AddAuth0JwtBearerAuthentication(builder.Configuration);
-builder.Services.AddAzureOpenAi();
-builder.Services.AddSemanticKernelServices(builder.Configuration);
+builder.Services.AddAgentFrameworkServices(builder.Configuration);
 builder.Services.AddCustomCors();
 
 var app = builder.Build();

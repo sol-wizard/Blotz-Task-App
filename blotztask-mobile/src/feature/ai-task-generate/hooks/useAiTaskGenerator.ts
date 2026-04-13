@@ -3,6 +3,8 @@ import * as signalR from "@microsoft/signalr";
 import { File as ExpoFile } from "expo-file-system";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
 import { AiResultMessageDTO } from "../models/ai-result-message-dto";
+import { useTranslation } from "react-i18next";
+import Toast from "react-native-toast-message";
 
 /**
  * AI task generation over SignalR. There are two ways to send input to the hub:
@@ -10,11 +12,21 @@ import { AiResultMessageDTO } from "../models/ai-result-message-dto";
  * - Text: `sendTextMessage` → `SendMessage`.
  * The model replies on `ReceiveMessage`, surfaced as `aiGeneratedMessage`.
  */
+const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
+  TranscriptionFailed: "errors.transcriptionFailed",
+  EmptyAudio: "errors.emptyAudio",
+  TokenLimited: "errors.tokenLimited",
+  BlockedByContentFilter: "errors.contentFilter",
+  Canceled: "errors.canceled",
+  NoTasksExtracted: "errors.noTasksExtracted",
+};
+
 export function useAiTaskGenerator({
   setIsAiGenerating,
 }: {
   setIsAiGenerating: (v: boolean) => void;
 }) {
+  const { t } = useTranslation("aiTaskGenerate");
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
 
@@ -26,7 +38,13 @@ export function useAiTaskGenerator({
 
     setIsAiGenerating(true);
 
-    await signalRService.invoke(connection, "TranscribeAudio", base64);
+    try {
+      await signalRService.invoke(connection, "TranscribeAudio", base64);
+    } catch (error) {
+      console.error("TranscribeAudio invocation failed:", error);
+      setIsAiGenerating(false);
+      Toast.show({ type: "error", text1: t("errors.default") });
+    }
   };
 
   const sendTextMessage = async (text: string) => {
@@ -36,14 +54,22 @@ export function useAiTaskGenerator({
     try {
       await signalRService.invoke(connection, "SendMessage", text);
     } catch (error) {
-      console.error("Error sending text message:", error);
+      console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
+      Toast.show({ type: "error", text1: t("errors.default") });
     }
   };
 
   const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
-    setAiGeneratedMessage(receivedAiMessage);
     setIsAiGenerating(false);
+
+    if (!receivedAiMessage.isSuccess) {
+      const i18nKey = ERROR_CODE_TO_I18N_KEY[receivedAiMessage.errorCode ?? ""] ?? "errors.default";
+      Toast.show({ type: "error", text1: t(i18nKey) });
+      return;
+    }
+
+    setAiGeneratedMessage(receivedAiMessage);
   };
 
   useEffect(() => {
@@ -69,7 +95,6 @@ export function useAiTaskGenerator({
 
   return {
     aiGeneratedMessage,
-    setAiGeneratedMessage,
     submitAudioForTranscription,
     sendTextMessage,
   };

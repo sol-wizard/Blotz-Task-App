@@ -3,8 +3,9 @@ import { Pressable, Text, View, FlatList } from "react-native";
 import Animated, { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import Modal from "react-native-modal";
 import { Ionicons } from "@expo/vector-icons";
-import { FormDivider } from "./form-divider";
+
 import { AnimatedChevron } from "./chevron";
+import { FormDivider } from "./form-divider";
 
 export type DropdownOption<T> = {
   label: string;
