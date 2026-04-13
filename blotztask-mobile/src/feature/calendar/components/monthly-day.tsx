@@ -26,18 +26,18 @@ export const MonthlyDay = ({
   const isSelected = dayKey === selectedDate;
   const isToday = state === "today";
   const isInactive = state === "disabled" || state === "inactive";
-  const previews = tasks.slice(0, 3);
+  const previews = tasks.slice(0, 4);
 
   return (
     <View className="p-0.5 w-full">
       <Pressable
         onPress={() => onPressDay?.(dayKey)}
-        className={`flex-col h-[76px] w-full items-center rounded-lg pt-1 border ${isSelected ? "" : "border-transparent"}`}
+        className={`flex-col h-[80px] w-full items-center rounded-lg pt-1 border ${isSelected ? "" : "border-transparent"}`}
         style={isSelected ? { borderColor: theme.colors.secondary } : {}}
       >
-        <View className={`w-5 h-5 rounded-full items-center justify-center mb-0.5`}>
+        <View className={`w-6 h-6 rounded-full items-center justify-center mb-1`}>
           <Text
-            className={`text-[10px] font-bold mt-0.5 ${isToday ? "text-highlight" : isInactive ? "text-gray-300" : "text-secondary"}`}
+            className={`text-[12px] font-balooBold mt-0.5 ${isToday ? "text-highlight" : isInactive ? "text-gray-300" : "text-secondary"}`}
           >
             {date.day}
           </Text>

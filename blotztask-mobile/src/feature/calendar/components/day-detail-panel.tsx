@@ -18,8 +18,9 @@ export const DayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
         >
           {selectedDayTasks.length > 0 ? (
             selectedDayTasks.map((task, index) => {
-              const start = task.startTime ? parseISO(task.startTime) : null;
-              const end = task.endTime ? parseISO(task.endTime) : null;
+              const parseTime = (timeStr?: string) => (timeStr ? parseISO(timeStr) : null);
+              const start = parseTime(task.startTime);
+              const end = parseTime(task.endTime);
               const isSameTime = task.startTime === task.endTime;
 
               return (
@@ -71,7 +72,7 @@ export const DayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
               );
             })
           ) : (
-            <Text className="text-center text-gray-400 mt-10">No tasks for this day</Text>
+            <Text className="text-center text-gray-400 mt-10 font-baloo">No tasks for this day</Text>
           )}
         </ScrollView>
       )}

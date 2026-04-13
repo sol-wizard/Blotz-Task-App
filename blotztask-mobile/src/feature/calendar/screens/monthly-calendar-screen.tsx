@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useRef } from "react";
 import { Pressable, Text, View, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
@@ -10,13 +10,14 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { MonthlyDay, MonthlyDayProps } from "../components/monthly-day";
 import { DayDetailPanel } from "../components/day-detail-panel";
 import { TaskThumbnailDTO } from "../models/monthly-task-indicator-dto";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { formatBottomSheetDate } from "../util/date-formatter";
+import i18n from "@/i18n";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-const L1_OFFSET = SCREEN_HEIGHT - 90;
-const L2_OFFSET = SCREEN_HEIGHT * 0.5;
-const L3_OFFSET = 100;
+const SNAP_L1 = 90;
+const SNAP_L2 = "50%";
+const SNAP_L3 = SCREEN_HEIGHT - 100;
 
 export default function MonthlyCalendarScreen() {
   const params = useLocalSearchParams<{ selectedDate: string }>();
@@ -27,41 +28,15 @@ export default function MonthlyCalendarScreen() {
   const selectedDateStr = format(selectedDay, "yyyy-MM-dd");
   const selectedMonthKey = format(selectedDay, "yyyy-MM");
 
-  const translateY = useSharedValue(L1_OFFSET);
-  const context = useSharedValue(0);
-
-  const gesture = Gesture.Pan()
-    .onStart(() => {
-      context.value = translateY.value;
-    })
-    .onUpdate((event) => {
-      translateY.value = Math.max(L3_OFFSET - 50, context.value + event.translationY);
-    })
-    .onEnd((event) => {
-      const targetY = translateY.value + event.velocityY * 0.1;
-      let finalY = L1_OFFSET;
-
-      if (targetY < (L2_OFFSET + L3_OFFSET) / 2) {
-        finalY = L3_OFFSET;
-      } else if (targetY < (L1_OFFSET + L2_OFFSET) / 2) {
-        finalY = L2_OFFSET;
-      } else {
-        finalY = L1_OFFSET;
-      }
-
-      translateY.value = withSpring(finalY, { damping: 50, stiffness: 180, mass: 0.8 });
-    });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const snapPoints = useMemo(() => [SNAP_L1, SNAP_L2, SNAP_L3], []);
 
   const { monthlyTaskAvailability } = useMonthlyTasks({ selectedDay });
 
   const dataByDate = useMemo(() => {
     const data: Record<string, TaskThumbnailDTO[]> = {};
     monthlyTaskAvailability.forEach((item) => {
-      const dateKey = item.date.substring(0, 10);
+      const dateKey = item.date.split("T")[0];
       data[dateKey] = item.taskThumbnails;
     });
     return data;
@@ -97,10 +72,12 @@ export default function MonthlyCalendarScreen() {
 
           <Pressable
             onPress={() => setSelectedDay(new Date())}
-            className="bg-white px-5 py-1.5 rounded-full shadow-sm border border-gray-50"
+            className="bg-white px-5 py-1.5 rounded-full border border-gray-50"
             style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           >
-            <Text className="text-sm font-balooBold text-secondary">Today</Text>
+            <Text className="text-base font-balooBold text-secondary">
+              {i18n.t("calendar:header.today")}
+            </Text>
           </Pressable>
         </View>
 
@@ -114,6 +91,7 @@ export default function MonthlyCalendarScreen() {
             hideExtraDays
             firstDay={1}
             enableSwipeMonths
+            monthFormat={"MMMM"}
             dayComponent={renderDay}
             theme={{
               calendarBackground: theme.colors.background,
@@ -123,27 +101,28 @@ export default function MonthlyCalendarScreen() {
               monthTextColor: "#444964",
               textMonthFontFamily: "BalooExtraBold",
               textMonthFontSize: 32,
-              arrowColor: "#E5E7EB",
+              arrowColor: theme.colors.secondary,
             }}
           />
         </View>
       </SafeAreaView>
 
-      <Animated.View
-        className="absolute inset-x-0 bg-white rounded-t-[32px] z-[100]"
-        style={[
-          animatedStyle,
-          {
-            height: SCREEN_HEIGHT,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: -10 },
-            shadowOpacity: 0.1,
-            shadowRadius: 10,
-            elevation: 20,
-          },
-        ]}
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={0}
+        snapPoints={snapPoints}
+        handleComponent={null}
+        backgroundStyle={{
+          backgroundColor: "white",
+          borderRadius: 32,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -10 },
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+          elevation: 20,
+        }}
       >
-        <GestureDetector gesture={gesture}>
+        <BottomSheetView className="flex-1">
           <View className="w-full pt-4 pb-4 px-6 items-center">
             <View
               className="w-12 h-1.5 rounded-full mb-5"
@@ -151,16 +130,16 @@ export default function MonthlyCalendarScreen() {
             />
             <View className="w-full items-start">
               <Text className="text-[16px] font-baloo text-secondary">
-                {format(selectedDay, "E, d MMM yyyy")}
+                {formatBottomSheetDate(selectedDay)}
               </Text>
             </View>
           </View>
-        </GestureDetector>
 
-        <View className="flex-1">
-          <DayDetailPanel selectedDay={selectedDay} />
-        </View>
-      </Animated.View>
+          <View className="flex-1">
+            <DayDetailPanel selectedDay={selectedDay} />
+          </View>
+        </BottomSheetView>
+      </BottomSheet>
     </View>
   );
 }
