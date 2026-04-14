@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState, useRef } from "react";
-import { Pressable, Text, View, Dimensions } from "react-native";
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Calendar, DateData } from "react-native-calendars";
+import { Calendar, DateData, LocaleConfig } from "react-native-calendars";
 import { format } from "date-fns";
 import { theme } from "@/shared/constants/theme";
 import { useMonthlyTasks } from "../hooks/useMonthlyTasks";
@@ -14,10 +14,22 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { formatBottomSheetDate } from "../util/date-formatter";
 import i18n from "@/i18n";
 
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-const SNAP_L1 = 90;
+LocaleConfig.locales["en"] = {
+  monthNames: [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+  ],
+  monthNamesShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  dayNames: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+  dayNamesShort: ["S", "M", "T", "W", "T", "F", "S"],
+  today: "Today",
+};
+LocaleConfig.defaultLocale = "en";
+
+const SNAP_L1 = "10%";
 const SNAP_L2 = "50%";
-const SNAP_L3 = SCREEN_HEIGHT - 100;
+const SNAP_L3 = "80%";
+const SNAP_POINTS = [SNAP_L1, SNAP_L2, SNAP_L3];
 
 export default function MonthlyCalendarScreen() {
   const params = useLocalSearchParams<{ selectedDate: string }>();
@@ -28,34 +40,25 @@ export default function MonthlyCalendarScreen() {
   const selectedDateStr = format(selectedDay, "yyyy-MM-dd");
   const selectedMonthKey = format(selectedDay, "yyyy-MM");
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => [SNAP_L1, SNAP_L2, SNAP_L3], []);
-
   const { monthlyTaskAvailability } = useMonthlyTasks({ selectedDay });
 
-  const dataByDate = useMemo(() => {
-    const data: Record<string, TaskThumbnailDTO[]> = {};
-    monthlyTaskAvailability.forEach((item) => {
-      const dateKey = item.date.split("T")[0];
-      data[dateKey] = item.taskThumbnails;
-    });
-    return data;
-  }, [monthlyTaskAvailability]);
+  const dataByDate: Record<string, TaskThumbnailDTO[]> = {};
+  monthlyTaskAvailability.forEach((item) => {
+    const dateKey = item.date.split("T")[0];
+    dataByDate[dateKey] = item.taskThumbnails;
+  });
 
-  const handleDayPress = useCallback((dateString: string) => {
+  const handleDayPress = (dateString: string) => {
     setSelectedDay(new Date(dateString));
-  }, []);
+  };
 
-  const renderDay = useCallback(
-    (props: MonthlyDayProps) => (
-      <MonthlyDay
-        {...props}
-        selectedDate={selectedDateStr}
-        tasks={dataByDate[props.date?.dateString ?? ""] ?? []}
-        onPressDay={handleDayPress}
-      />
-    ),
-    [selectedDateStr, dataByDate, handleDayPress],
+  const renderDay = (props: MonthlyDayProps) => (
+    <MonthlyDay
+      {...props}
+      selectedDate={selectedDateStr}
+      tasks={dataByDate[props.date?.dateString ?? ""] ?? []}
+      onPressDay={handleDayPress}
+    />
   );
 
   return (
@@ -106,9 +109,8 @@ export default function MonthlyCalendarScreen() {
       </SafeAreaView>
 
       <BottomSheet
-        ref={bottomSheetRef}
         index={0}
-        snapPoints={snapPoints}
+        snapPoints={SNAP_POINTS}
         handleComponent={null}
         backgroundStyle={{
           backgroundColor: "white",
