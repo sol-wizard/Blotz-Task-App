@@ -18,9 +18,8 @@ export const DayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
         >
           {selectedDayTasks.length > 0 ? (
             selectedDayTasks.map((task, index) => {
-              const parseTime = (timeStr?: string) => (timeStr ? parseISO(timeStr) : null);
-              const start = parseTime(task.startTime);
-              const end = parseTime(task.endTime);
+              const start = parseISO(task.startTime);
+              const end = parseISO(task.endTime);
               const isSameTime = task.startTime === task.endTime;
 
               return (
@@ -30,29 +29,23 @@ export const DayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
                 >
                   {/* Column 1: Time */}
                   <View className="w-[60px]">
-                    {start ? (
-                      <>
-                        <View className="flex-row items-baseline">
-                          <Text className="text-[16px] font-baloo text-secondary">
-                            {format(start, "h:mm")}
-                          </Text>
-                          <Text className="text-[12px] font-baloo text-secondary ml-0.5 uppercase">
-                            {format(start, "a")}
-                          </Text>
-                        </View>
-                        {end && !isSameTime && (
-                          <View className="flex-row items-baseline mt-0 opacity-50">
-                            <Text className="text-[14px] font-baloo text-secondary">
-                              {format(end, "h:mm")}
-                            </Text>
-                            <Text className="text-[11px] font-baloo text-secondary ml-0.5 uppercase">
-                              {format(end, "a")}
-                            </Text>
-                          </View>
-                        )}
-                      </>
-                    ) : (
-                      <Text className="text-[12px] font-baloo text-secondary">All Day</Text>
+                    <View className="flex-row items-baseline">
+                      <Text className="text-[16px] font-baloo text-secondary">
+                        {format(start, "h:mm")}
+                      </Text>
+                      <Text className="text-[12px] font-baloo text-secondary ml-0.5 uppercase">
+                        {format(start, "a")}
+                      </Text>
+                    </View>
+                    {!isSameTime && (
+                      <View className="flex-row items-baseline mt-0 opacity-50">
+                        <Text className="text-[14px] font-baloo text-secondary">
+                          {format(end, "h:mm")}
+                        </Text>
+                        <Text className="text-[11px] font-baloo text-secondary ml-0.5 uppercase">
+                          {format(end, "a")}
+                        </Text>
+                      </View>
                     )}
                   </View>
 
