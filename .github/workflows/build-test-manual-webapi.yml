@@ -37,3 +37,6 @@ jobs:
       - name: Run Manual Tests
         run: dotnet test --configuration Release --no-build --verbosity normal --filter "Category=Manual" --logger "trx;LogFileName=test_results.trx" --results-directory ./TestResults
         working-directory: ./blotztask-test
+        env:
+          AzureOpenAI__Endpoint: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AzureOpenAI__AiModels__TaskGeneration__DeploymentId: ${{ secrets.AZURE_OPENAI_TASK_GENERATION_DEPLOYMENT_ID }}
