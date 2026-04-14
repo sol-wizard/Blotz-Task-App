@@ -1,22 +1,27 @@
 using Azure.AI.Projects;
+using BlotzTask.Modules.AiUsage.Exceptions;
+using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Functions;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.Extensions.AI;
 
+
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
     Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct);
-    Task<AiGenerateMessage> GenerateAiResponse(string userMessage, AiChatContext context, CancellationToken ct);
+    Task<AiGenerateMessage> GenerateAiResponse(Guid userId,string userMessage, AiChatContext context, CancellationToken ct);
 }
 
 public class AiTaskGenerateService(
     ILogger<AiTaskGenerateService> logger,
     AIProjectClient projectClient,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    ICheckAiQuotaService checkAiQuotaService,
+    IRecordAiUsageService recordAiUsageService)
     : IAiTaskGenerateService
 {
     //TODO: This should not be here ? should be at DI?
@@ -60,6 +65,7 @@ public class AiTaskGenerateService(
     }
 
     public async Task<AiGenerateMessage> GenerateAiResponse(
+        Guid userId,
         string userMessage,
         AiChatContext context,
         CancellationToken ct)
@@ -68,10 +74,22 @@ public class AiTaskGenerateService(
 
         try
         {
+            await checkAiQuotaService.CheckQuotaAsync(userId,ct);
+
             logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
-            await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
-
+            var response=await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
+            var usageContent=response.Messages
+                .SelectMany(m=>m.Contents)
+                .OfType<UsageContent>()
+                .LastOrDefault();
+            int promptTokens=(int)(usageContent?.Details?.InputTokenCount??0);
+            int completTokens=(int)(usageContent?.Details?.OutputTokenCount??0);
+            await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest{
+                UserId=userId,
+                PromptTokens=promptTokens,
+                CompletionTokens=completTokens
+            },ct);
             logger.LogInformation("TaskGeneration: Tool calls this turn={ToolCallCount}, total tasks={TaskCount}, notes={NoteCount}",
                 context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
 
@@ -85,6 +103,10 @@ public class AiTaskGenerateService(
                 ExtractedNotes = context.Notes,
                 ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input."
             };
+        }
+        catch (AiQuotaExceededException)
+        {
+            throw;
         }
         catch (OperationCanceledException oce)
         {

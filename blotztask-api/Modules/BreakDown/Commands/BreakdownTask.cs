@@ -1,6 +1,9 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Auth0.ManagementApi.Models;
 using Azure.AI.Projects;
+using BlotzTask.Modules.AiUsage.Exceptions;
+using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.BreakDown.DTOs;
 using BlotzTask.Modules.BreakDown.Prompts;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
@@ -24,7 +27,9 @@ public class BreakdownTaskCommandHandler(
     GetTaskByIdQueryHandler getTaskByIdQueryHandler,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     AIProjectClient projectClient,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    ICheckAiQuotaService checkAiQuotaService,
+    IRecordAiUsageService recordAiUsageService)
 {
     //TODO: IF we want to support different deployment id , that should be done on the dependency injection layer
     private readonly string _deploymentId =
@@ -66,6 +71,7 @@ public class BreakdownTaskCommandHandler(
         try
         {
             //TODO: Investigate if we need so much details prompt here 
+            await checkAiQuotaService.CheckQuotaAsync(command.UserId,ct);
             var prompt = TaskBreakdownPrompts.GetBreakdownPrompt(
                 preferredLanguage,
                 task.Title,
@@ -77,8 +83,19 @@ public class BreakdownTaskCommandHandler(
                 model: _deploymentId,
                 instructions: prompt,
                 tools: [AIFunctionFactory.Create(AddSubTask)]);
-
-            await agent.RunAsync("Break down this task into subtasks.", cancellationToken: ct);
+            
+            var response=await agent.RunAsync("Break down this task into subtasks.", cancellationToken: ct);
+            var usageContent=response.Messages
+                .SelectMany(m=>m.Contents)
+                .OfType<UsageContent>()
+                .LastOrDefault();
+            int promptTokens=(int)(usageContent?.Details?.InputTokenCount??0);
+            int completTokens=(int)(usageContent?.Details?.OutputTokenCount??0);
+            await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest{
+                UserId=command.UserId,
+                PromptTokens=promptTokens,
+                CompletionTokens=completTokens
+            },ct);
 
             logger.LogInformation("Breakdown: Collected {Count} subtasks", collectedSubTasks.Count);
 
@@ -91,6 +108,10 @@ public class BreakdownTaskCommandHandler(
                 Subtasks = collectedSubTasks,
                 ErrorMessage = isSuccess ? "" : "Could not generate subtasks for this task."
             };
+        }
+          catch(AiQuotaExceededException)
+        {
+            throw;
         }
         catch (OperationCanceledException oce)
         {
