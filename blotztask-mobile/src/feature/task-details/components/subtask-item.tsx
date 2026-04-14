@@ -171,11 +171,11 @@ export default function SubtaskItem({
           }}
         >
           <View className="flex-row items-center px-4 py-1">
-            <View style={{ width: 32, justifyContent: "center" }}>
+            <View className="w-8 justify-center">
               <TasksCheckbox type="subtask" checked={isChecked} onChange={handleToggle} />
             </View>
 
-            <View style={{ flex: 1, marginLeft: 4 }}>
+            <View className="flex-1 ml-1">
               {isInlineEditing ? (
                 <>
                   <View className="flex-row items-center gap-4">
@@ -232,7 +232,7 @@ export default function SubtaskItem({
               )}
             </View>
 
-            <View style={{ width: 32, alignItems: "center", justifyContent: "center" }}>
+            <View className="w-8 items-center justify-center">
               {isEditMode ? (
                 <TouchableOpacity onPressIn={drag} activeOpacity={1}>
                   <MaterialIcons name="unfold-more" size={26} color={theme.colors.disabled} />
@@ -268,31 +268,21 @@ export default function SubtaskItem({
         style={{ margin: 0 }}
       >
         <View
+          className="bg-white rounded-3xl px-2.5 py-1.5"
           style={{
             position: "absolute",
             left: pickerPosition.x,
             top: pickerPosition.y,
             width: PICKER_WIDTH,
             height: PICKER_HEIGHT,
-            backgroundColor: "white",
-            borderRadius: 24,
-            paddingHorizontal: 10,
-            paddingVertical: 6,
+            elevation: 5,
             shadowColor: "#000",
             shadowOpacity: 0.08,
             shadowRadius: 12,
             shadowOffset: { width: 0, height: 4 },
-            elevation: 5,
           }}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-            }}
-          >
+          <View className="flex-row items-center justify-center h-full">
             <WheelPicker
               data={hourItems}
               value={selectedHours}
@@ -311,14 +301,7 @@ export default function SubtaskItem({
               }}
             />
 
-            <Text
-              style={{
-                color: "#B7BBC7",
-                fontSize: 12,
-                fontWeight: "700",
-                marginHorizontal: 2,
-              }}
-            >
+            <Text className="text-[#B7BBC7] text-xs font-bold mx-0.5">
               h
             </Text>
 
@@ -340,14 +323,7 @@ export default function SubtaskItem({
               }}
             />
 
-            <Text
-              style={{
-                color: "#B7BBC7",
-                fontSize: 12,
-                fontWeight: "700",
-                marginLeft: 2,
-              }}
-            >
+            <Text className="text-[#B7BBC7] text-xs font-bold mx-0.5">
               min
             </Text>
           </View>
