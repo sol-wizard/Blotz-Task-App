@@ -5,7 +5,7 @@ import { theme } from "@/shared/constants/theme";
 import { convertDurationToText } from "../../../shared/util/convert-duration";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { ActionButton, ActionButtonType } from "@/feature/notes/components/action-button";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TextInput } from "react-native-gesture-handler";
 import { updateSubtask } from "../services/subtask-service";
 import DurationPickerModal from "./time-wheel-picker";
@@ -64,11 +64,6 @@ export default function SubtaskItem({
     const m = minute.toString().padStart(2, "0");
     return `${h}:${m}:00`;
   }
-
-  const combineWheelValue = (_: Partial<{ hour: number; minute: number }>) => {
-    const base = mergeToDate(selectedHours, selectedMinutes);
-    onDurationChange?.(subtask.id, base);
-  };
 
   useEffect(() => {
     setTitleValue(subtask.title);

@@ -17,6 +17,16 @@ type DurationPickerModalProps = {
 const PICKER_WIDTH = 120;
 const PICKER_HEIGHT = 84;
 
+const hourItems: PickerItem<number>[] = Array.from({ length: 24 }, (_, index) => ({
+  value: index,
+  label: index.toString().padStart(2, "0"),
+}));
+
+const minuteItems: PickerItem<number>[] = Array.from({ length: 60 }, (_, index) => ({
+  value: index,
+  label: index.toString().padStart(2, "0"),
+}));
+
 export default function DurationPickerModal({
   isVisible,
   position,
@@ -26,23 +36,6 @@ export default function DurationPickerModal({
   onMinutesChange,
   onClose,
 }: DurationPickerModalProps) {
-  const hourItems: PickerItem<number>[] = useMemo(
-    () =>
-      Array.from({ length: 24 }, (_, index) => ({
-        value: index,
-        label: index.toString().padStart(2, "0"),
-      })),
-    [],
-  );
-
-  const minuteItems: PickerItem<number>[] = useMemo(
-    () =>
-      Array.from({ length: 60 }, (_, index) => ({
-        value: index,
-        label: index.toString().padStart(2, "0"),
-      })),
-    [],
-  );
 
   return (
     <Modal
