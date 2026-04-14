@@ -7,9 +7,8 @@ import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { ActionButton, ActionButtonType } from "@/feature/notes/components/action-button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TextInput } from "react-native-gesture-handler";
-import WheelPicker, { type PickerItem } from "@quidone/react-native-wheel-picker";
-import Modal from "react-native-modal";
 import { updateSubtask } from "../services/subtask-service";
+import DurationPickerModal from "./time-wheel-picker";
 
 type SubtaskItemData = {
   id: number;
@@ -93,23 +92,6 @@ export default function SubtaskItem({
     setIsInlineEditing((prev) => !prev);
   };
 
-  const hourItems: PickerItem<number>[] = useMemo(
-    () =>
-      Array.from({ length: 24 }, (_, index) => ({
-        value: index,
-        label: index.toString().padStart(2, "0"),
-      })),
-    [],
-  );
-
-  const minuteItems: PickerItem<number>[] = useMemo(
-    () =>
-      Array.from({ length: 60 }, (_, index) => ({
-        value: index,
-        label: index.toString().padStart(2, "0"),
-      })),
-    [],
-  );
 
   const PICKER_WIDTH = 120;
   const PICKER_HEIGHT = 84;
@@ -232,7 +214,7 @@ export default function SubtaskItem({
               )}
             </View>
 
-            <View className="w-8 items-center justify-center">
+            <View className="w-10 items-center justify-center">
               {isEditMode ? (
                 <TouchableOpacity onPressIn={drag} activeOpacity={1}>
                   <MaterialIcons name="unfold-more" size={26} color={theme.colors.disabled} />
@@ -257,78 +239,15 @@ export default function SubtaskItem({
         </TouchableOpacity>
       </Swipeable>
 
-      <Modal
+      <DurationPickerModal
         isVisible={isDurationPickerVisible}
-        onBackdropPress={closePicker}
-        onBackButtonPress={closePicker}
-        animationIn="fadeIn"
-        animationOut="fadeOut"
-        backdropOpacity={0.08}
-        useNativeDriver
-        style={{ margin: 0 }}
-      >
-        <View
-          className="bg-white rounded-3xl px-2.5 py-1.5"
-          style={{
-            position: "absolute",
-            left: pickerPosition.x,
-            top: pickerPosition.y,
-            width: PICKER_WIDTH,
-            height: PICKER_HEIGHT,
-            elevation: 5,
-            shadowColor: "#000",
-            shadowOpacity: 0.08,
-            shadowRadius: 12,
-            shadowOffset: { width: 0, height: 4 },
-          }}
-        >
-          <View className="flex-row items-center justify-center h-full">
-            <WheelPicker
-              data={hourItems}
-              value={selectedHours}
-              width={34}
-              itemHeight={26}
-              visibleItemCount={3}
-              enableScrollByTapOnItem
-              onValueChanged={({ item }) => {
-                setSelectedHours(item.value as number);
-                combineWheelValue({ hour: item.value });
-              }}
-              itemTextStyle={{
-                color: theme.colors.highlight,
-                fontSize: 16,
-                fontWeight: "700",
-              }}
-            />
-
-            <Text className="text-[#B7BBC7] text-xs font-bold mx-0.5">
-              h
-            </Text>
-
-            <WheelPicker
-              data={minuteItems}
-              value={selectedMinutes}
-              width={38}
-              itemHeight={28}
-              visibleItemCount={3}
-              enableScrollByTapOnItem
-              onValueChanged={({ item }) => {
-                setSelectedMinutes(item.value as number);
-                combineWheelValue({ minute: item.value });
-              }}
-              itemTextStyle={{
-                color: theme.colors.highlight,
-                fontSize: 16,
-                fontWeight: "700",
-              }}
-            />
-
-            <Text className="text-[#B7BBC7] text-xs font-bold mx-0.5">
-              min
-            </Text>
-          </View>
-        </View>
-      </Modal>
+        position={pickerPosition}
+        selectedHours={selectedHours}
+        selectedMinutes={selectedMinutes}
+        onHoursChange={setSelectedHours}
+        onMinutesChange={setSelectedMinutes}
+        onClose={closePicker}
+      />
     </>
   );
 }
