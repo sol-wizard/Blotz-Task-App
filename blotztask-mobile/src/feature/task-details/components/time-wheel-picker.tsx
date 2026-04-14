@@ -2,7 +2,6 @@ import { View, Text } from "react-native";
 import Modal from "react-native-modal";
 import WheelPicker, { type PickerItem } from "@quidone/react-native-wheel-picker";
 import { theme } from "@/shared/constants/theme";
-import { useMemo } from "react";
 
 type DurationPickerModalProps = {
   isVisible: boolean;
