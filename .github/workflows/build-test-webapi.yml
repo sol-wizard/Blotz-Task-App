@@ -50,7 +50,7 @@ jobs:
         working-directory: ./blotztask-test
 
       - name: Run .NET Tests
-        run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test_results.trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        run: dotnet test --configuration Release --no-build --verbosity normal --filter "Category!=Manual" --logger "trx;LogFileName=test_results.trx" --collect:"XPlat Code Coverage" --results-directory ./TestResults
         working-directory: ./blotztask-test
 
       - name: Publish test results as PR comment
