@@ -43,16 +43,7 @@ public class DevAiTestController(
             TimeZone = timeZone
         });
 
-        var streamChunks = new List<string>();
-        var result = await aiTaskGenerateService.GenerateAiResponseStreaming(
-            resolvedMessage,
-            chatContext,
-            chunk =>
-            {
-                streamChunks.Add(chunk);
-                return Task.CompletedTask;
-            },
-            ct);
+        var result = await aiTaskGenerateService.GenerateAiResponse(resolvedMessage, chatContext, ct);
 
         totalSw.Stop();
 
@@ -63,7 +54,6 @@ public class DevAiTestController(
             result.ExtractedNotes,
             result.ErrorCode,
             result.ErrorMessage,
-            StreamChunks = streamChunks,
             Timing = new
             {
                 InitMs = initMs,
@@ -127,11 +117,7 @@ public class DevAiTestController(
                 TimeZone = TimeZoneInfo.Utc
             });
 
-            var result = await aiTaskGenerateService.GenerateAiResponseStreaming(
-                resolvedMessage,
-                chatContext,
-                _ => Task.CompletedTask,
-                ct);
+            var result = await aiTaskGenerateService.GenerateAiResponse(resolvedMessage, chatContext, ct);
 
             caseSw.Stop();
             caseResult.TimeMs = caseSw.ElapsedMilliseconds;

@@ -11,6 +11,9 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 
 //TODO: Remove the deployment id from the app settings , we only want to store that in the environment variable and the local development json 
 //so we need to update the onboarding documents
+
+//TODO: Investigate using RunStreamingAsync to stream AI responses via SignalR (ReceiveStreamUpdate).
+//      Evaluate whether streaming improves perceived latency given that tasks/notes only appear after tool calls complete.
 [Authorize]
 public class AiTaskGenerateChatHub(
     ILogger<AiTaskGenerateChatHub> logger,
@@ -79,7 +82,7 @@ public class AiTaskGenerateChatHub(
                 Message = message,
                 TimeZone = chatContext.TimeZone
             });
-            
+
             var resultMessage = await aiTaskGenerateService.GenerateAiResponse(resolvedMessage, chatContext, ct);
             resultMessage.UserInput = message;
 
