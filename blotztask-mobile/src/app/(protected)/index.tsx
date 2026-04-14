@@ -16,7 +16,10 @@ export default function ProtectedGate() {
   useEffect(() => {
     if (isLoading || !userPreferences) return;
 
-    if (userPreferences.preferredLanguage !== systemPreferredLanguage) {
+    if (
+      userPreferences.preferredLanguage !== systemPreferredLanguage &&
+      !userProfile?.isOnBoarded
+    ) {
       updateUserPreferences({
         ...userPreferences,
         preferredLanguage: systemPreferredLanguage,
