@@ -5,7 +5,7 @@ import { theme } from "@/shared/constants/theme";
 import { convertDurationToText } from "../../../shared/util/convert-duration";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { ActionButton, ActionButtonType } from "@/feature/notes/components/action-button";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { TextInput } from "react-native-gesture-handler";
 import WheelPicker, { type PickerItem } from "@quidone/react-native-wheel-picker";
 import Modal from "react-native-modal";
@@ -50,20 +50,15 @@ export default function SubtaskItem({
 
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const [titleValue, setTitleValue] = useState(subtask.title);
-  const [localDuration, setLocalDuration] = useState(subtask.duration ?? "PT0H0M");
+  const [localDuration, setLocalDuration] = useState(subtask.duration);
 
   const durationTriggerRef = useRef<View>(null);
   const [pickerPosition, setPickerPosition] = useState({ x: 0, y: 0 });
   const [isDurationPickerVisible, setIsDurationPickerVisible] = useState(false);
 
-  const [h = "0", m = "0"] = localDuration.split(":");
-  const parsedDuration = {
-    hours: Number(h) || 0,
-    minutes: Number(m) || 0,
-  };
 
-  const [selectedHours, setSelectedHours] = useState(parsedDuration.hours);
-  const [selectedMinutes, setSelectedMinutes] = useState(parsedDuration.minutes);
+  const [selectedHours, setSelectedHours] = useState(0);
+  const [selectedMinutes, setSelectedMinutes] = useState(0);
 
   function mergeToDate(hour: number, minute: number) {
     const h = hour.toString().padStart(2, "0");
@@ -76,7 +71,13 @@ export default function SubtaskItem({
     onDurationChange?.(subtask.id, base);
   };
 
-console.log("subtask.id:", subtask.id);
+  useEffect(() => {
+    setTitleValue(subtask.title);
+    setLocalDuration(subtask.duration ?? "00:00:00");
+    const [h = "0", m = "0"] = (subtask.duration ?? "00:00:00").split(":");
+    setSelectedHours(Number(h) || 0);
+    setSelectedMinutes(Number(m) || 0);
+  }, [subtask.title, subtask.duration]);
 
   const handleInlineEditToggle = () => {
     if (isInlineEditing) {
