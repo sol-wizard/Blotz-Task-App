@@ -65,7 +65,6 @@ export default function MonthlyCalendarScreen() {
           <Pressable
             onPress={() => router.back()}
             className="w-9 h-9 bg-white rounded-full items-center justify-center shadow-sm border border-gray-50"
-            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           >
             <MaterialCommunityIcons name="chevron-left" size={22} color={theme.colors.onSurface} />
           </Pressable>
@@ -73,7 +72,6 @@ export default function MonthlyCalendarScreen() {
           <Pressable
             onPress={() => setSelectedDay(new Date())}
             className="bg-white px-5 py-1.5 rounded-full border border-gray-50"
-            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
           >
             <Text className="text-base font-balooBold text-secondary">
               {i18n.t("calendar:header.today")}
