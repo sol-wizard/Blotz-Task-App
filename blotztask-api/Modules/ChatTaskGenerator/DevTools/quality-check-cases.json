@@ -1,14 +1,29 @@
 [
   {
-    "id": "single-task-with-time",
-    "input": "I need to buy groceries at 5pm",
+    "id": "tomorrow-at-specific-time",
+    "input": "I need to buy groceries tomorrow at 5pm",
     "expectedTaskCount": 1,
     "expectedNoteCount": 0,
     "expectations": [
       {
         "titleContains": ["groceries"],
+        "startDateOffset": 1,
         "startTimeHour": 17,
         "label": "Life"
+      }
+    ]
+  },
+  {
+    "id": "relative-time-minutes-from-now",
+    "input": "Remind me in 5 minutes to drink water",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["water"],
+        "minutesFromNow": 5,
+        "toleranceMinutes": 2,
+        "label": "Health"
       }
     ]
   }

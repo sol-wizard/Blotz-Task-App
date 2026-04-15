@@ -7,47 +7,15 @@ namespace BlotzTask.Modules.ChatTaskGenerator.DevTools;
 
 public class AiQualityCheckService(
     IAiTaskGenerateService aiTaskGenerateService,
-    DateTimeResolveService dateTimeResolveService) : IAiQualityCheckService
+    DateTimeResolveService dateTimeResolveService,
+    IConfiguration configuration) : IAiQualityCheckService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    internal static readonly string QualityCheckCasesPath = Path.Combine(
+    private static readonly string QualityCheckCasesPath = Path.Combine(
         AppContext.BaseDirectory, "Modules", "ChatTaskGenerator", "DevTools", "quality-check-cases.json");
 
-    public async Task<DevAiTestResult> TestGenerateAsync(DevAiTestRequest request, CancellationToken ct)
-    {
-        var language = request.Language ?? "English";
-        var timeZone = ResolveTimeZone(request.TimeZone);
-        var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
-
-        var totalSw = Stopwatch.StartNew();
-
-        var chatContext = await aiTaskGenerateService.InitializeAsync(language, userLocalTime, timeZone, ct);
-        var initMs = totalSw.ElapsedMilliseconds;
-
-        var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
-        {
-            Message = request.Message,
-            TimeZone = timeZone
-        });
-
-        var result = await aiTaskGenerateService.GenerateAiResponse(resolvedMessage, chatContext, ct);
-        totalSw.Stop();
-
-        return new DevAiTestResult
-        {
-            IsSuccess = result.IsSuccess,
-            ExtractedTasks = result.ExtractedTasks,
-            ExtractedNotes = result.ExtractedNotes,
-            ErrorCode = result.ErrorCode,
-            ErrorMessage = result.ErrorMessage,
-            Timing = new DevAiTestTiming
-            {
-                InitMs = initMs,
-                TotalMs = totalSw.ElapsedMilliseconds
-            }
-        };
-    }
+    private int BatchSize => configuration.GetValue<int>("DevTools:QualityCheckBatchSize", 5);
 
     public async Task<QualityCheckRunResult> RunQualityCheckAsync(string? caseId, CancellationToken ct)
     {
@@ -62,12 +30,15 @@ public class AiQualityCheckService(
         var scorecard = new QualityCheckScorecard { TotalCases = allCases.Count };
         var totalSw = Stopwatch.StartNew();
 
-        foreach (var qualityCheckCase in allCases)
+        foreach (var batch in allCases.Chunk(BatchSize))
         {
-            var caseResult = await RunSingleCaseAsync(qualityCheckCase, ct);
-            scorecard.Results.Add(caseResult);
-            if (caseResult.Passed) scorecard.Passed++;
-            else scorecard.Failed++;
+            var batchResults = await Task.WhenAll(batch.Select(c => RunSingleCaseAsync(c, ct)));
+            foreach (var caseResult in batchResults)
+            {
+                scorecard.Results.Add(caseResult);
+                if (caseResult.Passed) scorecard.Passed++;
+                else scorecard.Failed++;
+            }
         }
 
         totalSw.Stop();

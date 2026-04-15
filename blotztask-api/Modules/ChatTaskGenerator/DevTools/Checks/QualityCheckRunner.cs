@@ -98,6 +98,35 @@ public static class QualityCheckRunner
                     Passed = actualLabel.Equals(expectation.Label, StringComparison.OrdinalIgnoreCase)
                 });
             }
+
+            if (expectation.StartDateOffset.HasValue)
+            {
+                var expectedDate = DateTime.UtcNow.Date.AddDays(expectation.StartDateOffset.Value);
+                var actualDate = task.StartTime.Date;
+                caseResult.Checks.Add(new QualityCheckItem
+                {
+                    Field = $"task[{i}].startDate",
+                    Expected = expectedDate.ToString("yyyy-MM-dd"),
+                    Actual = actualDate.ToString("yyyy-MM-dd"),
+                    Passed = actualDate == expectedDate
+                });
+            }
+
+            if (expectation.MinutesFromNow.HasValue)
+            {
+                var now = DateTime.UtcNow;
+                var expectedTime = now.AddMinutes(expectation.MinutesFromNow.Value);
+                var tolerance = TimeSpan.FromMinutes(expectation.ToleranceMinutes);
+                var diff = (task.StartTime - expectedTime).Duration();
+                var passed = diff <= tolerance;
+                caseResult.Checks.Add(new QualityCheckItem
+                {
+                    Field = $"task[{i}].minutesFromNow",
+                    Expected = $"{expectation.MinutesFromNow}min (±{expectation.ToleranceMinutes}min) → ~{expectedTime:HH:mm}",
+                    Actual = task.StartTime.ToString("HH:mm"),
+                    Passed = passed
+                });
+            }
         }
     }
 }

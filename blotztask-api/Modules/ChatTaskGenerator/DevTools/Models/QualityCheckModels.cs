@@ -15,6 +15,17 @@ public class QualityCheckTaskExpectation
     public int? StartTimeHour { get; set; }
     public int? StartTimeMinute { get; set; }
     public string? Label { get; set; }
+
+    /// <summary>
+    /// Expected number of days from today. 0 = today, 1 = tomorrow, 7 = next week, etc.
+    /// </summary>
+    public int? StartDateOffset { get; set; }
+
+    /// <summary>
+    /// Expected minutes from now, with an allowed tolerance window (±ToleranceMinutes).
+    /// </summary>
+    public int? MinutesFromNow { get; set; }
+    public int ToleranceMinutes { get; set; } = 2;
 }
 
 public class QualityCheckItem
@@ -53,27 +64,4 @@ public class QualityCheckScorecard
     public string PassRate { get; set; } = "";
     public long TotalTimeMs { get; set; }
     public List<QualityCheckCaseResult> Results { get; set; } = [];
-}
-
-public class DevAiTestRequest
-{
-    public required string Message { get; set; }
-    public string? Language { get; set; }
-    public string? TimeZone { get; set; }
-}
-
-public class DevAiTestResult
-{
-    public bool IsSuccess { get; set; }
-    public object? ExtractedTasks { get; set; }
-    public object? ExtractedNotes { get; set; }
-    public string ErrorCode { get; set; } = "";
-    public string ErrorMessage { get; set; } = "";
-    public DevAiTestTiming Timing { get; set; } = new();
-}
-
-public class DevAiTestTiming
-{
-    public long InitMs { get; set; }
-    public long TotalMs { get; set; }
 }
