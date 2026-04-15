@@ -66,7 +66,7 @@ export const SoundscapeCard = ({
         {isSelected ? (
           <Pressable
             onPress={onTogglePlayback}
-            className="absolute inset-0 items-center justify-center bg-black/20"
+            className="absolute inset-0 items-center justify-center"
           >
             <View className="w-10 h-10 rounded-full items-center justify-center bg-black/45">
               <MaterialIcons name={isPlaying ? "pause" : "play-arrow"} size={28} color="#FFFFFF" />
