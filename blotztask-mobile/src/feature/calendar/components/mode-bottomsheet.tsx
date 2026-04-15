@@ -141,9 +141,11 @@ export const ModeBottomSheet = ({
 
   const handleSave = async () => {
     try {
+      const isCountDown = draftDuration !== 0;
       await savePomodoroSetting({
         timing: draftDuration,
         sound: draftSoundscape,
+        isCountDown: isCountDown,
       });
       stopPlayback();
       onClose();

@@ -9,4 +9,5 @@ export type PomodoroSoundscapeKey =
 export interface UpdatePomodoroSettingRequest {
   timing: number | null;
   sound: PomodoroSoundscapeKey | null;
+  isCountDown: boolean;
 }
