@@ -28,7 +28,7 @@ public static class QualityCheckRunner
         });
     }
 
-    public static void CheckTaskExpectations(QualityCheckCase qualityCheckCase, AiGenerateMessage result, QualityCheckCaseResult caseResult)
+    public static void CheckTaskExpectations(QualityCheckCase qualityCheckCase, AiGenerateMessage result, QualityCheckCaseResult caseResult, DateTime userLocalTime)
     {
         var tasks = result.ExtractedTasks ?? [];
 
@@ -101,7 +101,7 @@ public static class QualityCheckRunner
 
             if (expectation.StartDateOffset.HasValue)
             {
-                var expectedDate = DateTime.UtcNow.Date.AddDays(expectation.StartDateOffset.Value);
+                var expectedDate = userLocalTime.Date.AddDays(expectation.StartDateOffset.Value);
                 var actualDate = task.StartTime.Date;
                 caseResult.Checks.Add(new QualityCheckItem
                 {
@@ -114,8 +114,7 @@ public static class QualityCheckRunner
 
             if (expectation.MinutesFromNow.HasValue)
             {
-                var now = DateTime.UtcNow;
-                var expectedTime = now.AddMinutes(expectation.MinutesFromNow.Value);
+                var expectedTime = userLocalTime.AddMinutes(expectation.MinutesFromNow.Value);
                 var tolerance = TimeSpan.FromMinutes(expectation.ToleranceMinutes);
                 var diff = (task.StartTime - expectedTime).Duration();
                 var passed = diff <= tolerance;

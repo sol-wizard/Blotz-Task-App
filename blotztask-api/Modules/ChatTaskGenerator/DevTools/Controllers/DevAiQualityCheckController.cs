@@ -6,12 +6,15 @@ namespace BlotzTask.Modules.ChatTaskGenerator.DevTools;
 public class DevAiQualityCheckController(IAiQualityCheckService qualityCheckService, IWebHostEnvironment env) : ControllerBase
 {
     [HttpPost("dev/ai-quality-check")]
-    public async Task<IActionResult> RunQualityCheck([FromQuery] string? caseId, CancellationToken ct)
+    public async Task<IActionResult> RunQualityCheck(
+        [FromBody] QualityCheckRequest request,
+        [FromQuery] string? caseId,
+        CancellationToken ct)
     {
         if (!env.IsDevelopment())
             return NotFound();
 
-        var result = await qualityCheckService.RunQualityCheckAsync(caseId, ct);
+        var result = await qualityCheckService.RunQualityCheckAsync(request, caseId, ct);
 
         return result switch
         {

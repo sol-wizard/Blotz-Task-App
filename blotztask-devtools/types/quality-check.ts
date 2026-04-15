@@ -15,6 +15,7 @@ export interface QualityCheckExtractedTask {
 
 export interface QualityCheckCaseResult {
   id: string;
+  input: string;
   passed: boolean;
   totalTimeMs: number;
   initTimeMs: number;

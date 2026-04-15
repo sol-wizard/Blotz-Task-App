@@ -17,7 +17,7 @@ public class AiQualityCheckService(
 
     private int BatchSize => configuration.GetValue<int>("DevTools:QualityCheckBatchSize", 5);
 
-    public async Task<QualityCheckRunResult> RunQualityCheckAsync(string? caseId, CancellationToken ct)
+    public async Task<QualityCheckRunResult> RunQualityCheckAsync(QualityCheckRequest request, string? caseId, CancellationToken ct)
     {
         if (!File.Exists(QualityCheckCasesPath))
             return QualityCheckRunResult.Fail("quality-check-cases.json not found");
@@ -30,9 +30,11 @@ public class AiQualityCheckService(
         var scorecard = new QualityCheckScorecard { TotalCases = allCases.Count };
         var totalSw = Stopwatch.StartNew();
 
+        var timeZone = ResolveTimeZone(request.TimeZone);
+
         foreach (var batch in allCases.Chunk(BatchSize))
         {
-            var batchResults = await Task.WhenAll(batch.Select(c => RunSingleCaseAsync(c, ct)));
+            var batchResults = await Task.WhenAll(batch.Select(c => RunSingleCaseAsync(c, timeZone, ct)));
             foreach (var caseResult in batchResults)
             {
                 scorecard.Results.Add(caseResult);
@@ -61,23 +63,23 @@ public class AiQualityCheckService(
         return allCases;
     }
 
-    private async Task<QualityCheckCaseResult> RunSingleCaseAsync(QualityCheckCase qualityCheckCase, CancellationToken ct)
+    private async Task<QualityCheckCaseResult> RunSingleCaseAsync(QualityCheckCase qualityCheckCase, TimeZoneInfo timeZone, CancellationToken ct)
     {
-        var caseResult = new QualityCheckCaseResult { Id = qualityCheckCase.Id };
+        var caseResult = new QualityCheckCaseResult { Id = qualityCheckCase.Id, Input = qualityCheckCase.Input };
         var caseSw = Stopwatch.StartNew();
 
         try
         {
-            var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.Utc);
+            var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
 
             var initSw = Stopwatch.StartNew();
-            var chatContext = await aiTaskGenerateService.InitializeAsync("English", userLocalTime, TimeZoneInfo.Utc, ct);
+            var chatContext = await aiTaskGenerateService.InitializeAsync("English", userLocalTime, timeZone, ct);
             initSw.Stop();
 
             var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
             {
                 Message = qualityCheckCase.Input,
-                TimeZone = TimeZoneInfo.Utc
+                TimeZone = timeZone
             });
 
             var aiSw = Stopwatch.StartNew();
@@ -102,7 +104,7 @@ public class AiQualityCheckService(
 
             QualityCheckRunner.CheckTaskCount(qualityCheckCase, result, caseResult);
             QualityCheckRunner.CheckNoteCount(qualityCheckCase, result, caseResult);
-            QualityCheckRunner.CheckTaskExpectations(qualityCheckCase, result, caseResult);
+            QualityCheckRunner.CheckTaskExpectations(qualityCheckCase, result, caseResult, userLocalTime);
 
             caseResult.Passed = caseResult.Checks.All(c => c.Passed);
         }

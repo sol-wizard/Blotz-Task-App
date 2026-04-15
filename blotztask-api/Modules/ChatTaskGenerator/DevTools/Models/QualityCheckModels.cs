@@ -48,12 +48,18 @@ public class QualityCheckExtractedTask
 public class QualityCheckCaseResult
 {
     public required string Id { get; set; }
+    public required string Input { get; set; }
     public bool Passed { get; set; }
     public long TotalTimeMs { get; set; }
     public long InitTimeMs { get; set; }
     public long AiTimeMs { get; set; }
     public List<QualityCheckItem> Checks { get; set; } = [];
     public List<QualityCheckExtractedTask> ExtractedTasks { get; set; } = [];
+}
+
+public class QualityCheckRequest
+{
+    public string? TimeZone { get; set; }
 }
 
 public class QualityCheckScorecard

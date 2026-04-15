@@ -27,7 +27,7 @@ export const ResultRow = ({
             &#9654;
           </span>
         </td>
-        <td className="px-4 py-3 font-medium font-[family-name:var(--font-geist-mono)]">
+        <td className="px-4 py-3 font-medium font-[family-name:var(--font-geist-mono)] text-zinc-100">
           {result.id}
         </td>
         <td className="px-4 py-3">
@@ -46,11 +46,13 @@ export const ResultRow = ({
       {expanded && (
         <tr>
           <td colSpan={6} className="bg-zinc-900/40 px-6 py-4">
+            <div className="mb-4">
+              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Input</p>
+              <p className="text-sm text-zinc-100 italic">&ldquo;{result.input}&rdquo;</p>
+            </div>
             {result.extractedTasks.length > 0 && (
               <div className="mb-4">
-                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3">
-                  Task Preview
-                </p>
+                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3">Task Preview</p>
                 <div className="flex flex-col gap-2">
                   {result.extractedTasks.map((task, i) => (
                     <TaskCardPreview key={i} task={task} />
@@ -58,9 +60,7 @@ export const ResultRow = ({
                 </div>
               </div>
             )}
-            <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">
-              Checks
-            </p>
+            <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Checks</p>
             <ChecksDetail checks={result.checks} />
           </td>
         </tr>
