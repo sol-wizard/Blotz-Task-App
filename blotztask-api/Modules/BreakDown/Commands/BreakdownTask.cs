@@ -85,12 +85,8 @@ public class BreakdownTaskCommandHandler(
                 tools: [AIFunctionFactory.Create(AddSubTask)]);
             
             var response=await agent.RunAsync("Break down this task into subtasks.", cancellationToken: ct);
-            var usageContent=response.Messages
-                .SelectMany(m=>m.Contents)
-                .OfType<UsageContent>()
-                .LastOrDefault();
-            int promptTokens=(int)(usageContent?.Details?.InputTokenCount??0);
-            int completTokens=(int)(usageContent?.Details?.OutputTokenCount??0);
+            int promptTokens=(int)(response.Usage?.InputTokenCount??0);
+            int completTokens=(int)(response.Usage?.OutputTokenCount??0);
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest{
                 UserId=command.UserId,
                 PromptTokens=promptTokens,
