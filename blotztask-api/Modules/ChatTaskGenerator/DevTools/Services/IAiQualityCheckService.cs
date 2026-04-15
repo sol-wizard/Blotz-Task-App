@@ -7,7 +7,7 @@ public interface IAiQualityCheckService
 
 public class QualityCheckRunResult
 {
-    public bool NotFound { get; init; }
+    public bool IsError { get; init; }
     public string ErrorMessage { get; init; } = "";
     public QualityCheckScorecard? Scorecard { get; init; }
 
@@ -15,5 +15,5 @@ public class QualityCheckRunResult
         new() { Scorecard = scorecard };
 
     public static QualityCheckRunResult Fail(string message) =>
-        new() { NotFound = true, ErrorMessage = message };
+        new() { IsError = true, ErrorMessage = message };
 }

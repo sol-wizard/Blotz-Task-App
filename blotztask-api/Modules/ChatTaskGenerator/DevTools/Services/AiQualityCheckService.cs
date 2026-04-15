@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using BlotzTask.Modules.ChatTaskGenerator.DevTools.Checks;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 
@@ -25,7 +26,12 @@ public class AiQualityCheckService(
         var allCases = await LoadCasesAsync(caseId, ct);
 
         if (allCases.Count == 0)
-            return QualityCheckRunResult.Fail($"No quality check case found with id '{caseId}'");
+        {
+            var message = string.IsNullOrWhiteSpace(caseId)
+                ? "No test cases found in quality-check-cases.json"
+                : $"No quality check case found with id '{caseId}'";
+            return QualityCheckRunResult.Fail(message);
+        }
 
         var scorecard = new QualityCheckScorecard { TotalCases = allCases.Count };
         var totalSw = Stopwatch.StartNew();
@@ -79,7 +85,8 @@ public class AiQualityCheckService(
             var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
             {
                 Message = qualityCheckCase.Input,
-                TimeZone = timeZone
+                TimeZone = timeZone,
+                ReferenceTime = userLocalTime
             });
 
             var aiSw = Stopwatch.StartNew();
@@ -131,6 +138,7 @@ public class AiQualityCheckService(
             return TimeZoneInfo.Utc;
 
         try { return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId); }
-        catch { return TimeZoneInfo.Utc; }
+        catch (TimeZoneNotFoundException) { return TimeZoneInfo.Utc; }
+        catch (InvalidTimeZoneException) { return TimeZoneInfo.Utc; }
     }
 }

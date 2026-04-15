@@ -1,6 +1,7 @@
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
+using BlotzTask.Modules.ChatTaskGenerator.DevTools;
 
-namespace BlotzTask.Modules.ChatTaskGenerator.DevTools;
+namespace BlotzTask.Modules.ChatTaskGenerator.DevTools.Checks;
 
 public static class QualityCheckRunner
 {

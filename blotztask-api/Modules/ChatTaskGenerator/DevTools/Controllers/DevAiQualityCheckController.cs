@@ -18,7 +18,7 @@ public class DevAiQualityCheckController(IAiQualityCheckService qualityCheckServ
 
         return result switch
         {
-            { NotFound: true } => NotFound(new { error = result.ErrorMessage }),
+            { IsError: true } => NotFound(new { error = result.ErrorMessage }),
             _ => Ok(result.Scorecard)
         };
     }
