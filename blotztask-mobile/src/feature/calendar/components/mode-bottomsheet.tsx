@@ -57,6 +57,13 @@ const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
 const PADDING_HORIZONTAL = (SCREEN_WIDTH - 32) / 2 - ITEM_WIDTH / 2;
 const LOOP_MULTIPLIER = 5;
 const GALLERY_ITEMS = Array(LOOP_MULTIPLIER).fill(SOUNDSCAPES).flat();
+const SINGLE_LENGTH = SOUNDSCAPES.length;
+const MIDDLE_LOOP_START = SINGLE_LENGTH * Math.floor(LOOP_MULTIPLIER / 2);
+
+const getGalleryIndex = (soundscape: string) => {
+  const soundscapeIndex = SOUNDSCAPES.findIndex((item) => item.key === soundscape);
+  return MIDDLE_LOOP_START + (soundscapeIndex >= 0 ? soundscapeIndex : 0);
+};
 
 export const ModeBottomSheet = ({
   isOpen,
@@ -67,13 +74,24 @@ export const ModeBottomSheet = ({
   const { savePomodoroSetting, isSavingPomodoroSetting } = usePomodoroSettingMutation();
   const [draftDuration, setDraftDuration] = useState<number>(selectedDuration);
   const [draftSoundscape, setDraftSoundscape] = useState<PomodoroSoundscapeKey>(selectedSoundscape);
+  const initialTargetIndex = getGalleryIndex(selectedSoundscape);
+  const [activeIndex, setActiveIndex] = useState<number>(getGalleryIndex(selectedSoundscape));
   const { t } = useTranslation("pomodoro");
   const { isPlaying, togglePlayback, stopPlayback } = usePomodoroSoundscapePlayer(draftSoundscape);
 
   useEffect(() => {
     if (!isOpen) return;
+    const targetIndex = getGalleryIndex(selectedSoundscape);
     setDraftDuration(selectedDuration);
     setDraftSoundscape(selectedSoundscape);
+    setActiveIndex(targetIndex);
+    scrollX.value = targetIndex;
+
+    flatListRef.current?.scrollToOffset({
+      offset: targetIndex * SNAP_INTERVAL,
+      animated: false,
+    });
+
     console.log(
       "ModeBottomSheet opened with soundscape:",
       selectedSoundscape,
@@ -82,9 +100,7 @@ export const ModeBottomSheet = ({
     );
   }, [isOpen, selectedDuration, selectedSoundscape]);
 
-  const SINGLE_LENGTH = SOUNDSCAPES.length;
-  const INITIAL_INDEX = SINGLE_LENGTH * Math.floor(LOOP_MULTIPLIER / 2);
-  const scrollX = useSharedValue(INITIAL_INDEX);
+  const scrollX = useSharedValue(initialTargetIndex);
   const onScroll = useAnimatedScrollHandler((event) => {
     scrollX.value = event.contentOffset.x / SNAP_INTERVAL;
   });
@@ -98,9 +114,10 @@ export const ModeBottomSheet = ({
     const realIndex = ((index % SINGLE_LENGTH) + SINGLE_LENGTH) % SINGLE_LENGTH;
     const selectedKey = SOUNDSCAPES[realIndex].key;
     setDraftSoundscape(selectedKey as PomodoroSoundscapeKey);
+    setActiveIndex(index);
 
     if (index < SINGLE_LENGTH || index >= SINGLE_LENGTH * (LOOP_MULTIPLIER - 1)) {
-      const newIndex = INITIAL_INDEX + realIndex;
+      const newIndex = MIDDLE_LOOP_START + realIndex;
 
       flatListRef.current?.scrollToOffset({
         offset: newIndex * SNAP_INTERVAL,
@@ -115,6 +132,7 @@ export const ModeBottomSheet = ({
 
   const handleItemPress = (index: number, key: PomodoroSoundscapeKey) => {
     setDraftSoundscape(key);
+    setActiveIndex(index);
     flatListRef.current?.scrollToOffset({
       offset: index * SNAP_INTERVAL,
       animated: true,
@@ -192,13 +210,13 @@ export const ModeBottomSheet = ({
               <Animated.FlatList
                 ref={flatListRef}
                 data={GALLERY_ITEMS}
-                keyExtractor={(_, index) => index.toString()}
+                keyExtractor={(item, index) => `${item.key}-${index}`}
                 renderItem={({ item, index }) => (
                   <SoundscapeCard
                     item={item}
                     index={index}
                     scrollX={scrollX}
-                    isSelected={item.key === draftSoundscape}
+                    isSelected={index === activeIndex}
                     isPlaying={isPlaying}
                     onPress={handleItemPress}
                     onTogglePlayback={togglePlayback}
@@ -216,7 +234,6 @@ export const ModeBottomSheet = ({
                 onMomentumScrollEnd={handleMomentumScrollEnd}
                 onScroll={onScroll}
                 scrollEventThrottle={16}
-                initialScrollIndex={INITIAL_INDEX}
                 getItemLayout={(_, index) => ({
                   length: SNAP_INTERVAL,
                   offset: SNAP_INTERVAL * index,
