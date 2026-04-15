@@ -25,12 +25,22 @@ public class EvalCheck
     public bool Passed { get; set; }
 }
 
+public class EvalExtractedTask
+{
+    public required string Title { get; set; }
+    public string Description { get; set; } = "";
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
+    public required string LabelName { get; set; }
+}
+
 public class EvalCaseResult
 {
     public required string Id { get; set; }
     public bool Passed { get; set; }
     public long TimeMs { get; set; }
     public List<EvalCheck> Checks { get; set; } = [];
+    public List<EvalExtractedTask> ExtractedTasks { get; set; } = [];
 }
 
 public class EvalScorecard

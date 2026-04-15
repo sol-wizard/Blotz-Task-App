@@ -122,6 +122,17 @@ public class DevAiTestController(
             caseSw.Stop();
             caseResult.TimeMs = caseSw.ElapsedMilliseconds;
 
+            caseResult.ExtractedTasks = (result.ExtractedTasks ?? [])
+                .Select(t => new EvalExtractedTask
+                {
+                    Title = t.Title,
+                    Description = t.Description,
+                    StartTime = t.StartTime,
+                    EndTime = t.EndTime,
+                    LabelName = t.LabelName.ToString()
+                })
+                .ToList();
+
             CheckTaskCount(evalCase, result, caseResult);
             CheckNoteCount(evalCase, result, caseResult);
             CheckTaskExpectations(evalCase, result, caseResult);

@@ -1,6 +1,7 @@
 import type { EvalCaseResult } from "@/types/eval";
 import { StatusBadge } from "./status-badge";
 import { ChecksDetail } from "./checks-detail";
+import { TaskCardPreview } from "./task-card-preview";
 
 export const ResultRow = ({
   result,
@@ -39,7 +40,22 @@ export const ResultRow = ({
       </tr>
       {expanded && (
         <tr>
-          <td colSpan={5} className="bg-zinc-900/40 px-4 py-2">
+          <td colSpan={5} className="bg-zinc-900/40 px-6 py-4">
+            {result.extractedTasks.length > 0 && (
+              <div className="mb-4">
+                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3">
+                  Task Preview
+                </p>
+                <div className="flex flex-col gap-2">
+                  {result.extractedTasks.map((task, i) => (
+                    <TaskCardPreview key={i} task={task} />
+                  ))}
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">
+              Checks
+            </p>
             <ChecksDetail checks={result.checks} />
           </td>
         </tr>

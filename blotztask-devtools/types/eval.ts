@@ -5,11 +5,20 @@ export interface EvalCheck {
   passed: boolean;
 }
 
+export interface EvalExtractedTask {
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  labelName: string;
+}
+
 export interface EvalCaseResult {
   id: string;
   passed: boolean;
   timeMs: number;
   checks: EvalCheck[];
+  extractedTasks: EvalExtractedTask[];
 }
 
 export interface EvalScorecard {

@@ -1,5 +1,4 @@
 import type { EvalScorecard } from "@/types/eval";
-import { SummaryBar } from "./summary-bar";
 import { ResultsTable } from "./results-table";
 
 export const ScorecardView = ({
@@ -11,10 +10,5 @@ export const ScorecardView = ({
   expandedRows: Set<string>;
   onToggle: (id: string) => void;
 }) => {
-  return (
-    <div className="space-y-6">
-      <SummaryBar scorecard={scorecard} />
-      <ResultsTable results={scorecard.results} expandedRows={expandedRows} onToggle={onToggle} />
-    </div>
-  );
+  return <ResultsTable results={scorecard.results} expandedRows={expandedRows} onToggle={onToggle} />;
 };

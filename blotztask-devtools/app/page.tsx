@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { EvalScorecard } from "@/types/eval";
 import { LoadingState } from "@/components/eval-dashboard/loading-state";
 import { ErrorBanner } from "@/components/eval-dashboard/error-banner";
-import { EmptyState } from "@/components/eval-dashboard/empty-state";
+import { SummaryBar } from "@/components/eval-dashboard/summary-bar";
 import { ScorecardView } from "@/components/eval-dashboard/scorecard-view";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5027";
@@ -48,7 +48,7 @@ export default function EvalDashboard() {
     <main className="flex-1 p-6 max-w-5xl mx-auto w-full font-[family-name:var(--font-geist-sans)]">
       <header className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">AI Eval Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">AI Accuracy Dashboard</h1>
           <p className="text-sm text-zinc-400 mt-1">{API_URL}/dev/ai-eval</p>
         </div>
         <button
@@ -60,16 +60,18 @@ export default function EvalDashboard() {
         </button>
       </header>
 
-      {loading && <LoadingState />}
-      {error && <ErrorBanner message={error} />}
-      {scorecard && (
-        <ScorecardView
-          scorecard={scorecard}
-          expandedRows={expandedRows}
-          onToggle={toggleRow}
-        />
-      )}
-      {!loading && !error && !scorecard && <EmptyState />}
+      <div className="space-y-6">
+        <SummaryBar scorecard={scorecard} />
+        {error && <ErrorBanner message={error} />}
+        {loading && <LoadingState />}
+        {scorecard && (
+          <ScorecardView
+            scorecard={scorecard}
+            expandedRows={expandedRows}
+            onToggle={toggleRow}
+          />
+        )}
+      </div>
     </main>
   );
 }
