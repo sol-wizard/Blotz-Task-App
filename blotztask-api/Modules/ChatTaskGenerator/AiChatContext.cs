@@ -3,7 +3,6 @@ using BlotzTask.Modules.ChatTaskGenerator.FunctionTools;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
 
-//TODO: Why is this file here? should this be a DTOs?
 public class AiChatContext
 {
     public required AIAgent Agent { get; init; }
