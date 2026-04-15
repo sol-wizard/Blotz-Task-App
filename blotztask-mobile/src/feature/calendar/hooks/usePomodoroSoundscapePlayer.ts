@@ -12,9 +12,7 @@ const SOUND_MAP: Record<PomodoroSoundscapeKey, number | null> = {
   noSound: null,
 };
 
-export function usePomodoroSoundscapePlayer() {
-  const [selectedSoundscape, setSelectedSoundscape] = useState<PomodoroSoundscapeKey>("noSound");
-
+export function usePomodoroSoundscapePlayer(selectedSoundscape: PomodoroSoundscapeKey) {
   const player = useAudioPlayer(null, {
     updateInterval: 250,
   });
@@ -42,12 +40,7 @@ export function usePomodoroSoundscapePlayer() {
     player.replace(source);
     player.loop = true;
     player.seekTo(0);
-    player.play();
   }, [player, selectedSoundscape]);
-
-  const selectSoundscape = (key: PomodoroSoundscapeKey) => {
-    setSelectedSoundscape(key);
-  };
 
   const togglePlayback = () => {
     if (selectedSoundscape === "noSound") return;
@@ -66,9 +59,7 @@ export function usePomodoroSoundscapePlayer() {
   };
 
   return {
-    selectedSoundscape,
     isPlaying: status.playing,
-    selectSoundscape,
     togglePlayback,
     stopPlayback,
   };

@@ -12,7 +12,6 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { CustomDay, CustomDayProps } from "../components/custom-day";
 import { useLocalSearchParams } from "expo-router";
 import { ModeBottomSheet } from "../components/mode-bottomsheet";
-import { usePomodoroSoundscapePlayer } from "../hooks/usePomodoroSoundscapePlayer";
 import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
 
 const calendarTheme = {
@@ -27,8 +26,6 @@ export default function CalendarScreen() {
   const { weeklyTaskAvailability, isLoading } = useTaskDays({ selectedDay });
   const progress = useSharedValue(isCalendarVisible ? 1 : 0);
   const [isModeSheetOpen, setIsModeSheetOpen] = useState(false);
-  const { selectedSoundscape, isPlaying, selectSoundscape, togglePlayback, stopPlayback } =
-    usePomodoroSoundscapePlayer();
   const { data: pomodoroSetting } = usePomodoroSettingsQuery();
 
   const markedDates = isLoading ? {} : getMarkedDates({ weeklyTaskAvailability });
@@ -96,14 +93,9 @@ export default function CalendarScreen() {
         isOpen={isModeSheetOpen}
         onClose={() => {
           setIsModeSheetOpen(false);
-          stopPlayback();
         }}
-        selectedSoundscape={pomodoroSetting?.sound ?? selectedSoundscape}
+        selectedSoundscape={pomodoroSetting?.sound ?? "noSound"}
         selectedDuration={pomodoroSetting?.timing ?? 25}
-        isPlaying={isPlaying}
-        onSelectSoundscape={selectSoundscape}
-        onTogglePlayback={togglePlayback}
-        stopPlayback={stopPlayback}
       />
     </SafeAreaView>
   );

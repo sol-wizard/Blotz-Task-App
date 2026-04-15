@@ -12,15 +12,13 @@ import { SoundscapeCard } from "./sound-scape";
 import { useTranslation } from "react-i18next";
 import { PomodoroSoundscapeKey } from "../models/pomodoro-setting";
 import { usePomodoroSettingMutation } from "../hooks/usePomodoroSetting";
+import { usePomodoroSoundscapePlayer } from "../hooks/usePomodoroSoundscapePlayer";
+
 interface ModeBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   selectedSoundscape: PomodoroSoundscapeKey;
   selectedDuration: number;
-  isPlaying: boolean;
-  onSelectSoundscape: (key: PomodoroSoundscapeKey) => void;
-  onTogglePlayback: () => void;
-  stopPlayback: () => void;
 }
 
 const DURATIONS = [
@@ -65,20 +63,23 @@ export const ModeBottomSheet = ({
   onClose,
   selectedSoundscape,
   selectedDuration,
-  isPlaying,
-  onSelectSoundscape,
-  onTogglePlayback,
-  stopPlayback,
 }: ModeBottomSheetProps) => {
   const { savePomodoroSetting, isSavingPomodoroSetting } = usePomodoroSettingMutation();
   const [draftDuration, setDraftDuration] = useState<number>(selectedDuration);
   const [draftSoundscape, setDraftSoundscape] = useState<PomodoroSoundscapeKey>(selectedSoundscape);
   const { t } = useTranslation("pomodoro");
+  const { isPlaying, togglePlayback, stopPlayback } = usePomodoroSoundscapePlayer(draftSoundscape);
 
   useEffect(() => {
     if (!isOpen) return;
     setDraftDuration(selectedDuration);
     setDraftSoundscape(selectedSoundscape);
+    console.log(
+      "ModeBottomSheet opened with soundscape:",
+      selectedSoundscape,
+      "and duration:",
+      selectedDuration,
+    );
   }, [isOpen, selectedDuration, selectedSoundscape]);
 
   const SINGLE_LENGTH = SOUNDSCAPES.length;
@@ -200,7 +201,7 @@ export const ModeBottomSheet = ({
                     isSelected={item.key === draftSoundscape}
                     isPlaying={isPlaying}
                     onPress={handleItemPress}
-                    onTogglePlayback={onTogglePlayback}
+                    onTogglePlayback={togglePlayback}
                   />
                 )}
                 horizontal
@@ -259,7 +260,7 @@ export const ModeBottomSheet = ({
             {/* pic for soundscape */}
             <Pressable
               className="items-center -mt-12 relative"
-              onPress={() => onSelectSoundscape("noSound")}
+              onPress={() => setDraftSoundscape("noSound")}
             >
               <Image
                 source={ASSETS.pomodoroSoundChoose}
