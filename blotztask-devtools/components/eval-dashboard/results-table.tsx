@@ -18,7 +18,8 @@ export const ResultsTable = ({
             <th className="px-4 py-3 w-8" />
             <th className="px-4 py-3">Case ID</th>
             <th className="px-4 py-3">Status</th>
-            <th className="px-4 py-3 text-right">Time</th>
+            <th className="px-4 py-3 text-right">AI Time</th>
+            <th className="px-4 py-3 text-right">Init Time</th>
             <th className="px-4 py-3 text-right">Checks</th>
           </tr>
         </thead>

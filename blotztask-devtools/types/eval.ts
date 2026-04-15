@@ -16,7 +16,9 @@ export interface EvalExtractedTask {
 export interface EvalCaseResult {
   id: string;
   passed: boolean;
-  timeMs: number;
+  totalTimeMs: number;
+  initTimeMs: number;
+  aiTimeMs: number;
   checks: EvalCheck[];
   extractedTasks: EvalExtractedTask[];
 }

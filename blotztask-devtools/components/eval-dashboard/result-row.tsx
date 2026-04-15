@@ -3,6 +3,8 @@ import { StatusBadge } from "./status-badge";
 import { ChecksDetail } from "./checks-detail";
 import { TaskCardPreview } from "./task-card-preview";
 
+const formatMs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
+
 export const ResultRow = ({
   result,
   expanded,
@@ -31,8 +33,11 @@ export const ResultRow = ({
         <td className="px-4 py-3">
           <StatusBadge passed={result.passed} />
         </td>
-        <td className="px-4 py-3 text-right text-zinc-400 font-[family-name:var(--font-geist-mono)]">
-          {(result.timeMs / 1000).toFixed(1)}s
+        <td className="px-4 py-3 text-right text-zinc-100 font-[family-name:var(--font-geist-mono)]">
+          {formatMs(result.aiTimeMs)}
+        </td>
+        <td className="px-4 py-3 text-right text-zinc-500 font-[family-name:var(--font-geist-mono)]">
+          {formatMs(result.initTimeMs)}
         </td>
         <td className="px-4 py-3 text-right text-zinc-400">
           {passedChecks}/{result.checks.length}
@@ -40,7 +45,7 @@ export const ResultRow = ({
       </tr>
       {expanded && (
         <tr>
-          <td colSpan={5} className="bg-zinc-900/40 px-6 py-4">
+          <td colSpan={6} className="bg-zinc-900/40 px-6 py-4">
             {result.extractedTasks.length > 0 && (
               <div className="mb-4">
                 <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3">

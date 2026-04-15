@@ -38,7 +38,9 @@ public class EvalCaseResult
 {
     public required string Id { get; set; }
     public bool Passed { get; set; }
-    public long TimeMs { get; set; }
+    public long TotalTimeMs { get; set; }
+    public long InitTimeMs { get; set; }
+    public long AiTimeMs { get; set; }
     public List<EvalCheck> Checks { get; set; } = [];
     public List<EvalExtractedTask> ExtractedTasks { get; set; } = [];
 }
@@ -51,4 +53,27 @@ public class EvalScorecard
     public string PassRate { get; set; } = "";
     public long TotalTimeMs { get; set; }
     public List<EvalCaseResult> Results { get; set; } = [];
+}
+
+public class DevAiTestRequest
+{
+    public required string Message { get; set; }
+    public string? Language { get; set; }
+    public string? TimeZone { get; set; }
+}
+
+public class DevAiTestResult
+{
+    public bool IsSuccess { get; set; }
+    public object? ExtractedTasks { get; set; }
+    public object? ExtractedNotes { get; set; }
+    public string ErrorCode { get; set; } = "";
+    public string ErrorMessage { get; set; } = "";
+    public DevAiTestTiming Timing { get; set; } = new();
+}
+
+public class DevAiTestTiming
+{
+    public long InitMs { get; set; }
+    public long TotalMs { get; set; }
 }
