@@ -1,4 +1,4 @@
-import type { EvalCaseResult } from "@/types/eval";
+import type { QualityCheckCaseResult } from "@/types/quality-check";
 import { ResultRow } from "./result-row";
 
 export const ResultsTable = ({
@@ -6,7 +6,7 @@ export const ResultsTable = ({
   expandedRows,
   onToggle,
 }: {
-  results: EvalCaseResult[];
+  results: QualityCheckCaseResult[];
   expandedRows: Set<string>;
   onToggle: (id: string) => void;
 }) => {

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BlotzTask.Modules.ChatTaskGenerator.DevTools;
 
 [ApiController]
-public class DevAiEvalController(IAiEvalService evalService, IWebHostEnvironment env) : ControllerBase
+public class DevAiQualityCheckController(IAiQualityCheckService qualityCheckService, IWebHostEnvironment env) : ControllerBase
 {
     [HttpPost("dev/ai-test")]
     public async Task<IActionResult> TestGenerate([FromBody] DevAiTestRequest request, CancellationToken ct)
@@ -11,17 +11,17 @@ public class DevAiEvalController(IAiEvalService evalService, IWebHostEnvironment
         if (!env.IsDevelopment())
             return NotFound();
 
-        var result = await evalService.TestGenerateAsync(request, ct);
+        var result = await qualityCheckService.TestGenerateAsync(request, ct);
         return Ok(result);
     }
 
-    [HttpPost("dev/ai-eval")]
-    public async Task<IActionResult> RunEval([FromQuery] string? caseId, CancellationToken ct)
+    [HttpPost("dev/ai-quality-check")]
+    public async Task<IActionResult> RunQualityCheck([FromQuery] string? caseId, CancellationToken ct)
     {
         if (!env.IsDevelopment())
             return NotFound();
 
-        var result = await evalService.RunEvalAsync(caseId, ct);
+        var result = await qualityCheckService.RunQualityCheckAsync(caseId, ct);
 
         return result switch
         {

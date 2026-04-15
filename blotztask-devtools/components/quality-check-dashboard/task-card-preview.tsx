@@ -1,4 +1,4 @@
-import type { EvalExtractedTask } from "@/types/eval";
+import type { QualityCheckExtractedTask } from "@/types/quality-check";
 
 const LABEL_COLORS: Record<string, { bar: string; text: string }> = {
   Work:     { bar: "#c2e49f", text: "#3A442F" },
@@ -25,7 +25,7 @@ const formatDate = (iso: string) => {
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 };
 
-const formatTimeRange = (task: EvalExtractedTask) => {
+const formatTimeRange = (task: QualityCheckExtractedTask) => {
   const start = new Date(task.startTime);
   const end = new Date(task.endTime);
   if (start.getTime() === end.getTime()) return formatTime(task.startTime);
@@ -39,7 +39,7 @@ const Field = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-export const TaskCardPreview = ({ task }: { task: EvalExtractedTask }) => {
+export const TaskCardPreview = ({ task }: { task: QualityCheckExtractedTask }) => {
   const colors = LABEL_COLORS[task.labelName] ?? FALLBACK_COLOR;
 
   return (

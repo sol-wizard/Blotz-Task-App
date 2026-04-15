@@ -2,43 +2,43 @@ using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.DevTools;
 
-public static class EvalCheckRunner
+public static class QualityCheckRunner
 {
-    public static void CheckTaskCount(EvalCase evalCase, AiGenerateMessage result, EvalCaseResult caseResult)
+    public static void CheckTaskCount(QualityCheckCase qualityCheckCase, AiGenerateMessage result, QualityCheckCaseResult caseResult)
     {
         var actual = result.ExtractedTasks?.Count ?? 0;
-        caseResult.Checks.Add(new EvalCheck
+        caseResult.Checks.Add(new QualityCheckItem
         {
             Field = "taskCount",
-            Expected = evalCase.ExpectedTaskCount.ToString(),
+            Expected = qualityCheckCase.ExpectedTaskCount.ToString(),
             Actual = actual.ToString(),
-            Passed = actual == evalCase.ExpectedTaskCount
+            Passed = actual == qualityCheckCase.ExpectedTaskCount
         });
     }
 
-    public static void CheckNoteCount(EvalCase evalCase, AiGenerateMessage result, EvalCaseResult caseResult)
+    public static void CheckNoteCount(QualityCheckCase qualityCheckCase, AiGenerateMessage result, QualityCheckCaseResult caseResult)
     {
         var actual = result.ExtractedNotes?.Count ?? 0;
-        caseResult.Checks.Add(new EvalCheck
+        caseResult.Checks.Add(new QualityCheckItem
         {
             Field = "noteCount",
-            Expected = evalCase.ExpectedNoteCount.ToString(),
+            Expected = qualityCheckCase.ExpectedNoteCount.ToString(),
             Actual = actual.ToString(),
-            Passed = actual == evalCase.ExpectedNoteCount
+            Passed = actual == qualityCheckCase.ExpectedNoteCount
         });
     }
 
-    public static void CheckTaskExpectations(EvalCase evalCase, AiGenerateMessage result, EvalCaseResult caseResult)
+    public static void CheckTaskExpectations(QualityCheckCase qualityCheckCase, AiGenerateMessage result, QualityCheckCaseResult caseResult)
     {
         var tasks = result.ExtractedTasks ?? [];
 
-        for (var i = 0; i < evalCase.Expectations.Count; i++)
+        for (var i = 0; i < qualityCheckCase.Expectations.Count; i++)
         {
-            var expectation = evalCase.Expectations[i];
+            var expectation = qualityCheckCase.Expectations[i];
 
             if (i >= tasks.Count)
             {
-                caseResult.Checks.Add(new EvalCheck
+                caseResult.Checks.Add(new QualityCheckItem
                 {
                     Field = $"task[{i}]",
                     Expected = "task exists",
@@ -54,7 +54,7 @@ public static class EvalCheckRunner
             {
                 var titleMatch = expectation.TitleContains.Any(keyword =>
                     task.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase));
-                caseResult.Checks.Add(new EvalCheck
+                caseResult.Checks.Add(new QualityCheckItem
                 {
                     Field = $"task[{i}].titleContains",
                     Expected = string.Join(" | ", expectation.TitleContains),
@@ -66,7 +66,7 @@ public static class EvalCheckRunner
             if (expectation.StartTimeHour.HasValue)
             {
                 var actualHour = task.StartTime.Hour;
-                caseResult.Checks.Add(new EvalCheck
+                caseResult.Checks.Add(new QualityCheckItem
                 {
                     Field = $"task[{i}].startTimeHour",
                     Expected = expectation.StartTimeHour.Value.ToString(),
@@ -78,7 +78,7 @@ public static class EvalCheckRunner
             if (expectation.StartTimeMinute.HasValue)
             {
                 var actualMinute = task.StartTime.Minute;
-                caseResult.Checks.Add(new EvalCheck
+                caseResult.Checks.Add(new QualityCheckItem
                 {
                     Field = $"task[{i}].startTimeMinute",
                     Expected = expectation.StartTimeMinute.Value.ToString(),
@@ -90,7 +90,7 @@ public static class EvalCheckRunner
             if (expectation.Label is not null)
             {
                 var actualLabel = task.LabelName.ToString();
-                caseResult.Checks.Add(new EvalCheck
+                caseResult.Checks.Add(new QualityCheckItem
                 {
                     Field = $"task[{i}].label",
                     Expected = expectation.Label,

@@ -1,11 +1,11 @@
-export interface EvalCheck {
+export interface QualityCheckItem {
   field: string;
   expected: string;
   actual: string;
   passed: boolean;
 }
 
-export interface EvalExtractedTask {
+export interface QualityCheckExtractedTask {
   title: string;
   description: string;
   startTime: string;
@@ -13,21 +13,21 @@ export interface EvalExtractedTask {
   labelName: string;
 }
 
-export interface EvalCaseResult {
+export interface QualityCheckCaseResult {
   id: string;
   passed: boolean;
   totalTimeMs: number;
   initTimeMs: number;
   aiTimeMs: number;
-  checks: EvalCheck[];
-  extractedTasks: EvalExtractedTask[];
+  checks: QualityCheckItem[];
+  extractedTasks: QualityCheckExtractedTask[];
 }
 
-export interface EvalScorecard {
+export interface QualityCheckScorecard {
   totalCases: number;
   passed: number;
   failed: number;
   passRate: string;
   totalTimeMs: number;
-  results: EvalCaseResult[];
+  results: QualityCheckCaseResult[];
 }

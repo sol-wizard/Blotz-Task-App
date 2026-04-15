@@ -1,32 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import type { EvalScorecard } from "@/types/eval";
-import { LoadingState } from "@/components/eval-dashboard/loading-state";
-import { ErrorBanner } from "@/components/eval-dashboard/error-banner";
-import { SummaryBar } from "@/components/eval-dashboard/summary-bar";
-import { ScorecardView } from "@/components/eval-dashboard/scorecard-view";
+import type { QualityCheckScorecard } from "@/types/quality-check";
+import { LoadingState } from "@/components/quality-check-dashboard/loading-state";
+import { ErrorBanner } from "@/components/quality-check-dashboard/error-banner";
+import { SummaryBar } from "@/components/quality-check-dashboard/summary-bar";
+import { ScorecardView } from "@/components/quality-check-dashboard/scorecard-view";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5027";
 
-export default function EvalDashboard() {
-  const [scorecard, setScorecard] = useState<EvalScorecard | null>(null);
+export default function QualityCheckDashboard() {
+  const [scorecard, setScorecard] = useState<QualityCheckScorecard | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
-  const runEval = async () => {
+  const runQualityCheck = async () => {
     setLoading(true);
     setError(null);
     setScorecard(null);
     setExpandedRows(new Set());
 
     try {
-      const res = await fetch(`${API_URL}/dev/ai-eval`, { method: "POST" });
+      const res = await fetch(`${API_URL}/dev/ai-quality-check`, { method: "POST" });
       if (!res.ok) {
         throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
       }
-      const data: EvalScorecard = await res.json();
+      const data: QualityCheckScorecard = await res.json();
       setScorecard(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -49,10 +49,10 @@ export default function EvalDashboard() {
       <header className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">AI Accuracy Dashboard</h1>
-          <p className="text-sm text-zinc-400 mt-1">{API_URL}/dev/ai-eval</p>
+          <p className="text-sm text-zinc-400 mt-1">{API_URL}/dev/ai-quality-check</p>
         </div>
         <button
-          onClick={runEval}
+          onClick={runQualityCheck}
           disabled={loading}
           className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >

@@ -12,7 +12,7 @@ public static class DependencyInjection
         services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
         services.AddScoped<DateTimeResolveService>();
         services.AddScoped<SpeechTranscriptionService>();
-        services.AddScoped<IAiEvalService, AiEvalService>();
+        services.AddScoped<IAiQualityCheckService, AiQualityCheckService>();
 
         return services;
     }

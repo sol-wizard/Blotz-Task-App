@@ -1,4 +1,4 @@
-import type { EvalCaseResult } from "@/types/eval";
+import type { QualityCheckCaseResult } from "@/types/quality-check";
 import { StatusBadge } from "./status-badge";
 import { ChecksDetail } from "./checks-detail";
 import { TaskCardPreview } from "./task-card-preview";
@@ -10,7 +10,7 @@ export const ResultRow = ({
   expanded,
   onToggle,
 }: {
-  result: EvalCaseResult;
+  result: QualityCheckCaseResult;
   expanded: boolean;
   onToggle: () => void;
 }) => {

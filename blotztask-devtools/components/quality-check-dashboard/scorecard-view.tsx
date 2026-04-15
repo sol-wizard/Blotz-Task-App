@@ -1,4 +1,4 @@
-import type { EvalScorecard } from "@/types/eval";
+import type { QualityCheckScorecard } from "@/types/quality-check";
 import { ResultsTable } from "./results-table";
 
 export const ScorecardView = ({
@@ -6,7 +6,7 @@ export const ScorecardView = ({
   expandedRows,
   onToggle,
 }: {
-  scorecard: EvalScorecard;
+  scorecard: QualityCheckScorecard;
   expandedRows: Set<string>;
   onToggle: (id: string) => void;
 }) => {

@@ -1,4 +1,4 @@
-import type { EvalCheck } from "@/types/eval";
+import type { EvalCheck } from "@/types/quality-check";
 
 export const ChecksDetail = ({ checks }: { checks: EvalCheck[] }) => {
   return (

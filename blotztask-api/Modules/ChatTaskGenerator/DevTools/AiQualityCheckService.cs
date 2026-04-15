@@ -5,14 +5,14 @@ using BlotzTask.Modules.ChatTaskGenerator.Services;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.DevTools;
 
-public class AiEvalService(
+public class AiQualityCheckService(
     IAiTaskGenerateService aiTaskGenerateService,
-    DateTimeResolveService dateTimeResolveService) : IAiEvalService
+    DateTimeResolveService dateTimeResolveService) : IAiQualityCheckService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    internal static readonly string EvalCasesPath = Path.Combine(
-        AppContext.BaseDirectory, "Modules", "ChatTaskGenerator", "DevTools", "eval-cases.json");
+    internal static readonly string QualityCheckCasesPath = Path.Combine(
+        AppContext.BaseDirectory, "Modules", "ChatTaskGenerator", "DevTools", "quality-check-cases.json");
 
     public async Task<DevAiTestResult> TestGenerateAsync(DevAiTestRequest request, CancellationToken ct)
     {
@@ -49,22 +49,22 @@ public class AiEvalService(
         };
     }
 
-    public async Task<EvalRunResult> RunEvalAsync(string? caseId, CancellationToken ct)
+    public async Task<QualityCheckRunResult> RunQualityCheckAsync(string? caseId, CancellationToken ct)
     {
-        if (!File.Exists(EvalCasesPath))
-            return EvalRunResult.Fail("eval-cases.json not found");
+        if (!File.Exists(QualityCheckCasesPath))
+            return QualityCheckRunResult.Fail("quality-check-cases.json not found");
 
         var allCases = await LoadCasesAsync(caseId, ct);
 
         if (allCases.Count == 0)
-            return EvalRunResult.Fail($"No eval case found with id '{caseId}'");
+            return QualityCheckRunResult.Fail($"No quality check case found with id '{caseId}'");
 
-        var scorecard = new EvalScorecard { TotalCases = allCases.Count };
+        var scorecard = new QualityCheckScorecard { TotalCases = allCases.Count };
         var totalSw = Stopwatch.StartNew();
 
-        foreach (var evalCase in allCases)
+        foreach (var qualityCheckCase in allCases)
         {
-            var caseResult = await RunSingleCaseAsync(evalCase, ct);
+            var caseResult = await RunSingleCaseAsync(qualityCheckCase, ct);
             scorecard.Results.Add(caseResult);
             if (caseResult.Passed) scorecard.Passed++;
             else scorecard.Failed++;
@@ -76,13 +76,13 @@ public class AiEvalService(
             ? $"{(double)scorecard.Passed / scorecard.TotalCases * 100:F1}%"
             : "N/A";
 
-        return EvalRunResult.Success(scorecard);
+        return QualityCheckRunResult.Success(scorecard);
     }
 
-    private async Task<List<EvalCase>> LoadCasesAsync(string? caseId, CancellationToken ct)
+    private async Task<List<QualityCheckCase>> LoadCasesAsync(string? caseId, CancellationToken ct)
     {
-        var json = await File.ReadAllTextAsync(EvalCasesPath, ct);
-        var allCases = JsonSerializer.Deserialize<List<EvalCase>>(json, JsonOptions) ?? [];
+        var json = await File.ReadAllTextAsync(QualityCheckCasesPath, ct);
+        var allCases = JsonSerializer.Deserialize<List<QualityCheckCase>>(json, JsonOptions) ?? [];
 
         if (!string.IsNullOrWhiteSpace(caseId))
             allCases = allCases.Where(c => c.Id.Equals(caseId, StringComparison.OrdinalIgnoreCase)).ToList();
@@ -90,9 +90,9 @@ public class AiEvalService(
         return allCases;
     }
 
-    private async Task<EvalCaseResult> RunSingleCaseAsync(EvalCase evalCase, CancellationToken ct)
+    private async Task<QualityCheckCaseResult> RunSingleCaseAsync(QualityCheckCase qualityCheckCase, CancellationToken ct)
     {
-        var caseResult = new EvalCaseResult { Id = evalCase.Id };
+        var caseResult = new QualityCheckCaseResult { Id = qualityCheckCase.Id };
         var caseSw = Stopwatch.StartNew();
 
         try
@@ -105,7 +105,7 @@ public class AiEvalService(
 
             var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
             {
-                Message = evalCase.Input,
+                Message = qualityCheckCase.Input,
                 TimeZone = TimeZoneInfo.Utc
             });
 
@@ -119,7 +119,7 @@ public class AiEvalService(
             caseResult.AiTimeMs = aiSw.ElapsedMilliseconds;
 
             caseResult.ExtractedTasks = (result.ExtractedTasks ?? [])
-                .Select(t => new EvalExtractedTask
+                .Select(t => new QualityCheckExtractedTask
                 {
                     Title = t.Title,
                     Description = t.Description,
@@ -129,9 +129,9 @@ public class AiEvalService(
                 })
                 .ToList();
 
-            EvalCheckRunner.CheckTaskCount(evalCase, result, caseResult);
-            EvalCheckRunner.CheckNoteCount(evalCase, result, caseResult);
-            EvalCheckRunner.CheckTaskExpectations(evalCase, result, caseResult);
+            QualityCheckRunner.CheckTaskCount(qualityCheckCase, result, caseResult);
+            QualityCheckRunner.CheckNoteCount(qualityCheckCase, result, caseResult);
+            QualityCheckRunner.CheckTaskExpectations(qualityCheckCase, result, caseResult);
 
             caseResult.Passed = caseResult.Checks.All(c => c.Passed);
         }
@@ -140,7 +140,7 @@ public class AiEvalService(
             caseSw.Stop();
             caseResult.TotalTimeMs = caseSw.ElapsedMilliseconds;
             caseResult.Passed = false;
-            caseResult.Checks.Add(new EvalCheck
+            caseResult.Checks.Add(new QualityCheckItem
             {
                 Field = "exception",
                 Expected = "no error",
