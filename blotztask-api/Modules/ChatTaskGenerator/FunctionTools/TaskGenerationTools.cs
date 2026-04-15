@@ -1,11 +1,13 @@
 using System.ComponentModel;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
-namespace BlotzTask.Modules.ChatTaskGenerator.Functions;
+namespace BlotzTask.Modules.ChatTaskGenerator.FunctionTools;
 
 //TODO: Do we really need so many CRUD to do the operation ? Please research if we really need function tools here
-public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> notes)
+public class TaskGenerationTools
 {
+    public List<ExtractedTask> Tasks { get; } = [];
+    public List<ExtractedNote> Notes { get; } = [];
     public int ToolCallCount { get; private set; }
 
     public void ResetCallCount() => ToolCallCount = 0;
@@ -19,7 +21,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         [Description("Category label: Work, Life, Learning, or Health")] LabelNameEnum label)
     {
         ToolCallCount++;
-        tasks.Add(new ExtractedTask
+        Tasks.Add(new ExtractedTask
         {
             Id = Guid.NewGuid(),
             Title = title,
@@ -36,7 +38,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         [Description("The main content of the note")] string text)
     {
         ToolCallCount++;
-        notes.Add(new ExtractedNote
+        Notes.Add(new ExtractedNote
         {
             Id = Guid.NewGuid(),
             Text = text
@@ -49,9 +51,9 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         [Description("Title of the task to remove")] string title)
     {
         ToolCallCount++;
-        var task = tasks.FirstOrDefault(t => t.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
+        var task = Tasks.FirstOrDefault(t => t.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
         if (task == null) return "Task not found.";
-        tasks.Remove(task);
+        Tasks.Remove(task);
         return "Task removed.";
     }
 
@@ -65,7 +67,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         [Description("Category label: Work, Life, Learning, or Health")] LabelNameEnum label)
     {
         ToolCallCount++;
-        var task = tasks.FirstOrDefault(t => t.Title.Equals(existingTitle, StringComparison.OrdinalIgnoreCase));
+        var task = Tasks.FirstOrDefault(t => t.Title.Equals(existingTitle, StringComparison.OrdinalIgnoreCase));
         if (task == null) return "Task not found.";
         task.Title = title;
         task.Description = description;
@@ -80,9 +82,9 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         [Description("Text of the note to remove")] string text)
     {
         ToolCallCount++;
-        var note = notes.FirstOrDefault(n => n.Text.Equals(text, StringComparison.OrdinalIgnoreCase));
+        var note = Notes.FirstOrDefault(n => n.Text.Equals(text, StringComparison.OrdinalIgnoreCase));
         if (note == null) return "Note not found.";
-        notes.Remove(note);
+        Notes.Remove(note);
         return "Note removed.";
     }
 
@@ -92,7 +94,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         [Description("New text for the note")] string newText)
     {
         ToolCallCount++;
-        var note = notes.FirstOrDefault(n => n.Text.Equals(existingText, StringComparison.OrdinalIgnoreCase));
+        var note = Notes.FirstOrDefault(n => n.Text.Equals(existingText, StringComparison.OrdinalIgnoreCase));
         if (note == null) return "Note not found.";
         note.Text = newText;
         return "Note updated.";

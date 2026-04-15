@@ -1,7 +1,7 @@
 using Azure.AI.Projects;
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
-using BlotzTask.Modules.ChatTaskGenerator.Functions;
+using BlotzTask.Modules.ChatTaskGenerator.FunctionTools;
 using BlotzTask.Shared.Exceptions;
 using BlotzTask.Shared.Options;
 using Microsoft.Extensions.AI;
@@ -25,10 +25,7 @@ public class AiTaskGenerateService(
 
     public async Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct)
     {
-        //TODO: Do we have a better way of manage those list ?
-        var tasks = new List<ExtractedTask>();
-        var notes = new List<ExtractedNote>();
-        var tools = new TaskGenerationTools(tasks, notes);
+        var tools = new TaskGenerationTools();
 
         var agent = projectClient.AsAIAgent(
             model: _deploymentId,
@@ -42,8 +39,7 @@ public class AiTaskGenerateService(
                 AIFunctionFactory.Create(tools.RemoveNote),
                 AIFunctionFactory.Create(tools.UpdateNote)
             ]);
-        //TODO: De we need cancellation token here ?
-        var session = await agent.CreateSessionAsync();
+        var session = await agent.CreateSessionAsync(ct);
 
         logger.LogInformation("TaskGeneration: Session initialized for deployment={DeploymentId}", _deploymentId);
 
@@ -52,8 +48,6 @@ public class AiTaskGenerateService(
             Agent = agent,
             Session = session,
             Tools = tools,
-            Tasks = tasks,
-            Notes = notes,
             TimeZone = timeZone
         };
     }
@@ -72,7 +66,7 @@ public class AiTaskGenerateService(
             await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
 
             logger.LogInformation("TaskGeneration: Tool calls this turn={ToolCallCount}, total tasks={TaskCount}, notes={NoteCount}",
-                context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
+                context.Tools.ToolCallCount, context.Tools.Tasks.Count, context.Tools.Notes.Count);
 
             var isSuccess = context.Tools.ToolCallCount > 0;
 
@@ -80,8 +74,8 @@ public class AiTaskGenerateService(
             {
                 IsSuccess = isSuccess,
                 ErrorCode = isSuccess ? "" : AiErrorCode.NoTasksExtracted.ToString(),
-                ExtractedTasks = context.Tasks,
-                ExtractedNotes = context.Notes,
+                ExtractedTasks = context.Tools.Tasks,
+                ExtractedNotes = context.Tools.Notes,
                 ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input."
             };
         }

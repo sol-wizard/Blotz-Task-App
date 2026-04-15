@@ -11,7 +11,6 @@ public static class AgentFrameworkServiceExtensions
         // AIProjectClient is shared — one client, two deployment targets.
         // AIAgent is NOT created here because instructions are user-specific
         // (language + local time) and must be set per-session in the service layer.
-        // TODO: Investigate with other local developer and see if they can use the AI voice model without permission issue when they dont have azure credentials
         services.AddSingleton(sp =>
         {
             var endpoint = sp.GetRequiredService<IConfiguration>()["AzureOpenAI:Endpoint"]
