@@ -29,6 +29,5 @@ export function usePomodoroSettingMutation() {
 
   return {
     savePomodoroSetting: mutation.mutateAsync,
-    isSavingPomodoroSetting: mutation.isPending,
   };
 }

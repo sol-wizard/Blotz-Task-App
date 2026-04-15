@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { ASSETS } from "@/shared/constants/assets";
 import { PomodoroSoundscapeKey } from "../models/pomodoro-setting";

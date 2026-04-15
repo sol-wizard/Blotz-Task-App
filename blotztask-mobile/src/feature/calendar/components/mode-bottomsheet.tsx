@@ -71,7 +71,7 @@ export const ModeBottomSheet = ({
   selectedSoundscape,
   selectedDuration,
 }: ModeBottomSheetProps) => {
-  const { savePomodoroSetting, isSavingPomodoroSetting } = usePomodoroSettingMutation();
+  const { savePomodoroSetting } = usePomodoroSettingMutation();
   const [draftDuration, setDraftDuration] = useState<number>(selectedDuration);
   const [draftSoundscape, setDraftSoundscape] = useState<PomodoroSoundscapeKey>(selectedSoundscape);
   const initialTargetIndex = getGalleryIndex(selectedSoundscape);
