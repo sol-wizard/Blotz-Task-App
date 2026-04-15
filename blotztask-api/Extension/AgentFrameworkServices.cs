@@ -1,28 +1,28 @@
 using Azure.AI.Projects;
 using Azure.Identity;
+using BlotzTask.Shared.Options;
 
 namespace BlotzTask.Extension;
 
 public static class AgentFrameworkServiceExtensions
 {
-    public static IServiceCollection AddAgentFrameworkServices(
-        this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAgentFrameworkServices(this IServiceCollection services)
     {
-        var projectEndpoint = configuration["AzureOpenAI:Endpoint"];
-
-        if (string.IsNullOrWhiteSpace(projectEndpoint))
-        {
-            throw new InvalidOperationException(
-                "Missing Azure AI configuration. Set AzureOpenAI:Endpoint, AzureOpenAI:AiModels:TaskGeneration:DeploymentId, and AzureOpenAI:AiModels:Breakdown:DeploymentId in configuration.");
-        }
-
         // AIProjectClient is shared — one client, two deployment targets.
         // AIAgent is NOT created here because instructions are user-specific
         // (language + local time) and must be set per-session in the service layer.
-        // TODO : We can revise this because this is not the standard way of adding DI.
-        // TODO : Investigate with other local developer and see if they can use the AI voice model without permission issue when they dont have azure credentials
-        var projectClient = new AIProjectClient(new Uri(projectEndpoint), new DefaultAzureCredential());
-        services.AddSingleton(projectClient);
+        services.AddSingleton(sp =>
+        {
+            var endpoint = sp.GetRequiredService<IConfiguration>()["AzureOpenAI:Endpoint"]
+                ?? throw new InvalidOperationException(
+                    "Missing Azure AI configuration. Set AzureOpenAI:Endpoint in configuration.");
+            return new AIProjectClient(new Uri(endpoint), new DefaultAzureCredential());
+        });
+
+        services.AddOptions<AiModelOptions>()
+            .BindConfiguration(AiModelOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         return services;
     }

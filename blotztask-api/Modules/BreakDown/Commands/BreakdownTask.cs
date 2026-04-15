@@ -7,8 +7,9 @@ using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
-using Microsoft.Agents.AI.Foundry;
+using BlotzTask.Shared.Options;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
 
 namespace BlotzTask.Modules.BreakDown.Commands;
 
@@ -24,12 +25,9 @@ public class BreakdownTaskCommandHandler(
     GetTaskByIdQueryHandler getTaskByIdQueryHandler,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     AIProjectClient projectClient,
-    IConfiguration configuration)
+    IOptions<AiModelOptions> aiModelOptions)
 {
-    //TODO: IF we want to support different deployment id , that should be done on the dependency injection layer
-    private readonly string _deploymentId =
-        configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"]
-        ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:Breakdown:DeploymentId config.");
+    private readonly string _deploymentId = aiModelOptions.Value.Breakdown.DeploymentId;
 
     public async Task<BreakdownResult> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
     {
@@ -65,7 +63,7 @@ public class BreakdownTaskCommandHandler(
 
         try
         {
-            //TODO: Investigate if we need so much details prompt here 
+            //TODO: Investigate if we need so much details prompt here
             var prompt = TaskBreakdownPrompts.GetBreakdownPrompt(
                 preferredLanguage,
                 task.Title,
@@ -82,7 +80,7 @@ public class BreakdownTaskCommandHandler(
 
             logger.LogInformation("Breakdown: Collected {Count} subtasks", collectedSubTasks.Count);
 
-            //TODO: Please review this logic if we want to count this as success criteria 
+            //TODO: Please review this logic if we want to count this as success criteria
             var isSuccess = collectedSubTasks.Count > 0;
 
             return new BreakdownResult
