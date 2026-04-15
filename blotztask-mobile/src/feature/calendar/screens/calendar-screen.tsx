@@ -13,6 +13,7 @@ import { CustomDay, CustomDayProps } from "../components/custom-day";
 import { useLocalSearchParams } from "expo-router";
 import { ModeBottomSheet } from "../components/mode-bottomsheet";
 import { usePomodoroSoundscapePlayer } from "../hooks/usePomodoroSoundscapePlayer";
+import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
 
 const calendarTheme = {
   calendarBackground: theme.colors.background,
@@ -28,6 +29,7 @@ export default function CalendarScreen() {
   const [isModeSheetOpen, setIsModeSheetOpen] = useState(false);
   const { selectedSoundscape, isPlaying, selectSoundscape, togglePlayback, stopPlayback } =
     usePomodoroSoundscapePlayer();
+  const { data: pomodoroSetting } = usePomodoroSettingsQuery();
 
   const markedDates = isLoading ? {} : getMarkedDates({ weeklyTaskAvailability });
 
@@ -96,7 +98,8 @@ export default function CalendarScreen() {
           setIsModeSheetOpen(false);
           stopPlayback();
         }}
-        selectedSoundscape={selectedSoundscape}
+        selectedSoundscape={pomodoroSetting?.sound ?? selectedSoundscape}
+        selectedDuration={pomodoroSetting?.timing ?? 25}
         isPlaying={isPlaying}
         onSelectSoundscape={selectSoundscape}
         onTogglePlayback={togglePlayback}

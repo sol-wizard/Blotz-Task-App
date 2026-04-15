@@ -11,7 +11,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SoundscapeCard } from "./sound-scape";
 import { useTranslation } from "react-i18next";
 import { PomodoroSoundscapeKey } from "../models/pomodoro-setting";
-import { usePomodoroSettingMutation } from "../hooks/usePomodoroSettingMutation";
+import { usePomodoroSettingMutation } from "../hooks/usePomodoroSetting";
 interface ModeBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
