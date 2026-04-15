@@ -3,7 +3,9 @@ using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Functions;
 using BlotzTask.Shared.Exceptions;
+using BlotzTask.Shared.Options;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
@@ -16,13 +18,10 @@ public interface IAiTaskGenerateService
 public class AiTaskGenerateService(
     ILogger<AiTaskGenerateService> logger,
     AIProjectClient projectClient,
-    IConfiguration configuration)
+    IOptions<AiModelOptions> aiModelOptions)
     : IAiTaskGenerateService
 {
-    //TODO: This should not be here ? should be at DI?
-    private readonly string _deploymentId =
-        configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
-        ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
+    private readonly string _deploymentId = aiModelOptions.Value.TaskGeneration.DeploymentId;
 
     public async Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct)
     {
@@ -30,7 +29,7 @@ public class AiTaskGenerateService(
         var tasks = new List<ExtractedTask>();
         var notes = new List<ExtractedNote>();
         var tools = new TaskGenerationTools(tasks, notes);
-        
+
         var agent = projectClient.AsAIAgent(
             model: _deploymentId,
             instructions: AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime),

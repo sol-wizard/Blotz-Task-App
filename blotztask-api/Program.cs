@@ -37,7 +37,7 @@ builder.Services.AddAiUsageModule();
 builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 
 builder.Services.AddAuth0JwtBearerAuthentication(builder.Configuration);
-builder.Services.AddAgentFrameworkServices(builder.Configuration);
+builder.Services.AddAgentFrameworkServices();
 builder.Services.AddCustomCors();
 
 var app = builder.Build();

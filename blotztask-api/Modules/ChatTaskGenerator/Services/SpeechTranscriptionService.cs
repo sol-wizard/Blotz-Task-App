@@ -1,6 +1,8 @@
 using Azure;
 using Azure.AI.OpenAI;
 using BlotzTask.Shared.Exceptions;
+using BlotzTask.Shared.Options;
+using Microsoft.Extensions.Options;
 using OpenAI.Audio;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
@@ -10,21 +12,20 @@ public class SpeechTranscriptionService
     private readonly AudioClient _audioClient;
     private readonly ILogger<SpeechTranscriptionService> _logger;
 
-    public SpeechTranscriptionService(IConfiguration configuration, ILogger<SpeechTranscriptionService> logger)
+    public SpeechTranscriptionService(
+        IConfiguration configuration,
+        IOptions<AiModelOptions> aiModelOptions,
+        ILogger<SpeechTranscriptionService> logger)
     {
         _logger = logger;
 
         var endpoint = configuration["AzureOpenAI:Endpoint"];
         var apiKey = configuration["AzureOpenAI:ApiKey"];
-        var deploymentId = configuration["AzureOpenAI:AiModels:Speech:DeploymentId"];
+        var deploymentId = aiModelOptions.Value.Speech.DeploymentId;
 
         if (string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(apiKey))
             throw new InvalidOperationException(
                 "Missing Azure OpenAI configuration. Set AzureOpenAI:Endpoint and AzureOpenAI:ApiKey.");
-
-        if (string.IsNullOrWhiteSpace(deploymentId))
-            throw new InvalidOperationException(
-                "Missing Whisper deployment. Set AzureOpenAI:AiModels:Speech:DeploymentId.");
 
         var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
         _audioClient = client.GetAudioClient(deploymentId);
@@ -43,7 +44,6 @@ public class SpeechTranscriptionService
         {
             await using var stream = audio.OpenReadStream();
 
-
             var result = await _audioClient.TranscribeAudioAsync(
                 stream,
                 audio.FileName,
@@ -54,9 +54,7 @@ public class SpeechTranscriptionService
                 ct
             );
 
-
             var transcriptionResult = result.Value.Text;
-
 
             if (string.IsNullOrWhiteSpace(transcriptionResult))
                 throw new InvalidOperationException("Transcription returned empty text.");
