@@ -111,7 +111,7 @@ export default function SubtaskItem({
             backgroundColor: "#FFFFFF",
           }}
         >
-          <View className="flex-row items-center px-4 py-1">
+          <View className="flex-row items-center px-4 py-1" style={{ minHeight: 60 }}>
             <View className="w-8 justify-center">
               <TasksCheckbox type="subtask" checked={isChecked} onChange={handleToggle} />
             </View>
