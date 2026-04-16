@@ -8,7 +8,7 @@ import { useMonthlyTasks } from "../hooks/useMonthlyTasks";
 import { router, useLocalSearchParams } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { MonthlyDay, MonthlyDayProps } from "../components/monthly-day";
-import { DayDetailPanel } from "../components/day-detail-panel";
+import { SelectedDayDetailPanel } from "../components/day-detail-panel";
 import { TaskThumbnailDTO } from "../models/monthly-task-indicator-dto";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { formatBottomSheetDate } from "../util/date-formatter";
@@ -125,7 +125,7 @@ export default function MonthlyCalendarScreen() {
           </View>
 
           <View className="flex-1">
-            <DayDetailPanel selectedDay={selectedDay} />
+            <SelectedDayDetailPanel selectedDay={selectedDay} />
           </View>
         </BottomSheetView>
       </BottomSheet>

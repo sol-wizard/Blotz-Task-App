@@ -3,7 +3,7 @@ import { format, parseISO } from "date-fns";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import { theme } from "@/shared/constants/theme";
 
-export const DayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
+export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
   const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
 
   return (
