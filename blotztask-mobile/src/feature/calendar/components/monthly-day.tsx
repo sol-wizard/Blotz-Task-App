@@ -60,7 +60,7 @@ export const MonthlyDay = ({
                 <View className="flex-1">
                   <Text
                     numberOfLines={1}
-                    className={`text-[8px] font-bold font-inter leading-3 text-secondary`}
+                    className={`text-xs font-bold font-inter leading-3 text-secondary`}
                   >
                     {task.taskTitle}
                   </Text>

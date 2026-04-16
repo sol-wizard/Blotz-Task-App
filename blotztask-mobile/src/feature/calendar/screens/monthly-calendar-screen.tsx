@@ -20,10 +20,8 @@ const SNAP_L3 = "80%";
 const SNAP_POINTS = [SNAP_L1, SNAP_L2, SNAP_L3];
 
 export default function MonthlyCalendarScreen() {
-  const params = useLocalSearchParams<{ selectedDate: string }>();
-  const initialSelectedDate =
-    typeof params.selectedDate === "string" ? new Date(params.selectedDate) : new Date();
-  const [selectedDay, setSelectedDay] = useState(initialSelectedDate);
+  const { selectedDate } = useLocalSearchParams<{ selectedDate: string }>();
+  const [selectedDay, setSelectedDay] = useState(new Date(selectedDate || new Date()));
 
   const selectedDateStr = format(selectedDay, "yyyy-MM-dd");
   const selectedMonthKey = format(selectedDay, "yyyy-MM");
