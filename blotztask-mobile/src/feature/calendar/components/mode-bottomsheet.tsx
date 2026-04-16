@@ -10,7 +10,11 @@ import { ASSETS } from "@/shared/constants/assets";
 import { LinearGradient } from "expo-linear-gradient";
 import { SoundscapeCard } from "./sound-scape";
 import { useTranslation } from "react-i18next";
-import { PomodoroSoundscapeKey } from "../models/pomodoro-setting";
+import {
+  PomodoroSoundscapeKey,
+  SOUNDSCAPES_CONFIG,
+  SOUNDSCAPES_DATA,
+} from "../models/pomodoro-setting";
 import { usePomodoroSettingMutation } from "../hooks/usePomodoroSetting";
 import { usePomodoroSoundscapePlayer } from "../hooks/usePomodoroSoundscapePlayer";
 
@@ -26,44 +30,11 @@ const DURATIONS = [
   { key: "flow", timing: 0 },
 ];
 
-const SOUNDSCAPES = [
-  {
-    key: "easyFocus",
-    imageUrl: ASSETS.pomodoroSoundEasyFocus,
-  },
-  {
-    key: "deepWork",
-    imageUrl: ASSETS.pomodoroSoundDeepWork,
-  },
-  {
-    key: "taskFlow",
-    imageUrl: ASSETS.pomodoroSoundTaskFlow,
-  },
-  {
-    key: "calmMind",
-    imageUrl: ASSETS.pomodoroSoundCalmMind,
-  },
-  {
-    key: "cafeVibe",
-    imageUrl: ASSETS.pomodoroSoundCafeVibe,
-  },
-  { key: "noSound", imageUrl: ASSETS.pomodoroSoundNoSound },
-];
-
 const SCREEN_WIDTH = Dimensions.get("window").width;
 export const ITEM_WIDTH = 80;
 export const ITEM_GAP = 12;
 const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
 const PADDING_HORIZONTAL = (SCREEN_WIDTH - 32) / 2 - ITEM_WIDTH / 2;
-const LOOP_MULTIPLIER = 5;
-const GALLERY_ITEMS = Array(LOOP_MULTIPLIER).fill(SOUNDSCAPES).flat();
-const SINGLE_LENGTH = SOUNDSCAPES.length;
-const MIDDLE_LOOP_START = SINGLE_LENGTH * Math.floor(LOOP_MULTIPLIER / 2);
-
-const getGalleryIndex = (soundscape: string) => {
-  const soundscapeIndex = SOUNDSCAPES.findIndex((item) => item.key === soundscape);
-  return MIDDLE_LOOP_START + (soundscapeIndex >= 0 ? soundscapeIndex : 0);
-};
 
 export const ModeBottomSheet = ({
   isOpen,
@@ -74,33 +45,25 @@ export const ModeBottomSheet = ({
   const { savePomodoroSetting } = usePomodoroSettingMutation();
   const [draftDuration, setDraftDuration] = useState<number>(selectedDuration);
   const [draftSoundscape, setDraftSoundscape] = useState<PomodoroSoundscapeKey>(selectedSoundscape);
-  const initialTargetIndex = getGalleryIndex(selectedSoundscape);
-  const [activeIndex, setActiveIndex] = useState<number>(getGalleryIndex(selectedSoundscape));
   const { t } = useTranslation("pomodoro");
   const { isPlaying, togglePlayback, stopPlayback } = usePomodoroSoundscapePlayer(draftSoundscape);
+  const scrollX = useSharedValue(0);
 
   useEffect(() => {
     if (!isOpen) return;
-    const targetIndex = getGalleryIndex(selectedSoundscape);
     setDraftDuration(selectedDuration);
     setDraftSoundscape(selectedSoundscape);
-    setActiveIndex(targetIndex);
-    scrollX.value = targetIndex;
+    const index = SOUNDSCAPES_CONFIG.findIndex((s) => s.key === selectedSoundscape);
+    scrollX.value = index;
+
+    console.log("Open with:", selectedSoundscape);
 
     flatListRef.current?.scrollToOffset({
-      offset: targetIndex * SNAP_INTERVAL,
+      offset: index * SNAP_INTERVAL,
       animated: false,
     });
-
-    console.log(
-      "ModeBottomSheet opened with soundscape:",
-      selectedSoundscape,
-      "and duration:",
-      selectedDuration,
-    );
   }, [isOpen, selectedDuration, selectedSoundscape]);
 
-  const scrollX = useSharedValue(initialTargetIndex);
   const onScroll = useAnimatedScrollHandler((event) => {
     scrollX.value = event.contentOffset.x / SNAP_INTERVAL;
   });
@@ -108,31 +71,16 @@ export const ModeBottomSheet = ({
   const flatListRef = useRef<Animated.FlatList<any>>(null);
 
   const handleMomentumScrollEnd = (event: any) => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / SNAP_INTERVAL);
+    const index = Math.round(event.nativeEvent.contentOffset.x / SNAP_INTERVAL);
 
-    const realIndex = ((index % SINGLE_LENGTH) + SINGLE_LENGTH) % SINGLE_LENGTH;
-    const selectedKey = SOUNDSCAPES[realIndex].key;
-    setDraftSoundscape(selectedKey as PomodoroSoundscapeKey);
-    setActiveIndex(index);
-
-    if (index < SINGLE_LENGTH || index >= SINGLE_LENGTH * (LOOP_MULTIPLIER - 1)) {
-      const newIndex = MIDDLE_LOOP_START + realIndex;
-
-      flatListRef.current?.scrollToOffset({
-        offset: newIndex * SNAP_INTERVAL,
-        animated: false,
-      });
-
-      runOnUI(() => {
-        scrollX.value = newIndex;
-      })();
+    if (SOUNDSCAPES_CONFIG[index]) {
+      const selectedKey = SOUNDSCAPES_CONFIG[index].key;
+      setDraftSoundscape(selectedKey);
     }
   };
 
   const handleItemPress = (index: number, key: PomodoroSoundscapeKey) => {
     setDraftSoundscape(key);
-    setActiveIndex(index);
     flatListRef.current?.scrollToOffset({
       offset: index * SNAP_INTERVAL,
       animated: true,
@@ -140,18 +88,14 @@ export const ModeBottomSheet = ({
   };
 
   const handleSave = async () => {
-    try {
-      const isCountDown = draftDuration !== 0;
-      await savePomodoroSetting({
-        timing: draftDuration,
-        sound: draftSoundscape,
-        isCountDown: isCountDown,
-      });
-      stopPlayback();
-      onClose();
-    } catch (error) {
-      console.error("Failed to save pomodoro setting:", error);
-    }
+    const isCountDown = draftDuration !== 0;
+    await savePomodoroSetting({
+      timing: draftDuration,
+      sound: draftSoundscape,
+      isCountdown: isCountDown,
+    });
+    stopPlayback();
+    onClose();
   };
 
   return (
@@ -211,14 +155,14 @@ export const ModeBottomSheet = ({
             <View className="relative h-44 -mx-5">
               <Animated.FlatList
                 ref={flatListRef}
-                data={GALLERY_ITEMS}
-                keyExtractor={(item, index) => `${item.key}-${index}`}
+                data={SOUNDSCAPES_DATA}
+                keyExtractor={(item) => item.key}
                 renderItem={({ item, index }) => (
                   <SoundscapeCard
                     item={item}
                     index={index}
                     scrollX={scrollX}
-                    isSelected={index === activeIndex}
+                    isSelected={draftSoundscape === item.key}
                     isPlaying={isPlaying}
                     onPress={handleItemPress}
                     onTogglePlayback={togglePlayback}
@@ -236,11 +180,6 @@ export const ModeBottomSheet = ({
                 onMomentumScrollEnd={handleMomentumScrollEnd}
                 onScroll={onScroll}
                 scrollEventThrottle={16}
-                getItemLayout={(_, index) => ({
-                  length: SNAP_INTERVAL,
-                  offset: SNAP_INTERVAL * index,
-                  index,
-                })}
               />
 
               {/* === left gradient === */}
@@ -277,10 +216,7 @@ export const ModeBottomSheet = ({
             </View>
 
             {/* pic for soundscape */}
-            <Pressable
-              className="items-center -mt-12 relative"
-              onPress={() => setDraftSoundscape("noSound")}
-            >
+            <Pressable className="items-center -mt-12 relative">
               <Image
                 source={ASSETS.pomodoroSoundChoose}
                 className="w-32 h-12"

@@ -5,3 +5,5 @@ export interface PomodoroDTO {
   sound: PomodoroSoundscapeKey | null;
   isCountdown: boolean;
 }
+
+export type UpdatePomodoroSettingRequest = PomodoroDTO;

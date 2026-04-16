@@ -1,16 +1,6 @@
 import { useEffect } from "react";
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
-import { ASSETS } from "@/shared/constants/assets";
-import { PomodoroSoundscapeKey } from "../models/pomodoro-setting";
-
-const SOUND_MAP: Record<PomodoroSoundscapeKey, number | null> = {
-  easyFocus: ASSETS.pomodoroEasyFocus,
-  deepWork: ASSETS.pomodoroDeepWork,
-  taskFlow: ASSETS.pomodoroTaskFlow,
-  calmMind: ASSETS.pomodoroCalmMind,
-  cafeVibe: ASSETS.pomodoroCafeVibe,
-  noSound: null,
-};
+import { PomodoroSoundscapeKey, SOUNDSCAPE_MUSIC_MAP } from "../models/pomodoro-setting";
 
 export function usePomodoroSoundscapePlayer(selectedSoundscape: PomodoroSoundscapeKey) {
   const player = useAudioPlayer(null, {
@@ -34,7 +24,7 @@ export function usePomodoroSoundscapePlayer(selectedSoundscape: PomodoroSoundsca
       return;
     }
 
-    const source = SOUND_MAP[selectedSoundscape];
+    const source = SOUNDSCAPE_MUSIC_MAP[selectedSoundscape];
     if (!source) return;
 
     player.replace(source);

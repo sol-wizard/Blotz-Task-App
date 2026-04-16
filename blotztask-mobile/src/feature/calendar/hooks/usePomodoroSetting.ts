@@ -1,8 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchPomodoroSettings, updatePomodoroSetting } from "@/shared/services/pomodoro-service";
-import { PomodoroSoundscapeKey, UpdatePomodoroSettingRequest } from "../models/pomodoro-setting";
-import type { PomodoroDTO } from "@/shared/models/pomodoro-dto";
+import { PomodoroSoundscapeKey } from "../models/pomodoro-setting";
+import { PomodoroDTO, UpdatePomodoroSettingRequest } from "@/shared/models/pomodoro-dto";
 import { queryClient } from "@/shared/util/queryClient";
+import { pomodoroKeys } from "@/shared/constants/query-key-factory";
 
 export interface PomodoroSettingResponse {
   timing: number;
@@ -29,5 +30,6 @@ export function usePomodoroSettingMutation() {
 
   return {
     savePomodoroSetting: mutation.mutateAsync,
+    isLoading: mutation.isPending,
   };
 }
