@@ -11,6 +11,7 @@ import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { CustomDay, CustomDayProps } from "../components/custom-day";
 import { useLocalSearchParams } from "expo-router";
+import { ModeBottomSheet } from "../components/mode-bottomsheet";
 
 const calendarTheme = {
   calendarBackground: theme.colors.background,
@@ -23,6 +24,7 @@ export default function CalendarScreen() {
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const { weeklyTaskAvailability, isLoading } = useTaskDays({ selectedDay });
   const progress = useSharedValue(isCalendarVisible ? 1 : 0);
+  const [isModeSheetOpen, setIsModeSheetOpen] = useState(false);
 
   const markedDates = isLoading ? {} : getMarkedDates({ weeklyTaskAvailability });
 
@@ -83,8 +85,9 @@ export default function CalendarScreen() {
           </Animated.View>
         )}
 
-        <FilteredTaskList selectedDay={selectedDay} />
+        <FilteredTaskList selectedDay={selectedDay} onOpenMode={() => setIsModeSheetOpen(true)} />
       </CalendarProvider>
+      <ModeBottomSheet isOpen={isModeSheetOpen} onClose={() => setIsModeSheetOpen(false)} />
     </SafeAreaView>
   );
 }

@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text.Json;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.AiUsage.Entities;
 using BlotzTask.Modules.Notes.Domain;
 using BlotzTask.Modules.Pomodoro.Domain;
 using BlotzTask.Modules.Tasks.Domain.Entities;
@@ -69,6 +70,7 @@ public class SyncUserCommandHandler(
                 SignUpAt = signUpAt,
                 CreationAt = utcNow,
                 UpdatedAt = utcNow,
+                LoginAt = utcNow,
                 IsOnboarded = false
             };
             db.AppUsers.Add(row);
@@ -88,7 +90,15 @@ public class SyncUserCommandHandler(
                 IsCountdown = false
             };
             db.PomodoroSetting.Add(pomodoroSetting);
-            
+
+            var subscription = new UserSubscription
+            {
+                UserId = row.Id,
+                PlanId = 1,
+                CreatedAt = utcNow
+            };
+            db.UserSubscriptions.Add(subscription);
+
             await db.SaveChangesAsync(ct);
 
             // Seed default tasks for new user
@@ -180,6 +190,9 @@ public class SyncUserCommandHandler(
 
             return new SyncUserResult { Id = row.Id, Auth0UserId = row.Auth0UserId };
         }
+
+        existing.LoginAt = utcNow;
+        await db.SaveChangesAsync(ct);
 
         return new SyncUserResult { Id = existing.Id, Auth0UserId = existing.Auth0UserId };
     }

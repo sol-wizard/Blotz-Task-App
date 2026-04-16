@@ -1,6 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
-import { AnimatedChevron } from "@/shared/components/ui/chevron";
+import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
+import { AnimatedChevron } from "@/shared/components/chevron";
 import { router } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SharedValue } from "react-native-reanimated";
@@ -12,7 +13,8 @@ interface CalendarHeaderProps {
 }
 
 export default function CalendarHeader({ date, progress, onToggleCalendar }: CalendarHeaderProps) {
-  const { dayOfWeek } = formatCalendarDate(date);
+  const { userPreferences } = useUserPreferencesQuery();
+  const { dayOfWeek } = formatCalendarDate(date, userPreferences);
 
   return (
     <View className="flex-row items-center justify-between px-5">

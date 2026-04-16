@@ -7,11 +7,16 @@ import { useAuth0 } from "react-native-auth0";
 import { useEffect } from "react";
 
 export default function ProtectedLayout() {
-  const { user } = useAuth0();
+  const { user, getCredentials } = useAuth0();
 
   useEffect(() => {
     if (user?.sub) {
       analytics.identifyUser(user.sub, { email: user.email, name: user.name });
+    } else {
+      // useAuth0().user is null on app restart even when a valid session exists.
+      // getCredentials() restores the Auth0 session into context, which repopulates `user`
+      // and triggers this effect to re-run with the real user data.
+      void getCredentials();
     }
   }, [user?.sub]);
 

@@ -5,7 +5,7 @@ import ReanimatedSwipeable, {
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { differenceInCalendarDays, format } from "date-fns";
-import TasksCheckbox from "@/shared/components/ui/task-checkbox";
+import TasksCheckbox from "@/shared/components/task-checkbox";
 import { DeadlineTaskDTO } from "../models/deadline-task-dto";
 import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
@@ -83,7 +83,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
         style={{ gap: 12 }}
       >
         {/* Checkbox */}
-        <TasksCheckbox checked={task.isDone} onChange={() => {}} />
+        <TasksCheckbox type="task" checked={task.isDone} onChange={() => {}} />
 
         {/* Vertical label colour bar */}
         <View className="h-10 w-1.5 rounded-full" style={{ backgroundColor: labelColor }} />
