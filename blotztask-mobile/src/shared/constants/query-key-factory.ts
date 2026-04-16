@@ -38,3 +38,7 @@ export const azureSpeechKeys = {
 export const noteKeys = {
   all: ["notes"] as const,
 };
+
+export const ddlKeys = {
+  all: ["ddl"] as const,
+};

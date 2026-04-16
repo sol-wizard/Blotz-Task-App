@@ -51,7 +51,7 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
             var deadline = new TaskDeadline
             {
                 TaskItem = newTask,
-                DueAt = newTask.EndTime,
+                DueAt = command.TaskDetails.DueAt ?? newTask.EndTime,
                 CreatedAt = newTask.CreatedAt,
                 UpdatedAt = newTask.UpdatedAt,
                 IsPinned = false
@@ -78,4 +78,5 @@ public class AddTaskItemDto
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
     public bool? IsDeadline { get; set; }
+    public DateTimeOffset? DueAt { get; set; }
 }

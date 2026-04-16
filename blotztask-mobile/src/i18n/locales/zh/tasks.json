@@ -18,8 +18,7 @@
     "markAsDeadline": "设为截止任务",
     "dueTime": "截止时间",
     "invalidTimeRange": "开始时间不能晚于结束时间",
-    "warningReminderAfterDdl": "提醒您：您的提醒时间设置在截止时间之后。",
-    "warningEventAfterDdl": "提醒您：您的事件结束时间设置在截止时间之后。"
+    "invalidDeadlineRange": "提醒您：您的事件截止时间设置在任务结束时间之前。"
   },
   "details": {
     "notFound": "未找到选定的任务。",
@@ -56,5 +55,8 @@
     "life": "生活",
     "learning": "学习",
     "health": "健康"
+  },
+  "success": {
+    "taskCreated": "任务创建成功"
   }
 }

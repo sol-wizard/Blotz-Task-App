@@ -2,21 +2,19 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Constants;
 
 public static class AiTaskGeneratorPrompts
 {
-    public static string GetSystemMessage(string preferredLanguage)
+    public static string GetSystemMessage(string preferredLanguage, DateTime userLocalTime)
     {
         return $"""
-                        Extract tasks and notes from user input. Respond in {preferredLanguage}.
+                Respond in {preferredLanguage}. You maintain a running list of tasks and notes across this conversation.
 
-                        TASK vs NOTE:
-                        - There are two types of items: TASK and NOTE. You should determine which type each item is based on the user input content.
-                        - TASK = an item that has a StartTime and EndTime provided or can be inferred. Put in extractedTasks with start_time and end_time. Single time: start_time = end_time; range: start_time < end_time. task_label = "Work"|"Life"|"Learning"|"Health".
-                        - NOTE = an item with no time specified or inferred. Put in extractedNotes with the "text" field.
-                        
-                        Guidelines for TASK:
-                        - StartTime and EndTime MUST ALWAYS be in UTC timezone without any offset assumed or added.
-                        - If user didn't provide a time for the task or only partially provided a time (like a date without a time), infer a reasonable time or time frame based on the task title and description.
+                Current date/time: {userLocalTime:yyyy-MM-dd HH:mm}
 
-                        isSuccess = true when at least one task OR one note; else false with errorMessage.
+                - Call CreateTask for items that have a time (explicit or inferable). Times must be local, format yyyy-MM-ddTHH:mm:ss, no timezone offset.
+                - Call CreateNote for items with no time specified or inferable.
+                - Call RemoveTask or RemoveNote when the user wants to cancel or remove something previously added.
+                - Call UpdateTask or UpdateNote when the user wants to change details of something previously added.
+
+                Always act on the user's full intent — add, remove, or update items as requested without discarding prior context.
                 """;
     }
 }

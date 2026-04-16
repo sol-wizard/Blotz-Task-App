@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import Toast from "react-native-toast-message";
+import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
-import { FormTextInput } from "@/shared/components/ui/form-text-input";
+import { FormTextInput } from "@/shared/components/form-text-input";
 import { LabelSelect } from "./components/label-select";
-import { FormDivider } from "../../shared/components/ui/form-divider";
+import { FormDivider } from "../../shared/components/form-divider";
 import { ReminderTab } from "./components/reminder-tab";
 import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
@@ -26,7 +25,7 @@ import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
@@ -65,14 +64,19 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const oneHourLater = new Date(now.getTime() + 3600000);
   const initialDueAt = dto?.dueAt ? new Date(dto.dueAt) : null;
 
+  const initialStartDate = dto?.startTime ? new Date(dto.startTime) : now;
+  const initialStartTime = dto?.startTime ? new Date(dto.startTime) : now;
+  const initialEndDate = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
+  const initialEndTime = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
+
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
     description: dto?.description ?? "",
     labelId: dto?.labelId ?? null,
-    startDate: dto?.startTime ? new Date(dto?.startTime) : now,
-    startTime: dto?.startTime ? new Date(dto?.startTime) : now,
-    endDate: dto?.endTime ? new Date(dto?.endTime) : oneHourLater,
-    endTime: dto?.endTime ? new Date(dto?.endTime) : oneHourLater,
+    startDate: initialStartDate,
+    startTime: initialStartTime,
+    endDate: initialTab === "reminder" ? initialStartDate : initialEndDate,
+    endTime: initialTab === "reminder" ? initialStartTime : initialEndTime,
     alert: defaultAlert,
     isDeadline: dto?.isDeadline ?? !!initialDueAt,
     deadlineDate: initialDueAt ?? oneHourLater,
@@ -85,68 +89,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     defaultValues: defaultValues,
   });
 
-  const { handleSubmit, formState, control, setValue, clearErrors, trigger, watch } = form;
+  const { handleSubmit, formState, control, setValue, clearErrors, trigger, getValues } = form;
   const { isSubmitting } = formState;
-
-  const startDate = watch("startDate");
-  const startTime = watch("startTime");
-  const endDate = watch("endDate");
-  const endTime = watch("endTime");
-  const isDdl = watch("isDdl");
-  const deadlineDate = watch("deadlineDate");
-  const deadlineTime = watch("deadlineTime");
-
-  const prevHasWarned = useRef(false);
-
-  // If the deadline toggle is turned off and later back on, we want to be able
-  // to show the warning again for the (still) invalid date/time configuration.
-  useEffect(() => {
-    if (!isDdl) {
-      prevHasWarned.current = false;
-    }
-  }, [isDdl]);
-
-  useEffect(() => {
-    if (!isDdl || !deadlineDate || !deadlineTime) return;
-
-    const currentStartDate = isActiveTab === "reminder" ? startDate : endDate;
-    const currentStartTime = isActiveTab === "reminder" ? startTime : endTime;
-
-    if (!currentStartDate || !currentStartTime) return;
-
-    const currentDateTime = combineDateTime(currentStartDate, currentStartTime);
-    const ddlDateTime = combineDateTime(deadlineDate, deadlineTime);
-
-    if (!currentDateTime || !ddlDateTime) return;
-
-    if (currentDateTime > ddlDateTime) {
-      if (!prevHasWarned.current) {
-        const warningText = t(
-          isActiveTab === "reminder"
-            ? "form.warningReminderAfterDdl"
-            : "form.warningEventAfterDdl",
-        );
-        Toast.show({
-          type: "error",
-          text1: warningText,
-          position: "top",
-        });
-        prevHasWarned.current = true;
-      }
-    } else {
-      prevHasWarned.current = false;
-    }
-  }, [
-    startDate,
-    startTime,
-    endDate,
-    endTime,
-    deadlineDate,
-    deadlineTime,
-    isDdl,
-    isActiveTab,
-    t,
-  ]);
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;
@@ -200,12 +144,23 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     setIsActiveTab(next);
     clearErrors(["endDate", "endTime"]);
 
+    const startDate = getValues("startDate");
+    const startTime = getValues("startTime");
+
     if (next === "reminder") {
-      const currentEndDate = form.getValues("endDate");
-      const currentEndTime = form.getValues("endTime");
-      setValue("startDate", currentEndDate);
-      setValue("startTime", currentEndTime);
+      setValue("endDate", startDate, { shouldValidate: false });
+      setValue("endTime", startTime, { shouldValidate: false });
+      clearErrors(["endDate", "endTime"]);
+      return;
     }
+
+    const start = new Date();
+    const oneHourLater = new Date(start.getTime() + 3600000);
+    setValue("startDate", start);
+    setValue("startTime", start);
+    setValue("endDate", oneHourLater);
+    setValue("endTime", oneHourLater);
+    trigger("endTime");
   };
 
   return (
@@ -249,12 +204,14 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
         <FormDivider />
         <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
-        {formState.errors.endTime && (
+        {isActiveTab === "event" && formState.errors.endTime && (
           <Text className="text-red-500 text-sm mb-4 font-baloo">
             {t(formState.errors.endTime.message || "")}
           </Text>
         )}
-        {isActiveTab === "reminder" && <ReminderTab control={control} setValue={setValue} />}
+        {isActiveTab === "reminder" && (
+          <ReminderTab control={control} setValue={setValue} clearErrors={clearErrors} />
+        )}
         {isActiveTab === "event" && (
           <EventTab
             control={control}

@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
-import TasksCheckbox from "./task-checkbox";
+import TasksCheckbox from "../../../shared/components/task-checkbox";
 import { theme } from "@/shared/constants/theme";
 import { convertDurationToText } from "../../../shared/util/convert-duration";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -74,7 +74,7 @@ export default function SubtaskItem({
       >
         <View className="flex-row items-center min-h-[48px] px-3 py-1">
           <View style={{ width: 32, justifyContent: "center" }}>
-            <TasksCheckbox checked={isChecked} onChange={handleToggle} size={24} />
+            <TasksCheckbox type="subtask" checked={isChecked} onChange={handleToggle} />
           </View>
 
           <View style={{ flex: 1, marginLeft: 4, justifyContent: "center" }}>

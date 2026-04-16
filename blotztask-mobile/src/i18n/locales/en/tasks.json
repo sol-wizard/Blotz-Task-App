@@ -18,8 +18,7 @@
     "markAsDeadline": "Mark as deadline",
     "dueTime": "Due Time",
     "invalidTimeRange": "Start time cannot be later than end time",
-    "warningReminderAfterDdl": "Just a heads up, your reminder is set for after the deadline (due time).",
-    "warningEventAfterDdl": "Just a heads up, your event end time is set for after the deadline (due time)."
+    "invalidDeadlineRange": "Just a heads up, your deadline is set before the task end time."
   },
   "details": {
     "notFound": "Selected Task not found.",
@@ -56,5 +55,8 @@
     "life": "Life",
     "learning": "Learning",
     "health": "Health"
+  },
+  "success": {
+    "taskCreated": "Task created successfully"
   }
 }
