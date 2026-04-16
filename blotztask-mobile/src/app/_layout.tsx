@@ -22,7 +22,7 @@ import { queryClient } from "@/shared/util/queryClient";
 import * as Sentry from "@sentry/react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
-import { toastConfig } from "@/shared/components/ui/toast-config";
+import { toastConfig } from "@/shared/components/toast-config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import posthog from "@/shared/constants/posthog-client";
 
@@ -58,7 +58,7 @@ export default function RootLayout() {
             <SafeAreaProvider>
               <KeyboardProvider>
                 <RootStack />
-                <Toast config={toastConfig} position="bottom" bottomOffset={110} />
+                <Toast config={toastConfig} position="bottom" bottomOffset={120} />
               </KeyboardProvider>
             </SafeAreaProvider>
           </QueryClientProvider>

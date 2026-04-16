@@ -22,6 +22,94 @@ namespace BlotzTask.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("BlotzTask.Modules.AiUsage.Entities.AiUsageRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CompletionTokens")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PromptTokens")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalTokens")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("AiUsageRecords");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiUsage.Entities.SubscriptionPlan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("MonthlyTokenLimit")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SubscriptionPlans");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            MonthlyTokenLimit = 50000,
+                            Name = "Free"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            MonthlyTokenLimit = 500000,
+                            Name = "Pro"
+                        });
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiUsage.Entities.UserSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PlanId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlanId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserSubscriptions");
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.Badge", b =>
                 {
                     b.Property<int>("Id")
@@ -497,6 +585,9 @@ namespace BlotzTask.Migrations
                     b.Property<bool>("IsOnboarded")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("LoginAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PictureUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -522,6 +613,7 @@ namespace BlotzTask.Migrations
                             DisplayName = "blotztest1@gmail.com",
                             Email = "blotztest1@gmail.com",
                             IsOnboarded = false,
+                            LoginAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
                             PictureUrl = "https://s.gravatar.com/avatar/d7eee1179900d1154cf2b3a64f7f91dd?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbl.png",
                             SignUpAt = new DateTime(2025, 9, 9, 14, 33, 27, 955, DateTimeKind.Utc),
                             UpdatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc)
@@ -602,6 +694,36 @@ namespace BlotzTask.Migrations
                             PreferredLanguage = "Zh",
                             UpcomingNotification = true
                         });
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiUsage.Entities.AiUsageRecord", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiUsage.Entities.UserSubscription", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.AiUsage.Entities.SubscriptionPlan", "Plan")
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Plan");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.UserBadge", b =>

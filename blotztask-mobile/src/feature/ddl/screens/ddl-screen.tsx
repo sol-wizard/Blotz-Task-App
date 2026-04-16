@@ -1,11 +1,11 @@
 import { View, Text, FlatList } from "react-native";
-import { ReturnButton } from "@/shared/components/ui/return-button";
+import { ReturnButton } from "@/shared/components/return-button";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useAllDdl } from "../hooks/useAllDdl";
 import DdlCard from "../components/ddl-card";
 import { DeadlineTaskDTO } from "../models/deadline-task-dto";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 
 export default function DdlScreen() {
   const { t } = useTranslation("deadline");

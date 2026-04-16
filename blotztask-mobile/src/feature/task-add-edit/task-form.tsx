@@ -4,9 +4,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
-import { FormTextInput } from "@/shared/components/ui/form-text-input";
+import { FormTextInput } from "@/shared/components/form-text-input";
 import { LabelSelect } from "./components/label-select";
-import { FormDivider } from "../../shared/components/ui/form-divider";
+import { FormDivider } from "../../shared/components/form-divider";
 import { ReminderTab } from "./components/reminder-tab";
 import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
@@ -25,7 +25,7 @@ import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
@@ -91,7 +91,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const { handleSubmit, formState, control, setValue, clearErrors, trigger, getValues } = form;
   const { isSubmitting } = formState;
-
 
   if (isUserPreferencesLoading) {
     return <LoadingScreen />;

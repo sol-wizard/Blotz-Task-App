@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { ASSETS, PNGIMAGES } from "@/shared/constants/assets";
-import { FormDivider } from "@/shared/components/ui/form-divider";
+import { FormDivider } from "@/shared/components/form-divider";
 import { SettingsMenuItem } from "@/feature/settings/modals/settings-menu-item";
 import { useTranslation } from "react-i18next";
 import { Image } from "expo-image";

@@ -2,13 +2,18 @@ import { isSameDay, format } from "date-fns";
 import { enUS, zhCN } from "date-fns/locale";
 import i18n from "@/i18n";
 import { Text } from "react-native";
+import { Language, UserPreferencesDTO } from "@/shared/models/user-preferences-dto";
 
 /**
  * Formats a date string for calendar display
  * @param dateString - Date string in format YYYY-MM-DD
+ * @param userPreferences - User preferences containing language setting
  * @returns Object containing the day of week display string
  */
-export const formatCalendarDate = (dateString: string) => {
+export const formatCalendarDate = (
+  dateString: string,
+  userPreferences: UserPreferencesDTO | null | undefined,
+) => {
   const dateObj = new Date(`${dateString}T00:00:00`);
   const today = new Date();
 
@@ -20,7 +25,9 @@ export const formatCalendarDate = (dateString: string) => {
     };
   }
 
-  const isChinese = i18n.language === "zh";
+  if (!userPreferences) return { dayOfWeek: "" };
+
+  const isChinese = userPreferences.preferredLanguage === Language.Zh;
 
   if (isChinese) {
     // Chinese format: M月d日 (e.g., "1月9日")

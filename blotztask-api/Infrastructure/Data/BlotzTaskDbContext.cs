@@ -5,6 +5,7 @@ using BlotzTask.Modules.Labels.Enums;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Enums;
+using BlotzTask.Modules.AiUsage.Entities;
 using BlotzTask.Modules.Notes.Domain;
 using BlotzTask.Modules.Pomodoro.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,9 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<Badge> Badges { get; set; }
     public DbSet<UserBadge> UserBadges { get; set; }
     public DbSet<UserProgress> UserProgress { get; set; }
+    public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
+    public DbSet<UserSubscription> UserSubscriptions { get; set; }
+    public DbSet<AiUsageRecord> AiUsageRecords { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -93,6 +97,7 @@ public class BlotzTaskDbContext : DbContext
                 CreationAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
                 SignUpAt = new DateTime(2025, 9, 9, 14, 33, 27, 955, DateTimeKind.Utc),
                 UpdatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
+                LoginAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
                 IsOnboarded = false
             });
 
@@ -107,5 +112,11 @@ public class BlotzTaskDbContext : DbContext
                 EveningWrapUpNotification = false,
                 PreferredLanguage = Language.Zh
             });
+
+        modelBuilder.Entity<SubscriptionPlan>()
+            .HasData(
+                new SubscriptionPlan { Id = 1, Name = "Free", MonthlyTokenLimit = 50_000 },
+                new SubscriptionPlan { Id = 2, Name = "Pro", MonthlyTokenLimit = 500_000 }
+            );
     }
 }

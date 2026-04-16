@@ -3,11 +3,11 @@ import { EditTaskItemDTO } from "@/feature/task-add-edit/models/edit-task-item-d
 import { useLocalSearchParams, useRouter } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { View } from "react-native";
-import { ReturnButton } from "@/shared/components/ui/return-button";
+import { ReturnButton } from "@/shared/components/return-button";
 
 export default function TaskEditScreen() {
   const { updateTask, isUpdating } = useTaskMutations();

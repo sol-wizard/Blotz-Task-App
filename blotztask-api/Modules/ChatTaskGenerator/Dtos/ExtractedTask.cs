@@ -1,13 +1,15 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace BlotzTask.Modules.ChatTaskGenerator.DTOs;
+namespace BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
 /// <summary>
 ///     Represents a single extracted task from user input.
 /// </summary>
 public class ExtractedTask
 {
+    public Guid Id { get; set; }
+
     [JsonPropertyName("title")]
     [Description("A short, descriptive name for the task")]
     public string Title { get; set; }

@@ -5,7 +5,7 @@ import ReanimatedSwipeable, {
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { MaterialIcons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
-import TasksCheckbox from "@/shared/components/ui/task-checkbox";
+import TasksCheckbox from "@/shared/components/task-checkbox";
 
 import { SharedValue, useDerivedValue, withTiming } from "react-native-reanimated";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -16,10 +16,11 @@ import { useRecurringTaskMutations } from "../hooks/useRecurringTaskMutations";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { formatDateRange } from "../util/format-date-range";
-import { AnimatedChevron } from "@/shared/components/ui/chevron";
+import { AnimatedChevron } from "@/shared/components/chevron";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
+import { TaskCardLeftActions } from "./task-card-left-actions";
 
 // Props
 interface TaskCardProps {
@@ -27,13 +28,13 @@ interface TaskCardProps {
   deleteTask: (task: TaskDetailDTO) => void;
   isDeleting: boolean;
   selectedDay?: Date;
+  onOpenMode: () => void;
 }
 
-const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) => {
+const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: TaskCardProps) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
-
   // Mutations
   const { toggleTask, isToggling } = useTaskMutations();
   const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
@@ -88,6 +89,12 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
   return (
     <ReanimatedSwipeable
       ref={swipeRef}
+      renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
+        <TaskCardLeftActions progress={leftActionsProgress} onMode={onOpenMode} />
+      )}
+      leftThreshold={12}
+      overshootLeft={false}
+      dragOffsetFromRightEdge={8}
       renderRightActions={(rightActionsProgress: SharedValue<number>) => (
         <TaskCardRightActions
           progress={rightActionsProgress}
@@ -102,11 +109,12 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
       friction={2}
       dragOffsetFromLeftEdge={8}
     >
-      <View className="flex-col bg-white rounded-2xl px-4 py-3 min-h-20 justify-center">
+      <View className="flex-col bg-white rounded-3xl px-4 py-3 min-h-20 justify-center">
         <View className="justify-center">
           <View className="flex-row items-center" style={{ gap: 12 }}>
             {/* Checkbox */}
             <TasksCheckbox
+              type="task"
               checked={task.isDone}
               disabled={isLoading}
               onChange={async () => {
@@ -171,16 +179,18 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay }: TaskCardProps) 
                 {format(parseISO(task.endTime), "H:mm")}
               </Text>
 
-              {hasSubtasks && (
-                <Pressable
-                  onPress={() => setIsExpanded((v) => !v)}
-                  className="ml-2 p-1"
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  disabled={isLoading}
-                >
-                  <AnimatedChevron color="#9CA3AF" progress={progress} />
-                </Pressable>
-              )}
+              <View className="ml-1 w-6 items-center justify-center">
+                {hasSubtasks && (
+                  <Pressable
+                    onPress={() => setIsExpanded((v) => !v)}
+                    className="p-1"
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    disabled={isLoading}
+                  >
+                    <AnimatedChevron color="#9CA3AF" progress={progress} />
+                  </Pressable>
+                )}
+              </View>
             </View>
           </View>
           {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
