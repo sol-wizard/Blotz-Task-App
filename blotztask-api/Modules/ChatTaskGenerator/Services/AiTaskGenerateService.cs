@@ -78,13 +78,13 @@ public class AiTaskGenerateService(
 
             logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
-            var response=await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
-            int promptTokens=(int)(response.Usage?.InputTokenCount??0);
-            int completTokens=(int)(response.Usage?.OutputTokenCount??0);
+            var response = await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
+            int promptTokens = (int)(response.Usage?.InputTokenCount??0);
+            int completTokens = (int)(response.Usage?.OutputTokenCount??0);
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest{
-                UserId=userId,
-                PromptTokens=promptTokens,
-                CompletionTokens=completTokens
+                UserId = userId,
+                PromptTokens = promptTokens,
+                CompletionTokens = completTokens
             },ct);
             logger.LogInformation("TaskGeneration: Tool calls this turn={ToolCallCount}, total tasks={TaskCount}, notes={NoteCount}",
                 context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
