@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Calendar, DateData, LocaleConfig } from "react-native-calendars";
+import { Calendar, DateData } from "react-native-calendars";
 import { format } from "date-fns";
 import { theme } from "@/shared/constants/theme";
 import { useMonthlyTasks } from "../hooks/useMonthlyTasks";
@@ -14,17 +14,6 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { formatBottomSheetDate } from "../util/date-formatter";
 import i18n from "@/i18n";
 
-LocaleConfig.locales["en"] = {
-  monthNames: [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-  ],
-  monthNamesShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-  dayNames: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-  dayNamesShort: ["S", "M", "T", "W", "T", "F", "S"],
-  today: "Today",
-};
-LocaleConfig.defaultLocale = "en";
 
 const SNAP_L1 = "10%";
 const SNAP_L2 = "50%";
