@@ -2,7 +2,6 @@ import type { QualityCheckCaseResult } from "@/types/quality-check";
 import { StatusBadge } from "./status-badge";
 import { ReliabilityBadge } from "./reliability-badge";
 import { ChecksDetail } from "./checks-detail";
-import { TaskCardPreview } from "./task-card-preview";
 
 const formatMs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
@@ -64,18 +63,7 @@ export const ResultRow = ({
               <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Input</p>
               <p className="text-sm text-zinc-100 italic">&ldquo;{result.input}&rdquo;</p>
             </div>
-            {result.extractedTasks.length > 0 && (
-              <div className="mb-4">
-                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3">Task Preview</p>
-                <div className="flex flex-col gap-2">
-                  {result.extractedTasks.map((task, i) => (
-                    <TaskCardPreview key={i} task={task} />
-                  ))}
-                </div>
-              </div>
-            )}
-            <p className="text-xs text-zinc-500 uppercase tracking-wider mb-2">Checks</p>
-            <ChecksDetail checks={result.checks} />
+            <ChecksDetail checks={result.checks} extractedTasks={result.extractedTasks} />
           </td>
         </tr>
       )}

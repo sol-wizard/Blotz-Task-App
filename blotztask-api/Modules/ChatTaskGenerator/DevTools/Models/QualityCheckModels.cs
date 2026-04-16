@@ -26,6 +26,12 @@ public class QualityCheckTaskExpectation
     /// </summary>
     public int? MinutesFromNow { get; set; }
     public int ToleranceMinutes { get; set; } = 2;
+
+    /// <summary>
+    /// Expected day of week (e.g. "Saturday", "Monday"). Use this instead of StartDateOffset
+    /// for inputs like "this weekend" or "next week" where the offset varies by the day the test runs.
+    /// </summary>
+    public string? ExpectedDayOfWeek { get; set; }
 }
 
 public class QualityCheckItem

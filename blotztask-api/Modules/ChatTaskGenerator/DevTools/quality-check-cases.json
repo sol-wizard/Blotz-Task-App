@@ -24,5 +24,31 @@
         "label": "Work"
       }
     ]
+  },
+  {
+    "id": "weekend-defaults-to-saturday",
+    "input": "I want to go hiking this weekend",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["hiking"],
+        "expectedDayOfWeek": "Saturday",
+        "label": "Life"
+      }
+    ]
+  },
+  {
+    "id": "next-week-defaults-to-monday",
+    "input": "Schedule a project kickoff meeting next week",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["kickoff", "meeting", "project"],
+        "expectedDayOfWeek": "Monday",
+        "label": "Work"
+      }
+    ]
   }
 ]

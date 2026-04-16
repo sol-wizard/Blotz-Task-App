@@ -127,6 +127,18 @@ public static class QualityCheckRunner
                     Passed = passed
                 });
             }
+
+            if (expectation.ExpectedDayOfWeek is not null)
+            {
+                var actualDayOfWeek = task.StartTime.DayOfWeek.ToString();
+                caseResult.Checks.Add(new QualityCheckItem
+                {
+                    Field = $"task[{i}].dayOfWeek",
+                    Expected = expectation.ExpectedDayOfWeek,
+                    Actual = actualDayOfWeek,
+                    Passed = actualDayOfWeek.Equals(expectation.ExpectedDayOfWeek, StringComparison.OrdinalIgnoreCase)
+                });
+            }
         }
     }
 }
