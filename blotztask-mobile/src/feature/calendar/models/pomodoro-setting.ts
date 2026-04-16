@@ -1,5 +1,9 @@
 import { ASSETS } from "@/shared/constants/assets";
 
+export const ITEM_WIDTH = 80;
+export const ITEM_GAP = 12;
+export const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
+
 export const SOUNDSCAPES_DATA = [
   { key: "easyFocus", imageUrl: ASSETS.pomodoroSoundEasyFocus, music: ASSETS.pomodoroEasyFocus },
   { key: "deepWork", imageUrl: ASSETS.pomodoroSoundDeepWork, music: ASSETS.pomodoroDeepWork },
@@ -9,7 +13,6 @@ export const SOUNDSCAPES_DATA = [
   { key: "noSound", imageUrl: ASSETS.pomodoroSoundNoSound, music: null },
 ] as const;
 
-export const SOUNDSCAPES_CONFIG = SOUNDSCAPES_DATA;
 export type PomodoroSoundscapeKey = (typeof SOUNDSCAPES_DATA)[number]["key"];
 
 export const SOUNDSCAPE_IMAGE_MAP = Object.fromEntries(

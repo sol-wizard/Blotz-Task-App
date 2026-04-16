@@ -1,10 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { View, Text, Pressable, Modal, Image, Dimensions } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedScrollHandler,
-  runOnUI,
-} from "react-native-reanimated";
+import Animated, { useSharedValue, useAnimatedScrollHandler } from "react-native-reanimated";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ASSETS } from "@/shared/constants/assets";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,8 +8,9 @@ import { SoundscapeCard } from "./sound-scape";
 import { useTranslation } from "react-i18next";
 import {
   PomodoroSoundscapeKey,
-  SOUNDSCAPES_CONFIG,
   SOUNDSCAPES_DATA,
+  ITEM_WIDTH,
+  SNAP_INTERVAL,
 } from "../models/pomodoro-setting";
 import { usePomodoroSettingMutation } from "../hooks/usePomodoroSetting";
 import { usePomodoroSoundscapePlayer } from "../hooks/usePomodoroSoundscapePlayer";
@@ -30,10 +27,8 @@ const DURATIONS = [
   { key: "flow", timing: 0 },
 ];
 
+// Animated values for soundscape list
 const SCREEN_WIDTH = Dimensions.get("window").width;
-export const ITEM_WIDTH = 80;
-export const ITEM_GAP = 12;
-const SNAP_INTERVAL = ITEM_WIDTH + ITEM_GAP;
 const PADDING_HORIZONTAL = (SCREEN_WIDTH - 32) / 2 - ITEM_WIDTH / 2;
 
 export const ModeBottomSheet = ({
@@ -42,28 +37,28 @@ export const ModeBottomSheet = ({
   selectedSoundscape,
   selectedDuration,
 }: ModeBottomSheetProps) => {
+  // Mutations
   const { savePomodoroSetting } = usePomodoroSettingMutation();
   const [draftDuration, setDraftDuration] = useState<number>(selectedDuration);
   const [draftSoundscape, setDraftSoundscape] = useState<PomodoroSoundscapeKey>(selectedSoundscape);
-  const { t } = useTranslation("pomodoro");
   const { isPlaying, togglePlayback, stopPlayback } = usePomodoroSoundscapePlayer(draftSoundscape);
-  const scrollX = useSharedValue(0);
+
+  const { t } = useTranslation("pomodoro");
 
   useEffect(() => {
     if (!isOpen) return;
     setDraftDuration(selectedDuration);
     setDraftSoundscape(selectedSoundscape);
-    const index = SOUNDSCAPES_CONFIG.findIndex((s) => s.key === selectedSoundscape);
+    const index = SOUNDSCAPES_DATA.findIndex((s) => s.key === selectedSoundscape);
     scrollX.value = index;
-
-    console.log("Open with:", selectedSoundscape);
-
     flatListRef.current?.scrollToOffset({
       offset: index * SNAP_INTERVAL,
       animated: false,
     });
   }, [isOpen, selectedDuration, selectedSoundscape]);
 
+  // Animated values and functions for soundscape list
+  const scrollX = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((event) => {
     scrollX.value = event.contentOffset.x / SNAP_INTERVAL;
   });
@@ -73,12 +68,13 @@ export const ModeBottomSheet = ({
   const handleMomentumScrollEnd = (event: any) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / SNAP_INTERVAL);
 
-    if (SOUNDSCAPES_CONFIG[index]) {
-      const selectedKey = SOUNDSCAPES_CONFIG[index].key;
+    if (SOUNDSCAPES_DATA[index]) {
+      const selectedKey = SOUNDSCAPES_DATA[index].key;
       setDraftSoundscape(selectedKey);
     }
   };
 
+  // Functions to handle item selection and saving settings
   const handleItemPress = (index: number, key: PomodoroSoundscapeKey) => {
     setDraftSoundscape(key);
     flatListRef.current?.scrollToOffset({

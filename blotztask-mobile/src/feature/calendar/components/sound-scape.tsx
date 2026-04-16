@@ -1,9 +1,9 @@
 import { ImageBackground, Pressable, Text, View } from "react-native";
-import { ITEM_WIDTH, ITEM_GAP } from "./mode-bottomsheet";
+import { ITEM_WIDTH, ITEM_GAP } from "../models/pomodoro-setting";
 import { useTranslation } from "react-i18next";
 import Animated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
-import { PomodoroSoundscapeKey, SOUNDSCAPE_IMAGE_MAP } from "../models/pomodoro-setting";
+import { PomodoroSoundscapeKey } from "../models/pomodoro-setting";
 import { MaterialIcons } from "@expo/vector-icons";
 
 type SoundscapeItem = {
@@ -63,7 +63,7 @@ export const SoundscapeCard = ({
             {t(`soundscape.${item.key}`)}
           </Text>
         </ImageBackground>
-        {isSelected ? (
+        {isSelected && item.key !== "noSound" ? (
           <Pressable
             onPress={onTogglePlayback}
             className="absolute inset-0 items-center justify-center"

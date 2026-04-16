@@ -3,7 +3,6 @@ import { fetchPomodoroSettings, updatePomodoroSetting } from "@/shared/services/
 import { PomodoroSoundscapeKey } from "../models/pomodoro-setting";
 import { PomodoroDTO, UpdatePomodoroSettingRequest } from "@/shared/models/pomodoro-dto";
 import { queryClient } from "@/shared/util/queryClient";
-import { pomodoroKeys } from "@/shared/constants/query-key-factory";
 
 export interface PomodoroSettingResponse {
   timing: number;
