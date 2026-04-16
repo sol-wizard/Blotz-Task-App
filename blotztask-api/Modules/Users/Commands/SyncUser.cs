@@ -70,6 +70,7 @@ public class SyncUserCommandHandler(
                 SignUpAt = signUpAt,
                 CreationAt = utcNow,
                 UpdatedAt = utcNow,
+                LoginAt = utcNow,
                 IsOnboarded = false
             };
             db.AppUsers.Add(row);
@@ -189,6 +190,9 @@ public class SyncUserCommandHandler(
 
             return new SyncUserResult { Id = row.Id, Auth0UserId = row.Auth0UserId };
         }
+
+        existing.LoginAt = utcNow;
+        await db.SaveChangesAsync(ct);
 
         return new SyncUserResult { Id = existing.Id, Auth0UserId = existing.Auth0UserId };
     }
