@@ -1,36 +1,8 @@
 [
   {
-    "id": "tomorrow-at-specific-time",
-    "input": "I need to buy groceries tomorrow at 5pm",
-    "expectedTaskCount": 1,
-    "expectedNoteCount": 0,
-    "expectations": [
-      {
-        "titleContains": ["groceries"],
-        "startDateOffset": 1,
-        "startTimeHour": 17,
-        "label": "Life"
-      }
-    ]
-  },
-  {
-    "id": "ambiguous-time-resolved-by-context",
-    "input": "I want to buy breakfast at 8:00.",
-    "expectedTaskCount": 1,
-    "expectedNoteCount": 0,
-    "expectations": [
-      {
-        "titleContains": ["breakfast"],
-        "startTimeHour": 8,
-        "startTimeMinute": 0,
-        "label": "Life"
-      }
-    ]
-  },
-  {
-    "id": "relative-time-minutes-from-now",
-    "input": "Remind me in 5 minutes to drink water",
-    "expectedTaskCount": 1,
+    "id": "three-tasks-combined-actions",
+    "input": "Remind me in 5 minutes to drink water, buy breakfast at 8, and I have a team meeting tomorrow at 10am",
+    "expectedTaskCount": 3,
     "expectedNoteCount": 0,
     "expectations": [
       {
@@ -38,6 +10,18 @@
         "minutesFromNow": 5,
         "toleranceMinutes": 2,
         "label": "Health"
+      },
+      {
+        "titleContains": ["breakfast"],
+        "startTimeHour": 8,
+        "startTimeMinute": 0,
+        "label": "Life"
+      },
+      {
+        "titleContains": ["meeting"],
+        "startDateOffset": 1,
+        "startTimeHour": 10,
+        "label": "Work"
       }
     ]
   }
