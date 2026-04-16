@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Azure.AI.Projects;
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
@@ -31,6 +32,7 @@ public class AiTaskGenerateService(
         var notes = new List<ExtractedNote>();
         var tools = new TaskGenerationTools(tasks, notes);
         
+        var agentSw = Stopwatch.StartNew();
         var agent = projectClient.AsAIAgent(
             model: _deploymentId,
             instructions: AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime),
@@ -43,10 +45,15 @@ public class AiTaskGenerateService(
                 AIFunctionFactory.Create(tools.RemoveNote),
                 AIFunctionFactory.Create(tools.UpdateNote)
             ]);
+        var agentCreatedMs = agentSw.ElapsedMilliseconds;
+
         //TODO: De we need cancellation token here ?
         var session = await agent.CreateSessionAsync();
+        agentSw.Stop();
 
-        logger.LogInformation("TaskGeneration: Session initialized for deployment={DeploymentId}", _deploymentId);
+        logger.LogInformation(
+            "TaskGeneration: Session initialized for deployment={DeploymentId} | AgentCreated={AgentCreatedMs}ms | SessionCreated={SessionCreatedMs}ms",
+            _deploymentId, agentCreatedMs, agentSw.ElapsedMilliseconds);
 
         return new AiChatContext
         {
@@ -70,10 +77,13 @@ public class AiTaskGenerateService(
         {
             logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
+            var runSw = Stopwatch.StartNew();
             await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
+            runSw.Stop();
 
-            logger.LogInformation("TaskGeneration: Tool calls this turn={ToolCallCount}, total tasks={TaskCount}, notes={NoteCount}",
-                context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
+            logger.LogInformation(
+                "TaskGeneration: RunAsync completed in {RunMs}ms | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount}",
+                runSw.ElapsedMilliseconds, context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
 
             var isSuccess = context.Tools.ToolCallCount > 0;
 
