@@ -5,15 +5,14 @@ import { Calendar, DateData } from "react-native-calendars";
 import { format } from "date-fns";
 import { theme } from "@/shared/constants/theme";
 import { useMonthlyTasks } from "../hooks/useMonthlyTasks";
-import { router, useLocalSearchParams } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useLocalSearchParams } from "expo-router";
 import { MonthlyDay, MonthlyDayProps } from "../components/monthly-day";
 import { SelectedDayDetailPanel } from "../components/day-detail-panel";
 import { TaskThumbnailDTO } from "../models/monthly-task-indicator-dto";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { formatBottomSheetDate } from "../util/date-formatter";
 import i18n from "@/i18n";
-
+import { ReturnButton } from "@/shared/components/ui/return-button";
 
 const SNAP_L1 = "10%";
 const SNAP_L2 = "50%";
@@ -54,12 +53,7 @@ export default function MonthlyCalendarScreen() {
     <View className="flex-1 bg-background">
       <SafeAreaView className="flex-1" edges={["top"]}>
         <View className="flex-row items-center justify-between px-6 pt-4 pb-2">
-          <Pressable
-            onPress={() => router.back()}
-            className="w-9 h-9 bg-white rounded-full items-center justify-center shadow-sm border border-gray-50"
-          >
-            <MaterialCommunityIcons name="chevron-left" size={22} color={theme.colors.onSurface} />
-          </Pressable>
+          <ReturnButton className="bg-white shadow-sm border-gray-50 w-9 h-9" />
 
           <Pressable
             onPress={() => setSelectedDay(new Date())}
