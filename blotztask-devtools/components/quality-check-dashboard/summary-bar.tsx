@@ -1,7 +1,13 @@
 import type { QualityCheckScorecard } from "@/types/quality-check";
 import { StatCard } from "./stat-card";
 
-export const SummaryBar = ({ scorecard }: { scorecard: QualityCheckScorecard | null }) => {
+export const SummaryBar = ({
+  scorecard,
+  isReliabilityMode = false,
+}: {
+  scorecard: QualityCheckScorecard | null;
+  isReliabilityMode?: boolean;
+}) => {
   return (
     <div className="space-y-3">
       {/* Quality row */}
@@ -12,16 +18,24 @@ export const SummaryBar = ({ scorecard }: { scorecard: QualityCheckScorecard | n
           tooltip="Total number of test cases in quality-check-cases.json."
         />
         <StatCard
-          label="Correct"
+          label={isReliabilityMode ? "Stable" : "Correct"}
           value={scorecard ? scorecard.passed.toString() : "—"}
           variant="pass"
-          tooltip="Cases where every check passed."
+          tooltip={
+            isReliabilityMode
+              ? "Cases that passed on every run — safe to rely on."
+              : "Cases where every check passed."
+          }
         />
         <StatCard
-          label="Incorrect"
+          label={isReliabilityMode ? "Flaky" : "Incorrect"}
           value={scorecard ? scorecard.failed.toString() : "—"}
           variant="fail"
-          tooltip="Cases where at least one check failed."
+          tooltip={
+            isReliabilityMode
+              ? "Cases that failed at least once — non-deterministic AI behaviour detected."
+              : "Cases where at least one check failed."
+          }
         />
         <StatCard
           label="Accuracy"

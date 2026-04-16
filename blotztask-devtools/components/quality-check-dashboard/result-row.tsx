@@ -1,5 +1,6 @@
 import type { QualityCheckCaseResult } from "@/types/quality-check";
 import { StatusBadge } from "./status-badge";
+import { ReliabilityBadge } from "./reliability-badge";
 import { ChecksDetail } from "./checks-detail";
 import { TaskCardPreview } from "./task-card-preview";
 
@@ -14,24 +15,33 @@ export const ResultRow = ({
   expanded: boolean;
   onToggle: () => void;
 }) => {
+  const isReliabilityMode = result.totalRuns != null && result.totalRuns > 1;
   const passedChecks = result.checks.filter((c) => c.passed).length;
 
   return (
     <>
       <tr
-        onClick={onToggle}
-        className="border-t border-zinc-800 cursor-pointer transition-colors hover:bg-zinc-900/60"
+        onClick={isReliabilityMode ? undefined : onToggle}
+        className={`border-t border-zinc-800 transition-colors ${isReliabilityMode ? "" : "cursor-pointer hover:bg-zinc-900/60"}`}
       >
         <td className="px-4 py-3 text-zinc-500">
-          <span className={`inline-block transition-transform ${expanded ? "rotate-90" : ""}`}>
-            &#9654;
-          </span>
+          {isReliabilityMode ? (
+            <span className="inline-block text-zinc-700">&#9654;</span>
+          ) : (
+            <span className={`inline-block transition-transform ${expanded ? "rotate-90" : ""}`}>
+              &#9654;
+            </span>
+          )}
         </td>
         <td className="px-4 py-3 font-medium font-[family-name:var(--font-geist-mono)] text-zinc-100">
           {result.id}
         </td>
         <td className="px-4 py-3">
-          <StatusBadge passed={result.passed} />
+          {isReliabilityMode ? (
+            <ReliabilityBadge passCount={result.passCount!} totalRuns={result.totalRuns!} />
+          ) : (
+            <StatusBadge passed={result.passed} />
+          )}
         </td>
         <td className="px-4 py-3 text-right text-zinc-100 font-[family-name:var(--font-geist-mono)]">
           {formatMs(result.aiTimeMs)}
@@ -40,10 +50,14 @@ export const ResultRow = ({
           {formatMs(result.initTimeMs)}
         </td>
         <td className="px-4 py-3 text-right text-zinc-400">
-          {passedChecks}/{result.checks.length}
+          {isReliabilityMode ? (
+            <span className="text-zinc-600 text-xs">—</span>
+          ) : (
+            `${passedChecks}/${result.checks.length}`
+          )}
         </td>
       </tr>
-      {expanded && (
+      {!isReliabilityMode && expanded && (
         <tr>
           <td colSpan={6} className="bg-zinc-900/40 px-6 py-4">
             <div className="mb-4">

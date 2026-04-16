@@ -22,6 +22,10 @@ export interface QualityCheckCaseResult {
   aiTimeMs: number;
   checks: QualityCheckItem[];
   extractedTasks: QualityCheckExtractedTask[];
+  // Populated only in reliability (multi-run) mode
+  totalRuns?: number;
+  passCount?: number;
+  reliabilityRate?: string;
 }
 
 export interface QualityCheckScorecard {

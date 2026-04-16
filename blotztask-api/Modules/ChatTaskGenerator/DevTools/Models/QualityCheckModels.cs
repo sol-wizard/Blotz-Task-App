@@ -55,11 +55,22 @@ public class QualityCheckCaseResult
     public long AiTimeMs { get; set; }
     public List<QualityCheckItem> Checks { get; set; } = [];
     public List<QualityCheckExtractedTask> ExtractedTasks { get; set; } = [];
+
+    /// <summary>Populated only when the run was executed multiple times for reliability testing.</summary>
+    public int? TotalRuns { get; set; }
+    public int? PassCount { get; set; }
+    public string? ReliabilityRate { get; set; }
 }
 
 public class QualityCheckRequest
 {
     public string? TimeZone { get; set; }
+
+    /// <summary>
+    /// When greater than 1, each case is run this many times in parallel and results are
+    /// aggregated into a reliability score (e.g. 3/5). Defaults to 1 (single run).
+    /// </summary>
+    public int ReliabilityRuns { get; set; } = 1;
 }
 
 public class QualityCheckScorecard

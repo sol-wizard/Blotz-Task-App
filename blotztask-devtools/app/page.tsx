@@ -12,11 +12,16 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5027";
 export default function QualityCheckDashboard() {
   const [scorecard, setScorecard] = useState<QualityCheckScorecard | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingMode, setLoadingMode] = useState<"single" | "reliability">("single");
   const [error, setError] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
-  const runQualityCheck = async () => {
+  const isReliabilityMode =
+    (scorecard?.results[0]?.totalRuns ?? 1) > 1;
+
+  const runQualityCheck = async (reliabilityRuns = 1) => {
     setLoading(true);
+    setLoadingMode(reliabilityRuns > 1 ? "reliability" : "single");
     setError(null);
     setScorecard(null);
     setExpandedRows(new Set());
@@ -25,7 +30,10 @@ export default function QualityCheckDashboard() {
       const res = await fetch(`${API_URL}/dev/ai-quality-check`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
+        body: JSON.stringify({
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          reliabilityRuns,
+        }),
       });
       if (!res.ok) {
         throw new Error(`Backend returned ${res.status}: ${res.statusText}`);
@@ -55,17 +63,35 @@ export default function QualityCheckDashboard() {
           <h1 className="text-2xl font-bold tracking-tight">AI Accuracy Dashboard</h1>
           <p className="text-sm text-zinc-400 mt-1">{API_URL}/dev/ai-quality-check</p>
         </div>
-        <button
-          onClick={runQualityCheck}
-          disabled={loading}
-          className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? "Checking..." : "Check AI Accuracy"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => runQualityCheck(1)}
+            disabled={loading}
+            className={`rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              !isReliabilityMode && scorecard
+                ? "bg-emerald-500 ring-2 ring-emerald-400 ring-offset-2 ring-offset-zinc-950"
+                : "bg-emerald-600 hover:bg-emerald-500"
+            }`}
+          >
+            {loading && loadingMode === "single" ? "Checking..." : "Check AI Accuracy"}
+          </button>
+          <button
+            onClick={() => runQualityCheck(5)}
+            disabled={loading}
+            title="Run each case 5 times in parallel to measure reliability"
+            className={`rounded-lg border px-5 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              isReliabilityMode
+                ? "border-violet-600 bg-violet-700 text-white ring-2 ring-violet-400 ring-offset-2 ring-offset-zinc-950"
+                : "border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
+            }`}
+          >
+            {loading && loadingMode === "reliability" ? "Running 5×..." : "Run 5×"}
+          </button>
+        </div>
       </header>
 
       <div className="space-y-6">
-        <SummaryBar scorecard={scorecard} />
+        <SummaryBar scorecard={scorecard} isReliabilityMode={isReliabilityMode} />
         {error && <ErrorBanner message={error} />}
         {loading && <LoadingState />}
         {scorecard && (
@@ -73,6 +99,7 @@ export default function QualityCheckDashboard() {
             scorecard={scorecard}
             expandedRows={expandedRows}
             onToggle={toggleRow}
+            isReliabilityMode={isReliabilityMode}
           />
         )}
       </div>

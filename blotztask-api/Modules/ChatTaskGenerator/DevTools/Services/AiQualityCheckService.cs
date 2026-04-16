@@ -37,16 +37,46 @@ public class AiQualityCheckService(
         var totalSw = Stopwatch.StartNew();
 
         var timeZone = ResolveTimeZone(request.TimeZone);
+        var reliabilityRuns = Math.Max(1, request.ReliabilityRuns);
 
-        foreach (var batch in allCases.Chunk(BatchSize))
+        List<QualityCheckCaseResult> finalResults;
+
+        if (reliabilityRuns == 1)
         {
-            var batchResults = await Task.WhenAll(batch.Select(c => RunSingleCaseAsync(c, timeZone, ct)));
-            foreach (var caseResult in batchResults)
+            finalResults = await RunAllCasesOnceAsync(allCases, timeZone, ct);
+        }
+        else
+        {
+            var allRuns = await Task.WhenAll(
+                Enumerable.Range(0, reliabilityRuns)
+                    .Select(_ => RunAllCasesOnceAsync(allCases, timeZone, ct)));
+
+            finalResults = allCases.Select(qualityCase =>
             {
-                scorecard.Results.Add(caseResult);
-                if (caseResult.Passed) scorecard.Passed++;
-                else scorecard.Failed++;
-            }
+                var caseRuns = allRuns.Select(run => run.First(r => r.Id == qualityCase.Id)).ToList();
+                var passCount = caseRuns.Count(r => r.Passed);
+                return new QualityCheckCaseResult
+                {
+                    Id = qualityCase.Id,
+                    Input = qualityCase.Input,
+                    Passed = passCount == reliabilityRuns,
+                    AiTimeMs = (long)caseRuns.Average(r => r.AiTimeMs),
+                    InitTimeMs = (long)caseRuns.Average(r => r.InitTimeMs),
+                    TotalTimeMs = (long)caseRuns.Average(r => r.TotalTimeMs),
+                    TotalRuns = reliabilityRuns,
+                    PassCount = passCount,
+                    ReliabilityRate = $"{(double)passCount / reliabilityRuns * 100:F0}%",
+                    Checks = [],
+                    ExtractedTasks = []
+                };
+            }).ToList();
+        }
+
+        foreach (var caseResult in finalResults)
+        {
+            scorecard.Results.Add(caseResult);
+            if (caseResult.Passed) scorecard.Passed++;
+            else scorecard.Failed++;
         }
 
         totalSw.Stop();
@@ -62,6 +92,18 @@ public class AiQualityCheckService(
         }
 
         return QualityCheckRunResult.Success(scorecard);
+    }
+
+    private async Task<List<QualityCheckCaseResult>> RunAllCasesOnceAsync(
+        IReadOnlyList<QualityCheckCase> cases, TimeZoneInfo timeZone, CancellationToken ct)
+    {
+        var results = new List<QualityCheckCaseResult>();
+        foreach (var batch in cases.Chunk(BatchSize))
+        {
+            var batchResults = await Task.WhenAll(batch.Select(c => RunSingleCaseAsync(c, timeZone, ct)));
+            results.AddRange(batchResults);
+        }
+        return results;
     }
 
     private async Task<List<QualityCheckCase>> LoadCasesAsync(string? caseId, CancellationToken ct)
