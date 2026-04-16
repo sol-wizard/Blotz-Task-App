@@ -22,6 +22,9 @@ module.exports = {
         interThin: ["InterThin"],
         interBold: ["InterBold"],
       },
+      fontSize: {
+        xxs: "8px",
+      },
     },
   },
   plugins: [],

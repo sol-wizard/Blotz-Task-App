@@ -37,7 +37,7 @@ export const MonthlyDay = ({
       >
         <View className={`w-6 h-6 rounded-full items-center justify-center mb-1`}>
           <Text
-            className={`text-xs font-balooBold mt-0.5 ${isToday ? "text-highlight" : isInactive ? "text-gray-300" : "text-secondary"}`}
+            className={`text-sm font-balooBold mt-0.5 ${isToday ? "text-highlight" : isInactive ? "text-gray-300" : "text-secondary"}`}
           >
             {date.day}
           </Text>
@@ -60,7 +60,7 @@ export const MonthlyDay = ({
                 <View className="flex-1">
                   <Text
                     numberOfLines={1}
-                    className={`text-xs font-bold font-inter leading-3 text-secondary`}
+                    className={`text-[8px] font-bold font-inter leading-3 text-secondary`}
                   >
                     {task.taskTitle}
                   </Text>
