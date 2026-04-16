@@ -12,7 +12,7 @@ import { TaskThumbnailDTO } from "../models/monthly-task-indicator-dto";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { formatBottomSheetDate } from "../util/date-formatter";
 import i18n from "@/i18n";
-import { ReturnButton } from "@/shared/components/ui/return-button";
+import { ReturnButton } from "../../../shared/components/ui/return-button";
 
 const SNAP_L1 = "10%";
 const SNAP_L2 = "50%";
