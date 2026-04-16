@@ -111,13 +111,13 @@ public class DataSeeder
         return plan;
     }
 
-    public async Task<AiUsageRecord> CreateAiUsageRecordAsync(Guid userId,int promptTokens,int completTokens,DateTime?createdAt=null)
+    public async Task<AiUsageRecord> CreateAiUsageRecordAsync(Guid userId,int promptTokens,int completionTokens,DateTime?createdAt=null)
     {
         var record = new AiUsageRecord
         {
           UserId = userId,
           PromptTokens = promptTokens,
-          CompletionTokens = completTokens,
+          CompletionTokens = completionTokens,
           TotalTokens = promptTokens+completTokens,
           CreatedAt = createdAt??DateTime.UtcNow 
         };
