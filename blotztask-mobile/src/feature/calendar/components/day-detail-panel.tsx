@@ -2,6 +2,7 @@ import { View, Text, ScrollView, Dimensions, ActivityIndicator } from "react-nat
 import { format, parseISO } from "date-fns";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import { theme } from "@/shared/constants/theme";
+import i18n from "@/i18n";
 
 export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) => {
   const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
@@ -66,7 +67,7 @@ export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) =
             })
           ) : (
             <Text className="text-center text-gray-400 mt-10 font-baloo">
-              No tasks for this day
+              {i18n.t("calendar:emptyState.all.title")}
             </Text>
           )}
         </ScrollView>

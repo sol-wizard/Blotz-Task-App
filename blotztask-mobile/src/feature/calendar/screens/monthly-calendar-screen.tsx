@@ -20,13 +20,14 @@ const SNAP_L3 = "80%";
 const SNAP_POINTS = [SNAP_L1, SNAP_L2, SNAP_L3];
 
 export default function MonthlyCalendarScreen() {
+  // Hooks
   const { selectedDate } = useLocalSearchParams<{ selectedDate: string }>();
   const [selectedDay, setSelectedDay] = useState(new Date(selectedDate || new Date()));
+  const { monthlyTaskAvailability } = useMonthlyTasks({ selectedDay });
 
+  // Derived values
   const selectedDateStr = format(selectedDay, "yyyy-MM-dd");
   const selectedMonthKey = format(selectedDay, "yyyy-MM");
-
-  const { monthlyTaskAvailability } = useMonthlyTasks({ selectedDay });
 
   const dataByDate: Record<string, TaskThumbnailDTO[]> = {};
   monthlyTaskAvailability.forEach((item) => {
@@ -34,6 +35,7 @@ export default function MonthlyCalendarScreen() {
     dataByDate[dateKey] = item.taskThumbnails;
   });
 
+  // Functions
   const handleDayPress = (dateString: string) => {
     setSelectedDay(new Date(dateString));
   };
