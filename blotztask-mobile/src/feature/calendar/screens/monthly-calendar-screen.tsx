@@ -112,7 +112,7 @@ export default function MonthlyCalendarScreen() {
               style={{ backgroundColor: theme.colors.secondary }}
             />
             <View className="w-full items-start">
-              <Text className="text-[16px] font-baloo text-secondary">
+              <Text className="text-base font-baloo text-secondary">
                 {formatBottomSheetDate(selectedDay)}
               </Text>
             </View>

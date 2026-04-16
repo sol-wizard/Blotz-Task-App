@@ -25,24 +25,24 @@ export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) =
               return (
                 <View
                   key={task.id || index}
-                  className="flex-row items-center bg-white border border-gray-100 rounded-[16px] mb-2 py-2.5 px-4 shadow-xs"
+                  className="flex-row items-center bg-white border border-gray-100 rounded-2xl mb-2 py-2.5 px-4 shadow-xs"
                 >
                   {/* Column 1: Time */}
-                  <View className="w-[60px]">
+                  <View className="w-16">
                     <View className="flex-row items-baseline">
-                      <Text className="text-[16px] font-baloo text-secondary">
+                      <Text className="text-base font-baloo text-secondary">
                         {format(start, "h:mm")}
                       </Text>
-                      <Text className="text-[12px] font-baloo text-secondary ml-0.5 uppercase">
+                      <Text className="text-xs font-baloo text-secondary ml-0.5 uppercase">
                         {format(start, "a")}
                       </Text>
                     </View>
                     {!isSameTime && (
                       <View className="flex-row items-baseline mt-0 opacity-50">
-                        <Text className="text-[14px] font-baloo text-secondary">
+                        <Text className="text-sm font-baloo text-secondary">
                           {format(end, "h:mm")}
                         </Text>
-                        <Text className="text-[11px] font-baloo text-secondary ml-0.5 uppercase">
+                        <Text className="text-xs font-baloo text-secondary ml-0.5 uppercase">
                           {format(end, "a")}
                         </Text>
                       </View>
@@ -57,7 +57,7 @@ export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) =
 
                   {/* Column 3: Title */}
                   <View className="flex-1">
-                    <Text className="text-[15px] font-baloo text-secondary leading-tight">
+                    <Text className="text-base font-baloo text-secondary leading-tight">
                       {task.title}
                     </Text>
                   </View>
@@ -65,7 +65,9 @@ export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) =
               );
             })
           ) : (
-            <Text className="text-center text-gray-400 mt-10 font-baloo">No tasks for this day</Text>
+            <Text className="text-center text-gray-400 mt-10 font-baloo">
+              No tasks for this day
+            </Text>
           )}
         </ScrollView>
       )}

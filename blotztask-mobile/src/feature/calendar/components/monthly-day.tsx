@@ -32,17 +32,17 @@ export const MonthlyDay = ({
     <View className="p-0.5 w-full">
       <Pressable
         onPress={() => onPressDay?.(dayKey)}
-        className={`flex-col h-[80px] w-full items-center rounded-lg pt-1 border ${isSelected ? "" : "border-transparent"}`}
+        className={`flex-col h-20 w-full items-center rounded-lg pt-1 border ${isSelected ? "" : "border-transparent"}`}
         style={isSelected ? { borderColor: theme.colors.secondary } : {}}
       >
         <View className={`w-6 h-6 rounded-full items-center justify-center mb-1`}>
           <Text
-            className={`text-[12px] font-balooBold mt-0.5 ${isToday ? "text-highlight" : isInactive ? "text-gray-300" : "text-secondary"}`}
+            className={`text-xs font-balooBold mt-0.5 ${isToday ? "text-highlight" : isInactive ? "text-gray-300" : "text-secondary"}`}
           >
             {date.day}
           </Text>
         </View>
-        <View className="w-full px-1 gap-y-[1px]">
+        <View className="w-full px-1 gap-y-0.5">
           {previews.map((task, index) => {
             const labelColor = task.label?.color ?? theme.colors.disabled;
             const bgColor = `${labelColor}66`;
@@ -50,7 +50,7 @@ export const MonthlyDay = ({
             return (
               <View
                 key={`${dayKey}-${index}`}
-                className="flex-row items-center rounded-sm px-0.5 h-[12px]"
+                className="flex-row items-center rounded-sm px-0.5 h-3"
                 style={{ backgroundColor: bgColor }}
               >
                 <View
@@ -60,7 +60,7 @@ export const MonthlyDay = ({
                 <View className="flex-1">
                   <Text
                     numberOfLines={1}
-                    className={`text-[8px] font-bold font-inter leading-[12px] text-secondary`}
+                    className={`text-[8px] font-bold font-inter leading-3 text-secondary`}
                   >
                     {task.taskTitle}
                   </Text>
