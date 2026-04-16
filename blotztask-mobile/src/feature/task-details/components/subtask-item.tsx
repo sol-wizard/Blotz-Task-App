@@ -5,10 +5,11 @@ import { theme } from "@/shared/constants/theme";
 import { convertDurationToText } from "../../../shared/util/convert-duration";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { ActionButton, ActionButtonType } from "@/feature/notes/components/action-button";
-import { useEffect, useState } from "react";
-import { updateSubtask } from "../services/subtask-service";
+import { useState } from "react";
+import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import SubtaskInlineEditor from "./subtask-inline-editor";
 
+// Types
 type SubtaskItemData = {
   id: number;
   title: string;
@@ -37,7 +38,21 @@ export default function SubtaskItem({
   parentTaskId,
   drag,
 }: SubtaskItemProps) {
+  // Mutations
+  const { updateSubtask } = useSubtaskMutations();
+
+  // State
+  const [isInlineEditing, setIsInlineEditing] = useState(false);
+  const [titleValue, setTitleValue] = useState(subtask.title);
+  const [localDuration, setLocalDuration] = useState(subtask.duration ?? "00:00:00");
+  const [selectedHours, setSelectedHours] = useState(0);
+  const [selectedMinutes, setSelectedMinutes] = useState(0);
+
+  // Derived values
   const isChecked = subtask?.isDone;
+  const textColor = isChecked ? theme.colors.disabled : theme.colors.onSurface;
+
+  // Functions
   const handleToggle = () => {
     onToggle(subtask.id);
   };
@@ -46,37 +61,26 @@ export default function SubtaskItem({
     onDelete?.(subtask.id);
   };
 
-  const [isInlineEditing, setIsInlineEditing] = useState(false);
-  const [titleValue, setTitleValue] = useState(subtask.title);
-  const [localDuration, setLocalDuration] = useState(subtask.duration);
-
-  const [selectedHours, setSelectedHours] = useState(0);
-  const [selectedMinutes, setSelectedMinutes] = useState(0);
-
-
-  useEffect(() => {
-    setTitleValue(subtask.title);
-    setLocalDuration(subtask.duration ?? "00:00:00");
-    const [h = "0", m = "0"] = (subtask.duration ?? "00:00:00").split(":");
-    setSelectedHours(Number(h) || 0);
-    setSelectedMinutes(Number(m) || 0);
-  }, [subtask.title, subtask.duration]);
-
   const handleInlineEditToggle = () => {
     if (isInlineEditing) {
       updateSubtask?.({
         subTaskId: subtask.id,
         parentTaskId: parentTaskId,
         title: titleValue,
-        duration: localDuration ?? undefined,
+        duration: localDuration,
         order: subtask.order,
         isDone: subtask.isDone,
       });
+    } else {
+      const duration = subtask.duration ?? "00:00:00";
+      setTitleValue(subtask.title);
+      setLocalDuration(duration);
+      const [h = "0", m = "0"] = duration.split(":");
+      setSelectedHours(Number(h) || 0);
+      setSelectedMinutes(Number(m) || 0);
     }
     setIsInlineEditing((prev) => !prev);
   };
-
-  const textColor = isChecked ? theme.colors.disabled : theme.colors.onSurface;
 
   const renderRightActions = () => {
     return (
