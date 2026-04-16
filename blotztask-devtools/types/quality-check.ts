@@ -30,5 +30,7 @@ export interface QualityCheckScorecard {
   failed: number;
   passRate: string;
   totalTimeMs: number;
+  avgAiTimeMs: number;
+  maxAiTimeMs: number;
   results: QualityCheckCaseResult[];
 }

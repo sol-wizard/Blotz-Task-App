@@ -69,5 +69,12 @@ public class QualityCheckScorecard
     public int Failed { get; set; }
     public string PassRate { get; set; } = "";
     public long TotalTimeMs { get; set; }
+
+    /// <summary>Average AI API call duration across all cases (pure AI latency, parallelism-agnostic).</summary>
+    public long AvgAiTimeMs { get; set; }
+
+    /// <summary>Slowest AI API call duration across all cases (bottleneck indicator).</summary>
+    public long MaxAiTimeMs { get; set; }
+
     public List<QualityCheckCaseResult> Results { get; set; } = [];
 }

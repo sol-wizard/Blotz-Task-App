@@ -14,6 +14,20 @@
     ]
   },
   {
+    "id": "ambiguous-time-resolved-by-context",
+    "input": "I want to buy breakfast at 8:00.",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["breakfast"],
+        "startTimeHour": 8,
+        "startTimeMinute": 0,
+        "label": "Life"
+      }
+    ]
+  },
+  {
     "id": "relative-time-minutes-from-now",
     "input": "Remind me in 5 minutes to drink water",
     "expectedTaskCount": 1,

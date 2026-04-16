@@ -11,6 +11,7 @@ public class DevAiQualityCheckController(IAiQualityCheckService qualityCheckServ
         [FromQuery] string? caseId,
         CancellationToken ct)
     {
+        //Should do this better not in the controller maybe some where else and retrun a proper error
         if (!env.IsDevelopment())
             return NotFound();
 

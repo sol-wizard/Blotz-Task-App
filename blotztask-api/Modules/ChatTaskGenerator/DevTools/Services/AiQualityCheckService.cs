@@ -12,7 +12,7 @@ public class AiQualityCheckService(
     IConfiguration configuration) : IAiQualityCheckService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
-
+// TODO: Will this be very fragile is there a better way of doing this ?
     private static readonly string QualityCheckCasesPath = Path.Combine(
         AppContext.BaseDirectory, "Modules", "ChatTaskGenerator", "DevTools", "quality-check-cases.json");
 
@@ -54,6 +54,12 @@ public class AiQualityCheckService(
         scorecard.PassRate = scorecard.TotalCases > 0
             ? $"{(double)scorecard.Passed / scorecard.TotalCases * 100:F1}%"
             : "N/A";
+
+        if (scorecard.Results.Count > 0)
+        {
+            scorecard.AvgAiTimeMs = (long)scorecard.Results.Average(r => r.AiTimeMs);
+            scorecard.MaxAiTimeMs = scorecard.Results.Max(r => r.AiTimeMs);
+        }
 
         return QualityCheckRunResult.Success(scorecard);
     }
