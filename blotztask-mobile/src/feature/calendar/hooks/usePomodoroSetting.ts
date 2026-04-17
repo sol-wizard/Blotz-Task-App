@@ -1,8 +1,9 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchPomodoroSettings, updatePomodoroSetting } from "@/shared/services/pomodoro-service";
 import { PomodoroSoundscapeKey } from "../models/pomodoro-setting";
-import { PomodoroDTO, UpdatePomodoroSettingRequest } from "@/shared/models/pomodoro-dto";
+import { PomodoroDTO } from "@/shared/models/pomodoro-dto";
 import { queryClient } from "@/shared/util/queryClient";
+import { pomodoroKeys } from "@/shared/constants/query-key-factory";
 
 export interface PomodoroSettingResponse {
   timing: number;
@@ -12,7 +13,7 @@ export interface PomodoroSettingResponse {
 
 export const usePomodoroSettingsQuery = () => {
   return useQuery<PomodoroDTO>({
-    queryKey: ["pomodoroSettings"],
+    queryKey: pomodoroKeys.settings(),
     queryFn: fetchPomodoroSettings,
   });
 };
@@ -20,15 +21,14 @@ export const usePomodoroSettingsQuery = () => {
 export function usePomodoroSettingMutation() {
   const mutation = useMutation({
     mutationKey: ["updatePomodoroSetting"],
-    mutationFn: (payload: UpdatePomodoroSettingRequest) => updatePomodoroSetting(payload),
+    mutationFn: (payload: PomodoroDTO) => updatePomodoroSetting(payload),
     onSuccess: () => {
-      // Invalidate the query to refetch the updated settings
-      queryClient.invalidateQueries({ queryKey: ["pomodoroSettings"] });
+      queryClient.invalidateQueries({ queryKey: pomodoroKeys.all });
     },
   });
 
   return {
-    savePomodoroSetting: mutation.mutateAsync,
+    updatePomodoroSetting: mutation.mutateAsync,
     isLoading: mutation.isPending,
   };
 }

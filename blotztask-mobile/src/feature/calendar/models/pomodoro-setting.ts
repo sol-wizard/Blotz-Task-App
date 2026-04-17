@@ -15,10 +15,6 @@ export const SOUNDSCAPES_DATA = [
 
 export type PomodoroSoundscapeKey = (typeof SOUNDSCAPES_DATA)[number]["key"];
 
-export const SOUNDSCAPE_IMAGE_MAP = Object.fromEntries(
-  SOUNDSCAPES_DATA.map((item) => [item.key, item.imageUrl]),
-) as Record<PomodoroSoundscapeKey, any>;
-
 export const SOUNDSCAPE_MUSIC_MAP = Object.fromEntries(
   SOUNDSCAPES_DATA.map((item) => [item.key, item.music]),
 ) as Record<PomodoroSoundscapeKey, any>;

@@ -2,8 +2,6 @@ import { PomodoroSoundscapeKey } from "@/feature/calendar/models/pomodoro-settin
 
 export interface PomodoroDTO {
   timing: number;
-  sound: PomodoroSoundscapeKey | null;
+  sound: PomodoroSoundscapeKey;
   isCountdown: boolean;
 }
-
-export type UpdatePomodoroSettingRequest = PomodoroDTO;

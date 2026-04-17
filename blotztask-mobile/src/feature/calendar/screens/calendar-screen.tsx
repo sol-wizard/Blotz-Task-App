@@ -89,14 +89,16 @@ export default function CalendarScreen() {
 
         <FilteredTaskList selectedDay={selectedDay} onOpenMode={() => setIsModeSheetOpen(true)} />
       </CalendarProvider>
-      <ModeBottomSheet
-        isOpen={isModeSheetOpen}
-        onClose={() => {
-          setIsModeSheetOpen(false);
-        }}
-        selectedSoundscape={pomodoroSetting?.sound ?? "noSound"}
-        selectedDuration={pomodoroSetting?.timing ?? 25}
-      />
+      {pomodoroSetting && (
+        <ModeBottomSheet
+          isOpen={isModeSheetOpen}
+          onClose={() => {
+            setIsModeSheetOpen(false);
+          }}
+          selectedSoundscape={pomodoroSetting.sound}
+          selectedDuration={pomodoroSetting.timing}
+        />
+      )}
     </SafeAreaView>
   );
 }

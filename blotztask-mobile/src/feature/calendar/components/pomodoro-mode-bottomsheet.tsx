@@ -38,7 +38,7 @@ export const ModeBottomSheet = ({
   selectedDuration,
 }: ModeBottomSheetProps) => {
   // Mutations
-  const { savePomodoroSetting } = usePomodoroSettingMutation();
+  const { updatePomodoroSetting } = usePomodoroSettingMutation();
   const [draftDuration, setDraftDuration] = useState<number>(selectedDuration);
   const [draftSoundscape, setDraftSoundscape] = useState<PomodoroSoundscapeKey>(selectedSoundscape);
   const { isPlaying, togglePlayback, stopPlayback } = usePomodoroSoundscapePlayer(draftSoundscape);
@@ -85,7 +85,7 @@ export const ModeBottomSheet = ({
 
   const handleSave = async () => {
     const isCountDown = draftDuration !== 0;
-    await savePomodoroSetting({
+    await updatePomodoroSetting({
       timing: draftDuration,
       sound: draftSoundscape,
       isCountdown: isCountDown,
