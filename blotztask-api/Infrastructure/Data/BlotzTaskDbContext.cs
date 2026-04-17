@@ -97,6 +97,7 @@ public class BlotzTaskDbContext : DbContext
                 CreationAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
                 SignUpAt = new DateTime(2025, 9, 9, 14, 33, 27, 955, DateTimeKind.Utc),
                 UpdatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
+                LoginAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
                 IsOnboarded = false
             });
 

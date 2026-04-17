@@ -8,6 +8,13 @@ public sealed class ResolveDateTimesRequest
 {
     public string Message { get; init; } = string.Empty;
     public TimeZoneInfo TimeZone { get; init; }
+
+    /// <summary>
+    /// Optional fixed reference point for "now". When set, the recognizer uses this
+    /// instead of capturing a fresh <see cref="DateTimeOffset.UtcNow"/>, ensuring the
+    /// quality-check runner and the resolver share the same time snapshot.
+    /// </summary>
+    public DateTime? ReferenceTime { get; init; }
 }
 
 public class DateTimeResolveService
@@ -18,7 +25,8 @@ public class DateTimeResolveService
         var message = request.Message;
 
 
-        var localNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, request.TimeZone).DateTime;
+        var localNow = request.ReferenceTime
+            ?? TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, request.TimeZone).DateTime;
         localNow = DateTime.SpecifyKind(localNow, DateTimeKind.Unspecified);
 
         // Run recognizer for Chinese and English, then merge results
