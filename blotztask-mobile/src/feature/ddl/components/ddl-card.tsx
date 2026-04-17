@@ -71,14 +71,12 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
             { taskId: task.id, isPinned: !task.isPinned },
             {
               onSuccess: () => swipeRef.current?.close(),
-              onError: (error) => console.error("Failed to pin deadline task:", error),
             },
           )
         }
         onDelete={() =>
           deleteDeadlineTask(task.id, {
             onSuccess: () => swipeRef.current?.close(),
-            onError: (error) => console.error("Failed to delete deadline task:", error),
           })
         }
         disabled={isActionPending}
