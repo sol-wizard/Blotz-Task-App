@@ -21,7 +21,7 @@ public class UpdatePomodoroSettingCommandHandler(
         
         if (pomodorSetting == null) throw new Exception($"Pomodoro Setting with userId {command.UserId} not found.");
         
-        if (command.PomodoroSetting.Timing <= 0)
+        if (command.PomodoroSetting.Timing < 0)
         {
             throw new ValidationException("Pomodoro Setting timing must be greater than zero");
         }
