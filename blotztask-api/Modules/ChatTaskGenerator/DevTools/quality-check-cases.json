@@ -34,6 +34,8 @@
       {
         "titleContains": ["hiking"],
         "expectedDayOfWeek": "Saturday",
+        "startTimeHourMin": 6,
+        "startTimeHourMax": 18,
         "label": "Life"
       }
     ]

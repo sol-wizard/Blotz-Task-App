@@ -32,6 +32,13 @@ public class QualityCheckTaskExpectation
     /// for inputs like "this weekend" or "next week" where the offset varies by the day the test runs.
     /// </summary>
     public string? ExpectedDayOfWeek { get; set; }
+
+    /// <summary>
+    /// Asserts that the task's start time hour falls within [StartTimeHourMin, StartTimeHourMax] (inclusive).
+    /// Useful for vague inputs like "hiking this weekend" where any reasonable daytime hour is acceptable.
+    /// </summary>
+    public int? StartTimeHourMin { get; set; }
+    public int? StartTimeHourMax { get; set; }
 }
 
 public class QualityCheckItem
