@@ -44,6 +44,14 @@ export const SummaryBar = ({
         />
       </div>
 
+      {/* Model row */}
+      {scorecard && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-violet-800 bg-violet-950/60 text-sm font-[family-name:var(--font-geist-mono)]">
+          <span className="text-violet-400 font-semibold uppercase tracking-wider text-xs">Model</span>
+          <span className="text-violet-100 font-bold">{scorecard.modelId}</span>
+        </div>
+      )}
+
       {/* Timing row */}
       <div className="grid grid-cols-3 gap-3">
         <StatCard

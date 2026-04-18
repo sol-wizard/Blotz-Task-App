@@ -30,6 +30,7 @@ export interface QualityCheckCaseResult {
 }
 
 export interface QualityCheckScorecard {
+  modelId: string;
   totalCases: number;
   passed: number;
   failed: number;

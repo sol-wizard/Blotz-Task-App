@@ -89,6 +89,7 @@ public class QualityCheckRequest
 
 public class QualityCheckScorecard
 {
+    public string ModelId { get; set; } = "";
     public int TotalCases { get; set; }
     public int Passed { get; set; }
     public int Failed { get; set; }
