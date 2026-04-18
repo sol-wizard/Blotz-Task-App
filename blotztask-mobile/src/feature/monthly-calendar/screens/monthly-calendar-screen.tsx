@@ -11,7 +11,7 @@ import { MonthlyDay, MonthlyDayProps } from "../components/monthly-day";
 import { SelectedDayDetailPanel } from "../components/day-detail-panel";
 import { TaskThumbnailDTO } from "../models/monthly-task-indicator-dto";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { formatBottomSheetDate } from "../util/date-formatter";
+import { formatBottomSheetDate } from "@/feature/calendar/util/date-formatter";
 import i18n from "@/i18n";
 import { ReturnButton } from "@/shared/components/return-button";
 
@@ -53,7 +53,7 @@ export default function MonthlyCalendarScreen() {
   return (
     <View className="flex-1 bg-background">
       <SafeAreaView className="flex-1" edges={["top"]}>
-        <View className="flex-row items-center justify-between px-6 pt-4 pb-2">
+        <View className="flex-row items-center justify-between px-6 pt-4">
           <ReturnButton className="bg-white shadow-sm border-gray-50 w-9 h-9" />
 
           <Pressable
@@ -77,15 +77,21 @@ export default function MonthlyCalendarScreen() {
             firstDay={1}
             enableSwipeMonths
             monthFormat={"MMMM"}
+            renderHeader={(date: any) => {
+              const monthIndex = date.getMonth() + 1;
+              return (
+                <Text className="text-4xl font-balooBold text-secondary">{`${monthIndex}月`}</Text>
+              );
+            }}
             dayComponent={renderDay}
             theme={{
               calendarBackground: theme.colors.background,
-              textDayHeaderFontFamily: "BalooBold",
-              textDayHeaderFontSize: 13,
-              textSectionTitleColor: "#9CA3AF",
-              monthTextColor: "#444964",
-              textMonthFontFamily: "BalooExtraBold",
-              textMonthFontSize: 32,
+              textDayHeaderFontFamily: "Inter",
+              textDayHeaderFontSize: 11,
+              textSectionTitleColor: theme.colors.onSurface,
+              monthTextColor: theme.colors.onSurface,
+              textMonthFontFamily: "BalooBold",
+              textMonthFontSize: 24,
               arrowColor: theme.colors.secondary,
             }}
           />

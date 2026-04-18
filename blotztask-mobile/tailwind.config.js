@@ -23,7 +23,7 @@ module.exports = {
         interBold: ["InterBold"],
       },
       fontSize: {
-        xxs: "8px",
+        xxs: "9px",
       },
     },
   },

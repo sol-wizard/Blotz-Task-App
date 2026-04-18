@@ -29,20 +29,19 @@ export const MonthlyDay = ({
   const previews = tasks.slice(0, 4);
 
   return (
-    <View className="p-0.5 w-full">
+    <View className="w-full">
       <Pressable
         onPress={() => onPressDay?.(dayKey)}
-        className={`flex-col h-20 w-full items-center rounded-lg pt-1 border ${isSelected ? "" : "border-transparent"}`}
-        style={isSelected ? { borderColor: theme.colors.secondary } : {}}
+        className={`flex-col h-24 w-full items-center rounded-lg ${isSelected ? "bg-secondary" : ""}`}
       >
-        <View className={`w-6 h-6 rounded-full items-center justify-center mb-1`}>
+        <View className="w-7 h-7 rounded-full items-center justify-center mb-1.5">
           <Text
-            className={`text-sm font-balooBold mt-0.5 ${isToday ? "text-highlight" : isInactive ? "text-gray-300" : "text-secondary"}`}
+            className={`text-base font-interBold mt-0.5 ${isSelected ? "text-white" : isToday ? "text-highlight" : isInactive ? "text-gray-300" : "text-secondary"}`}
           >
             {date.day}
           </Text>
         </View>
-        <View className="w-full px-1 gap-y-0.5">
+        <View className="w-full px-0.5 gap-y-0.5">
           {previews.map((task, index) => {
             const labelColor = task.label?.color ?? theme.colors.disabled;
             const bgColor = `${labelColor}66`;
@@ -60,7 +59,7 @@ export const MonthlyDay = ({
                 <View className="flex-1">
                   <Text
                     numberOfLines={1}
-                    className={`text-[8px] font-bold font-inter leading-3 text-secondary`}
+                    className={`text-xxs font-inter leading-3 ${isSelected ? "text-white" : "text-secondary"}`}
                   >
                     {task.taskTitle}
                   </Text>
