@@ -63,7 +63,7 @@ export const ResultRow = ({
               <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Input</p>
               <p className="text-sm text-zinc-100 italic">&ldquo;{result.input}&rdquo;</p>
             </div>
-            <ChecksDetail checks={result.checks} extractedTasks={result.extractedTasks} />
+            <ChecksDetail checks={result.checks} extractedTasks={result.extractedTasks} extractedNotes={result.extractedNotes ?? []} />
           </td>
         </tr>
       )}

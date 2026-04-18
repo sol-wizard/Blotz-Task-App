@@ -1,9 +1,9 @@
 [
   {
     "id": "three-tasks-combined-actions",
-    "input": "Remind me in 5 minutes to drink water, buy breakfast at 8, and I have a team meeting tomorrow at 10am",
-    "expectedTaskCount": 3,
-    "expectedNoteCount": 0,
+    "input": "Remind me in 5 minutes to drink water, buy breakfast at 8, and I want to build a website",
+    "expectedTaskCount": 2,
+    "expectedNoteCount": 1,
     "expectations": [
       {
         "titleContains": ["water"],
@@ -16,12 +16,6 @@
         "startTimeHour": 8,
         "startTimeMinute": 0,
         "label": "Life"
-      },
-      {
-        "titleContains": ["meeting"],
-        "startDateOffset": 1,
-        "startTimeHour": 10,
-        "label": "Work"
       }
     ]
   },

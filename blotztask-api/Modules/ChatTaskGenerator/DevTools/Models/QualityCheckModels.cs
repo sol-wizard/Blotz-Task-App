@@ -68,6 +68,7 @@ public class QualityCheckCaseResult
     public long AiTimeMs { get; set; }
     public List<QualityCheckItem> Checks { get; set; } = [];
     public List<QualityCheckExtractedTask> ExtractedTasks { get; set; } = [];
+    public List<string> ExtractedNotes { get; set; } = [];
 
     /// <summary>Populated only when the run was executed multiple times for reliability testing.</summary>
     public int? TotalRuns { get; set; }

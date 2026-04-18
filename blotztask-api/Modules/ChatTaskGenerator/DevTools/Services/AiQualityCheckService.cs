@@ -157,6 +157,10 @@ public class AiQualityCheckService(
                 })
                 .ToList();
 
+            caseResult.ExtractedNotes = (result.ExtractedNotes ?? [])
+                .Select(n => n.Text)
+                .ToList();
+
             QualityCheckRunner.CheckTaskCount(qualityCheckCase, result, caseResult);
             QualityCheckRunner.CheckNoteCount(qualityCheckCase, result, caseResult);
             QualityCheckRunner.CheckTaskExpectations(qualityCheckCase, result, caseResult, userLocalTime);
