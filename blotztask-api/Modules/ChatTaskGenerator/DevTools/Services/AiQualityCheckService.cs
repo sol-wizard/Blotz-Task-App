@@ -33,7 +33,11 @@ public class AiQualityCheckService(
             return QualityCheckRunResult.Fail(message);
         }
 
-        var scorecard = new QualityCheckScorecard { TotalCases = allCases.Count };
+        var scorecard = new QualityCheckScorecard
+        {
+            TotalCases = allCases.Count,
+            ModelId = configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"] ?? "unknown"
+        };
         var totalSw = Stopwatch.StartNew();
 
         var timeZone = ResolveTimeZone(request.TimeZone);
@@ -155,6 +159,10 @@ public class AiQualityCheckService(
                     EndTime = t.EndTime,
                     LabelName = t.LabelName.ToString()
                 })
+                .ToList();
+
+            caseResult.ExtractedNotes = (result.ExtractedNotes ?? [])
+                .Select(n => n.Text)
                 .ToList();
 
             QualityCheckRunner.CheckTaskCount(qualityCheckCase, result, caseResult);

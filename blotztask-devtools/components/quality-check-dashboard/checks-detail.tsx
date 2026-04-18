@@ -69,9 +69,11 @@ const TaskChecksTable = ({ checks }: { checks: EvalCheck[] }) => (
 export const ChecksDetail = ({
   checks,
   extractedTasks,
+  extractedNotes,
 }: {
   checks: EvalCheck[];
   extractedTasks: QualityCheckExtractedTask[];
+  extractedNotes: string[];
 }) => {
   const summaryChecks = checks.filter((c) => !c.field.startsWith("task["));
 
@@ -137,6 +139,26 @@ export const ChecksDetail = ({
           );
         })}
       </div>
+
+      {extractedNotes.length > 0 && (
+        <div className="mt-6 flex flex-col gap-6">
+          {extractedNotes.map((note, i) => (
+            <div key={i} className="rounded-xl border border-zinc-700 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 text-xs font-[family-name:var(--font-geist-mono)] border-b border-zinc-700 bg-zinc-800/40 text-zinc-500">
+                <span>note[{i}]</span>
+              </div>
+              <div className="p-4 bg-zinc-900/40">
+                <div className="rounded-xl border border-zinc-700 bg-zinc-800 overflow-hidden">
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <div className="w-1 h-5 rounded-full flex-shrink-0 bg-zinc-500" />
+                    <span className="text-base font-semibold text-zinc-100">{note}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

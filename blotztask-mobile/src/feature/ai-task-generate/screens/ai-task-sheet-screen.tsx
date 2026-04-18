@@ -72,9 +72,10 @@ export default function AiTaskSheetScreen() {
 
   const handleSubmitText = async () => {
     if (!textInput.trim() || isAiGenerating) return;
-    Keyboard.dismiss();
-    await sendTextMessage(textInput.trim());
+    const message = textInput.trim();
     setTextInput("");
+    Keyboard.dismiss();
+    await sendTextMessage(message);
   };
 
   const handleAddAll = async () => {
