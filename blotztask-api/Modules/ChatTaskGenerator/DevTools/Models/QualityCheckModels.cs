@@ -32,6 +32,13 @@ public class QualityCheckTaskExpectation
     /// for inputs like "this weekend" or "next week" where the offset varies by the day the test runs.
     /// </summary>
     public string? ExpectedDayOfWeek { get; set; }
+
+    /// <summary>
+    /// Asserts that the task's start time hour falls within [StartTimeHourMin, StartTimeHourMax] (inclusive).
+    /// Useful for vague inputs like "hiking this weekend" where any reasonable daytime hour is acceptable.
+    /// </summary>
+    public int? StartTimeHourMin { get; set; }
+    public int? StartTimeHourMax { get; set; }
 }
 
 public class QualityCheckItem
@@ -61,6 +68,7 @@ public class QualityCheckCaseResult
     public long AiTimeMs { get; set; }
     public List<QualityCheckItem> Checks { get; set; } = [];
     public List<QualityCheckExtractedTask> ExtractedTasks { get; set; } = [];
+    public List<string> ExtractedNotes { get; set; } = [];
 
     /// <summary>Populated only when the run was executed multiple times for reliability testing.</summary>
     public int? TotalRuns { get; set; }
@@ -81,6 +89,7 @@ public class QualityCheckRequest
 
 public class QualityCheckScorecard
 {
+    public string ModelId { get; set; } = "";
     public int TotalCases { get; set; }
     public int Passed { get; set; }
     public int Failed { get; set; }

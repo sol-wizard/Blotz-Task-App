@@ -139,6 +139,20 @@ public static class QualityCheckRunner
                     Passed = actualDayOfWeek.Equals(expectation.ExpectedDayOfWeek, StringComparison.OrdinalIgnoreCase)
                 });
             }
+
+            if (expectation.StartTimeHourMin.HasValue || expectation.StartTimeHourMax.HasValue)
+            {
+                var actualHour = task.StartTime.Hour;
+                var min = expectation.StartTimeHourMin ?? 0;
+                var max = expectation.StartTimeHourMax ?? 23;
+                caseResult.Checks.Add(new QualityCheckItem
+                {
+                    Field = $"task[{i}].startTimeHourRange",
+                    Expected = $"{min:D2}:00 – {max:D2}:00",
+                    Actual = task.StartTime.ToString("HH:mm"),
+                    Passed = actualHour >= min && actualHour <= max
+                });
+            }
         }
     }
 }
