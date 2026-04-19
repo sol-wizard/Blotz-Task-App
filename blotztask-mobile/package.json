@@ -15,6 +15,7 @@
     "@expo-google-fonts/baloo-2": "^0.4.2",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
+    "@gorhom/bottom-sheet": "^5.2.9",
     "@hookform/resolvers": "^5.1.1",
     "@microsoft/signalr": "^8.0.7",
     "@quidone/react-native-wheel-picker": "^1.6.0",
