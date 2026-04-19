@@ -31,7 +31,7 @@ export function AiInputBar({
     <View className="w-full flex-row items-center px-6 gap-4 pb-8">
       {/* Microphone hold-to-record */}
       <Pressable
-        onLongPress={onMicPressIn}
+        onPressIn={onMicPressIn}
         onPressOut={onMicPressOut}
         accessibilityLabel="Hold to record"
         className="w-14 h-14 rounded-full items-center justify-center"
