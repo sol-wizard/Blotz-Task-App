@@ -6,6 +6,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import { requestRecordingPermissionsAsync } from "expo-audio";
+import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { AiInputBar } from "../component/ai-input-bar";
 import { AiResultList } from "../component/ai-result-list";
@@ -100,6 +101,7 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressIn = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Keyboard.dismiss();
     void startListening();
   };
