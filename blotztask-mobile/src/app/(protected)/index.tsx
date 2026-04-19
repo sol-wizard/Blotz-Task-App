@@ -1,7 +1,7 @@
 import { systemPreferredLanguage } from "@/feature/auth/utils/system-preferred-language";
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { router } from "expo-router";
 import { useEffect } from "react";
@@ -16,7 +16,10 @@ export default function ProtectedGate() {
   useEffect(() => {
     if (isLoading || !userPreferences) return;
 
-    if (userPreferences.preferredLanguage !== systemPreferredLanguage) {
+    if (
+      userPreferences.preferredLanguage !== systemPreferredLanguage &&
+      !userProfile?.isOnBoarded
+    ) {
       updateUserPreferences({
         ...userPreferences,
         preferredLanguage: systemPreferredLanguage,

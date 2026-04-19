@@ -4,7 +4,7 @@ import { Controller, Control } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
-import { AnimatedDropdown } from "@/shared/components/ui/animated-dropdown";
+import { AnimatedDropdown } from "@/shared/components/animated-dropdown";
 
 type AlertSelectProps = {
   control: Control<any>;
@@ -36,7 +36,7 @@ export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "alert
           className="flex-row items-center justify-between"
           layout={MotionAnimations.layout}
         >
-          <Text className="font-baloo text-secondary text-2xl mt-1">{t("form.alert")}</Text>
+          <Text className="font-baloo text-secondary text-xl mt-1">{t("form.alert")}</Text>
 
           <AnimatedDropdown
             value={value}

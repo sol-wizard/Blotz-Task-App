@@ -22,6 +22,179 @@ namespace BlotzTask.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("BlotzTask.Modules.AiUsage.Entities.AiUsageRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CompletionTokens")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PromptTokens")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalTokens")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("AiUsageRecords");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiUsage.Entities.SubscriptionPlan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("MonthlyTokenLimit")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SubscriptionPlans");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            MonthlyTokenLimit = 50000,
+                            Name = "Free"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            MonthlyTokenLimit = 500000,
+                            Name = "Pro"
+                        });
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiUsage.Entities.UserSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PlanId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlanId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserSubscriptions");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.Badge", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("IconUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Threshold")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.ToTable("Badges", (string)null);
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.UserBadge", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("BadgeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EarnedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "BadgeId");
+
+                    b.HasIndex("BadgeId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserBadges", (string)null);
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.UserProgress", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserProgress", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
                     b.Property<int>("LabelId")
@@ -175,6 +348,67 @@ namespace BlotzTask.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int?>("LabelId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset?>("TemplateEndTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("TemplateStartTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("TimeType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LabelId");
+
+                    b.HasIndex("UserId", "IsActive");
+
+                    b.ToTable("RecurringTasks", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.Subtask", b =>
                 {
                     b.Property<int>("Id")
@@ -221,6 +455,47 @@ namespace BlotzTask.Migrations
                     b.ToTable("Subtasks", (string)null);
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskDeadline", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<DateTimeOffset>("DueAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsPinned")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("TaskItemId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DueAt");
+
+                    b.HasIndex("TaskItemId")
+                        .IsUnique();
+
+                    b.HasIndex("IsPinned", "DueAt");
+
+                    b.ToTable("TaskDeadlines", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
                 {
                     b.Property<int>("Id")
@@ -250,6 +525,9 @@ namespace BlotzTask.Migrations
                     b.Property<string>("NotificationId")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("RecurringTaskId")
+                        .HasColumnType("int");
+
                     b.Property<DateTimeOffset>("StartTime")
                         .HasColumnType("datetimeoffset");
 
@@ -269,6 +547,8 @@ namespace BlotzTask.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("LabelId");
+
+                    b.HasIndex("RecurringTaskId");
 
                     b.HasIndex("UserId", "StartTime", "EndTime");
 
@@ -305,6 +585,9 @@ namespace BlotzTask.Migrations
                     b.Property<bool>("IsOnboarded")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("LoginAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PictureUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -330,6 +613,7 @@ namespace BlotzTask.Migrations
                             DisplayName = "blotztest1@gmail.com",
                             Email = "blotztest1@gmail.com",
                             IsOnboarded = false,
+                            LoginAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
                             PictureUrl = "https://s.gravatar.com/avatar/d7eee1179900d1154cf2b3a64f7f91dd?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbl.png",
                             SignUpAt = new DateTime(2025, 9, 9, 14, 33, 27, 955, DateTimeKind.Utc),
                             UpdatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc)
@@ -412,6 +696,60 @@ namespace BlotzTask.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.AiUsage.Entities.AiUsageRecord", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.AiUsage.Entities.UserSubscription", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.AiUsage.Entities.SubscriptionPlan", "Plan")
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Plan");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.UserBadge", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Badges.Domain.Badge", null)
+                        .WithMany()
+                        .HasForeignKey("BadgeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Badges.Domain.UserProgress", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", null)
+                        .WithOne()
+                        .HasForeignKey("BlotzTask.Modules.Badges.Domain.UserProgress", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Labels.Domain.Label", b =>
                 {
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
@@ -450,6 +788,57 @@ namespace BlotzTask.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Labels.Domain.Label", "Label")
+                        .WithMany()
+                        .HasForeignKey("LabelId");
+
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("BlotzTask.Modules.Tasks.Domain.Entities.RecurrencePattern", "Pattern", b1 =>
+                        {
+                            b1.Property<int>("RecurringTaskId")
+                                .HasColumnType("int");
+
+                            b1.Property<int?>("DayOfMonth")
+                                .HasColumnType("int")
+                                .HasColumnName("DayOfMonth");
+
+                            b1.Property<int?>("DaysOfWeek")
+                                .HasColumnType("int")
+                                .HasColumnName("DaysOfWeek");
+
+                            b1.Property<int>("Frequency")
+                                .HasColumnType("int")
+                                .HasColumnName("Frequency");
+
+                            b1.Property<int>("Interval")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("int")
+                                .HasDefaultValue(1)
+                                .HasColumnName("Interval");
+
+                            b1.HasKey("RecurringTaskId");
+
+                            b1.ToTable("RecurringTasks");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RecurringTaskId");
+                        });
+
+                    b.Navigation("Label");
+
+                    b.Navigation("Pattern")
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.Subtask", b =>
                 {
                     b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", "ParentTask")
@@ -461,11 +850,27 @@ namespace BlotzTask.Migrations
                     b.Navigation("ParentTask");
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskDeadline", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", "TaskItem")
+                        .WithOne("Deadline")
+                        .HasForeignKey("BlotzTask.Modules.Tasks.Domain.Entities.TaskDeadline", "TaskItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TaskItem");
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
                 {
                     b.HasOne("BlotzTask.Modules.Labels.Domain.Label", "Label")
                         .WithMany("TaskItems")
                         .HasForeignKey("LabelId");
+
+                    b.HasOne("BlotzTask.Modules.Tasks.Domain.Entities.RecurringTask", "RecurringTask")
+                        .WithMany()
+                        .HasForeignKey("RecurringTaskId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
                         .WithMany()
@@ -474,6 +879,8 @@ namespace BlotzTask.Migrations
                         .IsRequired();
 
                     b.Navigation("Label");
+
+                    b.Navigation("RecurringTask");
 
                     b.Navigation("User");
                 });
@@ -505,6 +912,8 @@ namespace BlotzTask.Migrations
 
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.TaskItem", b =>
                 {
+                    b.Navigation("Deadline");
+
                     b.Navigation("Subtasks");
                 });
 

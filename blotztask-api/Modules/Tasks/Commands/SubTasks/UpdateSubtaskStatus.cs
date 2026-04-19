@@ -5,16 +5,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Commands.SubTasks;
 
+public class UpdateSubtaskStatusCommand
+{
+    public int SubtaskId { get; set; }
+}
+
 public class UpdateSubtaskStatusCommandHandler(BlotzTaskDbContext db, ILogger<UpdateSubtaskStatusCommandHandler> logger)
 {
-    public async Task<string> Handle(int subtaskId, CancellationToken ct = default)
+    public async Task<string> Handle(UpdateSubtaskStatusCommand command, CancellationToken ct = default)
     {
         logger.LogInformation("Updating subtask status");
-        var subtask = await db.Subtasks.FindAsync(subtaskId, ct);
+        var subtask = await db.Subtasks.FindAsync(command.SubtaskId, ct);
 
         if (subtask == null)
         {
-            throw new NotFoundException($"Subtask with id {subtaskId} was not found.");
+            throw new NotFoundException($"Subtask with id {command.SubtaskId} was not found.");
         }
 
         subtask.IsDone = !subtask.IsDone;

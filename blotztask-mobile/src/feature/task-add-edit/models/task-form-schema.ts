@@ -12,6 +12,9 @@ export const taskFormSchema = z
     endTime: z.date(),
     labelId: z.number().nullable(),
     alert: z.number().nullable(),
+    isDeadline: z.boolean(),
+    deadlineDate: z.date(),
+    deadlineTime: z.date(),
   })
   .refine(
     (data) => {
@@ -28,5 +31,17 @@ export const taskFormSchema = z
   );
 
 export type TaskFormField = z.infer<typeof taskFormSchema>;
+
+export function hasDeadlineWarning(data: TaskFormField): boolean {
+  if (!data.isDeadline) return false;
+
+  const endDate = data.endDate;
+  const endTime = data.endTime;
+  const end = combineDateTime(endDate, endTime);
+  const deadline = combineDateTime(data.deadlineDate, data.deadlineTime);
+  if (!end || !deadline) return false;
+
+  return end > deadline;
+}
 
 export default TaskFormField;

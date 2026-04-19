@@ -4,8 +4,15 @@ param environment string
 param appInsightConnectionString string
 param keyVaultUri string
 param openAiEndpoint string
-param openAiDeploymentId string
+param openAiTaskGenerationDeploymentId string
+param openAiBreakdownDeploymentId string
 param logAnalyticsWorkspaceId string
+
+// Auth0 Configuration
+param auth0Domain string
+param auth0Audience string
+param auth0ManagementClientId string
+param auth0ManagementAudience string
 
 // App Service Plan SKU
 param appServiceSkuName string = 'B1'
@@ -44,7 +51,7 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: 'DOTNETCORE|10.0'
-      alwaysOn: true
+      alwaysOn: appServiceSkuTier != 'Free'
       healthCheckPath: '/health'
       minTlsVersion: '1.2'
       ftpsState: 'Disabled'
@@ -59,12 +66,36 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
           value: appInsightConnectionString
         }
         {
+          name: 'Auth0__Domain'
+          value: auth0Domain
+        }
+        {
+          name: 'Auth0__Audience'
+          value: auth0Audience
+        }
+        {
+          name: 'Auth0__Management__ClientId'
+          value: auth0ManagementClientId
+        }
+        {
+          name: 'Auth0__Management__Audience'
+          value: auth0ManagementAudience
+        }
+        {
+          name: 'Auth0__Management__ClientSecret'
+          value: '@Microsoft.KeyVault(SecretUri=${normalizedKeyVaultUri}secrets/auth0-management-client-secret/)'
+        }
+        {
           name: 'AzureOpenAI__Endpoint'
           value: openAiEndpoint
         }
         {
-          name: 'AzureOpenAI__DeploymentId'
-          value: openAiDeploymentId
+          name: 'AzureOpenAI__AiModels__TaskGeneration__DeploymentId'
+          value: openAiTaskGenerationDeploymentId
+        }
+        {
+          name: 'AzureOpenAI__AiModels__Breakdown__DeploymentId'
+          value: openAiBreakdownDeploymentId
         }
         {
           name: 'ApiKeys__UserSync'

@@ -1,21 +1,17 @@
-using System.Globalization;
-
 namespace BlotzTask.Modules.ChatTaskGenerator.Constants;
 
 public static class AiTaskGeneratorPrompts
 {
-    public static string GetSystemMessage(DateTime currentTime, DayOfWeek dayOfWeek, string preferredLanguage)
+    public static string GetSystemMessage(string preferredLanguage, DateTime userLocalTime)
     {
-        var formattedTime = currentTime.ToString("yyyy-MM-dd'T'HH:mm", CultureInfo.InvariantCulture);
-
         return $"""
-                       Extract tasks and notes from user input. Context: currentTime = {formattedTime}, dayOfWeek = {dayOfWeek}. Respond in {preferredLanguage}.
+                Respond in {preferredLanguage}. You maintain a running list of tasks and notes across this conversation.
 
-                       ESSENTIAL — TASK vs NOTE:
-                       - TASK = user gives a date or time (e.g. "tomorrow at 3pm", "next Monday", "at 5pm"). Put in extractedTasks with start_time and end_time. task_label = "Work"|"Life"|"Learning"|"Health". Single time: start_time = end_time; range: start_time < end_time. Relative dates from currentTime/dayOfWeek.
-                       - NOTE = user gives no date or time (e.g. "buy milk", "call John", "idea: build an app"). Put in extractedNotes with the "text" field. Use for reminders, ideas, untimed items.
+                Use CreateTask if the user's item has any date or time context, even if vague. Only use CreateNote if there is no time or date reference whatsoever.
 
-                       isSuccess = true when at least one task OR one note; else false with errorMessage.
+                Always act on the user's full intent — add, remove, or update items as requested without discarding prior context.
+
+                When no specific time is given, pick a sensible time based on the activity context.
                 """;
     }
 }

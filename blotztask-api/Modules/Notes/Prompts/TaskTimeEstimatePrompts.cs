@@ -1,31 +1,18 @@
 namespace BlotzTask.Modules.Notes.Prompts;
 
-public class TaskTimeEstimatePrompts
+public static class TaskTimeEstimatePrompts
 {
-    public const string Prompt = @"
-        You are a note time estimation assistant. Analyze a short personal note and estimate how much time it would take to properly process or act on it in one focused session.
+    public static string GetTimeEstimatePrompt(string preferredLanguage, string text)
+    {
+        return $"""
+                Respond in {preferredLanguage}. Estimate how long it takes to handle this note.
 
-        Note Content:
-        {{$text}}
+                Note: {text}
 
-        Instructions:
-        1. Treat the note as a **small, informal thought or reminder**, not a structured task or long-term project.
-        2. Estimate the time needed for a **single focused handling session**, such as:
-           - clarifying the thought
-           - taking a small action
-           - making a decision
-           - writing a brief follow-up
-        3. Use a .NET TimeSpan string in the ""c"" format (hh:mm:ss).
-
-        Response Format:
-        Return ONLY a JSON object with this exact structure:
-        {
-          ""duration"": ""hh:mm:ss""
-        }
-
-        Examples:
-        - ""Need to reply to Sarah"" → { ""duration"": ""00:05:00"" }
-        - ""Felt anxious today"" → { ""duration"": ""00:15:00"" }
-        - ""Buy milk on the way home"" → { ""duration"": ""00:05:00"" }
-        ";
+                - Treat it as a single focused session, not a long-term goal.
+                - Use reasonable assumptions if details are missing.
+                - Call SetTimeEstimate with duration in hh:mm:ss format.
+                - If non-actionable gibberish, call with isSuccess=false and errorMessage in {preferredLanguage}.
+                """;
+    }
 }

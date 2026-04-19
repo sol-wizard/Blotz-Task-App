@@ -7,13 +7,11 @@ param dbAdminUsername string
 @secure()
 param dbAdminPassword string
 
-// Database SKU settings
-param dbSkuName string = 'Basic'
-param dbSkuTier string = 'Basic'
-param dbSkuCapacity int = 5
-param dbMaxSizeBytes int = 1073741824 // 1GB
+param dbMaxSizeBytes int = 1073741824
+param dbSkuName string
+param dbSkuTier string
+param dbSkuCapacity int
 
-//TODO : A new database resource is created from azure portal please update the bicep script here
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   name: 'sql-${projectName}-${environment}'
   location: location
@@ -40,6 +38,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
     }
     properties: {
       maxSizeBytes: dbMaxSizeBytes
+      requestedBackupStorageRedundancy: 'Local'
     }
   }
 }

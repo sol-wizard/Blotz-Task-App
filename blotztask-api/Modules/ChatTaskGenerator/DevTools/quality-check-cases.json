@@ -1,0 +1,50 @@
+[
+  {
+    "id": "three-tasks-combined-actions",
+    "input": "Remind me in 5 minutes to drink water, buy breakfast at 8, and I want to build a website",
+    "expectedTaskCount": 2,
+    "expectedNoteCount": 1,
+    "expectations": [
+      {
+        "titleContains": ["water"],
+        "minutesFromNow": 5,
+        "toleranceMinutes": 2,
+        "label": "Health"
+      },
+      {
+        "titleContains": ["breakfast"],
+        "startTimeHour": 8,
+        "startTimeMinute": 0,
+        "label": "Life"
+      }
+    ]
+  },
+  {
+    "id": "weekend-defaults-to-saturday",
+    "input": "I want to go hiking this weekend",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["hiking"],
+        "expectedDayOfWeek": "Saturday",
+        "startTimeHourMin": 6,
+        "startTimeHourMax": 18,
+        "label": "Life"
+      }
+    ]
+  },
+  {
+    "id": "next-week-defaults-to-monday",
+    "input": "Schedule a project kickoff meeting next week",
+    "expectedTaskCount": 1,
+    "expectedNoteCount": 0,
+    "expectations": [
+      {
+        "titleContains": ["kickoff", "meeting", "project"],
+        "expectedDayOfWeek": "Monday",
+        "label": "Work"
+      }
+    ]
+  }
+]

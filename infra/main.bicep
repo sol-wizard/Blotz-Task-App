@@ -9,10 +9,22 @@ param location string = resourceGroup().location
 param dbAdminUsername string
 @secure()
 param dbAdminPassword string
+@secure()
+param auth0ManagementClientSecret string
 
-param openAiDeploymentName string
-param openAiModelName string
-param openAiModelVersion string
+// Auth0 Configuration
+param auth0Domain string
+param auth0Audience string
+param auth0ManagementClientId string
+param auth0ManagementAudience string
+
+param breakdownDeploymentName string
+param breakdownModelName string
+param breakdownModelVersion string
+
+param taskGenerationDeploymentName string
+param taskGenerationModelName string
+param taskGenerationModelVersion string
 param githubRepo string // Format: org/repo (e.g., sol-wizard/Blotz-Task-App)
 param budgetAmount int
 param alertEmail string
@@ -21,11 +33,11 @@ param alertEmail string
 param appServiceSkuName string
 param appServiceSkuTier string
 
-// Database SKU settings
+// Database (DTU model)
+param dbMaxSizeGb int
 param dbSkuName string
 param dbSkuTier string
 param dbSkuCapacity int
-param dbMaxSizeGb int
 
 // Key Vault create mode - use 'recover' if Key Vault is soft-deleted
 @allowed(['default', 'recover'])
@@ -85,10 +97,15 @@ module webAppForAPI 'modules/appService.bicep' = {
     appInsightConnectionString: appInsight.outputs.connectionString
     keyVaultUri: kv.outputs.vaultUri
     openAiEndpoint: openAi.outputs.endpoint
-    openAiDeploymentId: openAi.outputs.deploymentId
+    openAiTaskGenerationDeploymentId: openAi.outputs.taskGenerationDeploymentId
+    openAiBreakdownDeploymentId: openAi.outputs.breakdownDeploymentId
     logAnalyticsWorkspaceId: logAnalytics.outputs.id
     appServiceSkuName: appServiceSkuName
     appServiceSkuTier: appServiceSkuTier
+    auth0Domain: auth0Domain
+    auth0Audience: auth0Audience
+    auth0ManagementClientId: auth0ManagementClientId
+    auth0ManagementAudience: auth0ManagementAudience
   }
 }
 
@@ -110,10 +127,10 @@ module sql 'modules/sqlserver.bicep' = {
     environment: environment
     dbAdminUsername: dbAdminUsername
     dbAdminPassword: dbAdminPassword
+    dbMaxSizeBytes: dbMaxSizeGb * 1073741824
     dbSkuName: dbSkuName
     dbSkuTier: dbSkuTier
     dbSkuCapacity: dbSkuCapacity
-    dbMaxSizeBytes: dbMaxSizeGb * 1073741824
   }
 }
 
@@ -126,6 +143,15 @@ module storeConnectionString 'modules/keyVaultSecret.bicep' = {
   }
 }
 
+module storeAuth0ManagementClientSecret 'modules/keyVaultSecret.bicep' = {
+  name: '${namePrefix}-${environment}-store-auth0-mgmt-secret'
+  params: {
+    keyVaultName: kv.outputs.name
+    secretName: 'auth0-management-client-secret'
+    secretValue: auth0ManagementClientSecret
+  }
+}
+
 module openAi 'modules/openAi.bicep' = {
   name: '${namePrefix}-${environment}-openai'
   params: {
@@ -133,9 +159,12 @@ module openAi 'modules/openAi.bicep' = {
     projectName: namePrefix
     keyVaultName: kv.outputs.name
     foundryProjectName: 'proj-${namePrefix}-${environment}'
-    openAiDeploymentName: openAiDeploymentName
-    openAiModelName: openAiModelName
-    openAiModelVersion: openAiModelVersion
+    breakdownDeploymentName: breakdownDeploymentName
+    breakdownModelName: breakdownModelName
+    breakdownModelVersion: breakdownModelVersion
+    taskGenerationDeploymentName: taskGenerationDeploymentName
+    taskGenerationModelName: taskGenerationModelName
+    taskGenerationModelVersion: taskGenerationModelVersion
   }
 }
 module githubActionIdentity 'modules/identity.bicep' = {

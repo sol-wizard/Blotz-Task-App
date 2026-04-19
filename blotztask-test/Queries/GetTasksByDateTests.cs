@@ -1,4 +1,5 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Tests.Fixtures;
@@ -18,10 +19,10 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
         _context = new BlotzTaskDbContext(fixture.Options);
         _seeder = new DataSeeder(_context);
         var logger = TestDbContextFactory.CreateLogger<GetTasksByDateQueryHandler>();
-        _handler = new GetTasksByDateQueryHandler(_context, logger);
+        _handler = new GetTasksByDateQueryHandler(_context, new(), logger);
     }
 
-    [Fact(Skip = "API not yet updated to exclude floating tasks from calendar page")]
+    [Fact]
     public async Task Handle_ShouldReturnTasks_OnlyIfTheyFallWithinTheSelectedDate()
     {
         // Arrange
@@ -143,83 +144,268 @@ public class GetTasksByDateTests : IClassFixture<DatabaseFixture>
     
 
     [Fact]
-    public async Task Handle_ShouldShowOverdueTask_WithinSevenDayWindow()
+    public async Task Handle_ShouldIncludeAllOverdueTasks_ForTodayAndPastDates_ButNotFutureDates()
     {
         // Arrange
         var userId = await _seeder.CreateUserAsync();
-        
+
         // Create UserPreferences with AutoRollover enabled (required for overdue task rollover)
         _context.UserPreferences.Add(new UserPreference { UserId = userId, AutoRollover = true });
         await _context.SaveChangesAsync();
-        
-        // Use current time with local timezone to properly test overdue rollover
+
         var userNow = DateTimeOffset.Now;
         var localOffset = userNow.Offset;
         var userTodayStart = new DateTimeOffset(userNow.Date, localOffset);
-        var threeDaysAgo = userNow.AddDays(-3);
-        
-        // 1. Overdue task within 7-day window (ended 2 days ago, NOT done) -> SHOULD appear
-        var fourDaysAgo = userTodayStart.AddDays(-4);
-        await _seeder.CreateTaskAsync(userId, "Overdue Task Within Window",
-            new DateTimeOffset(fourDaysAgo.Date.AddHours(9), localOffset),
-            new DateTimeOffset(fourDaysAgo.Date.AddHours(10), localOffset));
-        
-        // 2. Overdue task outside 7-day window (ended 9 days ago) -> should NOT appear
+        var pastSelectedDate = userTodayStart.AddDays(-3);
+        var historicalPastSelectedDate = userTodayStart.AddDays(-12);
+        var futureSelectedDate = userTodayStart.AddDays(2);
+
         var nineDaysAgo = userTodayStart.AddDays(-9);
-        await _seeder.CreateTaskAsync(userId, "Overdue Task Outside Window",
+        await _seeder.CreateTaskAsync(
+            userId,
+            "Old Overdue Task",
             new DateTimeOffset(nineDaysAgo.Date.AddHours(9), localOffset),
             new DateTimeOffset(nineDaysAgo.Date.AddHours(10), localOffset));
-        
-        // 3. Completed overdue task within window -> should NOT appear (IsDone = true)
-        var completedTask = await _seeder.CreateTaskAsync(userId, "Completed Overdue Task",
-            new DateTimeOffset(fourDaysAgo.Date.AddHours(11), localOffset),
-            new DateTimeOffset(fourDaysAgo.Date.AddHours(12), localOffset));
+
+        var twoDaysAgo = userTodayStart.AddDays(-2);
+        var completedTask = await _seeder.CreateTaskAsync(
+            userId,
+            "Completed Overdue Task",
+            new DateTimeOffset(twoDaysAgo.Date.AddHours(11), localOffset),
+            new DateTimeOffset(twoDaysAgo.Date.AddHours(12), localOffset));
         completedTask.IsDone = true;
         await _context.SaveChangesAsync();
 
-        var query = new GetTasksByDateQuery
+        var futureScheduledDay = futureSelectedDate;
+        await _seeder.CreateTaskAsync(
+            userId,
+            "Future Scheduled Task",
+            new DateTimeOffset(futureScheduledDay.Date.AddHours(14), localOffset),
+            new DateTimeOffset(futureScheduledDay.Date.AddHours(15), localOffset));
+
+        var todayQuery = new GetTasksByDateQuery
         {
             UserId = userId,
             StartDate = userNow,
             IncludeFloatingForToday = false
         };
 
-        var threeDaysAgoQuery = new GetTasksByDateQuery
+        var pastQuery = new GetTasksByDateQuery
         {
             UserId = userId,
-            StartDate = threeDaysAgo,
+            StartDate = pastSelectedDate,
+            IncludeFloatingForToday = false
+        };
+
+        var historicalPastQuery = new GetTasksByDateQuery
+        {
+            UserId = userId,
+            StartDate = historicalPastSelectedDate,
+            IncludeFloatingForToday = false
+        };
+
+        var futureQuery = new GetTasksByDateQuery
+        {
+            UserId = userId,
+            StartDate = futureSelectedDate,
+            IncludeFloatingForToday = false
+        };
+
+        // Act
+        var todayResult = await _handler.Handle(todayQuery);
+        var pastResult = await _handler.Handle(pastQuery);
+        var historicalPastResult = await _handler.Handle(historicalPastQuery);
+        var futureResult = await _handler.Handle(futureQuery);
+
+        // Assert
+        todayResult.Should().Contain(t => t.Title == "Old Overdue Task",
+            because: "today's view should include all overdue tasks, even when they are older than seven days");
+        todayResult.Should().NotContain(t => t.Title == "Completed Overdue Task",
+            because: "completed overdue tasks should not roll over");
+
+        pastResult.Should().Contain(t => t.Title == "Old Overdue Task",
+            because: "past day views should also include all currently overdue tasks");
+        pastResult.Should().NotContain(t => t.Title == "Completed Overdue Task",
+            because: "completed overdue tasks should not appear in past day views either");
+
+        historicalPastResult.Should().NotContain(t => t.Title == "Old Overdue Task",
+            because: "even older past day views should include tasks that are overdue at request time");
+
+        futureResult.Should().Contain(t => t.Title == "Future Scheduled Task",
+            because: "future day views should still show tasks scheduled in that selected period");
+        futureResult.Should().NotContain(t => t.Title == "Old Overdue Task",
+            because: "future day views must stay clean and exclude overdue tasks");
+    }
+
+    // -----------------------------------------------------------------------
+    // Virtual recurring occurrence tests
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task Handle_ShouldReturnVirtualOccurrence_WhenRecurringTaskOccursOnDate()
+    {
+        // Scenario: User sets up "Go to Gym" as a daily recurring task starting Mar 14 at 9am.
+        // They haven't opened the app yet today so no DB row exists for today.
+        // Expected: "Go to Gym" still shows up on Mar 14 as a virtual task (Id = null).
+        var userId = await _seeder.CreateUserAsync();
+        var queryDate = new DateTimeOffset(2026, 3, 14, 0, 0, 0, TimeSpan.Zero);
+        var templateTime = new DateTimeOffset(2026, 3, 14, 9, 0, 0, TimeSpan.Zero);
+
+        await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Go to Gym",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 3, 14),
+            templateStartTime: templateTime);
+
+        var query = new GetTasksByDateQuery
+        {
+            UserId = userId,
+            StartDate = queryDate,
             IncludeFloatingForToday = false
         };
 
         // Act
         var result = await _handler.Handle(query);
-        var threeDaysAgoResult = await _handler.Handle(threeDaysAgoQuery);
 
-        // Debug output
-        Console.WriteLine("Result tasks:");
-        foreach (var task in result)
-        {   
-            Console.WriteLine("this is the result");
-            Console.WriteLine($"  - {task.Title}");
-        }
+        // Assert: "Go to Gym" appears but has no DB row yet (Id = null), only the template reference
+        var virtualTask = result.Should().ContainSingle(t => t.Title == "Go to Gym").Subject;
+        virtualTask.Id.Should().BeNull(because: "user has not interacted with today's occurrence yet — no DB row saved");
+        virtualTask.RecurringTaskId.Should().NotBeNull(because: "virtual task must reference its recurring template so the frontend knows which template it belongs to");
+    }
 
-        // Assert
-        result.Should().Contain(t => t.Title == "Overdue Task Within Window",
-            because: "Overdue task within 7-day window should appear on today's date.");
-        
-        result.Should().NotContain(t => t.Title == "Overdue Task Outside Window",
-            because: "Overdue task outside the 7-day window should NOT appear.");
-        
-        result.Should().NotContain(t => t.Title == "Completed Overdue Task",
-            because: "Completed overdue tasks should NOT roll over.");
+    [Fact]
+    public async Task Handle_ShouldReturnStoredRow_NotVirtual_WhenOccurrenceAlreadySaved()
+    {
+        // Scenario: User has "Morning Run" as a daily recurring task.
+        // They already marked today's run as done — a real DB row now exists for today.
+        // Expected: only 1 "Morning Run" appears (the saved row), not 2 (saved + virtual duplicate).
+        var userId = await _seeder.CreateUserAsync();
+        var queryDate = new DateTimeOffset(2026, 3, 14, 0, 0, 0, TimeSpan.Zero);
+        var templateTime = new DateTimeOffset(2026, 3, 14, 9, 0, 0, TimeSpan.Zero);
 
-        threeDaysAgoResult.Should().Contain(t => t.Title == "Overdue Task Within Window",
-            because: "Overdue task within 7-day window should appear on three days ago's date.");
+        var recurring = await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Morning Run",
+            frequency: RecurrenceFrequency.Daily,
+            startDate: new DateOnly(2026, 3, 14),
+            templateStartTime: templateTime);
 
-        threeDaysAgoResult.Should().NotContain(t => t.Title == "Overdue Task Outside Window",
-            because: "Overdue task outside the 7-day window should NOT appear.");
+        // User tapped "done" on today's occurrence → a real TaskItem row was saved
+        var savedOccurrence = await _seeder.CreateTaskAsync(
+            userId,
+            title: "Morning Run",
+            start: templateTime,
+            end: templateTime);
+        savedOccurrence.RecurringTaskId = recurring.Id;
+        savedOccurrence.IsDone = true;
+        await _context.SaveChangesAsync();
 
-        threeDaysAgoResult.Should().NotContain(t => t.Title == "Completed Overdue Task",
-            because: "Completed overdue tasks should NOT roll over three days ago.");
+        var query = new GetTasksByDateQuery
+        {
+            UserId = userId,
+            StartDate = queryDate,
+            IncludeFloatingForToday = false
+        };
+
+        // Act
+        var result = await _handler.Handle(query);
+
+        // Assert: exactly 1 "Morning Run", with a real Id and marked done — no virtual duplicate
+        var taskResults = result.Where(t => t.Title == "Morning Run").ToList();
+        taskResults.Should().HaveCount(1, because: "the saved DB row replaces the virtual occurrence — user should not see duplicates");
+        taskResults[0].Id.Should().NotBeNull(because: "this is the real saved row, not a virtual one");
+        taskResults[0].IsDone.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Handle_WeeklyRecurring_ShouldAppearOnCorrectDay_AndNotOnWrongDay()
+    {
+        // Scenario: User sets up "Monday Yoga" every Monday at 7am starting Mar 16 2026.
+        // Querying on Monday Mar 16 → should appear.
+        // Querying on Tuesday Mar 17 → should NOT appear (yoga is Monday-only).
+        var userId = await _seeder.CreateUserAsync();
+        var monday = new DateTimeOffset(2026, 3, 16, 0, 0, 0, TimeSpan.Zero);
+        var tuesday = new DateTimeOffset(2026, 3, 17, 0, 0, 0, TimeSpan.Zero);
+        var templateTime = new DateTimeOffset(2026, 3, 16, 7, 0, 0, TimeSpan.Zero);
+
+        await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Monday Yoga",
+            frequency: RecurrenceFrequency.Weekly,
+            startDate: new DateOnly(2026, 3, 16),
+            templateStartTime: templateTime,
+            daysOfWeek: (int)WeeklyDayFlags.Monday);
+
+        var mondayQuery = new GetTasksByDateQuery { UserId = userId, StartDate = monday, IncludeFloatingForToday = false };
+        var tuesdayQuery = new GetTasksByDateQuery { UserId = userId, StartDate = tuesday, IncludeFloatingForToday = false };
+
+        var mondayResult = await _handler.Handle(mondayQuery);
+        var tuesdayResult = await _handler.Handle(tuesdayQuery);
+
+        mondayResult.Should().Contain(t => t.Title == "Monday Yoga",
+            because: "Mar 16 2026 is a Monday — yoga should appear");
+        tuesdayResult.Should().NotContain(t => t.Title == "Monday Yoga",
+            because: "Mar 17 2026 is a Tuesday — yoga is Monday-only");
+    }
+
+    [Fact]
+    public async Task Handle_MonthlyRecurring_ShouldAppearOnCorrectDay_AndNotOnWrongDay()
+    {
+        // Scenario: User sets up "Pay Rent" on the 1st of every month starting Jan 1 2026.
+        // Querying on Mar 1 2026 → should appear (3 months later, same day of month).
+        // Querying on Mar 2 2026 → should NOT appear (rent is only on the 1st).
+        var userId = await _seeder.CreateUserAsync();
+        var march1 = new DateTimeOffset(2026, 3, 1, 0, 0, 0, TimeSpan.Zero);
+        var march2 = new DateTimeOffset(2026, 3, 2, 0, 0, 0, TimeSpan.Zero);
+        var templateTime = new DateTimeOffset(2026, 1, 1, 9, 0, 0, TimeSpan.Zero);
+
+        await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Pay Rent",
+            frequency: RecurrenceFrequency.Monthly,
+            startDate: new DateOnly(2026, 1, 1),
+            templateStartTime: templateTime);
+
+        var march1Query = new GetTasksByDateQuery { UserId = userId, StartDate = march1, IncludeFloatingForToday = false };
+        var march2Query = new GetTasksByDateQuery { UserId = userId, StartDate = march2, IncludeFloatingForToday = false };
+
+        var march1Result = await _handler.Handle(march1Query);
+        var march2Result = await _handler.Handle(march2Query);
+
+        march1Result.Should().Contain(t => t.Title == "Pay Rent",
+            because: "Mar 1 is the 1st of the month — monthly rent reminder should appear");
+        march2Result.Should().NotContain(t => t.Title == "Pay Rent",
+            because: "Mar 2 is not the 1st of the month — rent reminder should not appear");
+    }
+
+    [Fact]
+    public async Task Handle_YearlyRecurring_ShouldAppearOnCorrectDay_AndNotOnWrongDay()
+    {
+        // Scenario: User sets up "Annual Health Checkup" every year starting Mar 14 2025.
+        // Querying on Mar 14 2026 → should appear (1 year later, same month and day).
+        // Querying on Mar 15 2026 → should NOT appear (checkup is only on Mar 14).
+        var userId = await _seeder.CreateUserAsync();
+        var anniversary = new DateTimeOffset(2026, 3, 14, 0, 0, 0, TimeSpan.Zero);
+        var dayAfter = new DateTimeOffset(2026, 3, 15, 0, 0, 0, TimeSpan.Zero);
+        var templateTime = new DateTimeOffset(2025, 3, 14, 10, 0, 0, TimeSpan.Zero);
+
+        await _seeder.CreateRecurringTaskAsync(
+            userId,
+            title: "Annual Health Checkup",
+            frequency: RecurrenceFrequency.Yearly,
+            startDate: new DateOnly(2025, 3, 14),
+            templateStartTime: templateTime);
+
+        var anniversaryQuery = new GetTasksByDateQuery { UserId = userId, StartDate = anniversary, IncludeFloatingForToday = false };
+        var dayAfterQuery = new GetTasksByDateQuery { UserId = userId, StartDate = dayAfter, IncludeFloatingForToday = false };
+
+        var anniversaryResult = await _handler.Handle(anniversaryQuery);
+        var dayAfterResult = await _handler.Handle(dayAfterQuery);
+
+        anniversaryResult.Should().Contain(t => t.Title == "Annual Health Checkup",
+            because: "Mar 14 2026 is exactly one year after Mar 14 2025 — yearly checkup should appear");
+        dayAfterResult.Should().NotContain(t => t.Title == "Annual Health Checkup",
+            because: "Mar 15 2026 is not the anniversary date — checkup should not appear");
     }
 }

@@ -1,29 +1,31 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
-import { FormTextInput } from "@/shared/components/ui/form-text-input";
+import { FormTextInput } from "@/shared/components/form-text-input";
 import { LabelSelect } from "./components/label-select";
-import { FormDivider } from "../../shared/components/ui/form-divider";
+import { FormDivider } from "../../shared/components/form-divider";
 import { ReminderTab } from "./components/reminder-tab";
 import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
 import { AlertSelect } from "./components/alert-select";
+import { DeadlineSection } from "./components/deadline-section";
 import { createNotificationFromAlert } from "./util/create-notification-from-alert";
 import {
   buildTaskTimePayload,
   calculateAlertSeconds,
   calculateAlertTime,
 } from "./util/time-convertion";
+import { combineDateTime } from "./util/combine-date-time";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
@@ -42,7 +44,8 @@ type TaskFormProps =
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
-  const hasEventTimes = dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime;
+  const hasEventTimes =
+    dto?.timeType === 1 || (dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime);
   const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
   const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
   const { t } = useTranslation("tasks");
@@ -58,15 +61,26 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     : (initialAlertTime ?? null);
 
   const now = new Date();
+  const oneHourLater = new Date(now.getTime() + 3600000);
+  const initialDueAt = dto?.dueAt ? new Date(dto.dueAt) : null;
+
+  const initialStartDate = dto?.startTime ? new Date(dto.startTime) : now;
+  const initialStartTime = dto?.startTime ? new Date(dto.startTime) : now;
+  const initialEndDate = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
+  const initialEndTime = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
+
   const defaultValues: TaskFormField = {
     title: dto?.title ?? "",
     description: dto?.description ?? "",
     labelId: dto?.labelId ?? null,
-    startDate: dto?.startTime ? new Date(dto?.startTime) : now,
-    startTime: dto?.startTime ? new Date(dto?.startTime) : now,
-    endDate: dto?.endTime ? new Date(dto?.endTime) : now,
-    endTime: dto?.endTime ? new Date(dto?.endTime) : now,
+    startDate: initialStartDate,
+    startTime: initialStartTime,
+    endDate: initialTab === "reminder" ? initialStartDate : initialEndDate,
+    endTime: initialTab === "reminder" ? initialStartTime : initialEndTime,
     alert: defaultAlert,
+    isDeadline: dto?.isDeadline ?? !!initialDueAt,
+    deadlineDate: initialDueAt ?? oneHourLater,
+    deadlineTime: initialDueAt ?? oneHourLater,
   };
 
   const form = useForm<TaskFormField>({
@@ -75,7 +89,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     defaultValues: defaultValues,
   });
 
-  const { handleSubmit, formState, control, setValue } = form;
+  const { handleSubmit, formState, control, setValue, clearErrors, trigger, getValues } = form;
   const { isSubmitting } = formState;
 
   if (isUserPreferencesLoading) {
@@ -105,8 +119,10 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         alert: data.alert,
         title: data.title,
       });
-      alertTime = calculateAlertTime(data.startTime, data.alert);
+      alertTime = calculateAlertTime(startTime!, data.alert);
     }
+
+    const deadline = data.isDeadline ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
 
     const submitTask: AddTaskItemDTO = {
       title: data.title.trim(),
@@ -117,6 +133,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       timeType,
       alertTime: alertTime ? convertToDateTimeOffset(alertTime) : undefined,
       notificationId,
+      isDeadline: data.isDeadline,
+      dueAt: deadline ? convertToDateTimeOffset(deadline) : undefined,
     };
 
     onSubmit(submitTask);
@@ -124,12 +142,15 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const handleTabChange = (next: SegmentButtonValue) => {
     setIsActiveTab(next);
+    clearErrors(["endDate", "endTime"]);
 
-    if (mode === "edit" || next === "reminder") {
-      setValue("startDate", defaultValues.startDate);
-      setValue("startTime", defaultValues.startTime);
-      setValue("endDate", defaultValues.endDate);
-      setValue("endTime", defaultValues.endTime);
+    const startDate = getValues("startDate");
+    const startTime = getValues("startTime");
+
+    if (next === "reminder") {
+      setValue("endDate", startDate, { shouldValidate: false });
+      setValue("endTime", startTime, { shouldValidate: false });
+      clearErrors(["endDate", "endTime"]);
       return;
     }
 
@@ -139,89 +160,99 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     setValue("startTime", start);
     setValue("endDate", oneHourLater);
     setValue("endTime", oneHourLater);
+    trigger("endTime");
   };
 
   return (
     <View className="flex-1 bg-white">
-      <FormProvider {...form}>
-        <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
-          {/* Title */}
-          <Animated.View className="mb-4 bg-white" layout={MotionAnimations.layout}>
-            <FormTextInput
-              name="title"
-              placeholder={t("form.newTask")}
-              control={control}
-              className="font-balooBold text-4xl leading-normal"
-              inputProps={{
-                multiline: false,
-                blurOnSubmit: true,
-                returnKeyType: "done",
-                placeholderTextColor: theme.colors.disabled,
-              }}
-            />
-            {formState.errors.title && (
-              <Text className="text-red-500 text-sm ml-1 font-baloo">
-                {t("details.mustHaveTitleError")}
-              </Text>
-            )}
-          </Animated.View>
-
-          <Animated.View
-            className="py-3 bg-background rounded-2xl px-4"
-            layout={MotionAnimations.layout}
-          >
-            <FormTextInput
-              name="description"
-              placeholder={t("form.addNote")}
-              control={control}
-              className="font-baloo text-lg text-primary"
-              inputProps={{
-                placeholderTextColor: theme.colors.primary,
-              }}
-            />
-          </Animated.View>
-
-          <FormDivider />
-          <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
-          {formState.errors.endTime && (
-            <Text className="text-red-500 text-sm mb-4 font-baloo">
-              {t(formState.errors.endTime.message || "")}
+      <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* Title */}
+        <Animated.View className="mb-4 bg-white" layout={MotionAnimations.layout}>
+          <FormTextInput
+            name="title"
+            placeholder={t("form.newTask")}
+            control={control}
+            className="font-balooBold text-4xl leading-normal"
+            inputProps={{
+              multiline: false,
+              blurOnSubmit: true,
+              returnKeyType: "done",
+              placeholderTextColor: theme.colors.disabled,
+            }}
+          />
+          {formState.errors.title && (
+            <Text className="text-red-500 text-sm ml-1 font-baloo">
+              {t("details.mustHaveTitleError")}
             </Text>
           )}
-          {isActiveTab === "reminder" && <ReminderTab control={control} />}
-          {isActiveTab === "event" && <EventTab control={control} />}
-          <FormDivider />
+        </Animated.View>
 
-          <AlertSelect control={control} />
-          <FormDivider />
+        <Animated.View
+          className="py-3 bg-background rounded-2xl px-4"
+          layout={MotionAnimations.layout}
+        >
+          <FormTextInput
+            name="description"
+            placeholder={t("form.addNote")}
+            control={control}
+            className="font-baloo text-lg text-primary"
+            inputProps={{
+              placeholderTextColor: theme.colors.primary,
+            }}
+          />
+        </Animated.View>
 
-          {/* Label Select */}
-          <Animated.View className="mb-8" layout={MotionAnimations.layout}>
-            {isLoading ? (
-              <Text className="font-baloo text-lg text-primary mt-3">
-                {t("common:loading.categories")}
-              </Text>
-            ) : (
-              <LabelSelect control={control} labels={labels} />
-            )}
-          </Animated.View>
-        </ScrollView>
+        <FormDivider />
+        <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
+        {isActiveTab === "event" && formState.errors.endTime && (
+          <Text className="text-red-500 text-sm mb-4 font-baloo">
+            {t(formState.errors.endTime.message || "")}
+          </Text>
+        )}
+        {isActiveTab === "reminder" && (
+          <ReminderTab control={control} setValue={setValue} clearErrors={clearErrors} />
+        )}
+        {isActiveTab === "event" && (
+          <EventTab
+            control={control}
+            trigger={trigger}
+            clearErrors={clearErrors}
+            setValue={setValue}
+          />
+        )}
+        <FormDivider />
+        <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
+        <FormDivider />
 
-        {/* Submit */}
-        <View className="px-8 py-6">
-          <Pressable
-            onPress={handleSubmit(handleFormSubmit)}
-            disabled={isSubmitting}
-            className={`w-full py-4 rounded-xl items-center justify-center ${
-              isSubmitting ? "bg-gray-300" : "bg-lime-300"
-            }`}
-          >
-            <Text className="font-balooBold text-xl text-black">
-              {mode === "create" ? t("form.createTask") : t("form.updateTask")}
+        <AlertSelect control={control} />
+        <FormDivider />
+
+        {/* Label Select */}
+        <Animated.View className="mb-8" layout={MotionAnimations.layout}>
+          {isLoading ? (
+            <Text className="font-baloo text-lg text-primary mt-3">
+              {t("common:loading.categories")}
             </Text>
-          </Pressable>
-        </View>
-      </FormProvider>
+          ) : (
+            <LabelSelect control={control} labels={labels} />
+          )}
+        </Animated.View>
+      </ScrollView>
+
+      {/* Submit */}
+      <View className="px-8 py-6">
+        <Pressable
+          onPress={handleSubmit(handleFormSubmit)}
+          disabled={isSubmitting}
+          className={`w-full py-4 rounded-xl items-center justify-center ${
+            isSubmitting ? "bg-gray-300" : "bg-lime-300"
+          }`}
+        >
+          <Text className="font-balooBold text-xl text-black">
+            {mode === "create" ? t("form.createTask") : t("form.updateTask")}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 };

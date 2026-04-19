@@ -6,7 +6,7 @@ public static class TestDbContextFactory
 {
     public static ILogger<T> CreateLogger<T>()
     {
-        return LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<T>();
+        return LoggerFactory.Create(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Warning)).CreateLogger<T>();
     }
 }
 

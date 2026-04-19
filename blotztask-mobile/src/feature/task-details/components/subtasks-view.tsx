@@ -4,11 +4,8 @@ import { useTranslation } from "react-i18next";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import { useSubtasksByParentId } from "../hooks/useSubtasksByParentId";
-import { AddSubtaskDTO } from "@/feature/task-details/models/add-subtask-dto";
 import SubtasksEditor from "./subtasks-editor";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { usePostHog } from "posthog-react-native";
-import { EVENTS } from "@/shared/constants/posthog-events";
 import { LABEL_COLOR_PALETTE_BY_ID } from "@/shared/util/label-colors";
 
 type SubtaskViewProps = {
@@ -17,10 +14,7 @@ type SubtaskViewProps = {
 
 const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const { t } = useTranslation("tasks");
-  const { breakDownTask, isBreakingDown, replaceSubtasks, isReplacingSubtasks } =
-    useSubtaskMutations();
-  const posthog = usePostHog();
-
+  const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
   const { data: fetchedSubtasks, isLoading: isLoadingSubtasks } = useSubtasksByParentId(
     parentTask.id,
   );
@@ -29,24 +23,12 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
   const hasSubtasks = displaySubtasks.length > 0;
 
   const handleBreakDown = async () => {
-    if (isBreakingDown || isReplacingSubtasks) return;
+    if (isBreakingDownAndReplacingSubtasks || parentTask.id == null) return;
 
-    posthog.capture(EVENTS.BREAKDOWN_TASK);
-
-    try {
-      const subtasks = (await breakDownTask(parentTask.id)) ?? [];
-      if (subtasks.length > 0) {
-        await replaceSubtasks({
-          taskId: parentTask.id,
-          subtasks: subtasks.map((subtask: AddSubtaskDTO) => ({ ...subtask })),
-        });
-      }
-    } catch (e) {
-      console.error("Subtask error:", e);
-    }
+    return await breakDownAndReplaceSubtasks(parentTask.id);
   };
 
-  const isLoading = isBreakingDown || isReplacingSubtasks || isLoadingSubtasks;
+  const isLoading = isBreakingDownAndReplacingSubtasks || isLoadingSubtasks;
 
   const fallbackBg = "#EBF0FE";
   const labelId = parentTask.label?.labelId;
@@ -66,7 +48,13 @@ const SubtasksView = ({ parentTask }: SubtaskViewProps) => {
 
   // Show manage view if subtasks exist
   if (hasSubtasks) {
-    return <SubtasksEditor parentTask={parentTask} />;
+    return (
+      <SubtasksEditor
+        parentTask={parentTask}
+        onRefreshSubtasks={handleBreakDown}
+        isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
+      />
+    );
   }
 
   // Show initial breakdown view if no subtasks exist yet

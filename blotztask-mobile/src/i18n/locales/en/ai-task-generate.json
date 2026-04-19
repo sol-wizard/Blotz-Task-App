@@ -1,6 +1,6 @@
 {
   "input": {
-    "placeholder": "Type a task, or tap below to say it"
+    "placeholder": "Type here..."
   },
   "buttons": {
     "speak": "Speak",
@@ -20,16 +20,32 @@
     "taskAdded": "Yay! Task added!"
   },
   "errors": {
-    "default": "Oops something went over my head. Please try again."
+    "default": "Oops something went over my head. Please try again.",
+    "transcriptionFailed": "Could not understand the audio. Please try again.",
+    "emptyAudio": "No audio was recorded. Please try again.",
+    "tokenLimited": "You've hit the usage limit. Please try again later.",
+    "contentFilter": "Your message was flagged. Please rephrase and try again.",
+    "canceled": "The request was canceled.",
+    "noTasksExtracted": "I couldn't find any tasks in that. Please try again."
   },
   "taskCard": {
     "titlePlaceholder": "Task title",
     "editTitleLabel": "Edit task title",
-    "editTitleHint": "Double tap to edit task title"
+    "editTitleHint": "Double tap to edit task title",
+    "today": "Today"
   },
   "noteCard": {
     "textPlaceholder": "Note content",
     "editTextLabel": "Edit note",
     "editTextHint": "Double tap to edit note"
+  },
+  "voiceHint": {
+    "trySaying": "Try speaking or typing",
+    "hintText": "\"Attend the U.S. presidential election tomorrow at 8 AM\""
+  },
+  "voiceListening": {
+    "title": "Listening ...",
+    "aiThinking": "AI is thinking ...",
+    "subtitle": "Say everything you need to get done."
   }
 }

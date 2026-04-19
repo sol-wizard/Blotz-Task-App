@@ -15,7 +15,8 @@ export const taskKeys = {
   all: ["tasks"] as const,
   selectedDay: (date: string) => [...taskKeys.all, "selectedDay", date] as const,
   byId: (id: number) => [...taskKeys.all, "Id", id] as const,
-  availability: (monday: string) => [...taskKeys.all, "availability", monday] as const,
+  weekAvailability: (monday: string) => [...taskKeys.all, "weekAvailability", monday] as const,
+  monthAvailability: (month: string) => [...taskKeys.all, "monthAvailability", month] as const,
 } as const;
 
 export const subtaskKeys = {
@@ -36,4 +37,13 @@ export const azureSpeechKeys = {
 
 export const noteKeys = {
   all: ["notes"] as const,
+};
+
+export const ddlKeys = {
+  all: ["ddl"] as const,
+};
+
+export const pomodoroKeys = {
+  all: ["pomodoroSettings"] as const,
+  settings: () => [...pomodoroKeys.all, "settings"] as const,
 };

@@ -8,16 +8,16 @@ import { MachineButton } from "@/feature/gashapon-machine/components/machine-but
 import { cleanupSystem, physicsSystem } from "@/feature/gashapon-machine/utils/game-systems";
 import { LinearGradient } from "expo-linear-gradient";
 import { NoteRevealModal } from "@/feature/gashapon-machine/components/note-reveal-modal";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
 import { router } from "expo-router";
-import { usePostHog } from "posthog-react-native";
+import { analytics } from "@/shared/services/analytics";
+import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
-import { useAddNoteToTask } from "@/feature/gashapon-machine/utils/add-note-to-task";
+import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
 import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
-import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 
 export default function GashaponMachineScreen() {
   const [basePicLoaded, setBasePicLoaded] = useState(false);
@@ -27,15 +27,11 @@ export default function GashaponMachineScreen() {
   const [dropStarTrigger, setDropStarTrigger] = useState(0);
   const [randomNote, setRandomTask] = useState<NoteDTO | null>(null);
   const [droppedStarIcon, setDroppedStarIcon] = useState(getStarIconAsBefore(0));
-  const addNoteToTask = useAddNoteToTask();
-  const posthog = usePostHog();
-  const { deleteNote } = useNotesMutation();
+  const { addNoteToTask, isConverting } = useAddNoteToTask();
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery: "" });
 
   useEffect(() => {
-    posthog.capture("screen_viewed", {
-      screen_name: "GashaponMachine",
-    });
+    analytics.trackScreenViewed(SCREEN_NAMES.GASHAPON_MACHINE);
   }, []);
 
   const MAX_STARS = 30;
@@ -44,10 +40,13 @@ export default function GashaponMachineScreen() {
 
   const handleDoNow = () => {
     if (!randomNote) return;
+    const start = new Date();
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
     addNoteToTask({
       note: randomNote,
+      startTime: start,
+      endTime: end,
       onSuccess: () => {
-        deleteNote(randomNote.id);
         router.push("/(protected)/(tabs)");
         setModalVisible(false);
       },
@@ -88,6 +87,7 @@ export default function GashaponMachineScreen() {
           task={randomNote}
           onDoNow={handleDoNow}
           onCancel={handleCancel}
+          isDoNowLoading={isConverting}
         />
         {!isAllLoaded && <LoadingScreen />}
         <View

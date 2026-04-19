@@ -8,10 +8,13 @@
 .idea/
 package-lock.json
 .agents
-.claude
 .codex
-.cursor
+# Claude Code - ignore personal settings, but allow CLAUDE.md
+.claude/settings.json
+.claude/settings.local.json
+# Cursor - ignore local state, but allow rules
+.cursor/notepads
+.cursor/mcp.json
 20260130-Blotz-onboarding.md
-
 # bicep build outputs (generated)
 infra/main.json

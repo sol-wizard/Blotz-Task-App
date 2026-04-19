@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.Tasks.Domain.Services;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,20 +21,30 @@ public class GetWeeklyTaskAvailabilityQuery
 
 public class GetWeeklyTaskAvailabilityQueryHandler(
     BlotzTaskDbContext db,
+    RecurringTaskGeneratorService generatorService,
     ILogger<GetWeeklyTaskAvailabilityQueryHandler> logger)
 {
     public async Task<List<DailyTaskIndicatorDto>> Handle(GetWeeklyTaskAvailabilityQuery query,
         CancellationToken ct = default)
     {
+        
         var stopwatch = Stopwatch.StartNew();
+        bool? autoRolloverEnabled = await db.UserPreferences
+            .AsNoTracking()
+            .Where(p => p.UserId == query.UserId)
+            .Select(p => p.AutoRollover)
+            .FirstOrDefaultAsync(ct);
+        var autoRollover = autoRolloverEnabled ?? true;
+        
         var weekStart = query.Monday;
-
         var weekEndExclusive = query.Monday.AddDays(7);
+        var weekStartDate = DateOnly.FromDateTime(weekStart.Date);
+        var weekEndDate = DateOnly.FromDateTime(weekEndExclusive.Date);
 
         var userNow = DateTimeOffset.UtcNow.ToOffset(query.Monday.Offset);
         var userTodayStart = new DateTimeOffset(userNow.Date, query.Monday.Offset);
         var userTodayEnd = userTodayStart.AddDays(1);
-        var sevenDayWindowStart = userTodayEnd.AddDays(-7);
+        var includeOverdueTasks = weekStart.Date <= userNow.Date;
 
         logger.LogInformation(
             "Fetching weekly task availability for user {UserId} from {weekStart} to {weekEndExclusive}",
@@ -42,34 +53,46 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
             weekEndExclusive);
 
         var queryStopwatch = Stopwatch.StartNew();
+
+        // Fetch stored TaskItems for this week
         var tasks = await db.TaskItems
             .AsNoTracking()
             .Where(t => t.UserId == query.UserId &&
                         (
                             // Tasks in date range
                             (
-                                t.StartTime < weekEndExclusive 
+                                t.StartTime < weekEndExclusive
                                 && t.EndTime > weekStart
                             )
                             ||
-                            // Overdue tasks within 7 days (matching GetTasksByDateQuery)
+                            // Overdue tasks for today/past views only.
                             (
-                               !t.IsDone
+                                includeOverdueTasks
+                                && !t.IsDone
                                 && t.EndTime < userNow
-                                && t.EndTime >= sevenDayWindowStart
                             )
                         ))
             .Select(t => new
             {
                 t.StartTime,
                 t.EndTime,
-                t.CreatedAt,
                 t.IsDone
             })
             .ToListAsync(ct);
+
+        // Fetch active RecurringTasks that could have occurrences in this week
+        var recurringTasks = await db.RecurringTasks
+            .AsNoTracking()
+            .Where(r => r.UserId == query.UserId
+                && r.IsActive
+                && r.StartDate <= weekEndDate
+                && (r.EndDate == null || r.EndDate >= weekStartDate))
+            .ToListAsync(ct);
+
         logger.LogInformation(
-            "Fetched {TaskCount} tasks for weekly availability for user {UserId} (DB query {DbElapsedMs}ms)",
+            "Fetched {TaskCount} stored tasks, {RecurringCount} recurring templates for user {UserId} (DB query {DbElapsedMs}ms)",
             tasks.Count,
+            recurringTasks.Count,
             query.UserId,
             queryStopwatch.ElapsedMilliseconds);
 
@@ -78,23 +101,34 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         for (var dayStart = weekStart; dayStart < weekEndExclusive; dayStart = dayStart.AddDays(1))
         {
             var dayEnd = dayStart.AddDays(1);
+            var dayDate = DateOnly.FromDateTime(dayStart.Date);
+            var isToday = dayStart.Date == userNow.Date;
+            var overdueCutoff = isToday ? userNow : dayEnd;
 
             var hasTask = tasks.Any(t =>
             {
-                    // Tasks in date range
-                    if (t.StartTime < dayEnd && t.EndTime >= dayStart) return true;
+                // Tasks in date range
+                if (t.StartTime < dayEnd && t.EndTime >= dayStart) return true;
 
-                    // Overdue tasks within 7 days
-                    if (
-                        dayStart < userTodayEnd && dayStart >= sevenDayWindowStart
-                        && t.StartTime < dayEnd && t.EndTime >= sevenDayWindowStart
-                        && !t.IsDone && t.EndTime < userNow
-                        )
-                    {
-                        return true;
-                    }
-                    return false;
+                // Overdue tasks should only decorate today/past cells, using the selected day's cutoff.
+                if (
+                    includeOverdueTasks
+                    && autoRollover
+                    && dayStart < userTodayEnd
+                    && !t.IsDone
+                    && t.EndTime < overdueCutoff
+                    )
+                {
+                    return true;
+                }
+                return false;
             });
+
+            // If no stored task found, check if any recurring task occurs on this day
+            if (!hasTask)
+            {
+                hasTask = recurringTasks.Any(r => generatorService.IsOccurrenceOn(r, dayDate));
+            }
 
             result.Add(new DailyTaskIndicatorDto
             {
@@ -102,6 +136,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
                 HasTask = hasTask
             });
         }
+
         logger.LogInformation(
             "Computed weekly task availability for user {UserId} in {ElapsedMs}ms",
             query.UserId,
@@ -110,6 +145,7 @@ public class GetWeeklyTaskAvailabilityQueryHandler(
         return result;
     }
 }
+
 public class DailyTaskIndicatorDto
 {
     public DateTimeOffset Date { get; set; }

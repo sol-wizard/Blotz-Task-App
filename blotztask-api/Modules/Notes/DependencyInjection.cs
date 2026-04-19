@@ -12,6 +12,7 @@ public static class DependencyInjection
     services.AddScoped<DeleteNoteCommandHandler>();
     services.AddScoped<SearchNotesQueryHandler>();
     services.AddScoped<TimeEstimateCommandHandler>();
+    services.AddScoped<ConvertNoteToTaskCommandHandler>();
     return services;
   }
 }

@@ -1,4 +1,4 @@
-import { format, isSameDay, parseISO } from "date-fns";
+import { format, isSameDay, isToday, parseISO } from "date-fns";
 import i18n from "@/i18n";
 
 const formatCardDateForLocale = (isoString: string) => {
@@ -12,6 +12,7 @@ const formatCardDateForLocale = (isoString: string) => {
   }
 
   // English format: 08 Jan
+  return format(date, "dd MMM");
 };
 
 export const formatAiTaskCardDate = ({
@@ -21,23 +22,18 @@ export const formatAiTaskCardDate = ({
   startTime: string;
   endTime: string;
 }) => {
-  const isChinese = i18n.language === "zh";
+  const startDate = parseISO(startTime);
+  const endDate = parseISO(endTime);
 
-  if (!startTime && !endTime) {
-    // Reuse existing "today" translation for Chinese calendar
-    return isChinese ? i18n.t("calendar:header.today") : "Today";
+  if (isToday(startDate)) {
+    return i18n.t("aiTaskGenerate:taskCard.today");
   }
 
-  if (startTime && endTime) {
-    const startDate = parseISO(startTime);
-    const endDate = parseISO(endTime);
-
-    if (isSameDay(startDate, endDate)) {
-      return formatCardDateForLocale(startTime);
-    }
-
-    return `${formatCardDateForLocale(startTime)} - ${formatCardDateForLocale(endTime)}`;
+  if (isSameDay(startDate, endDate)) {
+    return formatCardDateForLocale(startTime);
   }
+
+  return `${formatCardDateForLocale(startTime)} - ${formatCardDateForLocale(endTime)}`;
 };
 
 export const formatAiTaskCardTime = ({

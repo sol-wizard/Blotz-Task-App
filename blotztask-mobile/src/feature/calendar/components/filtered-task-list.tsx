@@ -1,18 +1,24 @@
 import { FlatList, View } from "react-native";
-import { TaskStatusRow } from "../../../shared/components/ui/task-status-row";
+import { TaskStatusRow } from "../../../shared/components/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import TaskCard from "./task-card";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useState } from "react";
 import { TaskStatusType } from "../models/task-status-type";
 import { filterSelectedTask } from "../util/task-counts";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import TaskCard from "./task-card";
 
-export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
+export const FilteredTaskList = ({
+  selectedDay,
+  onOpenMode,
+}: {
+  selectedDay: Date;
+  onOpenMode: () => void;
+}) => {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
 
   const { deleteTask, isDeleting } = useTaskMutations();
@@ -31,12 +37,13 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
-    <View className="shadow shadow-gray-300">
+    <View className="shadow shadow-gray-200">
       <TaskCard
         task={item}
         deleteTask={deleteTask}
         isDeleting={isDeleting}
         selectedDay={selectedDay}
+        onOpenMode={onOpenMode}
       />
     </View>
   );
@@ -62,8 +69,11 @@ export const FilteredTaskList = ({ selectedDay }: { selectedDay: Date }) => {
         <FlatList
           className="flex-1"
           data={tasksOfSelectedStatus}
+          contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12 }}
           renderItem={renderTask}
-          keyExtractor={(task) => task.id.toString()}
+          keyExtractor={(task) =>
+            task.id != null ? `task-${task.id}` : `virtual-${task.recurringTaskId}`
+          }
         />
       ) : (
         <TaskListPlaceholder selectedStatus={selectedStatus} />

@@ -1,24 +1,26 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
 import { useRouter } from "expo-router";
-import { usePostHog } from "posthog-react-native";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { EVENTS } from "@/shared/constants/posthog-events";
+import { analytics } from "@/shared/services/analytics";
+import Toast from "react-native-toast-message";
+import { useTranslation } from "react-i18next";
 
 export default function TaskCreateScreen() {
   const router = useRouter();
   const { addTask, isAdding } = useTaskMutations();
-  const posthog = usePostHog();
+  const { t } = useTranslation("tasks");
 
   const handleTaskSubmit = async (submitTask: AddTaskItemDTO) => {
     try {
       await addTask(submitTask);
 
-      posthog.capture(EVENTS.CREATE_TASK_MANUALLY);
+      analytics.trackManualTaskCreated();
 
       router.back();
+      Toast.show({ type: "warning", text1: t("success.taskCreated") });
       console.log("Task created successfully");
     } catch (error) {
       console.error("Failed to create task:", error);

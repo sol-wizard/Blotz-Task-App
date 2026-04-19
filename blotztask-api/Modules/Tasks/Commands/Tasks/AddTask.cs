@@ -23,9 +23,15 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
         TaskTimeValidator.ValidateTaskTimes(command.TaskDetails.StartTime, command.TaskDetails.EndTime,
             command.TaskDetails.TimeType);
 
+        var title = (command.TaskDetails.Title ?? string.Empty).Trim();
+        if (string.IsNullOrEmpty(title))
+        {
+            throw new ValidationException("Title is required.");
+        }
+
         var newTask = new TaskItem
         {
-            Title = command.TaskDetails.Title,
+            Title = title,
             Description = command.TaskDetails.Description,
             StartTime = command.TaskDetails.StartTime,
             EndTime = command.TaskDetails.EndTime,
@@ -39,6 +45,20 @@ public class AddTaskCommandHandler(BlotzTaskDbContext db, ILogger<AddTaskCommand
         };
 
         db.TaskItems.Add(newTask);
+        
+        if (command.TaskDetails.IsDeadline == true)
+        {
+            var deadline = new TaskDeadline
+            {
+                TaskItem = newTask,
+                DueAt = command.TaskDetails.DueAt ?? newTask.EndTime,
+                CreatedAt = newTask.CreatedAt,
+                UpdatedAt = newTask.UpdatedAt,
+                IsPinned = false
+            };
+            db.TaskDeadlines.Add(deadline);
+        }
+        
         await db.SaveChangesAsync(ct);
 
         logger.LogInformation("Task {Id} was successfully added for user {UserId}", newTask.Id, command.UserId);
@@ -57,4 +77,6 @@ public class AddTaskItemDto
     public int? LabelId { get; set; }
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
+    public bool? IsDeadline { get; set; }
+    public DateTimeOffset? DueAt { get; set; }
 }

@@ -1,18 +1,20 @@
-import UserProfile from "./user-profile";
 import { View, Text, Pressable } from "react-native";
 import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
-import { useUserProfile } from "@/shared/hooks/useUserProfile";
-import { AnimatedChevron } from "@/shared/components/ui/chevron";
+import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
+import { AnimatedChevron } from "@/shared/components/chevron";
+import { router } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SharedValue } from "react-native-reanimated";
 
 interface CalendarHeaderProps {
   date: string;
-  progress: any;
+  progress: SharedValue<number>;
   onToggleCalendar: () => void;
 }
 
 export default function CalendarHeader({ date, progress, onToggleCalendar }: CalendarHeaderProps) {
-  const { dayOfWeek } = formatCalendarDate(date);
-  const { userProfile } = useUserProfile();
+  const { userPreferences } = useUserPreferencesQuery();
+  const { dayOfWeek } = formatCalendarDate(date, userPreferences);
 
   return (
     <View className="flex-row items-center justify-between px-5">
@@ -28,9 +30,32 @@ export default function CalendarHeader({ date, progress, onToggleCalendar }: Cal
         >
           <AnimatedChevron color="#1F2937" progress={progress} />
         </Pressable>
+
+        <Pressable
+          onPress={() => {
+            router.push({
+              pathname: "/(protected)/monthly-calendar",
+              params: { selectedDate: date },
+            });
+          }}
+          className="p-1"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <MaterialCommunityIcons name="calendar-month-outline" size={26} color="#1F2937" />
+        </Pressable>
       </View>
 
-      <UserProfile profile={userProfile} />
+      <View className="flex-row items-center justify-end px-5">
+        <Pressable
+          onPress={() => {
+            router.push({
+              pathname: "/(protected)/ddl",
+            });
+          }}
+        >
+          <MaterialCommunityIcons name="bell-outline" size={24} color="black" />
+        </Pressable>
+      </View>
     </View>
   );
 }

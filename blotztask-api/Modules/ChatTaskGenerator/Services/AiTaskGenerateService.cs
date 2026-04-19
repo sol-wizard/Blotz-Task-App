@@ -1,100 +1,118 @@
-using System.Text.Json;
+using System.Diagnostics;
+using Azure.AI.Projects;
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
+using BlotzTask.Modules.ChatTaskGenerator.Functions;
 using BlotzTask.Shared.Exceptions;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.Extensions.AI;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct);
+    Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct);
+    Task<AiGenerateMessage> GenerateAiResponse(string userMessage, AiChatContext context, CancellationToken ct);
 }
 
 public class AiTaskGenerateService(
-    IChatHistoryManagerService chatHistoryManagerService,
-    IChatCompletionService chatCompletionService,
     ILogger<AiTaskGenerateService> logger,
-    Kernel kernel)
+    AIProjectClient projectClient,
+    IConfiguration configuration)
     : IAiTaskGenerateService
 {
-    public async Task<AiGenerateMessage> GenerateAiResponse(CancellationToken ct)
+    //TODO: This should not be here ? should be at DI?
+    private readonly string _deploymentId =
+        configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
+        ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
+
+    public async Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct)
     {
-        var chatHistory = chatHistoryManagerService.GetChatHistory();
+        //TODO: Do we have a better way of manage those list ?
+        var tasks = new List<ExtractedTask>();
+        var notes = new List<ExtractedNote>();
+        var tools = new TaskGenerationTools(tasks, notes);
+        
+        var agentSw = Stopwatch.StartNew();
+        var agent = projectClient.AsAIAgent(
+            model: _deploymentId,
+            instructions: AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime),
+            tools:
+            [
+                AIFunctionFactory.Create(tools.CreateTask),
+                AIFunctionFactory.Create(tools.CreateNote),
+                AIFunctionFactory.Create(tools.RemoveTask),
+                AIFunctionFactory.Create(tools.UpdateTask),
+                AIFunctionFactory.Create(tools.RemoveNote),
+                AIFunctionFactory.Create(tools.UpdateNote)
+            ]);
+        var agentCreatedMs = agentSw.ElapsedMilliseconds;
+
+        //TODO: De we need cancellation token here ?
+        var session = await agent.CreateSessionAsync();
+        agentSw.Stop();
+
+        logger.LogInformation(
+            "TaskGeneration: Session initialized for deployment={DeploymentId} | AgentCreated={AgentCreatedMs}ms | SessionCreated={SessionCreatedMs}ms",
+            _deploymentId, agentCreatedMs, agentSw.ElapsedMilliseconds);
+
+        return new AiChatContext
+        {
+            Agent = agent,
+            Session = session,
+            Tools = tools,
+            Tasks = tasks,
+            Notes = notes,
+            TimeZone = timeZone
+        };
+    }
+
+    public async Task<AiGenerateMessage> GenerateAiResponse(
+        string userMessage,
+        AiChatContext context,
+        CancellationToken ct)
+    {
+        context.Tools.ResetCallCount();
 
         try
         {
-            var executionSettings = new OpenAIPromptExecutionSettings
+            logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
+
+            var runSw = Stopwatch.StartNew();
+            await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
+            runSw.Stop();
+
+            logger.LogInformation(
+                "TaskGeneration: RunAsync completed in {RunMs}ms | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount}",
+                runSw.ElapsedMilliseconds, context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
+
+            var isSuccess = context.Tools.ToolCallCount > 0;
+
+            return new AiGenerateMessage
             {
-                ResponseFormat = typeof(AiGenerateMessage) // Enforces structured output via JSON Schema
+                IsSuccess = isSuccess,
+                ErrorCode = isSuccess ? "" : AiErrorCode.NoTasksExtracted.ToString(),
+                ExtractedTasks = context.Tasks,
+                ExtractedNotes = context.Notes,
+                ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input."
             };
-
-            var chatResults = await chatCompletionService.GetChatMessageContentsAsync(
-                chatHistory,
-                executionSettings,
-                kernel,
-                ct
-            );
-
-            var functionResultMessage = chatResults.LastOrDefault();
-
-            logger.LogInformation(functionResultMessage?.Content);
-
-            if (functionResultMessage == null)
-            {
-                logger.LogWarning(
-                    "Chat completion returned no messages. ChatHistory count: {Count}, Model: {ModelId}",
-                    chatHistory.Count,
-                    executionSettings.ModelId ?? "unknown"
-                );
-                throw new AiNoMessageReturnedException();
-            }
-
-            if (string.IsNullOrWhiteSpace(functionResultMessage.Content))
-            {
-                logger.LogWarning("AI response content is empty.");
-                throw new AiEmptyResponseException();
-            }
-
-            try
-            {
-                var aiGenerateMessage = JsonSerializer.Deserialize<AiGenerateMessage>(
-                    functionResultMessage.Content,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                );
-
-                if (aiGenerateMessage == null)
-                {
-                    logger.LogWarning("Deserialized object is null.");
-                    throw new AiInvalidJsonException(functionResultMessage.Content);
-                }
-
-                chatHistory.AddAssistantMessage(JsonSerializer.Serialize(aiGenerateMessage));
-                return aiGenerateMessage;
-            }
-            catch (JsonException ex)
-            {
-                logger.LogError(ex, "Failed to deserialize AI response: {Content}", functionResultMessage.Content);
-                throw new AiInvalidJsonException(functionResultMessage.Content, ex);
-            }
         }
         catch (OperationCanceledException oce)
         {
             logger.LogInformation(oce, "AI task generation cancelled.");
             throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
         }
-        catch (TokenLimitExceededException ex)
+        catch (Exception ex) when (
+            ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase))
         {
             logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
             throw new AiTokenLimitedException();
         }
-        catch (HttpOperationException ex) when (
-            ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase)
-        )
+        catch (Exception ex) when (
+            ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase))
         {
-            logger.LogWarning(ex, "Request blocked by Azure OpenAI content filter.");
+            logger.LogWarning(ex, "Request blocked by content filter.");
             throw new AiContentFilterException();
         }
         catch (Exception ex)

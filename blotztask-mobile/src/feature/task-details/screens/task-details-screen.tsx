@@ -6,16 +6,16 @@ import SubtasksView from "@/feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { ASSETS } from "@/shared/constants/assets";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import {
   TaskRangeTimeCard,
   TaskSingleTimeCard,
 } from "@/feature/task-details/components/task-time-card";
 import { useTranslation } from "react-i18next";
-import { ReturnButton } from "@/shared/components/ui/return-button";
+import { ReturnButton } from "@/shared/components/return-button";
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export default function TaskDetailsScreen() {
   }, [selectedTask]);
 
   const handleUpdateDescription = async (newDescription: string) => {
-    if (!selectedTask) return;
+    if (!selectedTask || !selectedTask.id) return;
     if (newDescription === (selectedTask.description ?? "")) return;
 
     await updateTask({
@@ -53,7 +53,7 @@ export default function TaskDetailsScreen() {
     return <LoadingScreen />;
   }
 
-  if (!selectedTask) {
+  if (!selectedTask || !selectedTask.id) {
     console.warn("No selected task found");
     return (
       <View className="flex-1 items-center justify-center">
@@ -120,12 +120,14 @@ export default function TaskDetailsScreen() {
               }}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <MaterialCommunityIcons name="pencil-minus-outline" size={28} />
+              <ASSETS.editIcon width={28} height={28} fill="#444964" />
             </TouchableOpacity>
           </View>
 
           <View className="flex-row items-start justify-center mb-4">
-            <Text className="flex-1 font-balooBold text-4xl leading-normal">{selectedTask.title}</Text>
+            <Text className="flex-1 font-balooBold text-4xl leading-normal">
+              {selectedTask.title}
+            </Text>
           </View>
 
           {selectedTask.startTime === selectedTask.endTime ? (

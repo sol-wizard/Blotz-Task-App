@@ -14,6 +14,7 @@ export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {
       endTime: convertToDateTimeOffset(now),
       labelId: task.label?.labelId,
       timeType: 0,
+      isDeadline: false,
     };
   }
   let timeType = 1;
@@ -27,5 +28,6 @@ export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {
     endTime: convertToDateTimeOffset(new Date(task.endTime)),
     labelId: task.label?.labelId,
     timeType: timeType,
+    isDeadline: false,
   };
 }

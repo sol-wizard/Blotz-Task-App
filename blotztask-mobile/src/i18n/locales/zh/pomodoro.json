@@ -1,0 +1,20 @@
+{
+  "taskCard": {
+    "modes": "模式",
+    "focus": "专注"
+  },
+  "focusMode": {
+    "title": "专注模式",
+    "duration": "专注时长",
+    "soundscapes": "声音",
+    "flow": "∞ 无限流"
+  },
+  "soundscape": {
+    "easyFocus": "轻松\n专注",
+    "deepWork": "深度\n工作",
+    "taskFlow": "任务\n心流",
+    "calmMind": "平静\n氛围",
+    "cafeVibe": "咖啡馆\n白噪音",
+    "noSound": "无\n声音"
+  }
+}

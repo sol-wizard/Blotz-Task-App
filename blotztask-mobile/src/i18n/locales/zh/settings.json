@@ -6,7 +6,8 @@
     "taskHandling": "任务处理",
     "notifications": "通知",
     "language": "语言",
-    "allTasks": "所有任务页面 (测试版)"
+    "allTasks": "所有任务页面 (测试版)",
+    "about": "关于"
   },
   "account": {
     "title": "账户",
@@ -46,5 +47,13 @@
   "profile": {
     "title": "个人资料",
     "editProfile": "编辑个人资料"
+  },
+  "about": {
+    "title": "关于",
+    "visitWebsite": "访问官网",
+    "feedback": "意见反馈",
+    "privacyPolicy": "隐私声明",
+    "followUs": "关注我们",
+    "xiaohongshu": "小红书"
   }
 }

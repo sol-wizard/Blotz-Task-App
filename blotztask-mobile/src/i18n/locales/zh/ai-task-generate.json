@@ -1,6 +1,6 @@
 {
   "input": {
-    "placeholder": "点击说话或输入文字..."
+    "placeholder": "在这里输入..."
   },
   "buttons": {
     "speak": "说话",
@@ -20,16 +20,32 @@
     "taskAdded": "太棒了！任务已添加！"
   },
   "errors": {
-    "default": "哎呀，我有点搞不定了。请再试一次。"
+    "default": "哎呀，我有点搞不定了。请再试一次。",
+    "transcriptionFailed": "无法理解音频，请再试一次。",
+    "emptyAudio": "未录制到音频，请再试一次。",
+    "tokenLimited": "您已达到使用限制，请稍后再试。",
+    "contentFilter": "您的消息被系统拦截，请换一种说法再试。",
+    "canceled": "请求已取消。",
+    "noTasksExtracted": "我没有找到任何任务，请再试一次。"
   },
   "taskCard": {
     "titlePlaceholder": "任务标题",
     "editTitleLabel": "编辑任务标题",
-    "editTitleHint": "双击编辑任务标题"
+    "editTitleHint": "双击编辑任务标题",
+    "today": "今天"
   },
   "noteCard": {
     "textPlaceholder": "笔记内容",
     "editTextLabel": "编辑笔记",
     "editTextHint": "双击编辑笔记"
+  },
+  "voiceHint": {
+    "trySaying": "试试说话或输入",
+    "hintText": "\"明天早上 8 点参加美国总统选举\""
+  },
+  "voiceListening": {
+    "title": "聆听中 ...",
+    "aiThinking": "AI 思考中 ...",
+    "subtitle": "说出所有你需要完成的事情。"
   }
 }

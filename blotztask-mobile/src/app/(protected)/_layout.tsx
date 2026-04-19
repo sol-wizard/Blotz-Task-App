@@ -1,13 +1,28 @@
 import { useTrackActiveUser5s } from "@/feature/auth/analytics/useTrackActiveUser5s";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
+import { usePushNotificationSetup } from "@/shared/hooks/usePushNotificationSetup";
+import { analytics } from "@/shared/services/analytics";
 import { Stack } from "expo-router";
-import { usePostHog } from "posthog-react-native";
+import { useAuth0 } from "react-native-auth0";
+import { useEffect } from "react";
 
 export default function ProtectedLayout() {
-  const posthog = usePostHog();
+  const { user, getCredentials } = useAuth0();
+
+  useEffect(() => {
+    if (user?.sub) {
+      analytics.identifyUser(user.sub, { email: user.email, name: user.name });
+    } else {
+      // useAuth0().user is null on app restart even when a valid session exists.
+      // getCredentials() restores the Auth0 session into context, which repopulates `user`
+      // and triggers this effect to re-run with the real user data.
+      void getCredentials();
+    }
+  }, [user?.sub]);
 
   useLanguageInit();
-  useTrackActiveUser5s(posthog);
+  useTrackActiveUser5s();
+  usePushNotificationSetup();
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -16,15 +31,13 @@ export default function ProtectedLayout() {
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
 
       <Stack.Screen name="task-details" options={{ headerShown: false }} />
+
+      <Stack.Screen name="ddl" options={{ headerShown: false }} />
+
       <Stack.Screen
         name="task-edit"
         options={{
-          headerShown: true,
-          headerShadowVisible: false,
-          headerTitle: "",
-          headerBackVisible: true,
-          headerTintColor: "#8E8E93",
-          headerBackButtonDisplayMode: "minimal",
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -68,6 +81,7 @@ export default function ProtectedLayout() {
           fullScreenGestureEnabled: false,
         }}
       />
+      <Stack.Screen name="monthly-calendar" options={{ headerShown: false }} />
     </Stack>
   );
 }

@@ -1,10 +1,13 @@
 using BlotzTask.Infrastructure.Data.Configurations;
+using BlotzTask.Modules.Badges.Domain;
 using BlotzTask.Modules.Labels.Domain;
 using BlotzTask.Modules.Labels.Enums;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Enums;
+using BlotzTask.Modules.AiUsage.Entities;
 using BlotzTask.Modules.Notes.Domain;
+using BlotzTask.Modules.Pomodoro.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Infrastructure.Data;
@@ -16,6 +19,8 @@ public class BlotzTaskDbContext : DbContext
     }
 
     public DbSet<TaskItem> TaskItems { get; set; }
+    public DbSet<TaskDeadline> TaskDeadlines { get; set; }
+    public DbSet<RecurringTask> RecurringTasks { get; set; }
     public DbSet<Label> Labels { get; set; }
     public DbSet<DeletedTaskItem> DeletedTaskItems { get; set; }
     public DbSet<Subtask> Subtasks => Set<Subtask>();
@@ -23,12 +28,19 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<UserPreference> UserPreferences { get; set; }
     public DbSet<PomodoroSetting> PomodoroSetting { get; set; }
     public DbSet<Note> Notes { get; set; }
+    public DbSet<Badge> Badges { get; set; }
+    public DbSet<UserBadge> UserBadges { get; set; }
+    public DbSet<UserProgress> UserProgress { get; set; }
+    public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
+    public DbSet<UserSubscription> UserSubscriptions { get; set; }
+    public DbSet<AiUsageRecord> AiUsageRecords { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SubtaskConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(TaskItemConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(TaskDeadlineConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DeletedTaskItemConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LabelConfiguration).Assembly);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppUserConfiguration).Assembly);
@@ -85,6 +97,7 @@ public class BlotzTaskDbContext : DbContext
                 CreationAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
                 SignUpAt = new DateTime(2025, 9, 9, 14, 33, 27, 955, DateTimeKind.Utc),
                 UpdatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
+                LoginAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
                 IsOnboarded = false
             });
 
@@ -99,5 +112,11 @@ public class BlotzTaskDbContext : DbContext
                 EveningWrapUpNotification = false,
                 PreferredLanguage = Language.Zh
             });
+
+        modelBuilder.Entity<SubscriptionPlan>()
+            .HasData(
+                new SubscriptionPlan { Id = 1, Name = "Free", MonthlyTokenLimit = 50_000 },
+                new SubscriptionPlan { Id = 2, Name = "Pro", MonthlyTokenLimit = 500_000 }
+            );
     }
 }
