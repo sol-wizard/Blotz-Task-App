@@ -100,10 +100,6 @@ public class AiTaskGenerateService(
                 ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input."
             };
         }
-        catch (AiQuotaExceededException)
-        {
-            throw;
-        }
         catch (OperationCanceledException oce)
         {
             logger.LogInformation(oce, "AI task generation cancelled.");
