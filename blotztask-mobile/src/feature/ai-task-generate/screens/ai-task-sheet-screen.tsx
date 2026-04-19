@@ -11,8 +11,9 @@ import { AiInputBar } from "../component/ai-input-bar";
 import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
-import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
+import { useVoiceRecorder, StopAndUploadResult } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
+import { useHoldHint } from "../hooks/useHoldHint";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { convertAiTaskToAddTaskItemDTO } from "../utils/map-aitask-to-addtaskitem-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -26,6 +27,7 @@ export default function AiTaskSheetScreen() {
   const { height } = useWindowDimensions();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
+  const { active, trigger } = useHoldHint(1500);
   const {
     aiGeneratedMessage,
     submitAudioForTranscription,
@@ -101,6 +103,13 @@ export default function AiTaskSheetScreen() {
     void startListening();
   };
 
+  const handleMicPressOut = async () => {
+    const result = await stopAndUpload();
+    if (result === StopAndUploadResult.Short) {
+      trigger();
+    }
+  };
+
   return (
     <View className="flex-1 bg-transparent">
       <Pressable className="absolute inset-0" onPress={handleDismiss} pointerEvents="auto" />
@@ -141,9 +150,9 @@ export default function AiTaskSheetScreen() {
                 </Text>
                 <Text
                   className="text-white/70 font-baloo text-sm text-center"
-                  style={{ opacity: isListening || isAiGenerating ? 1 : 0 }}
+                  style={{ opacity: isListening || isAiGenerating || active ? 1 : 0 }}
                 >
-                  {t("voiceListening.subtitle")}
+                  {active ? t("errors.holdLonger") : t("voiceListening.subtitle")}
                 </Text>
               </View>
 
@@ -155,7 +164,7 @@ export default function AiTaskSheetScreen() {
                 onChangeText={setTextInput}
                 onSubmitText={() => void handleSubmitText()}
                 onMicPressIn={handleMicPressIn}
-                onMicPressOut={() => void stopAndUpload()}
+                onMicPressOut={() => void handleMicPressOut()}
                 onConfirm={() => void handleAddAll()}
               />
             </View>
