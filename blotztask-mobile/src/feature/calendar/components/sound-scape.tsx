@@ -1,9 +1,34 @@
-import { ImageBackground, Pressable, Text } from "react-native";
-import { ITEM_WIDTH, ITEM_GAP } from "./mode-bottomsheet";
+import { ImageBackground, Pressable, Text, View } from "react-native";
+import { ITEM_WIDTH, ITEM_GAP, PomodoroSoundscapeKey } from "../models/pomodoro-setting";
 import { useTranslation } from "react-i18next";
 import Animated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
+import type { SharedValue } from "react-native-reanimated";
+import { MaterialIcons } from "@expo/vector-icons";
 
-export const SoundscapeCard = ({ item, index, scrollX, onPress }: any) => {
+type SoundscapeItem = {
+  key: PomodoroSoundscapeKey;
+  imageUrl: any;
+};
+
+interface SoundscapeCardProps {
+  item: SoundscapeItem;
+  index: number;
+  scrollX: SharedValue<number>;
+  isSelected: boolean;
+  isPlaying: boolean;
+  onPress: (index: number, key: PomodoroSoundscapeKey) => void;
+  onTogglePlayback: () => void;
+}
+
+export const SoundscapeCard = ({
+  item,
+  index,
+  scrollX,
+  isSelected,
+  isPlaying,
+  onPress,
+  onTogglePlayback,
+}: SoundscapeCardProps) => {
   const { t } = useTranslation("pomodoro");
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -15,7 +40,7 @@ export const SoundscapeCard = ({ item, index, scrollX, onPress }: any) => {
   });
 
   return (
-    <Pressable onPress={() => onPress(index, item.id)}>
+    <Pressable onPress={() => onPress(index, item.key)}>
       <Animated.View
         style={[
           animatedStyle,
@@ -37,6 +62,16 @@ export const SoundscapeCard = ({ item, index, scrollX, onPress }: any) => {
             {t(`soundscape.${item.key}`)}
           </Text>
         </ImageBackground>
+        {isSelected && item.key !== "noSound" ? (
+          <Pressable
+            onPress={onTogglePlayback}
+            className="absolute inset-0 items-center justify-center"
+          >
+            <View className="w-10 h-10 rounded-full items-center justify-center bg-black/45">
+              <MaterialIcons name={isPlaying ? "pause" : "play-arrow"} size={28} color="#FFFFFF" />
+            </View>
+          </Pressable>
+        ) : null}
       </Animated.View>
     </Pressable>
   );

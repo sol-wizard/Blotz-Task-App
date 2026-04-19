@@ -2,21 +2,46 @@ using System.ComponentModel;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Functions;
-
 //TODO: Do we really need so many CRUD to do the operation ? Please research if we really need function tools here
+
 public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> notes)
 {
     public int ToolCallCount { get; private set; }
 
     public void ResetCallCount() => ToolCallCount = 0;
 
-    [Description("Add a task that has a scheduled start and end time")]
+    [Description("Add multiple tasks at once. Prefer this over CreateTask when the user mentions more than one task.")]
+    public string CreateTasks(
+        [Description("Array of task titles")] string[] titles,
+        [Description("Array of descriptions (empty string if none)")] string[] descriptions,
+        [Description("Array of start times in yyyy-MM-ddTHH:mm:ss")] DateTime[] startTimes,
+        [Description("Array of end times in yyyy-MM-ddTHH:mm:ss, equals startTime if no duration")] DateTime[] endTimes,
+        [Description("Array of labels: Work, Life, Learning, or Health")] LabelNameEnum[] labels)
+    {
+        ToolCallCount++;
+        var count = titles.Length;
+        for (var i = 0; i < count; i++)
+        {
+            tasks.Add(new ExtractedTask
+            {
+                Id = Guid.NewGuid(),
+                Title = titles[i],
+                Description = i < descriptions.Length ? descriptions[i] : "",
+                StartTime = startTimes[i],
+                EndTime = endTimes[i],
+                LabelName = labels[i]
+            });
+        }
+        return $"{count} task(s) added.";
+    }
+
+    [Description("Add a single task that has a specific date or time.")]
     public string CreateTask(
-        [Description("Short descriptive title for the task")] string title,
-        [Description("Detailed description. Empty string if not provided.")] string description,
-        [Description("Start time in local time, format yyyy-MM-ddTHH:mm:ss, no timezone offset")] DateTime startTime,
-        [Description("End time in local time, format yyyy-MM-ddTHH:mm:ss, no timezone offset. Equal to startTime for single-point tasks.")] DateTime endTime,
-        [Description("Category label: Work, Life, Learning, or Health")] LabelNameEnum label)
+        [Description("Title")] string title,
+        [Description("Description or empty")] string description,
+        [Description("yyyy-MM-ddTHH:mm:ss")] DateTime startTime,
+        [Description("yyyy-MM-ddTHH:mm:ss, equals startTime if no duration")] DateTime endTime,
+        [Description("Work, Life, Learning, or Health")] LabelNameEnum label)
     {
         ToolCallCount++;
         tasks.Add(new ExtractedTask
@@ -31,9 +56,25 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         return "Task added.";
     }
 
-    [Description("Add a note for content that has no specific date or time")]
+    [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one note.")]
+    public string CreateNotes(
+        [Description("Array of note texts")] string[] texts)
+    {
+        ToolCallCount++;
+        foreach (var text in texts)
+        {
+            notes.Add(new ExtractedNote
+            {
+                Id = Guid.NewGuid(),
+                Text = text
+            });
+        }
+        return $"{texts.Length} note(s) added.";
+    }
+
+    [Description("Add a single note for an idea or something to remember. Use this when no date or time is mentioned.")]
     public string CreateNote(
-        [Description("The main content of the note")] string text)
+        [Description("Note content")] string text)
     {
         ToolCallCount++;
         notes.Add(new ExtractedNote
@@ -44,9 +85,9 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         return "Note added.";
     }
 
-    [Description("Remove a previously added task by its title")]
+    [Description("Remove a task")]
     public string RemoveTask(
-        [Description("Title of the task to remove")] string title)
+        [Description("Task title")] string title)
     {
         ToolCallCount++;
         var task = tasks.FirstOrDefault(t => t.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
@@ -55,14 +96,14 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         return "Task removed.";
     }
 
-    [Description("Update the details of a previously added task")]
+    [Description("Update a task")]
     public string UpdateTask(
-        [Description("Current title of the task to update")] string existingTitle,
+        [Description("Current title")] string existingTitle,
         [Description("New title")] string title,
-        [Description("Updated description. Empty string if not provided.")] string description,
-        [Description("New start time, format yyyy-MM-ddTHH:mm:ss, no timezone offset")] DateTime startTime,
-        [Description("New end time, format yyyy-MM-ddTHH:mm:ss, no timezone offset")] DateTime endTime,
-        [Description("Category label: Work, Life, Learning, or Health")] LabelNameEnum label)
+        [Description("Description or empty")] string description,
+        [Description("yyyy-MM-ddTHH:mm:ss")] DateTime startTime,
+        [Description("yyyy-MM-ddTHH:mm:ss")] DateTime endTime,
+        [Description("Work, Life, Learning, or Health")] LabelNameEnum label)
     {
         ToolCallCount++;
         var task = tasks.FirstOrDefault(t => t.Title.Equals(existingTitle, StringComparison.OrdinalIgnoreCase));
@@ -75,9 +116,9 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         return "Task updated.";
     }
 
-    [Description("Remove a previously added note")]
+    [Description("Remove a note")]
     public string RemoveNote(
-        [Description("Text of the note to remove")] string text)
+        [Description("Note text")] string text)
     {
         ToolCallCount++;
         var note = notes.FirstOrDefault(n => n.Text.Equals(text, StringComparison.OrdinalIgnoreCase));
@@ -86,10 +127,10 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         return "Note removed.";
     }
 
-    [Description("Update the text of a previously added note")]
+    [Description("Update a note")]
     public string UpdateNote(
-        [Description("Current text of the note to update")] string existingText,
-        [Description("New text for the note")] string newText)
+        [Description("Current text")] string existingText,
+        [Description("New text")] string newText)
     {
         ToolCallCount++;
         var note = notes.FirstOrDefault(n => n.Text.Equals(existingText, StringComparison.OrdinalIgnoreCase));

@@ -43,4 +43,8 @@
       <Folder Include="Modules\Badges\Enum\" />
       <Folder Include="Modules\ChatTaskGenerator\Functions\" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="Modules\ChatTaskGenerator\DevTools\eval-cases.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
 </Project>
