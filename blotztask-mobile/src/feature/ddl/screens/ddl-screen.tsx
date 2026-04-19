@@ -10,6 +10,7 @@ import LoadingScreen from "@/shared/components/loading-screen";
 export default function DdlScreen() {
   const { t } = useTranslation("deadline");
   const { ddlTasks, isLoading } = useAllDdl();
+  const sortedTasks = [...ddlTasks].sort((left, right) => Number(right.isPinned) - Number(left.isPinned));
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -23,7 +24,7 @@ export default function DdlScreen() {
       </View>
 
       <FlatList
-        data={ddlTasks}
+        data={sortedTasks}
         keyExtractor={(item: DeadlineTaskDTO) => item.id.toString()}
         contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, gap: 12 }}
         renderItem={({ item }) => <DdlCard task={item} />}
