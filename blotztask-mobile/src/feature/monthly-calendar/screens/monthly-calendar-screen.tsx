@@ -66,7 +66,7 @@ export default function MonthlyCalendarScreen() {
           </Pressable>
         </View>
 
-        <View className="px-2">
+        <View className="px-2 mt-2">
           <Calendar
             key={selectedMonthKey}
             current={selectedDateStr}
