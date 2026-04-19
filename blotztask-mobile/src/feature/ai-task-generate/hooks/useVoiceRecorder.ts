@@ -19,13 +19,16 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   const recordingStartedAt = useRef<number | null>(null);
 
   const startListening = async () => {
+    // Set listening immediately so the waveform appears on press rather than
+    // after the async audio setup completes (~200-400ms later).
+    setIsListening(true);
     try {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
       recordingStartedAt.current = Date.now();
-      setIsListening(true);
     } catch (error) {
+      setIsListening(false);
       console.warn("[Mic] Error starting recording.", error);
     }
   };
