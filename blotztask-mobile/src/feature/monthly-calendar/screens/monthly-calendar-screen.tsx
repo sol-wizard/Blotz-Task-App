@@ -80,7 +80,7 @@ export default function MonthlyCalendarScreen() {
             renderHeader={(date: any) => {
               const monthIndex = date.getMonth() + 1;
               return (
-                <Text className="text-4xl font-balooBold text-secondary">{`${monthIndex}月`}</Text>
+                <Text className="text-4xl font-balooBold text-secondary pt-2">{`${monthIndex}月`}</Text>
               );
             }}
             dayComponent={renderDay}
