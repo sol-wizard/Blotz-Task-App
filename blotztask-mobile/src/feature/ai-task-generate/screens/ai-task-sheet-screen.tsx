@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Pressable, useWindowDimensions, Keyboard } from "react-native";
+import { View, Pressable, useWindowDimensions, Keyboard } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { AiInputBar } from "../component/ai-input-bar";
 import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
+import { ListeningIndicator } from "../component/listening-indicator";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder, StopAndUploadResult } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
@@ -27,7 +28,7 @@ export default function AiTaskSheetScreen() {
   const { height } = useWindowDimensions();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
-  const { active, trigger } = useHoldHint(1500);
+  const { isHoldHintVisible, showHoldHint } = useHoldHint(1500);
   const {
     aiGeneratedMessage,
     submitAudioForTranscription,
@@ -57,7 +58,7 @@ export default function AiTaskSheetScreen() {
   const aiNotes = aiGeneratedMessage?.extractedNotes ?? [];
   const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
 
-  const analyticsResultsPayload = {
+  const analyticsPayload = {
     userInput: aiGeneratedMessage?.userInput,
     generatedTaskTitles: aiTasks.map((t) => t.title),
     generatedNoteTexts: aiNotes.map((n) => n.text),
@@ -66,7 +67,7 @@ export default function AiTaskSheetScreen() {
   // --- Handlers ---
   const handleDismiss = () => {
     analytics.trackIfUserAcceptAiTask({
-      ...analyticsResultsPayload,
+      ...analyticsPayload,
       outcome: hasResults ? "rejected" : "abandoned",
     });
     router.back();
@@ -88,7 +89,7 @@ export default function AiTaskSheetScreen() {
         ...aiNotes.map((n) => createNoteAsync(n.text)),
       ]);
       analytics.trackIfUserAcceptAiTask({
-        ...analyticsResultsPayload,
+        ...analyticsPayload,
         outcome: "accepted",
       });
       router.back();
@@ -106,7 +107,7 @@ export default function AiTaskSheetScreen() {
   const handleMicPressOut = async () => {
     const result = await stopAndUpload();
     if (result === StopAndUploadResult.Short) {
-      trigger();
+      showHoldHint();
     }
   };
 
@@ -140,21 +141,11 @@ export default function AiTaskSheetScreen() {
                 />
               )}
 
-              {/* Listening indicator */}
-              <View className="items-center px-8 pb-4">
-                <Text
-                  className="text-white font-balooBold text-xl mb-1"
-                  style={{ opacity: isListening || isAiGenerating ? 1 : 0 }}
-                >
-                  {isAiGenerating ? t("voiceListening.aiThinking") : t("voiceListening.title")}
-                </Text>
-                <Text
-                  className="text-white/70 font-baloo text-sm text-center"
-                  style={{ opacity: isListening || isAiGenerating || active ? 1 : 0 }}
-                >
-                  {active ? t("errors.holdLonger") : t("voiceListening.subtitle")}
-                </Text>
-              </View>
+              <ListeningIndicator
+                isListening={isListening}
+                isAiGenerating={isAiGenerating}
+                isHoldHintVisible={isHoldHintVisible}
+              />
 
               {/* Bottom controls */}
               <AiInputBar

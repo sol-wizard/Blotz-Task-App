@@ -15,5 +15,5 @@ export function useHoldHint(duration: number) {
     return () => clearTimeout(timer);
   }, [triggerCount, duration]);
 
-  return { active, trigger: () => setTriggerCount((c) => c + 1) };
+  return { isHoldHintVisible: active, showHoldHint: () => setTriggerCount((c) => c + 1) };
 }
