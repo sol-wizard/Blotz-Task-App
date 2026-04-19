@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Azure.AI.Projects;
+using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.Notes.DTOs;
 using BlotzTask.Modules.Notes.Prompts;
@@ -7,7 +8,6 @@ using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.Extensions.AI;
-using BlotzTask.Modules.AiUsage.Exceptions;
 
 namespace BlotzTask.Modules.Notes.Commands;
 
@@ -31,8 +31,7 @@ public class TimeEstimateCommandHandler(
     AIProjectClient projectClient,
     IConfiguration configuration,
     ICheckAiQuotaService checkAiQuotaService,
-    IRecordAiUsageService recordAiUsageService
-    )
+    IRecordAiUsageService recordAiUsageService)
 {
     private readonly string _deploymentId =
         configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"]
@@ -65,9 +64,9 @@ public class TimeEstimateCommandHandler(
 
         try
         {
-            await checkAiQuotaService.CheckQuotaAsync(request.UserId,ct);
+            await checkAiQuotaService.CheckQuotaAsync(request.UserId, ct);
             var instructions = TaskTimeEstimatePrompts.GetTimeEstimatePrompt(preferredLanguage, request.Text);
-            
+
             var agent = projectClient.AsAIAgent(
                 model: _deploymentId,
                 instructions: instructions,
@@ -76,13 +75,13 @@ public class TimeEstimateCommandHandler(
             logger.LogInformation("TimeEstimate: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
             var response = await agent.RunAsync("Estimate the time for this note.", cancellationToken: ct);
-            int promptTokens = (int)(response.Usage?.InputTokenCount??0);
-            int completTokens = (int)(response.Usage?.OutputTokenCount??0);
-            await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest{
+            int completionTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+            await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
+            {
                 UserId = request.UserId,
-                PromptTokens = promptTokens,
-                CompletionTokens = completTokens
-            },ct);    
+                TotalTokens = completionTokens
+            }, ct);
+
             if (captured == null)
             {
                 logger.LogWarning("AI did not call SetTimeEstimate for note {NoteId}", request.NoteId);
@@ -92,10 +91,6 @@ public class TimeEstimateCommandHandler(
             logger.LogInformation("TimeEstimate result: {Duration}, success={IsSuccess}", captured.Duration, captured.IsSuccess);
 
             return captured;
-        }
-        catch (AiQuotaExceededException)
-        {
-            throw;
         }
         catch (OperationCanceledException oce)
         {

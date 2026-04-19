@@ -7,13 +7,12 @@ using BlotzTask.Modules.ChatTaskGenerator.Functions;
 using BlotzTask.Shared.Exceptions;
 using Microsoft.Extensions.AI;
 
-
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
     Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct);
-    Task<AiGenerateMessage> GenerateAiResponse(Guid userId,string userMessage, AiChatContext context, CancellationToken ct);
+    Task<AiGenerateMessage> GenerateAiResponse(Guid userId, string userMessage, AiChatContext context, CancellationToken ct);
 }
 
 public class AiTaskGenerateService(
@@ -24,18 +23,18 @@ public class AiTaskGenerateService(
     IRecordAiUsageService recordAiUsageService)
     : IAiTaskGenerateService
 {
-    //TODO: This should not be here ? should be at DI?
+    // TODO: Move deployment id resolution to DI/configuration.
     private readonly string _deploymentId =
         configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
         ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
 
     public async Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct)
     {
-        //TODO: Do we have a better way of manage those list ?
+        // TODO: Consider a clearer way to manage extracted task/note lists.
         var tasks = new List<ExtractedTask>();
         var notes = new List<ExtractedNote>();
         var tools = new TaskGenerationTools(tasks, notes);
-        
+
         var agent = projectClient.AsAIAgent(
             model: _deploymentId,
             instructions: AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime),
@@ -48,7 +47,8 @@ public class AiTaskGenerateService(
                 AIFunctionFactory.Create(tools.RemoveNote),
                 AIFunctionFactory.Create(tools.UpdateNote)
             ]);
-        //TODO: De we need cancellation token here ?
+
+        // TODO: Pass cancellation token if the API supports it.
         var session = await agent.CreateSessionAsync();
 
         logger.LogInformation("TaskGeneration: Session initialized for deployment={DeploymentId}", _deploymentId);
@@ -74,18 +74,18 @@ public class AiTaskGenerateService(
 
         try
         {
-            await checkAiQuotaService.CheckQuotaAsync(userId,ct);
+            await checkAiQuotaService.CheckQuotaAsync(userId, ct);
 
             logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
             var response = await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
-            int promptTokens = (int)(response.Usage?.InputTokenCount??0);
-            int completTokens = (int)(response.Usage?.OutputTokenCount??0);
-            await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest{
+            int completionTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+            await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
+            {
                 UserId = userId,
-                PromptTokens = promptTokens,
-                CompletionTokens = completTokens
-            },ct);
+                TotalTokens = completionTokens
+            }, ct);
+
             logger.LogInformation("TaskGeneration: Tool calls this turn={ToolCallCount}, total tasks={TaskCount}, notes={NoteCount}",
                 context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
 
