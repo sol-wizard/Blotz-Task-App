@@ -7,8 +7,6 @@ import { File as ExpoFile } from "expo-file-system";
 // tap would otherwise immediately upload silence or near-silence to the backend.
 const MIN_RECORDING_DURATION_MS = 1000;
 
-const RECORD_OPTIONS = { ...RecordingPresets.HIGH_QUALITY };
-
 export enum StopAndUploadResult {
   Uploaded,
   Short,
@@ -17,7 +15,7 @@ export enum StopAndUploadResult {
 
 export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
   const [isListening, setIsListening] = useState(false);
-  const recorder = useAudioRecorder(RECORD_OPTIONS);
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recordingStartedAt = useRef<number | null>(null);
 
   const startListening = async () => {
