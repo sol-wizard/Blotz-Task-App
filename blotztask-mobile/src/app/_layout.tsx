@@ -25,6 +25,8 @@ import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/toast-config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import posthog from "@/shared/constants/posthog-client";
+import { useForceUpdate } from "@/shared/hooks/useForceUpdate";
+import ForceUpdateScreen from "@/shared/components/force-update-screen";
 
 Sentry.init({
   dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
@@ -70,6 +72,11 @@ export default function RootLayout() {
 
 function RootStack() {
   const { isAuthenticated } = useAuth();
+  const { updateNeeded, storeUrl } = useForceUpdate();
+
+  if (updateNeeded) {
+    return <ForceUpdateScreen storeUrl={storeUrl} />;
+  }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
