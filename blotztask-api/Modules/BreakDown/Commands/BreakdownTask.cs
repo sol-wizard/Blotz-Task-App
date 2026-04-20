@@ -89,7 +89,7 @@ public class BreakdownTaskCommandHandler(
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
             {
                 UserId = command.UserId,
-                TotalTokens = completionTokens
+                CompletionTokens = completionTokens
             }, ct);
 
             logger.LogInformation("Breakdown: Collected {Count} subtasks", collectedSubTasks.Count);

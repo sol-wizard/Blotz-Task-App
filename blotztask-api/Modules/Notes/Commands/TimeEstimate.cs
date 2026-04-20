@@ -79,7 +79,7 @@ public class TimeEstimateCommandHandler(
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
             {
                 UserId = request.UserId,
-                TotalTokens = completionTokens
+                CompletionTokens = completionTokens
             }, ct);
 
             if (captured == null)
