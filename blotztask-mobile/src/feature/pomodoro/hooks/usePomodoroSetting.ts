@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchPomodoroSettings, updatePomodoroSetting } from "@/shared/services/pomodoro-service";
-import { PomodoroSoundscapeKey } from "../models/pomodoro-setting";
+import { PomodoroSoundscapeKey } from "../utils/pomodoro-setting";
 import { PomodoroDTO } from "@/shared/models/pomodoro-dto";
 import { queryClient } from "@/shared/util/queryClient";
 import { pomodoroKeys } from "@/shared/constants/query-key-factory";

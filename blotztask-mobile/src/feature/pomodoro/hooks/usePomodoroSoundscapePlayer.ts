@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
-import { PomodoroSoundscapeKey, SOUNDSCAPE_MUSIC_MAP } from "../models/pomodoro-setting";
+import { PomodoroSoundscapeKey, SOUNDSCAPE_MUSIC_MAP } from "../utils/pomodoro-setting";
 
 export function usePomodoroSoundscapePlayer(selectedSoundscape: PomodoroSoundscapeKey) {
   const player = useAudioPlayer(null, {

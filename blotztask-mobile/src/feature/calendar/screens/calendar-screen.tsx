@@ -11,8 +11,9 @@ import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { CustomDay, CustomDayProps } from "../components/custom-day";
 import { useLocalSearchParams } from "expo-router";
-import { ModeBottomSheet } from "../components/pomodoro-mode-bottomsheet";
-import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
+import { ModeBottomSheet } from "../../pomodoro/components/pomodoro-mode-bottomsheet";
+import { PomodoroFocus } from "../../pomodoro/components/pomodoro-focus";
+import { usePomodoroSettingsQuery } from "../../pomodoro/hooks/usePomodoroSetting";
 
 const calendarTheme = {
   calendarBackground: theme.colors.background,
@@ -26,6 +27,7 @@ export default function CalendarScreen() {
   const { weeklyTaskAvailability, isLoading } = useTaskDays({ selectedDay });
   const progress = useSharedValue(isCalendarVisible ? 1 : 0);
   const [isModeSheetOpen, setIsModeSheetOpen] = useState(false);
+  const [isFocusSheetOpen, setIsFocusSheetOpen] = useState(false);
   const { data: pomodoroSetting } = usePomodoroSettingsQuery();
 
   const markedDates = isLoading ? {} : getMarkedDates({ weeklyTaskAvailability });
@@ -87,13 +89,27 @@ export default function CalendarScreen() {
           </Animated.View>
         )}
 
-        <FilteredTaskList selectedDay={selectedDay} onOpenMode={() => setIsModeSheetOpen(true)} />
+        <FilteredTaskList
+          selectedDay={selectedDay}
+          onOpenMode={() => setIsModeSheetOpen(true)}
+          onOpenFocus={() => setIsFocusSheetOpen(true)}
+        />
       </CalendarProvider>
       {pomodoroSetting && (
         <ModeBottomSheet
           isOpen={isModeSheetOpen}
           onClose={() => {
             setIsModeSheetOpen(false);
+          }}
+          selectedSoundscape={pomodoroSetting.sound}
+          selectedDuration={pomodoroSetting.timing}
+        />
+      )}
+      {pomodoroSetting && (
+        <PomodoroFocus
+          isOpen={isFocusSheetOpen}
+          onClose={() => {
+            setIsFocusSheetOpen(false);
           }}
           selectedSoundscape={pomodoroSetting.sound}
           selectedDuration={pomodoroSetting.timing}
