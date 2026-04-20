@@ -39,7 +39,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     const isTooShort = elapsed < MIN_RECORDING_DURATION_MS;
 
     if (!recorder.isRecording) {
-      // Recording never fully started — just signal the result without touching the recorder.
+      setIsListening(false);
       return isTooShort ? StopAndUploadResult.Short : undefined;
     }
 
