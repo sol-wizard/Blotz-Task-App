@@ -13,7 +13,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
     public void ResetCallCount() => ToolCallCount = 0;
 
     [Description("Add multiple tasks at once. Prefer this over CreateTask when the user mentions more than one task.")]
-    public string CreateTasks(
+    public async Task<string> CreateTasks(
         [Description("Array of task titles")] string[] titles,
         [Description("Array of descriptions (empty string if none)")] string[] descriptions,
         [Description("Array of start times in yyyy-MM-ddTHH:mm:ss")] DateTime[] startTimes,
@@ -24,7 +24,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         var count = titles.Length;
         for (var i = 0; i < count; i++)
         {
-            tasks.Add(new ExtractedTask
+            var task = new ExtractedTask
             {
                 Id = Guid.NewGuid(),
                 Title = titles[i],
@@ -32,7 +32,9 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
                 StartTime = startTimes[i],
                 EndTime = endTimes[i],
                 LabelName = labels[i]
-            });
+            };
+            tasks.Add(task);
+            if (OnTaskStreamed != null) await OnTaskStreamed(task);
         }
         return $"{count} task(s) added.";
     }
@@ -61,17 +63,19 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
     }
 
     [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one note.")]
-    public string CreateNotes(
+    public async Task<string> CreateNotes(
         [Description("Array of note texts")] string[] texts)
     {
         ToolCallCount++;
         foreach (var text in texts)
         {
-            notes.Add(new ExtractedNote
+            var note = new ExtractedNote
             {
                 Id = Guid.NewGuid(),
                 Text = text
-            });
+            };
+            notes.Add(note);
+            if (OnNoteStreamed != null) await OnNoteStreamed(note);
         }
         return $"{texts.Length} note(s) added.";
     }
