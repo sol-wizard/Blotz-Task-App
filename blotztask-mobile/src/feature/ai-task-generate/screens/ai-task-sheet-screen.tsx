@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Pressable, useWindowDimensions, Keyboard } from "react-native";
+import { View, Pressable, Text, useWindowDimensions, Keyboard } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -30,7 +30,7 @@ export default function AiTaskSheetScreen() {
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
   const { isHoldHintVisible, showHoldHint } = useHoldHint(1500);
-  const { aiGeneratedMessage, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
+  const { aiGeneratedMessage, interimTranscript, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
@@ -135,6 +135,15 @@ export default function AiTaskSheetScreen() {
 
               {/* Task / note cards (has results) */}
               {hasResults && <AiResultList aiTasks={aiTasks} aiNotes={aiNotes} />}
+
+              {isAiGenerating && !!interimTranscript && (
+                <Text
+                  style={{ opacity: 0.7, fontStyle: "italic", color: "white", textAlign: "center", marginHorizontal: 24, marginBottom: 8 }}
+                  numberOfLines={3}
+                >
+                  "{interimTranscript}"
+                </Text>
+              )}
 
               <ListeningIndicator
                 isListening={isListening}

@@ -128,6 +128,8 @@ public class AiTaskGenerateChatHub(
             };
 
             var transcript = await speechTranscriptionService.TranscribeAsync(formFile, ct);
+            await Clients.Caller.SendAsync("ReceiveTranscript", transcript, ct);
+
             await SendMessage(transcript);
         }
         catch (AiTaskGenerationException ex)

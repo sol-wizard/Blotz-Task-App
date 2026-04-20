@@ -29,6 +29,7 @@ export function useAiTaskGenerator({
   const { t } = useTranslation("aiTaskGenerate");
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
+  const [interimTranscript, setInterimTranscript] = useState<string | undefined>();
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
     if (!connection) throw new Error("Cannot submit audio: not connected.");
@@ -36,6 +37,7 @@ export function useAiTaskGenerator({
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
     const base64 = arrayBufferToBase64(arrayBuffer);
 
+    setInterimTranscript(undefined);
     setIsAiGenerating(true);
 
     try {
@@ -50,6 +52,7 @@ export function useAiTaskGenerator({
   const sendTextMessage = async (text: string) => {
     if (!text.trim() || !connection) return;
 
+    setInterimTranscript(undefined);
     setIsAiGenerating(true);
     try {
       await signalRService.invoke(connection, "SendMessage", text);
@@ -61,6 +64,7 @@ export function useAiTaskGenerator({
   };
 
   const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
+    setInterimTranscript(undefined);
     setIsAiGenerating(false);
 
     if (!receivedAiMessage.isSuccess) {
@@ -81,6 +85,7 @@ export function useAiTaskGenerator({
         conn = newConn;
         setConnection(conn);
         conn.on("ReceiveMessage", receiveMessageHandler);
+        conn.on("ReceiveTranscript", (transcript: string) => setInterimTranscript(transcript));
         return conn.start();
       })
       .catch((error) => console.error("Error connecting to SignalR:", error));
@@ -88,6 +93,7 @@ export function useAiTaskGenerator({
     return () => {
       if (conn) {
         conn.off("ReceiveMessage", receiveMessageHandler);
+        conn.off("ReceiveTranscript");
         conn.stop().catch((error) => console.error("Error stopping SignalR connection:", error));
       }
     };
@@ -95,6 +101,7 @@ export function useAiTaskGenerator({
 
   return {
     aiGeneratedMessage,
+    interimTranscript,
     submitAudioForTranscription,
     sendTextMessage,
   };
