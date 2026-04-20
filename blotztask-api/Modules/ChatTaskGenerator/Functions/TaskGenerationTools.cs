@@ -7,6 +7,8 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Functions;
 public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> notes)
 {
     public int ToolCallCount { get; private set; }
+    public Func<ExtractedTask, Task>? OnTaskStreamed { get; set; }
+    public Func<ExtractedNote, Task>? OnNoteStreamed { get; set; }
 
     public void ResetCallCount() => ToolCallCount = 0;
 
@@ -36,7 +38,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
     }
 
     [Description("Add a single task that has a specific date or time.")]
-    public string CreateTask(
+    public async Task<string> CreateTask(
         [Description("Title")] string title,
         [Description("Description or empty")] string description,
         [Description("yyyy-MM-ddTHH:mm:ss")] DateTime startTime,
@@ -44,7 +46,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         [Description("Work, Life, Learning, or Health")] LabelNameEnum label)
     {
         ToolCallCount++;
-        tasks.Add(new ExtractedTask
+        var task = new ExtractedTask
         {
             Id = Guid.NewGuid(),
             Title = title,
@@ -52,7 +54,9 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
             StartTime = startTime,
             EndTime = endTime,
             LabelName = label
-        });
+        };
+        tasks.Add(task);
+        if (OnTaskStreamed != null) await OnTaskStreamed(task);
         return "Task added.";
     }
 
@@ -73,15 +77,17 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
     }
 
     [Description("Add a single note for an idea or something to remember. Use this when no date or time is mentioned.")]
-    public string CreateNote(
+    public async Task<string> CreateNote(
         [Description("Note content")] string text)
     {
         ToolCallCount++;
-        notes.Add(new ExtractedNote
+        var note = new ExtractedNote
         {
             Id = Guid.NewGuid(),
             Text = text
-        });
+        };
+        notes.Add(note);
+        if (OnNoteStreamed != null) await OnNoteStreamed(note);
         return "Note added.";
     }
 

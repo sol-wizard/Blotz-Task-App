@@ -13,7 +13,9 @@ export enum StopAndUploadResult {
   NoAudio,
 }
 
-export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
+export function useVoiceRecorder(
+  submitAudioForTranscription: (uri: string, pressReleasedAt: number) => Promise<void>,
+) {
   const [isListening, setIsListening] = useState(false);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recordingStartedAt = useRef<number | null>(null);
@@ -34,7 +36,8 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   };
 
   const stopAndUpload = async (): Promise<StopAndUploadResult | undefined> => {
-    const elapsed = recordingStartedAt.current ? Date.now() - recordingStartedAt.current : 0;
+    const pressReleasedAt = Date.now();
+    const elapsed = recordingStartedAt.current ? pressReleasedAt - recordingStartedAt.current : 0;
     recordingStartedAt.current = null;
     const isTooShort = elapsed < MIN_RECORDING_DURATION_MS;
 
@@ -44,12 +47,17 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
 
     try {
+      const stopStart = Date.now();
       await recorder.stop();
+      const stopEnd = Date.now();
       setIsListening(false);
       if (isTooShort) return StopAndUploadResult.Short;
       const uri = recorder.uri;
       if (!uri) return StopAndUploadResult.NoAudio;
-      await submitAudioForTranscription(uri);
+      console.log(
+        `[VoiceTiming] stopAndUpload: recordedMs=${elapsed} recorderStopMs=${stopEnd - stopStart}`,
+      );
+      await submitAudioForTranscription(uri, pressReleasedAt);
       new ExpoFile(uri).delete();
       return StopAndUploadResult.Uploaded;
     } catch (error) {

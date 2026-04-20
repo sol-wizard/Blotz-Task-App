@@ -30,7 +30,7 @@ export default function AiTaskSheetScreen() {
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
   const { isHoldHintVisible, showHoldHint } = useHoldHint(1500);
-  const { aiGeneratedMessage, interimTranscript, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
+  const { aiGeneratedMessage, interimTranscript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
@@ -56,6 +56,11 @@ export default function AiTaskSheetScreen() {
   );
   const aiNotes = aiGeneratedMessage?.extractedNotes ?? [];
   const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
+
+  const streamedAiTasks = streamedTasks.map((task) => mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []));
+  const displayTasks = hasResults ? aiTasks : streamedAiTasks;
+  const displayNotes = hasResults ? aiNotes : streamedNotes;
+  const hasContent = hasResults || streamedTasks.length > 0 || streamedNotes.length > 0;
 
   const analyticsPayload = {
     userInput: aiGeneratedMessage?.userInput,
@@ -131,12 +136,12 @@ export default function AiTaskSheetScreen() {
               </View>
 
               {/* Hint text (no results) */}
-              {!hasResults && <VoiceHintText />}
+              {!hasContent && <VoiceHintText />}
 
-              {/* Task / note cards (has results) */}
-              {hasResults && <AiResultList aiTasks={aiTasks} aiNotes={aiNotes} />}
+              {/* Task / note cards (streamed or final) */}
+              {hasContent && <AiResultList aiTasks={displayTasks} aiNotes={displayNotes} />}
 
-              {isAiGenerating && !!interimTranscript && (
+              {isAiGenerating && !!interimTranscript && !hasContent && (
                 <Text
                   style={{ opacity: 0.7, fontStyle: "italic", color: "white", textAlign: "center", marginHorizontal: 24, marginBottom: 8 }}
                   numberOfLines={3}
@@ -145,11 +150,19 @@ export default function AiTaskSheetScreen() {
                 </Text>
               )}
 
-              <ListeningIndicator
-                isListening={isListening}
-                isAiGenerating={isAiGenerating}
-                isHoldHintVisible={isHoldHintVisible}
-              />
+              {!hasContent && (
+                <ListeningIndicator
+                  isListening={isListening}
+                  isAiGenerating={isAiGenerating}
+                  isHoldHintVisible={isHoldHintVisible}
+                />
+              )}
+
+              {isAiGenerating && hasContent && (
+                <Text style={{ color: "white", opacity: 0.6, fontSize: 13, marginBottom: 8 }}>
+                  {t("voiceListening.aiThinking")}…
+                </Text>
+              )}
 
               {/* Input bar sticks to the keyboard only */}
 

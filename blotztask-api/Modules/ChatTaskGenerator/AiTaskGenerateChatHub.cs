@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.AiUsage.Exceptions;
@@ -77,20 +78,46 @@ public class AiTaskGenerateChatHub(
     {
         var chatContext = (AiChatContext)Context.Items["ChatContext"]!;
 
+        var totalSw = Stopwatch.StartNew();
         try
         {
             var ct = Context.ConnectionAborted;
 
+            var resolveSw = Stopwatch.StartNew();
             var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
             {
                 Message = message,
                 TimeZone = chatContext.TimeZone
             });
+            resolveSw.Stop();
 
+            var streamSw = Stopwatch.StartNew();
+            chatContext.Tools.OnTaskStreamed = async task =>
+            {
+                await Clients.Caller.SendAsync("ReceiveTaskExtracted", task, ct);
+                logger.LogInformation("VoiceTiming: ReceiveTaskExtracted pushed. ElapsedMs={ElapsedMs}", streamSw.ElapsedMilliseconds);
+            };
+            chatContext.Tools.OnNoteStreamed = async note =>
+            {
+                await Clients.Caller.SendAsync("ReceiveNoteExtracted", note, ct);
+                logger.LogInformation("VoiceTiming: ReceiveNoteExtracted pushed. ElapsedMs={ElapsedMs}", streamSw.ElapsedMilliseconds);
+            };
+
+            var generateSw = Stopwatch.StartNew();
             var resultMessage = await aiTaskGenerateService.GenerateAiResponse(resolvedMessage, chatContext, ct);
+            generateSw.Stop();
+
+            chatContext.Tools.OnTaskStreamed = null;
+            chatContext.Tools.OnNoteStreamed = null;
             resultMessage.UserInput = message;
 
+            var sendSw = Stopwatch.StartNew();
             await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
+            sendSw.Stop();
+
+            logger.LogInformation(
+                "VoiceTiming: SendMessage completed. DateResolveMs={DateResolveMs} GenerateMs={GenerateMs} ClientSendMs={ClientSendMs} SendMessageTotalMs={SendMessageTotalMs} MessageChars={MessageChars}",
+                resolveSw.ElapsedMilliseconds, generateSw.ElapsedMilliseconds, sendSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds, message.Length);
         }
         catch (AiQuotaExceededException ex)
         {
@@ -114,23 +141,39 @@ public class AiTaskGenerateChatHub(
     public async Task TranscribeAudio(byte[] audioData)
     {
         var ct = Context.ConnectionAborted;
+        var totalSw = Stopwatch.StartNew();
 
         try
         {
             if (audioData is null || audioData.Length == 0)
                 throw new AiTaskGenerationException(AiErrorCode.EmptyAudio, "No audio was received.");
 
+            logger.LogInformation(
+                "VoiceTiming: TranscribeAudio received. AudioBytes={AudioBytes}",
+                audioData.Length);
+
+            var prepSw = Stopwatch.StartNew();
             await using var stream = new MemoryStream(audioData);
             var formFile = new FormFile(stream, 0, audioData.Length, "audio", "audio.m4a")
             {
                 Headers = new HeaderDictionary(),
                 ContentType = "audio/mp4"
             };
+            prepSw.Stop();
 
+            var whisperSw = Stopwatch.StartNew();
             var transcript = await speechTranscriptionService.TranscribeAsync(formFile, ct);
+            whisperSw.Stop();
+
             await Clients.Caller.SendAsync("ReceiveTranscript", transcript, ct);
 
+            var sendMessageSw = Stopwatch.StartNew();
             await SendMessage(transcript);
+            sendMessageSw.Stop();
+
+            logger.LogInformation(
+                "VoiceTiming: TranscribeAudio completed. AudioBytes={AudioBytes} PrepMs={PrepMs} WhisperTotalMs={WhisperTotalMs} SendMessageMs={SendMessageMs} TranscribeAudioTotalMs={TranscribeAudioTotalMs}",
+                audioData.Length, prepSw.ElapsedMilliseconds, whisperSw.ElapsedMilliseconds, sendMessageSw.ElapsedMilliseconds, totalSw.ElapsedMilliseconds);
         }
         catch (AiTaskGenerationException ex)
         {
