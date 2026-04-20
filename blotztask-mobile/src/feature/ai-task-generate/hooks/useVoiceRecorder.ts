@@ -1,17 +1,6 @@
 import { RecordingPresets, setAudioModeAsync, useAudioRecorder } from "expo-audio";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { File as ExpoFile } from "expo-file-system";
-
-// Minimum hold duration before we treat the recording as intentional.
-// Since the mic now starts on onPressIn (not onLongPress), a quick accidental
-// tap would otherwise immediately upload silence or near-silence to the backend.
-const MIN_RECORDING_DURATION_MS = 1000;
-
-export enum StopAndUploadResult {
-  Uploaded,
-  Short,
-  NoAudio,
-}
 
 export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
   const [isListening, setIsListening] = useState(false);
@@ -31,10 +20,10 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
   };
 
-  const stopAndUpload = async (): Promise<StopAndUploadResult | undefined> => {
+  const stopAndUpload = async (): Promise<void> => {
     if (!recorder.isRecording) {
       setIsListening(false);
-      return undefined;
+      return;
     }
 
     try {
@@ -42,10 +31,9 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       setIsListening(false);
 
       const uri = recorder.uri;
-      if (!uri) return StopAndUploadResult.NoAudio;
+      if (!uri) return;
       await submitAudioForTranscription(uri);
       new ExpoFile(uri).delete();
-      return StopAndUploadResult.Uploaded;
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
     } finally {
@@ -55,5 +43,5 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
   };
 
-  return { isListening, startListening, stopAndUpload };
+  return { isListening, startListening, stopAndUpload, setIsListening };
 }

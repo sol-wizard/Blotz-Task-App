@@ -13,9 +13,8 @@ import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { ListeningIndicator } from "../component/listening-indicator";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
-import { useVoiceRecorder, StopAndUploadResult } from "../hooks/useVoiceRecorder";
+import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
-import { useHoldHint } from "../hooks/useHoldHint";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { convertAiTaskToAddTaskItemDTO } from "../utils/map-aitask-to-addtaskitem-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -29,12 +28,13 @@ export default function AiTaskSheetScreen() {
   const { height } = useWindowDimensions();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
-  const { isHoldHintVisible, showHoldHint } = useHoldHint(1500);
+  const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
+
   const { aiGeneratedMessage, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload } = useVoiceRecorder(
+  const { isListening, startListening, stopAndUpload, setIsListening } = useVoiceRecorder(
     submitAudioForTranscription,
   );
   const { addTaskAsync, isAdding } = useTaskMutations();
@@ -104,13 +104,6 @@ export default function AiTaskSheetScreen() {
     void startListening();
   };
 
-  const handleMicPressOut = async () => {
-    const result = await stopAndUpload();
-    if (result === StopAndUploadResult.Short) {
-      showHoldHint();
-    }
-  };
-
   return (
     <View className="flex-1 bg-transparent">
       <Pressable className="absolute inset-0" onPress={handleDismiss} pointerEvents="auto" />
@@ -145,13 +138,18 @@ export default function AiTaskSheetScreen() {
               {/* Input bar sticks to the keyboard only */}
 
               <AiInputBar
+                // Text input
                 textInput={textInput}
-                isListening={isListening}
-                hasResults={hasResults}
                 onChangeText={setTextInput}
                 onSubmitText={() => void handleSubmitText()}
+                // Mic input
+                isListening={isListening}
+                setIsListening={setIsListening}
                 onMicPressIn={handleMicPressIn}
-                onMicPressOut={() => void handleMicPressOut()}
+                onMicPressOut={() => void stopAndUpload()}
+                setIsHoldHintVisible={setIsHoldHintVisible}
+                // has results
+                hasResults={hasResults}
                 onConfirm={() => void handleAddAll()}
               />
             </View>
