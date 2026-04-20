@@ -16,7 +16,6 @@ export enum StopAndUploadResult {
 export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
   const [isListening, setIsListening] = useState(false);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const recordingStartedAt = useRef<number | null>(null);
 
   const startListening = async () => {
     // Set listening immediately so the waveform appears on press rather than
@@ -26,7 +25,6 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
-      recordingStartedAt.current = Date.now();
     } catch (error) {
       setIsListening(false);
       console.warn("[Mic] Error starting recording.", error);
@@ -34,19 +32,15 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   };
 
   const stopAndUpload = async (): Promise<StopAndUploadResult | undefined> => {
-    const elapsed = recordingStartedAt.current ? Date.now() - recordingStartedAt.current : 0;
-    recordingStartedAt.current = null;
-    const isTooShort = elapsed < MIN_RECORDING_DURATION_MS;
-
     if (!recorder.isRecording) {
       setIsListening(false);
-      return isTooShort ? StopAndUploadResult.Short : undefined;
+      return undefined;
     }
 
     try {
       await recorder.stop();
       setIsListening(false);
-      if (isTooShort) return StopAndUploadResult.Short;
+
       const uri = recorder.uri;
       if (!uri) return StopAndUploadResult.NoAudio;
       await submitAudioForTranscription(uri);
