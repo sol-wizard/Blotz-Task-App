@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Pressable, ScrollView, useWindowDimensions, Keyboard } from "react-native";
+import { View, Pressable, useWindowDimensions, Keyboard } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -30,11 +30,9 @@ export default function AiTaskSheetScreen() {
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
   const { isHoldHintVisible, showHoldHint } = useHoldHint(1500);
-  const {
-    aiGeneratedMessage,
-    submitAudioForTranscription,
-    sendTextMessage,
-  } = useAiTaskGenerator({ setIsAiGenerating });
+  const { aiGeneratedMessage, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
+    setIsAiGenerating,
+  });
   const { labels } = useAllLabels();
   const { isListening, startListening, stopAndUpload } = useVoiceRecorder(
     submitAudioForTranscription,
@@ -123,12 +121,8 @@ export default function AiTaskSheetScreen() {
           end={{ x: 0.7, y: 1 }}
           style={{ height: height * 0.8, borderRadius: 20 }}
         >
-          <View style={{ flex: 1 }}>
-            {/* Content area scrollable so keyboard never obscures content */}
-            <ScrollView
-              contentContainerStyle={{ flexGrow: 1, alignItems: "center" }}
-              keyboardShouldPersistTaps="handled"
-            >
+          <KeyboardStickyView style={{ flex: 1 }}>
+            <View className="flex-1 items-center">
               {/* Top row - dismiss button */}
               <View className="w-full items-end px-6 pt-4 pb-2">
                 <Pressable onPress={handleDismiss} accessibilityLabel="Stop">
@@ -140,22 +134,16 @@ export default function AiTaskSheetScreen() {
               {!hasResults && <VoiceHintText />}
 
               {/* Task / note cards (has results) */}
-              {hasResults && (
-                <AiResultList
-                  aiTasks={aiTasks}
-                  aiNotes={aiNotes}
-                />
-              )}
+              {hasResults && <AiResultList aiTasks={aiTasks} aiNotes={aiNotes} />}
 
               <ListeningIndicator
                 isListening={isListening}
                 isAiGenerating={isAiGenerating}
                 isHoldHintVisible={isHoldHintVisible}
               />
-            </ScrollView>
 
-            {/* Input bar sticks to the keyboard only */}
-            <KeyboardStickyView>
+              {/* Input bar sticks to the keyboard only */}
+
               <AiInputBar
                 textInput={textInput}
                 isListening={isListening}
@@ -166,8 +154,8 @@ export default function AiTaskSheetScreen() {
                 onMicPressOut={() => void handleMicPressOut()}
                 onConfirm={() => void handleAddAll()}
               />
-            </KeyboardStickyView>
-          </View>
+            </View>
+          </KeyboardStickyView>
         </LinearGradient>
       </View>
     </View>
