@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { CustomDay, CustomDayProps } from "../components/custom-day";
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { ModeBottomSheet } from "../../pomodoro/components/pomodoro-mode-bottomsheet";
 import { usePomodoroSettingsQuery } from "../../pomodoro/hooks/usePomodoroSetting";
 
@@ -51,10 +51,6 @@ export default function CalendarScreen() {
     setCalendarKey((k) => k + 1);
   }, [params.selectedDate]);
 
-  const handleOpenFocus = () => {
-    router.push("/(protected)/pomodoro-focus");
-  };
-
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
       <CalendarHeader
@@ -91,11 +87,7 @@ export default function CalendarScreen() {
           </Animated.View>
         )}
 
-        <FilteredTaskList
-          selectedDay={selectedDay}
-          onOpenMode={() => setIsModeSheetOpen(true)}
-          onOpenFocus={handleOpenFocus}
-        />
+        <FilteredTaskList selectedDay={selectedDay} onOpenMode={() => setIsModeSheetOpen(true)} />
       </CalendarProvider>
       {pomodoroSetting && (
         <ModeBottomSheet

@@ -29,17 +29,9 @@ interface TaskCardProps {
   isDeleting: boolean;
   selectedDay?: Date;
   onOpenMode: () => void;
-  onOpenFocus: () => void;
 }
 
-const TaskCard = ({
-  task,
-  deleteTask,
-  isDeleting,
-  selectedDay,
-  onOpenMode,
-  onOpenFocus,
-}: TaskCardProps) => {
+const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: TaskCardProps) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
@@ -94,6 +86,10 @@ const TaskCard = ({
     swipeRef.current?.close();
   };
 
+  const handleOpenFocus = () => {
+    router.push("/(protected)/pomodoro-focus");
+  };
+
   return (
     <ReanimatedSwipeable
       ref={swipeRef}
@@ -101,7 +97,7 @@ const TaskCard = ({
         <TaskCardLeftActions
           progress={leftActionsProgress}
           onMode={onOpenMode}
-          onFocus={onOpenFocus}
+          onFocus={handleOpenFocus}
         />
       )}
       leftThreshold={12}
