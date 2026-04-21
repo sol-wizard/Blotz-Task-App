@@ -585,6 +585,9 @@ namespace BlotzTask.Migrations
                     b.Property<bool>("IsOnboarded")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("LoginAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PictureUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -610,6 +613,7 @@ namespace BlotzTask.Migrations
                             DisplayName = "blotztest1@gmail.com",
                             Email = "blotztest1@gmail.com",
                             IsOnboarded = false,
+                            LoginAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc),
                             PictureUrl = "https://s.gravatar.com/avatar/d7eee1179900d1154cf2b3a64f7f91dd?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fbl.png",
                             SignUpAt = new DateTime(2025, 9, 9, 14, 33, 27, 955, DateTimeKind.Utc),
                             UpdatedAt = new DateTime(2025, 9, 9, 14, 34, 27, 575, DateTimeKind.Utc)

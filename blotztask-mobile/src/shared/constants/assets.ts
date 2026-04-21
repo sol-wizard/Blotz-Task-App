@@ -66,6 +66,11 @@ export const SVGIMAGES = {
 
 export const SOUNDS = {
   buttonSpin: require("../../../assets/sounds/button-spin.mp3"),
+  pomodoroEasyFocus: require("../../../assets/sounds/pomodoro-easyFocus.mp3"),
+  pomodoroDeepWork: require("../../../assets/sounds/pomodoro-deepWork.mp3"),
+  pomodoroTaskFlow: require("../../../assets/sounds/pomodoro-taskFlow.mp3"),
+  pomodoroCalmMind: require("../../../assets/sounds/pomodoro-calmMind.mp3"),
+  pomodoroCafeVibe: require("../../../assets/sounds/pomodoro-cafeVibe.mp3"),
 };
 
 // Export all assets for convenience

@@ -5,9 +5,13 @@ param organizationName = 'blotz'
 param projectName = 'task'
 param location = 'australiaeast'
 
-param openAiDeploymentName = 'gpt-5.2-chat'
-param openAiModelName = 'gpt-5.2-chat'
-param openAiModelVersion = '2025-12-11'
+param breakdownDeploymentName = 'gpt-5.2-chat'
+param breakdownModelName = 'gpt-5.2-chat'
+param breakdownModelVersion = '2025-12-11'
+
+param taskGenerationDeploymentName = 'gpt-5.4-mini'
+param taskGenerationModelName = 'gpt-5.4-mini'
+param taskGenerationModelVersion = '2025-12-11'
 param githubRepo = 'sol-wizard/Blotz-Task-App'
 param budgetAmount = 40 // AUD per month for production
 param alertEmail = 'benjaminneoh2928@gmail.com'

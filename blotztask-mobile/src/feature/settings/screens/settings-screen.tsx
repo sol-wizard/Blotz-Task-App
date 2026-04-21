@@ -84,8 +84,6 @@ export default function SettingsScreen() {
         <Text className="text-2xl font-balooBold text-secondary mt-5">
           {userProfile?.displayName}
         </Text>
-        <Text className="text-base font-baloo text-gray-500 mt-1">{t("version")}</Text>
-
         <ScrollView
           className="mt-8 w-full bg-white rounded-2xl"
           contentContainerStyle={{ alignItems: "center" }}
