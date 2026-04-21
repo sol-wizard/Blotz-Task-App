@@ -85,6 +85,7 @@ public class QualityCheckRequest
     /// aggregated into a reliability score (e.g. 3/5). Defaults to 1 (single run).
     /// </summary>
     public int ReliabilityRuns { get; set; } = 1;
+    public Guid UserId { get; set; }
 }
 
 public class QualityCheckScorecard
