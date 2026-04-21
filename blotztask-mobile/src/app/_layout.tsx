@@ -77,11 +77,11 @@ function RootStack() {
       <Stack.Screen name="update-required" />
 
       <Stack.Protected guard={!isAuthenticated}>
-        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack.Protected>
 
       <Stack.Protected guard={isAuthenticated}>
-        <Stack.Screen name="(protected)" />
+        <Stack.Screen name="(protected)" options={{ headerShown: false }} />
       </Stack.Protected>
     </Stack>
   );
