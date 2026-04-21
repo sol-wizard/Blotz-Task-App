@@ -1,7 +1,7 @@
 import { Redirect } from "expo-router";
 import * as Notifications from "expo-notifications";
 import { useAuth } from "@/shared/hooks/useAuth";
-import { useUpdateCheck } from "@/shared/hooks/useUpdateCheck";
+import { useUpdateCheck, UpdateCheckStatus } from "@/shared/hooks/useUpdateCheck";
 import LoadingScreen from "@/shared/components/loading-screen";
 
 // Configure notification handling
@@ -36,11 +36,11 @@ export default function Index() {
   const { isAuthenticated, isAuthLoading } = useAuth();
   const updateCheck = useUpdateCheck();
 
-  if (isAuthLoading || updateCheck.status === "pending") {
+  if (isAuthLoading || updateCheck.status === UpdateCheckStatus.Pending) {
     return <LoadingScreen />;
   }
 
-  if (updateCheck.status === "outdated") {
+  if (updateCheck.status === UpdateCheckStatus.Outdated) {
     return <Redirect href={{ pathname: "/update-required", params: { storeUrl: updateCheck.storeUrl } }} />;
   }
 
