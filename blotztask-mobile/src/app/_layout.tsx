@@ -24,6 +24,8 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/toast-config";
 import { useAuth } from "@/shared/hooks/useAuth";
+import { useUpdateCheck } from "@/shared/hooks/useUpdateCheck";
+import { UpdateRequiredOverlay } from "@/shared/components/update-required-overlay";
 import posthog from "@/shared/constants/posthog-client";
 
 Sentry.init({
@@ -70,18 +72,25 @@ export default function RootLayout() {
 
 function RootStack() {
   const { isAuthenticated } = useAuth();
+  const updateCheck = useUpdateCheck();
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
 
-      <Stack.Protected guard={!isAuthenticated}>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      </Stack.Protected>
+        <Stack.Protected guard={!isAuthenticated}>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        </Stack.Protected>
 
-      <Stack.Protected guard={isAuthenticated}>
-        <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-      </Stack.Protected>
-    </Stack>
+        <Stack.Protected guard={isAuthenticated}>
+          <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+        </Stack.Protected>
+      </Stack>
+
+      {updateCheck.status === "outdated" && (
+        <UpdateRequiredOverlay storeUrl={updateCheck.storeUrl} />
+      )}
+    </>
   );
 }
