@@ -75,8 +75,8 @@ public class AiUsageMeteringScenarioTests : IClassFixture<DatabaseFixture>
         await _seeder.CreateUserSubscriptionAsync(userId, plan.Id);
 
         var monthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-        await _seeder.CreateAiUsageRecordAsync(userId, 1_200, monthStart.AddSeconds(-1));
-        await _seeder.CreateAiUsageRecordAsync(userId, 200, monthStart.AddDays(1));
+        await _seeder.CreateAiUsageRecordAsync(userId, 100, 1_200, 1300, monthStart.AddSeconds(-1));
+await _seeder.CreateAiUsageRecordAsync(userId, 100, 200, 300, monthStart.AddDays(1));
 
         var summary = await _summaryHandler.Handle(new GetAiUsageSummaryQuery { UserId = userId });
         summary.UsedTokens.Should().Be(200);
