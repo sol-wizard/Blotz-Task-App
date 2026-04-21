@@ -119,6 +119,8 @@ public class DataSeeder
         {
             UserId = userId,
             CompletionTokens = CompletionTokens,
+            PromptTokens = PromptTokens,
+            TotalTokens = TotalTokens,
             CreatedAt = createdAt ?? DateTime.UtcNow
         };
 

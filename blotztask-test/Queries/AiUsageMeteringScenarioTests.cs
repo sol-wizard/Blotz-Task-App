@@ -40,8 +40,8 @@ public class AiUsageMeteringScenarioTests : IClassFixture<DatabaseFixture>
         var plan = await _seeder.CreateSubscriptionPlanAsync("Free", 1000);
         await _seeder.CreateUserSubscriptionAsync(userId, plan.Id);
 
-        await _recordService.RecordAiUsageAsync(new RecordAiUsageRequest { UserId = userId, CompletionTokens = 200 });
-        await _recordService.RecordAiUsageAsync(new RecordAiUsageRequest { UserId = userId, CompletionTokens= 300 });
+        await _recordService.RecordAiUsageAsync(new RecordAiUsageRequest { UserId = userId, PromptTokens = 100, CompletionTokens = 200 ,TotalTokens = 300});
+        await _recordService.RecordAiUsageAsync(new RecordAiUsageRequest { UserId = userId, PromptTokens = 100, CompletionTokens= 300 ,TotalTokens = 400});
 
         var expectedUsedBefore = 500;
         var query = new GetAiUsageSummaryQuery { UserId = userId };
@@ -54,7 +54,7 @@ public class AiUsageMeteringScenarioTests : IClassFixture<DatabaseFixture>
         await FluentActions.Invoking(() => _checkService.CheckQuotaAsync(userId))
             .Should().NotThrowAsync();
 
-        await _recordService.RecordAiUsageAsync(new RecordAiUsageRequest { UserId = userId, CompletionTokens = 500 });
+        await _recordService.RecordAiUsageAsync(new RecordAiUsageRequest { UserId = userId, PromptTokens = 100, CompletionTokens = 500 ,TotalTokens = 600});
 
         await FluentActions.Invoking(() => _checkService.CheckQuotaAsync(userId))
             .Should().ThrowAsync<AiQuotaExceededException>();
