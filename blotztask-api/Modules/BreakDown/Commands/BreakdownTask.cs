@@ -86,10 +86,13 @@ public class BreakdownTaskCommandHandler(
 
             var response = await agent.RunAsync("Break down this task into subtasks.", cancellationToken: ct);
             int completionTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+            int promptTokens = (int)(response.Usage?.InputTokenCount ?? 0);
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
             {
                 UserId = command.UserId,
-                CompletionTokens = completionTokens
+                CompletionTokens = completionTokens,
+                PromptTokens = promptTokens,
+                TotalTokens = completionTokens + promptTokens
             }, ct);
 
             logger.LogInformation("Breakdown: Collected {Count} subtasks", collectedSubTasks.Count);

@@ -76,10 +76,13 @@ public class TimeEstimateCommandHandler(
 
             var response = await agent.RunAsync("Estimate the time for this note.", cancellationToken: ct);
             int completionTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+            int promptTokens = (int)(response.Usage?.InputTokenCount ?? 0);
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
             {
                 UserId = request.UserId,
-                CompletionTokens = completionTokens
+                CompletionTokens = completionTokens,
+                PromptTokens = promptTokens,
+                TotalTokens = completionTokens + promptTokens
             }, ct);
 
             if (captured == null)

@@ -86,10 +86,13 @@ public class AiTaskGenerateService(
 
             var response = await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
             int completionTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+            int promptTokens = (int)(response.Usage?.InputTokenCount ?? 0);
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
             {
                 UserId = userId,
-                CompletionTokens = completionTokens
+                CompletionTokens = completionTokens,
+                PromptTokens = promptTokens,
+                TotalTokens = completionTokens + promptTokens
             }, ct);
             var runSw = Stopwatch.StartNew();
             await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
