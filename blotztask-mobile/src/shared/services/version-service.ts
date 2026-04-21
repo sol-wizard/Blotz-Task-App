@@ -10,6 +10,7 @@ export const checkForUpdate = async (): Promise<UpdateCheckResult> => {
   const isProduction = process.env.EXPO_PUBLIC_APP_ENV === "production";
   const isIOS = Platform.OS === "ios";
 
+  // TODO: Skip andoid check for now, need to figure out the best way to do it
   if (!isProduction || !isIOS) return { isUpToDate: true, storeUrl: null };
 
   const { latestVersion, currentVersion, storeUrl } = await checkIOSVersion();
