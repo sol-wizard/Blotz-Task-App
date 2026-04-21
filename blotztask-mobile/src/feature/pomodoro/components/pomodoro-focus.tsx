@@ -13,11 +13,6 @@ interface PomodoroFocusProps {
   selectedCountdown: boolean;
 }
 
-const FOCUS_GRADIENT_COLORS = ["#C2E49F", "#EEFBE1"] as const;
-const FOCUS_SOFT_TEXT_COLOR = "#00000033";
-const FOCUS_BUTTON_COLOR = "#E7F7D7";
-const STARS_COLORS = "#F3FADE";
-
 export const PomodoroFocus = ({
   onClose,
   selectedSoundscape,
@@ -29,7 +24,7 @@ export const PomodoroFocus = ({
   const displayTime = shouldCountDown ? formatDuration(selectedDuration) : "00:00";
 
   return (
-    <LinearGradient colors={FOCUS_GRADIENT_COLORS} style={{ flex: 1 }}>
+    <LinearGradient colors={["#C2E49F", "#EEFBE1"]} style={{ flex: 1 }}>
       <SafeAreaView className="flex-1 px-5 pt-2 pb-3">
         <View className="flex-row w-full items-center justify-between">
           <ReturnButton className="w-20 h-20 border-0 bg-[#00000014]" />
@@ -51,7 +46,7 @@ export const PomodoroFocus = ({
               <MaterialCommunityIcons
                 name="star"
                 size={26}
-                color={STARS_COLORS}
+                color="#F3FADE"
                 className="absolute top-2 left-6"
                 style={{ transform: [{ rotate: "-12deg" }] }}
               />
@@ -59,7 +54,7 @@ export const PomodoroFocus = ({
               <MaterialCommunityIcons
                 name="star"
                 size={36}
-                color={STARS_COLORS}
+                color="#F3FADE"
                 className="absolute -top-2 right-4"
                 style={{ transform: [{ rotate: "15deg" }] }}
               />
@@ -67,7 +62,7 @@ export const PomodoroFocus = ({
               <MaterialCommunityIcons
                 name="star"
                 size={14}
-                color={STARS_COLORS}
+                color="#F3FADE"
                 className="absolute top-10 left-16"
               />
             </View>
@@ -75,7 +70,7 @@ export const PomodoroFocus = ({
 
           <View className="mt-8 pt-2 item-center">
             <Text className="text-8xl font-bold font-baloo pt-4 tracking-wide text-[#00000080]">
-              {selectedDuration === 0 ? t("focusMode.flow") : displayTime}
+              {displayTime}
             </Text>
             <Pressable className="items-center justify-center -mt-4" onPress={onClose}>
               <Text className="text-xl font-baloo font-bold text-[#00000080]">
@@ -87,39 +82,22 @@ export const PomodoroFocus = ({
 
         <View className="w-full mb-8 flex-row items-center justify-between px-12">
           <View className="items-center justify-center px-8 py-2 rounded-full">
-            <Text className="mb-2 text-2xl font-baloo" style={{ color: FOCUS_SOFT_TEXT_COLOR }}>
+            <Text className="mb-2 text-2xl font-baloo text-[#00000033]">
               {t("focusMode.pause")}
             </Text>
-            <Pressable
-              className="h-20 w-20 flex-row items-center justify-center rounded-full"
-              style={{ backgroundColor: FOCUS_SOFT_TEXT_COLOR, gap: 10 }}
-            >
-              <View
-                className="w-3.5 h-8 rounded-full"
-                style={{ backgroundColor: FOCUS_BUTTON_COLOR }}
-              />
-              <View
-                className="w-3.5 h-8 rounded-full"
-                style={{ backgroundColor: FOCUS_BUTTON_COLOR }}
-              />
+            <Pressable className="h-20 w-20 flex-row items-center justify-center rounded-full bg-[#00000033] gap-3">
+              <View className="w-3.5 h-8 rounded-full bg-[#E7F7D7]" />
+              <View className="w-3.5 h-8 rounded-full bg-[#E7F7D7]" />
             </Pressable>
           </View>
 
           <View className="items-center">
-            <Text className="mb-2 text-2xl font-baloo" style={{ color: FOCUS_SOFT_TEXT_COLOR }}>
-              {t("focusMode.end")}
-            </Text>
+            <Text className="mb-2 text-2xl font-baloo text-[#00000033]">{t("focusMode.end")}</Text>
             <Pressable
-              onPress={onClose}
-              className="h-20 w-20 items-center justify-center rounded-full"
-              style={{ backgroundColor: FOCUS_SOFT_TEXT_COLOR }}
+              // onPress={onClose}
+              className="h-20 w-20 items-center justify-center rounded-full bg-[#00000033]"
             >
-              <View
-                className="w-8 h-8 rounded-md"
-                style={{
-                  backgroundColor: FOCUS_BUTTON_COLOR,
-                }}
-              />
+              <View className="w-8 h-8 rounded-md bg-[#E7F7D7]" />
             </Pressable>
           </View>
         </View>
