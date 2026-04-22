@@ -11,8 +11,8 @@ import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { CustomDay, CustomDayProps } from "../components/custom-day";
 import { useLocalSearchParams } from "expo-router";
-import { ModeBottomSheet } from "../components/pomodoro-mode-bottomsheet";
-import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
+import { ModeBottomSheet } from "../../pomodoro/components/pomodoro-mode-bottomsheet";
+import { usePomodoroSettingsQuery } from "../../pomodoro/hooks/usePomodoroSetting";
 
 const calendarTheme = {
   calendarBackground: theme.colors.background,
