@@ -60,9 +60,7 @@ export const NoteRow = ({
           setIsSwiping(false);
         }}
       >
-        <View
-          className={`flex-1 overflow-hidden rounded-3xl ${isSwiping ? "bg-gray-100" : "bg-white"}`}
-        >
+        <View className={`rounded-3xl ${isSwiping ? "bg-gray-100" : "bg-white"}`}>
           <NoteCard note={note} onPressCard={() => onPressNote(note)} />
         </View>
       </ReanimatedSwipeable>
