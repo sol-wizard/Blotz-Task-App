@@ -43,15 +43,16 @@ var app = builder.Build();
 
 // Request pipeline
 app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseCors("AllowSpecificOrigin");
-app.UseAuthentication();
-app.UseAuthorization();
-app.UseMiddleware<UserContextMiddleware>();
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
+app.UseCors("AllowSpecificOrigin");
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseMiddleware<UserContextMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -60,9 +61,12 @@ if (app.Environment.IsDevelopment())
 }
 
 // Endpoints
-app.MapGet("/", () => Results.Content(
-    "<html><body><h1>Web API is running</h1></body></html>",
-    "text/html"));
+app.MapGet("/", (IHostEnvironment environment) => Results.Ok(new
+{
+    name = "BlotzTask API",
+    status = "ok",
+    environment = environment.EnvironmentName
+}));
 app.MapHealthChecks("/health");
 app.MapControllers();
 app.MapHub<AiTaskGenerateChatHub>("/ai-task-generate-chathub");
