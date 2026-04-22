@@ -40,7 +40,8 @@ export const NoteHeader = ({ searchQuery, setSearchQuery }: NoteHeaderProps) => 
           onChangeText={setSearchQuery}
           placeholder="Search notes"
           placeholderTextColor="#9CA3AF"
-          className="ml-2 text-black"
+          className="flex-1 ml-2 text-black"
+          style={{ paddingVertical: 0, includeFontPadding: false }}
         />
       </View>
     </View>
