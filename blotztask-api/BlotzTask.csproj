@@ -41,7 +41,6 @@
     <ItemGroup>
       <Folder Include="Modules\Badges\Domain\" />
       <Folder Include="Modules\Badges\Enum\" />
-      <Folder Include="Modules\ChatTaskGenerator\Functions\" />
     </ItemGroup>
 
     <ItemGroup>
