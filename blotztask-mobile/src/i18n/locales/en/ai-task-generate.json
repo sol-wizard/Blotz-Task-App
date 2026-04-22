@@ -26,7 +26,8 @@
     "tokenLimited": "You've hit the usage limit. Please try again later.",
     "contentFilter": "Your message was flagged. Please rephrase and try again.",
     "canceled": "The request was canceled.",
-    "noTasksExtracted": "I couldn't find any tasks in that. Please try again."
+    "noTasksExtracted": "I couldn't find any tasks in that. Please try again.",
+    "holdLonger": "Hold the mic a little longer to record."
   },
   "taskCard": {
     "titlePlaceholder": "Task title",

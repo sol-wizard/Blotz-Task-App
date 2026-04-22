@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Pressable, useWindowDimensions, Keyboard } from "react-native";
+import { View, Pressable, useWindowDimensions, Keyboard } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import { requestRecordingPermissionsAsync } from "expo-audio";
+import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { AiInputBar } from "../component/ai-input-bar";
 import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
+import { ListeningIndicator } from "../component/listening-indicator";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
@@ -26,13 +28,13 @@ export default function AiTaskSheetScreen() {
   const { height } = useWindowDimensions();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
-  const {
-    aiGeneratedMessage,
-    submitAudioForTranscription,
-    sendTextMessage,
-  } = useAiTaskGenerator({ setIsAiGenerating });
+  const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
+
+  const { aiGeneratedMessage, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
+    setIsAiGenerating,
+  });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload } = useVoiceRecorder(
+  const { isListening, startListening, stopAndUpload, setIsListening } = useVoiceRecorder(
     submitAudioForTranscription,
   );
   const { addTaskAsync, isAdding } = useTaskMutations();
@@ -55,7 +57,7 @@ export default function AiTaskSheetScreen() {
   const aiNotes = aiGeneratedMessage?.extractedNotes ?? [];
   const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
 
-  const analyticsResultsPayload = {
+  const analyticsPayload = {
     userInput: aiGeneratedMessage?.userInput,
     generatedTaskTitles: aiTasks.map((t) => t.title),
     generatedNoteTexts: aiNotes.map((n) => n.text),
@@ -64,7 +66,7 @@ export default function AiTaskSheetScreen() {
   // --- Handlers ---
   const handleDismiss = () => {
     analytics.trackIfUserAcceptAiTask({
-      ...analyticsResultsPayload,
+      ...analyticsPayload,
       outcome: hasResults ? "rejected" : "abandoned",
     });
     router.back();
@@ -86,7 +88,7 @@ export default function AiTaskSheetScreen() {
         ...aiNotes.map((n) => createNoteAsync(n.text)),
       ]);
       analytics.trackIfUserAcceptAiTask({
-        ...analyticsResultsPayload,
+        ...analyticsPayload,
         outcome: "accepted",
       });
       router.back();
@@ -97,6 +99,7 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressIn = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Keyboard.dismiss();
     void startListening();
   };
@@ -124,38 +127,29 @@ export default function AiTaskSheetScreen() {
               {!hasResults && <VoiceHintText />}
 
               {/* Task / note cards (has results) */}
-              {hasResults && (
-                <AiResultList
-                  aiTasks={aiTasks}
-                  aiNotes={aiNotes}
-                />
-              )}
+              {hasResults && <AiResultList aiTasks={aiTasks} aiNotes={aiNotes} />}
 
-              {/* Listening indicator */}
-              <View className="items-center px-8 pb-4">
-                <Text
-                  className="text-white font-balooBold text-xl mb-1"
-                  style={{ opacity: isListening || isAiGenerating ? 1 : 0 }}
-                >
-                  {isAiGenerating ? t("voiceListening.aiThinking") : t("voiceListening.title")}
-                </Text>
-                <Text
-                  className="text-white/70 font-baloo text-sm text-center"
-                  style={{ opacity: isListening || isAiGenerating ? 1 : 0 }}
-                >
-                  {t("voiceListening.subtitle")}
-                </Text>
-              </View>
-
-              {/* Bottom controls */}
-              <AiInputBar
-                textInput={textInput}
+              <ListeningIndicator
                 isListening={isListening}
-                hasResults={hasResults}
+                isAiGenerating={isAiGenerating}
+                isHoldHintVisible={isHoldHintVisible}
+              />
+
+              {/* Input bar sticks to the keyboard only */}
+
+              <AiInputBar
+                // Text input
+                textInput={textInput}
                 onChangeText={setTextInput}
                 onSubmitText={() => void handleSubmitText()}
+                // Mic input
+                isListening={isListening}
+                setIsListening={setIsListening}
                 onMicPressIn={handleMicPressIn}
                 onMicPressOut={() => void stopAndUpload()}
+                setIsHoldHintVisible={setIsHoldHintVisible}
+                // has results
+                hasResults={hasResults}
                 onConfirm={() => void handleAddAll()}
               />
             </View>
