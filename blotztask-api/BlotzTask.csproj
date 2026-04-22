@@ -39,11 +39,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Modules\Badges\Domain\" />
-      <Folder Include="Modules\Badges\Enum\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <Content Update="Modules\ChatTaskGenerator\DevTools\eval-cases.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 </Project>

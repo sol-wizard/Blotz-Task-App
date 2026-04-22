@@ -32,7 +32,6 @@ builder.Services.AddBadgeModule();
 builder.Services.AddPomodoroModule();
 builder.Services.AddAiUsageModule();
 builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
-builder.Services.AddAiUsageModule();
 
 builder.Services.AddDatabaseContext(builder.Configuration, builder.Environment);
 
