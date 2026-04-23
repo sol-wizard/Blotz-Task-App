@@ -80,7 +80,7 @@ export default function SettingsAvatarScreen() {
                 <View
                   className="rounded-full border-4"
                   style={{
-                    borderColor: isSelected ? "#F2A74B" : "transparent",
+                    borderColor: isSelected ? "#8B86B3" : "transparent",
                   }}
                 >
                   <Image
