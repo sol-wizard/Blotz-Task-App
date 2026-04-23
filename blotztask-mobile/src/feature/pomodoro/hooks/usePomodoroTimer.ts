@@ -29,11 +29,10 @@ export function usePomodoroTimer(
     isCountdown,
   );
 
-  // 倒计时结束时自动暂停
   useEffect(() => {
     if (isFinished && !isPaused) {
       setIsPaused(true);
-      // 可以在这里触发震动、铃声或者 onFinish 回调
+      // Could add sound here or other side effects on timer finish
     }
   }, [isFinished, isPaused]);
 

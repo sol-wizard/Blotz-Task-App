@@ -23,10 +23,8 @@ export default function PomodoroFocusScreen() {
     initialPaused = activeSession.isPaused;
 
     if (activeSession.isPaused) {
-      // 如果之前是暂停的，时间没有流逝，直接用缓存的秒数
       initialElapsed = activeSession.elapsedSeconds;
     } else {
-      // 如果之前是运行状态，必须计算“离开页面到现在的真实时间差” (补偿后台时间)
       const secondsPassedInBackground = Math.floor((Date.now() - activeSession.timestamp) / 1000);
       initialElapsed = activeSession.elapsedSeconds + secondsPassedInBackground;
     }
@@ -37,7 +35,7 @@ export default function PomodoroFocusScreen() {
       taskId,
       elapsedSeconds,
       isPaused,
-      timestamp: Date.now(), // 记录存入的具体时间，供下次恢复时计算
+      timestamp: Date.now(),
     });
     router.back();
   };
