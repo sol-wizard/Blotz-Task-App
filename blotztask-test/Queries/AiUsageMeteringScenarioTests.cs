@@ -94,10 +94,10 @@ await _seeder.CreateAiUsageRecordAsync(userId, 100, 200, 300, monthStart.AddDays
     }
 
     [Fact]
-    public async Task CheckQuota_WhenNoSubscription_ThrowsInvalidOperation()
+    public async Task CheckQuota_WhenNoSubscription_ThrowsNotFound()
     {
         var userId = await _seeder.CreateUserAsync();
         await FluentActions.Invoking(() => _checkService.CheckQuotaAsync(userId))
-            .Should().ThrowAsync<InvalidOperationException>();
+            .Should().ThrowAsync<NotFoundException>();
     }
 }
