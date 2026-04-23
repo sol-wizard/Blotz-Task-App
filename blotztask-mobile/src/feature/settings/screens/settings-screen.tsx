@@ -88,7 +88,7 @@ export default function SettingsScreen() {
           className="mt-8 w-full bg-white rounded-2xl"
           contentContainerStyle={{
             alignItems: "center",
-            paddingBottom: 180,
+            paddingBottom: 140,
           }}
         >
           {menuItems.map((item, index) => (
