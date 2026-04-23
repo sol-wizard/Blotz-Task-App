@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AvatarDTO } from "@/feature/settings/modals/avatar-dto";
 import { avatarKeys } from "@/shared/constants/query-key-factory";
 
-const AVATAR_LIST_URL = "https://stgblotztaskstag.blob.core.windows.net/avatars/avatars.json";
+const AVATAR_LIST_URL = process.env.EXPO_PUBLIC_AVATAR_LIST_URL;
 
 type AvatarListDTO = {
   version: number;
@@ -38,6 +38,10 @@ function isAvatarListDTO(value: unknown): value is AvatarListDTO {
 }
 
 async function fetchAvatarList(): Promise<AvatarListDTO> {
+  if (!AVATAR_LIST_URL) {
+    throw new Error("Avatar list URL is not configured.");
+  }
+
   const response = await fetch(AVATAR_LIST_URL);
 
   if (!response.ok) {
@@ -55,7 +59,7 @@ async function fetchAvatarList(): Promise<AvatarListDTO> {
 
 export function useAvatarListQuery() {
   const avatarListQuery = useQuery<AvatarListDTO>({
-    queryKey: avatarKeys.list(),
+    queryKey: avatarKeys.all,
     queryFn: () => fetchAvatarList(),
   });
 

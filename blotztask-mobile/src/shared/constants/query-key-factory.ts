@@ -61,5 +61,4 @@ export const monthlyReviewKeys = {
 
 export const avatarKeys = {
   all: ["avatars"] as const,
-  list: () => [...avatarKeys.all, "list"] as const,
 };
