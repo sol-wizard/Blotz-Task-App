@@ -62,12 +62,12 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background py-4">
+    <SafeAreaView className="flex-1 bg-background pt-4">
       <Text className="text-center text-4xl font-balooExtraBold text-secondary pt-2">
         {t("title")}
       </Text>
 
-      <View className="px-8 mt-2 w-full items-center">
+      <View className="flex-1 min-h-0 px-8 mt-2 w-full items-center">
         <View>
           <Image
             source={avatarSource}
@@ -85,10 +85,11 @@ export default function SettingsScreen() {
           {userProfile?.displayName}
         </Text>
         <ScrollView
-          className="mt-8 w-full bg-white rounded-2xl"
+          className="mt-8 w-full flex-1 bg-white rounded-2xl"
           contentContainerStyle={{
             alignItems: "center",
-            paddingBottom: 140,
+            paddingBottom: 24,
+            flexGrow: 1,
           }}
         >
           {menuItems.map((item, index) => (
