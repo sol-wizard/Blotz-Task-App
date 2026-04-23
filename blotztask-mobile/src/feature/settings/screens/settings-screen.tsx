@@ -86,7 +86,10 @@ export default function SettingsScreen() {
         </Text>
         <ScrollView
           className="mt-8 w-full bg-white rounded-2xl"
-          contentContainerStyle={{ alignItems: "center" }}
+          contentContainerStyle={{
+            alignItems: "center",
+            paddingBottom: 180,
+          }}
         >
           {menuItems.map((item, index) => (
             <View key={item.key} className="w-11/12">
