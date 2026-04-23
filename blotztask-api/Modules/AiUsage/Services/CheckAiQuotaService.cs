@@ -1,5 +1,6 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.AiUsage.Exceptions;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -22,7 +23,7 @@ public class CheckAiQuotaService(BlotzTaskDbContext db, IMemoryCache cache) : IC
                 .FirstOrDefaultAsync(ct);
 
             if (subscription is null)
-                throw new InvalidOperationException($"No subscription found for user {userId}.");
+                throw new NotFoundException($"No subscription found for user {userId}.");
 
             monthlyTokenLimit = subscription.MonthlyTokenLimit;
             cache.Set($"quota:plan:{userId}", monthlyTokenLimit, TimeSpan.FromHours(1));
