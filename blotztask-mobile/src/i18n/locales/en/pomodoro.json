@@ -7,14 +7,19 @@
     "title": "Focus Mode",
     "duration": "Duration",
     "soundscapes": "Soundscapes",
-    "flow": "∞ flow"
+    "flow": "∞ flow",
+    "stretchTitle": "You've been at it for an hour!",
+    "stretchSubtitle": "Take a tiny stretch!",
+    "viewTask": "View my task",
+    "pause": "Pause",
+    "end": "End"
   },
   "soundscape": {
     "easyFocus": "Easy\nFocus",
     "deepWork": "Deep\nWork",
     "taskFlow": "Task\nFlow",
-    "calmVibes": "Calm\nVibes",
-    "cafeVibes": "Cafe\nVibes",
+    "calmMind": "Calm\nMind",
+    "cafeVibe": "Cafe\nVibe",
     "noSound": "No\nSound"
   }
 }

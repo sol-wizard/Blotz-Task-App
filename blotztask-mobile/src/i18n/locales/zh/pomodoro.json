@@ -7,14 +7,19 @@
     "title": "专注模式",
     "duration": "专注时长",
     "soundscapes": "声音",
-    "flow": "∞ 无限流"
+    "flow": "∞ 无限流",
+    "stretchTitle": "你已经专注一小时了！",
+    "stretchSubtitle": "起来活动一下吧！",
+    "viewTask": "查看任务",
+    "pause": "暂停",
+    "end": "结束"
   },
   "soundscape": {
     "easyFocus": "轻松\n专注",
     "deepWork": "深度\n工作",
     "taskFlow": "任务\n心流",
-    "calmVibes": "平静\n氛围",
-    "cafeVibes": "咖啡馆\n白噪音",
+    "calmMind": "平静\n氛围",
+    "cafeVibe": "咖啡馆\n白噪音",
     "noSound": "无\n声音"
   }
 }

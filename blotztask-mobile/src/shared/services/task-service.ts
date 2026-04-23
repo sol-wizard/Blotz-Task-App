@@ -4,7 +4,7 @@ import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
 import { apiClient } from "./api/client";
 
 import { DailyTaskIndicatorDTO } from "@/feature/calendar/models/daily-task-indicator-dto";
-import { MonthlyTaskIndicatorDTO } from "@/feature/calendar/models/monthly-task-indicator-dto";
+import { MonthlyTaskIndicatorDTO } from "@/feature/monthly-calendar/models/monthly-task-indicator-dto";
 import { startOfDay } from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
 
