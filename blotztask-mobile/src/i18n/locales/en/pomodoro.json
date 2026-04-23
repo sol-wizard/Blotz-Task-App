@@ -8,11 +8,20 @@
     "duration": "Duration",
     "soundscapes": "Soundscapes",
     "flow": "∞ flow",
-    "stretchTitle": "You've been at it for an hour!",
-    "stretchSubtitle": "Take a tiny stretch!",
+    "defaultTitle": "Time to Focus!",
+    "defaultSubtitle": "Keep Going!",
     "viewTask": "View my task",
+    "resume": "Resume",
     "pause": "Pause",
-    "end": "End"
+    "end": "End",
+    "milestoneTitle": "You have been focused for {{value}} {{unit}}!",
+    "milestoneSubtitle": "Take a tiny stretch!",
+    "unit": {
+      "minute_one": "minute",
+      "minute_other": "minutes",
+      "hour_one": "hour",
+      "hour_other": "hours"
+    }
   },
   "soundscape": {
     "easyFocus": "Easy\nFocus",
