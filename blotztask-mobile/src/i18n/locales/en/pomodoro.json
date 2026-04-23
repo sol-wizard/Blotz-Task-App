@@ -7,7 +7,12 @@
     "title": "Focus Mode",
     "duration": "Duration",
     "soundscapes": "Soundscapes",
-    "flow": "∞ flow"
+    "flow": "∞ flow",
+    "stretchTitle": "You've been at it for an hour!",
+    "stretchSubtitle": "Take a tiny stretch!",
+    "viewTask": "View my task",
+    "pause": "Pause",
+    "end": "End"
   },
   "soundscape": {
     "easyFocus": "Easy\nFocus",
