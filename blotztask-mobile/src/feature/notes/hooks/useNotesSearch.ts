@@ -5,7 +5,7 @@ import { searchNotes } from "../services/notes-service";
 
 export const useNotesSearch = ({
   searchQuery,
-  debouncedMs = 300,
+  debouncedMs = 400,
 }: {
   searchQuery: string;
   debouncedMs?: number;

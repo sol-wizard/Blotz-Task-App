@@ -82,8 +82,6 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     if (task.alertTime && new Date(task.alertTime) > new Date()) {
       await cancelNotification({ notificationId: task.notificationId });
     }
-
-    swipeRef.current?.close();
   };
 
   const handleOpenFocus = () => {
