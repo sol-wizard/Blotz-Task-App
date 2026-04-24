@@ -51,6 +51,7 @@ const useDdlMutation = () => {
         type: "warning",
         text1: t("success.removed"),
       });
+      console.log(`[Mutation Success] task ${taskId} is removed from ddl`);
     },
     onError: () => {
       Toast.show({
@@ -84,6 +85,9 @@ const useDdlMutation = () => {
         type: "error",
         text1: t("errors.mark_as_done"),
       });
+    },
+    onSuccess: (_data, taskId) => {
+      console.log(`[Mutation Success] task ${taskId} is done`);
     },
     onSettled: () => {
       invalidateAll();
