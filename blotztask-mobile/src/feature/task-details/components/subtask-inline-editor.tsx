@@ -11,8 +11,6 @@ type SubtaskInlineEditorProps = {
   selectedHours: number;
   selectedMinutes: number;
   onTitleChange: (text: string) => void;
-  onHoursChange: (hour: number) => void;
-  onMinutesChange: (minute: number) => void;
   onDurationClose: (duration: string) => void;
 };
 
@@ -22,16 +20,19 @@ const PICKER_HEIGHT = 84;
 export default function SubtaskInlineEditor({
   titleValue,
   localDuration,
-  selectedHours,
-  selectedMinutes,
   onTitleChange,
-  onHoursChange,
-  onMinutesChange,
   onDurationClose,
 }: SubtaskInlineEditorProps) {
   const durationTriggerRef = useRef<View>(null);
   const [pickerPosition, setPickerPosition] = useState({ x: 0, y: 0 });
   const [isDurationPickerVisible, setIsDurationPickerVisible] = useState(false);
+
+  const [h = "0", m = "0"] = (localDuration ?? "00:00:00").split(":");
+  const pickerHours = Number(h) || 0;
+  const pickerMinutes = Number(m) || 0;
+
+  const [selectedHours, setSelectedHours] = useState(pickerHours);
+  const [selectedMinutes, setSelectedMinutes] = useState(pickerMinutes);
 
   const openDurationPicker = () => {
     durationTriggerRef.current?.measureInWindow((x, y, width, height) => {
@@ -83,8 +84,8 @@ export default function SubtaskInlineEditor({
         position={pickerPosition}
         selectedHours={selectedHours}
         selectedMinutes={selectedMinutes}
-        onHoursChange={onHoursChange}
-        onMinutesChange={onMinutesChange}
+        onHoursChange={setSelectedHours}
+        onMinutesChange={setSelectedMinutes}
         onClose={closePicker}
       />
     </>
