@@ -37,9 +37,8 @@ export default function SubtaskItem({
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const [titleValue, setTitleValue] = useState(subtask.title);
   const [localDuration, setLocalDuration] = useState(subtask.duration ?? "00:00:00");
-  const [h = "0", m = "0"] = localDuration.split(":");
-  const [selectedHours, setSelectedHours] = useState(Number(h) || 0);
-  const [selectedMinutes, setSelectedMinutes] = useState(Number(m) || 0);
+  const [selectedHours, setSelectedHours] = useState(0);
+  const [selectedMinutes, setSelectedMinutes] = useState(0);
 
   // Derived values
   const isChecked = subtask?.isDone;
@@ -69,6 +68,9 @@ export default function SubtaskItem({
       const duration = subtask.duration ?? "00:00:00";
       setTitleValue(subtask.title);
       setLocalDuration(duration);
+      const [h = "0", m = "0"] = duration.split(":");
+      setSelectedHours(Number(h) || 0);
+      setSelectedMinutes(Number(m) || 0);
     }
     setIsInlineEditing((prev) => !prev);
   };

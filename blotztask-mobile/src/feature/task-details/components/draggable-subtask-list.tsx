@@ -35,15 +35,8 @@ export const DraggableSubtaskList = ({
     return (
       <ScaleDecorator>
         <SubtaskItem
-          item={{
-            id: item.subTaskId,
-            title: item.title,
-            duration: item.duration,
-            isDone: item.isDone,
-            order: item.order,
-          }}
+          item={item}
           onToggle={(id) => onToggle?.(id)}
-          color={color}
           isEditMode={isEditMode}
           onDelete={onDelete}
           drag={drag}
@@ -66,7 +59,6 @@ export const DraggableSubtaskList = ({
         autoscrollSpeed={100}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 100 }}
       />
     </View>
   );
