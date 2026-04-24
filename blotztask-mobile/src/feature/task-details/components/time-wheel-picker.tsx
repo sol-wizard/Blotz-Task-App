@@ -16,15 +16,14 @@ type DurationPickerModalProps = {
 const PICKER_WIDTH = 120;
 const PICKER_HEIGHT = 84;
 
-const hourItems: PickerItem<number>[] = Array.from({ length: 24 }, (_, index) => ({
-  value: index,
-  label: index.toString().padStart(2, "0"),
-}));
+const createPickerItems = (length: number): PickerItem<number>[] =>
+  Array.from({ length }, (_, value) => ({
+    value,
+    label: value.toString().padStart(2, "0"),
+  }));
 
-const minuteItems: PickerItem<number>[] = Array.from({ length: 60 }, (_, index) => ({
-  value: index,
-  label: index.toString().padStart(2, "0"),
-}));
+const hourItems = createPickerItems(24);
+const minuteItems = createPickerItems(60);
 
 export default function DurationPickerModal({
   isVisible,
