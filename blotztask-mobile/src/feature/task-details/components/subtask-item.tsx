@@ -9,18 +9,10 @@ import { useState } from "react";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import SubtaskInlineEditor from "./subtask-inline-editor";
 import { useTranslation } from "react-i18next";
-
-// Types
-type SubtaskItemData = {
-  id: number;
-  title: string;
-  duration?: string;
-  isDone: boolean;
-  order: number;
-};
+import { SubtaskDTO } from "../models/subtask-dto";
 
 type SubtaskItemProps = {
-  item: SubtaskItemData;
+  item: SubtaskDTO;
   onToggle: (id: number) => void;
   isEditMode?: boolean;
   onDelete?: (id: number) => void;
@@ -55,17 +47,17 @@ export default function SubtaskItem({
 
   // Functions
   const handleToggle = () => {
-    onToggle(subtask.id);
+    onToggle(subtask.subTaskId);
   };
 
   const handleDelete = () => {
-    onDelete?.(subtask.id);
+    onDelete?.(subtask.subTaskId);
   };
 
   const handleInlineEditToggle = () => {
     if (isInlineEditing) {
       updateSubtask?.({
-        subTaskId: subtask.id,
+        subTaskId: subtask.subTaskId,
         parentTaskId: parentTaskId,
         title: titleValue,
         duration: localDuration,
@@ -133,7 +125,7 @@ export default function SubtaskItem({
                   onMinutesChange={setSelectedMinutes}
                   onDurationClose={(duration) => {
                     setLocalDuration(duration);
-                    onDurationChange?.(subtask.id, duration);
+                    onDurationChange?.(subtask.subTaskId, duration);
                   }}
                 />
               ) : (
