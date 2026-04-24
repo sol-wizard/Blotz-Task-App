@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import DetailsView from "@/feature/task-details/components/details-view";
 import SubtasksView from "@/feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -24,6 +24,7 @@ export default function TaskDetailsScreen() {
   const { selectedTask, isLoading } = useTaskById({ taskId });
   const { updateTask, isUpdating } = useTaskMutations();
   const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
+  const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(0)).current;
   const { t } = useTranslation();
 
@@ -31,7 +32,7 @@ export default function TaskDetailsScreen() {
   useEffect(() => {
     const show = Keyboard.addListener("keyboardWillShow", (e) => {
       Animated.timing(translateY, {
-        toValue: -(e.endCoordinates.height * 0.4),
+        toValue: -(e.endCoordinates.height - insets.bottom),
         duration: e.duration,
         useNativeDriver: true,
       }).start();

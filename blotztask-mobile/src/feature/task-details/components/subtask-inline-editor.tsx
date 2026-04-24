@@ -68,6 +68,8 @@ export default function SubtaskInlineEditor({
           value={titleValue}
           onChangeText={onTitleChange}
           placeholder="Subtask Title"
+          returnKeyType="done"
+          blurOnSubmit={true}
           multiline
           className="text-3 font-bold py-2 pr-1 shrink text-top"
           style={{
