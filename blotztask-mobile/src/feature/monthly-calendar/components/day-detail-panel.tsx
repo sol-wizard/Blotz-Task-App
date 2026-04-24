@@ -1,4 +1,5 @@
-import { View, Text, ScrollView, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, ActivityIndicator } from "react-native";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet"; 
 import { format, parseISO } from "date-fns";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import { theme } from "@/shared/constants/theme";
@@ -12,10 +13,10 @@ export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) =
       {isLoading ? (
         <ActivityIndicator size="large" color={theme.colors.onSurface} className="mt-10" />
       ) : (
-        <ScrollView
+        <BottomSheetScrollView
           showsVerticalScrollIndicator={false}
           className="flex-1"
-          contentContainerStyle={{ paddingBottom: Dimensions.get("window").height * 0.4 }}
+          contentContainerStyle={{ paddingBottom: 40 }}
         >
           {selectedDayTasks.length > 0 ? (
             selectedDayTasks.map((task, index) => {
@@ -70,7 +71,7 @@ export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) =
               {i18n.t("calendar:emptyState.all.title")}
             </Text>
           )}
-        </ScrollView>
+        </BottomSheetScrollView>
       )}
     </View>
   );
