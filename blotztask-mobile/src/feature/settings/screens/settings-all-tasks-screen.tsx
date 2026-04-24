@@ -3,7 +3,7 @@ import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { ActivityIndicator, FlatList, View, Text, Pressable } from "react-native";
 import { TaskStatusRow } from "@/shared/components/task-status-row";
 
-import { TaskListPlaceholder } from "@/feature/calendar/components/tasklist-placeholder";
+import { EmptyTaskListPlaceholder } from "@/feature/calendar/components/empty-tasklist-placeholder";
 import { getAllTasks } from "@/shared/services/task-service";
 import { TaskStatusType } from "@/feature/calendar/models/task-status-type";
 import { router } from "expo-router";
@@ -89,7 +89,7 @@ export default function SettingsAllTasksScreen() {
           contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 8, gap: 12 }}
         />
       ) : (
-        <TaskListPlaceholder selectedStatus={selectedStatus} />
+        <EmptyTaskListPlaceholder selectedStatus={selectedStatus} />
       )}
     </SafeAreaView>
   );

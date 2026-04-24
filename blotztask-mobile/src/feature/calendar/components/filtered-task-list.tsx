@@ -1,6 +1,6 @@
-import { FlatList } from "react-native";
+import { FlatList, View, Text, Pressable } from "react-native";
 import { TaskStatusRow } from "../../../shared/components/task-status-row";
-import { TaskListPlaceholder } from "./tasklist-placeholder";
+import { EmptyTaskListPlaceholder } from "./empty-tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useState } from "react";
@@ -11,6 +11,10 @@ import LoadingScreen from "@/shared/components/loading-screen";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import TaskCard from "./task-card";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { ErrorBoundary } from "react-error-boundary";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { theme } from "@/shared/constants/theme";
 
 export const FilteredTaskList = ({
   selectedDay,
@@ -19,10 +23,28 @@ export const FilteredTaskList = ({
   selectedDay: Date;
   onOpenMode: () => void;
 }) => {
+  return (
+    <Animated.View className="flex-1" layout={MotionAnimations.layout}>
+      <QueryErrorResetBoundary>
+        {({ reset }) => (
+          <ErrorBoundary onReset={reset} FallbackComponent={FailedToLoadTask}>
+            <TaskListWithData selectedDay={selectedDay} onOpenMode={onOpenMode} />
+          </ErrorBoundary>
+        )}
+      </QueryErrorResetBoundary>
+    </Animated.View>
+  );
+};
+
+function TaskListWithData({
+  selectedDay,
+  onOpenMode,
+}: {
+  selectedDay: Date;
+  onOpenMode: () => void;
+}) {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
-
   const { deleteTask, isDeleting } = useTaskMutations();
-
   const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
 
   const filteredSelectedDayTasks = filterSelectedTask({
@@ -54,7 +76,7 @@ export const FilteredTaskList = ({
   );
 
   return (
-    <Animated.View className="flex-1" layout={MotionAnimations.layout}>
+    <>
       <Animated.View layout={MotionAnimations.layout}>
         <TaskStatusRow
           allTaskCount={findStatusCount("All")}
@@ -81,8 +103,26 @@ export const FilteredTaskList = ({
           }
         />
       ) : (
-        <TaskListPlaceholder selectedStatus={selectedStatus} />
+        <EmptyTaskListPlaceholder selectedStatus={selectedStatus} />
       )}
-    </Animated.View>
+    </>
   );
-};
+}
+
+function FailedToLoadTask({ resetErrorBoundary }: { resetErrorBoundary: () => void }) {
+  return (
+    <View className="flex-1 items-center justify-center px-8 gap-3">
+      <MaterialCommunityIcons name="alert-circle-outline" size={32} color={theme.colors.warning} />
+      <Text className="font-balooBold text-lg text-center" style={{ color: theme.colors.warning }}>
+        Failed to load tasks
+      </Text>
+      <Pressable
+        onPress={resetErrorBoundary}
+        className="px-6 py-2 rounded-xl bg-background"
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Text className="font-baloo text-sm text-primary">Retry</Text>
+      </Pressable>
+    </View>
+  );
+}

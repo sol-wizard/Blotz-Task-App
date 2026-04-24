@@ -4,13 +4,13 @@ import LottieView from "lottie-react-native";
 import { ASSETS } from "@/shared/constants/assets";
 import { useTranslation } from "react-i18next";
 
-interface TaskListPlaceholderProps {
+interface EmptyTaskListPlaceholderProps {
   selectedStatus: string;
 }
 
-export function TaskListPlaceholder({ selectedStatus }: TaskListPlaceholderProps) {
+export function EmptyTaskListPlaceholder({ selectedStatus }: EmptyTaskListPlaceholderProps) {
   const { t } = useTranslation("calendar");
-  
+
   // Map status to translation keys
   const getEmptyStateKey = (status: string): string => {
     switch (status) {
@@ -26,7 +26,7 @@ export function TaskListPlaceholder({ selectedStatus }: TaskListPlaceholderProps
   };
 
   const stateKey = getEmptyStateKey(selectedStatus);
-  
+
   return (
     <View className="flex-1 items-center justify-center px-4">
       <LottieView

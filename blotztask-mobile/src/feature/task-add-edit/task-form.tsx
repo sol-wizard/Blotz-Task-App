@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useForm } from "react-hook-form";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { ErrorBoundary } from "react-error-boundary";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { FormTextInput } from "@/shared/components/form-text-input";
-import { LabelSelect } from "./components/label-select";
+import { FailedToLoadLabel, LabelSelectWithData } from "./components/label-select";
 import { FormDivider } from "../../shared/components/form-divider";
 import { ReminderTab } from "./components/reminder-tab";
 import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
-import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
 import { AlertSelect } from "./components/alert-select";
 import { DeadlineSection } from "./components/deadline-section";
@@ -30,6 +31,7 @@ import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { theme } from "@/shared/constants/theme";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type TaskFormProps =
   | {
@@ -51,8 +53,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const { t } = useTranslation("tasks");
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
-
-  const { labels = [], isLoading } = useAllLabels();
 
   const initialAlertTime = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
 
@@ -229,13 +229,13 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
         {/* Label Select */}
         <Animated.View className="mb-8" layout={MotionAnimations.layout}>
-          {isLoading ? (
-            <Text className="font-baloo text-lg text-primary mt-3">
-              {t("common:loading.categories")}
-            </Text>
-          ) : (
-            <LabelSelect control={control} labels={labels} />
-          )}
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary onReset={reset} FallbackComponent={FailedToLoadLabel}>
+                <LabelSelectWithData control={control} />
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
         </Animated.View>
       </ScrollView>
 

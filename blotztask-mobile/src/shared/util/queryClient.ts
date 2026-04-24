@@ -1,6 +1,7 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
 import Toast from "react-native-toast-message";
+import i18n from "@/i18n";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -46,22 +47,32 @@ export const queryClient = new QueryClient({
       refetchOnReconnect: true,
       refetchOnWindowFocus: true,
       networkMode: "online",
+      throwOnError: (error) => {
+        if (isAxiosError(error)) {
+          const status = error.response?.status;
+          return !status || status >= 500;
+        }
+        return true;
+      },
     },
     mutations: {
       retry: 0,
       networkMode: "online",
+      throwOnError: false,
     },
   },
 });
 
 function getErrorMessage(error: unknown): string {
+  const fallback = i18n.t("errors.somethingWentWrong");
+
   if (isAxiosError(error)) {
-    return error.response?.data?.message || "Something went wrong";
+    return error.response?.data?.message || fallback;
   }
 
   if (error instanceof Error) {
     return error.message;
   }
 
-  return "Something went wrong";
+  return fallback;
 }

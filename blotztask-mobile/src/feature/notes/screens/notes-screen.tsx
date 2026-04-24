@@ -136,7 +136,7 @@ export default function NotesScreen() {
       >
         <View className="flex-1">
           <NoteHeader searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-
+          {showLoading && <LoadingScreen />}
           {!showLoading && notesSearchResult.length === 0 ? (
             <View className="flex-1 items-center justify-center">
               <Text className="text-center text-black font-balooBold text-2xl">
@@ -206,8 +206,6 @@ export default function NotesScreen() {
             }}
             onSave={handleSave}
           />
-
-          {showLoading && <LoadingScreen />}
         </View>
       </TouchableWithoutFeedback>
 

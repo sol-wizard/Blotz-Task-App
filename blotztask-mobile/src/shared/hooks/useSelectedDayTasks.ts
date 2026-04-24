@@ -10,6 +10,7 @@ const useSelectedDayTasks = ({ selectedDay }: { selectedDay: Date }) => {
   const { data: selectedDayTasks = [], isLoading } = useQuery({
     queryKey: taskKeys.selectedDay(dayKey),
     queryFn: () => fetchTasksForDate(selectedDay, true),
+    throwOnError: true,
   });
 
   return {

@@ -68,6 +68,7 @@
     "posthog-react-native-session-replay": "^1.2.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "react-error-boundary": "^6.1.1",
     "react-hook-form": "^7.60.0",
     "react-i18next": "^16.5.1",
     "react-native": "0.83.4",

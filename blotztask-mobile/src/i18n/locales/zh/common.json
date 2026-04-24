@@ -32,6 +32,9 @@
       "message": "我们需要访问您的麦克风以进行语音输入。"
     }
   },
+  "errors": {
+    "somethingWentWrong": "出了点问题"
+  },
   "update": {
     "title": "新版本来啦！",
     "message": "我们悄悄做了好多优化，快来体验全新的 Blotz 吧～",
