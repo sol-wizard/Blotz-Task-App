@@ -22,7 +22,6 @@ type SubtaskItemData = {
 type SubtaskItemProps = {
   item: SubtaskItemData;
   onToggle: (id: number) => void;
-  color?: string;
   isEditMode?: boolean;
   onDelete?: (id: number) => void;
   onDurationChange?: (id: number, duration: string) => void;
