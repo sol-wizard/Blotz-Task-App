@@ -1,13 +1,15 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { PomodoroFocus } from "../components/pomodoro-focus";
 import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
-import { useActiveSession } from "../hooks/useActiveSession";
+import { pauseOtherSessions, useActiveSession } from "../hooks/useActiveSession";
 
 export default function PomodoroFocusScreen() {
   const { data: pomodoroSetting } = usePomodoroSettingsQuery();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
 
-  const { initialElapsed, initialPaused, saveSession, clearSession } = useActiveSession(taskId);
+  const { initialElapsed, initialPaused, saveSession, clearSession } = useActiveSession(
+    taskId ?? "",
+  );
 
   if (!pomodoroSetting) return null;
 
@@ -21,6 +23,12 @@ export default function PomodoroFocusScreen() {
     router.back();
   };
 
+  const handleTogglePause = (currentIsPaused: boolean, currentElapsed: number) => {
+    if (currentIsPaused && taskId) {
+      pauseOtherSessions(taskId);
+    }
+  };
+
   return (
     <PomodoroFocus
       onMinimize={handleMinimize}
@@ -30,6 +38,7 @@ export default function PomodoroFocusScreen() {
       selectedCountdown={pomodoroSetting.isCountdown}
       initialElapsedSeconds={initialElapsed}
       initialIsPaused={initialPaused}
+      onTogglePauseInteract={handleTogglePause}
     />
   );
 }

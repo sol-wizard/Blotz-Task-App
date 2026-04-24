@@ -113,7 +113,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const handleOpenFocus = () => {
     if (!task.id) return;
 
-    pauseOtherSessions(task.id.toString());
+    if (!hasActiveSession) {
+      pauseOtherSessions(task.id.toString());
+    }
+
     router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
     swipeRef.current?.close();
   };

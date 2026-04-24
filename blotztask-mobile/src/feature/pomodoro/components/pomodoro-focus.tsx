@@ -15,6 +15,7 @@ interface PomodoroFocusProps {
   selectedCountdown: boolean;
   initialElapsedSeconds: number;
   initialIsPaused: boolean;
+  onTogglePauseInteract?: (isPaused: boolean, elapsedSeconds: number) => void;
 }
 
 export const PomodoroFocus = ({
@@ -25,6 +26,7 @@ export const PomodoroFocus = ({
   selectedCountdown,
   initialElapsedSeconds,
   initialIsPaused,
+  onTogglePauseInteract,
 }: PomodoroFocusProps) => {
   const { t } = useTranslation("pomodoro");
 
@@ -36,6 +38,13 @@ export const PomodoroFocus = ({
   );
 
   const milestoneKey = getMilestoneKey(elapsedSeconds);
+
+  const handlePlayPauseClick = () => {
+    if (onTogglePauseInteract) {
+      onTogglePauseInteract(isPaused, elapsedSeconds);
+    }
+    togglePause();
+  };
 
   return (
     <LinearGradient colors={["#C2E49F", "#EEFBE1"]} style={{ flex: 1 }}>
@@ -109,7 +118,7 @@ export const PomodoroFocus = ({
             </Text>
             <Pressable
               className="h-20 w-20 flex-row items-center justify-center rounded-full bg-[#00000033] gap-3"
-              onPress={togglePause}
+              onPress={handlePlayPauseClick}
             >
               {isPaused ? (
                 <Ionicons name="play" size={48} color="#E7F7D7" className="ml-1" />

@@ -14,7 +14,7 @@ interface ActiveSessionData {
 }
 
 export function pauseOtherSessions(currentTaskId: string) {
-  // 拿到所有 activeSession 前缀的缓存
+  // 获取所有以 activeSession 开头的缓存
   const allSessions = queryClient.getQueriesData<ActiveSessionData | null>({
     queryKey: pomodoroKeys.activeSessions(),
   });
@@ -24,17 +24,18 @@ export function pauseOtherSessions(currentTaskId: string) {
   allSessions.forEach(([queryKey, sessionData]) => {
     if (!sessionData) return;
 
-    // 提取出对应的 taskId
-    const taskId = queryKey[queryKey.length - 1] as string;
+    // 🌟 核心检查：确保从 queryKey 中正确提取了 taskId
+    // 我们的 Key 结构是 ["pomodoro", "activeSession", taskId]
+    const taskId = String(queryKey[queryKey.length - 1]);
 
-    // 如果是别人的任务，并且还在运行中，强制结算并暂停！
-    if (taskId !== currentTaskId && !sessionData.isPaused) {
+    // 如果 ID 不匹配（是别人）且没暂停，才执行暂停
+    if (taskId !== String(currentTaskId) && !sessionData.isPaused) {
       const secondsPassed = Math.floor((now - sessionData.timestamp) / 1000);
 
       queryClient.setQueryData(queryKey, {
         ...sessionData,
         elapsedSeconds: sessionData.elapsedSeconds + secondsPassed,
-        isPaused: true, // 强制暂停
+        isPaused: true, // 强制暂停别人
         timestamp: now,
       });
     }
@@ -44,9 +45,9 @@ export function pauseOtherSessions(currentTaskId: string) {
 export function useActiveSession(taskId: string) {
   const queryKey = pomodoroKeys.activeSession(taskId);
 
-  const { data: activeSession } = useQuery<ActiveSessionData>({
+  const { data: activeSession } = useQuery<ActiveSessionData | null>({
     queryKey,
-    queryFn: () => null as any,
+    queryFn: () => Promise.resolve(null),
     staleTime: Infinity,
   });
 
