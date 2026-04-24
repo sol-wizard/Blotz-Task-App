@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { startTransition, useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { CalendarProvider, WeekCalendar } from "react-native-calendars";
 import { theme } from "@/shared/constants/theme";
@@ -31,7 +31,9 @@ export default function CalendarScreen() {
   const markedDates = isLoading ? {} : getMarkedDates({ weeklyTaskAvailability });
 
   const handleDayPress = useCallback((dateString: string) => {
-    setSelectedDay(new Date(dateString));
+    startTransition(() => {
+      setSelectedDay(new Date(dateString));
+    });
   }, []);
 
   const renderDay = useCallback(
@@ -47,7 +49,9 @@ export default function CalendarScreen() {
     const parsedDate = new Date(params.selectedDate);
     if (Number.isNaN(parsedDate.getTime())) return;
 
-    setSelectedDay(parsedDate);
+    startTransition(() => {
+      setSelectedDay(parsedDate);
+    });
     setCalendarKey((k) => k + 1);
   }, [params.selectedDate]);
 
@@ -66,7 +70,9 @@ export default function CalendarScreen() {
         key={calendarKey}
         date={format(selectedDay, "yyyy-MM-dd")}
         onDateChanged={(date: string) => {
-          setSelectedDay(new Date(date));
+          startTransition(() => {
+            setSelectedDay(new Date(date));
+          });
         }}
         showTodayButton={false}
       >

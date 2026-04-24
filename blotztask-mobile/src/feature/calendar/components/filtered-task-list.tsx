@@ -3,7 +3,7 @@ import { TaskStatusRow } from "../../../shared/components/task-status-row";
 import { EmptyTaskListPlaceholder } from "./empty-tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { TaskStatusType } from "../models/task-status-type";
 import { filterSelectedTask } from "../util/task-counts";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
@@ -35,7 +35,9 @@ export const FilteredTaskList = ({
               />
             )}
           >
-            <TaskListWithData selectedDay={selectedDay} onOpenMode={onOpenMode} />
+            <Suspense fallback={<LoadingScreen />}>
+              <TaskListWithData selectedDay={selectedDay} onOpenMode={onOpenMode} />
+            </Suspense>
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
@@ -52,10 +54,10 @@ function TaskListWithData({
 }) {
   const [selectedStatus, setSelectedStatus] = useState<TaskStatusType>("All");
   const { deleteTask, isDeleting } = useTaskMutations();
-  const { selectedDayTasks, isLoading } = useSelectedDayTasks({ selectedDay });
+  const { selectedDayTasks } = useSelectedDayTasks({ selectedDay });
 
   const filteredSelectedDayTasks = filterSelectedTask({
-    selectedDayTasks: selectedDayTasks ?? [],
+    selectedDayTasks,
   });
   const safeFilteredTasks = Array.isArray(filteredSelectedDayTasks) ? filteredSelectedDayTasks : [];
   const tasksOfSelectedStatus = safeFilteredTasks.find(
@@ -97,9 +99,7 @@ function TaskListWithData({
         />
       </Animated.View>
 
-      {isLoading ? (
-        <LoadingScreen />
-      ) : tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
+      {tasksOfSelectedStatus && tasksOfSelectedStatus.length > 0 ? (
         <FlatList
           className="flex-1"
           data={tasksOfSelectedStatus}
