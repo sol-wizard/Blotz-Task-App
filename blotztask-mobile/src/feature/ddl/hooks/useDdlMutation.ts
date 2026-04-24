@@ -48,7 +48,7 @@ const useDdlMutation = () => {
     onSuccess: () => {
       invalidateAll();
       Toast.show({
-        type: "success",
+        type: "warning",
         text1: t("success.removed"),
       });
     },
