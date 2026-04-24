@@ -19,7 +19,6 @@ export const DraggableSubtaskList = ({
   isEditMode = false,
   onDelete,
   onToggle,
-  color,
   parentTaskId,
   ListHeaderComponent,
 }: DraggableSubtaskListProps) => {
