@@ -8,8 +8,6 @@ import DurationPickerModal from "./time-wheel-picker";
 type SubtaskInlineEditorProps = {
   titleValue: string;
   localDuration?: string;
-  selectedHours: number;
-  selectedMinutes: number;
   onTitleChange: (text: string) => void;
   onDurationClose: (duration: string) => void;
 };
