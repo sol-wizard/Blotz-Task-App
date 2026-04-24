@@ -82,6 +82,7 @@ export default function ProtectedLayout() {
         }}
       />
       <Stack.Screen name="monthly-calendar" options={{ headerShown: false }} />
+      <Stack.Screen name="pomodoro-focus" options={{ headerShown: false }} />
     </Stack>
   );
 }

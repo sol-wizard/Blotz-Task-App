@@ -20,12 +20,8 @@ export const updateUserProfile = async (userProfile: UpdateUserProfileDTO): Prom
 
 export const fetchUserPreferences = async (): Promise<UserPreferencesDTO> => {
   const url = `/user-preferences`;
-  try {
-    return await apiClient.get(url);
-  } catch (err: unknown) {
-    console.error("Fetch user preferences failed:", err);
-    throw new Error("Failed to load user preferences");
-  }
+
+  return await apiClient.get(url);
 };
 
 export const updateUserPreferences = async (preferences: UserPreferencesDTO): Promise<string> => {

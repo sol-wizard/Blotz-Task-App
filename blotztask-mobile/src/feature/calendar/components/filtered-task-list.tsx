@@ -1,4 +1,4 @@
-import { FlatList, View } from "react-native";
+import { FlatList } from "react-native";
 import { TaskStatusRow } from "../../../shared/components/task-status-row";
 import { TaskListPlaceholder } from "./tasklist-placeholder";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
@@ -37,7 +37,12 @@ export const FilteredTaskList = ({
   };
 
   const renderTask = ({ item }: { item: TaskDetailDTO }) => (
-    <View className="shadow shadow-gray-200">
+    <Animated.View
+      entering={MotionAnimations.upEntering}
+      exiting={MotionAnimations.leftExiting}
+      layout={MotionAnimations.layout}
+      className="shadow shadow-gray-200"
+    >
       <TaskCard
         task={item}
         deleteTask={deleteTask}
@@ -45,7 +50,7 @@ export const FilteredTaskList = ({
         selectedDay={selectedDay}
         onOpenMode={onOpenMode}
       />
-    </View>
+    </Animated.View>
   );
 
   return (

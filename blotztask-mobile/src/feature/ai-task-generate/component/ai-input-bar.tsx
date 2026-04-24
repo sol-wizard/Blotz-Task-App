@@ -4,31 +4,42 @@ import LottieView from "lottie-react-native";
 import { View, Pressable, TextInput, Platform } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRef } from "react";
 
 type Props = {
+  // Text input
   textInput: string;
-  isListening: boolean;
-  hasResults: boolean;
   onChangeText: (text: string) => void;
   onSubmitText: () => void;
+
+  // Mic / recording
+  isListening: boolean;
+  setIsListening: (listening: boolean) => void;
+  setIsHoldHintVisible: (visible: boolean) => void;
   onMicPressIn: () => void;
   onMicPressOut: () => void;
+
+  // Results
+  hasResults: boolean;
   onConfirm: () => void;
 };
 
 export function AiInputBar({
   textInput,
   isListening,
+  setIsListening,
   hasResults,
   onChangeText,
   onSubmitText,
   onMicPressIn,
   onMicPressOut,
   onConfirm,
+  setIsHoldHintVisible,
 }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
   const { bottom } = useSafeAreaInsets();
   const bottomPadding = Platform.OS === "android" ? bottom + 16 : 32;
+  const longPressTriggered = useRef(false);
 
   return (
     <View
@@ -37,8 +48,23 @@ export function AiInputBar({
     >
       {/* Microphone hold-to-record */}
       <Pressable
-        onLongPress={onMicPressIn}
-        onPressOut={onMicPressOut}
+        onPressIn={() => {
+          longPressTriggered.current = false;
+          setIsHoldHintVisible(false);
+          onMicPressIn();
+        }}
+        onPressOut={() => {
+          if (!longPressTriggered.current) {
+            setIsHoldHintVisible(true);
+            setIsListening(false);
+          } else {
+            onMicPressOut();
+          }
+        }}
+        onLongPress={() => {
+          longPressTriggered.current = true;
+        }}
+        delayLongPress={1000}
         accessibilityLabel="Hold to record"
         className="w-14 h-14 rounded-full items-center justify-center"
         style={{

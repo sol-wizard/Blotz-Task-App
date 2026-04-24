@@ -1,4 +1,4 @@
-import { PomodoroSoundscapeKey } from "@/feature/calendar/models/pomodoro-setting";
+import { PomodoroSoundscapeKey } from "@/feature/pomodoro/utils/pomodoro-setting";
 
 export interface PomodoroDTO {
   timing: number;

@@ -82,15 +82,21 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     if (task.alertTime && new Date(task.alertTime) > new Date()) {
       await cancelNotification({ notificationId: task.notificationId });
     }
+  };
 
-    swipeRef.current?.close();
+  const handleOpenFocus = () => {
+    router.push("/(protected)/pomodoro-focus");
   };
 
   return (
     <ReanimatedSwipeable
       ref={swipeRef}
       renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
-        <TaskCardLeftActions progress={leftActionsProgress} onMode={onOpenMode} />
+        <TaskCardLeftActions
+          progress={leftActionsProgress}
+          onMode={onOpenMode}
+          onFocus={handleOpenFocus}
+        />
       )}
       leftThreshold={12}
       overshootLeft={false}
