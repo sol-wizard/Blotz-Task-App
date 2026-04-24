@@ -128,7 +128,7 @@ export default function TaskDetailsScreen() {
           </View>
 
           <View className="flex-row items-start justify-center mb-4">
-            <Text className="flex-1 font-balooBold text-4xl leading-normal">
+            <Text className="flex-1 font-balooBold text-3xl leading-normal">
               {selectedTask.title}
             </Text>
           </View>
