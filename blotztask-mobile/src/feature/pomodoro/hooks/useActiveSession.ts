@@ -13,6 +13,34 @@ interface ActiveSessionData {
   timestamp: number;
 }
 
+export function pauseOtherSessions(currentTaskId: string) {
+  // 拿到所有 activeSession 前缀的缓存
+  const allSessions = queryClient.getQueriesData<ActiveSessionData | null>({
+    queryKey: pomodoroKeys.activeSessions(),
+  });
+
+  const now = Date.now();
+
+  allSessions.forEach(([queryKey, sessionData]) => {
+    if (!sessionData) return;
+
+    // 提取出对应的 taskId
+    const taskId = queryKey[queryKey.length - 1] as string;
+
+    // 如果是别人的任务，并且还在运行中，强制结算并暂停！
+    if (taskId !== currentTaskId && !sessionData.isPaused) {
+      const secondsPassed = Math.floor((now - sessionData.timestamp) / 1000);
+
+      queryClient.setQueryData(queryKey, {
+        ...sessionData,
+        elapsedSeconds: sessionData.elapsedSeconds + secondsPassed,
+        isPaused: true, // 强制暂停
+        timestamp: now,
+      });
+    }
+  });
+}
+
 export function useActiveSession(taskId: string) {
   const queryKey = pomodoroKeys.activeSession(taskId);
 
@@ -22,6 +50,7 @@ export function useActiveSession(taskId: string) {
     staleTime: Infinity,
   });
 
+  const hasActiveSession = !!activeSession;
   let initialElapsed = 0;
   let initialPaused = false;
 
@@ -52,5 +81,6 @@ export function useActiveSession(taskId: string) {
     initialPaused,
     saveSession,
     clearSession,
+    hasActiveSession,
   };
 }
