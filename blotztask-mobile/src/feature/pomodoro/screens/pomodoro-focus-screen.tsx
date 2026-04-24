@@ -1,7 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { PomodoroFocus } from "../components/pomodoro-focus";
 import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
-import { queryClient } from "@/shared/util/queryClient";
 import { useActiveSession } from "../hooks/useActiveSession";
 
 export default function PomodoroFocusScreen() {
