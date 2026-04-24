@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { View, Text, Pressable, Alert, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -91,20 +91,6 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
   const endTimeDisplay = task.dueAt ? format(new Date(task.dueAt), "dd/MM/yy") : "—";
   const isPinned = task.isPinned;
 
-  const handleDelete = () => {
-    Alert.alert(t("remove_from_ddl.title"), t("remove_from_ddl.message"), [
-      { text: t("remove_from_ddl.cancel"), style: "cancel" },
-      {
-        text: t("remove_from_ddl.confirm"),
-        style: "destructive",
-        onPress: () => {
-          deleteDeadlineTask(task.id, {
-            onSuccess: () => swipeRef.current?.close(),
-          });
-        },
-      },
-    ]);
-  };
 
   const renderRightActions = (progress: SharedValue<number>) => {
     return (
@@ -118,7 +104,11 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
             },
           )
         }
-        onDelete={handleDelete}
+        onDelete={() => {
+          deleteDeadlineTask(task.id, {
+            onSuccess: () => swipeRef.current?.close(),
+          });
+        }}
         isPinned={isPinned}
         isUpdatingPin={isUpdatingPin}
         isDeletingTask={isDeletingDeadlineTask}

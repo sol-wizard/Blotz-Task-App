@@ -1,15 +1,12 @@
 {
   "title": "截止日期",
   "days": "天",
-  "remove_from_ddl": {
-    "title": "移出截止日期列表",
-    "message": "把任务移出截止日期列表，该任务仍会保留。确定要移除吗？",
-    "confirm": "确定",
-    "cancel": "取消"
-  },
   "errors": {
     "update_pin": "更新置顶状态失败",
     "delete_task": "从截止日期列表中移除任务失败",
     "mark_as_done": "更新任务完成状态失败"
+  },
+  "success": {
+    "removed": "任务已从截止日期列表中移除"
   }
 }

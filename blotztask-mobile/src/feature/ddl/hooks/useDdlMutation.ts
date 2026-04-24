@@ -15,19 +15,8 @@ const useDdlMutation = () => {
   };
 
   const updatePinMutation = useMutation({
-    mutationFn: async ({ taskId, isPinned }: { taskId: number; isPinned: boolean }) => {
-      // If we are pinning a task, find and unpin any other pinned task first
-      if (isPinned) {
-        const ddlTasks = queryClient.getQueryData<any[]>(ddlKeys.all);
-        if (ddlTasks) {
-          const previouslyPinnedTask = ddlTasks.find((t) => t.isPinned && t.id !== taskId);
-          if (previouslyPinnedTask) {
-            await updatePin(previouslyPinnedTask.id, false);
-          }
-        }
-      }
-      return updatePin(taskId, isPinned);
-    },
+    mutationFn: ({ taskId, isPinned }: { taskId: number; isPinned: boolean }) =>
+      updatePin(taskId, isPinned),
     onSuccess: () => {
       invalidateAll();
     },
@@ -43,6 +32,10 @@ const useDdlMutation = () => {
     mutationFn: (taskId: number) => deleteDeadlineTask(taskId),
     onSuccess: () => {
       invalidateAll();
+      Toast.show({
+        type: "success",
+        text1: t("success.removed"),
+      });
     },
     onError: () => {
       Toast.show({
