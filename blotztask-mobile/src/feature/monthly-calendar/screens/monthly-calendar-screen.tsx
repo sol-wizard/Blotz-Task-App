@@ -118,7 +118,7 @@ export default function MonthlyCalendarScreen() {
           elevation: 20,
         }}
       >
-        <View className="flex-1" style={{ paddingBottom: androidBottomOffset }} >
+        <View className="flex-1">
           <View className="w-full pt-4 pb-4 px-6 items-center">
             <View
               className="w-12 h-1.5 rounded-full mb-5"
