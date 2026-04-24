@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, Alert, ActivityIndicator } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -15,13 +15,24 @@ type RightActionsProps = {
   progress: SharedValue<number>;
   onPin: () => void;
   onDelete: () => void;
-  disabled: boolean;
+  isPinned: boolean;
+  isUpdatingPin: boolean;
+  isDeletingTask: boolean;
 };
 
-const RightActions = ({ progress, onPin, onDelete, disabled }: RightActionsProps) => {
+const RightActions = ({
+  progress,
+  onPin,
+  onDelete,
+  isPinned,
+  isUpdatingPin,
+  isDeletingTask,
+}: RightActionsProps) => {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: 120 * (1 - progress.value) }],
   }));
+
+  const isDisabled = isUpdatingPin || isDeletingTask;
 
   return (
     <Animated.View
@@ -29,23 +40,35 @@ const RightActions = ({ progress, onPin, onDelete, disabled }: RightActionsProps
       style={animatedStyle}
     >
       <Pressable
-        disabled={disabled}
+        disabled={isDisabled}
         onPress={onPin}
         className={`h-20 w-20 items-center justify-center rounded-2xl ${
-          disabled ? "bg-[#E7EFDf]" : "bg-[#DCF5C7]"
+          isDisabled ? "bg-[#E7EFDf]" : "bg-[#DCF5C7]"
         }`}
       >
-        <MaterialCommunityIcons name="arrow-up-bold" size={22} color="#5B9E2E" />
+        {isUpdatingPin ? (
+          <ActivityIndicator size="small" color="#5B9E2E" />
+        ) : (
+          <MaterialCommunityIcons
+            name={isPinned ? "pin-off" : "pin"}
+            size={22}
+            color="#5B9E2E"
+          />
+        )}
       </Pressable>
 
       <Pressable
-        disabled={disabled}
+        disabled={isDisabled}
         onPress={onDelete}
         className={`h-20 w-20 items-center justify-center rounded-2xl ${
-          disabled ? "bg-[#F8EEEE]" : "bg-[#FCE4E4]"
+          isDisabled ? "bg-[#F8EEEE]" : "bg-[#FCE4E4]"
         }`}
       >
-        <MaterialCommunityIcons name="trash-can-outline" size={22} color="#E05C5C" />
+        {isDeletingTask ? (
+          <ActivityIndicator size="small" color="#E05C5C" />
+        ) : (
+          <MaterialCommunityIcons name="trash-can-outline" size={22} color="#E05C5C" />
+        )}
       </Pressable>
     </Animated.View>
   );
@@ -54,13 +77,34 @@ const RightActions = ({ progress, onPin, onDelete, disabled }: RightActionsProps
 const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const { t } = useTranslation("deadline");
-  const { updatePin, deleteDeadlineTask, isUpdatingPin, isDeletingDeadlineTask } = useDdlMutation();
+  const {
+    updatePin,
+    deleteDeadlineTask,
+    markAsDone,
+    isUpdatingPin,
+    isDeletingDeadlineTask,
+    isMarkingAsDone,
+  } = useDdlMutation();
 
   const daysLeft = Math.max(0, differenceInCalendarDays(new Date(task.dueAt), new Date()));
   const labelColor = task.label?.color ?? "#D1D1D6";
   const endTimeDisplay = task.dueAt ? format(new Date(task.dueAt), "dd/MM/yy") : "—";
-  const isActionPending = isUpdatingPin || isDeletingDeadlineTask;
   const isPinned = task.isPinned;
+
+  const handleDelete = () => {
+    Alert.alert(t("remove_from_ddl.title"), t("remove_from_ddl.message"), [
+      { text: t("remove_from_ddl.cancel"), style: "cancel" },
+      {
+        text: t("remove_from_ddl.confirm"),
+        style: "destructive",
+        onPress: () => {
+          deleteDeadlineTask(task.id, {
+            onSuccess: () => swipeRef.current?.close(),
+          });
+        },
+      },
+    ]);
+  };
 
   const renderRightActions = (progress: SharedValue<number>) => {
     return (
@@ -74,12 +118,10 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
             },
           )
         }
-        onDelete={() =>
-          deleteDeadlineTask(task.id, {
-            onSuccess: () => swipeRef.current?.close(),
-          })
-        }
-        disabled={isActionPending}
+        onDelete={handleDelete}
+        isPinned={isPinned}
+        isUpdatingPin={isUpdatingPin}
+        isDeletingTask={isDeletingDeadlineTask}
       />
     );
   };
@@ -108,7 +150,12 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
         )}
 
         <View className={isPinned ? "w-12 items-center justify-center" : undefined}>
-          <TasksCheckbox type="task" checked={task.isDone} onChange={() => {}} />
+          <TasksCheckbox
+            type="task"
+            checked={task.isDone}
+            disabled={isMarkingAsDone}
+            onChange={() => markAsDone(task.id)}
+          />
         </View>
 
         <View

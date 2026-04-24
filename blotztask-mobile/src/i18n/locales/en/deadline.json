@@ -1,4 +1,15 @@
 {
   "title": "Deadline",
-  "days": "days"
+  "days": "days",
+  "remove_from_ddl": {
+    "title": "Remove Task from DDL",
+    "message": "This will remove the task from the deadline view, but the task will still remain as a regular task. Are you sure?",
+    "confirm": "Remove",
+    "cancel": "Cancel"
+  },
+  "errors": {
+    "update_pin": "Failed to update pin status",
+    "delete_task": "Failed to remove task from DDL",
+    "mark_as_done": "Failed to update task completion"
+  }
 }
