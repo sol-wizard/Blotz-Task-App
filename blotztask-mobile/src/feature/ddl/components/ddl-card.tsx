@@ -126,46 +126,80 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
       dragOffsetFromLeftEdge={8}
     >
       <View
-        className="bg-white rounded-2xl px-4 py-3 h-20 flex-row items-center"
-        style={{ gap: 12 }}
+        className={
+          isPinned
+            ? "bg-white rounded-[28px] min-h-[128px] px-2 py-4 flex-row items-center"
+            : "bg-white rounded-2xl px-4 py-3 h-20 flex-row items-center"
+        }
+        style={!isPinned ? { gap: 12 } : undefined}
       >
         {isPinned && (
-          <View className="absolute top-1.5 right-1.5 opacity-60">
-            <MaterialCommunityIcons name="pin" size={16} color="#9A9A9A" />
+          <View className="absolute top-2.5 right-2.5">
+            <MaterialCommunityIcons name="arrow-collapse-up" size={20} color="#9A9A9A" />
           </View>
         )}
 
-        <TasksCheckbox
-          type="task"
-          checked={task.isDone}
-          disabled={isMarkingAsDone}
-          onChange={() => markAsDone(task.id)}
-        />
+        <View className={isPinned ? "w-12 items-center justify-center" : undefined}>
+          <TasksCheckbox
+            type="task"
+            checked={task.isDone}
+            disabled={isMarkingAsDone}
+            onChange={() => markAsDone(task.id)}
+          />
+        </View>
 
         <View
-          className="h-10 w-1.5 rounded-full"
+          className={isPinned ? "h-10 w-1.5 rounded-full mx-4" : "h-10 w-1.5 rounded-full"}
           style={{ backgroundColor: labelColor }}
         />
 
-        <View className="flex-1">
+        <View className="flex-1 justify-center pr-3">
           <Text
-            className="font-baloo text-lg text-gray-800"
-            numberOfLines={1}
+            className={
+              isPinned
+                ? "font-balooBold text-[22px] leading-[26px] text-secondary"
+                : "font-baloo text-lg text-gray-800"
+            }
+            numberOfLines={2}
           >
             {task.title}
           </Text>
 
-          <Text className="font-balooThin text-gray-400">
+          <Text
+            className={
+              isPinned
+                ? "mt-1 text-[16px] leading-5 text-gray-400 font-medium"
+                : "font-balooThin text-gray-400"
+            }
+          >
             {endTimeDisplay}
           </Text>
         </View>
 
-        <View className="flex-row items-center justify-center pt-3">
+        <View
+          className={
+            isPinned
+              ? "w-20 items-center justify-center -ml-2"
+              : "flex-row items-center justify-center pt-3"
+          }
+        >
           <View className="items-center">
-            <Text className="font-baloo text-4xl text-secondary leading-none pt-2">
+            <Text
+              className={
+                isPinned
+                  ? "font-baloo text-[52px] leading-[60px] text-[#9AD80A]"
+                  : "font-baloo text-4xl text-secondary leading-none pt-2"
+              }
+            >
               {daysLeft}
             </Text>
-            <Text className="ml-1 font-balooThin text-xs text-gray-400">
+            <Text
+              className={
+                isPinned
+                  ? "text-[14px] leading-4 text-[#9AD80A] font-medium -mt-5"
+                  : "ml-1 font-balooThin text-xs text-gray-400"
+              }
+            >
               {t("days")}
             </Text>
           </View>
