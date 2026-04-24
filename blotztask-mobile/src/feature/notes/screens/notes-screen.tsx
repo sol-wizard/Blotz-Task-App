@@ -1,5 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, RefObject } from "react";
 import { View, Text, Pressable, TouchableWithoutFeedback, Keyboard, FlatList } from "react-native";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorPlaceholder } from "@/shared/components/error-placeholder";
+import { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import { analytics } from "@/shared/services/analytics";
@@ -48,7 +52,6 @@ export default function NotesScreen() {
     }, []),
   );
 
-  const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
   const { onRowOpen, closeAllRows } = useSwipeableManager();
 
   const openEditModal = (note: NoteDTO) => {
@@ -136,46 +139,31 @@ export default function NotesScreen() {
       >
         <View className="flex-1">
           <NoteHeader searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-          {showLoading && <LoadingScreen />}
-          {!showLoading && notesSearchResult.length === 0 ? (
-            <View className="flex-1 items-center justify-center">
-              <Text className="text-center text-black font-balooBold text-2xl">
-                {t("emptyNoteMessage.encouragingTitle")}
-              </Text>
-              <Text className="text-center text-black font-baloo text-xl mt-2">
-                {t("emptyNoteMessage.encouragingDescription")}
-              </Text>
-            </View>
-          ) : (
-            <View className="px-6 flex-1">
-              <View className={`rounded-3xl  bg-white`}>
-                <FlatList
-                  data={showLoading ? [] : notesSearchResult}
-                  keyExtractor={(item) => String(item.id)}
-                  renderItem={({ item }) => (
-                    <NoteRow
-                      note={item}
-                      onPressNote={openEditModal}
-                      onDelete={handleDelete}
-                      onRowOpen={onRowOpen}
-                      onAddToTask={(note: NoteDTO) => {
-                        setSelectedNote(note);
-                        setNoteTimePickerSheetVisible(true);
-                        console.log("Selected note for time estimation:", note);
-                      }}
-                    />
-                  )}
-                  ItemSeparatorComponent={() => <View className="h-[1px] bg-[#E7E7E7] mx-5" />}
-                  showsVerticalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                  onScrollBeginDrag={closeAllRows}
-                  initialNumToRender={12}
-                  windowSize={7}
-                  maxToRenderPerBatch={12}
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary
+                onReset={reset}
+                fallbackRender={({ resetErrorBoundary }) => (
+                  <ErrorPlaceholder
+                    message="Failed to load notes"
+                    resetErrorBoundary={resetErrorBoundary}
+                  />
+                )}
+              >
+                <NotesContentWithData
+                  searchQuery={searchQuery}
+                  openEditModal={openEditModal}
+                  handleDelete={handleDelete}
+                  onRowOpen={onRowOpen}
+                  closeAllRows={closeAllRows}
+                  onAddToTask={(note: NoteDTO) => {
+                    setSelectedNote(note);
+                    setNoteTimePickerSheetVisible(true);
+                  }}
                 />
-              </View>
-            </View>
-          )}
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
 
           <Pressable
             onPress={() => {
@@ -232,5 +220,66 @@ export default function NotesScreen() {
         onStartNow={handleStartNowFromEstimate}
       />
     </SafeAreaView>
+  );
+}
+
+function NotesContentWithData({
+  searchQuery,
+  openEditModal,
+  handleDelete,
+  onRowOpen,
+  closeAllRows,
+  onAddToTask,
+}: {
+  searchQuery: string;
+  openEditModal: (note: NoteDTO) => void;
+  handleDelete: (note: NoteDTO) => void;
+  onRowOpen: (refObject: RefObject<SwipeableMethods | null>) => void;
+  closeAllRows: () => void;
+  onAddToTask: (note: NoteDTO) => void;
+}) {
+  const { t } = useTranslation("notes");
+  const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
+
+  if (showLoading) return <LoadingScreen />;
+
+  if (notesSearchResult.length === 0) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-center text-black font-balooBold text-2xl">
+          {t("emptyNoteMessage.encouragingTitle")}
+        </Text>
+        <Text className="text-center text-black font-baloo text-xl mt-2">
+          {t("emptyNoteMessage.encouragingDescription")}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View className="px-6 flex-1">
+      <View className="rounded-3xl bg-white">
+        <FlatList
+          data={notesSearchResult}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={({ item }) => (
+            <NoteRow
+              note={item}
+              onPressNote={openEditModal}
+              onDelete={handleDelete}
+              onRowOpen={onRowOpen}
+              onAddToTask={onAddToTask}
+            />
+          )}
+          ItemSeparatorComponent={() => <View className="h-[1px] bg-[#E7E7E7] mx-5" />}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          onScrollBeginDrag={closeAllRows}
+          initialNumToRender={12}
+          windowSize={7}
+          maxToRenderPerBatch={12}
+        />
+      </View>
+    </View>
   );
 }

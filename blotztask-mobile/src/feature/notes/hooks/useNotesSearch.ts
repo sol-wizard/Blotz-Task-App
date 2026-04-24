@@ -17,6 +17,7 @@ export const useNotesSearch = ({
   const { data: allNotes, isLoading } = useQuery({
     queryKey: [...noteKeys.all, debouncedQuery],
     queryFn: () => searchNotes(debouncedQuery),
+    throwOnError: true,
   });
 
   const notesSearchResult = allNotes ?? [];

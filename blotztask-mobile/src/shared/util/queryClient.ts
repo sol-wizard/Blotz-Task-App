@@ -47,13 +47,7 @@ export const queryClient = new QueryClient({
       refetchOnReconnect: true,
       refetchOnWindowFocus: true,
       networkMode: "online",
-      throwOnError: (error) => {
-        if (isAxiosError(error)) {
-          const status = error.response?.status;
-          return !status || status >= 500;
-        }
-        return true;
-      },
+      throwOnError: true,
     },
     mutations: {
       retry: 0,
