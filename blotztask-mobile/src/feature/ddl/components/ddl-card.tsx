@@ -171,8 +171,6 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
                   : undefined
               }
               numberOfLines={isPinned ? 2 : 1}
-              adjustsFontSizeToFit={isPinned}
-              minimumFontScale={isPinned ? 0.65 : undefined}
             >
               {task.title}
             </Text>
