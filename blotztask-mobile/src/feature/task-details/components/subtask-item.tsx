@@ -8,6 +8,7 @@ import { ActionButton, ActionButtonType } from "@/feature/notes/components/actio
 import { useState } from "react";
 import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
 import SubtaskInlineEditor from "./subtask-inline-editor";
+import { useTranslation } from "react-i18next";
 
 // Types
 type SubtaskItemData = {
@@ -51,6 +52,7 @@ export default function SubtaskItem({
   // Derived values
   const isChecked = subtask?.isDone;
   const textColor = isChecked ? theme.colors.disabled : theme.colors.onSurface;
+  const { t } = useTranslation(["tasks"]);
 
   // Functions
   const handleToggle = () => {
@@ -139,7 +141,7 @@ export default function SubtaskItem({
                 <>
                   {localDuration && (
                     <Text
-                      className="text-[12px] font-bold"
+                      className="text-3 font-bold"
                       style={{
                         color: isChecked ? "#BDE6A3" : theme.colors.highlight,
                         marginBottom: -2,
@@ -168,7 +170,7 @@ export default function SubtaskItem({
               ) : isInlineEditing ? (
                 <TouchableOpacity onPress={handleInlineEditToggle}>
                   <Text className="text-sm font-bold" style={{ color: theme.colors.highlight }}>
-                    Done
+                    {t("subtasks.done")}
                   </Text>
                 </TouchableOpacity>
               ) : (
