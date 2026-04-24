@@ -37,9 +37,6 @@ export default function SubtaskItem({
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const [titleValue, setTitleValue] = useState(subtask.title);
   const [localDuration, setLocalDuration] = useState(subtask.duration ?? "00:00:00");
-  const [h = "0", m = "0"] = localDuration.split(":");
-  const pickerHours = Number(h) || 0;
-  const pickerMinutes = Number(m) || 0;
 
   // Derived values
   const isChecked = subtask?.isDone;
