@@ -8,19 +8,29 @@
     "duration": "Duration",
     "soundscapes": "Soundscapes",
     "flow": "∞ flow",
-    "defaultTitle": "Time to Focus!",
-    "defaultSubtitle": "Keep Going!",
     "viewTask": "View my task",
     "resume": "Resume",
     "pause": "Pause",
     "end": "End",
     "milestoneTitle": "You have been focused for {{value}} {{unit}}!",
     "milestoneSubtitle": "Take a tiny stretch!",
-    "unit": {
-      "minute_one": "minute",
-      "minute_other": "minutes",
-      "hour_one": "hour",
-      "hour_other": "hours"
+    "milestones": {
+      "phase0": {
+        "title": "Just getting started!",
+        "subtitle": "Let's build some momentum!"
+      },
+      "phase1": {
+        "title": "25 minutes done!",
+        "subtitle": "Take a 5-minute stretch!"
+      },
+      "phase2": {
+        "title": "1 hour of deep focus!",
+        "subtitle": "Grab some water."
+      },
+      "phase3": {
+        "title": "2 hours?! You're a machine!",
+        "subtitle": "Time for a longer break."
+      }
     }
   },
   "soundscape": {

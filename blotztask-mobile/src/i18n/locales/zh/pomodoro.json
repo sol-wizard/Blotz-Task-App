@@ -8,19 +8,27 @@
     "duration": "专注时长",
     "soundscapes": "声音",
     "flow": "∞ 无限流",
-    "defaultTitle": "专注！",
-    "defaultSubtitle": "加油！",
     "viewTask": "查看任务",
     "resume": "继续",
     "pause": "暂停",
     "end": "结束",
-    "milestoneTitle": "你已经专注 {{value}}{{unit}}了！",
-    "milestoneSubtitle": "起来活动一下吧！",
-    "unit": {
-      "minute_one": "分钟",
-      "minute_other": "分钟",
-      "hour_one": "小时",
-      "hour_other": "小时"
+    "milestones": {
+      "phase0": {
+        "title": "刚刚开始！",
+        "subtitle": "让我们积累一些动力吧！"
+      },
+      "phase1": {
+        "title": "25分钟了！",
+        "subtitle": "休息5分钟，活动一下吧！"
+      },
+      "phase2": {
+        "title": "1小时的深度专注！",
+        "subtitle": "喝点水吧。"
+      },
+      "phase3": {
+        "title": "2小时？！你太棒了！",
+        "subtitle": "该好好休息一下了。"
+      }
     }
   },
   "soundscape": {

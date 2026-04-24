@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { ReturnButton } from "@/shared/components/return-button";
 import { usePomodoroTimer } from "../hooks/usePomodoroTimer";
-import { usePomodoroMilestoneTitle } from "../hooks/usePomodoroTitle";
+import { getMilestoneKey } from "../utils/milestone-copywrites";
 
 interface PomodoroFocusProps {
   onEnd: () => void;
@@ -28,11 +28,14 @@ export const PomodoroFocus = ({
 }: PomodoroFocusProps) => {
   const { t } = useTranslation("pomodoro");
 
-  const { displayTimeStr, elapsedMinutes, elapsedSeconds, isPaused, togglePause } =
-    usePomodoroTimer(selectedDuration, selectedCountdown, initialElapsedSeconds, initialIsPaused);
+  const { displayTimeStr, elapsedSeconds, isPaused, togglePause } = usePomodoroTimer(
+    selectedDuration,
+    selectedCountdown,
+    initialElapsedSeconds,
+    initialIsPaused,
+  );
 
-  const { title: milestoneTitle, subtitle: milestoneSubtitle } =
-    usePomodoroMilestoneTitle(elapsedMinutes);
+  const milestoneKey = getMilestoneKey(elapsedSeconds);
 
   return (
     <LinearGradient colors={["#C2E49F", "#EEFBE1"]} style={{ flex: 1 }}>
@@ -46,14 +49,16 @@ export const PomodoroFocus = ({
 
         <View className="flex-1 items-center">
           <View className="mt-28 mb-8">
-            <View className="rounded-full w-80 min-h-16 px-5 py-3 items-center justify-center bg-[#00000014]">
-              <Text className="text-base font-baloo font-bold text-[#444964] leading-5 text-center">
-                {milestoneTitle}
-              </Text>
-              <Text className="text-base font-baloo font-bold text-[#444964] leading-5 text-center">
-                {milestoneSubtitle}
-              </Text>
-            </View>
+            {milestoneKey && (
+              <View className="rounded-full w-80 min-h-16 px-5 py-3 items-center justify-center bg-[#00000014]">
+                <Text className="text-base font-baloo font-bold text-[#444964] leading-5 text-center">
+                  {t(`focusMode.milestones.${milestoneKey}.title`)}
+                </Text>
+                <Text className="text-base font-baloo font-bold text-[#444964] leading-5 text-center">
+                  {t(`focusMode.milestones.${milestoneKey}.subtitle`)}
+                </Text>
+              </View>
+            )}
             <View className="mt-4 h-16 w-64 relative self-center">
               {/* stars */}
               {/* TODO: gradient and decorative stars are static now; replace with motion animation later */}

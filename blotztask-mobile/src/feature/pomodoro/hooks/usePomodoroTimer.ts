@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { calculateTimerState } from "../utils/timer";
+import { calculateTimerState } from "../utils/elapsed-timer";
 import { formatDuration } from "../utils/format-duration";
 
 export function usePomodoroTimer(
@@ -22,7 +22,6 @@ export function usePomodoroTimer(
     return () => clearInterval(interval);
   }, [isPaused]);
 
-  // 拿到当前时间状态
   const { displaySeconds, isFinished } = calculateTimerState(
     elapsedSeconds,
     targetDurationSeconds,
@@ -38,7 +37,6 @@ export function usePomodoroTimer(
 
   return {
     displayTimeStr: formatDuration(displaySeconds),
-    elapsedMinutes: Math.floor(elapsedSeconds / 60),
     elapsedSeconds,
     isFinished,
     isPaused,
