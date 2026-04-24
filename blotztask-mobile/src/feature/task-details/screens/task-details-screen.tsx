@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Animated } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import DetailsView from "@/feature/task-details/components/details-view";
 import SubtasksView from "@/feature/task-details/components/subtasks-view";
@@ -24,7 +24,30 @@ export default function TaskDetailsScreen() {
   const { selectedTask, isLoading } = useTaskById({ taskId });
   const { updateTask, isUpdating } = useTaskMutations();
   const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
+  const translateY = useRef(new Animated.Value(0)).current;
   const { t } = useTranslation();
+
+
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardWillShow", (e) => {
+      Animated.timing(translateY, {
+        toValue: -(e.endCoordinates.height * 0.4),
+        duration: e.duration,
+        useNativeDriver: true,
+      }).start();
+    });
+    const hide = Keyboard.addListener("keyboardWillHide", (e) => {
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: e.duration,
+        useNativeDriver: true,
+      }).start();
+    });
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedTask) {
@@ -85,6 +108,7 @@ export default function TaskDetailsScreen() {
       className="flex-1"
       style={{ backgroundColor: selectedTask.label?.color ?? theme.colors.fallback }}
     >
+    <Animated.View style={{ flex: 1, transform: [{ translateY }] }}>
       <View pointerEvents="box-none" className="ml-6 pt-2">
         <ReturnButton />
       </View>
@@ -153,6 +177,7 @@ export default function TaskDetailsScreen() {
           <SubtasksView parentTask={selectedTask} />
         </View>
       </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }

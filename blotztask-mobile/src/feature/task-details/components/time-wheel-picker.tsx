@@ -45,6 +45,7 @@ export default function DurationPickerModal({
       animationOut="fadeOut"
       backdropOpacity={0.08}
       useNativeDriver
+      hideModalContentWhileAnimating
       style={{ margin: 0 }}
     >
       <View
