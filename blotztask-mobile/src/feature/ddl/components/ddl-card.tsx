@@ -10,6 +10,7 @@ import { DeadlineTaskDTO } from "../models/deadline-task-dto";
 import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 import useDdlMutation from "../hooks/useDdlMutation";
+import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 type RightActionsProps = {
   progress: SharedValue<number>;
@@ -116,96 +117,113 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
     );
   };
 
-  return (
-    <ReanimatedSwipeable
-      ref={swipeRef}
-      renderRightActions={renderRightActions}
-      rightThreshold={12}
-      overshootRight={false}
-      friction={2}
-      dragOffsetFromLeftEdge={8}
-    >
-      <View
-        className={
-          isPinned
-            ? "bg-white rounded-[28px] min-h-[128px] px-2 py-4 flex-row items-center"
-            : "bg-white rounded-2xl px-4 py-3 h-20 flex-row items-center"
+  const isDoneStyle =
+    task.isDone && !isMarkingAsDone
+      ? {
+          textDecorationLine: "line-through",
+          textDecorationColor: "#9CA3AF",
         }
-        style={!isPinned ? { gap: 12 } : undefined}
+      : undefined;
+
+  return (
+    <Animated.View
+      entering={MotionAnimations.upEntering}
+      exiting={MotionAnimations.outExiting}
+      layout={MotionAnimations.layout}
+    >
+      <ReanimatedSwipeable
+        ref={swipeRef}
+        renderRightActions={renderRightActions}
+        rightThreshold={12}
+        overshootRight={false}
+        friction={2}
+        dragOffsetFromLeftEdge={8}
       >
-        {isPinned && (
-          <View className="absolute top-2.5 right-2.5">
-            <MaterialCommunityIcons name="arrow-collapse-up" size={20} color="#9A9A9A" />
-          </View>
-        )}
-
-        <View className={isPinned ? "w-12 items-center justify-center" : undefined}>
-          <TasksCheckbox
-            type="task"
-            checked={task.isDone}
-            disabled={isMarkingAsDone}
-            onChange={() => markAsDone(task.id)}
-          />
-        </View>
-
-        <View
-          className={isPinned ? "h-10 w-1.5 rounded-full mx-4" : "h-10 w-1.5 rounded-full"}
-          style={{ backgroundColor: labelColor }}
-        />
-
-        <View className="flex-1 justify-center pr-3">
-          <Text
-            className={
-              isPinned
-                ? "font-balooBold text-[22px] leading-[26px] text-secondary"
-                : "font-baloo text-lg text-gray-800"
-            }
-            numberOfLines={2}
-          >
-            {task.title}
-          </Text>
-
-          <Text
-            className={
-              isPinned
-                ? "mt-1 text-[16px] leading-5 text-gray-400 font-medium"
-                : "font-balooThin text-gray-400"
-            }
-          >
-            {endTimeDisplay}
-          </Text>
-        </View>
-
         <View
           className={
             isPinned
-              ? "w-20 items-center justify-center -ml-2"
-              : "flex-row items-center justify-center pt-3"
+              ? "bg-white rounded-[28px] min-h-[128px] px-2 py-4 flex-row items-center"
+              : "bg-white rounded-2xl px-4 py-3 h-20 flex-row items-center gap-3"
           }
         >
-          <View className="items-center">
+          {isPinned && (
+            <View className="absolute top-2.5 right-2.5">
+              <MaterialCommunityIcons name="arrow-collapse-up" size={20} color="#9A9A9A" />
+            </View>
+          )}
+
+          <View className={isPinned ? "w-12 items-center justify-center" : undefined}>
+            <TasksCheckbox
+              type="task"
+              checked={task.isDone}
+              disabled={isMarkingAsDone}
+              onChange={() => markAsDone(task.id)}
+            />
+          </View>
+
+          <View
+            className={isPinned ? "h-10 w-1.5 rounded-full mx-4" : "h-10 w-1.5 rounded-full"}
+            style={{ backgroundColor: labelColor }}
+          />
+
+          <View className="flex-1 justify-center pr-3">
             <Text
               className={
                 isPinned
-                  ? "font-baloo text-[52px] leading-[60px] text-[#9AD80A]"
-                  : "font-baloo text-4xl text-secondary leading-none pt-2"
+                  ? `font-semibold text-[22px] leading-[26px] ${
+                      task.isDone ? "text-neutral-400 line-through" : "text-secondary"
+                    }`
+                  : `font-semibold text-xl font-inter mt-0.5 ${
+                      task.isDone ? "text-neutral-400 line-through" : "text-[#444964]"
+                    }`
               }
+              style={isDoneStyle as any}
+              numberOfLines={1}
+            >
+              {task.title}
+            </Text>
+
+            <Text
+              className={
+                isPinned
+                  ? "mt-1 text-[16px] leading-5 text-gray-400 font-medium"
+                  : "font-balooThin text-gray-400"
+              }
+            >
+              {endTimeDisplay}
+            </Text>
+          </View>
+
+          <View className="items-center justify-center">
+            <Text
+              className={
+                isPinned
+                  ? `font-baloo text-[52px] leading-[60px] ${
+                      task.isDone ? "text-neutral-200" : "text-[#9AD80A]"
+                    }`
+                  : `font-baloo text-4xl leading-10 mt-1 ${
+                      task.isDone ? "text-neutral-200" : "text-secondary"
+                    }`
+              }
+              style={{ includeFontPadding: false }}
             >
               {daysLeft}
             </Text>
             <Text
               className={
                 isPinned
-                  ? "text-[14px] leading-4 text-[#9AD80A] font-medium -mt-5"
-                  : "ml-1 font-balooThin text-xs text-gray-400"
+                  ? `text-[14px] leading-4 font-medium -mt-5 ${
+                      task.isDone ? "text-neutral-200" : "text-[#9AD80A]"
+                    }`
+                  : "ml-1 font-balooThin text-xs text-gray-400 -mt-1"
               }
             >
               {t("days")}
             </Text>
           </View>
         </View>
-      </View>
-    </ReanimatedSwipeable>
+      </ReanimatedSwipeable>
+    </Animated.View>
   );
 };
 
