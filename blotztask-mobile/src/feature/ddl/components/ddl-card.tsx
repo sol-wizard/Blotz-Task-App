@@ -152,7 +152,11 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
         )}
 
         <View className={isPinned ? "w-12 items-center justify-center" : undefined}>
-          <TasksCheckbox type="task" checked={task.isDone} onChange={() => {}} />
+          <TasksCheckbox
+            type="task"
+            checked={task.isDone}
+            onChange={() => markAsDone(task.id)}
+          />
         </View>
 
         <View
@@ -167,6 +171,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
                 ? "font-balooBold text-[25px] leading-[30px] text-secondary underline"
                 : "font-baloo text-lg text-gray-800"
             }
+            style={isDoneStyle}
             numberOfLines={isPinned ? 2 : 1}
             adjustsFontSizeToFit={isPinned}
             minimumFontScale={isPinned ? 0.65 : undefined}
