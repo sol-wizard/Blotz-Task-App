@@ -90,7 +90,6 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
   const endTimeDisplay = task.dueAt ? format(new Date(task.dueAt), "dd/MM/yy") : "—";
   const isPinned = task.isPinned;
 
-
   const renderRightActions = (progress: SharedValue<number>) => {
     return (
       <RightActions
@@ -115,14 +114,6 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
     );
   };
 
-  const isDoneStyle =
-    task.isDone && !isMarkingAsDone
-      ? {
-          textDecorationLine: "line-through",
-          textDecorationColor: "#9CA3AF",
-        }
-      : undefined;
-
   return (
     <Animated.View
       entering={MotionAnimations.upEntering}
@@ -130,96 +121,103 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
       layout={MotionAnimations.layout}
     >
       <ReanimatedSwipeable
-      ref={swipeRef}
-      renderRightActions={renderRightActions}
-      rightThreshold={12}
-      overshootRight={false}
-      friction={2}
-      dragOffsetFromLeftEdge={8}
-    >
-      <View
-        className={
-          isPinned
-            ? "bg-white rounded-[28px] min-h-32 px-2 py-4 flex-row items-center"
-            : "bg-white rounded-2xl px-4 py-3 h-20 flex-row items-center"
-        }
-        style={!isPinned ? { gap: 12 } : undefined}
+        ref={swipeRef}
+        renderRightActions={renderRightActions}
+        rightThreshold={12}
+        overshootRight={false}
+        friction={2}
+        dragOffsetFromLeftEdge={8}
       >
-        {isPinned && (
-          <View className="absolute top-2.5 right-2.5">
-            <MaterialCommunityIcons name="arrow-collapse-up" size={20} color="#9A9A9A" />
-          </View>
-        )}
-
-        <View className={isPinned ? "w-12 items-center justify-center" : undefined}>
-          <TasksCheckbox
-            type="task"
-            checked={task.isDone}
-            onChange={() => markAsDone(task.id)}
-          />
-        </View>
-
-        <View
-          className={isPinned ? "h-10 w-1.5 rounded-full ml-1 mx-4" : "h-10 w-1.5 rounded-full"}
-          style={{ backgroundColor: labelColor }}
-        />
-
-        <View className={isPinned ? "flex-1 justify-center py-1 pr-3" : "flex-1"}>
-          <Text
-            className={
-              isPinned
-                ? "font-balooBold text-[25px] leading-[30px] text-secondary underline"
-                : "font-baloo text-lg text-gray-800"
-            }
-            style={isDoneStyle}
-            numberOfLines={isPinned ? 2 : 1}
-            adjustsFontSizeToFit={isPinned}
-            minimumFontScale={isPinned ? 0.65 : undefined}
-          >
-            {task.title}
-          </Text>
-
-          <Text
-            className={
-              isPinned
-                ? "mt-0.5 text-[16px] leading-5 text-gray-400 font-medium"
-                : "font-balooThin text-gray-400"
-            }
-          >
-            {endTimeDisplay}
-          </Text>
-        </View>
-
         <View
           className={
             isPinned
-              ? "w-20 self-stretch justify-center items-start -ml-2"
-              : "flex-row items-center justify-center pt-3"
+              ? "bg-white rounded-[28px] min-h-32 px-2 py-4 flex-row items-center"
+              : "bg-white rounded-2xl px-4 py-3 h-20 flex-row items-center"
           }
+          style={!isPinned ? { gap: 12 } : undefined}
         >
-          <View className="items-center">
+          {isPinned && (
+            <View className="absolute top-2.5 right-2.5">
+              <MaterialCommunityIcons name="arrow-collapse-up" size={20} color="#9A9A9A" />
+            </View>
+          )}
+
+          <View className={isPinned ? "w-12 items-center justify-center" : undefined}>
+            <TasksCheckbox
+              type="task"
+              checked={task.isDone}
+              onChange={() => markAsDone(task.id)}
+            />
+          </View>
+
+          <View
+            className={isPinned ? "h-10 w-1.5 rounded-full ml-1 mx-4" : "h-10 w-1.5 rounded-full"}
+            style={{ backgroundColor: labelColor }}
+          />
+
+          <View className={isPinned ? "flex-1 justify-center py-1 pr-3" : "flex-1"}>
             <Text
               className={
                 isPinned
-                  ? "font-baloo text-[52px] leading-[70px] text-[#9AD80A]"
-                  : "font-baloo text-4xl text-secondary leading-none pt-2"
+                  ? "font-balooBold text-[25px] leading-[30px] text-secondary underline"
+                  : "font-baloo text-lg text-gray-800"
               }
+              style={
+                task.isDone && !isMarkingAsDone
+                  ? {
+                      textDecorationLine: "line-through",
+                      textDecorationColor: "#9CA3AF",
+                    }
+                  : undefined
+              }
+              numberOfLines={isPinned ? 2 : 1}
+              adjustsFontSizeToFit={isPinned}
+              minimumFontScale={isPinned ? 0.65 : undefined}
             >
-              {daysLeft}
+              {task.title}
             </Text>
+
             <Text
               className={
                 isPinned
-                  ? "text-[14px] leading-4 text-[#9AD80A] font-medium -mt-5"
-                  : "ml-1 font-balooThin text-xs text-gray-400"
+                  ? "mt-0.5 text-[16px] leading-5 text-gray-400 font-medium"
+                  : "font-balooThin text-gray-400"
               }
             >
-              {t("days")}
+              {endTimeDisplay}
             </Text>
           </View>
+
+          <View
+            className={
+              isPinned
+                ? "w-20 self-stretch justify-center items-start -ml-2"
+                : "flex-row items-center justify-center pt-3"
+            }
+          >
+            <View className="items-center">
+              <Text
+                className={
+                  isPinned
+                    ? "font-baloo text-[52px] leading-[70px] text-[#9AD80A]"
+                    : "font-baloo text-4xl text-secondary leading-none pt-2"
+                }
+              >
+                {daysLeft}
+              </Text>
+              <Text
+                className={
+                  isPinned
+                    ? "text-[14px] leading-4 text-[#9AD80A] font-medium -mt-5"
+                    : "ml-1 font-balooThin text-xs text-gray-400"
+                }
+              >
+                {t("days")}
+              </Text>
+            </View>
+          </View>
         </View>
-      </View>
-    </ReanimatedSwipeable>
+      </ReanimatedSwipeable>
     </Animated.View>
   );
 };
