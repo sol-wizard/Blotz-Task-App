@@ -33,18 +33,16 @@ const RightActions = ({
     transform: [{ translateX: 120 * (1 - progress.value) }],
   }));
 
-  const isDisabled = isUpdatingPin || isDeletingTask;
-
   return (
     <Animated.View
       className="w-50 flex-row items-center justify-end gap-3 pl-4"
       style={animatedStyle}
     >
       <Pressable
-        disabled={isDisabled}
+        disabled={isUpdatingPin}
         onPress={onPin}
         className={`h-20 w-20 items-center justify-center rounded-2xl ${
-          isDisabled ? "bg-[#E7EFDf]" : "bg-[#DCF5C7]"
+          isUpdatingPin ? "bg-[#E7EFDf]" : "bg-[#DCF5C7]"
         }`}
       >
         {isUpdatingPin ? (
@@ -59,10 +57,10 @@ const RightActions = ({
       </Pressable>
 
       <Pressable
-        disabled={isDisabled}
+        disabled={isDeletingTask}
         onPress={onDelete}
         className={`h-20 w-20 items-center justify-center rounded-2xl ${
-          isDisabled ? "bg-[#F8EEEE]" : "bg-[#FCE4E4]"
+          isDeletingTask ? "bg-[#F8EEEE]" : "bg-[#FCE4E4]"
         }`}
       >
         {isDeletingTask ? (
@@ -166,46 +164,38 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
             style={{ backgroundColor: labelColor }}
           />
 
-          <View className="flex-1 justify-center pr-3">
-            <Text
-              className={
-                isPinned
-                  ? `font-semibold text-[22px] leading-[26px] ${
-                      task.isDone ? "text-neutral-400 line-through" : "text-secondary"
-                    }`
-                  : `font-semibold text-xl font-inter mt-0.5 ${
-                      task.isDone ? "text-neutral-400 line-through" : "text-[#444964]"
-                    }`
-              }
-              style={isDoneStyle as any}
-              numberOfLines={1}
-            >
-              {task.title}
-            </Text>
+        <View className={isPinned ? "flex-1 justify-center py-1 pr-3" : "flex-1"}>
+          <Text
+            className={
+              isPinned
+                ? "font-balooBold text-[25px] leading-[30px] text-secondary underline"
+                : "font-baloo text-lg text-gray-800"
+            }
+            numberOfLines={isPinned ? 2 : 1}
+            adjustsFontSizeToFit={isPinned}
+            minimumFontScale={isPinned ? 0.65 : undefined}
+          >
+            {task.title}
+          </Text>
 
-            <Text
-              className={
-                isPinned
-                  ? "mt-1 text-[16px] leading-5 text-gray-400 font-medium"
-                  : "font-balooThin text-gray-400"
-              }
-            >
-              {endTimeDisplay}
-            </Text>
-          </View>
+          <Text
+            className={
+              isPinned
+                ? "mt-0.5 text-[16px] leading-5 text-gray-400 font-medium"
+                : "font-balooThin text-gray-400"
+            }
+          >
+            {endTimeDisplay}
+          </Text>
+        </View>
 
-          <View className="items-center justify-center">
+          <View className="items-center">
             <Text
               className={
                 isPinned
-                  ? `font-baloo text-[52px] leading-[60px] ${
-                      task.isDone ? "text-neutral-200" : "text-[#9AD80A]"
-                    }`
-                  : `font-baloo text-4xl leading-10 mt-1 ${
-                      task.isDone ? "text-neutral-200" : "text-secondary"
-                    }`
+                  ? "font-baloo text-[52px] leading-[70px] text-[#9AD80A]"
+                  : "font-baloo text-4xl text-secondary leading-none pt-2"
               }
-              style={{ includeFontPadding: false }}
             >
               {daysLeft}
             </Text>
@@ -215,7 +205,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
                   ? `text-[14px] leading-4 font-medium -mt-5 ${
                       task.isDone ? "text-neutral-200" : "text-[#9AD80A]"
                     }`
-                  : "ml-1 font-balooThin text-xs text-gray-400 -mt-1"
+                  : "ml-1 font-balooThin text-xs text-gray-400"
               }
             >
               {t("days")}

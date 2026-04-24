@@ -15,27 +15,31 @@ const useDdlMutation = () => {
   };
 
   const updatePinMutation = useMutation({
-    mutationFn: async ({ taskId, isPinned }: { taskId: number; isPinned: boolean }) => {
-      // If we are pinning a task, find and unpin any other pinned task first
-      if (isPinned) {
-        const ddlTasks = queryClient.getQueryData<any[]>(ddlKeys.all);
-        if (ddlTasks) {
-          const previouslyPinnedTask = ddlTasks.find((t) => t.isPinned && t.id !== taskId);
-          if (previouslyPinnedTask) {
-            await updatePin(previouslyPinnedTask.id, false);
-          }
-        }
+    mutationFn: ({ taskId, isPinned }: { taskId: number; isPinned: boolean }) =>
+      updatePin(taskId, isPinned),
+    onMutate: async ({ taskId, isPinned }) => {
+      await queryClient.cancelQueries({ queryKey: ddlKeys.all });
+      const previousDdlTasks = queryClient.getQueryData<DeadlineTaskDTO[]>(ddlKeys.all);
+
+      if (previousDdlTasks) {
+        queryClient.setQueryData<DeadlineTaskDTO[]>(ddlKeys.all, (old) =>
+          old?.map((t) => (t.id === taskId ? { ...t, isPinned } : t)),
+        );
       }
-      return updatePin(taskId, isPinned);
+
+      return { previousDdlTasks };
     },
-    onSuccess: () => {
-      invalidateAll();
-    },
-    onError: () => {
+    onError: (_err, _variables, context) => {
+      if (context?.previousDdlTasks) {
+        queryClient.setQueryData(ddlKeys.all, context.previousDdlTasks);
+      }
       Toast.show({
         type: "error",
         text1: t("errors.update_pin"),
       });
+    },
+    onSettled: () => {
+      invalidateAll();
     },
   });
 
@@ -58,14 +62,31 @@ const useDdlMutation = () => {
 
   const markAsDoneMutation = useMutation({
     mutationFn: (taskId: number) => toggleTaskCompletion(taskId),
-    onSuccess: () => {
-      invalidateAll();
+    onMutate: async (taskId) => {
+      await queryClient.cancelQueries({ queryKey: ddlKeys.all });
+      await queryClient.cancelQueries({ queryKey: taskKeys.all });
+
+      const previousDdlTasks = queryClient.getQueryData<DeadlineTaskDTO[]>(ddlKeys.all);
+
+      if (previousDdlTasks) {
+        queryClient.setQueryData<DeadlineTaskDTO[]>(ddlKeys.all, (old) =>
+          old?.map((t) => (t.id === taskId ? { ...t, isDone: !t.isDone } : t)),
+        );
+      }
+
+      return { previousDdlTasks };
     },
-    onError: () => {
+    onError: (_err, _taskId, context) => {
+      if (context?.previousDdlTasks) {
+        queryClient.setQueryData(ddlKeys.all, context.previousDdlTasks);
+      }
       Toast.show({
         type: "error",
         text1: t("errors.mark_as_done"),
       });
+    },
+    onSettled: () => {
+      invalidateAll();
     },
   });
 
