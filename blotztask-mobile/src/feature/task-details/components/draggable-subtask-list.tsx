@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from "react-native-draggable-flatlist";
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
-import { View } from "react-native";
+import { View, Platform } from "react-native";
 import SubtaskItem from "@/feature/task-details/components/subtask-item";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type DraggableSubtaskListProps = {
   subtasks: SubtaskDTO[];
@@ -23,6 +24,8 @@ export const DraggableSubtaskList = ({
   ListHeaderComponent,
 }: DraggableSubtaskListProps) => {
   const [data, setData] = useState(subtasks);
+  const { bottom } = useSafeAreaInsets();
+  const listBottomPadding = Platform.OS === "android" ? bottom + 12 : 0;
 
   useEffect(() => {
     setData(subtasks);
@@ -58,6 +61,7 @@ export const DraggableSubtaskList = ({
         onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setData(newData)}
         keyExtractor={(item: SubtaskDTO) => item.subTaskId.toString()}
         renderItem={renderItem}
+        contentContainerStyle={{ paddingBottom: listBottomPadding }}
         autoscrollThreshold={40}
         autoscrollSpeed={100}
         showsVerticalScrollIndicator={false}

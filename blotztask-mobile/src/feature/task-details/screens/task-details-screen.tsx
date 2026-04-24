@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
-import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Animated } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import DetailsView from "@/feature/task-details/components/details-view";
 import SubtasksView from "@/feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -27,6 +28,8 @@ export default function TaskDetailsScreen() {
   const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(0)).current;
   const { t } = useTranslation();
+  const { bottom } = useSafeAreaInsets();
+  const bottomInset = Platform.OS === "android" ? bottom : 0;
 
 
   useEffect(() => {
@@ -163,7 +166,10 @@ export default function TaskDetailsScreen() {
         </View>
       </TouchableWithoutFeedback>
 
-      <View className="flex-1 pt-6 px-6 bg-white rounded-t-[3rem]">
+      <View
+        className="flex-1 pt-6 px-6 bg-white rounded-t-[3rem]"
+        style={{ paddingBottom: bottomInset }}
+      >
         <View className="flex-row justify-around mb-6">
           <DetailsView
             taskDescription={descriptionText}
