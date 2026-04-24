@@ -47,7 +47,9 @@ export function useActiveSession(taskId: string) {
 
   const { data: activeSession } = useQuery<ActiveSessionData | null>({
     queryKey,
-    queryFn: () => Promise.resolve(null),
+    queryFn: () => queryClient.getQueryData<ActiveSessionData>(queryKey) ?? null,
+    enabled: false,
+    initialData: () => queryClient.getQueryData<ActiveSessionData>(queryKey) ?? null,
     staleTime: Infinity,
   });
 
@@ -74,7 +76,7 @@ export function useActiveSession(taskId: string) {
   };
 
   const clearSession = () => {
-    queryClient.removeQueries({ queryKey });
+    queryClient.setQueryData(queryKey, null);
   };
 
   return {
