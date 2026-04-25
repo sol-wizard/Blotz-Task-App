@@ -6,18 +6,18 @@ import { useEffect, useState } from "react";
 // while active is already true would be a no-op and the timer would not reset.
 export function useHoldHint(duration: number) {
   const [triggerCount, setTriggerCount] = useState(0);
-  const [active, setActive] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (triggerCount === 0) return;
-    setActive(true);
-    const timer = setTimeout(() => setActive(false), duration);
+    setIsVisible(true);
+    const timer = setTimeout(() => setIsVisible(false), duration);
     return () => clearTimeout(timer);
-  }, [triggerCount, duration]);
+  }, [triggerCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
-    isHoldHintVisible: active,
+    isHoldHintVisible: isVisible,
     showHoldHint: () => setTriggerCount((c) => c + 1),
-    hideHoldHint: () => setActive(false),
+    hideHoldHint: () => setIsVisible(false),
   };
 }

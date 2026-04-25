@@ -146,7 +146,7 @@ export default function AiTaskSheetScreen() {
                   style={{ opacity: 0.7, fontStyle: "italic", color: "white", textAlign: "center", marginHorizontal: 24, marginBottom: 8 }}
                   numberOfLines={3}
                 >
-                  "{interimTranscript}"
+                  &ldquo;{interimTranscript}&rdquo;
                 </Text>
               )}
 
