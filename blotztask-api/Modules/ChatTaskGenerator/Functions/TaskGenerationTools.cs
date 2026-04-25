@@ -95,7 +95,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         return "Note added.";
     }
 
-    [Description("Remove a task")]
+    [Description("Remove a task. Use this when the user says they no longer want to do something they previously mentioned, e.g. 'I don't want to go to the gym anymore'.")]
     public string RemoveTask(
         [Description("Task title")] string title)
     {
@@ -106,7 +106,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         return "Task removed.";
     }
 
-    [Description("Update a task")]
+    [Description("Update a task. Use this when the user corrects or adjusts something they already said, e.g. changing the time or title of an existing task.")]
     public string UpdateTask(
         [Description("Current title")] string existingTitle,
         [Description("New title")] string title,
@@ -126,7 +126,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         return "Task updated.";
     }
 
-    [Description("Remove a note")]
+    [Description("Remove a note. Use this when the user says they no longer want to keep something they previously noted.")]
     public string RemoveNote(
         [Description("Note text")] string text)
     {
@@ -137,7 +137,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         return "Note removed.";
     }
 
-    [Description("Update a note")]
+    [Description("Update a note. Use this when the user corrects or adjusts the content of an existing note.")]
     public string UpdateNote(
         [Description("Current text")] string existingText,
         [Description("New text")] string newText)
