@@ -1,12 +1,4 @@
 {
   "title": "截止日期",
-  "days": "天",
-  "errors": {
-    "update_pin": "更新置顶状态失败",
-    "delete_task": "从截止日期列表中移除任务失败",
-    "mark_as_done": "更新任务完成状态失败"
-  },
-  "success": {
-    "removed": "任务已从截止日期列表中移除"
-  }
+  "days": "天"
 }

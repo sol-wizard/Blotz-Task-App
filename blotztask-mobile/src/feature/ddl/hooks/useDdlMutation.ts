@@ -2,13 +2,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updatePin, deleteDeadlineTask } from "../services/ddl-services";
 import { toggleTaskCompletion } from "@/shared/services/task-service";
 import { ddlKeys, taskKeys } from "@/shared/constants/query-key-factory";
-import Toast from "react-native-toast-message";
-import { useTranslation } from "react-i18next";
 import { DeadlineTaskDTO } from "../models/deadline-task-dto";
 
 const useDdlMutation = () => {
   const queryClient = useQueryClient();
-  const { t } = useTranslation("deadline");
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ddlKeys.all });
@@ -40,10 +37,6 @@ const useDdlMutation = () => {
     mutationFn: (taskId: number) => deleteDeadlineTask(taskId),
     onSuccess: (_data, taskId) => {
       invalidateAll();
-      Toast.show({
-        type: "warning",
-        text1: t("success.removed"),
-      });
       console.log(`[Mutation Success] task ${taskId} is removed from ddl`);
     },
 

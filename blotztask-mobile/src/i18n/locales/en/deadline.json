@@ -1,12 +1,4 @@
 {
   "title": "Deadline",
-  "days": "days",
-  "errors": {
-    "update_pin": "Failed to update pin status",
-    "delete_task": "Failed to remove task from DDL",
-    "mark_as_done": "Failed to update task completion"
-  },
-  "success": {
-    "removed": "Task removed from DDL view"
-  }
+  "days": "days"
 }
