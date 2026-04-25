@@ -50,5 +50,5 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
   };
 
-  return { isListening, startListening, stopAndUpload, cancelListening, setIsListening };
+  return { isListening, startListening, stopAndUpload, cancelListening };
 }

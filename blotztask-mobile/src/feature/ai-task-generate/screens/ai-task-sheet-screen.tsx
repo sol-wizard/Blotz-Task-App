@@ -34,8 +34,9 @@ export default function AiTaskSheetScreen() {
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload, setIsListening, cancelListening } =
-    useVoiceRecorder(submitAudioForTranscription);
+  const { isListening, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
+    submitAudioForTranscription,
+  );
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 
@@ -143,10 +144,10 @@ export default function AiTaskSheetScreen() {
                 onSubmitText={() => void handleSubmitText()}
                 // Mic input
                 isListening={isListening}
-                setIsListening={setIsListening}
                 onMicPressIn={handleMicPressIn}
                 onMicPressOut={() => void stopAndUpload()}
                 setIsHoldHintVisible={setIsHoldHintVisible}
+                cancelListening={cancelListening}
                 // has results
                 hasResults={hasResults}
                 onConfirm={() => void handleAddAll()}
