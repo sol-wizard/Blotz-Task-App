@@ -3,7 +3,7 @@ import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import { AnimatedChevron } from "@/shared/components/chevron";
 import { router } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { SharedValue } from "react-native-reanimated";
 
 interface CalendarHeaderProps {
@@ -42,7 +42,7 @@ export default function CalendarHeader({ date, progress, onToggleCalendar }: Cal
           className="h-14 w-14 items-center justify-center rounded-full bg-white border border-gray-100"
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <MaterialCommunityIcons name="flag" size={24} color="#1F2937" />
+          <Feather name="flag" size={24} color="#1F2937" />
         </Pressable>
 
         <Pressable
