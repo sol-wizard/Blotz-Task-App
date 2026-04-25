@@ -28,7 +28,7 @@
     "banner": "🎉 太棒了！继续让 Blotz 帮你高效完成更多任务吧！",
     "showProgress": "显示进度条",
     "showProgressHint": "（点击数字可切换显示）",
-    "period": "统计周期",
+    "period": "统计周期 :",
     "usedQuota": "已使用额度",
     "remaining": "剩余",
     "plan": "会员计划"
