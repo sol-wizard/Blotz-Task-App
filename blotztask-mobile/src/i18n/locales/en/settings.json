@@ -2,6 +2,7 @@
   "title": "Settings",
   "menu": {
     "account": "Account",
+    "MembershipPlan": "Membership Plan",
     "taskHandling": "Task Handling",
     "notifications": "Notifications",
     "language": "Language",
@@ -20,6 +21,16 @@
     "deleteConfirmText": "I understand this cannot be undone.",
     "deleteLoading": "Deleting your data...",
     "deleteConfirm": "Delete permanently"
+  },
+  "MembershipPlan": {
+    "completedLabel": "Completed this month",
+    "banner": "🎉 Great job! Let Blotz help you get even more done.",
+    "showProgress": "Show progress bar",
+    "showProgressHint": "(Tap the number to toggle)",
+    "period": "Billing period",
+    "usedQuota": "Used quota",
+    "remaining": "Remaining",
+    "plan": "Membership Plan"
   },
   "taskHandling": {
     "title": "Task Handling",
