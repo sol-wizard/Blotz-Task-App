@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import { View, Text } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -7,71 +7,13 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { differenceInCalendarDays, format } from "date-fns";
 import TasksCheckbox from "@/shared/components/task-checkbox";
 import { DeadlineTaskDTO } from "../models/deadline-task-dto";
-import Animated, { SharedValue, useAnimatedStyle } from "react-native-reanimated";
+import Animated, { SharedValue } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 import useDdlMutation from "../hooks/useDdlMutation";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 
-type RightActionsProps = {
-  progress: SharedValue<number>;
-  onPin: () => void;
-  onDelete: () => void;
-  isPinned: boolean;
-  isUpdatingPin: boolean;
-  isDeletingTask: boolean;
-};
+import DdlRightActions from "./ddl-right-actions";
 
-const RightActions = ({
-  progress,
-  onPin,
-  onDelete,
-  isPinned,
-  isUpdatingPin,
-  isDeletingTask,
-}: RightActionsProps) => {
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: 120 * (1 - progress.value) }],
-  }));
-
-  return (
-    <Animated.View
-      className="w-50 flex-row items-center justify-end gap-3 pl-4"
-      style={animatedStyle}
-    >
-      <Pressable
-        disabled={isUpdatingPin}
-        onPress={onPin}
-        className={`h-20 w-20 items-center justify-center rounded-2xl ${
-          isUpdatingPin ? "bg-[#E7EFDf]" : "bg-[#DCF5C7]"
-        }`}
-      >
-        {isUpdatingPin ? (
-          <ActivityIndicator size="small" color="#5B9E2E" />
-        ) : (
-          <MaterialCommunityIcons
-            name={isPinned ? "pin-off" : "pin"}
-            size={22}
-            color="#5B9E2E"
-          />
-        )}
-      </Pressable>
-
-      <Pressable
-        disabled={isDeletingTask}
-        onPress={onDelete}
-        className={`h-20 w-20 items-center justify-center rounded-2xl ${
-          isDeletingTask ? "bg-[#F8EEEE]" : "bg-[#FCE4E4]"
-        }`}
-      >
-        {isDeletingTask ? (
-          <ActivityIndicator size="small" color="#E05C5C" />
-        ) : (
-          <MaterialCommunityIcons name="trash-can-outline" size={22} color="#E05C5C" />
-        )}
-      </Pressable>
-    </Animated.View>
-  );
-};
 
 const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
@@ -92,7 +34,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
 
   const renderRightActions = (progress: SharedValue<number>) => {
     return (
-      <RightActions
+      <DdlRightActions
         progress={progress}
         onPin={() =>
           updatePin(

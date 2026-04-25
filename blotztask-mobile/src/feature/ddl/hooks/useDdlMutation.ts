@@ -4,6 +4,7 @@ import { toggleTaskCompletion } from "@/shared/services/task-service";
 import { ddlKeys, taskKeys } from "@/shared/constants/query-key-factory";
 import Toast from "react-native-toast-message";
 import { useTranslation } from "react-i18next";
+import { DeadlineTaskDTO } from "../models/deadline-task-dto";
 
 const useDdlMutation = () => {
   const queryClient = useQueryClient();
@@ -29,15 +30,7 @@ const useDdlMutation = () => {
 
       return { previousDdlTasks };
     },
-    onError: (_err, _variables, context) => {
-      if (context?.previousDdlTasks) {
-        queryClient.setQueryData(ddlKeys.all, context.previousDdlTasks);
-      }
-      Toast.show({
-        type: "error",
-        text1: t("errors.update_pin"),
-      });
-    },
+
     onSettled: () => {
       invalidateAll();
     },
@@ -53,12 +46,7 @@ const useDdlMutation = () => {
       });
       console.log(`[Mutation Success] task ${taskId} is removed from ddl`);
     },
-    onError: () => {
-      Toast.show({
-        type: "error",
-        text1: t("errors.delete_task"),
-      });
-    },
+
   });
 
   const markAsDoneMutation = useMutation({
@@ -77,15 +65,7 @@ const useDdlMutation = () => {
 
       return { previousDdlTasks };
     },
-    onError: (_err, _taskId, context) => {
-      if (context?.previousDdlTasks) {
-        queryClient.setQueryData(ddlKeys.all, context.previousDdlTasks);
-      }
-      Toast.show({
-        type: "error",
-        text1: t("errors.mark_as_done"),
-      });
-    },
+
     onSuccess: (_data, taskId) => {
       console.log(`[Mutation Success] task ${taskId} is done`);
     },
