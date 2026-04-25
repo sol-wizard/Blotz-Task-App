@@ -45,7 +45,7 @@ const useDdlMutation = () => {
 
   const deleteDeadlineTaskMutation = useMutation({
     mutationFn: (taskId: number) => deleteDeadlineTask(taskId),
-    onSuccess: () => {
+    onSuccess: (_data, taskId) => {
       invalidateAll();
       Toast.show({
         type: "warning",
