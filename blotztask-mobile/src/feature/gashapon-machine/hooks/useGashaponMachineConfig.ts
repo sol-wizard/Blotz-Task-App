@@ -221,10 +221,13 @@ export const useGashaponMachineConfig = ({
     });
 
     Accelerometer.setUpdateInterval(16);
-
+    
     const shakingSubscription = Accelerometer.addListener((accelerometerData) => {
-      const { x, y } = accelerometerData;
+      let { x, y } = accelerometerData;
 
+      if (Platform.OS === "android") {
+        x = -x;
+      }
       starsRef.current.forEach((star) => {
         if (star && worldRef.current) {
           const starExists = worldRef.current.bodies.includes(star);
