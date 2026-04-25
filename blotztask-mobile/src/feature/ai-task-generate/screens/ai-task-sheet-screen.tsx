@@ -34,7 +34,7 @@ export default function AiTaskSheetScreen() {
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload, setIsListening } = useVoiceRecorder(
+  const { isListening, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
     submitAudioForTranscription,
   );
   const { addTaskAsync, isAdding } = useTaskMutations();
@@ -136,7 +136,14 @@ export default function AiTaskSheetScreen() {
 
               {isAiGenerating && !!transcript && !hasContent && (
                 <Text
-                  style={{ opacity: 0.7, fontStyle: "italic", color: "white", textAlign: "center", marginHorizontal: 24, marginBottom: 8 }}
+                  style={{
+                    opacity: 0.7,
+                    fontStyle: "italic",
+                    color: "white",
+                    textAlign: "center",
+                    marginHorizontal: 24,
+                    marginBottom: 8,
+                  }}
                   numberOfLines={3}
                 >
                   &ldquo;{transcript}&rdquo;
@@ -166,10 +173,10 @@ export default function AiTaskSheetScreen() {
                 onSubmitText={() => void handleSubmitText()}
                 // Mic input
                 isListening={isListening}
-                setIsListening={setIsListening}
                 setIsHoldHintVisible={(visible) => (visible ? showHoldHint() : hideHoldHint())}
                 onMicPressIn={handleMicPressIn}
                 onMicPressOut={() => void handleMicPressOut()}
+                cancelListening={cancelListening}
                 // Results
                 hasResults={hasContent}
                 onConfirm={() => void handleAddAll()}

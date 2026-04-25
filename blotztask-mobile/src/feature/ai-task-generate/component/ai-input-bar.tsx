@@ -14,10 +14,10 @@ type Props = {
 
   // Mic / recording
   isListening: boolean;
-  setIsListening: (listening: boolean) => void;
   setIsHoldHintVisible: (visible: boolean) => void;
   onMicPressIn: () => void;
   onMicPressOut: () => void;
+  cancelListening: () => void;
 
   // Results
   hasResults: boolean;
@@ -29,7 +29,6 @@ type Props = {
 export function AiInputBar({
   textInput,
   isListening,
-  setIsListening,
   hasResults,
   onChangeText,
   onSubmitText,
@@ -38,6 +37,7 @@ export function AiInputBar({
   onConfirm,
   setIsHoldHintVisible,
   isAiGenerating,
+  cancelListening,
 }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
   const { bottom } = useSafeAreaInsets();
@@ -61,7 +61,7 @@ export function AiInputBar({
           if (isAiGenerating) return;
           if (!longPressTriggered.current) {
             setIsHoldHintVisible(true);
-            setIsListening(false);
+            cancelListening();
           } else {
             onMicPressOut();
           }
