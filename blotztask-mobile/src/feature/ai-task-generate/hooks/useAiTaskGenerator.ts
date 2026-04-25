@@ -29,7 +29,7 @@ export function useAiTaskGenerator({
   const { t } = useTranslation("aiTaskGenerate");
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
-  const [interimTranscript, setInterimTranscript] = useState<string | undefined>();
+  const [transcript, setTranscript] = useState<string | undefined>();
   const [streamedTasks, setStreamedTasks] = useState<ExtractedTaskDTO[]>([]);
   const [streamedNotes, setStreamedNotes] = useState<AiNoteDTO[]>([]);
   // Tracks the moment the user released the mic (or submitted text), used to log
@@ -42,7 +42,7 @@ export function useAiTaskGenerator({
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
     const base64 = arrayBufferToBase64(arrayBuffer);
 
-    setInterimTranscript(undefined);
+    setTranscript(undefined);
     setStreamedTasks([]);
     setStreamedNotes([]);
     setIsAiGenerating(true);
@@ -60,7 +60,7 @@ export function useAiTaskGenerator({
   const sendTextMessage = async (text: string) => {
     if (!text.trim() || !connection) return;
 
-    setInterimTranscript(undefined);
+    setTranscript(undefined);
     setStreamedTasks([]);
     setStreamedNotes([]);
     setIsAiGenerating(true);
@@ -75,7 +75,7 @@ export function useAiTaskGenerator({
   };
 
   const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
-    setInterimTranscript(undefined);
+    setTranscript(undefined);
     setStreamedTasks([]);
     setStreamedNotes([]);
     setIsAiGenerating(false);
@@ -100,7 +100,7 @@ export function useAiTaskGenerator({
         conn = newConn;
         setConnection(conn);
         conn.on("ReceiveMessage", receiveMessageHandler);
-        conn.on("ReceiveTranscript", (transcript: string) => setInterimTranscript(transcript));
+        conn.on("ReceiveTranscript", (text: string) => setTranscript(text));
         conn.on("ReceiveTaskExtracted", (task: ExtractedTaskDTO) => {
           if (requestStartedAtRef.current == null) return;
           setStreamedTasks((prev) => [...prev, task]);
@@ -126,7 +126,7 @@ export function useAiTaskGenerator({
 
   return {
     aiGeneratedMessage,
-    interimTranscript,
+    transcript,
     streamedTasks,
     streamedNotes,
     submitAudioForTranscription,

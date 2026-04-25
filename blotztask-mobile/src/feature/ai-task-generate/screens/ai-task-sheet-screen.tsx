@@ -30,7 +30,7 @@ export default function AiTaskSheetScreen() {
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
   const { isHoldHintVisible, showHoldHint, hideHoldHint } = useHoldHint(1500);
-  const { aiGeneratedMessage, interimTranscript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
+  const { aiGeneratedMessage, transcript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
@@ -141,12 +141,12 @@ export default function AiTaskSheetScreen() {
               {/* Task / note cards (streamed or final) */}
               {hasContent && <AiResultList aiTasks={displayTasks} aiNotes={displayNotes} />}
 
-              {isAiGenerating && !!interimTranscript && !hasContent && (
+              {isAiGenerating && !!transcript && !hasContent && (
                 <Text
                   style={{ opacity: 0.7, fontStyle: "italic", color: "white", textAlign: "center", marginHorizontal: 24, marginBottom: 8 }}
                   numberOfLines={3}
                 >
-                  &ldquo;{interimTranscript}&rdquo;
+                  &ldquo;{transcript}&rdquo;
                 </Text>
               )}
 
