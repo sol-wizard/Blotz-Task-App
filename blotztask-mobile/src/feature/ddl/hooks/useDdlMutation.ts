@@ -35,11 +35,9 @@ const useDdlMutation = () => {
 
   const deleteDeadlineTaskMutation = useMutation({
     mutationFn: (taskId: number) => deleteDeadlineTask(taskId),
-    onSuccess: (_data, taskId) => {
+    onSettled: () => {
       invalidateAll();
-      console.log(`[Mutation Success] task ${taskId} is removed from ddl`);
     },
-
   });
 
   const markAsDoneMutation = useMutation({
@@ -59,9 +57,6 @@ const useDdlMutation = () => {
       return { previousDdlTasks };
     },
 
-    onSuccess: (_data, taskId) => {
-      console.log(`[Mutation Success] task ${taskId} is done`);
-    },
     onSettled: () => {
       invalidateAll();
     },
