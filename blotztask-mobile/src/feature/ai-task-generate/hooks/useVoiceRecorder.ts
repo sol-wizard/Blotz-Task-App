@@ -20,6 +20,13 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
   };
 
+  const cancelListening = async (): Promise<void> => {
+    if (recorder.isRecording) {
+      await recorder.stop();
+    }
+    setIsListening(false);
+  };
+
   const stopAndUpload = async (): Promise<void> => {
     if (!recorder.isRecording) {
       setIsListening(false);
@@ -43,5 +50,5 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
   };
 
-  return { isListening, startListening, stopAndUpload, setIsListening };
+  return { isListening, startListening, stopAndUpload, cancelListening };
 }
