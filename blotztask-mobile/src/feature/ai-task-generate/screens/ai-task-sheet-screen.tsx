@@ -34,7 +34,7 @@ export default function AiTaskSheetScreen() {
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload } = useVoiceRecorder(
+  const { isListening, startListening, stopAndUpload, setIsListening } = useVoiceRecorder(
     submitAudioForTranscription,
   );
   const { addTaskAsync, isAdding } = useTaskMutations();
@@ -167,11 +167,13 @@ export default function AiTaskSheetScreen() {
               {/* Input bar sticks to the keyboard only */}
 
               <AiInputBar
+                // Text input
                 textInput={textInput}
-                isListening={isListening}
-                hasResults={hasResults}
                 onChangeText={setTextInput}
                 onSubmitText={() => void handleSubmitText()}
+                // Mic input
+                isListening={isListening}
+                setIsListening={setIsListening}
                 onMicPressIn={handleMicPressIn}
                 onMicPressOut={() => void handleMicPressOut()}
                 onConfirm={() => void handleAddAll()}

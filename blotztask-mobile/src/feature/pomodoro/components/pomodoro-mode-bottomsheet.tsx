@@ -4,14 +4,14 @@ import Animated, { useSharedValue, useAnimatedScrollHandler } from "react-native
 import { MaterialIcons } from "@expo/vector-icons";
 import { ASSETS } from "@/shared/constants/assets";
 import { LinearGradient } from "expo-linear-gradient";
-import { SoundscapeCard } from "./sound-scape";
+import { SoundscapeCard } from "../../calendar/components/sound-scape";
 import { useTranslation } from "react-i18next";
 import {
   PomodoroSoundscapeKey,
   SOUNDSCAPES_DATA,
   ITEM_WIDTH,
   SNAP_INTERVAL,
-} from "../models/pomodoro-setting";
+} from "../utils/pomodoro-setting";
 import { usePomodoroSettingMutation } from "../hooks/usePomodoroSetting";
 import { usePomodoroSoundscapePlayer } from "../hooks/usePomodoroSoundscapePlayer";
 

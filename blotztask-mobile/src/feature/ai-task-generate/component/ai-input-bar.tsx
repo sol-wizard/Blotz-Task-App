@@ -1,38 +1,70 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import LottieView from "lottie-react-native";
-import { View, Pressable, TextInput } from "react-native";
+import { View, Pressable, TextInput, Platform } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRef } from "react";
 
 type Props = {
+  // Text input
   textInput: string;
-  isListening: boolean;
-  hasResults: boolean;
   onChangeText: (text: string) => void;
   onSubmitText: () => void;
+
+  // Mic / recording
+  isListening: boolean;
+  setIsListening: (listening: boolean) => void;
+  setIsHoldHintVisible: (visible: boolean) => void;
   onMicPressIn: () => void;
   onMicPressOut: () => void;
+
+  // Results
+  hasResults: boolean;
   onConfirm: () => void;
 };
 
 export function AiInputBar({
   textInput,
   isListening,
+  setIsListening,
   hasResults,
   onChangeText,
   onSubmitText,
   onMicPressIn,
   onMicPressOut,
   onConfirm,
+  setIsHoldHintVisible,
 }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
+  const { bottom } = useSafeAreaInsets();
+  const bottomPadding = Platform.OS === "android" ? bottom + 16 : 32;
+  const longPressTriggered = useRef(false);
 
   return (
-    <View className="w-full flex-row items-center px-6 gap-4 pb-8">
+    <View
+      className="w-full flex-row items-center px-6 gap-4"
+      style={{ paddingBottom: bottomPadding }}
+    >
       {/* Microphone hold-to-record */}
       <Pressable
-        onPressIn={onMicPressIn}
-        onPressOut={onMicPressOut}
+        onPressIn={() => {
+          longPressTriggered.current = false;
+          setIsHoldHintVisible(false);
+          onMicPressIn();
+        }}
+        onPressOut={() => {
+          if (!longPressTriggered.current) {
+            setIsHoldHintVisible(true);
+            setIsListening(false);
+          } else {
+            onMicPressOut();
+          }
+        }}
+        onLongPress={() => {
+          longPressTriggered.current = true;
+        }}
+        delayLongPress={1000}
         accessibilityLabel="Hold to record"
         className="w-14 h-14 rounded-full items-center justify-center"
         style={{
