@@ -223,8 +223,8 @@ export const useGashaponMachineConfig = ({
     Accelerometer.setUpdateInterval(16);
     
     const shakingSubscription = Accelerometer.addListener((accelerometerData) => {
-      let { x, y } = accelerometerData;
-
+      const y = accelerometerData.y;
+      let x = accelerometerData.x;
       if (Platform.OS === "android") {
         x = -x;
       }
