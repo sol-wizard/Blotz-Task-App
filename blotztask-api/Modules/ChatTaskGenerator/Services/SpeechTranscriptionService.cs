@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Azure;
 using Azure.AI.OpenAI;
 using BlotzTask.Shared.Exceptions;
@@ -36,15 +35,10 @@ public class SpeechTranscriptionService
         if (audio.Length <= 0)
             throw new ArgumentException("Audio file cannot be empty.", nameof(audio));
 
-        _logger.LogInformation(
-            "VoiceTiming: Whisper call starting. FileName={FileName} ContentType={ContentType} SizeBytes={SizeBytes}",
-            audio.FileName, audio.ContentType, audio.Length);
-
         try
         {
             await using var stream = audio.OpenReadStream();
 
-            var apiSw = Stopwatch.StartNew();
             var result = await _audioClient.TranscribeAudioAsync(
                 stream,
                 audio.FileName,
@@ -54,16 +48,11 @@ public class SpeechTranscriptionService
                 },
                 ct
             );
-            apiSw.Stop();
 
             var transcriptionResult = result.Value.Text;
 
             if (string.IsNullOrWhiteSpace(transcriptionResult))
                 throw new InvalidOperationException("Transcription returned empty text.");
-
-            _logger.LogInformation(
-                "VoiceTiming: Whisper call completed. WhisperApiMs={WhisperApiMs} Chars={Chars} SizeBytes={SizeBytes}",
-                apiSw.ElapsedMilliseconds, transcriptionResult.Length, audio.Length);
 
             return transcriptionResult.Trim();
         }
