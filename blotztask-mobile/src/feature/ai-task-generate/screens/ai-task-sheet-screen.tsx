@@ -29,7 +29,7 @@ export default function AiTaskSheetScreen() {
   const { height } = useWindowDimensions();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
-  const { isHoldHintVisible, showHoldHint } = useHoldHint(1500);
+  const { isHoldHintVisible, showHoldHint, hideHoldHint } = useHoldHint(1500);
   const { aiGeneratedMessage, interimTranscript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
     setIsAiGenerating,
   });
@@ -174,8 +174,11 @@ export default function AiTaskSheetScreen() {
                 // Mic input
                 isListening={isListening}
                 setIsListening={setIsListening}
+                setIsHoldHintVisible={(visible) => (visible ? showHoldHint() : hideHoldHint())}
                 onMicPressIn={handleMicPressIn}
                 onMicPressOut={() => void handleMicPressOut()}
+                // Results
+                hasResults={hasResults}
                 onConfirm={() => void handleAddAll()}
               />
             </View>

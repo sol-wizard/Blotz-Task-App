@@ -36,35 +36,20 @@ export function useAiTaskGenerator({
   // the user-perceived end-to-end latency when ReceiveMessage arrives.
   const requestStartedAtRef = useRef<number | null>(null);
 
-  const submitAudioForTranscription = async (
-    uri: string,
-    pressReleasedAt: number,
-  ): Promise<void> => {
+  const submitAudioForTranscription = async (uri: string): Promise<void> => {
     if (!connection) throw new Error("Cannot submit audio: not connected.");
 
-    const readStart = Date.now();
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
-    const readEnd = Date.now();
     const base64 = arrayBufferToBase64(arrayBuffer);
-    const encodeEnd = Date.now();
-
-    console.log(
-      `[VoiceTiming] submitAudio: audioBytes=${arrayBuffer.byteLength} base64Bytes=${base64.length} readMs=${readEnd - readStart} base64EncodeMs=${encodeEnd - readEnd} sinceReleaseMs=${encodeEnd - pressReleasedAt}`,
-    );
 
     setInterimTranscript(undefined);
     setStreamedTasks([]);
     setStreamedNotes([]);
     setIsAiGenerating(true);
-    requestStartedAtRef.current = pressReleasedAt;
+    requestStartedAtRef.current = Date.now();
 
     try {
-      const invokeStart = Date.now();
       await signalRService.invoke(connection, "TranscribeAudio", base64);
-      const invokeEnd = Date.now();
-      console.log(
-        `[VoiceTiming] TranscribeAudio invoke resolved: invokeMs=${invokeEnd - invokeStart} sinceReleaseMs=${invokeEnd - pressReleasedAt}`,
-      );
     } catch (error) {
       console.error("TranscribeAudio invocation failed:", error);
       setIsAiGenerating(false);
@@ -79,13 +64,9 @@ export function useAiTaskGenerator({
     setStreamedTasks([]);
     setStreamedNotes([]);
     setIsAiGenerating(true);
-    const sendStart = Date.now();
-    requestStartedAtRef.current = sendStart;
+    requestStartedAtRef.current = Date.now();
     try {
       await signalRService.invoke(connection, "SendMessage", text);
-      console.log(
-        `[VoiceTiming] SendMessage invoke resolved: invokeMs=${Date.now() - sendStart} chars=${text.length}`,
-      );
     } catch (error) {
       console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
@@ -99,13 +80,7 @@ export function useAiTaskGenerator({
     setStreamedNotes([]);
     setIsAiGenerating(false);
 
-    const startedAt = requestStartedAtRef.current;
-    if (startedAt != null) {
-      console.log(
-        `[VoiceTiming] ReceiveMessage arrived: totalSinceStartMs=${Date.now() - startedAt} success=${receivedAiMessage.isSuccess} tasks=${receivedAiMessage.extractedTasks?.length ?? 0} notes=${receivedAiMessage.extractedNotes?.length ?? 0}`,
-      );
-      requestStartedAtRef.current = null;
-    }
+    requestStartedAtRef.current = null;
 
     if (!receivedAiMessage.isSuccess) {
       const i18nKey = ERROR_CODE_TO_I18N_KEY[receivedAiMessage.errorCode ?? ""] ?? "errors.default";
@@ -128,19 +103,11 @@ export function useAiTaskGenerator({
         conn.on("ReceiveTranscript", (transcript: string) => setInterimTranscript(transcript));
         conn.on("ReceiveTaskExtracted", (task: ExtractedTaskDTO) => {
           if (requestStartedAtRef.current == null) return;
-          const sinceStartMs = Date.now() - requestStartedAtRef.current;
-          setStreamedTasks((prev) => {
-            console.log(`[VoiceTiming] ReceiveTaskExtracted arrived: sinceStartMs=${sinceStartMs} totalStreamedSoFar=${prev.length + 1}`);
-            return [...prev, task];
-          });
+          setStreamedTasks((prev) => [...prev, task]);
         });
         conn.on("ReceiveNoteExtracted", (note: AiNoteDTO) => {
           if (requestStartedAtRef.current == null) return;
-          const sinceStartMs = Date.now() - requestStartedAtRef.current;
-          setStreamedNotes((prev) => {
-            console.log(`[VoiceTiming] ReceiveNoteExtracted arrived: sinceStartMs=${sinceStartMs} totalStreamedSoFar=${prev.length + 1}`);
-            return [...prev, note];
-          });
+          setStreamedNotes((prev) => [...prev, note]);
         });
         return conn.start();
       })
