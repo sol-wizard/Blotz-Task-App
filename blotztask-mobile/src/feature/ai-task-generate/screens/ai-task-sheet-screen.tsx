@@ -34,9 +34,8 @@ export default function AiTaskSheetScreen() {
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload, setIsListening } = useVoiceRecorder(
-    submitAudioForTranscription,
-  );
+  const { isListening, startListening, stopAndUpload, setIsListening, cancelListening } =
+    useVoiceRecorder(submitAudioForTranscription);
   const { addTaskAsync, isAdding } = useTaskMutations();
   const { createNoteAsync, isNoteCreating } = useNotesMutation();
 

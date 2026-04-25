@@ -18,6 +18,7 @@ type Props = {
   setIsHoldHintVisible: (visible: boolean) => void;
   onMicPressIn: () => void;
   onMicPressOut: () => void;
+  cancelListening: () => void;
 
   // Results
   hasResults: boolean;
@@ -35,6 +36,7 @@ export function AiInputBar({
   onMicPressOut,
   onConfirm,
   setIsHoldHintVisible,
+  cancelListening,
 }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
   const { bottom } = useSafeAreaInsets();
