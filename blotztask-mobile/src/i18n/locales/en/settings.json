@@ -27,7 +27,7 @@
     "banner": "🎉 Great job! Let Blotz help you get even more done.",
     "showProgress": "Show progress bar",
     "showProgressHint": "(Tap the number to toggle)",
-    "period": "Billing period",
+    "period": "Billing period :",
     "usedQuota": "Used quota",
     "remaining": "Remaining",
     "plan": "Membership Plan"
