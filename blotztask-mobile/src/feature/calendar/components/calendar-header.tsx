@@ -3,7 +3,7 @@ import { formatCalendarDate } from "@/feature/calendar/util/date-formatter";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import { AnimatedChevron } from "@/shared/components/chevron";
 import { router } from "expo-router";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { SharedValue } from "react-native-reanimated";
 
 interface CalendarHeaderProps {
@@ -30,6 +30,20 @@ export default function CalendarHeader({ date, progress, onToggleCalendar }: Cal
         >
           <AnimatedChevron color="#1F2937" progress={progress} />
         </Pressable>
+      </View>
+
+      <View className="flex-row items-center justify-end gap-3">
+        <Pressable
+          onPress={() => {
+            router.push({
+              pathname: "/(protected)/ddl",
+            });
+          }}
+          className="h-14 w-14 items-center justify-center rounded-full bg-white border border-gray-100"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Feather name="flag" size={24} color="#1F2937" />
+        </Pressable>
 
         <Pressable
           onPress={() => {
@@ -38,22 +52,10 @@ export default function CalendarHeader({ date, progress, onToggleCalendar }: Cal
               params: { selectedDate: date },
             });
           }}
-          className="p-1"
+          className="h-14 w-14 items-center justify-center rounded-full bg-white border border-gray-100"
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <MaterialCommunityIcons name="calendar-month-outline" size={26} color="#1F2937" />
-        </Pressable>
-      </View>
-
-      <View className="flex-row items-center justify-end px-5">
-        <Pressable
-          onPress={() => {
-            router.push({
-              pathname: "/(protected)/ddl",
-            });
-          }}
-        >
-          <MaterialCommunityIcons name="bell-outline" size={24} color="black" />
+          <MaterialCommunityIcons name="calendar-check" size={24} color="#1F2937" />
         </Pressable>
       </View>
     </View>
