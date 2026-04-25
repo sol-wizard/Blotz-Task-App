@@ -30,6 +30,13 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
   };
 
+  const cancelListening = async (): Promise<void> => {
+    if (recorder.isRecording) {
+      await recorder.stop();
+    }
+    setIsListening(false);
+  };
+
   const stopAndUpload = async (): Promise<StopAndUploadResult | void> => {
     if (!recorder.isRecording) {
       setIsListening(false);
@@ -37,7 +44,9 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
 
     const pressReleasedAt = Date.now();
-    const duration = recordingStartedAtRef.current ? pressReleasedAt - recordingStartedAtRef.current : Infinity;
+    const duration = recordingStartedAtRef.current
+      ? pressReleasedAt - recordingStartedAtRef.current
+      : Infinity;
     recordingStartedAtRef.current = null;
 
     try {
@@ -63,5 +72,5 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
   };
 
-  return { isListening, startListening, stopAndUpload, setIsListening };
+  return { isListening, startListening, stopAndUpload, cancelListening };
 }

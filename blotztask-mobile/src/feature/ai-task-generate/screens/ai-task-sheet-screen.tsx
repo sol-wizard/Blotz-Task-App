@@ -30,11 +30,18 @@ export default function AiTaskSheetScreen() {
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
   const { isHoldHintVisible, showHoldHint, hideHoldHint } = useHoldHint(1500);
-  const { aiGeneratedMessage, interimTranscript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
+  const {
+    aiGeneratedMessage,
+    interimTranscript,
+    streamedTasks,
+    streamedNotes,
+    submitAudioForTranscription,
+    sendTextMessage,
+  } = useAiTaskGenerator({
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload, setIsListening } = useVoiceRecorder(
+  const { isListening, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
     submitAudioForTranscription,
   );
   const { addTaskAsync, isAdding } = useTaskMutations();
@@ -57,7 +64,9 @@ export default function AiTaskSheetScreen() {
   const aiNotes = aiGeneratedMessage?.extractedNotes ?? [];
   const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
 
-  const streamedAiTasks = streamedTasks.map((task) => mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []));
+  const streamedAiTasks = streamedTasks.map((task) =>
+    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
+  );
   const displayTasks = hasResults ? aiTasks : streamedAiTasks;
   const displayNotes = hasResults ? aiNotes : streamedNotes;
   const hasContent = hasResults || streamedTasks.length > 0 || streamedNotes.length > 0;
@@ -143,7 +152,14 @@ export default function AiTaskSheetScreen() {
 
               {isAiGenerating && !!interimTranscript && !hasContent && (
                 <Text
-                  style={{ opacity: 0.7, fontStyle: "italic", color: "white", textAlign: "center", marginHorizontal: 24, marginBottom: 8 }}
+                  style={{
+                    opacity: 0.7,
+                    fontStyle: "italic",
+                    color: "white",
+                    textAlign: "center",
+                    marginHorizontal: 24,
+                    marginBottom: 8,
+                  }}
                   numberOfLines={3}
                 >
                   &ldquo;{interimTranscript}&rdquo;
@@ -173,10 +189,10 @@ export default function AiTaskSheetScreen() {
                 onSubmitText={() => void handleSubmitText()}
                 // Mic input
                 isListening={isListening}
-                setIsListening={setIsListening}
                 setIsHoldHintVisible={(visible) => (visible ? showHoldHint() : hideHoldHint())}
                 onMicPressIn={handleMicPressIn}
                 onMicPressOut={() => void handleMicPressOut()}
+                cancelListening={cancelListening}
                 // Results
                 hasResults={hasResults}
                 onConfirm={() => void handleAddAll()}
