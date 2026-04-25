@@ -30,7 +30,7 @@ export default function AiTaskSheetScreen() {
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
   const { isHoldHintVisible, showHoldHint, hideHoldHint } = useHoldHint(1500);
-  const { aiGeneratedMessage, transcript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
+  const { userInput, transcript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
@@ -51,28 +51,21 @@ export default function AiTaskSheetScreen() {
   }, []);
 
   // --- Derived data ---
-  const aiTasks = (aiGeneratedMessage?.extractedTasks ?? []).map((task) =>
-    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
-  );
-  const aiNotes = aiGeneratedMessage?.extractedNotes ?? [];
-  const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
-
-  const streamedAiTasks = streamedTasks.map((task) => mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []));
-  const displayTasks = hasResults ? aiTasks : streamedAiTasks;
-  const displayNotes = hasResults ? aiNotes : streamedNotes;
-  const hasContent = hasResults || streamedTasks.length > 0 || streamedNotes.length > 0;
+  const displayTasks = streamedTasks.map((task) => mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []));
+  const displayNotes = streamedNotes;
+  const hasContent = streamedTasks.length > 0 || streamedNotes.length > 0;
 
   const analyticsPayload = {
-    userInput: aiGeneratedMessage?.userInput,
-    generatedTaskTitles: aiTasks.map((t) => t.title),
-    generatedNoteTexts: aiNotes.map((n) => n.text),
+    userInput,
+    generatedTaskTitles: displayTasks.map((t) => t.title),
+    generatedNoteTexts: displayNotes.map((n) => n.text),
   };
 
   // --- Handlers ---
   const handleDismiss = () => {
     analytics.trackIfUserAcceptAiTask({
       ...analyticsPayload,
-      outcome: hasResults ? "rejected" : "abandoned",
+      outcome: hasContent ? "rejected" : "abandoned",
     });
     router.back();
   };
@@ -89,8 +82,8 @@ export default function AiTaskSheetScreen() {
     if (isAdding || isNoteCreating) return;
     try {
       await Promise.all([
-        ...aiTasks.map((task) => addTaskAsync(convertAiTaskToAddTaskItemDTO(task))),
-        ...aiNotes.map((n) => createNoteAsync(n.text)),
+        ...displayTasks.map((task) => addTaskAsync(convertAiTaskToAddTaskItemDTO(task))),
+        ...displayNotes.map((n) => createNoteAsync(n.text)),
       ]);
       analytics.trackIfUserAcceptAiTask({
         ...analyticsPayload,
@@ -178,8 +171,10 @@ export default function AiTaskSheetScreen() {
                 onMicPressIn={handleMicPressIn}
                 onMicPressOut={() => void handleMicPressOut()}
                 // Results
-                hasResults={hasResults}
+                hasResults={hasContent}
                 onConfirm={() => void handleAddAll()}
+                // State
+                isAiGenerating={isAiGenerating}
               />
             </View>
           </KeyboardStickyView>

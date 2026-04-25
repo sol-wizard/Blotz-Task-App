@@ -12,32 +12,47 @@ const MIN_RECORDING_MS = 1000;
 export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
   const [isListening, setIsListening] = useState(false);
   const recordingStartedAtRef = useRef<number | null>(null);
+  const setupPromiseRef = useRef<Promise<void> | null>(null);
+  const sessionIdRef = useRef(0);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
   const startListening = async () => {
     // Set listening immediately so the waveform appears on press rather than
     // after the async audio setup completes (~200-400ms later).
     setIsListening(true);
-    try {
+    const sessionId = ++sessionIdRef.current;
+    setupPromiseRef.current = (async () => {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
       recordingStartedAtRef.current = Date.now();
-    } catch (error) {
-      setIsListening(false);
-      recordingStartedAtRef.current = null;
+    })().catch((error) => {
+      if (sessionId === sessionIdRef.current) {
+        setIsListening(false);
+        recordingStartedAtRef.current = null;
+      }
       console.warn("[Mic] Error starting recording.", error);
-    }
+    });
   };
 
   const stopAndUpload = async (): Promise<StopAndUploadResult | void> => {
-    if (!recorder.isRecording) {
+    const sessionId = sessionIdRef.current;
+
+    // Wait for recording setup to finish if the user released before it completed
+    if (setupPromiseRef.current) {
+      await setupPromiseRef.current;
+      setupPromiseRef.current = null;
+    }
+
+    // Use our own ref rather than recorder.isRecording — recorder.isRecording is
+    // React state and may be stale immediately after recorder.record() is called.
+    if (!recordingStartedAtRef.current) {
       setIsListening(false);
       return;
     }
 
     const pressReleasedAt = Date.now();
-    const duration = recordingStartedAtRef.current ? pressReleasedAt - recordingStartedAtRef.current : Infinity;
+    const duration = pressReleasedAt - recordingStartedAtRef.current;
     recordingStartedAtRef.current = null;
 
     try {
@@ -57,9 +72,14 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
     } finally {
-      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(
-        () => undefined,
-      );
+      // Only reset audio mode if a newer session hasn't already started.
+      // Without this guard, the finally of session N resets allowsRecording: false
+      // AFTER session N+1 has already set it to true, breaking the next recording.
+      if (sessionId === sessionIdRef.current) {
+        await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(
+          () => undefined,
+        );
+      }
     }
   };
 
