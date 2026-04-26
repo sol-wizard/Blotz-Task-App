@@ -13,7 +13,7 @@ import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { ListeningIndicator } from "../component/listening-indicator";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
-import { useVoiceRecorder, StopAndUploadResult } from "../hooks/useVoiceRecorder";
+import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { useHoldHint } from "../hooks/useHoldHint";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
@@ -103,10 +103,7 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressOut = async () => {
-    const result = await stopAndUpload();
-    if (result === StopAndUploadResult.Short) {
-      showHoldHint();
-    }
+    await stopAndUpload();
   };
 
   return (
