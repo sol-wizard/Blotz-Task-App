@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Pressable, useWindowDimensions, Keyboard } from "react-native";
+import { View, Pressable, Text, useWindowDimensions, Keyboard } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -15,6 +15,7 @@ import { ListeningIndicator } from "../component/listening-indicator";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
+import { useHoldHint } from "../hooks/useHoldHint";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { convertAiTaskToAddTaskItemDTO } from "../utils/map-aitask-to-addtaskitem-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -28,9 +29,8 @@ export default function AiTaskSheetScreen() {
   const { height } = useWindowDimensions();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
-  const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
-
-  const { aiGeneratedMessage, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
+  const { isHoldHintVisible, showHoldHint, hideHoldHint } = useHoldHint(1500);
+  const { userInput, transcript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
@@ -51,23 +51,21 @@ export default function AiTaskSheetScreen() {
   }, []);
 
   // --- Derived data ---
-  const aiTasks = (aiGeneratedMessage?.extractedTasks ?? []).map((task) =>
-    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
-  );
-  const aiNotes = aiGeneratedMessage?.extractedNotes ?? [];
-  const hasResults = aiTasks.length > 0 || aiNotes.length > 0;
+  const displayTasks = streamedTasks.map((task) => mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []));
+  const displayNotes = streamedNotes;
+  const hasContent = streamedTasks.length > 0 || streamedNotes.length > 0;
 
   const analyticsPayload = {
-    userInput: aiGeneratedMessage?.userInput,
-    generatedTaskTitles: aiTasks.map((t) => t.title),
-    generatedNoteTexts: aiNotes.map((n) => n.text),
+    userInput,
+    generatedTaskTitles: displayTasks.map((t) => t.title),
+    generatedNoteTexts: displayNotes.map((n) => n.text),
   };
 
   // --- Handlers ---
   const handleDismiss = () => {
     analytics.trackIfUserAcceptAiTask({
       ...analyticsPayload,
-      outcome: hasResults ? "rejected" : "abandoned",
+      outcome: hasContent ? "rejected" : "abandoned",
     });
     router.back();
   };
@@ -84,8 +82,8 @@ export default function AiTaskSheetScreen() {
     if (isAdding || isNoteCreating) return;
     try {
       await Promise.all([
-        ...aiTasks.map((task) => addTaskAsync(convertAiTaskToAddTaskItemDTO(task))),
-        ...aiNotes.map((n) => createNoteAsync(n.text)),
+        ...displayTasks.map((task) => addTaskAsync(convertAiTaskToAddTaskItemDTO(task))),
+        ...displayNotes.map((n) => createNoteAsync(n.text)),
       ]);
       analytics.trackIfUserAcceptAiTask({
         ...analyticsPayload,
@@ -99,9 +97,14 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressIn = () => {
+    hideHoldHint();
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Keyboard.dismiss();
     void startListening();
+  };
+
+  const handleMicPressOut = async () => {
+    await stopAndUpload();
   };
 
   return (
@@ -124,16 +127,40 @@ export default function AiTaskSheetScreen() {
               </View>
 
               {/* Hint text (no results) */}
-              {!hasResults && <VoiceHintText />}
+              {!hasContent && <VoiceHintText />}
 
-              {/* Task / note cards (has results) */}
-              {hasResults && <AiResultList aiTasks={aiTasks} aiNotes={aiNotes} />}
+              {/* Task / note cards (streamed or final) */}
+              {hasContent && <AiResultList aiTasks={displayTasks} aiNotes={displayNotes} />}
 
-              <ListeningIndicator
-                isListening={isListening}
-                isAiGenerating={isAiGenerating}
-                isHoldHintVisible={isHoldHintVisible}
-              />
+              {isAiGenerating && !!transcript && !hasContent && (
+                <Text
+                  style={{
+                    opacity: 0.7,
+                    fontStyle: "italic",
+                    color: "white",
+                    textAlign: "center",
+                    marginHorizontal: 24,
+                    marginBottom: 8,
+                  }}
+                  numberOfLines={3}
+                >
+                  &ldquo;{transcript}&rdquo;
+                </Text>
+              )}
+
+              {!hasContent && (
+                <ListeningIndicator
+                  isListening={isListening}
+                  isAiGenerating={isAiGenerating}
+                  isHoldHintVisible={isHoldHintVisible}
+                />
+              )}
+
+              {isAiGenerating && hasContent && (
+                <Text style={{ color: "white", opacity: 0.6, fontSize: 13, marginBottom: 8 }}>
+                  {t("voiceListening.aiThinking")}…
+                </Text>
+              )}
 
               {/* Input bar sticks to the keyboard only */}
 
@@ -144,13 +171,15 @@ export default function AiTaskSheetScreen() {
                 onSubmitText={() => void handleSubmitText()}
                 // Mic input
                 isListening={isListening}
+                onShortPress={showHoldHint}
                 onMicPressIn={handleMicPressIn}
-                onMicPressOut={() => void stopAndUpload()}
-                setIsHoldHintVisible={setIsHoldHintVisible}
+                onMicPressOut={() => void handleMicPressOut()}
                 cancelListening={cancelListening}
-                // has results
-                hasResults={hasResults}
+                // Results
+                hasResults={hasContent}
                 onConfirm={() => void handleAddAll()}
+                // State
+                isAiGenerating={isAiGenerating}
               />
             </View>
           </KeyboardStickyView>

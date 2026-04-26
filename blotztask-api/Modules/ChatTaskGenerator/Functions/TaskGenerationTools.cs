@@ -7,11 +7,13 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Functions;
 public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> notes)
 {
     public int ToolCallCount { get; private set; }
+    public Func<ExtractedTask, Task>? OnTaskStreamed { get; set; }
+    public Func<ExtractedNote, Task>? OnNoteStreamed { get; set; }
 
     public void ResetCallCount() => ToolCallCount = 0;
 
     [Description("Add multiple tasks at once. Prefer this over CreateTask when the user mentions more than one task.")]
-    public string CreateTasks(
+    public async Task<string> CreateTasks(
         [Description("Array of task titles")] string[] titles,
         [Description("Array of descriptions (empty string if none)")] string[] descriptions,
         [Description("Array of start times in yyyy-MM-ddTHH:mm:ss")] DateTime[] startTimes,
@@ -22,7 +24,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         var count = titles.Length;
         for (var i = 0; i < count; i++)
         {
-            tasks.Add(new ExtractedTask
+            var task = new ExtractedTask
             {
                 Id = Guid.NewGuid(),
                 Title = titles[i],
@@ -30,13 +32,15 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
                 StartTime = startTimes[i],
                 EndTime = endTimes[i],
                 LabelName = labels[i]
-            });
+            };
+            tasks.Add(task);
+            if (OnTaskStreamed != null) await OnTaskStreamed(task);
         }
         return $"{count} task(s) added.";
     }
 
     [Description("Add a single task that has a specific date or time.")]
-    public string CreateTask(
+    public async Task<string> CreateTask(
         [Description("Title")] string title,
         [Description("Description or empty")] string description,
         [Description("yyyy-MM-ddTHH:mm:ss")] DateTime startTime,
@@ -44,7 +48,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         [Description("Work, Life, Learning, or Health")] LabelNameEnum label)
     {
         ToolCallCount++;
-        tasks.Add(new ExtractedTask
+        var task = new ExtractedTask
         {
             Id = Guid.NewGuid(),
             Title = title,
@@ -52,40 +56,46 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
             StartTime = startTime,
             EndTime = endTime,
             LabelName = label
-        });
+        };
+        tasks.Add(task);
+        if (OnTaskStreamed != null) await OnTaskStreamed(task);
         return "Task added.";
     }
 
     [Description("Add multiple notes at once. Prefer this over CreateNote when the user mentions more than one note.")]
-    public string CreateNotes(
+    public async Task<string> CreateNotes(
         [Description("Array of note texts")] string[] texts)
     {
         ToolCallCount++;
         foreach (var text in texts)
         {
-            notes.Add(new ExtractedNote
+            var note = new ExtractedNote
             {
                 Id = Guid.NewGuid(),
                 Text = text
-            });
+            };
+            notes.Add(note);
+            if (OnNoteStreamed != null) await OnNoteStreamed(note);
         }
         return $"{texts.Length} note(s) added.";
     }
 
     [Description("Add a single note for an idea or something to remember. Use this when no date or time is mentioned.")]
-    public string CreateNote(
+    public async Task<string> CreateNote(
         [Description("Note content")] string text)
     {
         ToolCallCount++;
-        notes.Add(new ExtractedNote
+        var note = new ExtractedNote
         {
             Id = Guid.NewGuid(),
             Text = text
-        });
+        };
+        notes.Add(note);
+        if (OnNoteStreamed != null) await OnNoteStreamed(note);
         return "Note added.";
     }
 
-    [Description("Remove a task")]
+    [Description("Remove a task. Use this when the user says they no longer want to do something they previously mentioned, e.g. 'I don't want to go to the gym anymore'.")]
     public string RemoveTask(
         [Description("Task title")] string title)
     {
@@ -96,7 +106,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         return "Task removed.";
     }
 
-    [Description("Update a task")]
+    [Description("Update a task. Use this when the user corrects or adjusts something they already said, e.g. changing the time or title of an existing task.")]
     public string UpdateTask(
         [Description("Current title")] string existingTitle,
         [Description("New title")] string title,
@@ -116,7 +126,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         return "Task updated.";
     }
 
-    [Description("Remove a note")]
+    [Description("Remove a note. Use this when the user says they no longer want to keep something they previously noted.")]
     public string RemoveNote(
         [Description("Note text")] string text)
     {
@@ -127,7 +137,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         return "Note removed.";
     }
 
-    [Description("Update a note")]
+    [Description("Update a note. Use this when the user corrects or adjusts the content of an existing note.")]
     public string UpdateNote(
         [Description("Current text")] string existingText,
         [Description("New text")] string newText)

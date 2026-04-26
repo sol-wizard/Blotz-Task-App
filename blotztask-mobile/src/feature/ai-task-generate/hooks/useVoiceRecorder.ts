@@ -39,6 +39,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
 
       const uri = recorder.uri;
       if (!uri) return;
+
       await submitAudioForTranscription(uri);
       new ExpoFile(uri).delete();
     } catch (error) {
