@@ -115,8 +115,8 @@ public class BlotzTaskDbContext : DbContext
 
         modelBuilder.Entity<SubscriptionPlan>()
             .HasData(
-                new SubscriptionPlan { Id = 1, Name = "Free", MonthlyTokenLimit = 50_000 },
-                new SubscriptionPlan { Id = 2, Name = "Pro", MonthlyTokenLimit = 500_000 }
+                new SubscriptionPlan { Id = 1, Name = "Free", MonthlyTokenLimit = 300_000 },
+                new SubscriptionPlan { Id = 2, Name = "Pro", MonthlyTokenLimit = 3_000_000 }
             );
     }
 }

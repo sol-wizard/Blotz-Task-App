@@ -6,8 +6,12 @@ namespace BlotzTask.Modules.AiUsage.Services;
 public class RecordAiUsageRequest
 {
     public required Guid UserId { get; init; }
-    public required int PromptTokens { get; init; }
-    public required int CompletionTokens { get; init; }
+
+    public required int InputTokens { get; init; }
+
+    public required int OutputTokens { get; init; }
+
+    public required int TotalTokens { get; init; }
 }
 
 public interface IRecordAiUsageService
@@ -22,9 +26,9 @@ public class RecordAiUsageService(BlotzTaskDbContext db) : IRecordAiUsageService
         var usageRecord = new AiUsageRecord
         {
             UserId = request.UserId,
-            PromptTokens = request.PromptTokens,
-            CompletionTokens = request.CompletionTokens,
-            TotalTokens = request.PromptTokens + request.CompletionTokens,
+            InputTokens = request.InputTokens,
+            OutputTokens = request.OutputTokens,
+            TotalTokens = request.TotalTokens,
             CreatedAt = DateTime.UtcNow
         };
 
