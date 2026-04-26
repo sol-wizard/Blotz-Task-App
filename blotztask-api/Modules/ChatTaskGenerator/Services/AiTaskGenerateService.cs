@@ -86,7 +86,10 @@ public class AiTaskGenerateService(
 
             logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
+            var runSw = Stopwatch.StartNew();
             var response = await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
+            runSw.Stop();
+
             int completionTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
             int promptTokens = (int)(response.Usage?.InputTokenCount ?? 0);
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
@@ -96,9 +99,6 @@ public class AiTaskGenerateService(
                 PromptTokens = promptTokens,
                 TotalTokens = completionTokens + promptTokens
             }, ct);
-            var runSw = Stopwatch.StartNew();
-            await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
-            runSw.Stop();
 
             logger.LogInformation(
                 "TaskGeneration: RunAsync completed in {RunMs}ms | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount}",
