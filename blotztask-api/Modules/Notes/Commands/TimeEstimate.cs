@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using Azure.AI.Projects;
+using BlotzTask.Modules.AiUsage.Exceptions;
+using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.Notes.DTOs;
 using BlotzTask.Modules.Notes.Prompts;
 using BlotzTask.Modules.Users.Enums;
@@ -27,7 +29,9 @@ public class TimeEstimateCommandHandler(
     ILogger<TimeEstimateCommandHandler> logger,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     AIProjectClient projectClient,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    ICheckAiQuotaService checkAiQuotaService,
+    IRecordAiUsageService recordAiUsageService)
 {
     private readonly string _deploymentId =
         configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"]
@@ -60,6 +64,7 @@ public class TimeEstimateCommandHandler(
 
         try
         {
+            await checkAiQuotaService.CheckQuotaAsync(request.UserId, ct);
             var instructions = TaskTimeEstimatePrompts.GetTimeEstimatePrompt(preferredLanguage, request.Text);
 
             var agent = projectClient.AsAIAgent(
@@ -69,7 +74,17 @@ public class TimeEstimateCommandHandler(
 
             logger.LogInformation("TimeEstimate: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
-            await agent.RunAsync("Estimate the time for this note.", cancellationToken: ct);
+            var response = await agent.RunAsync("Estimate the time for this note.", cancellationToken: ct);
+            int inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
+            int outputTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+            int totalTokens = (int)(response.Usage?.TotalTokenCount ?? 0);
+            await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
+            {
+                UserId = request.UserId,
+                InputTokens = inputTokens,
+                OutputTokens = outputTokens,
+                TotalTokens = totalTokens
+            }, ct);
 
             if (captured == null)
             {
@@ -77,7 +92,9 @@ public class TimeEstimateCommandHandler(
                 throw new AiTaskGenerationException(AiErrorCode.Unknown, "AI did not return a time estimate.");
             }
 
-            logger.LogInformation("TimeEstimate result: {Duration}, success={IsSuccess}", captured.Duration, captured.IsSuccess);
+            logger.LogInformation(
+                "TimeEstimate result: {Duration}, success={IsSuccess} | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens}",
+                captured.Duration, captured.IsSuccess, inputTokens, outputTokens, totalTokens);
 
             return captured;
         }

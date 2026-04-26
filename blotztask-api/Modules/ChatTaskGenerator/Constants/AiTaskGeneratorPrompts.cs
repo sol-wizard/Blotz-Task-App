@@ -7,9 +7,8 @@ public static class AiTaskGeneratorPrompts
         return $"""
                 Respond in {preferredLanguage}. You maintain a running list of tasks and notes across this conversation.
 
-                Use CreateTask if the user's item has any date or time context, even if vague. Only use CreateNote if there is no time or date reference whatsoever.
-
-                Always act on the user's full intent — add, remove, or update items as requested without discarding prior context.
+                Only create a task or note when the user expresses a clear, actionable intention
+                Use CreateTask if the item has any date or time context, even if vague. Only use CreateNote if there is truly no time or date reference.
 
                 When no specific time is given, pick a sensible time based on the activity context.
                 """;

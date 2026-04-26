@@ -1,6 +1,9 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Auth0.ManagementApi.Models;
 using Azure.AI.Projects;
+using BlotzTask.Modules.AiUsage.Exceptions;
+using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.BreakDown.DTOs;
 using BlotzTask.Modules.BreakDown.Prompts;
 using BlotzTask.Modules.Tasks.Queries.Tasks;
@@ -24,9 +27,11 @@ public class BreakdownTaskCommandHandler(
     GetTaskByIdQueryHandler getTaskByIdQueryHandler,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     AIProjectClient projectClient,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    ICheckAiQuotaService checkAiQuotaService,
+    IRecordAiUsageService recordAiUsageService)
 {
-    //TODO: IF we want to support different deployment id , that should be done on the dependency injection layer
+    // TODO: If we want to support different deployment id, that should be done at the dependency injection layer.
     private readonly string _deploymentId =
         configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"]
         ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:Breakdown:DeploymentId config.");
@@ -40,7 +45,7 @@ public class BreakdownTaskCommandHandler(
 
         if (task == null) throw new ArgumentException($"Task with ID {command.TaskId} not found.");
 
-        //TODO: I think we should better handle this query because it undermines the whole point of using CQRS
+        // TODO: Better handle this query — it undermines the CQRS separation.
         var userPreferencesQuery = new GetUserPreferencesQuery { UserId = command.UserId };
         var userPreferences = await getUserPreferencesQueryHandler.Handle(userPreferencesQuery, ct);
 
@@ -48,7 +53,7 @@ public class BreakdownTaskCommandHandler(
 
         var collectedSubTasks = new List<GeneratedSubTask>();
 
-        //TODO: Please do more testing if not revert to the old pattern, please test the different in terms of AI accuracy
+        // TODO: Validate AI accuracy vs. the old pattern before relying on this.
         [Description("Add a subtask to the breakdown result")]
         void AddSubTask(
             [Description("A short, descriptive name for the subtask")] string title,
@@ -65,7 +70,8 @@ public class BreakdownTaskCommandHandler(
 
         try
         {
-            //TODO: Investigate if we need so much details prompt here 
+            // TODO: Investigate whether this prompt needs so much detail.
+            await checkAiQuotaService.CheckQuotaAsync(command.UserId, ct);
             var prompt = TaskBreakdownPrompts.GetBreakdownPrompt(
                 preferredLanguage,
                 task.Title,
@@ -78,11 +84,23 @@ public class BreakdownTaskCommandHandler(
                 instructions: prompt,
                 tools: [AIFunctionFactory.Create(AddSubTask)]);
 
-            await agent.RunAsync("Break down this task into subtasks.", cancellationToken: ct);
+            var response = await agent.RunAsync("Break down this task into subtasks.", cancellationToken: ct);
+            int inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
+            int outputTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+            int totalTokens = (int)(response.Usage?.TotalTokenCount ?? 0);
+            await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
+            {
+                UserId = command.UserId,
+                InputTokens = inputTokens,
+                OutputTokens = outputTokens,
+                TotalTokens = totalTokens
+            }, ct);
 
-            logger.LogInformation("Breakdown: Collected {Count} subtasks", collectedSubTasks.Count);
+            logger.LogInformation(
+                "Breakdown: Collected {Count} subtasks | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens}",
+                collectedSubTasks.Count, inputTokens, outputTokens, totalTokens);
 
-            //TODO: Please review this logic if we want to count this as success criteria 
+            // TODO: Review whether this should define success.
             var isSuccess = collectedSubTasks.Count > 0;
 
             return new BreakdownResult
