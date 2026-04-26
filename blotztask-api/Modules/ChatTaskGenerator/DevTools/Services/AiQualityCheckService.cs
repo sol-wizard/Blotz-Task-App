@@ -18,7 +18,11 @@ public class AiQualityCheckService(
 
     private int BatchSize => configuration.GetValue<int>("DevTools:QualityCheckBatchSize", 5);
 
-    public async Task<QualityCheckRunResult> RunQualityCheckAsync(QualityCheckRequest request, string? caseId, CancellationToken ct)
+    public async Task<QualityCheckRunResult> RunQualityCheckAsync(
+        QualityCheckRequest request,
+        string? caseId,
+        Guid userId,
+        CancellationToken ct)
     {
         if (!File.Exists(QualityCheckCasesPath))
             return QualityCheckRunResult.Fail("quality-check-cases.json not found");
@@ -47,13 +51,13 @@ public class AiQualityCheckService(
 
         if (reliabilityRuns == 1)
         {
-            finalResults = await RunAllCasesOnceAsync(allCases, timeZone, ct);
+            finalResults = await RunAllCasesOnceAsync(allCases, timeZone, userId, ct);
         }
         else
         {
             var allRuns = await Task.WhenAll(
                 Enumerable.Range(0, reliabilityRuns)
-                    .Select(_ => RunAllCasesOnceAsync(allCases, timeZone, ct)));
+                    .Select(_ => RunAllCasesOnceAsync(allCases, timeZone, userId, ct)));
 
             finalResults = allCases.Select(qualityCase =>
             {
@@ -99,12 +103,15 @@ public class AiQualityCheckService(
     }
 
     private async Task<List<QualityCheckCaseResult>> RunAllCasesOnceAsync(
-        IReadOnlyList<QualityCheckCase> cases, TimeZoneInfo timeZone, CancellationToken ct)
+        IReadOnlyList<QualityCheckCase> cases,
+        TimeZoneInfo timeZone,
+        Guid userId,
+        CancellationToken ct)
     {
         var results = new List<QualityCheckCaseResult>();
         foreach (var batch in cases.Chunk(BatchSize))
         {
-            var batchResults = await Task.WhenAll(batch.Select(c => RunSingleCaseAsync(c, timeZone, ct)));
+            var batchResults = await Task.WhenAll(batch.Select(c => RunSingleCaseAsync(c, timeZone, userId, ct)));
             results.AddRange(batchResults);
         }
         return results;
@@ -121,7 +128,11 @@ public class AiQualityCheckService(
         return allCases;
     }
 
-    private async Task<QualityCheckCaseResult> RunSingleCaseAsync(QualityCheckCase qualityCheckCase, TimeZoneInfo timeZone, CancellationToken ct)
+    private async Task<QualityCheckCaseResult> RunSingleCaseAsync(
+        QualityCheckCase qualityCheckCase,
+        TimeZoneInfo timeZone,
+        Guid userId,
+        CancellationToken ct)
     {
         var caseResult = new QualityCheckCaseResult { Id = qualityCheckCase.Id, Input = qualityCheckCase.Input };
         var caseSw = Stopwatch.StartNew();
@@ -142,7 +153,7 @@ public class AiQualityCheckService(
             });
 
             var aiSw = Stopwatch.StartNew();
-            var result = await aiTaskGenerateService.GenerateAiResponse(Guid.Empty,resolvedMessage, chatContext, ct);
+            var result = await aiTaskGenerateService.GenerateAiResponse(userId, resolvedMessage, chatContext, ct);
             aiSw.Stop();
 
             caseSw.Stop();
