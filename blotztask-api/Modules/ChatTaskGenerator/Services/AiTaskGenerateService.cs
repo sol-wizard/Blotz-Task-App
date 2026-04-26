@@ -43,7 +43,9 @@ public class AiTaskGenerateService(
             tools:
             [
                 AIFunctionFactory.Create(tools.CreateTask),
+                AIFunctionFactory.Create(tools.CreateTasks),
                 AIFunctionFactory.Create(tools.CreateNote),
+                AIFunctionFactory.Create(tools.CreateNotes),
                 AIFunctionFactory.Create(tools.RemoveTask),
                 AIFunctionFactory.Create(tools.UpdateTask),
                 AIFunctionFactory.Create(tools.RemoveNote),

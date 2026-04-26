@@ -87,15 +87,23 @@ public class AiTaskGenerateChatHub(
                 Message = message,
                 TimeZone = chatContext.TimeZone
             });
-            
-            var resultMessage = await aiTaskGenerateService.GenerateAiResponse(userId,resolvedMessage, chatContext, ct);
+
+            chatContext.Tools.OnTaskStreamed = async task =>
+                await Clients.Caller.SendAsync("ReceiveTaskExtracted", task, ct);
+            chatContext.Tools.OnNoteStreamed = async note =>
+                await Clients.Caller.SendAsync("ReceiveNoteExtracted", note, ct);
+
+            var resultMessage = await aiTaskGenerateService.GenerateAiResponse(userId, resolvedMessage, chatContext, ct);
+
+            chatContext.Tools.OnTaskStreamed = null;
+            chatContext.Tools.OnNoteStreamed = null;
             resultMessage.UserInput = message;
 
-            await Clients.Caller.SendAsync("ReceiveMessage", resultMessage, ct);
+            await Clients.Caller.SendAsync("ReceiveGenerationResult", resultMessage, ct);
         }
         catch (AiQuotaExceededException ex)
         {
-            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
+            await Clients.Caller.SendAsync("ReceiveGenerationResult", new AiGenerateMessage
             {
                 IsSuccess = false,
                 ErrorMessage = ex.Message
@@ -103,7 +111,7 @@ public class AiTaskGenerateChatHub(
         }
         catch (AiTaskGenerationException ex)
         {
-            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
+            await Clients.Caller.SendAsync("ReceiveGenerationResult", new AiGenerateMessage
             {
                 IsSuccess = false,
                 ErrorCode = ex.Code.ToString(),
@@ -129,12 +137,14 @@ public class AiTaskGenerateChatHub(
             };
 
             var transcript = await speechTranscriptionService.TranscribeAsync(formFile, ct);
+
+            await Clients.Caller.SendAsync("ReceiveTranscript", transcript, ct);
             await SendMessage(transcript);
         }
         catch (AiTaskGenerationException ex)
         {
             logger.LogError(ex, "TranscribeAudio failed. ErrorCode: {ErrorCode}", ex.Code);
-            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
+            await Clients.Caller.SendAsync("ReceiveGenerationResult", new AiGenerateMessage
             {
                 IsSuccess = false,
                 ErrorCode = ex.Code.ToString(),
@@ -144,7 +154,7 @@ public class AiTaskGenerateChatHub(
         catch (Exception ex)
         {
             logger.LogError(ex, "TranscribeAudio failed with an unexpected error.");
-            await Clients.Caller.SendAsync("ReceiveMessage", new AiGenerateMessage
+            await Clients.Caller.SendAsync("ReceiveGenerationResult", new AiGenerateMessage
             {
                 IsSuccess = false,
                 ErrorCode = AiErrorCode.Unknown.ToString(),
