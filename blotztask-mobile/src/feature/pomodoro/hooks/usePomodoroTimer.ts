@@ -25,7 +25,7 @@ interface PomodoroTimerState {
   startTimer: (taskId: string, initialElapsed?: number) => void;
   togglePause: () => void;
   stopTimer: () => void;
-  _tick: () => void; // 内部心跳
+  _tick: () => void;
 }
 
 let globalInterval: ReturnType<typeof setInterval> | null = null;
@@ -38,9 +38,12 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
       session: { taskId, elapsedSeconds: initialElapsed, isPaused: false },
     });
 
-    if (!globalInterval) {
-      globalInterval = setInterval(() => get()._tick(), 1000);
+    if (globalInterval) {
+      clearInterval(globalInterval);
+      globalInterval = null;
     }
+
+    globalInterval = setInterval(() => get()._tick(), 1000);
   },
 
   togglePause: () => {

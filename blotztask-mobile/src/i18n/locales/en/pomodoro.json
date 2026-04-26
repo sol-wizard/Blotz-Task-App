@@ -12,6 +12,10 @@
     "resume": "Resume",
     "pause": "Pause",
     "end": "End",
+    "switchTaskTitle": "Switch Task?",
+    "switchTaskMessage": "You already have a task in progress. Starting a new pomodoro will discard the previous progress. Are you sure you want to continue?",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
     "milestoneTitle": "You have been focused for {{value}} {{unit}}!",
     "milestoneSubtitle": "Take a tiny stretch!",
     "milestones": {

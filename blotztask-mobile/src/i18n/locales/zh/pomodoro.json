@@ -12,6 +12,10 @@
     "resume": "继续",
     "pause": "暂停",
     "end": "结束",
+    "switchTaskTitle": "更换任务？",
+    "switchTaskMessage": "当前已有任务正在计时，开启新番茄钟将丢弃之前的进度。确认继续吗？",
+    "confirm": "确定开启",
+    "cancel": "取消",
     "milestones": {
       "phase0": {
         "title": "刚刚开始！",
