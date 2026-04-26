@@ -6,18 +6,21 @@ export enum TaskTimeType {
   Range = 1,
 }
 
-export interface TaskDetailDTO {
-  id: number | null;
-  recurringTaskId?: number | null;
-  description?: string;
+export interface TimedTaskFields {
   title: string;
-  isDone: boolean;
-  label?: LabelDTO;
   startTime: string;
   endTime: string;
+  description?: string;
   timeType: TaskTimeType | null;
   notificationId: string | null;
-  subtasks?: SubtaskDTO[];
   alertTime?: string;
   isDeadline: boolean;
+}
+
+export interface TaskDetailDTO extends TimedTaskFields {
+  id: number | null;
+  recurringTaskId?: number | null;
+  isDone: boolean;
+  label?: LabelDTO;
+  subtasks?: SubtaskDTO[];
 }

@@ -1,14 +1,6 @@
-import { TaskTimeType } from "./task-detail-dto";
+import { TimedTaskFields } from "./task-detail-dto";
 
-export interface AddTaskItemDTO {
-  title: string;
-  description?: string;
-  startTime: string;
-  endTime: string;
+export interface AddTaskItemDTO extends TimedTaskFields {
   labelId?: number;
-  timeType: TaskTimeType | null;
-  notificationId?: string | null;
-  alertTime?: string;
   dueAt?: string;
-  isDeadline: boolean;
 }
