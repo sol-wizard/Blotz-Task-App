@@ -97,6 +97,9 @@ public class AiQualityCheckService(
         {
             scorecard.AvgAiTimeMs = (long)scorecard.Results.Average(r => r.AiTimeMs);
             scorecard.MaxAiTimeMs = scorecard.Results.Max(r => r.AiTimeMs);
+            scorecard.TotalInputTokens = scorecard.Results.Sum(r => r.InputTokens);
+            scorecard.TotalOutputTokens = scorecard.Results.Sum(r => r.OutputTokens);
+            scorecard.TotalTokens = scorecard.Results.Sum(r => r.TotalTokens);
         }
 
         return QualityCheckRunResult.Success(scorecard);
@@ -136,6 +139,7 @@ public class AiQualityCheckService(
     {
         var caseResult = new QualityCheckCaseResult { Id = qualityCheckCase.Id, Input = qualityCheckCase.Input };
         var caseSw = Stopwatch.StartNew();
+       
 
         try
         {
@@ -161,8 +165,12 @@ public class AiQualityCheckService(
 
             caseSw.Stop();
             caseResult.TotalTimeMs = caseSw.ElapsedMilliseconds;
-            caseResult.InitTimeMs = initSw.ElapsedMilliseconds;
+           caseResult.InitTimeMs = Math.Max(1, initSw.ElapsedMilliseconds);
             caseResult.AiTimeMs = aiSw.ElapsedMilliseconds;
+
+            caseResult.InputTokens = result.InputTokens;
+            caseResult.OutputTokens = result.OutputTokens;
+            caseResult.TotalTokens = result.TotalTokens;
 
             caseResult.ExtractedTasks = (result.ExtractedTasks ?? [])
                 .Select(t => new QualityCheckExtractedTask

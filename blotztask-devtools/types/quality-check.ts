@@ -27,6 +27,9 @@ export interface QualityCheckCaseResult {
   totalRuns?: number;
   passCount?: number;
   reliabilityRate?: string;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
 }
 
 export interface QualityCheckScorecard {
@@ -38,5 +41,8 @@ export interface QualityCheckScorecard {
   totalTimeMs: number;
   avgAiTimeMs: number;
   maxAiTimeMs: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalTokens: number;
   results: QualityCheckCaseResult[];
 }

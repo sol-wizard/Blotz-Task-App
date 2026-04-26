@@ -32,4 +32,16 @@ public class AiGenerateMessage
     [JsonPropertyName("errorMessage")]
     [Description("Error message explaining why task extraction failed. Empty string when isSuccess is true.")]
     public string ErrorMessage { get; set; } = "";
+
+    [JsonPropertyName("inputTokens")]
+    [Description("Number of prompt tokens used.")]
+    public int InputTokens{ get; set; }
+
+    [JsonPropertyName("outputTokens")]
+    [Description("Number of completion tokens used.")]
+    public int OutputTokens { get; set; }
+
+    [JsonPropertyName("totalTokens")]
+    [Description("Number of total tokens used.")]
+    public int TotalTokens { get; set; }
 }
