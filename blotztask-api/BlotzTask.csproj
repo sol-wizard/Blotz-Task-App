@@ -30,17 +30,18 @@
         <PackageReference Include="Microsoft.Recognizers.Text" Version="1.8.13" />
         <PackageReference Include="Microsoft.Recognizers.Text.DateTime" Version="1.8.13" />
         <!-- Keep this direct reference: it overrides the older transitive NuGet.CommandLine 5.11.5
-             from EF tooling with 7.3.0, reducing the warning from critical to low severity. -->
-        <PackageReference Include="NuGet.CommandLine" Version="7.3.0">
+            from EF tooling with 7.3.0, reducing the warning from critical to low severity. -->
+        <PackageReference Include="NuGet.CommandLine" Version="7.3.1">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="OpenTelemetry.Api" Version="1.15.3" />
         <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
         <PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="5.0.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <Content Update="Modules\ChatTaskGenerator\DevTools\eval-cases.json" CopyToOutputDirectory="PreserveNewest" />
+        <Content Update="Modules\ChatTaskGenerator\DevTools\eval-cases.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 </Project>
