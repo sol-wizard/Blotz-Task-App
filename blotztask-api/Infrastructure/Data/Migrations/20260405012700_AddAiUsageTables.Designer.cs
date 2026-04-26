@@ -31,13 +31,13 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("CompletionTokens")
+                    b.Property<int>("InputTokens")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PromptTokens")
+                    b.Property<int>("OutputTokens")
                         .HasColumnType("int");
 
                     b.Property<int>("TotalTokens")
@@ -77,13 +77,13 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                         new
                         {
                             Id = 1,
-                            MonthlyTokenLimit = 50000,
+                            MonthlyTokenLimit = 300000,
                             Name = "Free"
                         },
                         new
                         {
                             Id = 2,
-                            MonthlyTokenLimit = 500000,
+                            MonthlyTokenLimit = 3000000,
                             Name = "Pro"
                         });
                 });

@@ -75,14 +75,14 @@ public class TimeEstimateCommandHandler(
             logger.LogInformation("TimeEstimate: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
             var response = await agent.RunAsync("Estimate the time for this note.", cancellationToken: ct);
-            int completionTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
-            int promptTokens = (int)(response.Usage?.InputTokenCount ?? 0);
-            int totalTokens = completionTokens + promptTokens;
+            int inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
+            int outputTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+            int totalTokens = (int)(response.Usage?.TotalTokenCount ?? 0);
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
             {
                 UserId = request.UserId,
-                CompletionTokens = completionTokens,
-                PromptTokens = promptTokens,
+                InputTokens = inputTokens,
+                OutputTokens = outputTokens,
                 TotalTokens = totalTokens
             }, ct);
 
@@ -94,7 +94,7 @@ public class TimeEstimateCommandHandler(
 
             logger.LogInformation(
                 "TimeEstimate result: {Duration}, success={IsSuccess} | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens}",
-                captured.Duration, captured.IsSuccess, promptTokens, completionTokens, totalTokens);
+                captured.Duration, captured.IsSuccess, inputTokens, outputTokens, totalTokens);
 
             return captured;
         }

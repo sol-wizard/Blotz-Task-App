@@ -30,7 +30,7 @@ public class GetAiUsageSummaryQueryHandler(BlotzTaskDbContext db)
         var periodEnd = periodStart.AddMonths(1).AddSeconds(-1);
         var usedTokens = await db.AiUsageRecords
             .Where(r => r.UserId == query.UserId&&r.CreatedAt>=periodStart && r.CreatedAt<=periodEnd)
-            .SumAsync(r => r.CompletionTokens, ct);
+            .SumAsync(r => r.TotalTokens, ct);
 
         return new AiUsageSummaryDto(
             UsedTokens: usedTokens,

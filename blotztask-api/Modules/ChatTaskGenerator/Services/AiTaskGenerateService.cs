@@ -90,19 +90,20 @@ public class AiTaskGenerateService(
             var response = await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
             runSw.Stop();
 
-            int completionTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
-            int promptTokens = (int)(response.Usage?.InputTokenCount ?? 0);
+            int inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
+            int outputTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+            int totalTokens = (int)(response.Usage?.TotalTokenCount ?? 0);
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
             {
                 UserId = userId,
-                CompletionTokens = completionTokens,
-                PromptTokens = promptTokens,
-                TotalTokens = completionTokens + promptTokens
+                InputTokens = inputTokens,
+                OutputTokens = outputTokens,
+                TotalTokens = totalTokens
             }, ct);
 
             logger.LogInformation(
                 "TaskGeneration: RunAsync completed in {RunMs}ms | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens} | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount}",
-                runSw.ElapsedMilliseconds, promptTokens, completionTokens, promptTokens + completionTokens,
+                runSw.ElapsedMilliseconds, inputTokens, outputTokens, totalTokens,
                 context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
 
             var isSuccess = context.Tools.ToolCallCount > 0;

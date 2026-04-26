@@ -85,20 +85,20 @@ public class BreakdownTaskCommandHandler(
                 tools: [AIFunctionFactory.Create(AddSubTask)]);
 
             var response = await agent.RunAsync("Break down this task into subtasks.", cancellationToken: ct);
-            int completionTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
-            int promptTokens = (int)(response.Usage?.InputTokenCount ?? 0);
-            int totalTokens = completionTokens + promptTokens;
+            int inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
+            int outputTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+            int totalTokens = (int)(response.Usage?.TotalTokenCount ?? 0);
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
             {
                 UserId = command.UserId,
-                CompletionTokens = completionTokens,
-                PromptTokens = promptTokens,
+                InputTokens = inputTokens,
+                OutputTokens = outputTokens,
                 TotalTokens = totalTokens
             }, ct);
 
             logger.LogInformation(
                 "Breakdown: Collected {Count} subtasks | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens}",
-                collectedSubTasks.Count, promptTokens, completionTokens, totalTokens);
+                collectedSubTasks.Count, inputTokens, outputTokens, totalTokens);
 
             // TODO: Review whether this should define success.
             var isSuccess = collectedSubTasks.Count > 0;

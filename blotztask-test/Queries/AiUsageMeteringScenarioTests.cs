@@ -40,27 +40,27 @@ public class AiUsageMeteringScenarioTests : IClassFixture<DatabaseFixture>
         var plan = await _seeder.CreateSubscriptionPlanAsync("Free", 1000);
         await _seeder.CreateUserSubscriptionAsync(userId, plan.Id);
 
-        await _recordService.RecordAiUsageAsync(new RecordAiUsageRequest { UserId = userId, PromptTokens = 100, CompletionTokens = 200 ,TotalTokens = 300});
-        await _recordService.RecordAiUsageAsync(new RecordAiUsageRequest { UserId = userId, PromptTokens = 100, CompletionTokens= 300 ,TotalTokens = 400});
+        await _recordService.RecordAiUsageAsync(new RecordAiUsageRequest { UserId = userId, InputTokens = 100, OutputTokens = 200, TotalTokens = 300 });
+        await _recordService.RecordAiUsageAsync(new RecordAiUsageRequest { UserId = userId, InputTokens = 100, OutputTokens = 300, TotalTokens = 400 });
 
-        var expectedUsedBefore = 500;
+        var expectedUsedBefore = 700;
         var query = new GetAiUsageSummaryQuery { UserId = userId };
         var summaryBefore = await _summaryHandler.Handle(query);
 
         summaryBefore.UsedTokens.Should().Be(expectedUsedBefore);
         summaryBefore.TotalLimit.Should().Be(1000);
-        summaryBefore.RemainingTokens.Should().Be(500);
+        summaryBefore.RemainingTokens.Should().Be(300);
 
         await FluentActions.Invoking(() => _checkService.CheckQuotaAsync(userId))
             .Should().NotThrowAsync();
 
-        await _recordService.RecordAiUsageAsync(new RecordAiUsageRequest { UserId = userId, PromptTokens = 100, CompletionTokens = 500 ,TotalTokens = 600});
+        await _recordService.RecordAiUsageAsync(new RecordAiUsageRequest { UserId = userId, InputTokens = 100, OutputTokens = 500, TotalTokens = 600 });
 
         await FluentActions.Invoking(() => _checkService.CheckQuotaAsync(userId))
             .Should().ThrowAsync<AiQuotaExceededException>();
 
         var summaryAt = await _summaryHandler.Handle(query);
-        summaryAt.UsedTokens.Should().Be(1000);
+        summaryAt.UsedTokens.Should().Be(1300);
         summaryAt.RemainingTokens.Should().Be(0);
     }
 
@@ -76,10 +76,10 @@ public class AiUsageMeteringScenarioTests : IClassFixture<DatabaseFixture>
 
         var monthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         await _seeder.CreateAiUsageRecordAsync(userId, 100, 1_200, 1300, monthStart.AddSeconds(-1));
-await _seeder.CreateAiUsageRecordAsync(userId, 100, 200, 300, monthStart.AddDays(1));
+        await _seeder.CreateAiUsageRecordAsync(userId, 100, 200, 300, monthStart.AddDays(1));
 
         var summary = await _summaryHandler.Handle(new GetAiUsageSummaryQuery { UserId = userId });
-        summary.UsedTokens.Should().Be(200);
+        summary.UsedTokens.Should().Be(300);
 
         await FluentActions.Invoking(() => _checkService.CheckQuotaAsync(userId))
             .Should().NotThrowAsync();

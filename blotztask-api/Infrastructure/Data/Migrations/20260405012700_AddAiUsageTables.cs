@@ -19,8 +19,8 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PromptTokens = table.Column<int>(type: "int", nullable: false),
-                    CompletionTokens = table.Column<int>(type: "int", nullable: false),
+                    InputTokens = table.Column<int>(type: "int", nullable: false),
+                    OutputTokens = table.Column<int>(type: "int", nullable: false),
                     TotalTokens = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -80,8 +80,8 @@ namespace BlotzTask.Infrastructure.Data.Migrations
                 columns: new[] { "Id", "MonthlyTokenLimit", "Name" },
                 values: new object[,]
                 {
-                    { 1, 50000, "Free" },
-                    { 2, 500000, "Pro" }
+                    { 1, 300000, "Free" },
+                    { 2, 3000000, "Pro" }
                 });
 
             migrationBuilder.CreateIndex(
