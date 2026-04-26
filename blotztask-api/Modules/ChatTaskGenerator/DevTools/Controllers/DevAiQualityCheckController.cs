@@ -11,7 +11,7 @@ public class DevAiQualityCheckController(
     BlotzTaskDbContext dbContext,
     IConfiguration configuration) : ControllerBase
 {
-    private const string DevQualityCheckUserEmailEnvKey = "DEV_QUALITY_CHECK_USER_EMAIL";
+    private const string DevQualityCheckUserEmailEnvKey = "AiQualityCheck:UserEmail";
 
     [HttpPost("dev/ai-quality-check")]
     public async Task<IActionResult> RunQualityCheck(

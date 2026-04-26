@@ -7,7 +7,7 @@ using BlotzTask.Modules.ChatTaskGenerator.Services;
 namespace BlotzTask.Modules.ChatTaskGenerator.DevTools;
 
 public class AiQualityCheckService(
-    IAiTaskGenerateService aiTaskGenerateService,
+    IServiceScopeFactory serviceScopeFactory,
     DateTimeResolveService dateTimeResolveService,
     IConfiguration configuration) : IAiQualityCheckService
 {
@@ -139,6 +139,9 @@ public class AiQualityCheckService(
 
         try
         {
+            await using var scope = serviceScopeFactory.CreateAsyncScope();
+            var aiTaskGenerateService = scope.ServiceProvider.GetRequiredService<IAiTaskGenerateService>();
+
             var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
 
             var initSw = Stopwatch.StartNew();
