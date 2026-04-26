@@ -3,7 +3,6 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
-import { EditTaskItemDTO } from "./models/edit-task-item-dto";
 import { FormTextInput } from "@/shared/components/form-text-input";
 import { LabelSelect } from "./components/label-select";
 import { FormDivider } from "../../shared/components/form-divider";
@@ -21,7 +20,7 @@ import {
   calculateAlertTime,
 } from "./util/time-convertion";
 import { combineDateTime } from "./util/combine-date-time";
-import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
@@ -35,12 +34,12 @@ type TaskFormProps =
   | {
       mode: "create";
       dto?: undefined;
-      onSubmit: (data: AddTaskItemDTO) => void;
+      onSubmit: (data: TaskUpsertDTO) => void;
     }
   | {
       mode: "edit";
-      dto: EditTaskItemDTO;
-      onSubmit: (data: AddTaskItemDTO) => void;
+      dto: TaskUpsertDTO;
+      onSubmit: (data: TaskUpsertDTO) => void;
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
@@ -125,7 +124,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
     const deadline = data.isDeadline ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
 
-    const submitTask: AddTaskItemDTO = {
+    const submitTask: TaskUpsertDTO = {
       title: data.title.trim(),
       description: data.description?.trim() ?? undefined,
       startTime: convertToDateTimeOffset(startTime!),

@@ -1,10 +1,9 @@
 import TaskForm from "@/feature/task-add-edit/task-form";
-import { EditTaskItemDTO } from "@/feature/task-add-edit/models/edit-task-item-dto";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/loading-screen";
-import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { View } from "react-native";
 import { ReturnButton } from "@/shared/components/return-button";
@@ -21,7 +20,7 @@ export default function TaskEditScreen() {
     return <LoadingScreen />;
   }
 
-  const taskEditData: EditTaskItemDTO = {
+  const taskEditData: TaskUpsertDTO = {
     title: selectedTask.title,
     description: selectedTask.description,
     startTime: selectedTask.startTime,
@@ -33,7 +32,7 @@ export default function TaskEditScreen() {
     isDeadline: selectedTask.isDeadline,
   };
 
-  const handleTaskSubmit = async (formValues: AddTaskItemDTO) => {
+  const handleTaskSubmit = async (formValues: TaskUpsertDTO) => {
     try {
       await updateTaskAsync({
         taskId: selectedTask.id,

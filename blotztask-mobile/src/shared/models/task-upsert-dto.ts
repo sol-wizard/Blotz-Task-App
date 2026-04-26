@@ -1,6 +1,6 @@
 import { TimedTaskFields } from "./task-detail-dto";
 
-export interface AddTaskItemDTO extends TimedTaskFields {
+export interface TaskUpsertDTO extends TimedTaskFields {
   labelId?: number;
   dueAt?: string;
 }

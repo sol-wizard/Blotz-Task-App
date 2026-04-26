@@ -1,9 +1,9 @@
-import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { AiTaskDTO } from "../models/ai-task-dto";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 
 // TODO: handle invalid date, need to be changed after backend support (Do we still need this?)
-export function convertAiTaskToAddTaskItemDTO(task: AiTaskDTO): AddTaskItemDTO {
+export function convertAiTaskToTaskUpsertDTO(task: AiTaskDTO): TaskUpsertDTO {
   // TODO: Remove this fallback once the backend supports note
   if (!task.startTime || !task.endTime) {
     const now = new Date();
