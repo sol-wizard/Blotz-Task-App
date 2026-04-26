@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from "react-native";
+import { View, Text, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import DetailsView from "@/feature/task-details/components/details-view";
 import SubtasksView from "@/feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
 import LoadingScreen from "@/shared/components/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
@@ -25,6 +26,8 @@ export default function TaskDetailsScreen() {
   const { updateTask, isUpdating } = useTaskMutations();
   const [descriptionText, setDescriptionText] = useState(selectedTask?.description || "");
   const { t } = useTranslation();
+  const { bottom } = useSafeAreaInsets();
+  const bottomInset = Platform.OS === "android" ? bottom : 0;
 
   useEffect(() => {
     if (selectedTask) {
@@ -125,7 +128,7 @@ export default function TaskDetailsScreen() {
           </View>
 
           <View className="flex-row items-start justify-center mb-4">
-            <Text className="flex-1 font-balooBold text-4xl leading-normal">
+            <Text className="flex-1 font-balooBold text-3xl leading-normal">
               {selectedTask.title}
             </Text>
           </View>
@@ -138,7 +141,10 @@ export default function TaskDetailsScreen() {
         </View>
       </TouchableWithoutFeedback>
 
-      <View className="flex-1 pt-6 px-6 bg-white rounded-t-[3rem]">
+      <View
+        className="flex-1 pt-6 px-6 bg-white rounded-t-[3rem]"
+        style={{ paddingBottom: bottomInset }}
+      >
         <View className="flex-row justify-around mb-6">
           <DetailsView
             taskDescription={descriptionText}

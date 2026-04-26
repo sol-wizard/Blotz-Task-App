@@ -24,6 +24,7 @@ const useTaskMutations = () => {
     mutationFn: (task: AddTaskItemDTO) => addTaskItem(task),
     onSuccess: (_data, task) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["ddl"] });
       invalidateSelectedDayTask(queryClient, task.startTime, task.endTime);
     },
   });
@@ -63,6 +64,7 @@ const useTaskMutations = () => {
     onSuccess: (_data, task) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: taskKeys.byId(task.taskId) });
+      queryClient.invalidateQueries({ queryKey: ["ddl"] });
       invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime);
     },
   });
@@ -72,6 +74,7 @@ const useTaskMutations = () => {
     toggleTask: toggleTaskMutation.mutate,
     deleteTask: deleteTaskMutation.mutate,
     updateTask: updateTaskMutation.mutate,
+    updateTaskAsync: updateTaskMutation.mutateAsync,
     isAdding: addTaskMutation.isPending,
     isToggling: toggleTaskMutation.isPending,
     isDeleting: deleteTaskMutation.isPending,

@@ -2,33 +2,46 @@ import { RecordingPresets, setAudioModeAsync, useAudioRecorder } from "expo-audi
 import { useState } from "react";
 import { File as ExpoFile } from "expo-file-system";
 
-const RECORD_OPTIONS = { ...RecordingPresets.HIGH_QUALITY };
-
 export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
   const [isListening, setIsListening] = useState(false);
-  const recorder = useAudioRecorder(RECORD_OPTIONS);
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
   const startListening = async () => {
+    // Set listening immediately so the waveform appears on press rather than
+    // after the async audio setup completes (~200-400ms later).
+    setIsListening(true);
     try {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
-      setIsListening(true);
     } catch (error) {
+      setIsListening(false);
       console.warn("[Mic] Error starting recording.", error);
     }
   };
 
-  const stopAndUpload = async () => {
-    if (!recorder.isRecording) return;
+  const cancelListening = async (): Promise<void> => {
+    if (recorder.isRecording) {
+      await recorder.stop();
+    }
+    setIsListening(false);
+  };
+
+  const stopAndUpload = async (): Promise<void> => {
+    if (!recorder.isRecording) {
+      setIsListening(false);
+      return;
+    }
+
     try {
       await recorder.stop();
       setIsListening(false);
+
       const uri = recorder.uri;
-      if (uri) {
-        await submitAudioForTranscription(uri);
-        new ExpoFile(uri).delete();
-      }
+      if (!uri) return;
+
+      await submitAudioForTranscription(uri);
+      new ExpoFile(uri).delete();
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
     } finally {
@@ -38,5 +51,5 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
   };
 
-  return { isListening, startListening, stopAndUpload };
+  return { isListening, startListening, stopAndUpload, cancelListening };
 }

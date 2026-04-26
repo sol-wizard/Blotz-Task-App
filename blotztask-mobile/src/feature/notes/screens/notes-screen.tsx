@@ -148,7 +148,7 @@ export default function NotesScreen() {
             </View>
           ) : (
             <View className="px-6 flex-1">
-              <View className={`rounded-3xl overflow-hidden bg-white`}>
+              <View className={`rounded-3xl  bg-white`}>
                 <FlatList
                   data={showLoading ? [] : notesSearchResult}
                   keyExtractor={(item) => String(item.id)}

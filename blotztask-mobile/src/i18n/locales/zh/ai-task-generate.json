@@ -26,7 +26,8 @@
     "tokenLimited": "您已达到使用限制，请稍后再试。",
     "contentFilter": "您的消息被系统拦截，请换一种说法再试。",
     "canceled": "请求已取消。",
-    "noTasksExtracted": "我没有找到任何任务，请再试一次。"
+    "noTasksExtracted": "我没有找到任何任务，请再试一次。",
+    "holdLonger": "请长按麦克风以录音。"
   },
   "taskCard": {
     "titlePlaceholder": "任务标题",
