@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.DevTools;
@@ -19,13 +20,12 @@ public class DevAiQualityCheckController(
         [FromQuery] string? caseId,
         CancellationToken ct)
     {
-        //Should do this better not in the controller maybe some where else and retrun a proper error
         if (!env.IsDevelopment())
-            return NotFound();
+            throw new NotFoundException("AI quality check is only available in development.");
 
         var devUserEmail = configuration[DevQualityCheckUserEmailEnvKey];
         if (string.IsNullOrWhiteSpace(devUserEmail))
-            return NotFound(new { error = $"Missing environment variable: {DevQualityCheckUserEmailEnvKey}" });
+            throw new NotFoundException($"Missing environment variable: {DevQualityCheckUserEmailEnvKey}");
 
         var userId = await dbContext.AppUsers
             .Where(u => u.Email == devUserEmail)
@@ -33,14 +33,13 @@ public class DevAiQualityCheckController(
             .FirstOrDefaultAsync(ct);
 
         if (userId == Guid.Empty)
-            return NotFound(new { error = $"No user found for email '{devUserEmail}' from {DevQualityCheckUserEmailEnvKey}" });
+            throw new NotFoundException($"No user found for email '{devUserEmail}' from {DevQualityCheckUserEmailEnvKey}");
 
         var result = await qualityCheckService.RunQualityCheckAsync(request, caseId, userId, ct);
 
-        return result switch
-        {
-            { IsError: true } => NotFound(new { error = result.ErrorMessage }),
-            _ => Ok(result.Scorecard)
-        };
+        if (result.IsError)
+            throw new NotFoundException(result.ErrorMessage);
+
+        return Ok(result.Scorecard);
     }
 }
