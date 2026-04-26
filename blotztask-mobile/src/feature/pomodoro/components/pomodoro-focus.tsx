@@ -6,44 +6,39 @@ import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { ReturnButton } from "@/shared/components/return-button";
 import { usePomodoroTimer } from "../hooks/usePomodoroTimer";
 import { getMilestoneKey } from "../utils/milestone-copywrites";
+import { router, useLocalSearchParams } from "expo-router";
+import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
+import { useEffect } from "react";
 
-interface PomodoroFocusProps {
-  onEnd: () => void;
-  onMinimize: (elapsedSeconds: number, isPaused: boolean) => void;
-  selectedSoundscape: string;
-  selectedDuration: number;
-  selectedCountdown: boolean;
-  initialElapsedSeconds: number;
-  initialIsPaused: boolean;
-  onTogglePauseInteract?: (isPaused: boolean, elapsedSeconds: number) => void;
-}
-
-export const PomodoroFocus = ({
-  onEnd,
-  onMinimize,
-  selectedSoundscape,
-  selectedDuration,
-  selectedCountdown,
-  initialElapsedSeconds,
-  initialIsPaused,
-  onTogglePauseInteract,
-}: PomodoroFocusProps) => {
+export const PomodoroFocus = () => {
+  const { taskId } = useLocalSearchParams<{ taskId: string }>();
+  const { data: settings } = usePomodoroSettingsQuery();
   const { t } = useTranslation("pomodoro");
 
-  const { displayTimeStr, elapsedSeconds, isPaused, togglePause } = usePomodoroTimer(
-    selectedDuration,
-    selectedCountdown,
-    initialElapsedSeconds,
-    initialIsPaused,
-  );
+  const { session, startTimer, stopTimer, togglePause, getTimerData } = usePomodoroTimer();
 
+  useEffect(() => {
+    if (taskId && (!session || session.taskId !== taskId)) {
+      startTimer(taskId);
+    }
+  }, [taskId]);
+
+  if (!settings || !taskId) return null;
+
+  const { displayTimeStr, isPaused, elapsedSeconds } = getTimerData(
+    session?.taskId ?? "",
+    settings.timing,
+    settings.isCountdown,
+  );
   const milestoneKey = getMilestoneKey(elapsedSeconds);
 
-  const handlePlayPauseClick = () => {
-    if (onTogglePauseInteract) {
-      onTogglePauseInteract(isPaused, elapsedSeconds);
-    }
-    togglePause();
+  const handleEnd = () => {
+    stopTimer();
+    router.back();
+  };
+
+  const handleMinimize = () => {
+    router.back();
   };
 
   return (
@@ -52,7 +47,7 @@ export const PomodoroFocus = ({
         <View className="flex-row w-full items-center justify-between">
           <ReturnButton
             className="w-20 h-20 border-0 bg-[#00000014]"
-            onPress={() => onMinimize(elapsedSeconds, isPaused)}
+            onPress={() => handleMinimize()}
           />
         </View>
 
@@ -102,7 +97,7 @@ export const PomodoroFocus = ({
             </Text>
             <Pressable
               className="items-center justify-center -mt-4"
-              onPress={() => onMinimize(elapsedSeconds, isPaused)}
+              onPress={() => handleMinimize()}
             >
               <Text className="text-xl font-baloo font-bold text-[#00000080]">
                 {t("focusMode.viewTask")}
@@ -112,13 +107,13 @@ export const PomodoroFocus = ({
         </View>
 
         <View className="w-full mb-8 flex-row items-center justify-between px-12">
-          <View className="items-center justify-center px-8 py-2 rounded-full">
+          <View className="items-center justify-center w-32 py-2 rounded-full">
             <Text className="mb-2 text-2xl font-baloo text-[#00000033]">
               {isPaused ? t("focusMode.resume", "Resume") : t("focusMode.pause")}
             </Text>
             <Pressable
               className="h-20 w-20 flex-row items-center justify-center rounded-full bg-[#00000033] gap-3"
-              onPress={handlePlayPauseClick}
+              onPress={togglePause}
             >
               {isPaused ? (
                 <Ionicons name="play" size={48} color="#E7F7D7" className="ml-1" />
@@ -135,7 +130,7 @@ export const PomodoroFocus = ({
             <Text className="mb-2 text-2xl font-baloo text-[#00000033]">{t("focusMode.end")}</Text>
             <Pressable
               className="h-20 w-20 items-center justify-center rounded-full bg-[#00000033]"
-              onPress={onEnd}
+              onPress={handleEnd}
             >
               <View className="w-8 h-8 rounded-md bg-[#E7F7D7]" />
             </Pressable>

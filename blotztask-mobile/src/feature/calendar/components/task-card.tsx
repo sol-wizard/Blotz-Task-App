@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import ReanimatedSwipeable, {
   SwipeableMethods,
@@ -21,9 +21,9 @@ import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
 import { TaskCardLeftActions } from "./task-card-left-actions";
-import { useActiveSession, pauseOtherSessions } from "@/feature/pomodoro/hooks/useActiveSession";
 import { getMilestoneKey } from "@/feature/pomodoro/utils/milestone-copywrites";
 import { useTranslation } from "react-i18next";
+import { usePomodoroTimer } from "@/feature/pomodoro/hooks/usePomodoroTimer";
 
 // Props
 interface TaskCardProps {
@@ -38,6 +38,19 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
+
+  // Pomodoro session state
+  const togglePause = usePomodoroTimer((state) => state.togglePause);
+  const isPaused = usePomodoroTimer((state) =>
+    state.session?.taskId === String(task.id) ? state.session?.isPaused : true,
+  );
+  const isThisTaskActive = usePomodoroTimer((state) => state.session?.taskId === String(task.id));
+  const elapsedSeconds = usePomodoroTimer((state) =>
+    state.session?.taskId === String(task.id) ? state.session?.elapsedSeconds : 0,
+  );
+  const elapsedMinutes = Math.floor((elapsedSeconds ?? 0) / 60);
+  const milestoneKey = getMilestoneKey(elapsedSeconds);
+
   // Mutations
   const { toggleTask, isToggling } = useTaskMutations();
   const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
@@ -55,26 +68,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const isLoading =
     isToggling || isDeleting || isBreakingDownAndReplacingSubtasks || isCompletingOccurrence;
 
-  const { initialElapsed, initialPaused, saveSession, hasActiveSession } = useActiveSession(
-    task.id ? task.id.toString() : "",
-  );
-
   const { t } = useTranslation("pomodoro");
-  const elapsedMinutes = Math.floor(initialElapsed / 60);
-  const milestoneKey = getMilestoneKey(initialElapsed);
-  const [, setTick] = useState(0);
-
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-
-    if (hasActiveSession && !initialPaused) {
-      interval = setInterval(() => {
-        setTick((t) => t + 1);
-      }, 60000);
-    }
-
-    return () => clearInterval(interval);
-  }, [hasActiveSession, initialPaused]);
 
   // Functions
   const handleOpenTaskDetails = () => {
@@ -112,27 +106,12 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
 
   const handleOpenFocus = () => {
     if (!task.id) return;
-
-    if (!hasActiveSession) {
-      pauseOtherSessions(task.id.toString());
-    }
-
     router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
     swipeRef.current?.close();
   };
 
   const handleTogglePause = () => {
-    const newElapsed = initialElapsed;
-
-    if (!initialPaused) {
-      saveSession(newElapsed, true);
-    } else {
-      if (task.id != null) {
-        pauseOtherSessions(task.id.toString());
-      }
-      saveSession(newElapsed, false);
-    }
-
+    togglePause();
     swipeRef.current?.close();
   };
 
@@ -144,8 +123,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
           progress={leftActionsProgress}
           onMode={onOpenMode}
           onFocus={handleOpenFocus}
-          isActiveTask={hasActiveSession}
-          isPaused={initialPaused}
+          isActiveTask={isThisTaskActive}
+          isPaused={isPaused}
           onTogglePause={handleTogglePause}
         />
       )}
@@ -251,7 +230,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
             </View>
           </View>
 
-          {hasActiveSession && (
+          {isThisTaskActive && (
             <Pressable
               onPress={handleOpenFocus}
               className="mt-3 flex-row items-center justify-between bg-[#FFF7ED] px-3 py-2.5 rounded-xl"
@@ -262,7 +241,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
 
               <View className="flex-row items-center">
                 <Text className="text-gray-400 font-inter text-[12px] mr-0.5">
-                  {initialPaused
+                  {isPaused
                     ? t("focusMode.paused", "Paused")
                     : t(`focusMode.milestones.${milestoneKey}.subtitle`)}
                 </Text>

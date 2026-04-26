@@ -1,46 +1,87 @@
-import { useState, useEffect } from "react";
 import { calculateTimerState } from "../utils/elapsed-timer";
 import { formatDuration } from "../utils/format-duration";
+import { create } from "zustand";
 
-export function usePomodoroTimer(
-  targetDurationMinutes: number,
-  isCountdown: boolean = true,
-  initialElapsedSeconds: number = 0,
-  initialIsPaused: boolean = false,
-) {
-  const [elapsedSeconds, setElapsedSeconds] = useState(initialElapsedSeconds);
-  const [isPaused, setIsPaused] = useState(initialIsPaused);
-  const targetDurationSeconds = targetDurationMinutes * 60;
-
-  useEffect(() => {
-    if (isPaused) return;
-
-    const interval = setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isPaused]);
-
-  const { displaySeconds, isFinished } = calculateTimerState(
-    elapsedSeconds,
-    targetDurationSeconds,
-    isCountdown,
-  );
-
-  useEffect(() => {
-    if (isFinished && !isPaused) {
-      setIsPaused(true);
-      // Could add sound here or other side effects on timer finish
-    }
-  }, [isFinished, isPaused]);
-
-  return {
-    displayTimeStr: formatDuration(displaySeconds),
-    elapsedSeconds,
-    isFinished,
-    isPaused,
-    togglePause: () => setIsPaused(!isPaused),
-    endTimer: () => setIsPaused(true),
-  };
+interface PomodoroSession {
+  taskId: string;
+  elapsedSeconds: number;
+  isPaused: boolean;
 }
+
+interface PomodoroTimerState {
+  session: PomodoroSession | null;
+
+  getTimerData: (
+    taskId: string,
+    targetMinutes: number,
+    isCountdown: boolean,
+  ) => {
+    displayTimeStr: string;
+    isPaused: boolean;
+    isFinished: boolean;
+    elapsedSeconds: number;
+  };
+
+  startTimer: (taskId: string, initialElapsed?: number) => void;
+  togglePause: () => void;
+  stopTimer: () => void;
+  _tick: () => void; // 内部心跳
+}
+
+let globalInterval: ReturnType<typeof setInterval> | null = null;
+
+export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
+  session: null,
+
+  startTimer: (taskId, initialElapsed = 0) => {
+    set({
+      session: { taskId, elapsedSeconds: initialElapsed, isPaused: false },
+    });
+
+    if (!globalInterval) {
+      globalInterval = setInterval(() => get()._tick(), 1000);
+    }
+  },
+
+  togglePause: () => {
+    const { session } = get();
+    if (!session) return;
+    set({ session: { ...session, isPaused: !session.isPaused } });
+  },
+
+  stopTimer: () => {
+    set({ session: null });
+  },
+
+  _tick: () => {
+    const { session } = get();
+    if (session && !session.isPaused) {
+      set({
+        session: { ...session, elapsedSeconds: session.elapsedSeconds + 1 },
+      });
+    }
+  },
+
+  getTimerData: (taskId, targetMinutes, isCountdown) => {
+    const { session } = get();
+    if (!session || session.taskId !== taskId) {
+      return {
+        displayTimeStr: isCountdown ? formatDuration(targetMinutes * 60) : "00:00",
+        isPaused: true,
+        isFinished: false,
+        elapsedSeconds: 0,
+      };
+    }
+    const elapsed = session?.elapsedSeconds || 0;
+    const targetSeconds = targetMinutes * 60;
+
+    const { displaySeconds, isFinished } = calculateTimerState(elapsed, targetSeconds, isCountdown);
+
+    return {
+      displayTimeStr: formatDuration(displaySeconds),
+      isPaused: session?.isPaused ?? true,
+      isFinished,
+      elapsedSeconds: elapsed,
+    };
+  },
+}));
