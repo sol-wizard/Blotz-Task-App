@@ -14,7 +14,7 @@ type Props = {
 
   // Mic / recording
   isListening: boolean;
-  setIsHoldHintVisible: (visible: boolean) => void;
+  onShortPress: () => void;
   onMicPressIn: () => void;
   onMicPressOut: () => void;
   cancelListening: () => void;
@@ -35,7 +35,7 @@ export function AiInputBar({
   onMicPressIn,
   onMicPressOut,
   onConfirm,
-  setIsHoldHintVisible,
+  onShortPress,
   isAiGenerating,
   cancelListening,
 }: Props) {
@@ -54,13 +54,12 @@ export function AiInputBar({
         onPressIn={() => {
           if (isAiGenerating) return;
           longPressTriggered.current = false;
-          setIsHoldHintVisible(false);
           onMicPressIn();
         }}
         onPressOut={() => {
           if (isAiGenerating) return;
           if (!longPressTriggered.current) {
-            setIsHoldHintVisible(true);
+            onShortPress();
             cancelListening();
           } else {
             onMicPressOut();

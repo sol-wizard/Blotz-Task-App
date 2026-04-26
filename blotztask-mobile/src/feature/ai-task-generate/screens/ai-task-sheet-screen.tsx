@@ -97,6 +97,7 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressIn = () => {
+    hideHoldHint();
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     Keyboard.dismiss();
     void startListening();
@@ -170,7 +171,7 @@ export default function AiTaskSheetScreen() {
                 onSubmitText={() => void handleSubmitText()}
                 // Mic input
                 isListening={isListening}
-                setIsHoldHintVisible={(visible) => (visible ? showHoldHint() : hideHoldHint())}
+                onShortPress={showHoldHint}
                 onMicPressIn={handleMicPressIn}
                 onMicPressOut={() => void handleMicPressOut()}
                 cancelListening={cancelListening}
