@@ -101,8 +101,9 @@ public class AiTaskGenerateService(
             }, ct);
 
             logger.LogInformation(
-                "TaskGeneration: RunAsync completed in {RunMs}ms | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount}",
-                runSw.ElapsedMilliseconds, context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
+                "TaskGeneration: RunAsync completed in {RunMs}ms | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens} | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount}",
+                runSw.ElapsedMilliseconds, promptTokens, completionTokens, promptTokens + completionTokens,
+                context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
 
             var isSuccess = context.Tools.ToolCallCount > 0;
 

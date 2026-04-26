@@ -77,12 +77,13 @@ public class TimeEstimateCommandHandler(
             var response = await agent.RunAsync("Estimate the time for this note.", cancellationToken: ct);
             int completionTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
             int promptTokens = (int)(response.Usage?.InputTokenCount ?? 0);
+            int totalTokens = completionTokens + promptTokens;
             await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
             {
                 UserId = request.UserId,
                 CompletionTokens = completionTokens,
                 PromptTokens = promptTokens,
-                TotalTokens = completionTokens + promptTokens
+                TotalTokens = totalTokens
             }, ct);
 
             if (captured == null)
@@ -91,7 +92,9 @@ public class TimeEstimateCommandHandler(
                 throw new AiTaskGenerationException(AiErrorCode.Unknown, "AI did not return a time estimate.");
             }
 
-            logger.LogInformation("TimeEstimate result: {Duration}, success={IsSuccess}", captured.Duration, captured.IsSuccess);
+            logger.LogInformation(
+                "TimeEstimate result: {Duration}, success={IsSuccess} | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens}",
+                captured.Duration, captured.IsSuccess, promptTokens, completionTokens, totalTokens);
 
             return captured;
         }
