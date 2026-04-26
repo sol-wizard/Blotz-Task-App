@@ -11,7 +11,6 @@ const MIN_RECORDING_MS = 1000;
 
 export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
   const [isListening, setIsListening] = useState(false);
-  const recordingStartedAtRef = useRef<number | null>(null);
   const setupPromiseRef = useRef<Promise<void> | null>(null);
   const sessionIdRef = useRef(0);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -25,11 +24,9 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
-      recordingStartedAtRef.current = Date.now();
     })().catch((error) => {
       if (sessionId === sessionIdRef.current) {
         setIsListening(false);
-        recordingStartedAtRef.current = null;
       }
       console.warn("[Mic] Error starting recording.", error);
     });
@@ -51,24 +48,19 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       setupPromiseRef.current = null;
     }
 
-    // Use our own ref rather than recorder.isRecording — recorder.isRecording is
-    // React state and may be stale immediately after recorder.record() is called.
-    if (!recordingStartedAtRef.current) {
+    // After awaiting setupPromiseRef, setup is fully resolved so isRecording is reliable.
+    if (!recorder.isRecording) {
       setIsListening(false);
       return;
     }
 
-    const pressReleasedAt = Date.now();
-    const duration = recordingStartedAtRef.current
-      ? pressReleasedAt - recordingStartedAtRef.current
-      : Infinity;
-    recordingStartedAtRef.current = null;
+    const durationMs = recorder.currentTime * 1000;
 
     try {
       await recorder.stop();
       setIsListening(false);
 
-      if (duration < MIN_RECORDING_MS) {
+      if (durationMs < MIN_RECORDING_MS) {
         return StopAndUploadResult.Short;
       }
 
