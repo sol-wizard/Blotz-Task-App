@@ -118,7 +118,7 @@ export const useSubtaskMutations = () => {
     isUpdatingSubtask: updateSubtaskMutation.isPending,
 
     // Add subtask
-    addSubtask: addSubtaskMutation.mutateAsync,
+    addSubtask: addSubtaskMutation.mutate,
     isAddingSubtask: addSubtaskMutation.isPending,
 
     // Toggle subtask status

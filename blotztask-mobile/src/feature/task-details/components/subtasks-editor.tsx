@@ -18,7 +18,7 @@ type SubtasksEditorProps = {
 
 const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }: SubtasksEditorProps) => {
   const { t } = useTranslation(["tasks", "common"]);
-  const { data: fetchedSubtasks, isLoading } = useSubtasksByParentId(parentTask.id);
+  const { data: fetchedSubtasks, isLoading } = useSubtasksByParentId(parentTask.id!);
 
   const { deleteSubtask, isDeletingSubtask, toggleSubtaskStatus, addSubtask, isAddingSubtask } = useSubtaskMutations();
 
@@ -50,23 +50,15 @@ const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }:
   };
 
   const handleAddSubtask = async () => {
-    try {
-      await addSubtask({
-        parentTaskId: parentTask.id,
+    addSubtask({
+        parentTaskId: parentTask.id!,
         title: "New subtask",
         duration: "00:00:00",
         order: (fetchedSubtasks?.length ?? 0) + 1,
       });
-    } catch (error) {
-      console.error("Failed to add subtask:", error);
-      Toast.show({
-        type: "error",
-        text1: t("tasks:details.failedToAddSubtask"),
-      });
-    }
   };
 
-  if (isLoading || isRefreshingSubtasks || isDeletingSubtask || isAddingSubtask) {
+  if (isLoading || isRefreshingSubtasks || isDeletingSubtask) {
     return (
       <View className="flex-1 items-center justify-center">
         <Text className="text-base font-baloo text-primary">
