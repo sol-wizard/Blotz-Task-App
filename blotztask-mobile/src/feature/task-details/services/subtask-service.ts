@@ -18,15 +18,13 @@ export const createBreakDownSubtasks = async (
 };
 
 export async function addSubtask(newSubtask: AddNewSubtaskDTO): Promise<number> {
-  const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/SubTask`;
-
   try {
-    const response = await apiClient.post(url, { ...newSubtask });
-    return (response as { data: number }).data;
+    return await apiClient.post<number>("/SubTask", { ...newSubtask });
   } catch {
     throw new Error("Add subtask failed");
   }
 }
+
 
 export async function updateSubtask(newSubtask: SubtaskDTO): Promise<void> {
   const taskId = newSubtask.parentTaskId;
