@@ -24,7 +24,6 @@ export async function addSubtask(newSubtask: AddNewSubtaskDTO): Promise<number> 
     const response = await apiClient.post(url, { ...newSubtask });
     return (response as { data: number }).data;
   } catch (error) {
-    console.error("Add subtask error details:", JSON.stringify(error, null, 2));
     throw new Error("Add subtask failed");
   }
 }
