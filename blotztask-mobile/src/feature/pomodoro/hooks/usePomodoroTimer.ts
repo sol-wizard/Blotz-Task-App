@@ -1,4 +1,4 @@
-import { calculateTimerState } from "../utils/elapsed-timer";
+import { calculateTimerState } from "../utils/calculateTimerState";
 import { formatDuration } from "../utils/format-duration";
 import { create } from "zustand";
 

@@ -21,7 +21,7 @@ import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
 import { TaskCardLeftActions } from "./task-card-left-actions";
-import { getMilestoneKey } from "@/feature/pomodoro/utils/milestone-copywrites";
+import { getMilestoneKey } from "@/feature/pomodoro/utils/getMilestoneKey";
 import { useTranslation } from "react-i18next";
 import { usePomodoroTimer } from "@/feature/pomodoro/hooks/usePomodoroTimer";
 

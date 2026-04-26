@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { ReturnButton } from "@/shared/components/return-button";
 import { usePomodoroTimer } from "../hooks/usePomodoroTimer";
-import { getMilestoneKey } from "../utils/milestone-copywrites";
+import { getMilestoneKey } from "../utils/getMilestoneKey";
 import { router, useLocalSearchParams } from "expo-router";
 import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
 import { useEffect } from "react";
