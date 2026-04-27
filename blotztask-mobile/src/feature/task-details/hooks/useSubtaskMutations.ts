@@ -83,10 +83,7 @@ export const useSubtaskMutations = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
-    },
-    onError: (error) => {
-      console.error("Failed to add subtask:", error);
-    },
+    }
   });
 
   const toggleSubtaskStatusMutation = useMutation({
