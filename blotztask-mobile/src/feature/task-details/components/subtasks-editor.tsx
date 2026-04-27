@@ -39,7 +39,7 @@ const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }:
 
   const handleDelete = async (id: number) => {
     try {
-      await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id });
+      await deleteSubtask({ subtaskId: id, parentTaskId: parentTask.id! });
     } catch (error) {
       console.error("Failed to delete subtask:", error);
       Toast.show({
@@ -122,8 +122,9 @@ const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }:
           subtasks={fetchedSubtasks}
           isEditMode={isEditMode}
           onDelete={handleDelete}
-          onToggle={(subtaskId) => toggleSubtaskStatus({ subtaskId, parentTaskId: parentTask.id })}
+          onToggle={(subtaskId) => toggleSubtaskStatus({ subtaskId, parentTaskId: parentTask.id! })}
           color={taskColor}
+          parentTaskId={parentTask.id!}
         />
       </View>
 

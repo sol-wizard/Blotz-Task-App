@@ -70,8 +70,8 @@ export const useSubtaskMutations = () => {
   const updateSubtaskMutation = useMutation({
     mutationFn: updateSubtask,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["subtasks", variables.parentTaskId] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
     onError: (error) => {
       console.error("Failed to update subtask:", error);
@@ -90,8 +90,8 @@ export const useSubtaskMutations = () => {
     mutationFn: ({ subtaskId }: { subtaskId: number; parentTaskId: number }) =>
       toggleSubtaskStatus(subtaskId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["subtasks", variables.parentTaskId] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
     onError: (error) => {
       console.error("Failed to toggle subtask status:", error);
