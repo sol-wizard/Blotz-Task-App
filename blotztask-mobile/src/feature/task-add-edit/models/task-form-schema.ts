@@ -4,7 +4,11 @@ import { isBefore, isEqual } from "date-fns";
 
 export const taskFormSchema = z
   .object({
-    title: z.string().trim().min(1, "Title is required").max(80, "Max 80 chars"),
+    title: z
+      .string()
+      .trim()
+      .min(1, "Task must have a title")
+      .max(80, "Title is too long. Please keep it under 80 characters."),
     description: z.union([z.string().max(1000, "Max 1000 chars"), z.literal("")]).nullable(),
     startDate: z.date(),
     startTime: z.date(),
