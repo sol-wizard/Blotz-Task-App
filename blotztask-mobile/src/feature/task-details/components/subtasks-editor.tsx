@@ -20,7 +20,7 @@ const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }:
   const { t } = useTranslation(["tasks", "common"]);
   const { data: fetchedSubtasks, isLoading } = useSubtasksByParentId(parentTask.id!);
 
-  const { deleteSubtask, isDeletingSubtask, toggleSubtaskStatus } = useSubtaskMutations();
+  const { deleteSubtask, isDeletingSubtask, toggleSubtaskStatus, addSubtask, isAddingSubtask } = useSubtaskMutations();
 
   const [isEditMode, setIsEditMode] = useState(false);
   const taskColor = parentTask?.label?.color ?? theme.colors.disabled;
@@ -47,6 +47,15 @@ const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }:
         text1: t("tasks:details.failedToDeleteSubtask"),
       });
     }
+  };
+
+  const handleAddSubtask = async () => {
+    addSubtask({
+        parentTaskId: parentTask.id!,
+        title: "New subtask",
+        duration: "00:00:00",
+        order: (fetchedSubtasks?.length ?? 0) + 1,
+      });
   };
 
   if (isLoading || isRefreshingSubtasks || isDeletingSubtask) {
@@ -97,7 +106,11 @@ const SubtasksEditor = ({ parentTask, onRefreshSubtasks, isRefreshingSubtasks }:
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity onPress={() => console.log("Add subtask clicked")} className="p-2 ml-1">
+          <TouchableOpacity 
+            onPress={handleAddSubtask} 
+            disabled={isAddingSubtask}
+            className="p-2 ml-1"
+            >
             <MaterialIcons name="add" size={28} color={theme.colors.disabled} />
           </TouchableOpacity>
         </View>
