@@ -5,8 +5,6 @@ export function convertDurationToText(timeStr: string): string {
     return `${minutes} min`;
   } else if (minutes === 0 && seconds === 0) {
     return `${hours} h`;
-  } else if (hours === 0 && seconds === 0) {
-    return `${minutes} min`;
   } else {
     return `${hours > 0 ? hours + " h " : ""}${minutes > 0 ? minutes + " min" : ""}`;
   }
