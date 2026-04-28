@@ -6,7 +6,7 @@ export enum TaskTimeType {
   Range = 1,
 }
 
-export interface BasicTaskFields {
+export interface BaseTask {
   title: string;
   startTime: string;
   endTime: string;
@@ -17,7 +17,7 @@ export interface BasicTaskFields {
   isDeadline: boolean;
 }
 
-export interface TaskDetailDTO extends BasicTaskFields {
+export interface TaskDetailDTO extends BaseTask {
   id: number | null;
   recurringTaskId?: number | null;
   isDone: boolean;

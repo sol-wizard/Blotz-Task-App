@@ -1,6 +1,6 @@
-import { BasicTaskFields } from "./task-detail-dto";
+import { BaseTask } from "./task-detail-dto";
 
-export interface TaskUpsertDTO extends BasicTaskFields {
+export interface TaskUpsertDTO extends BaseTask {
   labelId?: number;
   dueAt?: string;
 }
