@@ -58,5 +58,9 @@
   },
   "success": {
     "taskCreated": "Task created successfully"
+  },
+  "subtasks": {
+    "done": "Done",
+    "delete": "Delete"
   }
 }

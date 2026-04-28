@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using Azure.AI.Projects;
+using BlotzTask.Modules.AiUsage.Exceptions;
+using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Functions;
@@ -11,23 +13,25 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 public interface IAiTaskGenerateService
 {
     Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct);
-    Task<AiGenerateMessage> GenerateAiResponse(string userMessage, AiChatContext context, CancellationToken ct);
+    Task<AiGenerateMessage> GenerateAiResponse(Guid userId, string userMessage, AiChatContext context, CancellationToken ct);
 }
 
 public class AiTaskGenerateService(
     ILogger<AiTaskGenerateService> logger,
     AIProjectClient projectClient,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    ICheckAiQuotaService checkAiQuotaService,
+    IRecordAiUsageService recordAiUsageService)
     : IAiTaskGenerateService
 {
-    //TODO: This should not be here ? should be at DI?
+    // TODO: Move deployment id resolution to DI/configuration.
     private readonly string _deploymentId =
         configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
         ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
 
     public async Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct)
     {
-        //TODO: Do we have a better way of manage those list ?
+        // TODO: Consider a clearer way to manage extracted task/note lists.
         var tasks = new List<ExtractedTask>();
         var notes = new List<ExtractedNote>();
         var tools = new TaskGenerationTools(tasks, notes);
@@ -69,6 +73,7 @@ public class AiTaskGenerateService(
     }
 
     public async Task<AiGenerateMessage> GenerateAiResponse(
+        Guid userId,
         string userMessage,
         AiChatContext context,
         CancellationToken ct)
@@ -77,15 +82,29 @@ public class AiTaskGenerateService(
 
         try
         {
+            await checkAiQuotaService.CheckQuotaAsync(userId, ct);
+
             logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
             var runSw = Stopwatch.StartNew();
-            await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
+            var response = await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);
             runSw.Stop();
 
+            int inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
+            int outputTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+            int totalTokens = (int)(response.Usage?.TotalTokenCount ?? 0);
+            await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
+            {
+                UserId = userId,
+                InputTokens = inputTokens,
+                OutputTokens = outputTokens,
+                TotalTokens = totalTokens
+            }, ct);
+
             logger.LogInformation(
-                "TaskGeneration: RunAsync completed in {RunMs}ms | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount}",
-                runSw.ElapsedMilliseconds, context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
+                "TaskGeneration: RunAsync completed in {RunMs}ms | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens} | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount}",
+                runSw.ElapsedMilliseconds, inputTokens, outputTokens, totalTokens,
+                context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
 
             var isSuccess = context.Tools.ToolCallCount > 0;
 

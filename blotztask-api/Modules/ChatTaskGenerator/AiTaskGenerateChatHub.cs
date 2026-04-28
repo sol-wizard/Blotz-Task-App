@@ -59,6 +59,7 @@ public class AiTaskGenerateChatHub(
         var chatContext = await aiTaskGenerateService.InitializeAsync(preferredLanguage, userLocalTime, timeZone, Context.ConnectionAborted);
 
         Context.Items["ChatContext"] = chatContext;
+        Context.Items["UserId"] = userId;
 
         await base.OnConnectedAsync();
     }
@@ -76,7 +77,7 @@ public class AiTaskGenerateChatHub(
     public async Task SendMessage(string message)
     {
         var chatContext = (AiChatContext)Context.Items["ChatContext"]!;
-
+        var userId = (Guid)Context.Items["UserId"]!;
         try
         {
             var ct = Context.ConnectionAborted;
@@ -92,7 +93,7 @@ public class AiTaskGenerateChatHub(
             chatContext.Tools.OnNoteStreamed = async note =>
                 await Clients.Caller.SendAsync("ReceiveNoteExtracted", note, ct);
 
-            var resultMessage = await aiTaskGenerateService.GenerateAiResponse(resolvedMessage, chatContext, ct);
+            var resultMessage = await aiTaskGenerateService.GenerateAiResponse(userId, resolvedMessage, chatContext, ct);
 
             chatContext.Tools.OnTaskStreamed = null;
             chatContext.Tools.OnNoteStreamed = null;

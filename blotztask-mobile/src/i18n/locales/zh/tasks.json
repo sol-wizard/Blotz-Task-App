@@ -58,5 +58,9 @@
   },
   "success": {
     "taskCreated": "任务创建成功"
+  },
+  "subtasks": {
+    "done": "完成",
+    "delete": "删除"
   }
 }

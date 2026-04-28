@@ -5,20 +5,19 @@ import { theme } from "@/shared/constants/theme";
 import { convertDurationToText } from "../../../shared/util/convert-duration";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { ActionButton, ActionButtonType } from "@/feature/notes/components/action-button";
-
-type SubtaskItemData = {
-  id: number;
-  title: string;
-  duration?: string;
-  isDone: boolean;
-};
+import { useState } from "react";
+import { useSubtaskMutations } from "../hooks/useSubtaskMutations";
+import SubtaskInlineEditor from "./subtask-inline-editor";
+import { useTranslation } from "react-i18next";
+import { SubtaskDTO } from "../models/subtask-dto";
 
 type SubtaskItemProps = {
-  item: SubtaskItemData;
+  item: SubtaskDTO;
   onToggle: (id: number) => void;
-  color?: string;
   isEditMode?: boolean;
   onDelete?: (id: number) => void;
+  onDurationChange?: (id: number, duration: string) => void;
+  parentTaskId: number;
   drag?: () => void;
 };
 
@@ -27,18 +26,49 @@ export default function SubtaskItem({
   onToggle,
   isEditMode = false,
   onDelete,
+  onDurationChange,
+  parentTaskId,
   drag,
 }: SubtaskItemProps) {
+  // Mutations
+  const { updateSubtask } = useSubtaskMutations();
+
+  // State
+  const [isInlineEditing, setIsInlineEditing] = useState(false);
+  const [titleValue, setTitleValue] = useState(subtask.title);
+  const [localDuration, setLocalDuration] = useState(subtask.duration ?? "00:00:00");
+
+  // Derived values
   const isChecked = subtask?.isDone;
+  const textColor = isChecked ? theme.colors.disabled : theme.colors.onSurface;
+  const { t } = useTranslation(["tasks"]);
+
+  // Functions
   const handleToggle = () => {
-    onToggle(subtask.id);
+    onToggle(subtask.subTaskId);
   };
 
   const handleDelete = () => {
-    onDelete?.(subtask.id);
+    onDelete?.(subtask.subTaskId);
   };
 
-  const textColor = isChecked ? theme.colors.disabled : theme.colors.onSurface;
+  const handleInlineEditToggle = () => {
+    if (isInlineEditing) {
+      updateSubtask?.({
+        subTaskId: subtask.subTaskId,
+        parentTaskId: parentTaskId,
+        title: titleValue,
+        duration: localDuration,
+        order: subtask.order,
+        isDone: subtask.isDone,
+      });
+    } else {
+      const duration = subtask.duration ?? "00:00:00";
+      setTitleValue(subtask.title);
+      setLocalDuration(duration);
+    }
+    setIsInlineEditing((prev) => !prev);
+  };
 
   const renderRightActions = () => {
     return (
@@ -55,67 +85,89 @@ export default function SubtaskItem({
   };
 
   return (
-    <Swipeable
-      renderRightActions={renderRightActions}
-      friction={2}
-      enabled={!isEditMode}
-      containerStyle={{ marginBottom: 8 }}
-    >
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={() => !isEditMode && handleToggle()}
-        onLongPress={isEditMode ? drag : undefined}
-        style={{
-          borderRadius: 16,
-          borderWidth: 1,
-          borderColor: "#E5E7EB",
-          backgroundColor: "#FFFFFF",
-        }}
+    <>
+      <Swipeable
+        renderRightActions={renderRightActions}
+        friction={2}
+        enabled={!isEditMode}
+        containerStyle={{ marginBottom: 8 }}
       >
-        <View className="flex-row items-center min-h-[48px] px-3 py-1">
-          <View style={{ width: 32, justifyContent: "center" }}>
-            <TasksCheckbox type="subtask" checked={isChecked} onChange={handleToggle} />
-          </View>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => !isEditMode && handleToggle()}
+          onLongPress={isEditMode ? drag : undefined}
+          style={{
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: "#E5E7EB",
+            backgroundColor: "#FFFFFF",
+          }}
+        >
+          <View className="flex-row items-center px-4 py-1" style={{ minHeight: 60 }}>
+            <View className="w-8 justify-center">
+              <TasksCheckbox type="subtask" checked={isChecked} onChange={handleToggle} />
+            </View>
 
-          <View style={{ flex: 1, marginLeft: 4, justifyContent: "center" }}>
-            {subtask.duration && (
-              <Text
-                className="text-[12px] font-bold"
-                style={{
-                  color: isChecked ? "#BDE6A3" : theme.colors.highlight,
-                  marginBottom: -2,
-                  fontWeight: "700",
-                }}
-              >
-                {convertDurationToText(subtask.duration)}
-              </Text>
-            )}
-            <Text
-              numberOfLines={2}
-              className={`text-base font-bold ${isChecked ? "line-through" : ""}`}
-              style={{ color: textColor }}
-            >
-              {subtask?.title}
-            </Text>
-          </View>
-
-          <View style={{ width: 32, alignItems: "center", justifyContent: "center" }}>
-            {isEditMode ? (
-              <TouchableOpacity onPressIn={drag} activeOpacity={1}>
-                <MaterialIcons name="unfold-more" size={26} color={theme.colors.disabled} />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity onPress={() => console.log("Edit subtask clicked")}>
-                <MaterialCommunityIcons
-                  name="pencil-minus-outline"
-                  size={22}
-                  color={theme.colors.disabled}
+            <View className="flex-1 ml-1">
+              {isInlineEditing ? (
+                <SubtaskInlineEditor
+                  titleValue={titleValue}
+                  localDuration={localDuration}
+                  onTitleChange={setTitleValue}
+                  onDurationClose={(duration) => {
+                    setLocalDuration(duration);
+                    onDurationChange?.(subtask.subTaskId, duration);
+                  }}
                 />
-              </TouchableOpacity>
-            )}
+              ) : (
+                <>
+                  {localDuration && (
+                    <Text
+                      className="text-3 font-bold"
+                      style={{
+                        color: isChecked ? "#BDE6A3" : theme.colors.highlight,
+                        marginBottom: -2,
+                        fontWeight: "700",
+                      }}
+                    >
+                      {convertDurationToText(localDuration)}
+                    </Text>
+                  )}
+                  <Text
+                    numberOfLines={2}
+                    className={`text-base font-bold ${isChecked ? "line-through" : ""}`}
+                    style={{ color: textColor }}
+                  >
+                    {titleValue}
+                  </Text>
+                </>
+              )}
+            </View>
+
+            <View className="w-10 items-center justify-center">
+              {isEditMode ? (
+                <TouchableOpacity onPressIn={drag} activeOpacity={1}>
+                  <MaterialIcons name="unfold-more" size={26} color={theme.colors.disabled} />
+                </TouchableOpacity>
+              ) : isInlineEditing ? (
+                <TouchableOpacity onPress={handleInlineEditToggle}>
+                  <Text className="text-sm font-bold" style={{ color: theme.colors.highlight }}>
+                    {t("subtasks.done")}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity onPress={handleInlineEditToggle}>
+                  <MaterialCommunityIcons
+                    name="pencil-minus-outline"
+                    size={22}
+                    color={theme.colors.disabled}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
-    </Swipeable>
+        </TouchableOpacity>
+      </Swipeable>
+    </>
   );
 }
