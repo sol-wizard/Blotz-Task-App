@@ -22,50 +22,18 @@ public class AiTaskGenerateChatHub(
     SpeechTranscriptionService speechTranscriptionService) : Hub
 {
 
+    #region Connection Lifecycle
+
     public override async Task OnConnectedAsync()
     {
-        var httpContext = Context.GetHttpContext();
-        if (httpContext is null)
-        {
-            throw new HubException("UserId not found. Connection rejected.");
-        }
-
-        var hasUserId = httpContext.Items.TryGetValue("UserId", out var userIdValue);
-        if (!hasUserId)
-        {
-            throw new HubException("UserId not found. Connection rejected.");
-        }
-
-        if (userIdValue is not Guid userId)
-        {
-            throw new HubException("UserId not found. Connection rejected.");
-        }
-
-        // UTC is the safe default; the client passes a IANA/Windows timezone ID so we can
-        // convert server-side UTC timestamps into the user's local time for AI context.
-        var timeZone = TimeZoneInfo.Utc;
-        var timeZoneId = httpContext.Request.Query["timeZone"].ToString();
-
-        if (!string.IsNullOrWhiteSpace(timeZoneId))
-        {
-            try
-            {
-                timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Invalid time zone '{TimeZoneId}'. Falling back to UTC.", timeZoneId);
-            }
-        }
+        var httpContext = GetHttpContextOrThrow();
+        var userId = ExtractUserIdOrThrow(httpContext);
+        var timeZone = ResolveTimeZone(httpContext);
 
         var userPreferences = await getUserPreferencesQueryHandler.Handle(
-            new GetUserPreferencesQuery { UserId = userId },
-            CancellationToken.None);
+            new GetUserPreferencesQuery { UserId = userId }, CancellationToken.None);
         var preferredLanguage = userPreferences.PreferredLanguage.ToDisplayName();
-
-        var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
-
-        var chatContext = await aiTaskGenerateService.InitializeAsync(preferredLanguage, userLocalTime, timeZone, Context.ConnectionAborted);
+        var chatContext = await aiTaskGenerateService.InitializeAsync(preferredLanguage, timeZone, Context.ConnectionAborted);
 
         Context.Items["ChatContext"] = chatContext;
         Context.Items["UserId"] = userId;
@@ -82,6 +50,10 @@ public class AiTaskGenerateChatHub(
         Context.Items.Remove("ChatContext");
         await base.OnDisconnectedAsync(exception);
     }
+
+    #endregion
+
+    #region Hub Methods
 
     public async Task SendMessage(string message)
     {
@@ -130,20 +102,6 @@ public class AiTaskGenerateChatHub(
         }
     }
 
-    private void WireStreamingCallbacks(AiChatContext chatContext, CancellationToken ct)
-    {
-        chatContext.Tools.OnTaskStreamed = async task =>
-            await Clients.Caller.SendAsync("ReceiveTaskExtracted", task, ct);
-        chatContext.Tools.OnNoteStreamed = async note =>
-            await Clients.Caller.SendAsync("ReceiveNoteExtracted", note, ct);
-    }
-
-    private static void ClearStreamingCallbacks(AiChatContext chatContext)
-    {
-        chatContext.Tools.OnTaskStreamed = null;
-        chatContext.Tools.OnNoteStreamed = null;
-    }
-
     public async Task TranscribeAudio(byte[] audioData)
     {
         var ct = Context.ConnectionAborted;
@@ -186,4 +144,56 @@ public class AiTaskGenerateChatHub(
             });
         }
     }
+
+    #endregion
+
+    #region Private Helpers
+
+    private HttpContext GetHttpContextOrThrow()
+    {
+        return Context.GetHttpContext() ?? throw new HubException("UserId not found. Connection rejected.");
+    }
+
+    private static Guid ExtractUserIdOrThrow(HttpContext httpContext)
+    {
+        if (httpContext.Items.TryGetValue("UserId", out var userIdValue) && userIdValue is Guid userId)
+            return userId;
+
+        throw new HubException("UserId not found. Connection rejected.");
+    }
+
+    private TimeZoneInfo ResolveTimeZone(HttpContext httpContext)
+    {
+        // UTC is the safe default; the client passes a IANA/Windows timezone ID so we can
+        // convert server-side UTC timestamps into the user's local time for AI context.
+        var timeZoneId = httpContext.Request.Query["timeZone"].ToString();
+        if (string.IsNullOrWhiteSpace(timeZoneId))
+            return TimeZoneInfo.Utc;
+
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Invalid time zone '{TimeZoneId}'. Falling back to UTC.", timeZoneId);
+            return TimeZoneInfo.Utc;
+        }
+    }
+
+    private void WireStreamingCallbacks(AiChatContext chatContext, CancellationToken ct)
+    {
+        chatContext.Tools.OnTaskStreamed = async task =>
+            await Clients.Caller.SendAsync("ReceiveTaskExtracted", task, ct);
+        chatContext.Tools.OnNoteStreamed = async note =>
+            await Clients.Caller.SendAsync("ReceiveNoteExtracted", note, ct);
+    }
+
+    private static void ClearStreamingCallbacks(AiChatContext chatContext)
+    {
+        chatContext.Tools.OnTaskStreamed = null;
+        chatContext.Tools.OnNoteStreamed = null;
+    }
+
+    #endregion
 }

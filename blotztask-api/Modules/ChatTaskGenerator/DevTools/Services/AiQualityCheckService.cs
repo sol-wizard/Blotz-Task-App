@@ -143,9 +143,8 @@ public class AiQualityCheckService(
             var aiTaskGenerateService = scope.ServiceProvider.GetRequiredService<IAiTaskGenerateService>();
 
             var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
-
             var initSw = Stopwatch.StartNew();
-            var chatContext = await aiTaskGenerateService.InitializeAsync("English", userLocalTime, timeZone, ct);
+            var chatContext = await aiTaskGenerateService.InitializeAsync("English", timeZone, ct);
             initSw.Stop();
 
             var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
