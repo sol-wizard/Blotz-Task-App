@@ -12,12 +12,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 //TODO: Remove the deployment id from the app settings , we only want to store that in the environment variable and the local development json 
 //so we need to update the onboarding documents
 
-//TODO: Investigate using RunStreamingAsync to stream AI responses via SignalR (ReceiveStreamUpdate).
-//      Evaluate whether streaming improves perceived latency given that tasks/notes only appear after tool calls complete.
-
 //TODO: Review the ADR (.ai/decisions/001-ai-task-generation.md) — verify decisions are still accurate and up to date.
-
-//TODO: Test different models (not only GPT-5.4-mini) using the DevTools eval endpoint and compare speed/accuracy.
 [Authorize]
 public class AiTaskGenerateChatHub(
     ILogger<AiTaskGenerateChatHub> logger,
@@ -30,7 +25,8 @@ public class AiTaskGenerateChatHub(
     public override async Task OnConnectedAsync()
     {
         var httpContext = Context.GetHttpContext();
-        if (httpContext?.Items.TryGetValue("UserId", out var userIdObj) != true || userIdObj is not Guid userId)
+        var userId = httpContext?.Items["UserId"] as Guid?;
+        if (userId is null)
         {
             logger.LogWarning("UserId not found in HttpContext.Items. ConnectionId: {ConnectionId}",
                 Context.ConnectionId);
@@ -50,7 +46,7 @@ public class AiTaskGenerateChatHub(
         }
 
         var userPreferences = await getUserPreferencesQueryHandler.Handle(
-            new GetUserPreferencesQuery { UserId = userId },
+            new GetUserPreferencesQuery { UserId = userId.Value },
             CancellationToken.None);
         var preferredLanguage = userPreferences.PreferredLanguage.ToDisplayName();
 
@@ -82,23 +78,24 @@ public class AiTaskGenerateChatHub(
         {
             var ct = Context.ConnectionAborted;
 
+            // 1. Resolve any relative date/time references in the user's message (e.g. "tomorrow", "next Monday")
             var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
             {
                 Message = message,
                 TimeZone = chatContext.TimeZone
             });
 
-            chatContext.Tools.OnTaskStreamed = async task =>
-                await Clients.Caller.SendAsync("ReceiveTaskExtracted", task, ct);
-            chatContext.Tools.OnNoteStreamed = async note =>
-                await Clients.Caller.SendAsync("ReceiveNoteExtracted", note, ct);
+            // 2. Wire streaming callbacks so each tool call pushes items to the client in real time
+            WireStreamingCallbacks(chatContext, ct);
 
+            // 3. Run the AI — it will call tools (CreateTask, CreateNote, etc.) which trigger the callbacks above
             var resultMessage = await aiTaskGenerateService.GenerateAiResponse(userId, resolvedMessage, chatContext, ct);
 
-            chatContext.Tools.OnTaskStreamed = null;
-            chatContext.Tools.OnNoteStreamed = null;
-            resultMessage.UserInput = message;
+            // 4. Clear callbacks so stale tool calls from a previous turn cannot push to the client
+            ClearStreamingCallbacks(chatContext);
 
+            // 5. Stamp the original user message and send the authoritative final result for reconciliation
+            resultMessage.UserInput = message;
             await Clients.Caller.SendAsync("ReceiveGenerationResult", resultMessage, ct);
         }
         catch (AiQuotaExceededException ex)
@@ -118,6 +115,20 @@ public class AiTaskGenerateChatHub(
                 ErrorMessage = ex.Message
             });
         }
+    }
+
+    private void WireStreamingCallbacks(AiChatContext chatContext, CancellationToken ct)
+    {
+        chatContext.Tools.OnTaskStreamed = async task =>
+            await Clients.Caller.SendAsync("ReceiveTaskExtracted", task, ct);
+        chatContext.Tools.OnNoteStreamed = async note =>
+            await Clients.Caller.SendAsync("ReceiveNoteExtracted", note, ct);
+    }
+
+    private static void ClearStreamingCallbacks(AiChatContext chatContext)
+    {
+        chatContext.Tools.OnTaskStreamed = null;
+        chatContext.Tools.OnNoteStreamed = null;
     }
 
     public async Task TranscribeAudio(byte[] audioData)
