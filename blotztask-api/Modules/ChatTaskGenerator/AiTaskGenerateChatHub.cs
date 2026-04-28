@@ -25,28 +25,41 @@ public class AiTaskGenerateChatHub(
     public override async Task OnConnectedAsync()
     {
         var httpContext = Context.GetHttpContext();
-        var userId = httpContext?.Items["UserId"] as Guid?;
-        if (userId is null)
+        if (httpContext is null)
         {
-            logger.LogWarning("UserId not found in HttpContext.Items. ConnectionId: {ConnectionId}",
-                Context.ConnectionId);
-            throw new HubException("UserId not found in HttpContext. Connection rejected.");
+            throw new HubException("UserId not found. Connection rejected.");
         }
 
-        //TODO: If this is a default please leave a comment so easier to read for later person, please double check why we need those timezone
-        var timeZone = TimeZoneInfo.Utc;
-        var timeZoneId = httpContext?.Request.Query["timeZone"].ToString();
-        try
+        var hasUserId = httpContext.Items.TryGetValue("UserId", out var userIdValue);
+        if (!hasUserId)
         {
-            if (!string.IsNullOrWhiteSpace(timeZoneId)) timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            throw new HubException("UserId not found. Connection rejected.");
         }
-        catch (Exception ex)
+
+        if (userIdValue is not Guid userId)
         {
-            logger.LogWarning(ex, "Invalid time zone '{TimeZoneId}'. Using UTC.", timeZoneId);
+            throw new HubException("UserId not found. Connection rejected.");
+        }
+
+        // UTC is the safe default; the client passes a IANA/Windows timezone ID so we can
+        // convert server-side UTC timestamps into the user's local time for AI context.
+        var timeZone = TimeZoneInfo.Utc;
+        var timeZoneId = httpContext.Request.Query["timeZone"].ToString();
+
+        if (!string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            try
+            {
+                timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Invalid time zone '{TimeZoneId}'. Falling back to UTC.", timeZoneId);
+            }
         }
 
         var userPreferences = await getUserPreferencesQueryHandler.Handle(
-            new GetUserPreferencesQuery { UserId = userId.Value },
+            new GetUserPreferencesQuery { UserId = userId },
             CancellationToken.None);
         var preferredLanguage = userPreferences.PreferredLanguage.ToDisplayName();
 
