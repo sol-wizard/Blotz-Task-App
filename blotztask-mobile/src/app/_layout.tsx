@@ -68,7 +68,7 @@ export default function RootLayout() {
 
   return (
     <Auth0Provider domain={domain} clientId={clientId}>
-      <PostHogProvider client={posthog} autocapture>
+      <PostHogProvider client={posthog} autocapture={false}>
         <GestureHandlerRootView>
           <QueryClientProvider client={queryClient}>
             <SafeAreaProvider>

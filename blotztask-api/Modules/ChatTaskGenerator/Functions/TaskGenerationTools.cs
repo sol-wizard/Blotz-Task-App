@@ -100,6 +100,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         [Description("Task title")] string title)
     {
         ToolCallCount++;
+        //TODO: text matching is fragile
         var task = tasks.FirstOrDefault(t => t.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
         if (task == null) return "Task not found.";
         tasks.Remove(task);
@@ -116,6 +117,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         [Description("Work, Life, Learning, or Health")] LabelNameEnum label)
     {
         ToolCallCount++;
+        //TODO: here the same as well
         var task = tasks.FirstOrDefault(t => t.Title.Equals(existingTitle, StringComparison.OrdinalIgnoreCase));
         if (task == null) return "Task not found.";
         task.Title = title;
@@ -131,6 +133,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         [Description("Note text")] string text)
     {
         ToolCallCount++;
+        //TODO: here
         var note = notes.FirstOrDefault(n => n.Text.Equals(text, StringComparison.OrdinalIgnoreCase));
         if (note == null) return "Note not found.";
         notes.Remove(note);
@@ -143,6 +146,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
         [Description("New text")] string newText)
     {
         ToolCallCount++;
+        //TODO: here
         var note = notes.FirstOrDefault(n => n.Text.Equals(existingText, StringComparison.OrdinalIgnoreCase));
         if (note == null) return "Note not found.";
         note.Text = newText;
