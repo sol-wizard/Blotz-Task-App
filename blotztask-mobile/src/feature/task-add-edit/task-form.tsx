@@ -50,9 +50,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   const initialAlertTime = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
 
-  const defaultAlert = userPreferences?.upcomingNotification
-    ? (initialAlertTime ?? 300)
-    : (initialAlertTime ?? null);
+  const defaultAlert = initialAlertTime ?? (userPreferences?.upcomingNotification ? 300 : null);
 
   const now = new Date();
   const oneHourLater = new Date(now.getTime() + 3600000);
