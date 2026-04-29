@@ -1,6 +1,6 @@
 import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import type { TaskFormField } from "../models/task-form-schema";
-import { cancelNotification } from "@/feature/task-add-edit/util/cancel-notification";
+import { cancelNotification } from "@/shared/util/cancel-notification";
 import { calculateAlertTime } from "./time-convertion";
 import * as Notifications from "expo-notifications";
 
