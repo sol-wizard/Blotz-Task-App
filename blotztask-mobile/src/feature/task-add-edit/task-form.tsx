@@ -13,8 +13,9 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
 import { AlertSelect } from "./components/alert-select";
 import { DeadlineSection } from "./components/deadline-section";
+import { getTaskFormDefaults } from "./util/get-task-form-defaults";
 import { getTaskNotification } from "./util/get-task-notification";
-import { buildTaskTimePayload, calculateAlertSeconds } from "./util/time-convertion";
+import { buildTaskTimePayload } from "./util/time-convertion";
 import { combineDateTime } from "./util/combine-date-time";
 import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
@@ -43,19 +44,12 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const { labels = [], isLoading } = useAllLabels();
   const { t } = useTranslation("tasks");
 
-  // Variables
-  const now = new Date();
-  const oneHourLater = new Date(now.getTime() + 3600000);
-  const dtoStartTime = dto?.startTime ? new Date(dto.startTime) : now;
-  const dtoEndTime = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
-  const dueAt = dto?.dueAt ? new Date(dto.dueAt) : null;
-
   // Derived values
-  const hasEventTimes =
-    dto?.timeType === 1 || (dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime);
-  const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
-  const initialAlert = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
-  const defaultAlert = initialAlert ?? (userPreferences?.upcomingNotification ? 300 : null);
+  const { initialTab, defaultValues } = getTaskFormDefaults({
+    mode,
+    dto,
+    upcomingNotification: userPreferences?.upcomingNotification,
+  });
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
 
@@ -63,19 +57,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
-    defaultValues: {
-      title: dto?.title ?? "",
-      description: dto?.description ?? "",
-      labelId: dto?.labelId ?? null,
-      startDate: dtoStartTime,
-      startTime: dtoStartTime,
-      endDate: initialTab === "reminder" ? dtoStartTime : dtoEndTime,
-      endTime: initialTab === "reminder" ? dtoStartTime : dtoEndTime,
-      alert: defaultAlert,
-      isDeadline: dto?.isDeadline ?? !!dueAt,
-      deadlineDate: dueAt ?? oneHourLater,
-      deadlineTime: dueAt ?? oneHourLater,
-    },
+    defaultValues,
   });
 
   const { handleSubmit, formState, control, setValue, clearErrors, trigger, getValues } = form;
