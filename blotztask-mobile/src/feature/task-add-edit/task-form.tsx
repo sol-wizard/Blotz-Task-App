@@ -15,7 +15,7 @@ import { AlertSelect } from "./components/alert-select";
 import { DeadlineSection } from "./components/deadline-section";
 import { getTaskFormDefaults } from "./util/get-task-form-defaults";
 import { getTaskNotification } from "./util/get-task-notification";
-import { buildTaskTimePayload } from "./util/time-convertion";
+import { buildTaskTimePayload, calculateAlertTime } from "./util/time-convertion";
 import { combineDateTime } from "./util/combine-date-time";
 import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
@@ -28,10 +28,7 @@ import { theme } from "@/shared/constants/theme";
 
 export type TaskFormProps = {
   onSubmit: (data: TaskUpsertDTO) => void;
-} & (
-  | { mode: "create"; dto?: undefined }
-  | { mode: "edit"; dto: TaskUpsertDTO }
-);
+} & ({ mode: "create"; dto?: undefined } | { mode: "edit"; dto: TaskUpsertDTO });
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   // Queries
@@ -72,12 +69,12 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       isReminderTab ? data.startTime : data.endTime,
     );
 
-    const { notificationId, alertTime } = await getTaskNotification({
+    const newAlertTime = calculateAlertTime(startTime!, data.alert);
+    const notificationId = await getTaskNotification({
       mode,
       dto,
       upcomingNotification: userPreferences?.upcomingNotification,
-      startTime: startTime!,
-      alert: data.alert,
+      newAlertTime,
       title: data.title,
     });
 
@@ -90,7 +87,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       endTime: convertToDateTimeOffset(endTime!),
       labelId: data.labelId ?? undefined,
       timeType,
-      alertTime: alertTime ? convertToDateTimeOffset(alertTime) : undefined,
+      alertTime: notificationId && newAlertTime ? convertToDateTimeOffset(newAlertTime) : undefined,
       notificationId,
       isDeadline: data.isDeadline,
       dueAt: deadline ? convertToDateTimeOffset(deadline) : undefined,

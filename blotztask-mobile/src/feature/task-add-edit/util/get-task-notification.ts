@@ -1,29 +1,20 @@
 import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
-import type { TaskFormField } from "../models/task-form-schema";
 import { cancelNotification } from "@/shared/util/cancel-notification";
-import { calculateAlertTime } from "./time-convertion";
 import * as Notifications from "expo-notifications";
-
-type NotificationPayload = {
-  alertTime: Date | null;
-  notificationId: string | null;
-};
 
 export const getTaskNotification = async ({
   mode,
   dto,
   upcomingNotification,
-  startTime,
-  alert,
+  newAlertTime,
   title,
 }: {
   mode: "create" | "edit";
   dto?: TaskUpsertDTO;
   upcomingNotification?: boolean;
-  startTime: Date;
-  alert: TaskFormField["alert"];
+  newAlertTime: Date | null;
   title: string;
-}): Promise<NotificationPayload> => {
+}): Promise<string | null> => {
   // Replace the old scheduled notification before creating a new one during edits.
   if (mode === "edit" && dto?.alertTime && new Date(dto.alertTime) > new Date()) {
     await cancelNotification({
@@ -31,31 +22,11 @@ export const getTaskNotification = async ({
     });
   }
 
-  if (!upcomingNotification) {
-    return {
-      notificationId: null,
-      alertTime: null,
-    };
+  if (!upcomingNotification || !newAlertTime || newAlertTime <= new Date()) {
+    return null;
   }
 
-  const alertTime = calculateAlertTime(startTime, alert);
-
-  if (!alertTime || alertTime <= new Date()) {
-    return {
-      notificationId: null,
-      alertTime: null,
-    };
-  }
-
-  const notificationId = await scheduleTaskReminder({
-    title,
-    alertTime,
-  });
-
-  return {
-    notificationId,
-    alertTime: notificationId ? alertTime : null,
-  };
+  return scheduleTaskReminder({ title, alertTime: newAlertTime });
 };
 
 async function scheduleTaskReminder({
