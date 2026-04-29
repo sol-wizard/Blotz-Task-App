@@ -38,47 +38,44 @@ export type TaskFormProps =
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
+  // Queries
+  const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
+  const { labels = [], isLoading } = useAllLabels();
+  const { t } = useTranslation("tasks");
+
+  // Variables
+  const now = new Date();
+  const oneHourLater = new Date(now.getTime() + 3600000);
+  const dtoStartTime = dto?.startTime ? new Date(dto.startTime) : now;
+  const dtoEndTime = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
+  const dueAt = dto?.dueAt ? new Date(dto.dueAt) : null;
+
+  // Derived values
   const hasEventTimes =
     dto?.timeType === 1 || (dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime);
   const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
-  const { userPreferences, isUserPreferencesLoading } = useUserPreferencesQuery();
-  const { t } = useTranslation("tasks");
+  const initialAlert = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
+  const defaultAlert = initialAlert ?? (userPreferences?.upcomingNotification ? 300 : null);
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
 
-  const { labels = [], isLoading } = useAllLabels();
-
-  const initialAlertTime = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
-
-  const defaultAlert = initialAlertTime ?? (userPreferences?.upcomingNotification ? 300 : null);
-
-  const now = new Date();
-  const oneHourLater = new Date(now.getTime() + 3600000);
-  const initialDueAt = dto?.dueAt ? new Date(dto.dueAt) : null;
-
-  const initialStartDate = dto?.startTime ? new Date(dto.startTime) : now;
-  const initialStartTime = dto?.startTime ? new Date(dto.startTime) : now;
-  const initialEndDate = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
-  const initialEndTime = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
-
-  const defaultValues: TaskFormField = {
-    title: dto?.title ?? "",
-    description: dto?.description ?? "",
-    labelId: dto?.labelId ?? null,
-    startDate: initialStartDate,
-    startTime: initialStartTime,
-    endDate: initialTab === "reminder" ? initialStartDate : initialEndDate,
-    endTime: initialTab === "reminder" ? initialStartTime : initialEndTime,
-    alert: defaultAlert,
-    isDeadline: dto?.isDeadline ?? !!initialDueAt,
-    deadlineDate: initialDueAt ?? oneHourLater,
-    deadlineTime: initialDueAt ?? oneHourLater,
-  };
-
+  // Form
   const form = useForm<TaskFormField>({
     resolver: zodResolver(taskFormSchema),
     mode: "onChange",
-    defaultValues: defaultValues,
+    defaultValues: {
+      title: dto?.title ?? "",
+      description: dto?.description ?? "",
+      labelId: dto?.labelId ?? null,
+      startDate: dtoStartTime,
+      startTime: dtoStartTime,
+      endDate: initialTab === "reminder" ? dtoStartTime : dtoEndTime,
+      endTime: initialTab === "reminder" ? dtoStartTime : dtoEndTime,
+      alert: defaultAlert,
+      isDeadline: dto?.isDeadline ?? !!dueAt,
+      deadlineDate: dueAt ?? oneHourLater,
+      deadlineTime: dueAt ?? oneHourLater,
+    },
   });
 
   const { handleSubmit, formState, control, setValue, clearErrors, trigger, getValues } = form;
@@ -88,12 +85,14 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     return <LoadingScreen />;
   }
 
+  // Handlers
   const handleFormSubmit = async (data: TaskFormField) => {
+    const isReminderTab = isActiveTab === "reminder";
     const { startTime, endTime, timeType } = buildTaskTimePayload(
       data.startDate,
       data.startTime,
-      isActiveTab === "reminder" ? data.startDate : data.endDate,
-      isActiveTab === "reminder" ? data.startTime : data.endTime,
+      isReminderTab ? data.startDate : data.endDate,
+      isReminderTab ? data.startTime : data.endTime,
     );
 
     const { notificationId, alertTime } = await getTaskNotification({
@@ -124,11 +123,11 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   };
 
   const handleTabChange = (next: SegmentButtonValue) => {
-    setIsActiveTab(next);
-    clearErrors(["endDate", "endTime"]);
-
     const startDate = getValues("startDate");
     const startTime = getValues("startTime");
+
+    setIsActiveTab(next);
+    clearErrors(["endDate", "endTime"]);
 
     if (next === "reminder") {
       setValue("endDate", startDate, { shouldValidate: false });
