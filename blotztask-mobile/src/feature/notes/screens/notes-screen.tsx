@@ -139,10 +139,10 @@ export default function NotesScreen() {
 
           {!showLoading && notesSearchResult.length === 0 ? (
             <View className="flex-1 items-center justify-center">
-              <Text className="text-center text-black font-balooBold text-2xl">
+              <Text className="text-center text-black font-balooBold text-2xl" allowFontScaling={false}>
                 {t("emptyNoteMessage.encouragingTitle")}
               </Text>
-              <Text className="text-center text-black font-baloo text-xl mt-2">
+              <Text className="text-center text-black font-baloo text-xl mt-2" allowFontScaling={false}>
                 {t("emptyNoteMessage.encouragingDescription")}
               </Text>
             </View>
@@ -188,7 +188,7 @@ export default function NotesScreen() {
           >
             <View className="flex-row items-center">
               <ASSETS.editIcon width={18} height={18} fill="#587E00" />
-              <Text className="font-baloo text-lg ml-2" style={{ color: "#587E00" }}>
+              <Text className="font-baloo text-lg ml-2" style={{ color: "#587E00" }} allowFontScaling={false}>
                 {t("addNote")}
               </Text>
             </View>

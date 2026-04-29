@@ -74,7 +74,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
           className={
             isPinned
               ? "bg-white rounded-[28px] min-h-32 px-2 py-4 flex-row items-center"
-              : "bg-white rounded-2xl px-4 py-3 h-20 flex-row items-center"
+              : "bg-white rounded-2xl px-4 py-3 min-h-20 flex-row items-center"
           }
           style={!isPinned ? { gap: 12 } : undefined}
         >

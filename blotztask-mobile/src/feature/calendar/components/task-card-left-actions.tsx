@@ -18,7 +18,7 @@ export const TaskCardLeftActions = ({ progress, onMode, onFocus }: LeftActionsPr
     <Animated.View className="flex-row items-start justify-start gap-2 pr-4" style={animatedStyle}>
       <Pressable
         onPress={onMode}
-        className="h-20 w-24 rounded-3xl bg-blue-50 border border-blue-300 items-center justify-center"
+        className="min-h-20 w-24 rounded-3xl bg-blue-50 border border-blue-300 items-center justify-center"
       >
         <View className="items-center gap-1">
           <MaterialCommunityIcons name="cog" size={24} color="#53A8FF" />
@@ -30,7 +30,7 @@ export const TaskCardLeftActions = ({ progress, onMode, onFocus }: LeftActionsPr
 
       <Pressable
         onPress={onFocus}
-        className="h-20 w-24 rounded-3xl bg-orange-50 border border-orange-300 items-center justify-center"
+        className="min-h-20 w-24 rounded-3xl bg-orange-50 border border-orange-300 items-center justify-center"
       >
         <View className="items-center gap-1">
           <MaterialCommunityIcons name="clock" size={24} color="#FFAA4A" />

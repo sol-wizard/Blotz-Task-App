@@ -66,6 +66,15 @@ export default function TimePicker({
     onChange?.(out);
   };
 
+  const renderPickerItem = ({ item, itemTextStyle }: any) => (
+    <Text
+      allowFontScaling={false}
+      style={[{ textAlign: "center", fontSize: 20, lineHeight: itemHeight }, itemTextStyle]}
+    >
+      {item.label ?? item.value}
+    </Text>
+  );
+
   return (
     <View
       className="mx-auto w-[320px] rounded-xl overflow-hidden"
@@ -79,6 +88,7 @@ export default function TimePicker({
           itemHeight={itemHeight}
           visibleItemCount={visibleItemCount}
           enableScrollByTapOnItem
+          renderItem={renderPickerItem}
           onValueChanged={({ item }) => {
             const h = item.value as number;
             setHour12(h);
@@ -86,7 +96,14 @@ export default function TimePicker({
           }}
         />
 
-        <Text className="text-[22px] font-semibold text-[#2e3654] w-6 text-center">:</Text>
+        <View style={{ height: itemHeight }} className="justify-center items-center">
+          <Text
+            allowFontScaling={false}
+            className="text-[22px] font-semibold text-[#2e3654] w-6 text-center pb-1"
+          >
+            :
+          </Text>
+        </View>
 
         <WheelPicker
           data={MINUTES}
@@ -95,6 +112,7 @@ export default function TimePicker({
           itemHeight={itemHeight}
           visibleItemCount={visibleItemCount}
           enableScrollByTapOnItem
+          renderItem={renderPickerItem}
           onValueChanged={({ item }) => {
             const m = item.value as number;
             setMinute(m);
@@ -109,6 +127,7 @@ export default function TimePicker({
           itemHeight={itemHeight}
           visibleItemCount={visibleItemCount}
           enableScrollByTapOnItem
+          renderItem={renderPickerItem}
           onValueChanged={({ item }) => {
             const md = item.value as Meridiem;
             setMeridiem(md);

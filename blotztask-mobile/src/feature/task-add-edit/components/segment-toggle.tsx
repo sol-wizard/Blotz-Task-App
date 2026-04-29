@@ -14,8 +14,8 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function SegmentToggle({ value, setValue }: Props) {
   const { t } = useTranslation("tasks");
-  const tabPositionX = useSharedValue(value === "reminder" ? 0 : 224 / 2);
   const [containerWidth, setContainerWidth] = React.useState(224);
+  const tabPositionX = useSharedValue(value === "reminder" ? 0 : containerWidth / 2);
   const isInitialMount = React.useRef(true);
   React.useEffect(() => {
     if (containerWidth > 0) {
@@ -36,13 +36,13 @@ export function SegmentToggle({ value, setValue }: Props) {
 
   return (
     <Animated.View
-      className="flex-row bg-[#F4F6FA] p-1 rounded-xl mb-6 w-56 items-center"
+      className="flex-row bg-[#F4F6FA] p-1 rounded-xl mb-6 items-center self-start"
       layout={MotionAnimations.layout}
       onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
     >
       <Animated.View
-        className="absolute bg-white rounded-xl w-28 h-10 shadow-sm shadow-gray-400"
-        style={tabAnimatedStyle}
+        className="absolute bg-white rounded-xl h-10 shadow-sm shadow-gray-400"
+        style={[{ width: containerWidth / 2 }, tabAnimatedStyle]}
       />
       <AnimatedPressable
         className={`flex-1 justify-center items-center py-2 px-3 rounded-xl `}
@@ -55,6 +55,7 @@ export function SegmentToggle({ value, setValue }: Props) {
           className={`text-[15px] font-semibold ${
             value === "reminder" ? "text-[#1A2433]" : "text-[#6B768A]"
           }`}
+          numberOfLines={1}
         >
           {t("form.reminder")}
         </Text>
@@ -72,6 +73,7 @@ export function SegmentToggle({ value, setValue }: Props) {
           className={`text-[15px] font-semibold ${
             value === "event" ? "text-[#1A2433]" : "text-[#6B768A]"
           }`}
+          numberOfLines={1}
         >
           {t("form.event")}
         </Text>
