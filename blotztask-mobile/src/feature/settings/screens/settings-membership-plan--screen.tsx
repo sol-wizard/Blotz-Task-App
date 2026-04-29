@@ -19,12 +19,16 @@ export default function AiUsageScreen() {
 
     if (i18n.language === "zh") {
       // CN: 4月1日 - 4月30日
-      return `${startDate.getMonth() + 1}月${startDate.getDate()}日 - ${
-        endDate.getMonth() + 1
-      }月${endDate.getDate()}日`;
+      return `${startDate.getUTCMonth() + 1}月${startDate.getUTCDate()}日 - ${
+        endDate.getUTCMonth() + 1
+      }月${endDate.getUTCDate()}日`;
     } else {
-      // EN: Apr 1 - Apr 30
-      const formatter = new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" });
+      // EN: Apr 1 - Apr 30 (UTC calendar dates — matches zh branch)
+      const formatter = new Intl.DateTimeFormat(locale, {
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      });
       return `${formatter.format(startDate)} - ${formatter.format(endDate)}`;
     }
   };
