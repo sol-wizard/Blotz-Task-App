@@ -2,7 +2,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator.DevTools;
 
 public interface IAiQualityCheckService
 {
-    Task<QualityCheckRunResult> RunQualityCheckAsync(QualityCheckRequest request, string? caseId, CancellationToken ct);
+    Task<QualityCheckRunResult> RunQualityCheckAsync(QualityCheckRequest request, string? caseId, Guid userId, CancellationToken ct);
 }
 
 public class QualityCheckRunResult

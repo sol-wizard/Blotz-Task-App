@@ -35,14 +35,9 @@ public class SpeechTranscriptionService
         if (audio.Length <= 0)
             throw new ArgumentException("Audio file cannot be empty.", nameof(audio));
 
-        _logger.LogInformation(
-            "Starting Whisper transcription. FileName: {FileName}, ContentType: {ContentType}, SizeBytes: {SizeBytes}",
-            audio.FileName, audio.ContentType, audio.Length);
-
         try
         {
             await using var stream = audio.OpenReadStream();
-
 
             var result = await _audioClient.TranscribeAudioAsync(
                 stream,
@@ -54,14 +49,10 @@ public class SpeechTranscriptionService
                 ct
             );
 
-
             var transcriptionResult = result.Value.Text;
-
 
             if (string.IsNullOrWhiteSpace(transcriptionResult))
                 throw new InvalidOperationException("Transcription returned empty text.");
-
-            _logger.LogInformation("Whisper transcription completed. Characters: {Length}", transcriptionResult.Length);
 
             return transcriptionResult.Trim();
         }
