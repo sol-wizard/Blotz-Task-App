@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, Text, View , Platform} from "react-native";
+import { Pressable, Text, View, Platform } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
 import { format } from "date-fns";
@@ -26,8 +26,8 @@ export default function MonthlyCalendarScreen() {
   const [selectedDay, setSelectedDay] = useState(new Date(selectedDate || new Date()));
   const { monthlyTaskAvailability } = useMonthlyTasks({ selectedDay });
 
-  const insets = useSafeAreaInsets(); 
-  const androidBottomOffset = Platform.OS === 'android' ? insets.bottom : 0;
+  const insets = useSafeAreaInsets();
+  const androidBottomOffset = Platform.OS === "android" ? insets.bottom : 0;
 
   // Derived values
   const selectedDateStr = format(selectedDay, "yyyy-MM-dd");
@@ -71,7 +71,7 @@ export default function MonthlyCalendarScreen() {
 
         <View className="px-2 mt-2">
           <Calendar
-            key={selectedMonthKey}
+            key={`${selectedMonthKey}-${i18n.language}`}
             current={selectedDateStr}
             onMonthChange={(month: DateData) => {
               setSelectedDay(new Date(month.year, month.month - 1, 1));
@@ -79,11 +79,11 @@ export default function MonthlyCalendarScreen() {
             hideExtraDays
             firstDay={1}
             enableSwipeMonths
-            monthFormat={"MMMM"}
             renderHeader={(date: any) => {
-              const monthIndex = date.getMonth() + 1;
+              const isChinese = i18n.language.startsWith("zh");
+              const monthName = isChinese ? `${date.getMonth() + 1}月` : format(date, "MMMM");
               return (
-                <Text className="text-4xl font-balooBold text-secondary pt-2">{`${monthIndex}月`}</Text>
+                <Text className="text-4xl font-balooBold text-secondary pt-2">{monthName}</Text>
               );
             }}
             dayComponent={renderDay}
@@ -105,8 +105,8 @@ export default function MonthlyCalendarScreen() {
         index={0}
         snapPoints={SNAP_POINTS}
         handleComponent={null}
-        bottomInset={androidBottomOffset} 
-        enableOverDrag={false} 
+        bottomInset={androidBottomOffset}
+        enableOverDrag={false}
         enableDynamicSizing={false}
         backgroundStyle={{
           backgroundColor: "white",
