@@ -1,6 +1,6 @@
 import type { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import type { TaskFormField } from "../models/task-form-schema";
-import type { SegmentButtonValue } from "../models/segment-button-value";
+import { SegmentButtonValue } from "../models/segment-button-value";
 import { calculateAlertSeconds } from "./time-convertion";
 
 type GetTaskFormDefaultsParams = {
@@ -25,9 +25,8 @@ export const getTaskFormDefaults = ({
   const dtoEndTime = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
   const dueAt = dto?.dueAt ? new Date(dto.dueAt) : null;
 
-  const hasEventTimes =
-    dto?.timeType === 1 || (dto?.startTime && dto?.endTime && dto.startTime !== dto.endTime);
-  const initialTab: SegmentButtonValue = mode === "edit" && hasEventTimes ? "event" : "reminder";
+  const hasEventTimes = dto?.timeType === 1;
+  const initialTab = hasEventTimes ? SegmentButtonValue.Event : SegmentButtonValue.Reminder;
   const initialAlert = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
   const defaultAlert = initialAlert ?? (upcomingNotification ? 300 : null);
 
@@ -39,8 +38,8 @@ export const getTaskFormDefaults = ({
       labelId: dto?.labelId ?? null,
       startDate: dtoStartTime,
       startTime: dtoStartTime,
-      endDate: initialTab === "reminder" ? dtoStartTime : dtoEndTime,
-      endTime: initialTab === "reminder" ? dtoStartTime : dtoEndTime,
+      endDate: initialTab === SegmentButtonValue.Reminder ? dtoStartTime : dtoEndTime,
+      endTime: initialTab === SegmentButtonValue.Reminder ? dtoStartTime : dtoEndTime,
       alert: defaultAlert,
       isDeadline: dto?.isDeadline ?? !!dueAt,
       deadlineDate: dueAt ?? oneHourLater,

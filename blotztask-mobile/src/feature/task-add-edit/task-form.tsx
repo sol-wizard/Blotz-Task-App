@@ -61,7 +61,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   // Handlers
   const handleFormSubmit = async (data: TaskFormField) => {
-    const isReminderTab = isActiveTab === "reminder";
+    const isReminderTab = isActiveTab === SegmentButtonValue.Reminder;
     const { startTime, endTime, timeType } = buildTaskTimePayload(
       data.startDate,
       data.startTime,
@@ -103,7 +103,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     setIsActiveTab(next);
     clearErrors(["endDate", "endTime"]);
 
-    if (next === "reminder") {
+    if (next === SegmentButtonValue.Reminder) {
       setValue("endDate", startDate, { shouldValidate: false });
       setValue("endTime", startTime, { shouldValidate: false });
       clearErrors(["endDate", "endTime"]);
@@ -160,15 +160,15 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
         <FormDivider />
         <SegmentToggle value={isActiveTab} setValue={handleTabChange} />
-        {isActiveTab === "event" && formState.errors.endTime && (
+        {isActiveTab === SegmentButtonValue.Event && formState.errors.endTime && (
           <Text className="text-red-500 text-sm mb-4 font-baloo">
             {t(formState.errors.endTime.message || "")}
           </Text>
         )}
-        {isActiveTab === "reminder" && (
+        {isActiveTab === SegmentButtonValue.Reminder && (
           <ReminderTab control={control} setValue={setValue} clearErrors={clearErrors} />
         )}
-        {isActiveTab === "event" && (
+        {isActiveTab === SegmentButtonValue.Event && (
           <EventTab
             control={control}
             trigger={trigger}
