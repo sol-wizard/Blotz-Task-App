@@ -1,10 +1,10 @@
 import { TouchableOpacity, View, Text } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import Toast from "react-native-toast-message";
+import Toast, { ToastConfigParams } from "react-native-toast-message";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 export const toastConfig = {
-  error: (props: any) => (
+  error: (props: ToastConfigParams<unknown>) => (
     <View
       style={{ elevation: 0 }}
       className="flex-row items-start bg-gray-900 rounded-xl px-3 py-2.5 w-96 shadow-none"
@@ -21,7 +21,7 @@ export const toastConfig = {
       </TouchableOpacity>
     </View>
   ),
-  warning: (props: any) => (
+  warning: (props: ToastConfigParams<unknown>) => (
     <Animated.View
       entering={MotionAnimations.rightEntering}
       exiting={MotionAnimations.rightExiting}

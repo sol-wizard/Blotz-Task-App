@@ -69,8 +69,6 @@ export default {
         },
       ],
       ["expo-audio", { enableBackgroundPlayback: false }],
-      ["./plugins/withCustomGradleProperties"],
-      ["./plugins/withAzureSpeechAndroid"],
       "expo-asset",
       "@react-native-community/datetimepicker",
       "expo-build-properties",
