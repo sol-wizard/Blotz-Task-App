@@ -14,7 +14,7 @@ import { router } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useRecurringTaskMutations } from "../hooks/useRecurringTaskMutations";
 import { useSubtaskMutations } from "@/feature/task-details/hooks/useSubtaskMutations";
-import { cancelNotification } from "@/shared/util/cancel-notification";
+import { cancelNotification } from "@/feature/task-add-edit/util/cancel-notification";
 import { formatDateRange } from "../util/format-date-range";
 import { AnimatedChevron } from "@/shared/components/chevron";
 import { SubtaskProgressBar } from "./subtask-progress-bar";
