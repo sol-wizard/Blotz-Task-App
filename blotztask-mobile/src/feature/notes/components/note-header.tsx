@@ -15,7 +15,7 @@ export const NoteHeader = ({ searchQuery, setSearchQuery }: NoteHeaderProps) => 
   return (
     <View>
       <View className="flex-row justify-between items-center mt-10 px-6">
-        <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4">{t("title")}</Text>
+        <Text className="text-4xl text-gray-800 font-balooExtraBold pt-4" allowFontScaling={false}>{t("title")}</Text>
 
         <Pressable
           onPress={() => router.push("/(protected)/gashapon-machine")}
@@ -28,7 +28,7 @@ export const NoteHeader = ({ searchQuery, setSearchQuery }: NoteHeaderProps) => 
               color="#444964"
               style={{ marginRight: 5, transform: [{ scaleX: -1 }] }}
             />
-            <Text className="text-gray-700 font-baloo text-lg">{t("gashapon.pickNote")}</Text>
+            <Text className="text-gray-700 font-baloo text-lg" allowFontScaling={false}>{t("gashapon.pickNote")}</Text>
           </View>
         </Pressable>
       </View>

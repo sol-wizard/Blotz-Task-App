@@ -59,7 +59,7 @@ export const CustomDay = ({ date, state, marking, isMarked, onPressDay }: Custom
       <Animated.View className="items-center p-2 w-[48px] rounded-2xl" style={backgroundStyle}>
         <Text
           numberOfLines={1}
-          adjustsFontSizeToFit
+          allowFontScaling={false}
           className={`text-sm ${isToday && !isSelected && "font-bold"} ${textColorClass}`}
         >
           {weekLabel}
@@ -67,7 +67,7 @@ export const CustomDay = ({ date, state, marking, isMarked, onPressDay }: Custom
         <Text
           className={`text-2xl font-bold mt-1 ${textColorClass}`}
           numberOfLines={1}
-          adjustsFontSizeToFit
+          allowFontScaling={false}
         >
           {date.day}
         </Text>

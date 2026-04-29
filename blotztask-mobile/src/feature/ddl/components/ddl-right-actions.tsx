@@ -32,7 +32,7 @@ const DdlRightActions = ({
       <Pressable
         disabled={isUpdatingPin}
         onPress={onPin}
-        className={`${isPinned ? "h-32" : "h-20"} w-20 items-center justify-center rounded-2xl ${
+        className={`${isPinned ? "min-h-32" : "min-h-20"} w-20 items-center justify-center rounded-2xl ${
           isUpdatingPin ? "bg-[#E7EFDf]" : "bg-[#DCF5C7]"
         }`}
       >
@@ -50,7 +50,7 @@ const DdlRightActions = ({
       <Pressable
         disabled={isDeletingTask}
         onPress={onDelete}
-        className={`${isPinned ? "h-32" : "h-20"} w-20 items-center justify-center rounded-2xl ${
+        className={`${isPinned ? "min-h-32" : "min-h-20"} w-20 items-center justify-center rounded-2xl ${
           isDeletingTask ? "bg-[#F8EEEE]" : "bg-[#FCE4E4]"
         }`}
       >

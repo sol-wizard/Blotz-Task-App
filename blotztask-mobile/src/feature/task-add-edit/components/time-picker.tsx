@@ -86,7 +86,9 @@ export default function TimePicker({
           }}
         />
 
-        <Text className="text-[22px] font-semibold text-[#2e3654] w-6 text-center">:</Text>
+        <View style={{ height: itemHeight }} className="justify-center items-center">
+          <Text className="text-[22px] font-semibold text-[#2e3654] w-6 text-center pb-1">:</Text>
+        </View>
 
         <WheelPicker
           data={MINUTES}

@@ -28,7 +28,7 @@ export const TaskCardRightActions = ({
       <Pressable
         onPress={onBreakdown}
         disabled={isDeleting || isRefreshingSubtasks}
-        className={`h-20 w-32 rounded-3xl bg-blue-500/10 items-center justify-center ${
+        className={`min-h-20 w-32 rounded-3xl bg-blue-500/10 items-center justify-center ${
           isRefreshingSubtasks ? "opacity-50" : ""
         }`}
       >
@@ -42,7 +42,7 @@ export const TaskCardRightActions = ({
       <Pressable
         onPress={onDelete}
         disabled={isDeleting || isRefreshingSubtasks}
-        className={`h-20 w-20 rounded-3xl bg-red-500/10 items-center justify-center ${
+        className={`min-h-20 w-20 rounded-3xl bg-red-500/10 items-center justify-center ${
           isDeleting ? "opacity-50" : ""
         }`}
       >

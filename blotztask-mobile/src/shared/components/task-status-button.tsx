@@ -40,7 +40,11 @@ export const TaskStatusButton = ({
       className="px-4 py-2 rounded-3xl"
       style={animatedStyle}
     >
-      <Animated.Text className={`font-inter ${isSelected ? "font-bold" : ""}`} style={animatedTextStyle}>
+      <Animated.Text
+        className={`font-inter ${isSelected ? "font-bold" : ""}`}
+        style={animatedTextStyle}
+        numberOfLines={1}
+      >
         {statusName} ({taskCount})
       </Animated.Text>
     </AnimatedPressable>
