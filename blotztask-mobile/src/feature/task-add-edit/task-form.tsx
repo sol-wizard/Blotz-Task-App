@@ -38,7 +38,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
 
   // Derived values
   const { initialTab, defaultValues } = getTaskFormDefaults({
-    mode,
     dto,
     upcomingNotification: userPreferences?.upcomingNotification,
   });

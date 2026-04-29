@@ -4,7 +4,6 @@ import { SegmentButtonValue } from "../models/segment-button-value";
 import { calculateAlertSeconds } from "./time-convertion";
 
 type GetTaskFormDefaultsParams = {
-  mode: "create" | "edit";
   dto?: TaskUpsertDTO;
   upcomingNotification?: boolean;
 };
@@ -15,7 +14,6 @@ type TaskFormDefaults = {
 };
 
 export const getTaskFormDefaults = ({
-  mode,
   dto,
   upcomingNotification,
 }: GetTaskFormDefaultsParams): TaskFormDefaults => {
