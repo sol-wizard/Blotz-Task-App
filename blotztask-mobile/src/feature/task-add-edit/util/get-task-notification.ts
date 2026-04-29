@@ -7,13 +7,13 @@ export const getTaskNotification = async ({
   dto,
   upcomingNotification,
   newAlertTime,
-  title,
+  newTaskTitle,
 }: {
   mode: "create" | "edit";
   dto?: TaskUpsertDTO;
   upcomingNotification?: boolean;
   newAlertTime: Date | null;
-  title: string;
+  newTaskTitle: string;
 }): Promise<string | null> => {
   // Replace the old scheduled notification before creating a new one during edits.
   if (mode === "edit" && dto?.alertTime && new Date(dto.alertTime) > new Date()) {
@@ -26,21 +26,21 @@ export const getTaskNotification = async ({
     return null;
   }
 
-  return scheduleTaskReminder({ title, alertTime: newAlertTime });
+  return scheduleTaskReminder({ newTaskTitle, alertTime: newAlertTime });
 };
 
 async function scheduleTaskReminder({
-  title,
+  newTaskTitle,
   alertTime,
 }: {
-  title: string;
+  newTaskTitle: string;
   alertTime: Date;
 }): Promise<string | null> {
   try {
     return await Notifications.scheduleNotificationAsync({
       content: {
         title: "⏰ Task Reminder",
-        body: title,
+        body: newTaskTitle,
         categoryIdentifier: "task-reminder",
       },
       trigger: {

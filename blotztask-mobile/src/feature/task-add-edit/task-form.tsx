@@ -75,7 +75,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       dto,
       upcomingNotification: userPreferences?.upcomingNotification,
       newAlertTime,
-      title: data.title,
+      newTaskTitle: data.title,
     });
 
     const deadline = data.isDeadline ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
