@@ -42,6 +42,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
 
   // Pomodoro session state
   const session = usePomodoroTimer((state) => state.session);
+  const clearPreviousTimer = usePomodoroTimer((state) => state.clearPreviousTimer);
   const startTimer = usePomodoroTimer((state) => state.startTimer);
   const togglePause = usePomodoroTimer((state) => state.togglePause);
   const isPaused = usePomodoroTimer((state) =>
@@ -122,8 +123,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
 
   const handleConfirmSwitch = () => {
     setShowSwitchModal(false);
-    startTimer(String(task.id), 0);
+    clearPreviousTimer();
+
     router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
+    startTimer(String(task.id), 0);
   };
 
   const handleTogglePause = () => {

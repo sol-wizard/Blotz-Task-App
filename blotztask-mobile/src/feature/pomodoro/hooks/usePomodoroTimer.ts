@@ -10,6 +10,7 @@ interface PomodoroSession {
 
 interface PomodoroTimerState {
   session: PomodoroSession | null;
+  intervalId: ReturnType<typeof setInterval> | null;
 
   getTimerData: (
     taskId: string,
@@ -22,28 +23,37 @@ interface PomodoroTimerState {
     elapsedSeconds: number;
   };
 
+  clearPreviousTimer: () => void;
   startTimer: (taskId: string, initialElapsed?: number) => void;
   togglePause: () => void;
   stopTimer: () => void;
   _tick: () => void;
 }
 
-let globalInterval: ReturnType<typeof setInterval> | null = null;
-
 export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
   session: null,
+  intervalId: null,
 
-  startTimer: (taskId, initialElapsed = 0) => {
-    set({
-      session: { taskId, elapsedSeconds: initialElapsed, isPaused: false },
-    });
+  clearPreviousTimer: () => {
+    const { intervalId } = get();
 
-    if (globalInterval) {
-      clearInterval(globalInterval);
-      globalInterval = null;
+    if (intervalId) {
+      clearInterval(intervalId);
     }
 
-    globalInterval = setInterval(() => get()._tick(), 1000);
+    set({
+      session: null,
+      intervalId: null,
+    });
+  },
+
+  startTimer: (taskId, initialElapsed = 0) => {
+    const intervalId = setInterval(() => get()._tick(), 1000);
+
+    set({
+      session: { taskId, elapsedSeconds: initialElapsed, isPaused: false },
+      intervalId,
+    });
   },
 
   togglePause: () => {
@@ -53,7 +63,7 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
   },
 
   stopTimer: () => {
-    set({ session: null });
+    get().clearPreviousTimer();
   },
 
   _tick: () => {

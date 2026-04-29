@@ -15,13 +15,17 @@ export const PomodoroFocus = () => {
   const { data: settings } = usePomodoroSettingsQuery();
   const { t } = useTranslation("pomodoro");
 
-  const { session, startTimer, stopTimer, togglePause, getTimerData } = usePomodoroTimer();
+  const { session, clearPreviousTimer, startTimer, stopTimer, togglePause, getTimerData } =
+    usePomodoroTimer();
 
   useEffect(() => {
     if (taskId && (!session || session.taskId !== taskId)) {
+      if (session) {
+        clearPreviousTimer();
+      }
       startTimer(taskId);
     }
-  }, [taskId]);
+  }, [clearPreviousTimer, session, startTimer, taskId]);
 
   if (!settings || !taskId) return null;
 
