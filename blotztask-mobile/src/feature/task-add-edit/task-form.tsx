@@ -26,17 +26,12 @@ import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { theme } from "@/shared/constants/theme";
 
-export type TaskFormProps =
-  | {
-      mode: "create";
-      dto?: undefined;
-      onSubmit: (data: TaskUpsertDTO) => void;
-    }
-  | {
-      mode: "edit";
-      dto: TaskUpsertDTO;
-      onSubmit: (data: TaskUpsertDTO) => void;
-    };
+export type TaskFormProps = {
+  onSubmit: (data: TaskUpsertDTO) => void;
+} & (
+  | { mode: "create"; dto?: undefined }
+  | { mode: "edit"; dto: TaskUpsertDTO }
+);
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   // Queries
