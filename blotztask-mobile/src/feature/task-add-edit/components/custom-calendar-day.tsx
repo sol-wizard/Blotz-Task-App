@@ -104,6 +104,7 @@ export const CustomCalendarDay = ({
         }}
       >
         <Text
+          allowFontScaling={false}
           style={{
             fontFamily: "BalooBold",
             fontSize: 16,
@@ -144,6 +145,7 @@ export const CustomCalendarDay = ({
             }}
           >
             <Text
+              allowFontScaling={false}
               style={{
                 color: "white",
                 fontSize: 8,
