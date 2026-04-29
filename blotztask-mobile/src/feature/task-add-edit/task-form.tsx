@@ -13,15 +13,10 @@ import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { EventTab } from "./components/event-tab";
 import { AlertSelect } from "./components/alert-select";
 import { DeadlineSection } from "./components/deadline-section";
-import { createNotificationFromAlert } from "./util/create-notification-from-alert";
-import {
-  buildTaskTimePayload,
-  calculateAlertSeconds,
-  calculateAlertTime,
-} from "./util/time-convertion";
+import { getTaskNotification } from "./util/get-task-notification";
+import { buildTaskTimePayload, calculateAlertSeconds } from "./util/time-convertion";
 import { combineDateTime } from "./util/combine-date-time";
 import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
-import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
 import LoadingScreen from "@/shared/components/loading-screen";
@@ -30,7 +25,7 @@ import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { theme } from "@/shared/constants/theme";
 
-type TaskFormProps =
+export type TaskFormProps =
   | {
       mode: "create";
       dto?: undefined;
@@ -96,13 +91,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   }
 
   const handleFormSubmit = async (data: TaskFormField) => {
-    // If editing and the existing alert is still scheduled in the future, cancel the old notification first
-    if (mode === "edit" && dto?.alertTime && new Date(dto?.alertTime) > new Date()) {
-      await cancelNotification({
-        notificationId: dto?.notificationId,
-      });
-    }
-
     const { startTime, endTime, timeType } = buildTaskTimePayload(
       data.startDate,
       data.startTime,
@@ -110,17 +98,14 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       isActiveTab === "reminder" ? data.startTime : data.endTime,
     );
 
-    let notificationId: string | null = null;
-    let alertTime = undefined;
-    if (userPreferences?.upcomingNotification) {
-      notificationId =
-        (await createNotificationFromAlert({
-          startTime,
-          alert: data.alert,
-          title: data.title,
-        })) ?? null;
-      alertTime = calculateAlertTime(startTime!, data.alert);
-    }
+    const { notificationId, alertTime } = await getTaskNotification({
+      mode,
+      dto,
+      upcomingNotification: userPreferences?.upcomingNotification,
+      startTime: startTime!,
+      alert: data.alert,
+      title: data.title,
+    });
 
     const deadline = data.isDeadline ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
 
