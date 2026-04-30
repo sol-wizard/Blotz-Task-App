@@ -65,22 +65,17 @@ export const EventTab = ({
   const ddlStr = isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined;
 
   const handleStartDateChange = (nextDate: Date) => {
-    const previousSpan =
-      startDateValue && endDateValue
-        ? Math.max(differenceInCalendarDays(endDateValue, startDateValue), 0)
-        : 0;
-
     startDateOnChange(nextDate);
 
-    const nextEndDate =
-      endDateValue && isAfter(nextDate, endDateValue)
-        ? addDays(nextDate, previousSpan)
-        : endDateValue;
     if (endDateValue && isAfter(nextDate, endDateValue)) {
+      const previousSpan =
+        startDateValue ? Math.max(differenceInCalendarDays(endDateValue, startDateValue), 0) : 0;
+      const nextEndDate = addDays(nextDate, previousSpan);
       endDateOnChange(nextEndDate);
+      validateRange(nextDate, startTimeValue, nextEndDate, endTimeValue);
+    } else {
+      validateRange(nextDate, startTimeValue, endDateValue, endTimeValue);
     }
-
-    validateRange(nextDate, startTimeValue, nextEndDate, endTimeValue);
   };
 
   const isDateInvalid =
