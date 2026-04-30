@@ -33,6 +33,7 @@ public class AiTaskGenerateChatHub(
         var preferredLanguage = userPreferences.PreferredLanguage.ToDisplayName();
         var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
         var prompt = AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime);
+        //TODO: should initialize shouldnt be in the generate service.
         var chatContext = await aiTaskGenerateService.InitializeAsync(prompt, Context.ConnectionAborted);
 
         Context.Items["ChatContext"] = chatContext;
