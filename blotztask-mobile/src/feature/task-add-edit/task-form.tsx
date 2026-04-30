@@ -182,7 +182,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           />
           {formState.errors.title && (
             <Text className="text-red-500 text-sm ml-1 font-baloo">
-              {formState.errors.title?.message}
+              {t(formState.errors.title?.message || "")}
             </Text>
           )}
         </Animated.View>

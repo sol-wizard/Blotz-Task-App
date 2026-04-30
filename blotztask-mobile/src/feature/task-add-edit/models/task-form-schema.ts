@@ -7,8 +7,8 @@ export const taskFormSchema = z
     title: z
       .string()
       .trim()
-      .min(1, "Task must have a title")
-      .max(80, "Title is too long. Please keep it under 80 characters."),
+      .min(1, "details.mustHaveTitleError")
+      .max(80, "details.titleTooLongError"),
     description: z.union([z.string().max(1000, "Max 1000 chars"), z.literal("")]).nullable(),
     startDate: z.date(),
     startTime: z.date(),

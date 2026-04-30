@@ -36,7 +36,8 @@
     "error": "错误",
     "failedToRefreshSubtasks": "刷新子任务失败。请重试。",
     "failedToDeleteSubtask": "删除子任务失败。",
-    "mustHaveTitleError": "任务必须有一个标题"
+    "mustHaveTitleError": "任务必须有一个标题",
+    "titleTooLongError": "标题太长，请控制在 80 个字符以内。"
   },
   "alerts": {
     "none": "无",
