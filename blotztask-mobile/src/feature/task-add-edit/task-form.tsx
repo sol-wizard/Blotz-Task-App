@@ -25,6 +25,7 @@ import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { theme } from "@/shared/constants/theme";
+import { addHours } from "date-fns";
 
 export type TaskFormProps = {
   onSubmit: (data: TaskUpsertDTO) => void;
@@ -39,7 +40,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   // Derived values
   const { initialTab, defaultValues } = getTaskFormDefaults({
     dto,
-    upcomingNotification: userPreferences?.upcomingNotification,
+    allowNotification: userPreferences?.upcomingNotification,
   });
 
   const [isActiveTab, setIsActiveTab] = useState<SegmentButtonValue>(initialTab);
@@ -109,12 +110,12 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       return;
     }
 
-    const start = new Date();
-    const oneHourLater = new Date(start.getTime() + 3600000);
-    setValue("startDate", start);
-    setValue("startTime", start);
-    setValue("endDate", oneHourLater);
-    setValue("endTime", oneHourLater);
+    const oneHourLater = addHours(new Date(), 1);
+    const twoHoursLater = addHours(new Date(), 2);
+    setValue("startDate", oneHourLater);
+    setValue("startTime", oneHourLater);
+    setValue("endDate", twoHoursLater);
+    setValue("endTime", twoHoursLater);
     trigger("endTime");
   };
 

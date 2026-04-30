@@ -1,11 +1,13 @@
+import { addHours } from "date-fns";
 import type { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
-import type { TaskFormField } from "../models/task-form-schema";
 import { SegmentButtonValue } from "../models/segment-button-value";
+import type { TaskFormField } from "../models/task-form-schema";
 import { calculateAlertSeconds } from "./time-convertion";
+import { TaskTimeType } from "@/shared/models/base-task-dto";
 
 type GetTaskFormDefaultsParams = {
   dto?: TaskUpsertDTO;
-  upcomingNotification?: boolean;
+  allowNotification?: boolean;
 };
 
 type TaskFormDefaults = {
@@ -15,33 +17,51 @@ type TaskFormDefaults = {
 
 export const getTaskFormDefaults = ({
   dto,
-  upcomingNotification,
+  allowNotification,
 }: GetTaskFormDefaultsParams): TaskFormDefaults => {
   const now = new Date();
-  const oneHourLater = new Date(now.getTime() + 3600000);
-  const dtoStartTime = dto?.startTime ? new Date(dto.startTime) : now;
-  const dtoEndTime = dto?.endTime ? new Date(dto.endTime) : oneHourLater;
-  const dueAt = dto?.dueAt ? new Date(dto.dueAt) : null;
+  const oneHourLater = addHours(now, 1);
+  const twoHoursLater = addHours(now, 2);
 
-  const hasEventTimes = dto?.timeType === 1;
-  const initialTab = hasEventTimes ? SegmentButtonValue.Event : SegmentButtonValue.Reminder;
-  const initialAlert = calculateAlertSeconds(dto?.startTime, dto?.alertTime);
-  const defaultAlert = initialAlert ?? (upcomingNotification ? 300 : null);
+  if (!dto) {
+    return {
+      initialTab: SegmentButtonValue.Reminder,
+      defaultValues: {
+        title: "",
+        description: "",
+        labelId: null,
+        startDate: oneHourLater,
+        startTime: oneHourLater,
+        endDate: twoHoursLater,
+        endTime: twoHoursLater,
+        alert: allowNotification ? 300 : null,
+        isDeadline: false,
+        deadlineDate: null,
+        deadlineTime: null,
+      },
+    };
+  }
+
+  const dueAt = dto.dueAt ? new Date(dto.dueAt) : null;
+  const isEvent = dto.timeType === TaskTimeType.Range;
+
+  const initialAlert = calculateAlertSeconds(dto.startTime, dto.alertTime);
+  const defaultAlert = initialAlert ?? (allowNotification ? 300 : null);
 
   return {
-    initialTab,
+    initialTab: isEvent ? SegmentButtonValue.Event : SegmentButtonValue.Reminder,
     defaultValues: {
-      title: dto?.title ?? "",
-      description: dto?.description ?? "",
-      labelId: dto?.labelId ?? null,
-      startDate: dtoStartTime,
-      startTime: dtoStartTime,
-      endDate: initialTab === SegmentButtonValue.Reminder ? dtoStartTime : dtoEndTime,
-      endTime: initialTab === SegmentButtonValue.Reminder ? dtoStartTime : dtoEndTime,
+      title: dto.title,
+      description: dto.description ?? "",
+      labelId: dto.labelId ?? null,
+      startDate: new Date(dto.startTime),
+      startTime: new Date(dto.startTime),
+      endDate: new Date(dto.endTime),
+      endTime: new Date(dto.endTime),
       alert: defaultAlert,
-      isDeadline: dto?.isDeadline ?? !!dueAt,
-      deadlineDate: dueAt ?? oneHourLater,
-      deadlineTime: dueAt ?? oneHourLater,
+      isDeadline: dto.isDeadline,
+      deadlineDate: dueAt,
+      deadlineTime: dueAt,
     },
   };
 };

@@ -1,6 +1,6 @@
 export enum TaskTimeType {
-  Single = 0,
-  Range = 1,
+  Single = "SingleTime",
+  Range = "RangeTime",
 }
 
 export interface BaseTaskDTO {
@@ -8,7 +8,7 @@ export interface BaseTaskDTO {
   startTime: string;
   endTime: string;
   description?: string;
-  timeType: TaskTimeType | null;
+  timeType: TaskTimeType;
   notificationId: string | null;
   alertTime?: string;
   isDeadline: boolean;
