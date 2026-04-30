@@ -52,7 +52,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     defaultValues,
   });
 
-  const { handleSubmit, formState, control, setValue, clearErrors, trigger, getValues } = form;
+  const { handleSubmit, formState, control, setValue, clearErrors, getValues } = form;
   const { isSubmitting } = formState;
 
   if (isUserPreferencesLoading) {
@@ -168,7 +168,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           <ReminderTab control={control} setValue={setValue} clearErrors={clearErrors} />
         )}
         {isActiveTab === SegmentButtonValue.Event && (
-          <EventTab control={control} trigger={trigger} clearErrors={clearErrors} />
+          <EventTab control={control} />
         )}
         <FormDivider />
         <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
