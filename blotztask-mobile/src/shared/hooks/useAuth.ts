@@ -69,5 +69,3 @@ export const useAuth = () => {
     clearAuthState,
   };
 };
-
-export { AUTH_QUERY_KEY };

@@ -47,7 +47,9 @@ export async function refreshToken(): Promise<string> {
     await setAuthToken(credentials.accessToken);
     if (credentials.refreshToken) {
       await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, credentials.refreshToken);
+      console.log("✅ new refresh token:", credentials.refreshToken);
     }
+    console.log("✅ new access token:", credentials.accessToken);
 
     return credentials.accessToken;
   })();

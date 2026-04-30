@@ -1,14 +1,15 @@
 import { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { clearTokens, refreshToken } from "./token-manager";
 import { router } from "expo-router";
-import { queryClient } from "@/shared/util/queryClient";
-import { AUTH_QUERY_KEY } from "@/shared/hooks/useAuth";
+import { useAuth } from "@/shared/hooks/useAuth";
 
 export function handleAuthError(
   error: AxiosError,
   api: AxiosInstance,
   originalRequest: InternalAxiosRequestConfig & { _retry?: boolean },
 ) {
+  const { clearAuthState } = useAuth();
+
   // 401 which we attempt to refresh
   if (error.response?.status === 401 && !originalRequest._retry) {
     originalRequest._retry = true;
@@ -23,7 +24,7 @@ export function handleAuthError(
       .catch(() => {
         clearTokens();
         // Ensure auth state flips immediately for guards + redirects.
-        queryClient.setQueryData(AUTH_QUERY_KEY, false);
+        clearAuthState();
         router.replace("/(auth)/signin");
 
         return Promise.reject(error);

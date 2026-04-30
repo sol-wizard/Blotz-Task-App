@@ -6,7 +6,7 @@ import ReanimatedSwipeable, {
 import { MaterialIcons } from "@expo/vector-icons";
 import { format, parseISO } from "date-fns";
 import TasksCheckbox from "@/shared/components/task-checkbox";
-
+import * as SecureStore from "expo-secure-store";
 import { SharedValue, useDerivedValue, withTiming } from "react-native-reanimated";
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
 import { queryClient } from "@/shared/util/queryClient";
@@ -21,6 +21,7 @@ import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
 import { TaskCardLeftActions } from "./task-card-left-actions";
+import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY } from "@/shared/constants/token-key";
 
 // Props
 interface TaskCardProps {
@@ -135,6 +136,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
                 if (task.alertTime && new Date(task.alertTime) > new Date()) {
                   await cancelNotification({ notificationId: task?.notificationId });
                 }
+                const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+                console.log("refreshToken after toggle task", refreshToken);
+                const accessToken = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+                console.log("accessToken after toggle task", accessToken);
               }}
             />
 
