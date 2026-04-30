@@ -29,6 +29,7 @@ export function useAiTaskGenerator({
   const requestStartedAtRef = useRef<number | null>(null);
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
+    console.log("🥳 submitAudioForTranscription called with URI:", uri);
     if (!connection) throw new Error("Cannot submit audio: not connected.");
 
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
@@ -39,15 +40,16 @@ export function useAiTaskGenerator({
     requestStartedAtRef.current = Date.now();
 
     try {
+      console.log("🥳 Invoking TranscribeAudio with base64 data.");
       await signalRService.invoke(connection, "TranscribeAudio", base64);
     } catch (error) {
       console.error("TranscribeAudio invocation failed:", error);
       setIsAiGenerating(false);
-      Toast.show({ type: "error", text1: t("errors.default") });
     }
   };
 
   const sendTextMessage = async (text: string) => {
+    console.log("🥳 sendTextMessage called with text:", text);
     if (!text.trim() || !connection) return;
 
     setTranscript(undefined);
@@ -59,11 +61,11 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
-      Toast.show({ type: "error", text1: t("errors.default") });
     }
   };
 
   const generationCompleteHandler = (result: AiResultMessageDTO) => {
+    console.log("🥳 generationCompleteHandler called with result:", result);
     setTranscript(undefined);
     setIsAiGenerating(false);
     requestStartedAtRef.current = null;
@@ -91,12 +93,17 @@ export function useAiTaskGenerator({
         conn = newConn;
         setConnection(conn);
         conn.on("ReceiveGenerationResult", generationCompleteHandler);
-        conn.on("ReceiveTranscript", (text: string) => setTranscript(text));
+        conn.on("ReceiveTranscript", (text: string) => {
+          console.log("🥳 ReceiveTranscript called with text:", text);
+          setTranscript(text);
+        });
         conn.on("ReceiveTaskExtracted", (task: ExtractedTaskDTO) => {
+          console.log("🥳 ReceiveTaskExtracted called with task:", task);
           if (requestStartedAtRef.current == null) return;
           setStreamedTasks((prev) => [...prev, task]);
         });
         conn.on("ReceiveNoteExtracted", (note: AiNoteDTO) => {
+          console.log("🥳 ReceiveNoteExtracted called with note:", note);
           if (requestStartedAtRef.current == null) return;
           setStreamedNotes((prev) => [...prev, note]);
         });
