@@ -116,7 +116,6 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
     setValue("startTime", oneHourLater);
     setValue("endDate", twoHoursLater);
     setValue("endTime", twoHoursLater);
-    trigger("endTime");
   };
 
   return (
