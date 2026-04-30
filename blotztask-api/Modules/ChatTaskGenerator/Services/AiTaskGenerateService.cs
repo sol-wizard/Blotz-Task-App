@@ -12,7 +12,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct);
+    Task<AiChatContext> InitializeAsync(string preferredLanguage, TimeZoneInfo timeZone, CancellationToken ct);
     Task<AiGenerateMessage> GenerateAiResponse(Guid userId, string userMessage, AiChatContext context, CancellationToken ct);
 }
 
@@ -29,13 +29,14 @@ public class AiTaskGenerateService(
         configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
         ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
 
-    public async Task<AiChatContext> InitializeAsync(string preferredLanguage, DateTime userLocalTime, TimeZoneInfo timeZone, CancellationToken ct)
+    public async Task<AiChatContext> InitializeAsync(string preferredLanguage, TimeZoneInfo timeZone, CancellationToken ct)
     {
         // TODO: Consider a clearer way to manage extracted task/note lists.
         var tasks = new List<ExtractedTask>();
         var notes = new List<ExtractedNote>();
         var tools = new TaskGenerationTools(tasks, notes);
-        
+
+        var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
         var agentSw = Stopwatch.StartNew();
         var agent = projectClient.AsAIAgent(
             model: _deploymentId,

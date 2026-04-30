@@ -17,7 +17,7 @@ import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
 import { useHoldHint } from "../hooks/useHoldHint";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
-import { convertAiTaskToAddTaskItemDTO } from "../utils/map-aitask-to-addtaskitem-dto";
+import { convertAiTaskToTaskUpsertDTO } from "../utils/map-aitask-to-addtaskitem-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import Toast from "react-native-toast-message";
@@ -82,7 +82,7 @@ export default function AiTaskSheetScreen() {
     if (isAdding || isNoteCreating) return;
     try {
       await Promise.all([
-        ...displayTasks.map((task) => addTaskAsync(convertAiTaskToAddTaskItemDTO(task))),
+        ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
         ...displayNotes.map((n) => createNoteAsync(n.text)),
       ]);
       analytics.trackIfUserAcceptAiTask({

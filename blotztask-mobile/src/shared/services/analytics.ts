@@ -54,27 +54,6 @@ export const analytics = {
   },
 
   /**
-   * Fires when the AI successfully generates tasks/notes from the user's input.
-   * This is Step 1 of the AI funnel — used to measure how often users
-   * use the AI generation feature and what they ask for.
-   */
-  trackUserUsedAiGeneration(params: {
-    userInput: string;
-    generatedTaskCount: number;
-    generatedNoteCount: number;
-    generatedTaskTitles: string[];
-    generatedNoteTexts: string[];
-  }) {
-    posthog.capture(EVENTS.AI_PREVIEW_SHOWN, {
-      user_input: params.userInput,
-      ai_generated_task_count: params.generatedTaskCount,
-      ai_generated_note_count: params.generatedNoteCount,
-      ai_generated_task_titles: params.generatedTaskTitles,
-      ai_generated_note_texts: params.generatedNoteTexts,
-    });
-  },
-
-  /**
    * Fires when the user takes action on the AI preview — either accepting
    * the generated tasks or going back to re-enter their input.
    * This is Step 2 of the AI funnel. "Abandoned" is derived in PostHog
