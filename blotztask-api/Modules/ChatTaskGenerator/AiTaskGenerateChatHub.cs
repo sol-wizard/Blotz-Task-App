@@ -1,6 +1,7 @@
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.AiUsage.Exceptions;
+using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
@@ -8,9 +9,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
-
-//TODO: Remove the deployment id from the app settings , we only want to store that in the environment variable and the local development json 
-//so we need to update the onboarding documents
 
 //TODO: Review the ADR (.ai/decisions/001-ai-task-generation.md) — verify decisions are still accurate and up to date.
 [Authorize]
@@ -33,10 +31,13 @@ public class AiTaskGenerateChatHub(
         var userPreferences = await getUserPreferencesQueryHandler.Handle(
             new GetUserPreferencesQuery { UserId = userId }, CancellationToken.None);
         var preferredLanguage = userPreferences.PreferredLanguage.ToDisplayName();
-        var chatContext = await aiTaskGenerateService.InitializeAsync(preferredLanguage, timeZone, Context.ConnectionAborted);
+        var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
+        var prompt = AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime);
+        var chatContext = await aiTaskGenerateService.InitializeAsync(prompt, Context.ConnectionAborted);
 
         Context.Items["ChatContext"] = chatContext;
         Context.Items["UserId"] = userId;
+        Context.Items["TimeZone"] = timeZone;
 
         await base.OnConnectedAsync();
     }
@@ -59,6 +60,7 @@ public class AiTaskGenerateChatHub(
     {
         var chatContext = (AiChatContext)Context.Items["ChatContext"]!;
         var userId = (Guid)Context.Items["UserId"]!;
+        var timeZone = (TimeZoneInfo)Context.Items["Timezone"]!;
         try
         {
             var ct = Context.ConnectionAborted;
@@ -67,7 +69,7 @@ public class AiTaskGenerateChatHub(
             var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
             {
                 Message = message,
-                TimeZone = chatContext.TimeZone
+                TimeZone = timeZone
             });
 
             // 2. Wire streaming callbacks so each tool call pushes items to the client in real time

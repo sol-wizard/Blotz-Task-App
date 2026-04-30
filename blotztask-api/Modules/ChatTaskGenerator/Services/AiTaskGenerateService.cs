@@ -1,66 +1,42 @@
 using System.Diagnostics;
-using Azure.AI.Projects;
-using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Modules.AiUsage.Services;
-using BlotzTask.Modules.ChatTaskGenerator.Constants;
+using BlotzTask.Modules.ChatTaskGenerator.Clients;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Functions;
 using BlotzTask.Shared.Exceptions;
-using Microsoft.Extensions.AI;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<AiChatContext> InitializeAsync(string preferredLanguage, TimeZoneInfo timeZone, CancellationToken ct);
+    Task<AiChatContext> InitializeAsync(string prompt,  CancellationToken ct);
     Task<AiGenerateMessage> GenerateAiResponse(Guid userId, string userMessage, AiChatContext context, CancellationToken ct);
 }
 
 public class AiTaskGenerateService(
+    TaskClient taskClient,
     ILogger<AiTaskGenerateService> logger,
-    AIProjectClient projectClient,
     IConfiguration configuration,
     ICheckAiQuotaService checkAiQuotaService,
     IRecordAiUsageService recordAiUsageService)
     : IAiTaskGenerateService
 {
-    // TODO: Move deployment id resolution to DI/configuration.
-    private readonly string _deploymentId =
-        configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
-        ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
-
-    public async Task<AiChatContext> InitializeAsync(string preferredLanguage, TimeZoneInfo timeZone, CancellationToken ct)
+    public async Task<AiChatContext> InitializeAsync(string prompt, CancellationToken ct)
     {
         // TODO: Consider a clearer way to manage extracted task/note lists.
         var tasks = new List<ExtractedTask>();
         var notes = new List<ExtractedNote>();
         var tools = new TaskGenerationTools(tasks, notes);
-
-        var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
         var agentSw = Stopwatch.StartNew();
-        var agent = projectClient.AsAIAgent(
-            model: _deploymentId,
-            instructions: AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime),
-            tools:
-            [
-                AIFunctionFactory.Create(tools.CreateTask),
-                AIFunctionFactory.Create(tools.CreateTasks),
-                AIFunctionFactory.Create(tools.CreateNote),
-                AIFunctionFactory.Create(tools.CreateNotes),
-                AIFunctionFactory.Create(tools.RemoveTask),
-                AIFunctionFactory.Create(tools.UpdateTask),
-                AIFunctionFactory.Create(tools.RemoveNote),
-                AIFunctionFactory.Create(tools.UpdateNote)
-            ]);
+        var agent = taskClient.GetTaskAgent(prompt, tools);
         var agentCreatedMs = agentSw.ElapsedMilliseconds;
 
-        //TODO: De we need cancellation token here ?
-        var session = await agent.CreateSessionAsync();
+        var session = await agent.CreateSessionAsync(ct);
         agentSw.Stop();
 
         logger.LogInformation(
             "TaskGeneration: Session initialized for deployment={DeploymentId} | AgentCreated={AgentCreatedMs}ms | SessionCreated={SessionCreatedMs}ms",
-            _deploymentId, agentCreatedMs, agentSw.ElapsedMilliseconds);
+            taskClient.DeploymentId, agentCreatedMs, agentSw.ElapsedMilliseconds);
 
         return new AiChatContext
         {
@@ -69,7 +45,6 @@ public class AiTaskGenerateService(
             Tools = tools,
             Tasks = tasks,
             Notes = notes,
-            TimeZone = timeZone
         };
     }
 
@@ -85,7 +60,7 @@ public class AiTaskGenerateService(
         {
             await checkAiQuotaService.CheckQuotaAsync(userId, ct);
 
-            logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", _deploymentId);
+            logger.LogInformation("TaskGeneration: Invoking AI with deployment={DeploymentId}", taskClient.DeploymentId);
 
             var runSw = Stopwatch.StartNew();
             var response = await context.Agent.RunAsync(userMessage, context.Session, cancellationToken: ct);

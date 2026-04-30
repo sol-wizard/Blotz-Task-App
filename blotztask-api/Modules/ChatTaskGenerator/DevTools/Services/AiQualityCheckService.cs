@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.DevTools.Checks;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
@@ -144,7 +145,8 @@ public class AiQualityCheckService(
 
             var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
             var initSw = Stopwatch.StartNew();
-            var chatContext = await aiTaskGenerateService.InitializeAsync("English", timeZone, ct);
+            var prompt = AiTaskGeneratorPrompts.GetSystemMessage("English", userLocalTime);
+            var chatContext = await aiTaskGenerateService.InitializeAsync(prompt, ct);
             initSw.Stop();
 
             var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest

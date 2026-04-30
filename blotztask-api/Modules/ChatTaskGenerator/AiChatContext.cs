@@ -27,6 +27,4 @@ public class AiChatContext
     /// <summary>Accumulates notes created by the AI during this session.</summary>
     public required List<ExtractedNote> Notes { get; init; }
 
-    /// <summary>The user's local time zone, used to resolve relative date/time references in their input.</summary>
-    public required TimeZoneInfo TimeZone { get; init; }
 }
