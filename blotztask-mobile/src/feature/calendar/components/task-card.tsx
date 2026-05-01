@@ -41,16 +41,16 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
 
   // Pomodoro session state
-  const taskId = String(task.id);
-  const { session, startTimer, togglePause, isPaused, isThisTaskActive, elapsedSeconds } =
-    usePomodoroTimer((state) => ({
-      session: state.session,
-      startTimer: state.startTimer,
-      togglePause: state.togglePause,
-      isPaused: state.session?.taskId === taskId ? state.session.isPaused : true,
-      isThisTaskActive: state.session?.taskId === taskId,
-      elapsedSeconds: state.session?.taskId === taskId ? state.session.elapsedSeconds : 0,
-    }));
+  const session = usePomodoroTimer((state) => state.session);
+  const startTimer = usePomodoroTimer((state) => state.startTimer);
+  const togglePause = usePomodoroTimer((state) => state.togglePause);
+  const isPaused = usePomodoroTimer((state) =>
+    state.session?.taskId === String(task.id) ? state.session?.isPaused : true,
+  );
+  const isThisTaskActive = usePomodoroTimer((state) => state.session?.taskId === String(task.id));
+  const elapsedSeconds = usePomodoroTimer((state) =>
+    state.session?.taskId === String(task.id) ? state.session?.elapsedSeconds : 0,
+  );
   const [showSwitchModal, setShowSwitchModal] = useState(false);
 
   // Mutations
@@ -120,7 +120,6 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
 
   const handleConfirmSwitch = () => {
     setShowSwitchModal(false);
-    clearPreviousTimer();
 
     router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
     startTimer(String(task.id), 0);
@@ -140,7 +139,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
             progress={leftActionsProgress}
             onMode={onOpenMode}
             onFocus={handleOpenFocus}
-            isActiveTask={isThisTaskActive}
+            isPomodoroActiveTask={isThisTaskActive}
             isPaused={isPaused}
             onTogglePause={handleTogglePause}
           />

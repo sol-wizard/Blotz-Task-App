@@ -14,30 +14,18 @@ interface PomodoroTimerState {
   _tick: () => void;
 }
 
+let globalInterval: ReturnType<typeof setInterval> | null = null;
+
 export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
   session: null,
-  intervalId: null,
-
-  clearPreviousTimer: () => {
-    const { intervalId } = get();
-
-    if (intervalId) {
-      clearInterval(intervalId);
-    }
-
-    set({
-      session: null,
-      intervalId: null,
-    });
-  },
 
   startTimer: (taskId, initialElapsed = 0) => {
-    const intervalId = setInterval(() => get()._tick(), 1000);
-
-    set({
-      session: { taskId, elapsedSeconds: initialElapsed, isPaused: false },
-      intervalId,
-    });
+    if (globalInterval) {
+      clearInterval(globalInterval);
+      globalInterval = null;
+    }
+    set({ session: { taskId, elapsedSeconds: initialElapsed, isPaused: false } });
+    globalInterval = setInterval(() => get()._tick(), 1000);
   },
 
   togglePause: () => {
