@@ -8,18 +8,6 @@ interface PomodoroSession {
 
 interface PomodoroTimerState {
   session: PomodoroSession | null;
-
-  getTimerData: (
-    taskId: string,
-    targetMinutes: number,
-    isCountdown: boolean,
-  ) => {
-    displayTimeStr: string;
-    isPaused: boolean;
-    isFinished: boolean;
-    elapsedSeconds: number;
-  };
-
   startTimer: (taskId: string, initialElapsed?: number) => void;
   togglePause: () => void;
   stopTimer: () => void;
@@ -59,6 +47,10 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
   },
 
   stopTimer: () => {
+    if (globalInterval) {
+      clearInterval(globalInterval);
+      globalInterval = null;
+    }
     set({ session: null });
   },
 
