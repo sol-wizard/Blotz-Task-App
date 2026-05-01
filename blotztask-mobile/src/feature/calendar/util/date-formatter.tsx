@@ -53,7 +53,7 @@ export const formatCalendarDate = (
  * @param date - Date object or date string
  * @returns React component displaying the formatted month and year
  */
-export const renderCalendarHeader = (date?: any) => {
+export const renderCalendarHeader = (date?: unknown) => {
   if (!date) return null;
   const dateObj = date instanceof Date ? date : new Date(date.toString());
   const isChinese = i18n.language === "zh";
@@ -77,7 +77,7 @@ export const renderCalendarHeader = (date?: any) => {
  * @param date - Date object or date string
  * @returns Formatted date string (English: Mon, 15 Apr 2026 | Chinese: 4月15日)
  */
-export const formatBottomSheetDate = (date?: any) => {
+export const formatBottomSheetDate = (date?: unknown) => {
   if (!date) return "";
   const dateObj = date instanceof Date ? date : new Date(date.toString());
   const isChinese = i18n.language === "zh";

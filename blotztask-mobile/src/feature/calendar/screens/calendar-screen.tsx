@@ -13,12 +13,14 @@ import { CustomDay, CustomDayProps } from "../components/custom-day";
 import { useLocalSearchParams } from "expo-router";
 import { ModeBottomSheet } from "../../pomodoro/components/pomodoro-mode-bottomsheet";
 import { usePomodoroSettingsQuery } from "../../pomodoro/hooks/usePomodoroSetting";
+import { useTranslation } from "react-i18next";
 
 const calendarTheme = {
   calendarBackground: theme.colors.background,
 };
 
 export default function CalendarScreen() {
+  const { i18n } = useTranslation();
   const params = useLocalSearchParams<{ selectedDate?: string | string[] }>();
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [calendarKey, setCalendarKey] = useState(0);
@@ -63,7 +65,7 @@ export default function CalendarScreen() {
         }}
       />
       <CalendarProvider
-        key={calendarKey}
+        key={`${calendarKey}-${i18n.language}`}
         date={format(selectedDay, "yyyy-MM-dd")}
         onDateChanged={(date: string) => {
           setSelectedDay(new Date(date));
