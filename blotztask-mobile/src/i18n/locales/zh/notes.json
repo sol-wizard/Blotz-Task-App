@@ -5,6 +5,8 @@
   "noTasks": "未找到浮动任务",
   "createTask": "创建您的第一个任务",
   "addNote": "添加随手记",
+  "createNote": "创建随手记",
+  "editNote": "编辑随手记",
   "gashapon": {
     "revealTitle": "揭示新任务",
     "cancel": "取消",
