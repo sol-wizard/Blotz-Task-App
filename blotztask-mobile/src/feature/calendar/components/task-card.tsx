@@ -21,6 +21,7 @@ import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
 import { TaskCardLeftActions } from "./task-card-left-actions";
+import { theme } from "@/shared/constants/theme";
 
 // Props
 interface TaskCardProps {
@@ -41,7 +42,6 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
 
   // Derived values
-  const labelColor = task.label?.color ?? "#D1D1D6";
   const hasSubtasks = !!task.subtasks?.length;
   const timePeriod = formatDateRange({
     startTime: task.startTime,
@@ -139,7 +139,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
             />
 
             {/* Vertical label colour bar */}
-            <View className="h-10 w-1.5 rounded-full" style={{ backgroundColor: labelColor }} />
+            <View
+              className="h-10 w-1.5 rounded-full"
+              style={{ backgroundColor: task.label?.color ?? theme.colors.disabled }}
+            />
 
             {/* DDL Tag */}
             {task.isDeadline && (

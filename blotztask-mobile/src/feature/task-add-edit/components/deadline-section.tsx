@@ -148,7 +148,7 @@ export const DeadlineSection = ({ control, getValues, isActiveTab }: DeadlineSec
                 deadlineDate={deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
                 eventStartDate={startDate ? format(startDate, "yyyy-MM-dd") : undefined}
                 eventEndDate={
-                  isActiveTab === "event" && endDate
+                  isActiveTab === SegmentButtonValue.Event && endDate
                     ? format(endDate, "yyyy-MM-dd")
                     : startDate
                       ? format(startDate, "yyyy-MM-dd")

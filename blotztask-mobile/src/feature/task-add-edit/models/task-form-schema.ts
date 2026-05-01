@@ -17,8 +17,8 @@ export const taskFormSchema = z
     labelId: z.number().nullable(),
     alert: z.number().nullable(),
     isDeadline: z.boolean(),
-    deadlineDate: z.date(),
-    deadlineTime: z.date(),
+    deadlineDate: z.date().nullable(),
+    deadlineTime: z.date().nullable(),
   })
   .refine(
     (data) => {
