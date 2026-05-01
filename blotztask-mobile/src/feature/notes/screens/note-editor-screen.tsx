@@ -1,12 +1,12 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
+import { ReturnButton } from "@/shared/components/return-button";
 import { theme } from "@/shared/constants/theme";
 
 type NoteEditorParams = {
@@ -20,19 +20,14 @@ export default function NoteEditorScreen() {
   const params = useLocalSearchParams<NoteEditorParams>();
   const noteId = Array.isArray(params.noteId) ? params.noteId[0] : params.noteId;
   const initialTextParam = Array.isArray(params.noteText) ? params.noteText[0] : params.noteText;
-  const initialText = useMemo(() => initialTextParam ?? "", [initialTextParam]);
+  const initialText = initialTextParam ?? "";
 
   const [noteText, setNoteText] = useState(initialText);
   const { createNote, isNoteCreating, updateNote, isNoteUpdating } = useNotesMutation();
 
-  const isEditMode = Boolean(noteId);
-  const isSaving = isEditMode ? isNoteUpdating : isNoteCreating;
+  const isSaving = noteId ? isNoteUpdating : isNoteCreating;
   const trimmedText = noteText.trim();
   const canSave = trimmedText.length > 0 && !isSaving;
-
-  const handleBack = () => {
-    router.back();
-  };
 
   const handleSave = () => {
     if (!canSave) return;
@@ -61,15 +56,10 @@ export default function NoteEditorScreen() {
       <KeyboardAvoidingView behavior="padding" className="flex-1">
         <View className="flex-1 px-6">
           <View className="h-14 flex-row items-center justify-between">
-            <Pressable
-              onPress={handleBack}
-              className="h-10 w-10 items-center justify-center rounded-full bg-white"
-            >
-              <MaterialCommunityIcons name="chevron-left" size={28} color="#111827" />
-            </Pressable>
+            <ReturnButton className="h-10 w-10 border-0 bg-white" />
 
             <Text className="font-balooBold text-xl text-black">
-              {isEditMode ? t("editNote") : t("createNote")}
+              {noteId ? t("editNote") : t("createNote")}
             </Text>
 
             <Pressable
@@ -92,6 +82,7 @@ export default function NoteEditorScreen() {
             onChangeText={setNoteText}
             placeholder={t("notePlaceholder")}
             placeholderTextColor={theme.colors.primary}
+            maxLength={2000}
             multiline
             autoFocus
             textAlignVertical="top"
