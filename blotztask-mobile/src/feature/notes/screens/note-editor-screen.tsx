@@ -17,9 +17,8 @@ type NoteEditorParams = {
 export default function NoteEditorScreen() {
   const router = useRouter();
   const { t } = useTranslation("notes");
-  const params = useLocalSearchParams<NoteEditorParams>();
-  const noteId = Array.isArray(params.noteId) ? params.noteId[0] : params.noteId;
-  const initialTextParam = Array.isArray(params.noteText) ? params.noteText[0] : params.noteText;
+
+  const { noteId, noteText: initialTextParam } = useLocalSearchParams<NoteEditorParams>();
   const initialText = initialTextParam ?? "";
 
   const [noteText, setNoteText] = useState(initialText);
