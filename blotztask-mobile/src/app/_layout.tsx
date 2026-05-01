@@ -25,21 +25,7 @@ import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/toast-config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import posthog from "@/shared/constants/posthog-client";
-import { Text, TextInput } from "react-native";
-
-interface ComponentWithDefaultProps {
-  defaultProps?: { allowFontScaling?: boolean };
-}
-
-(Text as unknown as ComponentWithDefaultProps).defaultProps = {
-  ...(Text as unknown as ComponentWithDefaultProps).defaultProps,
-  allowFontScaling: false,
-};
-
-(TextInput as unknown as ComponentWithDefaultProps).defaultProps = {
-  ...(TextInput as unknown as ComponentWithDefaultProps).defaultProps,
-  allowFontScaling: false,
-};
+import "@/shared/util/typography";
 
 
 Sentry.init({
