@@ -54,6 +54,12 @@ export default function ProtectedLayout() {
           },
         }}
       />
+      <Stack.Screen
+        name="note-editor"
+        options={{
+          headerShown: false,
+        }}
+      />
 
       <Stack.Screen
         name="gashapon-machine"
