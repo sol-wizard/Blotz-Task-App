@@ -62,7 +62,7 @@ public class AiTaskGenerateChatHub(
     {
         var chatContext = (AiChatContext)Context.Items["ChatContext"]!;
         var userId = (Guid)Context.Items["UserId"]!;
-        var timeZone = (TimeZoneInfo)Context.Items["Timezone"]!;
+        var timeZone = (TimeZoneInfo)Context.Items["TimeZone"]!;
         try
         {
             var ct = Context.ConnectionAborted;
