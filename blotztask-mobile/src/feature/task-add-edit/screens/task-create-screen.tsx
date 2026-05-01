@@ -2,7 +2,7 @@ import TaskForm from "@/feature/task-add-edit/task-form";
 import { useRouter } from "expo-router";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import LoadingScreen from "@/shared/components/loading-screen";
-import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { analytics } from "@/shared/services/analytics";
 import Toast from "react-native-toast-message";
@@ -13,7 +13,7 @@ export default function TaskCreateScreen() {
   const { addTask, isAdding } = useTaskMutations();
   const { t } = useTranslation("tasks");
 
-  const handleTaskSubmit = async (submitTask: AddTaskItemDTO) => {
+  const handleTaskSubmit = async (submitTask: TaskUpsertDTO) => {
     try {
       await addTask(submitTask);
 

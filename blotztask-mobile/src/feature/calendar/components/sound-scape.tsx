@@ -7,7 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 
 type SoundscapeItem = {
   key: PomodoroSoundscapeKey;
-  imageUrl: any;
+  imageUrl: string;
 };
 
 interface SoundscapeCardProps {
@@ -53,7 +53,7 @@ export const SoundscapeCard = ({
         className="shadow-md shadow-black/15"
       >
         <ImageBackground
-          source={item.imageUrl}
+          source={{ uri: item.imageUrl }}
           className="w-full h-[100px] border-[3px] border-white justify-end p-2 bg-white"
           imageStyle={{ borderRadius: 20, resizeMode: "cover" }}
           style={{ borderRadius: 20, overflow: "hidden" }}

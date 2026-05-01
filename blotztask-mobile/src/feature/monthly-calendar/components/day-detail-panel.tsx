@@ -1,5 +1,5 @@
 import { View, Text, ActivityIndicator } from "react-native";
-import { BottomSheetScrollView } from "@gorhom/bottom-sheet"; 
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { format, parseISO } from "date-fns";
 import useSelectedDayTasks from "@/shared/hooks/useSelectedDayTasks";
 import { theme } from "@/shared/constants/theme";
@@ -27,7 +27,7 @@ export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) =
               return (
                 <View
                   key={task.id || index}
-                  className="flex-row items-center bg-white border border-gray-100 rounded-2xl mb-2 py-2.5 px-4 shadow-xs"
+                  className="flex-row items-center bg-white border border-gray-100 rounded-2xl mb-2 py-3 px-4 shadow-xs"
                 >
                   {/* Column 1: Time */}
                   <View className="w-16">

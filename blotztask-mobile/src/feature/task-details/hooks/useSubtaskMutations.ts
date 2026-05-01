@@ -4,6 +4,7 @@ import {
   deleteSubtask,
   updateSubtask,
   toggleSubtaskStatus,
+  addSubtask,
 } from "@/feature/task-details/services/subtask-service";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { subtaskKeys, taskKeys } from "@/shared/constants/query-key-factory";
@@ -69,20 +70,28 @@ export const useSubtaskMutations = () => {
   const updateSubtaskMutation = useMutation({
     mutationFn: updateSubtask,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["subtasks", variables.parentTaskId] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
     onError: (error) => {
       console.error("Failed to update subtask:", error);
     },
   });
 
+  const addSubtaskMutation = useMutation({
+    mutationFn: addSubtask,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+    }
+  });
+
   const toggleSubtaskStatusMutation = useMutation({
     mutationFn: ({ subtaskId }: { subtaskId: number; parentTaskId: number }) =>
       toggleSubtaskStatus(subtaskId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["subtasks", variables.parentTaskId] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: subtaskKeys.all(variables.parentTaskId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.all });
     },
     onError: (error) => {
       console.error("Failed to toggle subtask status:", error);
@@ -104,6 +113,10 @@ export const useSubtaskMutations = () => {
     //Update subtask
     updateSubtask: updateSubtaskMutation.mutateAsync,
     isUpdatingSubtask: updateSubtaskMutation.isPending,
+
+    // Add subtask
+    addSubtask: addSubtaskMutation.mutate,
+    isAddingSubtask: addSubtaskMutation.isPending,
 
     // Toggle subtask status
     toggleSubtaskStatus: toggleSubtaskStatusMutation.mutateAsync,
