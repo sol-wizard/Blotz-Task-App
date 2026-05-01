@@ -9,7 +9,6 @@ namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
 public interface IAiTaskGenerateService
 {
-    Task<AiChatContext> InitializeAsync(string prompt,  CancellationToken ct);
     Task<AiGenerateMessage> GenerateAiResponse(Guid userId, string userMessage, AiChatContext context, CancellationToken ct);
 }
 
@@ -21,32 +20,6 @@ public class AiTaskGenerateService(
     IRecordAiUsageService recordAiUsageService)
     : IAiTaskGenerateService
 {
-    public async Task<AiChatContext> InitializeAsync(string prompt, CancellationToken ct)
-    {
-        // TODO: Consider a clearer way to manage extracted task/note lists.
-        var tasks = new List<ExtractedTask>();
-        var notes = new List<ExtractedNote>();
-        var tools = new TaskGenerationTools(tasks, notes);
-        var agentSw = Stopwatch.StartNew();
-        var agent = taskClient.GetTaskAgent(prompt, tools);
-        var agentCreatedMs = agentSw.ElapsedMilliseconds;
-
-        var session = await agent.CreateSessionAsync(ct);
-        agentSw.Stop();
-
-        logger.LogInformation(
-            "TaskGeneration: Session initialized for deployment={DeploymentId} | AgentCreated={AgentCreatedMs}ms | SessionCreated={SessionCreatedMs}ms",
-            taskClient.DeploymentId, agentCreatedMs, agentSw.ElapsedMilliseconds);
-
-        return new AiChatContext
-        {
-            Agent = agent,
-            Session = session,
-            Tools = tools,
-            Tasks = tasks,
-            Notes = notes,
-        };
-    }
 
     public async Task<AiGenerateMessage> GenerateAiResponse(
         Guid userId,

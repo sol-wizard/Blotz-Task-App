@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<DateTimeResolveService>();
         services.AddScoped<SpeechTranscriptionService>();
         services.AddScoped<IAiQualityCheckService, AiQualityCheckService>();
+        services.AddScoped<IAiContextInitializeService, AiContextInitializeService>();
 
         return services;
     }

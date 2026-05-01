@@ -141,12 +141,13 @@ public class AiQualityCheckService(
         try
         {
             await using var scope = serviceScopeFactory.CreateAsyncScope();
+            var aiContextInitializeService = scope.ServiceProvider.GetRequiredService<IAiContextInitializeService>();
             var aiTaskGenerateService = scope.ServiceProvider.GetRequiredService<IAiTaskGenerateService>();
 
             var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
             var initSw = Stopwatch.StartNew();
             var prompt = AiTaskGeneratorPrompts.GetSystemMessage("English", userLocalTime);
-            var chatContext = await aiTaskGenerateService.InitializeAsync(prompt, ct);
+            var chatContext = await aiContextInitializeService.InitializeAsync(prompt, ct);
             initSw.Stop();
 
             var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest

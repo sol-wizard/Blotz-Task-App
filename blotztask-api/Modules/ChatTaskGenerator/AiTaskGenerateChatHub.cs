@@ -14,6 +14,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 [Authorize]
 public class AiTaskGenerateChatHub(
     ILogger<AiTaskGenerateChatHub> logger,
+    IAiContextInitializeService aiContextInitializeService,
     IAiTaskGenerateService aiTaskGenerateService,
     DateTimeResolveService dateTimeResolveService,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
@@ -34,7 +35,7 @@ public class AiTaskGenerateChatHub(
         var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
         var prompt = AiTaskGeneratorPrompts.GetSystemMessage(preferredLanguage, userLocalTime);
         //TODO: should initialize shouldnt be in the generate service.
-        var chatContext = await aiTaskGenerateService.InitializeAsync(prompt, Context.ConnectionAborted);
+        var chatContext = await aiContextInitializeService.InitializeAsync(prompt, Context.ConnectionAborted);
 
         Context.Items["ChatContext"] = chatContext;
         Context.Items["UserId"] = userId;
