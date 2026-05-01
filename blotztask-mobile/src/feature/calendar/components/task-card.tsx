@@ -41,18 +41,16 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
 
   // Pomodoro session state
-  const session = usePomodoroTimer((state) => state.session);
-  const startTimer = usePomodoroTimer((state) => state.startTimer);
-  const togglePause = usePomodoroTimer((state) => state.togglePause);
-  const isPaused = usePomodoroTimer((state) =>
-    state.session?.taskId === String(task.id) ? state.session?.isPaused : true,
-  );
-  const isThisTaskActive = usePomodoroTimer((state) => state.session?.taskId === String(task.id));
-  const elapsedSeconds = usePomodoroTimer((state) =>
-    state.session?.taskId === String(task.id) ? state.session?.elapsedSeconds : 0,
-  );
-  const elapsedMinutes = Math.floor((elapsedSeconds ?? 0) / 60);
-  const milestoneKey = getMilestoneKey(elapsedSeconds);
+  const taskId = String(task.id);
+  const { session, startTimer, togglePause, isPaused, isThisTaskActive, elapsedSeconds } =
+    usePomodoroTimer((state) => ({
+      session: state.session,
+      startTimer: state.startTimer,
+      togglePause: state.togglePause,
+      isPaused: state.session?.taskId === taskId ? state.session.isPaused : true,
+      isThisTaskActive: state.session?.taskId === taskId,
+      elapsedSeconds: state.session?.taskId === taskId ? state.session.elapsedSeconds : 0,
+    }));
   const [showSwitchModal, setShowSwitchModal] = useState(false);
 
   // Mutations
@@ -253,14 +251,14 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
                 className="mt-3 flex-row items-center justify-between bg-[#FFF7ED] px-3 py-2.5 rounded-xl"
               >
                 <Text className="text-orange-400 font-inter font-semibold text-[13px]">
-                  Focus · {elapsedMinutes} min
+                  Focus · {Math.floor(elapsedSeconds / 60)} min
                 </Text>
 
                 <View className="flex-row items-center">
                   <Text className="text-gray-400 font-inter text-[12px] mr-0.5">
                     {isPaused
                       ? t("focusMode.paused", "Paused")
-                      : t(`focusMode.milestones.${milestoneKey}.subtitle`)}
+                      : t(`focusMode.milestones.${getMilestoneKey(elapsedSeconds)}.subtitle`)}
                   </Text>
                   <MaterialIcons name="chevron-right" size={16} color="#9CA3AF" />
                 </View>

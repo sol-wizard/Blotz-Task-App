@@ -9,13 +9,15 @@ import { getMilestoneKey } from "../utils/getMilestoneKey";
 import { router, useLocalSearchParams } from "expo-router";
 import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
 import { useEffect } from "react";
+import { formatDuration } from "../utils/format-duration";
 
 export const PomodoroFocus = () => {
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
   const { data: settings } = usePomodoroSettingsQuery();
   const { t } = useTranslation("pomodoro");
 
-  const { session, startTimer, stopTimer, togglePause, getTimerData } = usePomodoroTimer();
+  const { session, startTimer, stopTimer, togglePause } = usePomodoroTimer();
+  const elapsedSeconds = session?.taskId === taskId ? session.elapsedSeconds : 0;
 
   useEffect(() => {
     if (taskId && (!session || session.taskId !== taskId)) {
@@ -25,19 +27,16 @@ export const PomodoroFocus = () => {
 
   if (!settings || !taskId) return null;
 
-  const { displayTimeStr, isPaused, elapsedSeconds } = getTimerData(
-    session?.taskId ?? "",
-    settings.timing,
-    settings.isCountdown,
-  );
+  const isPaused = session?.taskId === taskId ? session.isPaused : true;
+  const displaySeconds = settings.isCountdown
+    ? Math.max(0, settings.timing * 60 - elapsedSeconds)
+    : elapsedSeconds;
+  const displayTimeStr = formatDuration(displaySeconds);
   const milestoneKey = getMilestoneKey(elapsedSeconds);
+  const isFinished = settings.isCountdown && displaySeconds === 0;
 
   const handleEnd = () => {
     stopTimer();
-    router.back();
-  };
-
-  const handleMinimize = () => {
     router.back();
   };
 
@@ -47,7 +46,7 @@ export const PomodoroFocus = () => {
         <View className="flex-row w-full items-center justify-between">
           <ReturnButton
             className="w-20 h-20 border-0 bg-[#00000014]"
-            onPress={() => handleMinimize()}
+            onPress={() => router.back()}
           />
         </View>
 
@@ -95,10 +94,7 @@ export const PomodoroFocus = () => {
             <Text className="text-8xl font-bold font-baloo pt-4 tracking-wide text-[#00000080]">
               {displayTimeStr}
             </Text>
-            <Pressable
-              className="items-center justify-center -mt-4"
-              onPress={() => handleMinimize()}
-            >
+            <Pressable className="items-center justify-center -mt-4" onPress={() => router.back()}>
               <Text className="text-xl font-baloo font-bold text-[#00000080]">
                 {t("focusMode.viewTask")}
               </Text>

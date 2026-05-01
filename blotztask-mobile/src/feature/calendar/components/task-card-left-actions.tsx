@@ -7,7 +7,7 @@ type LeftActionsProps = {
   progress: SharedValue<number>;
   onMode: () => void;
   onFocus: () => void;
-  isActiveTask?: boolean;
+  isPomodoroActiveTask?: boolean;
   isPaused?: boolean;
   onTogglePause?: () => void;
 };
@@ -15,7 +15,7 @@ export const TaskCardLeftActions = ({
   progress,
   onMode,
   onFocus,
-  isActiveTask,
+  isPomodoroActiveTask,
   isPaused,
   onTogglePause,
 }: LeftActionsProps) => {
@@ -26,7 +26,7 @@ export const TaskCardLeftActions = ({
 
   return (
     <Animated.View className="flex-row items-start justify-start gap-2 pr-4" style={animatedStyle}>
-      {isActiveTask ? (
+      {isPomodoroActiveTask ? (
         <Pressable
           onPress={onTogglePause}
           className="h-full w-24 rounded-3xl bg-[#FFF0F0] border border-[#F567674D] items-center justify-center"

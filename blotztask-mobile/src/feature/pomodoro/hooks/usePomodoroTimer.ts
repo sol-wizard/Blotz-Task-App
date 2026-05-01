@@ -1,5 +1,3 @@
-import { calculateTimerState } from "../utils/calculateTimerState";
-import { formatDuration } from "../utils/format-duration";
 import { create } from "zustand";
 
 interface PomodoroSession {
@@ -10,18 +8,6 @@ interface PomodoroSession {
 
 interface PomodoroTimerState {
   session: PomodoroSession | null;
-
-  getTimerData: (
-    taskId: string,
-    targetMinutes: number,
-    isCountdown: boolean,
-  ) => {
-    displayTimeStr: string;
-    isPaused: boolean;
-    isFinished: boolean;
-    elapsedSeconds: number;
-  };
-
   startTimer: (taskId: string, initialElapsed?: number) => void;
   togglePause: () => void;
   stopTimer: () => void;
@@ -53,6 +39,10 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
   },
 
   stopTimer: () => {
+    if (globalInterval) {
+      clearInterval(globalInterval);
+      globalInterval = null;
+    }
     set({ session: null });
   },
 
@@ -63,28 +53,5 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
         session: { ...session, elapsedSeconds: session.elapsedSeconds + 1 },
       });
     }
-  },
-
-  getTimerData: (taskId, targetMinutes, isCountdown) => {
-    const { session } = get();
-    if (!session || session.taskId !== taskId) {
-      return {
-        displayTimeStr: isCountdown ? formatDuration(targetMinutes * 60) : "00:00",
-        isPaused: true,
-        isFinished: false,
-        elapsedSeconds: 0,
-      };
-    }
-    const elapsed = session?.elapsedSeconds || 0;
-    const targetSeconds = targetMinutes * 60;
-
-    const { displaySeconds, isFinished } = calculateTimerState(elapsed, targetSeconds, isCountdown);
-
-    return {
-      displayTimeStr: formatDuration(displaySeconds),
-      isPaused: session?.isPaused ?? true,
-      isFinished,
-      elapsedSeconds: elapsed,
-    };
   },
 }));
