@@ -27,7 +27,7 @@ export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) =
               return (
                 <View
                   key={task.id || index}
-                  className="flex-row items-center bg-white border border-gray-100 rounded-2xl mb-2 py-2.5 px-4 shadow-xs"
+                  className="flex-row items-center bg-white border border-gray-100 rounded-2xl mb-2 py-3 px-4 shadow-xs"
                 >
                   {/* Column 1: Time */}
                   <View className="w-16">
