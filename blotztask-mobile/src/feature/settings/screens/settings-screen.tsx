@@ -22,6 +22,12 @@ export default function SettingsScreen() {
       route: "/settings/account",
     },
     {
+      key: "MembershipPlan",
+      label: t("menu.MembershipPlan"),
+      icon: "brain",
+      route: "/settings/membership-plan",
+    },
+    {
       key: "task-handling",
       label: t("menu.taskHandling"),
       icon: "file-check-outline",
