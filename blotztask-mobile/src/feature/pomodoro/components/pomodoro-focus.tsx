@@ -21,9 +21,12 @@ export const PomodoroFocus = () => {
 
   useEffect(() => {
     if (taskId && (!session || session.taskId !== taskId)) {
+      if (session) {
+        clearPreviousTimer();
+      }
       startTimer(taskId);
     }
-  }, [taskId]);
+  }, [clearPreviousTimer, session, startTimer, taskId]);
 
   if (!settings || !taskId) return null;
 

@@ -120,8 +120,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
 
   const handleConfirmSwitch = () => {
     setShowSwitchModal(false);
-    startTimer(String(task.id), 0);
+    clearPreviousTimer();
+
     router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
+    startTimer(String(task.id), 0);
   };
 
   const handleTogglePause = () => {
