@@ -23,6 +23,7 @@ export const getTaskFormDefaults = ({
   const oneHourLater = addHours(now, 1);
   const twoHoursLater = addHours(now, 2);
 
+  // default values for creating a new task
   if (!dto) {
     return {
       initialTab: SegmentButtonValue.Reminder,
@@ -47,7 +48,7 @@ export const getTaskFormDefaults = ({
 
   const initialAlert = calculateAlertSeconds(dto.startTime, dto.alertTime);
   const defaultAlert = initialAlert ?? (allowNotification ? 300 : null);
-
+  // default values for editing an existing task
   return {
     initialTab: isEvent ? SegmentButtonValue.Event : SegmentButtonValue.Reminder,
     defaultValues: {
