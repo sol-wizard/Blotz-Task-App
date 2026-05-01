@@ -9,7 +9,8 @@ export type SettingsMenuKey =
   | "notifications"
   | "language"
   | "under-development"
-  | "about";
+  | "about"
+  | "MembershipPlan";
 export type SettingsMenuItem = {
   key: SettingsMenuKey;
   label: string;

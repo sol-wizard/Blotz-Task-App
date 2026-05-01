@@ -115,7 +115,10 @@ public class AiTaskGenerateService(
                 ErrorCode = isSuccess ? "" : AiErrorCode.NoTasksExtracted.ToString(),
                 ExtractedTasks = context.Tasks,
                 ExtractedNotes = context.Notes,
-                ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input."
+                ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input.",
+                InputTokens = inputTokens,
+                OutputTokens = outputTokens,
+                TotalTokens = totalTokens
             };
         }
         catch (OperationCanceledException oce)
