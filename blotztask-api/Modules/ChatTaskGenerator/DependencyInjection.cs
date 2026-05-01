@@ -11,9 +11,17 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var deploymentId = configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
-            ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
-        services.AddSingleton(sp => new TaskClient(sp.GetRequiredService<AIProjectClient>(), deploymentId));
+        var taskDeploymentId = configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"] 
+                               ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
+        var speechDeploymentId = configuration["AzureOpenAI:AiModels:Speech:DeploymentId"] 
+                                 ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:Speech:DeploymentId config.");
+        var endpoint = configuration["AzureOpenAI:Endpoint"] 
+                       ?? throw new InvalidOperationException("Missing AzureOpenAI:Endpoint config.");
+        var apiKey = configuration["AzureOpenAI:ApiKey"] 
+                     ?? throw new InvalidOperationException("Missing AzureOpenAI:ApiKey config.");
+        
+        services.AddSingleton(sp => new TaskClient(sp.GetRequiredService<AIProjectClient>(), taskDeploymentId));
+        services.AddSingleton(new TranscriptClient(endpoint, apiKey, speechDeploymentId));
         services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
         services.AddScoped<DateTimeResolveService>();
         services.AddScoped<SpeechTranscriptionService>();

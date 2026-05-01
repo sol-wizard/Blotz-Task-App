@@ -10,7 +10,7 @@ public class TaskClient(AIProjectClient client, string deploymentId)
     public string DeploymentId => deploymentId;
 
 
-    public ChatClientAgent GetTaskAgent(string prompt, TaskGenerationTools  tools)
+    public ChatClientAgent GetTaskAgent(string prompt, TaskGenerationTools tools)
     {
         return client.AsAIAgent(model: deploymentId,
             instructions: prompt,
