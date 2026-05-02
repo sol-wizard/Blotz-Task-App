@@ -21,6 +21,10 @@ import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
 import { TaskCardLeftActions } from "./task-card-left-actions";
+import { getMilestoneKey } from "@/feature/pomodoro/utils/getMilestoneKey";
+import { useTranslation } from "react-i18next";
+import { usePomodoroTimer } from "@/feature/pomodoro/hooks/usePomodoroTimer";
+import { SwitchTaskModal } from "./pomodoro-switch-modal";
 
 // Props
 interface TaskCardProps {
@@ -35,6 +39,15 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const progress = useDerivedValue(() => withTiming(isExpanded ? 1 : 0, { duration: 220 }));
+
+  // Pomodoro session state
+  const session = usePomodoroTimer((state) => state.session);
+  const togglePause = usePomodoroTimer((state) => state.togglePause);
+  const isThisTaskActive = session?.taskId === String(task.id);
+  const isPaused = isThisTaskActive ? (session?.isPaused ?? true) : true;
+  const elapsedSeconds = isThisTaskActive ? (session?.elapsedSeconds ?? 0) : 0;
+  const [showSwitchModal, setShowSwitchModal] = useState(false);
+
   // Mutations
   const { toggleTask, isToggling } = useTaskMutations();
   const { completeOccurrence, isPending: isCompletingOccurrence } = useRecurringTaskMutations();
@@ -51,6 +64,8 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const isOverdue = parseISO(task.endTime).getTime() <= new Date().getTime() && !task.isDone;
   const isLoading =
     isToggling || isDeleting || isBreakingDownAndReplacingSubtasks || isCompletingOccurrence;
+
+  const { t } = useTranslation("pomodoro");
 
   // Functions
   const handleOpenTaskDetails = () => {
@@ -85,125 +100,173 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   };
 
   const handleOpenFocus = () => {
-    router.push("/(protected)/pomodoro-focus");
+    if (!task.id) return;
+    if (session && session.taskId !== String(task.id)) {
+      setShowSwitchModal(true);
+    } else {
+      router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
+    }
+
+    swipeRef.current?.close();
+  };
+
+  const handleConfirmSwitch = () => {
+    setShowSwitchModal(false);
+
+    router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
+  };
+
+  const handleTogglePause = () => {
+    togglePause();
+    swipeRef.current?.close();
   };
 
   return (
-    <ReanimatedSwipeable
-      ref={swipeRef}
-      renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
-        <TaskCardLeftActions
-          progress={leftActionsProgress}
-          onMode={onOpenMode}
-          onFocus={handleOpenFocus}
-        />
-      )}
-      leftThreshold={12}
-      overshootLeft={false}
-      dragOffsetFromRightEdge={8}
-      renderRightActions={(rightActionsProgress: SharedValue<number>) => (
-        <TaskCardRightActions
-          progress={rightActionsProgress}
-          onBreakdown={handleBreakdown}
-          onDelete={handleDelete}
-          isDeleting={isDeleting}
-          isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
-        />
-      )}
-      rightThreshold={12}
-      overshootRight={false}
-      friction={2}
-      dragOffsetFromLeftEdge={8}
-    >
-      <View className="flex-col bg-white rounded-3xl px-4 py-3 min-h-20 justify-center">
-        <View className="justify-center">
-          <View className="flex-row items-center" style={{ gap: 12 }}>
-            {/* Checkbox */}
-            <TasksCheckbox
-              type="task"
-              checked={task.isDone}
-              disabled={isLoading}
-              onChange={async () => {
-                if (!task.id) {
-                  completeOccurrence({
-                    recurringTaskId: task.recurringTaskId!,
-                    occurrenceDate: format(selectedDay!, "yyyy-MM-dd"),
-                  });
-                  return;
-                }
-                toggleTask({ taskId: task.id!, selectedDay });
-                if (task.alertTime && new Date(task.alertTime) > new Date()) {
-                  await cancelNotification({ notificationId: task?.notificationId });
-                }
-              }}
-            />
-
-            {/* Vertical label colour bar */}
-            <View className="h-10 w-1.5 rounded-full" style={{ backgroundColor: labelColor }} />
-
-            {/* DDL Tag */}
-            {task.isDeadline && (
-              <View className="px-1 py-0.5 rounded bg-highlight items-center justify-center">
-                <Text className="text-white font-balooBold text-xs mt-0.5">DDL</Text>
-              </View>
-            )}
-
-            {/* Title + date */}
-            <Pressable className="flex-1 " onPress={handleOpenTaskDetails} disabled={isLoading}>
-              <View className="flex-row items-center" style={{ gap: 4 }}>
-                <Text
-                  className={`text-xl font-semibold font-inter ${
-                    task.isDone ? "text-neutral-400 line-through" : "text-[#444964]"
-                  }`}
-                  style={
-                    task.isDone
-                      ? {
-                          textDecorationLine: "line-through",
-                          textDecorationColor: "#9CA3AF",
-                        }
-                      : undefined
+    <>
+      <ReanimatedSwipeable
+        ref={swipeRef}
+        renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
+          <TaskCardLeftActions
+            progress={leftActionsProgress}
+            onMode={onOpenMode}
+            onFocus={handleOpenFocus}
+            isPomodoroActiveTask={isThisTaskActive}
+            isPaused={isPaused}
+            onTogglePause={handleTogglePause}
+          />
+        )}
+        leftThreshold={12}
+        overshootLeft={false}
+        dragOffsetFromRightEdge={8}
+        renderRightActions={(rightActionsProgress: SharedValue<number>) => (
+          <TaskCardRightActions
+            progress={rightActionsProgress}
+            onBreakdown={handleBreakdown}
+            onDelete={handleDelete}
+            isDeleting={isDeleting}
+            isRefreshingSubtasks={isBreakingDownAndReplacingSubtasks}
+          />
+        )}
+        rightThreshold={12}
+        overshootRight={false}
+        friction={2}
+        dragOffsetFromLeftEdge={8}
+      >
+        <View className="flex-col bg-white rounded-3xl px-4 py-3 min-h-20 justify-center">
+          <View className="justify-center">
+            <View className="flex-row items-center" style={{ gap: 12 }}>
+              {/* Checkbox */}
+              <TasksCheckbox
+                type="task"
+                checked={task.isDone}
+                disabled={isLoading}
+                onChange={async () => {
+                  if (!task.id) {
+                    completeOccurrence({
+                      recurringTaskId: task.recurringTaskId!,
+                      occurrenceDate: format(selectedDay!, "yyyy-MM-dd"),
+                    });
+                    return;
                   }
-                  numberOfLines={1}
-                >
-                  {task.title}
-                </Text>
-                {task.recurringTaskId && (
-                  <View className="ml-1.5">
-                    <MaterialIcons name="autorenew" size={17} color="#9CA3AF" />
-                  </View>
-                )}
-              </View>
-              {timePeriod && <Text className="font-balooThin text-gray-400">{timePeriod}</Text>}
-            </Pressable>
+                  toggleTask({ taskId: task.id!, selectedDay });
+                  if (task.alertTime && new Date(task.alertTime) > new Date()) {
+                    await cancelNotification({ notificationId: task?.notificationId });
+                  }
+                }}
+              />
 
-            <View className="flex-row items-center">
-              <Text
-                className={`${
-                  isOverdue ? "text-warning" : "text-primary"
-                } font-inter font-semibold text-lg`}
-              >
-                {format(parseISO(task.endTime), "H:mm")}
-              </Text>
+              {/* Vertical label colour bar */}
+              <View className="h-10 w-1.5 rounded-full" style={{ backgroundColor: labelColor }} />
 
-              <View className="ml-1 w-6 items-center justify-center">
-                {hasSubtasks && (
-                  <Pressable
-                    onPress={() => setIsExpanded((v) => !v)}
-                    className="p-1"
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    disabled={isLoading}
+              {/* DDL Tag */}
+              {task.isDeadline && (
+                <View className="px-1 py-0.5 rounded bg-highlight items-center justify-center">
+                  <Text className="text-white font-balooBold text-xs mt-0.5">DDL</Text>
+                </View>
+              )}
+
+              {/* Title + date */}
+              <Pressable className="flex-1 " onPress={handleOpenTaskDetails} disabled={isLoading}>
+                <View className="flex-row items-center" style={{ gap: 4 }}>
+                  <Text
+                    className={`text-xl font-semibold font-inter ${
+                      task.isDone ? "text-neutral-400 line-through" : "text-[#444964]"
+                    }`}
+                    style={
+                      task.isDone
+                        ? {
+                            textDecorationLine: "line-through",
+                            textDecorationColor: "#9CA3AF",
+                          }
+                        : undefined
+                    }
+                    numberOfLines={1}
                   >
-                    <AnimatedChevron color="#9CA3AF" progress={progress} />
-                  </Pressable>
-                )}
+                    {task.title}
+                  </Text>
+                  {task.recurringTaskId && (
+                    <View className="ml-1.5">
+                      <MaterialIcons name="autorenew" size={17} color="#9CA3AF" />
+                    </View>
+                  )}
+                </View>
+                {timePeriod && <Text className="font-balooThin text-gray-400">{timePeriod}</Text>}
+              </Pressable>
+
+              <View className="flex-row items-center">
+                <Text
+                  className={`${
+                    isOverdue ? "text-warning" : "text-primary"
+                  } font-inter font-semibold text-lg`}
+                >
+                  {format(parseISO(task.endTime), "H:mm")}
+                </Text>
+
+                <View className="ml-1 w-6 items-center justify-center">
+                  {hasSubtasks && (
+                    <Pressable
+                      onPress={() => setIsExpanded((v) => !v)}
+                      className="p-1"
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      disabled={isLoading}
+                    >
+                      <AnimatedChevron color="#9CA3AF" progress={progress} />
+                    </Pressable>
+                  )}
+                </View>
               </View>
             </View>
+
+            {isThisTaskActive && (
+              <Pressable
+                onPress={handleOpenFocus}
+                className="mt-3 flex-row items-center justify-between bg-[#FFF7ED] px-3 py-2.5 rounded-xl"
+              >
+                <Text className="text-orange-400 font-inter font-semibold text-[13px]">
+                  Focus · {Math.floor(elapsedSeconds / 60)} min
+                </Text>
+
+                <View className="flex-row items-center">
+                  <Text className="text-gray-400 font-inter text-[12px] mr-0.5">
+                    {isPaused
+                      ? t("focusMode.paused", "Paused")
+                      : t(`focusMode.milestones.${getMilestoneKey(elapsedSeconds)}.subtitle`)}
+                  </Text>
+                  <MaterialIcons name="chevron-right" size={16} color="#9CA3AF" />
+                </View>
+              </Pressable>
+            )}
+            {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
           </View>
-          {hasSubtasks && <SubtaskProgressBar subtasks={task.subtasks} />}
+          {hasSubtasks && <SubtaskList task={task} progress={progress} />}
         </View>
-        {hasSubtasks && <SubtaskList task={task} progress={progress} />}
-      </View>
-    </ReanimatedSwipeable>
+      </ReanimatedSwipeable>
+      <SwitchTaskModal
+        isVisible={showSwitchModal}
+        onClose={() => setShowSwitchModal(false)}
+        onConfirm={handleConfirmSwitch}
+      />
+    </>
   );
 };
 
