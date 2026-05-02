@@ -25,6 +25,8 @@ import Toast from "react-native-toast-message";
 import { toastConfig } from "@/shared/components/toast-config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import posthog from "@/shared/constants/posthog-client";
+import "@/shared/util/typography";
+
 
 Sentry.init({
   dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
