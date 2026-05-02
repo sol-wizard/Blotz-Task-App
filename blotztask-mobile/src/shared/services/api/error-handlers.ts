@@ -53,6 +53,10 @@ export function handleOtherErrors(error: AxiosError) {
       case 503:
         console.error("Server error occurred");
         break;
+      case 400:
+        // Business logic or validation error, usually handled by the caller
+        console.warn("Bad Request (400):", error.response.data);
+        break;
       default:
         // fallback generic
         console.error(`Unhandled error status: ${status}`, error.response.data);

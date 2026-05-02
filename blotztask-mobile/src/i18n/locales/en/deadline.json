@@ -1,4 +1,8 @@
 {
   "title": "Deadline",
-  "days": "days"
+  "days": "days",
+  "errors": {
+    "maxPinned": "You can pin a maximum of 3 deadline tasks",
+    "pinFailed": "Failed to update pin status"
+  }
 }

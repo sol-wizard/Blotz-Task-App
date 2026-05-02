@@ -17,8 +17,7 @@ export async function updatePin(taskId: number, isPinned: boolean): Promise<void
   try {
     await apiClient.patch(url, { taskId, isPinned });
   } catch (err) {
-    console.error("Error updating pin:", err);
-    throw new Error("Update pin failed");
+    throw err;
   }
 }
 
