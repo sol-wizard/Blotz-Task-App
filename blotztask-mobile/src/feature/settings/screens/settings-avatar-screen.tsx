@@ -1,38 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ReturnButton } from "@/shared/components/return-button";
-import avatarDataDevelopment from "../constants/avatar-development.json";
-import avatarDataProduction from "../constants/avatar-production.json";
 import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AvatarDTO } from "@/feature/settings/modals/avatar-dto";
+import { useAvatarListQuery } from "@/feature/settings/hooks/useAvatarListQuery";
+import LoadingScreen from "@/shared/components/loading-screen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 
-const appEnv = process.env.EXPO_PUBLIC_APP_ENV;
-
 export default function SettingsAvatarScreen() {
-  const avatarData =
-    appEnv === "production"
-      ? avatarDataProduction
-      : appEnv === "development"
-        ? avatarDataDevelopment
-        : avatarDataDevelopment;
-  const avatars = avatarData.avatars;
   const { userProfile } = useUserProfile();
+  const { avatars, isAvatarListLoading, isAvatarListError } = useAvatarListQuery();
 
-  const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(() => {
+  const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
     const pictureUrl = userProfile?.pictureUrl;
-    if (pictureUrl && avatars.some((avatar) => avatar.url === pictureUrl)) {
-      return pictureUrl;
+
+    if (!pictureUrl) {
+      setSelectedAvatarUrl(null);
+      return;
     }
-    return null;
-  });
+
+    if (avatars.some((avatar) => avatar.url === pictureUrl)) {
+      setSelectedAvatarUrl(pictureUrl);
+    }
+  }, [avatars, userProfile?.pictureUrl]);
 
   const { updateUserProfile, isUserUpdating } = useUserProfileMutation();
 
+  if (isAvatarListLoading) {
+    return <LoadingScreen />;
+  }
+
   const handleAvatarSelect = async (avatar: AvatarDTO) => {
     if (isUserUpdating) return;
+
+    const previousAvatarUrl = selectedAvatarUrl;
     setSelectedAvatarUrl(avatar.url);
 
     try {
@@ -42,6 +47,7 @@ export default function SettingsAvatarScreen() {
         isOnBoarded: userProfile?.isOnBoarded ?? false,
       });
     } catch {
+      setSelectedAvatarUrl(previousAvatarUrl);
       console.log("Failed to update avatar.");
     }
   };
@@ -56,31 +62,37 @@ export default function SettingsAvatarScreen() {
       </View>
 
       <View className="flex-row flex-wrap justify-between m-6">
-        {avatars.map((avatar) => {
-          const isSelected = avatar.url === selectedAvatarUrl;
+        {isAvatarListError ? (
+          <Text className="w-full text-center text-base font-baloo text-secondary">
+            Failed to load avatars.
+          </Text>
+        ) : (
+          avatars.map((avatar) => {
+            const isSelected = avatar.url === selectedAvatarUrl;
 
-          return (
-            <Pressable
-              key={avatar.url}
-              onPress={() => handleAvatarSelect(avatar)}
-              className={`mb-6 items-center ${isUserUpdating ? "opacity-70" : ""}`}
-              disabled={isUserUpdating}
-            >
-              <View
-                className="rounded-full border-4"
-                style={{
-                  borderColor: isSelected ? "#F2A74B" : "transparent",
-                }}
+            return (
+              <Pressable
+                key={avatar.url}
+                onPress={() => handleAvatarSelect(avatar)}
+                className={`mb-6 items-center ${isUserUpdating ? "opacity-70" : ""}`}
+                disabled={isUserUpdating}
               >
-                <Image
-                  source={{ uri: avatar.url }}
-                  style={{ width: 80, height: 80, borderRadius: 48 }}
-                  contentFit="cover"
-                />
-              </View>
-            </Pressable>
-          );
-        })}
+                <View
+                  className="rounded-full border-4"
+                  style={{
+                    borderColor: isSelected ? "#8B86B3" : "transparent",
+                  }}
+                >
+                  <Image
+                    source={{ uri: avatar.url }}
+                    style={{ width: 80, height: 80, borderRadius: 48 }}
+                    contentFit="cover"
+                  />
+                </View>
+              </Pressable>
+            );
+          })
+        )}
       </View>
     </SafeAreaView>
   );

@@ -52,3 +52,7 @@ export const aiUsageKeys = {
   all: ["aiUsage"] as const,
   summary: () => [...aiUsageKeys.all, "summary"] as const,
 };
+
+export const avatarKeys = {
+  all: ["avatars"] as const,
+};
