@@ -15,7 +15,6 @@ import { NoteDTO } from "@/feature/notes/models/note-dto";
 import { NoteRow } from "@/feature/notes/components/note-row";
 
 import { ASSETS } from "@/shared/constants/assets";
-import { NoteInputModal } from "@/feature/notes/components/note-input-modal";
 import { NoteTimePickerSheet } from "@/feature/notes/components/note-time-picker-sheet";
 import { NoteTimeEstimateModal } from "../components/note-time-estimate-modal";
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
@@ -26,13 +25,9 @@ export default function NotesScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { deleteNote, createNote, isNoteCreating, updateNote, isNoteUpdating } = useNotesMutation();
+  const { deleteNote } = useNotesMutation();
 
   const { t } = useTranslation("notes");
-
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [noteText, setNoteText] = useState("");
-  const [editingNote, setEditingNote] = useState<NoteDTO | null>(null);
 
   // Bottom sheet state for add-to-task (managed at screen level)
   const [noteTimePickerSheetVisible, setNoteTimePickerSheetVisible] = useState(false);
@@ -51,43 +46,19 @@ export default function NotesScreen() {
   const { notesSearchResult, showLoading } = useNotesSearch({ searchQuery });
   const { onRowOpen, closeAllRows } = useSwipeableManager();
 
-  const openEditModal = (note: NoteDTO) => {
+  const openEditor = (note: NoteDTO) => {
     closeAllRows();
-    setEditingNote(note);
-    setNoteText(note.text ?? "");
-    setIsModalVisible(true);
+    router.push({
+      pathname: "/(protected)/note-editor",
+      params: {
+        noteId: note.id,
+        noteText: note.text,
+      },
+    });
   };
 
   const handleDelete = (note: NoteDTO) => {
     deleteNote(String(note.id));
-  };
-
-  const handleSave = () => {
-    const text = noteText.trim();
-    if (!text) return;
-
-    if (editingNote) {
-      if (isNoteUpdating) return;
-      updateNote(
-        { id: editingNote.id, text },
-        {
-          onSuccess: () => {
-            setIsModalVisible(false);
-            setEditingNote(null);
-            setNoteText("");
-          },
-        },
-      );
-      return;
-    }
-
-    if (isNoteCreating) return;
-    createNote(text, {
-      onSuccess: () => {
-        setIsModalVisible(false);
-        setNoteText("");
-      },
-    });
   };
 
   const handleAIEstimate = (note: NoteDTO | null) => {
@@ -148,14 +119,14 @@ export default function NotesScreen() {
             </View>
           ) : (
             <View className="px-6 flex-1">
-              <View className={`rounded-3xl overflow-hidden bg-white`}>
+              <View className={`rounded-3xl  bg-white`}>
                 <FlatList
                   data={showLoading ? [] : notesSearchResult}
                   keyExtractor={(item) => String(item.id)}
                   renderItem={({ item }) => (
                     <NoteRow
                       note={item}
-                      onPressNote={openEditModal}
+                      onPressNote={openEditor}
                       onDelete={handleDelete}
                       onRowOpen={onRowOpen}
                       onAddToTask={(note: NoteDTO) => {
@@ -180,7 +151,7 @@ export default function NotesScreen() {
           <Pressable
             onPress={() => {
               closeAllRows();
-              setIsModalVisible(true);
+              router.push("/(protected)/note-editor");
             }}
             className="mx-6 mb-4 border-2 border-dashed rounded-2xl
               h-14 items-center justify-center bg-background"
@@ -193,19 +164,6 @@ export default function NotesScreen() {
               </Text>
             </View>
           </Pressable>
-
-          <NoteInputModal
-            visible={isModalVisible}
-            noteText={noteText}
-            isSaving={editingNote ? isNoteUpdating : isNoteCreating}
-            onChangeText={setNoteText}
-            onClose={() => {
-              setIsModalVisible(false);
-              setEditingNote(null);
-              setNoteText("");
-            }}
-            onSave={handleSave}
-          />
 
           {showLoading && <LoadingScreen />}
         </View>

@@ -1,23 +1,11 @@
 import { LabelDTO } from "./label-dto";
 import { SubtaskDTO } from "../../feature/task-details/models/subtask-dto";
+import { BaseTaskDTO } from "./base-task-dto";
 
-export enum TaskTimeType {
-  Single = 0,
-  Range = 1,
-}
-
-export interface TaskDetailDTO {
+export interface TaskDetailDTO extends BaseTaskDTO {
   id: number | null;
   recurringTaskId?: number | null;
-  description?: string;
-  title: string;
   isDone: boolean;
   label?: LabelDTO;
-  startTime: string;
-  endTime: string;
-  timeType: TaskTimeType | null;
-  notificationId: string | null;
   subtasks?: SubtaskDTO[];
-  alertTime?: string;
-  isDeadline: boolean;
 }

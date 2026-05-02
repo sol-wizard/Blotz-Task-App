@@ -14,7 +14,8 @@ export const ReliabilityBadge = ({
         : "bg-red-950 text-red-400 border-red-800";
 
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${color}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${color}`}>
       {passCount}/{totalRuns}
     </span>
   );

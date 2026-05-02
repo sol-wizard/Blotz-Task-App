@@ -22,6 +22,12 @@ export default function SettingsScreen() {
       route: "/settings/account",
     },
     {
+      key: "MembershipPlan",
+      label: t("menu.MembershipPlan"),
+      icon: "brain",
+      route: "/settings/membership-plan",
+    },
+    {
       key: "task-handling",
       label: t("menu.taskHandling"),
       icon: "file-check-outline",
@@ -62,49 +68,48 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background py-4">
-      <Text className="text-center text-4xl font-balooExtraBold text-secondary pt-2">
-        {t("title")}
-      </Text>
-
-      <View className="px-8 mt-2 w-full items-center">
-        <View>
-          <Image
-            source={avatarSource}
-            style={{ width: 96, height: 96, borderRadius: 48 }}
-            contentFit="cover"
-          />
-          <Pressable
-            onPress={handleProfileEdit}
-            className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-white items-center justify-center"
-          >
-            <ASSETS.editIcon width={18} height={18} fill="#363853" />
-          </Pressable>
-        </View>
-        <Text className="text-2xl font-balooBold text-secondary mt-5">
-          {userProfile?.displayName}
+    <SafeAreaView className="flex-1 bg-background pt-4">
+      <ScrollView>
+        <Text className="text-center text-4xl font-balooExtraBold text-secondary pt-2">
+          {t("title")}
         </Text>
-        <ScrollView
-          className="mt-8 w-full bg-white rounded-2xl"
-          contentContainerStyle={{ alignItems: "center" }}
-        >
-          {menuItems.map((item, index) => (
-            <View key={item.key} className="w-11/12">
-              <Pressable
-                onPress={() => router.push(item.route)}
-                className="flex-row items-center justify-between px-4 py-4"
-              >
-                <View className="flex-row items-center">
-                  <MaterialCommunityIcons name={item.icon} size={22} color="#444964" />
-                  <Text className="text-lg font-baloo text-secondary ml-3">{item.label}</Text>
-                </View>
-                <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
-              </Pressable>
-              {index < menuItems.length - 1 && <FormDivider marginVertical={2} />}
-            </View>
-          ))}
-        </ScrollView>
-      </View>
+
+        <View className="flex-1 min-h-0 px-8 mt-2 w-full items-center">
+          <View>
+            <Image
+              source={avatarSource}
+              style={{ width: 96, height: 96, borderRadius: 48 }}
+              contentFit="cover"
+            />
+            <Pressable
+              onPress={handleProfileEdit}
+              className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-white items-center justify-center"
+            >
+              <ASSETS.editIcon width={18} height={18} fill="#363853" />
+            </Pressable>
+          </View>
+          <Text className="text-2xl font-balooBold text-secondary mt-5">
+            {userProfile?.displayName}
+          </Text>
+          <View className="bg-white w-full pl-4 rounded-2xl mt-4">
+            {menuItems.map((item, index) => (
+              <View key={item.key} className="w-11/12">
+                <Pressable
+                  onPress={() => router.push(item.route)}
+                  className="flex-row items-center justify-between pl-4 py-4"
+                >
+                  <View className="flex-row items-center">
+                    <MaterialCommunityIcons name={item.icon} size={22} color="#444964" />
+                    <Text className="text-lg font-baloo text-secondary ml-3">{item.label}</Text>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
+                </Pressable>
+                {index < menuItems.length - 1 && <FormDivider marginVertical={2} />}
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

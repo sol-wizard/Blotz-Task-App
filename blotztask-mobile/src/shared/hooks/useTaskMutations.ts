@@ -1,12 +1,11 @@
 import { QueryClient, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AddTaskItemDTO } from "../models/add-task-item-dto";
+import { TaskUpsertDTO } from "../models/task-upsert-dto";
 import {
   addTaskItem,
   deleteTask,
   toggleTaskCompletion,
   updateTaskItem,
 } from "../services/task-service";
-import { EditTaskItemDTO } from "@/feature/task-add-edit/models/edit-task-item-dto";
 import { taskKeys } from "../constants/query-key-factory";
 import { addDays, isSameDay, startOfDay } from "date-fns";
 import { convertToDateTimeOffset } from "../util/convert-to-datetimeoffset";
@@ -14,16 +13,17 @@ import { TaskDetailDTO } from "../models/task-detail-dto";
 
 type UpdateTaskArgs = {
   taskId: number;
-  dto: EditTaskItemDTO;
+  dto: TaskUpsertDTO;
 };
 
 const useTaskMutations = () => {
   const queryClient = useQueryClient();
 
   const addTaskMutation = useMutation({
-    mutationFn: (task: AddTaskItemDTO) => addTaskItem(task),
+    mutationFn: (task: TaskUpsertDTO) => addTaskItem(task),
     onSuccess: (_data, task) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["ddl"] });
       invalidateSelectedDayTask(queryClient, task.startTime, task.endTime);
     },
   });
@@ -63,6 +63,7 @@ const useTaskMutations = () => {
     onSuccess: (_data, task) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       queryClient.invalidateQueries({ queryKey: taskKeys.byId(task.taskId) });
+      queryClient.invalidateQueries({ queryKey: ["ddl"] });
       invalidateSelectedDayTask(queryClient, task.dto.startTime, task.dto.endTime);
     },
   });
@@ -72,6 +73,7 @@ const useTaskMutations = () => {
     toggleTask: toggleTaskMutation.mutate,
     deleteTask: deleteTaskMutation.mutate,
     updateTask: updateTaskMutation.mutate,
+    updateTaskAsync: updateTaskMutation.mutateAsync,
     isAdding: addTaskMutation.isPending,
     isToggling: toggleTaskMutation.isPending,
     isDeleting: deleteTaskMutation.isPending,

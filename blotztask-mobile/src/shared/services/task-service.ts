@@ -1,6 +1,5 @@
 import { TaskDetailDTO } from "@/shared/models/task-detail-dto";
-import { EditTaskItemDTO } from "../../feature/task-add-edit/models/edit-task-item-dto";
-import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { apiClient } from "./api/client";
 
 import { DailyTaskIndicatorDTO } from "@/feature/calendar/models/daily-task-indicator-dto";
@@ -44,7 +43,7 @@ export async function toggleTaskCompletion(taskId: number): Promise<void> {
   await apiClient.put(url);
 }
 
-export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<number> => {
+export const addTaskItem = async (addTaskForm: TaskUpsertDTO): Promise<number> => {
   try {
     const url = `/Task`;
     const newTaskId: number = await apiClient.post(url, addTaskForm);
@@ -54,7 +53,7 @@ export const addTaskItem = async (addTaskForm: AddTaskItemDTO): Promise<number> 
   }
 };
 
-export async function updateTaskItem(taskId: number, updatedTask: EditTaskItemDTO): Promise<void> {
+export async function updateTaskItem(taskId: number, updatedTask: TaskUpsertDTO): Promise<void> {
   const url = `/Task/${taskId}`;
   return await apiClient.put(url, updatedTask);
 }

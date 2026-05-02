@@ -17,7 +17,7 @@ namespace BlotzTask.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "10.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -28,13 +28,13 @@ namespace BlotzTask.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("CompletionTokens")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PromptTokens")
+                    b.Property<int>("InputTokens")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OutputTokens")
                         .HasColumnType("int");
 
                     b.Property<int>("TotalTokens")
@@ -74,13 +74,13 @@ namespace BlotzTask.Migrations
                         new
                         {
                             Id = 1,
-                            MonthlyTokenLimit = 50000,
+                            MonthlyTokenLimit = 300000,
                             Name = "Free"
                         },
                         new
                         {
                             Id = 2,
-                            MonthlyTokenLimit = 500000,
+                            MonthlyTokenLimit = 3000000,
                             Name = "Pro"
                         });
                 });
@@ -291,6 +291,29 @@ namespace BlotzTask.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Notes", (string)null);
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.Pomodoro.Domain.PomodoroSetting", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsCountdown")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Sound")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Timing")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(25);
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("PomodoroSettings", (string)null);
                 });
 
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.DeletedTaskItem", b =>
@@ -620,29 +643,6 @@ namespace BlotzTask.Migrations
                         });
                 });
 
-            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.PomodoroSetting", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsCountdown")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Sound")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Timing")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(25);
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("PomodoroSettings", (string)null);
-                });
-
             modelBuilder.Entity("BlotzTask.Modules.Users.Domain.UserPreference", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -771,6 +771,17 @@ namespace BlotzTask.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.Pomodoro.Domain.PomodoroSetting", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
+                        .WithOne("PomodoroSetting")
+                        .HasForeignKey("BlotzTask.Modules.Pomodoro.Domain.PomodoroSetting", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Tasks.Domain.Entities.DeletedTaskItem", b =>
                 {
                     b.HasOne("BlotzTask.Modules.Labels.Domain.Label", "Label")
@@ -881,17 +892,6 @@ namespace BlotzTask.Migrations
                     b.Navigation("Label");
 
                     b.Navigation("RecurringTask");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("BlotzTask.Modules.Users.Domain.PomodoroSetting", b =>
-                {
-                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
-                        .WithOne("PomodoroSetting")
-                        .HasForeignKey("BlotzTask.Modules.Users.Domain.PomodoroSetting", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("User");
                 });

@@ -5,13 +5,14 @@ public static class AiTaskGeneratorPrompts
     public static string GetSystemMessage(string preferredLanguage, DateTime userLocalTime)
     {
         return $"""
-                Respond in {preferredLanguage}. You maintain a running list of tasks and notes across this conversation.
+                Respond in {preferredLanguage}. The user's current local time is {userLocalTime:yyyy-MM-dd HH:mm}. 
+                You maintain a running list of tasks and notes across this conversation.
 
-                Use CreateTask if the user's item has any date or time context, even if vague. Only use CreateNote if there is no time or date reference whatsoever.
+                Only create a task or note when the user expresses a clear intention.
+                Use CreateTask if the item has any date or time context, even if vague.
+                Use CreateNote if the item has no date or time reference at all — do not skip it.
 
-                Always act on the user's full intent — add, remove, or update items as requested without discarding prior context.
-
-                When no specific time is given, pick a sensible time based on the activity context.
+                When no specific time is given for a task, pick a sensible time based on the activity context.
                 """;
     }
 }

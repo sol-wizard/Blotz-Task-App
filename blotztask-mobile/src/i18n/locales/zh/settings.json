@@ -2,12 +2,14 @@
   "title": "设置",
   "menu": {
     "account": "账户",
+    "MembershipPlan": "会员计划",
     "taskHandling": "任务处理",
     "notifications": "通知",
     "language": "语言",
     "allTasks": "所有任务页面 (测试版)",
     "about": "关于"
   },
+
   "account": {
     "title": "账户",
     "name": "名字",
@@ -20,6 +22,16 @@
     "deleteConfirmText": "我已了解此操作无法撤销。",
     "deleteLoading": "正在删除你的数据...",
     "deleteConfirm": "永久删除"
+  },
+  "MembershipPlan": {
+    "completedLabel": "本月已完成",
+    "banner": "🎉 太棒了！继续让 Blotz 帮你高效完成更多任务吧！",
+    "showProgress": "显示进度条",
+    "showProgressHint": "（点击数字可切换显示）",
+    "period": "统计周期 :",
+    "usedQuota": "已使用额度",
+    "remaining": "剩余",
+    "plan": "会员计划"
   },
   "taskHandling": {
     "title": "任务处理",

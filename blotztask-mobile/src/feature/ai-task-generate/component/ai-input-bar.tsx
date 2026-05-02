@@ -1,8 +1,9 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import LottieView from "lottie-react-native";
-import { View, Pressable, TextInput } from "react-native";
+import { View, Pressable, TextInput, Platform } from "react-native";
 import { useTranslation } from "react-i18next";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRef } from "react";
 
 type Props = {
@@ -13,49 +14,59 @@ type Props = {
 
   // Mic / recording
   isListening: boolean;
-  setIsListening: (listening: boolean) => void;
-  setIsHoldHintVisible: (visible: boolean) => void;
+  onShortPress: () => void;
   onMicPressIn: () => void;
   onMicPressOut: () => void;
+  cancelListening: () => void;
 
   // Results
   hasResults: boolean;
   onConfirm: () => void;
+
+  isAiGenerating: boolean;
 };
 
 export function AiInputBar({
   textInput,
   isListening,
-  setIsListening,
   hasResults,
   onChangeText,
   onSubmitText,
   onMicPressIn,
   onMicPressOut,
   onConfirm,
-  setIsHoldHintVisible,
+  onShortPress,
+  isAiGenerating,
+  cancelListening,
 }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
+  const { bottom } = useSafeAreaInsets();
+  const bottomPadding = Platform.OS === "android" ? bottom + 16 : 32;
   const longPressTriggered = useRef(false);
 
   return (
-    <View className="w-full flex-row items-center px-6 gap-4 pb-8">
+    <View
+      className="w-full flex-row items-center px-6 gap-4"
+      style={{ paddingBottom: bottomPadding }}
+    >
       {/* Microphone hold-to-record */}
       <Pressable
         onPressIn={() => {
+          if (isAiGenerating) return;
           longPressTriggered.current = false;
-          setIsHoldHintVisible(false);
           onMicPressIn();
         }}
         onPressOut={() => {
+          if (isAiGenerating) return;
           if (!longPressTriggered.current) {
-            setIsHoldHintVisible(true);
-            setIsListening(false);
+            onShortPress();
+            cancelListening();
           } else {
             onMicPressOut();
           }
         }}
         onLongPress={() => {
+          if (isAiGenerating) return;
           longPressTriggered.current = true;
         }}
         delayLongPress={1000}
@@ -63,6 +74,7 @@ export function AiInputBar({
         className="w-14 h-14 rounded-full items-center justify-center"
         style={{
           backgroundColor: isListening ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.25)",
+          opacity: isAiGenerating ? 0.4 : 1,
         }}
       >
         <MaterialCommunityIcons name="microphone" size={28} color="white" />
@@ -87,11 +99,13 @@ export function AiInputBar({
             placeholderTextColor="rgba(255,255,255,0.6)"
             returnKeyType="send"
             multiline={false}
+            editable={!isAiGenerating}
             className="w-full text-white font-baloo text-base px-4"
             style={{
               backgroundColor: "rgba(255,255,255,0.25)",
               borderRadius: 28,
               height: 56,
+              opacity: isAiGenerating ? 0.4 : 1,
             }}
           />
         )}
@@ -100,10 +114,10 @@ export function AiInputBar({
       {/* Confirm button — only shown when there are AI results to accept */}
       {hasResults && (
         <Pressable
-          onPress={onConfirm}
+          onPress={isAiGenerating ? undefined : onConfirm}
           accessibilityLabel="Confirm"
           className="w-14 h-14 rounded-full items-center justify-center"
-          style={{ backgroundColor: "rgba(255,255,255,0.25)" }}
+          style={{ backgroundColor: "rgba(255,255,255,0.25)", opacity: isAiGenerating ? 0.4 : 1 }}
         >
           <MaterialCommunityIcons name="check" size={28} color="white" />
         </Pressable>
