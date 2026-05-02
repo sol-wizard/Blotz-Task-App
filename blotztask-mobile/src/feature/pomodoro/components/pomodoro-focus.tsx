@@ -8,7 +8,7 @@ import { usePomodoroTimer } from "../hooks/usePomodoroTimer";
 import { getMilestoneKey } from "../utils/getMilestoneKey";
 import { router, useLocalSearchParams } from "expo-router";
 import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { formatDuration } from "../utils/format-duration";
 
 export const PomodoroFocus = () => {
@@ -16,17 +16,17 @@ export const PomodoroFocus = () => {
   const { data: settings } = usePomodoroSettingsQuery();
   const { t } = useTranslation("pomodoro");
 
-  const { session, startTimer, stopTimer, togglePause } = usePomodoroTimer();
+  const { session, stopTimer, togglePause } = usePomodoroTimer();
   const elapsedSeconds = session?.taskId === taskId ? session.elapsedSeconds : 0;
 
-  const isEndingRef = useRef(false);
-
   useEffect(() => {
-    if (isEndingRef.current) return;
-    if (taskId && (!session || session.taskId !== taskId)) {
-      startTimer(taskId);
+    if (taskId) {
+      const currentSession = usePomodoroTimer.getState().session;
+      if (!currentSession || currentSession.taskId !== taskId) {
+        usePomodoroTimer.getState().startTimer(taskId);
+      }
     }
-  }, [session, startTimer, taskId]);
+  }, [taskId]);
 
   if (!settings || !taskId) return null;
 
@@ -38,7 +38,6 @@ export const PomodoroFocus = () => {
   const milestoneKey = getMilestoneKey(elapsedSeconds);
 
   const handleEnd = () => {
-    isEndingRef.current = true;
     stopTimer();
     router.back();
   };

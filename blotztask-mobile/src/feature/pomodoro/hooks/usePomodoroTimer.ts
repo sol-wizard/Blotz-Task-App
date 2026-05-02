@@ -8,24 +8,24 @@ interface PomodoroSession {
 
 interface PomodoroTimerState {
   session: PomodoroSession | null;
-  startTimer: (taskId: string, initialElapsed?: number) => void;
+  startTimer: (taskId: string) => void;
   togglePause: () => void;
   stopTimer: () => void;
   _tick: () => void;
 }
 
-let globalInterval: ReturnType<typeof setInterval> | null = null;
+let pomodoroClock: ReturnType<typeof setInterval> | null = null;
 
 export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
   session: null,
 
-  startTimer: (taskId, initialElapsed = 0) => {
-    if (globalInterval) {
-      clearInterval(globalInterval);
-      globalInterval = null;
+  startTimer: (taskId) => {
+    if (pomodoroClock) {
+      clearInterval(pomodoroClock);
+      pomodoroClock = null;
     }
-    set({ session: { taskId, elapsedSeconds: initialElapsed, isPaused: false } });
-    globalInterval = setInterval(() => get()._tick(), 1000);
+    set({ session: { taskId, elapsedSeconds: 0, isPaused: false } });
+    pomodoroClock = setInterval(() => get()._tick(), 1000);
   },
 
   togglePause: () => {
@@ -35,9 +35,9 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
   },
 
   stopTimer: () => {
-    if (globalInterval) {
-      clearInterval(globalInterval);
-      globalInterval = null;
+    if (pomodoroClock) {
+      clearInterval(pomodoroClock);
+      pomodoroClock = null;
     }
     set({ session: null });
   },

@@ -42,15 +42,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
 
   // Pomodoro session state
   const session = usePomodoroTimer((state) => state.session);
-  const startTimer = usePomodoroTimer((state) => state.startTimer);
   const togglePause = usePomodoroTimer((state) => state.togglePause);
-  const isPaused = usePomodoroTimer((state) =>
-    state.session?.taskId === String(task.id) ? state.session?.isPaused : true,
-  );
-  const isThisTaskActive = usePomodoroTimer((state) => state.session?.taskId === String(task.id));
-  const elapsedSeconds = usePomodoroTimer((state) =>
-    state.session?.taskId === String(task.id) ? state.session?.elapsedSeconds : 0,
-  );
+  const isThisTaskActive = session?.taskId === String(task.id);
+  const isPaused = isThisTaskActive ? (session?.isPaused ?? true) : true;
+  const elapsedSeconds = isThisTaskActive ? (session?.elapsedSeconds ?? 0) : 0;
   const [showSwitchModal, setShowSwitchModal] = useState(false);
 
   // Mutations
@@ -108,8 +103,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
 
   const handleOpenFocus = () => {
     if (!task.id) return;
-    const taskIdStr = String(task.id);
-    if (session && session.taskId !== taskIdStr) {
+    if (session && session.taskId !== String(task.id)) {
       setShowSwitchModal(true);
     } else {
       router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
@@ -122,7 +116,6 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     setShowSwitchModal(false);
 
     router.push({ pathname: "/(protected)/pomodoro-focus", params: { taskId: task.id } });
-    startTimer(String(task.id), 0);
   };
 
   const handleTogglePause = () => {
