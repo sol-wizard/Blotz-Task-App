@@ -14,11 +14,7 @@ export async function getAllDdlTasks(): Promise<DeadlineTaskDTO[]> {
 
 export async function updatePin(taskId: number, isPinned: boolean): Promise<void> {
   const url = `${process.env.EXPO_PUBLIC_URL_WITH_API}/Deadline/${taskId}/pin`;
-  try {
-    await apiClient.patch(url, { taskId, isPinned });
-  } catch (err) {
-    throw err;
-  }
+  await apiClient.patch(url, { taskId, isPinned });
 }
 
 export async function deleteDeadlineTask(taskId: number): Promise<void> {
