@@ -1,6 +1,5 @@
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
-using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
@@ -59,9 +58,7 @@ public class AiTaskGenerateChatHub(
     {
         var chatContext = (AiChatContext)Context.Items["ChatContext"]!;
         var userId = (Guid)Context.Items["UserId"]!;
-        try
-        {
-            var ct = Context.ConnectionAborted;
+        var ct = Context.ConnectionAborted;
 
             // 1. Resolve any relative date/time references in the user's message (e.g. "tomorrow", "next Monday")
             var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
@@ -106,19 +103,17 @@ public class AiTaskGenerateChatHub(
     {
         var ct = Context.ConnectionAborted;
 
-        try
+        if (audioData is null || audioData.Length == 0)
+            throw new AiTaskGenerationException(AiErrorCode.EmptyAudio, "No audio was received.");
+
+        await using var stream = new MemoryStream(audioData);
+        var formFile = new FormFile(stream, 0, audioData.Length, "audio", "audio.m4a")
         {
-            if (audioData is null || audioData.Length == 0)
-                throw new AiTaskGenerationException(AiErrorCode.EmptyAudio, "No audio was received.");
+            Headers = new HeaderDictionary(),
+            ContentType = "audio/mp4"
+        };
 
-            await using var stream = new MemoryStream(audioData);
-            var formFile = new FormFile(stream, 0, audioData.Length, "audio", "audio.m4a")
-            {
-                Headers = new HeaderDictionary(),
-                ContentType = "audio/mp4"
-            };
-
-            var transcript = await speechTranscriptionService.TranscribeAsync(formFile, ct);
+        var transcript = await speechTranscriptionService.TranscribeAsync(formFile, ct);
 
             await Clients.Caller.SendAsync("ReceiveTranscript", transcript, ct);
             await SendMessage(transcript);

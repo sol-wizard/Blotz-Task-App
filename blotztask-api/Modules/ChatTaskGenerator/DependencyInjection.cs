@@ -14,6 +14,8 @@ public static class DependencyInjection
         services.AddScoped<SpeechTranscriptionService>();
         services.AddScoped<IAiQualityCheckService, AiQualityCheckService>();
 
+        services.AddScoped<AiHubFilter>();
+
         return services;
     }
 }

@@ -12,7 +12,8 @@ public enum AiErrorCode
     Canceled = 5,
     TranscriptionFailed = 6,
     EmptyAudio = 7,
-    NoTasksExtracted = 8
+    NoTasksExtracted = 8,
+    QuotaExceeded = 9
 }
 
 public class AiTaskGenerationException : HubException
