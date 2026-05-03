@@ -118,7 +118,7 @@ public class BreakdownTaskCommandHandler(
             ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase))
         {
             logger.LogWarning(ex, "Token limit exceeded during task breakdown.");
-            throw new AiTokenLimitedException();
+            throw new AzureAiException();
         }
         catch (Exception ex) when (
             ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase))

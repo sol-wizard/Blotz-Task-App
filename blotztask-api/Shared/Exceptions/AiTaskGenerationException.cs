@@ -27,10 +27,10 @@ public class AiTaskGenerationException : HubException
     public AiErrorCode Code { get; }
 }
 
-public sealed class AiTokenLimitedException
+public sealed class AzureAiException
     : AiTaskGenerationException
 {
-    public AiTokenLimitedException(string message = "You have exceeded token rate limit of your current Azure OpenAI pricing tier.")
+    public AzureAiException(string message = "You have exceeded token rate limit of your current Azure OpenAI pricing tier.")
         : base(AiErrorCode.TokenLimited, message)
     {
     }
