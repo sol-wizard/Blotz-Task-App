@@ -20,31 +20,13 @@ const useDdlMutation = () => {
     mutationFn: ({ taskId, isPinned }: { taskId: number; isPinned: boolean }) =>
       updatePin(taskId, isPinned),
     meta: { silent: true },
-    onMutate: async ({ taskId, isPinned }) => {
-      await queryClient.cancelQueries({ queryKey: ddlKeys.all });
-      const previousDdlTasks = queryClient.getQueryData<DeadlineTaskDTO[]>(ddlKeys.all);
-
-      if (previousDdlTasks) {
-        queryClient.setQueryData<DeadlineTaskDTO[]>(ddlKeys.all, (old) =>
-          old?.map((t) => (t.id === taskId ? { ...t, isPinned } : t)),
-        );
-      }
-
-      return { previousDdlTasks };
-    },
-
-    onError: (_error, _variables, context) => {
-      if (context?.previousDdlTasks) {
-        queryClient.setQueryData<DeadlineTaskDTO[]>(ddlKeys.all, context.previousDdlTasks);
-      }
-
+    onError: (_error) => {
       if (isAxiosError(_error) && _error.response?.status === 400) {
         Toast.show({ type: "error", text1: t("errors.maxPinned") });
       } else {
         Toast.show({ type: "error", text1: t("errors.pinFailed") });
       }
     },
-
     onSettled: () => {
       invalidateAll();
     },

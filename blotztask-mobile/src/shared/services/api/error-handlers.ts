@@ -41,6 +41,7 @@ export function handleOtherErrors(error: AxiosError) {
     // You could show a toast: "Check your internet connection"
   } else {
     switch (status) {
+      case 400:
       case 403:
         console.warn("Access forbidden");
         // maybe router.replace or show "you don't have permissions" UI
@@ -52,10 +53,6 @@ export function handleOtherErrors(error: AxiosError) {
       case 502:
       case 503:
         console.error("Server error occurred");
-        break;
-      case 400:
-        // Business logic or validation error, usually handled by the caller
-        console.warn("Bad Request (400):", error.response.data);
         break;
       default:
         // fallback generic
