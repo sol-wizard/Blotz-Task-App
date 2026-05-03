@@ -132,7 +132,7 @@ public class BreakdownTaskCommandHandler(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error during task breakdown. TaskId: {TaskId}", command.TaskId);
+            logger.LogWarning(ex, "Unexpected error during task breakdown. TaskId: {TaskId}", command.TaskId);
             throw new AiTaskGenerationException(AiErrorCode.Unknown,
                 "An unhandled exception occurred during task breakdown.", ex);
         }
