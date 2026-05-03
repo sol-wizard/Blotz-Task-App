@@ -42,6 +42,7 @@ export function handleOtherErrors(error: AxiosError) {
   } else {
     switch (status) {
       case 400:
+        break;
       case 403:
         console.warn("Access forbidden");
         // maybe router.replace or show "you don't have permissions" UI
