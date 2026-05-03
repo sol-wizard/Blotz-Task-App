@@ -1,8 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using Auth0.ManagementApi.Models;
 using Azure.AI.Projects;
-using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.BreakDown.DTOs;
 using BlotzTask.Modules.BreakDown.Prompts;
@@ -10,7 +8,6 @@ using BlotzTask.Modules.Tasks.Queries.Tasks;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
 using BlotzTask.Shared.Exceptions;
-using Microsoft.Agents.AI.Foundry;
 using Microsoft.Extensions.AI;
 
 namespace BlotzTask.Modules.BreakDown.Commands;
@@ -43,7 +40,7 @@ public class BreakdownTaskCommandHandler(
         var query = new GetTasksByIdQuery { TaskId = command.TaskId, UserId = command.UserId };
         var task = await getTaskByIdQueryHandler.Handle(query, ct);
 
-        if (task == null) throw new ArgumentException($"Task with ID {command.TaskId} not found.");
+        if (task == null) throw new NotFoundException($"Task with ID {command.TaskId} not found.");
 
         // TODO: Better handle this query — it undermines the CQRS separation.
         var userPreferencesQuery = new GetUserPreferencesQuery { UserId = command.UserId };

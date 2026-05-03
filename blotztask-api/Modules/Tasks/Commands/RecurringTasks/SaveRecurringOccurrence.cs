@@ -1,5 +1,6 @@
 using BlotzTask.Infrastructure.Data;
 using BlotzTask.Modules.Tasks.Domain.Services;
+using BlotzTask.Shared.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Modules.Tasks.Commands.RecurringTasks;
@@ -21,7 +22,7 @@ public class SaveRecurringOccurrenceCommandHandler(
             .FirstOrDefaultAsync(r => r.Id == command.RecurringTaskId, ct);
 
         if (template == null)
-            throw new KeyNotFoundException($"RecurringTask {command.RecurringTaskId} not found.");
+            throw new NotFoundException($"RecurringTask {command.RecurringTaskId} not found.");
 
 
         // Check if a row already exists for this (RecurringTaskId, date) — avoid duplicates.
