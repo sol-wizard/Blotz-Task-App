@@ -1,8 +1,4 @@
 {
   "title": "截止日期",
-  "days": "天",
-  "errors": {
-    "maxPinned": "最多只能置顶3个DDL任务",
-    "pinFailed": "更新置顶状态失败"
-  }
+  "days": "天"
 }
