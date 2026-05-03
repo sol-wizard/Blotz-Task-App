@@ -5,9 +5,7 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddChatTaskGeneratorModule(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static IServiceCollection AddChatTaskGeneratorModule(this IServiceCollection services)
     {
         services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
         services.AddScoped<DateTimeResolveService>();
