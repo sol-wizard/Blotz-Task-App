@@ -37,16 +37,8 @@ public class Auth0ManagementService : IAuth0ManagementService
             token,
             new Uri(_settings.Audience));
 
-        try
-        {
-            await managementClient.Users.DeleteAsync(auth0UserId, ct);
-            _logger.LogInformation("Deleted Auth0 user {Auth0UserId}", auth0UserId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to delete Auth0 user {Auth0UserId}", auth0UserId);
-            throw;
-        }
+        await managementClient.Users.DeleteAsync(auth0UserId, ct);
+        _logger.LogInformation("Deleted Auth0 user {Auth0UserId}", auth0UserId);
     }
 
 

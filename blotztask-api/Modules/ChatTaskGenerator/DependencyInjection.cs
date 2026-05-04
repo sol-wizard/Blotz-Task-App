@@ -5,14 +5,14 @@ namespace BlotzTask.Modules.ChatTaskGenerator;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddChatTaskGeneratorModule(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static IServiceCollection AddChatTaskGeneratorModule(this IServiceCollection services)
     {
         services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
         services.AddScoped<DateTimeResolveService>();
         services.AddScoped<SpeechTranscriptionService>();
         services.AddScoped<IAiQualityCheckService, AiQualityCheckService>();
+
+        services.AddScoped<AiHubFilter>();
 
         return services;
     }

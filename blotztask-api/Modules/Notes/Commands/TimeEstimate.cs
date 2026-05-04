@@ -1,12 +1,10 @@
 using System.ComponentModel;
 using Azure.AI.Projects;
-using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.Notes.DTOs;
 using BlotzTask.Modules.Notes.Prompts;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
-using BlotzTask.Shared.Exceptions;
 using Microsoft.Extensions.AI;
 
 namespace BlotzTask.Modules.Notes.Commands;
@@ -62,71 +60,39 @@ public class TimeEstimateCommandHandler(
             };
         }
 
-        try
-        {
-            await checkAiQuotaService.CheckQuotaAsync(request.UserId, ct);
-            var instructions = TaskTimeEstimatePrompts.GetTimeEstimatePrompt(preferredLanguage, request.Text);
+        await checkAiQuotaService.CheckQuotaAsync(request.UserId, ct);
+        var instructions = TaskTimeEstimatePrompts.GetTimeEstimatePrompt(preferredLanguage, request.Text);
 
-            var agent = projectClient.AsAIAgent(
-                model: _deploymentId,
-                instructions: instructions,
-                tools: [AIFunctionFactory.Create(SetTimeEstimate)]);
+        var agent = projectClient.AsAIAgent(
+            model: _deploymentId,
+            instructions: instructions,
+            tools: [AIFunctionFactory.Create(SetTimeEstimate)]);
 
-            logger.LogInformation("TimeEstimate: Invoking AI with deployment={DeploymentId}", _deploymentId);
+        logger.LogInformation("TimeEstimate: Invoking AI with deployment={DeploymentId}", _deploymentId);
 
-            var response = await agent.RunAsync("Estimate the time for this note.", cancellationToken: ct);
-            int inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
-            int outputTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
-            int totalTokens = (int)(response.Usage?.TotalTokenCount ?? 0);
-            await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
-            {
-                UserId = request.UserId,
-                InputTokens = inputTokens,
-                OutputTokens = outputTokens,
-                TotalTokens = totalTokens
-            }, ct);
+        var response = await agent.RunAsync("Estimate the time for this note.", cancellationToken: ct);
+        int inputTokens = (int)(response.Usage?.InputTokenCount ?? 0);
+        int outputTokens = (int)(response.Usage?.OutputTokenCount ?? 0);
+        int totalTokens = (int)(response.Usage?.TotalTokenCount ?? 0);
+        await recordAiUsageService.RecordAiUsageAsync(new RecordAiUsageRequest
+        {
+            UserId = request.UserId,
+            InputTokens = inputTokens,
+            OutputTokens = outputTokens,
+            TotalTokens = totalTokens
+        }, ct);
 
-            if (captured == null)
-            {
-                logger.LogWarning("AI did not call SetTimeEstimate for note {NoteId}", request.NoteId);
-                throw new AiTaskGenerationException(AiErrorCode.Unknown, "AI did not return a time estimate.");
-            }
+        if (captured == null)
+        {
+            logger.LogWarning("AI did not call SetTimeEstimate for note {NoteId}", request.NoteId);
+            throw new InvalidOperationException("AI did not return a time estimate.");
+        }
 
-            logger.LogInformation(
-                "TimeEstimate result: {Duration}, success={IsSuccess} | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens}",
-                captured.Duration, captured.IsSuccess, inputTokens, outputTokens, totalTokens);
+        logger.LogInformation(
+            "TimeEstimate result: {Duration}, success={IsSuccess} | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens}",
+            captured.Duration, captured.IsSuccess, inputTokens, outputTokens, totalTokens);
 
-            return captured;
-        }
-        catch (OperationCanceledException oce)
-        {
-            logger.LogWarning(oce, "Task time estimation was canceled");
-            throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
-        }
-        catch (Exception ex) when (
-            ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase))
-        {
-            logger.LogWarning(ex, "Token limit exceeded during time estimation.");
-            throw new AiTokenLimitedException();
-        }
-        catch (Exception ex) when (
-            ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase))
-        {
-            logger.LogWarning(ex, "Request blocked by content filter during time estimation.");
-            throw new AiContentFilterException();
-        }
-        catch (AiTaskGenerationException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Unexpected error during time estimation. NoteId: {NoteId}", request.NoteId);
-            throw new AiTaskGenerationException(AiErrorCode.Unknown,
-                "An unhandled exception occurred during task time estimate.", ex);
-        }
+        return captured;
     }
 }
 
