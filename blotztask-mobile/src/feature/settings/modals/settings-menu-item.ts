@@ -5,6 +5,7 @@ import { ComponentProps } from "react";
 type IconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
 export type SettingsMenuKey =
   | "account"
+  | "beta-features"
   | "task-handling"
   | "notifications"
   | "language"

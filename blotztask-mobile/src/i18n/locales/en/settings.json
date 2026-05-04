@@ -3,11 +3,17 @@
   "menu": {
     "account": "Account",
     "MembershipPlan": "Membership Plan",
+    "betaFeatures": "Beta Features",
     "taskHandling": "Task Handling",
     "notifications": "Notifications",
     "language": "Language",
     "allTasks": "All tasks page (beta)",
     "about": "About"
+  },
+  "betaFeatures": {
+    "title": "Beta Features",
+    "allTasks": "All Tasks",
+    "membershipPlan": "Membership Plan"
   },
   "account": {
     "title": "Account",
