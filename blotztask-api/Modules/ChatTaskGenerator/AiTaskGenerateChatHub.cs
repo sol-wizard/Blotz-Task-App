@@ -1,4 +1,3 @@
-using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.Users.Queries;
@@ -60,43 +59,25 @@ public class AiTaskGenerateChatHub(
         var userId = (Guid)Context.Items["UserId"]!;
         var ct = Context.ConnectionAborted;
 
-            // 1. Resolve any relative date/time references in the user's message (e.g. "tomorrow", "next Monday")
-            var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
-            {
-                Message = message,
-                TimeZone = chatContext.TimeZone
-            });
-
-            // 2. Wire streaming callbacks so each tool call pushes items to the client in real time
-            WireStreamingCallbacks(chatContext, ct);
-
-            // 3. Run the AI — it will call tools (CreateTask, CreateNote, etc.) which trigger the callbacks above
-            var resultMessage = await aiTaskGenerateService.GenerateAiResponse(userId, resolvedMessage, chatContext, ct);
-
-            // 4. Clear callbacks so stale tool calls from a previous turn cannot push to the client
-            ClearStreamingCallbacks(chatContext);
-
-            // 5. Stamp the original user message and send the authoritative final result for reconciliation
-            resultMessage.UserInput = message;
-            await Clients.Caller.SendAsync("ReceiveGenerationResult", resultMessage, ct);
-        }
-        catch (AiQuotaExceededException ex)
+        // 1. Resolve any relative date/time references in the user's message (e.g. "tomorrow", "next Monday")
+        var resolvedMessage = dateTimeResolveService.Resolve(new ResolveDateTimesRequest
         {
-            await Clients.Caller.SendAsync("ReceiveGenerationResult", new AiGenerateMessage
-            {
-                IsSuccess = false,
-                ErrorMessage = ex.Message
-            });
-        }
-        catch (AiTaskGenerationException ex)
-        {
-            await Clients.Caller.SendAsync("ReceiveGenerationResult", new AiGenerateMessage
-            {
-                IsSuccess = false,
-                ErrorCode = ex.Code.ToString(),
-                ErrorMessage = ex.Message
-            });
-        }
+            Message = message,
+            TimeZone = chatContext.TimeZone
+        });
+
+        // 2. Wire streaming callbacks so each tool call pushes items to the client in real time
+        WireStreamingCallbacks(chatContext, ct);
+
+        // 3. Run the AI — it will call tools (CreateTask, CreateNote, etc.) which trigger the callbacks above
+        var resultMessage = await aiTaskGenerateService.GenerateAiResponse(userId, resolvedMessage, chatContext, ct);
+
+        // 4. Clear callbacks so stale tool calls from a previous turn cannot push to the client
+        ClearStreamingCallbacks(chatContext);
+
+        // 5. Stamp the original user message and send the authoritative final result for reconciliation
+        resultMessage.UserInput = message;
+        await Clients.Caller.SendAsync("ReceiveGenerationResult", resultMessage, ct);
     }
 
     public async Task TranscribeAudio(byte[] audioData)
@@ -114,30 +95,8 @@ public class AiTaskGenerateChatHub(
         };
 
         var transcript = await speechTranscriptionService.TranscribeAsync(formFile, ct);
-
-            await Clients.Caller.SendAsync("ReceiveTranscript", transcript, ct);
-            await SendMessage(transcript);
-        }
-        catch (AiTaskGenerationException ex)
-        {
-            logger.LogError(ex, "TranscribeAudio failed. ErrorCode: {ErrorCode}", ex.Code);
-            await Clients.Caller.SendAsync("ReceiveGenerationResult", new AiGenerateMessage
-            {
-                IsSuccess = false,
-                ErrorCode = ex.Code.ToString(),
-                ErrorMessage = ex.Message
-            });
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "TranscribeAudio failed with an unexpected error.");
-            await Clients.Caller.SendAsync("ReceiveGenerationResult", new AiGenerateMessage
-            {
-                IsSuccess = false,
-                ErrorCode = AiErrorCode.Unknown.ToString(),
-                ErrorMessage = ex.Message
-            });
-        }
+        await Clients.Caller.SendAsync("ReceiveTranscript", transcript, ct);
+        await SendMessage(transcript);
     }
 
     #endregion
