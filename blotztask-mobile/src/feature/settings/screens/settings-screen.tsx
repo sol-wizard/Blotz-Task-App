@@ -22,10 +22,10 @@ export default function SettingsScreen() {
       route: "/settings/account",
     },
     {
-      key: "MembershipPlan",
-      label: t("menu.MembershipPlan"),
-      icon: "brain",
-      route: "/settings/membership-plan",
+      key: "beta-features",
+      label: t("menu.betaFeatures"),
+      icon: "flask-outline",
+      route: "/settings/beta-features",
     },
     {
       key: "task-handling",
@@ -44,12 +44,6 @@ export default function SettingsScreen() {
       label: t("menu.language"),
       icon: "translate",
       route: "/settings/language",
-    },
-    {
-      key: "under-development",
-      label: t("menu.allTasks"),
-      icon: "cog-outline",
-      route: "/settings/all-tasks",
     },
     {
       key: "about",
