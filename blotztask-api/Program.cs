@@ -28,7 +28,7 @@ builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
 // Feature modules
 builder.Services.AddAiUsageModule();
 builder.Services.AddBadgeModule();
-builder.Services.AddChatTaskGeneratorModule(builder.Configuration);
+builder.Services.AddChatTaskGeneratorModule();
 builder.Services.AddLabelModule();
 builder.Services.AddNotesModule();
 builder.Services.AddPomodoroModule();

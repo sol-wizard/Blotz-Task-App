@@ -132,7 +132,7 @@ public class AiTaskGenerateService(
             ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase))
         {
             logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
-            throw new AiTokenLimitedException();
+            throw new AzureAiException();
         }
         catch (Exception ex) when (
             ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase))

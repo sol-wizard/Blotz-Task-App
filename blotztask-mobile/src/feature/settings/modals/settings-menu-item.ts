@@ -5,12 +5,11 @@ import { ComponentProps } from "react";
 type IconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
 export type SettingsMenuKey =
   | "account"
+  | "beta-features"
   | "task-handling"
   | "notifications"
   | "language"
-  | "under-development"
-  | "about"
-  | "MembershipPlan";
+  | "about";
 export type SettingsMenuItem = {
   key: SettingsMenuKey;
   label: string;

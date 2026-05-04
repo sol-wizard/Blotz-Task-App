@@ -3,11 +3,17 @@
   "menu": {
     "account": "账户",
     "MembershipPlan": "会员计划",
+    "betaFeatures": "测试功能",
     "taskHandling": "任务处理",
     "notifications": "通知",
     "language": "语言",
     "allTasks": "所有任务页面 (测试版)",
     "about": "关于"
+  },
+  "betaFeatures": {
+    "title": "测试功能",
+    "allTasks": "所有任务",
+    "membershipPlan": "会员计划"
   },
 
   "account": {

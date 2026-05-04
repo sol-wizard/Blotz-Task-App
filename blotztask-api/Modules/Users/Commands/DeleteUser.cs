@@ -28,31 +28,13 @@ public class DeleteUserCommandHandler(
 
         var auth0UserId = appUser.Auth0UserId;
 
-        try
-        {
-            await auth0ManagementService.DeleteUserAsync(auth0UserId, ct);
-            logger.LogInformation("Deleted Auth0 user {Auth0UserId} before DB cleanup for {UserId}", auth0UserId, command.UserId);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex,
-                "Failed to delete Auth0 user {Auth0UserId} for {UserId}. Aborting DB deletion.",
-                auth0UserId, command.UserId);
-            throw;
-        }
+        await auth0ManagementService.DeleteUserAsync(auth0UserId, ct);
+        logger.LogInformation("Deleted Auth0 user {Auth0UserId} before DB cleanup for {UserId}", auth0UserId, command.UserId);
 
-        try
-        {
-            db.AppUsers.Remove(appUser);
-            await db.SaveChangesAsync(ct);
+        db.AppUsers.Remove(appUser);
+        await db.SaveChangesAsync(ct);
 
-            logger.LogInformation("Deleted user data from database for {UserId}", command.UserId);
-            return "User deleted successfully.";
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to delete user data for {UserId} from database", command.UserId);
-            throw;
-        }
+        logger.LogInformation("Deleted user data from database for {UserId}", command.UserId);
+        return "User deleted successfully.";
     }
 }

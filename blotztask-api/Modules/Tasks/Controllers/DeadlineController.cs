@@ -35,6 +35,7 @@ public class DeadlineController(
             throw new UnauthorizedAccessException("Could not find valid user id from Http Context");
 
         command.TaskId = taskId;
+        command.UserId = userId;
         
         await updateDeadlinePinCommandHandler.Handle(command, ct);
 
