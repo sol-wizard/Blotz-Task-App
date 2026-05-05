@@ -21,12 +21,6 @@ public class AiChatContext
     /// <summary>Tool implementations the AI can call (CreateTask, RemoveTask, etc.) and their streaming callbacks.</summary>
     public required TaskGenerationTools Tools { get; init; }
 
-    /// <summary>Accumulates tasks created or updated by the AI during this session.</summary>
-    public required List<ExtractedTask> Tasks { get; init; }
-
-    /// <summary>Accumulates notes created by the AI during this session.</summary>
-    public required List<ExtractedNote> Notes { get; init; }
-
     /// <summary>The user's local time zone, used to resolve relative date/time references in their input.</summary>
     public required TimeZoneInfo TimeZone { get; init; }
 }

@@ -28,10 +28,7 @@ public class AiChatService(
 
     public async Task<AiChatContext> InitializeAsync(string preferredLanguage, TimeZoneInfo timeZone, CancellationToken ct)
     {
-        // TODO: Consider a clearer way to manage extracted task/note lists.
-        var tasks = new List<ExtractedTask>();
-        var notes = new List<ExtractedNote>();
-        var tools = new TaskGenerationTools(tasks, notes);
+        var tools = new TaskGenerationTools();
 
         var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
         var agentSw = Stopwatch.StartNew();
@@ -51,8 +48,7 @@ public class AiChatService(
             ]);
         var agentCreatedMs = agentSw.ElapsedMilliseconds;
 
-        //TODO: De we need cancellation token here ?
-        var session = await agent.CreateSessionAsync();
+        var session = await agent.CreateSessionAsync(ct);
         agentSw.Stop();
 
         logger.LogInformation(
@@ -64,8 +60,6 @@ public class AiChatService(
             Agent = agent,
             Session = session,
             Tools = tools,
-            Tasks = tasks,
-            Notes = notes,
             TimeZone = timeZone
         };
     }
@@ -102,7 +96,7 @@ public class AiChatService(
             logger.LogInformation(
                 "TaskGeneration: RunAsync completed in {RunMs}ms | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens} | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount}",
                 runSw.ElapsedMilliseconds, inputTokens, outputTokens, totalTokens,
-                context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
+                context.Tools.ToolCallCount, context.Tools.Tasks.Count, context.Tools.Notes.Count);
 
             var isSuccess = context.Tools.ToolCallCount > 0;
 
@@ -110,8 +104,8 @@ public class AiChatService(
             {
                 IsSuccess = isSuccess,
                 ErrorCode = isSuccess ? "" : AiErrorCode.NoTasksExtracted.ToString(),
-                ExtractedTasks = context.Tasks,
-                ExtractedNotes = context.Notes,
+                ExtractedTasks = context.Tools.Tasks,
+                ExtractedNotes = context.Tools.Notes,
                 ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input.",
                 InputTokens = inputTokens,
                 OutputTokens = outputTokens,
