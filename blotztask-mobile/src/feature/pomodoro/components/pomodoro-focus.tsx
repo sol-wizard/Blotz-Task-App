@@ -8,8 +8,9 @@ import { usePomodoroTimer } from "../hooks/usePomodoroTimer";
 import { getMilestoneKey } from "../utils/getMilestoneKey";
 import { router, useLocalSearchParams } from "expo-router";
 import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatDuration } from "../utils/format-duration";
+import { useSoundscapeStore } from "../hooks/useSoundscapeStore";
 
 export const PomodoroFocus = () => {
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
@@ -19,16 +20,18 @@ export const PomodoroFocus = () => {
   const { session, stopTimer, togglePause } = usePomodoroTimer();
   const elapsedSeconds = session?.taskId === taskId ? session.elapsedSeconds : 0;
 
+  const { toggleSoundscape, stopSoundscape } = useSoundscapeStore();
+
+  if (!settings || !taskId) return null;
+
   useEffect(() => {
     if (taskId) {
       const currentSession = usePomodoroTimer.getState().session;
       if (!currentSession || currentSession.taskId !== taskId) {
-        usePomodoroTimer.getState().startTimer(taskId);
+        usePomodoroTimer.getState().startTimer(taskId, settings.sound);
       }
     }
   }, [taskId]);
-
-  if (!settings || !taskId) return null;
 
   const isPaused = session?.taskId === taskId ? session.isPaused : true;
   const displaySeconds = settings.isCountdown
@@ -39,6 +42,7 @@ export const PomodoroFocus = () => {
 
   const handleEnd = () => {
     stopTimer();
+    stopSoundscape();
     router.back();
   };
 
@@ -50,6 +54,7 @@ export const PomodoroFocus = () => {
             className="w-20 h-20 border-0 bg-[#00000014]"
             onPress={() => router.back()}
           />
+          <Ionicons name="musical-notes" size={24} color="#444964" onPress={toggleSoundscape} />
         </View>
 
         <View className="flex-1 items-center">
