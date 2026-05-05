@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Azure.AI.Projects;
-using BlotzTask.Modules.AiUsage.Exceptions;
+using BlotzTask.Extension;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
@@ -19,15 +19,12 @@ public interface IAiChatService
 public class AiChatService(
     ILogger<AiChatService> logger,
     AIProjectClient projectClient,
-    IConfiguration configuration,
+    AgentFrameworkServiceExtensions.AzureAIOptions options,
     ICheckAiQuotaService checkAiQuotaService,
     IRecordAiUsageService recordAiUsageService)
     : IAiChatService
 {
-    // TODO: Move deployment id resolution to DI/configuration.
-    private readonly string _deploymentId =
-        configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
-        ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
+    private readonly string _deploymentId = options.TaskGenerationDeploymentId;
 
     public async Task<AiChatContext> InitializeAsync(string preferredLanguage, TimeZoneInfo timeZone, CancellationToken ct)
     {

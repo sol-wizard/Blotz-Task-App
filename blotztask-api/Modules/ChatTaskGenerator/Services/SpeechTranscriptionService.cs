@@ -1,6 +1,4 @@
 using Azure;
-using Azure.AI.OpenAI;
-using Azure.AI.Projects;
 using BlotzTask.Shared.Exceptions;
 using OpenAI.Audio;
 
