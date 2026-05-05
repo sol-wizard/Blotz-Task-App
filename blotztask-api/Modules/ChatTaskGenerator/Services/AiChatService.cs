@@ -16,8 +16,8 @@ public interface IAiTaskGenerateService
     Task<AiGenerateMessage> GenerateAiResponse(Guid userId, string userMessage, AiChatContext context, CancellationToken ct);
 }
 
-public class AiTaskGenerateService(
-    ILogger<AiTaskGenerateService> logger,
+public class AiChatService(
+    ILogger<AiChatService> logger,
     AIProjectClient projectClient,
     IConfiguration configuration,
     ICheckAiQuotaService checkAiQuotaService,
