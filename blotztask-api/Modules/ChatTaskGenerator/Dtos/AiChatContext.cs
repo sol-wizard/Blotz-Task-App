@@ -1,5 +1,4 @@
 using Microsoft.Agents.AI;
-using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 using BlotzTask.Modules.ChatTaskGenerator.Functions;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
