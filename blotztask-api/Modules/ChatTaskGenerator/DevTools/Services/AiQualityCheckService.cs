@@ -144,7 +144,7 @@ public class AiQualityCheckService(
         try
         {
             await using var scope = serviceScopeFactory.CreateAsyncScope();
-            var aiTaskGenerateService = scope.ServiceProvider.GetRequiredService<IAiTaskGenerateService>();
+            var aiTaskGenerateService = scope.ServiceProvider.GetRequiredService<IAiChatService>();
 
             var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
             var initSw = Stopwatch.StartNew();
