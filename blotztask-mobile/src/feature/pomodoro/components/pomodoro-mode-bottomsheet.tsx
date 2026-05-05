@@ -13,7 +13,7 @@ import {
   SNAP_INTERVAL,
 } from "../utils/pomodoro-setting";
 import { usePomodoroSettingMutation } from "../hooks/usePomodoroSetting";
-import { usePomodoroSoundscapePlayer } from "../hooks/usePomodoroSoundscapePlayer";
+import { useSoundscapeStore } from "../hooks/useSoundscapeStore";
 
 interface ModeBottomSheetProps {
   isOpen: boolean;
@@ -41,7 +41,7 @@ export const ModeBottomSheet = ({
   const { updatePomodoroSetting } = usePomodoroSettingMutation();
   const [draftDuration, setDraftDuration] = useState<number>(selectedDuration);
   const [draftSoundscape, setDraftSoundscape] = useState<PomodoroSoundscapeKey>(selectedSoundscape);
-  const { isPlaying, togglePlayback, stopPlayback } = usePomodoroSoundscapePlayer(draftSoundscape);
+  const { isPlaying, stopSoundscape, playSoundscape } = useSoundscapeStore();
 
   const { t } = useTranslation("pomodoro");
 
@@ -56,6 +56,12 @@ export const ModeBottomSheet = ({
       animated: false,
     });
   }, [isOpen, selectedDuration, selectedSoundscape]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!isPlaying) return;
+    void playSoundscape(draftSoundscape);
+  }, [isOpen, draftSoundscape]);
 
   // Animated values and functions for soundscape list
   const scrollX = useSharedValue(0);
@@ -90,8 +96,16 @@ export const ModeBottomSheet = ({
       sound: draftSoundscape,
       isCountdown: isCountDown,
     });
-    stopPlayback();
+    stopSoundscape();
     onClose();
+  };
+
+  const handleTogglePreview = () => {
+    if (isPlaying) {
+      stopSoundscape();
+      return;
+    }
+    void playSoundscape(draftSoundscape);
   };
 
   return (
@@ -161,7 +175,7 @@ export const ModeBottomSheet = ({
                     isSelected={draftSoundscape === item.key}
                     isPlaying={isPlaying}
                     onPress={handleItemPress}
-                    onTogglePlayback={togglePlayback}
+                    onTogglePlayback={handleTogglePreview}
                   />
                 )}
                 horizontal

@@ -4,10 +4,11 @@ import { useTranslation } from "react-i18next";
 import Animated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 import { MaterialIcons } from "@expo/vector-icons";
+import type { ImageSourcePropType } from "react-native";
 
 type SoundscapeItem = {
   key: PomodoroSoundscapeKey;
-  imageUrl: string;
+  imageUrl: ImageSourcePropType;
 };
 
 interface SoundscapeCardProps {
@@ -53,7 +54,7 @@ export const SoundscapeCard = ({
         className="shadow-md shadow-black/15"
       >
         <ImageBackground
-          source={{ uri: item.imageUrl }}
+          source={item.imageUrl}
           className="w-full h-[100px] border-[3px] border-white justify-end p-2 bg-white"
           imageStyle={{ borderRadius: 20, resizeMode: "cover" }}
           style={{ borderRadius: 20, overflow: "hidden" }}
