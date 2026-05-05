@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { PomodoroSoundscapeKey } from "../utils/pomodoro-setting";
 import { useSoundscapeStore } from "./useSoundscapeStore";
-import { use } from "react";
 
 interface PomodoroSession {
   taskId: string;

@@ -8,7 +8,7 @@ import { usePomodoroTimer } from "../hooks/usePomodoroTimer";
 import { getMilestoneKey } from "../utils/getMilestoneKey";
 import { router, useLocalSearchParams } from "expo-router";
 import { usePomodoroSettingsQuery } from "../hooks/usePomodoroSetting";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { formatDuration } from "../utils/format-duration";
 import { useSoundscapeStore } from "../hooks/useSoundscapeStore";
 
@@ -22,9 +22,9 @@ export const PomodoroFocus = () => {
 
   const { toggleSoundscape, stopSoundscape } = useSoundscapeStore();
 
-  if (!settings || !taskId) return null;
-
   useEffect(() => {
+    if (!taskId || !settings) return;
+
     if (taskId) {
       const currentSession = usePomodoroTimer.getState().session;
       if (!currentSession || currentSession.taskId !== taskId) {
@@ -33,7 +33,9 @@ export const PomodoroFocus = () => {
           .startTimer(taskId, settings.sound, settings.isCountdown, settings.timing);
       }
     }
-  }, [taskId]);
+  }, [taskId, settings]);
+
+  if (!settings || !taskId) return null;
 
   const isPaused = session?.taskId === taskId ? session.isPaused : true;
   const displaySeconds = settings.isCountdown
