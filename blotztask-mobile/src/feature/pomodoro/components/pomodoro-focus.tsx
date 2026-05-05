@@ -28,7 +28,9 @@ export const PomodoroFocus = () => {
     if (taskId) {
       const currentSession = usePomodoroTimer.getState().session;
       if (!currentSession || currentSession.taskId !== taskId) {
-        usePomodoroTimer.getState().startTimer(taskId, settings.sound);
+        usePomodoroTimer
+          .getState()
+          .startTimer(taskId, settings.sound, settings.isCountdown, settings.timing);
       }
     }
   }, [taskId]);
