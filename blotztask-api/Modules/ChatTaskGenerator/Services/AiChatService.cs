@@ -10,7 +10,7 @@ using Microsoft.Extensions.AI;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
-public interface IAiTaskGenerateService
+public interface IAiChatService
 {
     Task<AiChatContext> InitializeAsync(string preferredLanguage, TimeZoneInfo timeZone, CancellationToken ct);
     Task<AiGenerateMessage> GenerateAiResponse(Guid userId, string userMessage, AiChatContext context, CancellationToken ct);
@@ -22,7 +22,7 @@ public class AiChatService(
     IConfiguration configuration,
     ICheckAiQuotaService checkAiQuotaService,
     IRecordAiUsageService recordAiUsageService)
-    : IAiTaskGenerateService
+    : IAiChatService
 {
     // TODO: Move deployment id resolution to DI/configuration.
     private readonly string _deploymentId =
