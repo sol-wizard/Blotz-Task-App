@@ -31,6 +31,7 @@ public class GetTaskByIdQueryHandler(BlotzTaskDbContext db, ILogger<GetTaskByIdQ
                 NotificationId = task.NotificationId,
                 AlertTime = task.AlertTime,
                 IsDeadline = db.TaskDeadlines.Any(td => td.TaskItemId == task.Id),
+                DueAt = task.Deadline == null ? null : task.Deadline.DueAt,
                 Label = task.Label == null
                     ? null
                     : new LabelDto
@@ -68,4 +69,5 @@ public class TaskByIdItemDto
     public string? NotificationId { get; set; }
     public DateTimeOffset? AlertTime { get; set; }
     public bool IsDeadline { get; set; }
+    public DateTimeOffset? DueAt { get; set; }
 }
