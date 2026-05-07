@@ -36,12 +36,13 @@ public static class AgentFrameworkServiceExtensions
         // AIProjectClient is shared — one client, multiple deployment targets.
         // AIAgent is NOT created here because instructions are user-specific
         // (language + local time) and must be set per-session in the service layer.
-        var azureClient = new AzureOpenAIClient(new Uri(options.Endpoint), new AzureKeyCredential(options.ApiKey));
-        var projectClient = new AIProjectClient(new Uri(options.Endpoint), new DefaultAzureCredential());
-
         services.AddSingleton(options);
-        services.AddSingleton(projectClient);
-        services.AddSingleton(azureClient.GetAudioClient(options.SpeechDeploymentId));
+        services.AddSingleton<AzureOpenAIClient>(_ =>
+            new AzureOpenAIClient(new Uri(options.Endpoint), new AzureKeyCredential(options.ApiKey)));
+        services.AddSingleton<AIProjectClient>(_ =>
+            new AIProjectClient(new Uri(options.Endpoint), new DefaultAzureCredential()));
+        services.AddSingleton(sp =>
+            sp.GetRequiredService<AzureOpenAIClient>().GetAudioClient(options.SpeechDeploymentId));
 
         return services;
     }
