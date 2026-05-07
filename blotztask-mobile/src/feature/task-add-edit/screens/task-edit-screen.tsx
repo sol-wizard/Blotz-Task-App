@@ -30,6 +30,7 @@ export default function TaskEditScreen() {
     notificationId: selectedTask.notificationId,
     alertTime: selectedTask.alertTime,
     isDeadline: selectedTask.isDeadline,
+    dueAt: selectedTask.dueAt,
   };
 
   const handleTaskSubmit = async (formValues: TaskUpsertDTO) => {

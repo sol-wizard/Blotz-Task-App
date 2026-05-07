@@ -12,4 +12,5 @@ export interface BaseTaskDTO {
   notificationId: string | null;
   alertTime?: string;
   isDeadline: boolean;
+  dueAt?: string;
 }
