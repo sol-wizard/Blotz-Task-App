@@ -3,8 +3,7 @@ import { create } from "zustand";
 import { PomodoroSoundscapeKey, SOUNDSCAPE_MUSIC_MAP } from "../utils/pomodoro-setting";
 
 let globalPlayer: AudioPlayer | null = null;
-let currentKey: PomodoroSoundscapeKey | null = null;
-let initialized = false;
+let soundscapeKey: PomodoroSoundscapeKey | null = null;
 
 interface SoundscapeState {
   isPlaying: boolean;
@@ -20,7 +19,7 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
   isPlaying: false,
 
   initPlayer: async () => {
-    if (initialized && globalPlayer) return;
+    if (globalPlayer) return;
 
     await setAudioModeAsync({
       playsInSilentMode: true,
@@ -29,11 +28,10 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
     });
 
     globalPlayer = createAudioPlayer(null);
-    initialized = true;
   },
 
   playSoundscape: async (key) => {
-    if (!initialized || !globalPlayer) {
+    if (!globalPlayer) {
       await get().initPlayer();
     }
     if (!globalPlayer) return;
@@ -46,10 +44,10 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
     const source = SOUNDSCAPE_MUSIC_MAP[key];
     if (!source) return;
 
-    if (currentKey !== key) {
+    if (soundscapeKey !== key) {
       globalPlayer.replace(source);
       globalPlayer.loop = true;
-      currentKey = key;
+      soundscapeKey = key;
     }
 
     globalPlayer.play();
@@ -59,11 +57,11 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
   toggleSoundscape: () => {
     if (!globalPlayer) return;
     if (get().isPlaying) {
-      globalPlayer.pause();
+      get().pauseSoundscape();
       set({ isPlaying: false });
       return;
     }
-    get().playSoundscape(currentKey!);
+    get().playSoundscape(soundscapeKey!);
     set({ isPlaying: true });
   },
 
@@ -83,7 +81,7 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
     if (!globalPlayer) return;
     globalPlayer.pause();
     globalPlayer.seekTo(0);
-    currentKey = null;
+    soundscapeKey = null;
     set({ isPlaying: false });
   },
 }));

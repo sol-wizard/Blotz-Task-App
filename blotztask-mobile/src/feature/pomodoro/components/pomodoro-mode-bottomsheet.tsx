@@ -14,6 +14,8 @@ import {
 } from "../utils/pomodoro-setting";
 import { usePomodoroSettingMutation } from "../hooks/usePomodoroSetting";
 import { useSoundscapeStore } from "../hooks/useSoundscapeStore";
+import { usePomodoroTimer } from "../hooks/usePomodoroTimer";
+import { PomodoroSettingApplyModal } from "./pomodoro-setting-apply-modal";
 
 interface ModeBottomSheetProps {
   isOpen: boolean;
@@ -42,6 +44,8 @@ export const ModeBottomSheet = ({
   const [draftDuration, setDraftDuration] = useState<number>(selectedDuration);
   const [draftSoundscape, setDraftSoundscape] = useState<PomodoroSoundscapeKey>(selectedSoundscape);
   const { isPlaying, stopSoundscape, playSoundscape } = useSoundscapeStore();
+  const currentSession = usePomodoroTimer((s) => s.session);
+  const [showApplyModal, setShowApplyModal] = useState(false);
 
   const { t } = useTranslation("pomodoro");
 
@@ -59,6 +63,7 @@ export const ModeBottomSheet = ({
 
   useEffect(() => {
     if (!isOpen) return;
+    if (currentSession) return;
     if (!isPlaying) return;
     void playSoundscape(draftSoundscape);
   }, [isOpen, draftSoundscape]);
@@ -91,16 +96,30 @@ export const ModeBottomSheet = ({
 
   const handleSave = async () => {
     const isCountDown = draftDuration !== 0;
+    const changed = draftDuration !== selectedDuration || draftSoundscape !== selectedSoundscape;
+
+    if (!changed) {
+      onClose();
+      return;
+    }
+
     await updatePomodoroSetting({
       timing: draftDuration,
       sound: draftSoundscape,
       isCountdown: isCountDown,
     });
-    stopSoundscape();
+    if (currentSession) {
+      onClose();
+      setShowApplyModal(true);
+      return;
+    } else {
+      stopSoundscape();
+    }
     onClose();
   };
 
   const handleTogglePreview = () => {
+    if (currentSession) return;
     if (isPlaying) {
       stopSoundscape();
       return;
@@ -109,133 +128,140 @@ export const ModeBottomSheet = ({
   };
 
   return (
-    <Modal visible={isOpen} transparent animationType="slide">
-      <View className="flex-1 bg-black/50 justify-end">
-        <View className="bg-background rounded-t-3xl pt-4 pb-12">
-          {/* Header */}
-          <View className="flex-row justify-between items-center mb-6 px-4">
-            <Pressable
-              onPress={onClose}
-              className="w-12 h-12 bg-gray-200/60 rounded-full items-center justify-center"
-            >
-              <MaterialIcons name="close" size={24} color="#8C8C8C" />
-            </Pressable>
-            <Text className="text-lg font-baloo text-[#444964]">{t("focusMode.title")}</Text>
-            <Pressable
-              onPress={handleSave}
-              className="w-12 h-12 bg-gray-200/60 rounded-full items-center justify-center"
-            >
-              <MaterialIcons name="check" size={24} color="#8C8C8C" />
-            </Pressable>
-          </View>
-
-          {/* Duration Section */}
-          <Text className="text-[#444964] font-inter font-bold font-baloo mb-3 mx-6 text-xl">
-            {t("focusMode.duration")}
-          </Text>
-          <View className="bg-white mx-4 rounded-3xl p-5 mb-6 shadow-sm shadow-gray-200 flex-row gap-3">
-            {DURATIONS.map((duration) => (
+    <>
+      <Modal visible={isOpen} transparent animationType="slide">
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className="bg-background rounded-t-3xl pt-4 pb-12">
+            {/* Header */}
+            <View className="flex-row justify-between items-center mb-6 px-4">
               <Pressable
-                key={duration.key}
-                onPress={() => setDraftDuration(duration.timing)}
-                className={`px-4 h-10 item-center justify-center rounded-2xl border-2 ${
-                  draftDuration === duration.timing
-                    ? "bg-highlight border-highlight"
-                    : "bg-white border-highlight"
-                }`}
+                onPress={onClose}
+                className="w-12 h-12 bg-gray-200/60 rounded-full items-center justify-center"
               >
-                <Text
-                  className={`font-baloo text-lg ${
-                    draftDuration === duration.timing ? "text-white" : "text-[#9AD513]"
-                  }`}
-                >
-                  {duration.key === "flow" ? t("focusMode.flow") : duration.key}
-                </Text>
+                <MaterialIcons name="close" size={24} color="#8C8C8C" />
               </Pressable>
-            ))}
-          </View>
-
-          {/* Soundscapes Section */}
-          <Text className="text-[#444964] font-baloo mb-3 mx-6 text-xl">
-            {t("focusMode.soundscapes")}
-          </Text>
-
-          <View className="bg-white mx-4 rounded-3xl p-4 shadow-sm shadow-gray-200">
-            {/* Gallery */}
-            <View className="relative h-44 -mx-5">
-              <Animated.FlatList
-                ref={flatListRef}
-                data={SOUNDSCAPES_DATA}
-                keyExtractor={(item) => item.key}
-                renderItem={({ item, index }) => (
-                  <SoundscapeCard
-                    item={item}
-                    index={index}
-                    scrollX={scrollX}
-                    isSelected={draftSoundscape === item.key}
-                    isPlaying={isPlaying}
-                    onPress={handleItemPress}
-                    onTogglePlayback={handleTogglePreview}
-                  />
-                )}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                snapToInterval={SNAP_INTERVAL}
-                decelerationRate="fast"
-                contentContainerStyle={{
-                  paddingHorizontal: PADDING_HORIZONTAL,
-                  alignItems: "center",
-                  paddingBottom: 0,
-                }}
-                onMomentumScrollEnd={handleMomentumScrollEnd}
-                onScroll={onScroll}
-                scrollEventThrottle={16}
-              />
-
-              {/* === left gradient === */}
-              <View
-                pointerEvents="none"
-                className="absolute left-0 top-0 bottom-0 w-12 z-10"
-                style={{
-                  elevation: 10, // for Android to ensure it appears above the list items
-                }}
+              <Text className="text-lg font-baloo text-[#444964]">{t("focusMode.title")}</Text>
+              <Pressable
+                onPress={handleSave}
+                className="w-12 h-12 bg-gray-200/60 rounded-full items-center justify-center"
               >
-                <LinearGradient
-                  colors={["#FFFFFFFF", "#FFFFFF00"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{ flex: 1 }}
-                />
-              </View>
-
-              {/* === right gradient === */}
-              <View
-                pointerEvents="none"
-                className="absolute right-0 top-0 bottom-0 w-12 z-10"
-                style={{
-                  elevation: 10,
-                }}
-              >
-                <LinearGradient
-                  colors={["#FFFFFF00", "#FFFFFFFF"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{ flex: 1 }}
-                />
-              </View>
+                <MaterialIcons name="check" size={24} color="#8C8C8C" />
+              </Pressable>
             </View>
 
-            {/* pic for soundscape */}
-            <Pressable className="items-center -mt-12 relative">
-              <Image
-                source={ASSETS.pomodoroSoundChoose}
-                className="w-32 h-12"
-                resizeMode="contain"
-              />
-            </Pressable>
+            {/* Duration Section */}
+            <Text className="text-[#444964] font-inter font-bold font-baloo mb-3 mx-6 text-xl">
+              {t("focusMode.duration")}
+            </Text>
+            <View className="bg-white mx-4 rounded-3xl p-5 mb-6 shadow-sm shadow-gray-200 flex-row gap-3">
+              {DURATIONS.map((duration) => (
+                <Pressable
+                  key={duration.key}
+                  onPress={() => setDraftDuration(duration.timing)}
+                  className={`px-4 h-10 item-center justify-center rounded-2xl border-2 ${
+                    draftDuration === duration.timing
+                      ? "bg-highlight border-highlight"
+                      : "bg-white border-highlight"
+                  }`}
+                >
+                  <Text
+                    className={`font-baloo text-lg ${
+                      draftDuration === duration.timing ? "text-white" : "text-[#9AD513]"
+                    }`}
+                  >
+                    {duration.key === "flow" ? t("focusMode.flow") : duration.key}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {/* Soundscapes Section */}
+            <Text className="text-[#444964] font-baloo mb-3 mx-6 text-xl">
+              {t("focusMode.soundscapes")}
+            </Text>
+
+            <View className="bg-white mx-4 rounded-3xl p-4 shadow-sm shadow-gray-200">
+              {/* Gallery */}
+              <View className="relative h-44 -mx-5">
+                <Animated.FlatList
+                  ref={flatListRef}
+                  data={SOUNDSCAPES_DATA}
+                  keyExtractor={(item) => item.key}
+                  renderItem={({ item, index }) => (
+                    <SoundscapeCard
+                      item={item}
+                      index={index}
+                      scrollX={scrollX}
+                      isSelected={draftSoundscape === item.key}
+                      isPlaying={isPlaying}
+                      isPreviewEnabled={!currentSession}
+                      onPress={handleItemPress}
+                      onTogglePlayback={handleTogglePreview}
+                    />
+                  )}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  snapToInterval={SNAP_INTERVAL}
+                  decelerationRate="fast"
+                  contentContainerStyle={{
+                    paddingHorizontal: PADDING_HORIZONTAL,
+                    alignItems: "center",
+                    paddingBottom: 0,
+                  }}
+                  onMomentumScrollEnd={handleMomentumScrollEnd}
+                  onScroll={onScroll}
+                  scrollEventThrottle={16}
+                />
+
+                {/* === left gradient === */}
+                <View
+                  pointerEvents="none"
+                  className="absolute left-0 top-0 bottom-0 w-12 z-10"
+                  style={{
+                    elevation: 10, // for Android to ensure it appears above the list items
+                  }}
+                >
+                  <LinearGradient
+                    colors={["#FFFFFFFF", "#FFFFFF00"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ flex: 1 }}
+                  />
+                </View>
+
+                {/* === right gradient === */}
+                <View
+                  pointerEvents="none"
+                  className="absolute right-0 top-0 bottom-0 w-12 z-10"
+                  style={{
+                    elevation: 10,
+                  }}
+                >
+                  <LinearGradient
+                    colors={["#FFFFFF00", "#FFFFFFFF"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ flex: 1 }}
+                  />
+                </View>
+              </View>
+
+              {/* pic for soundscape */}
+              <Pressable className="items-center -mt-12 relative">
+                <Image
+                  source={ASSETS.pomodoroSoundChoose}
+                  className="w-32 h-12"
+                  resizeMode="contain"
+                />
+              </Pressable>
+            </View>
           </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+      <PomodoroSettingApplyModal
+        isVisible={showApplyModal}
+        onClose={() => setShowApplyModal(false)}
+      />
+    </>
   );
 };

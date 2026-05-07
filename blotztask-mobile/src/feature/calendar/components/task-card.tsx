@@ -110,6 +110,11 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     swipeRef.current?.close();
   };
 
+  const handleOpenMode = () => {
+    onOpenMode();
+    swipeRef.current?.reset();
+  };
+
   const handleConfirmSwitch = () => {
     setShowSwitchModal(false);
 
@@ -128,7 +133,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
         renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
           <TaskCardLeftActions
             progress={leftActionsProgress}
-            onMode={onOpenMode}
+            onMode={handleOpenMode}
             onFocus={handleOpenFocus}
             isPomodoroActiveTask={isThisTaskActive}
             isPaused={isPaused}

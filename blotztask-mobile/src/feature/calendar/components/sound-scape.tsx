@@ -17,6 +17,7 @@ interface SoundscapeCardProps {
   scrollX: SharedValue<number>;
   isSelected: boolean;
   isPlaying: boolean;
+  isPreviewEnabled: boolean;
   onPress: (index: number, key: PomodoroSoundscapeKey) => void;
   onTogglePlayback: () => void;
 }
@@ -27,6 +28,7 @@ export const SoundscapeCard = ({
   scrollX,
   isSelected,
   isPlaying,
+  isPreviewEnabled,
   onPress,
   onTogglePlayback,
 }: SoundscapeCardProps) => {
@@ -63,7 +65,7 @@ export const SoundscapeCard = ({
             {t(`soundscape.${item.key}`)}
           </Text>
         </ImageBackground>
-        {isSelected && item.key !== "noSound" ? (
+        {isSelected && item.key !== "noSound" && isPreviewEnabled ? (
           <Pressable
             onPress={onTogglePlayback}
             className="absolute inset-0 items-center justify-center"

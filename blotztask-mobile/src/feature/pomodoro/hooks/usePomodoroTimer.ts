@@ -21,7 +21,6 @@ interface PomodoroTimerState {
   ) => void;
   togglePause: () => void;
   stopTimer: () => void;
-  setSoundscape: (key: PomodoroSoundscapeKey) => void;
   _tick: () => void;
 }
 
@@ -71,16 +70,6 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
     }
     useSoundscapeStore.getState().stopSoundscape();
     set({ session: null });
-  },
-
-  setSoundscape: (soundscape) => {
-    const { session } = get();
-    if (!session) return;
-
-    set({ session: { ...session, soundscape } });
-
-    if (session.isPaused) return;
-    void useSoundscapeStore.getState().playSoundscape(soundscape);
   },
 
   _tick: () => {
