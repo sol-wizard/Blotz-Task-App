@@ -28,6 +28,8 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
   } = useDdlMutation();
 
   const daysLeft = Math.max(0, differenceInCalendarDays(new Date(task.dueAt), new Date()));
+  const daysLeftText = daysLeft.toString();
+  const pinnedDaysFontSize = Math.max(18, Math.min(52, 150 / daysLeftText.length));
   const labelColor = task.label?.color ?? "#D1D1D6";
   const endTimeDisplay = task.dueAt ? format(new Date(task.dueAt), "dd/MM/yy") : "—";
   const isPinned = task.isPinned;
@@ -132,24 +134,39 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
           <View
             className={
               isPinned
-                ? "w-20 self-stretch justify-center items-start -ml-2"
+                ? "self-stretch justify-center items-center -ml-2"
                 : "flex-row items-center justify-center pt-3"
             }
+            style={isPinned ? { width: 104 } : undefined}
           >
-            <View className="items-center">
+            <View className={isPinned ? "w-full items-center" : "items-center"}>
               <Text
                 className={
                   isPinned
-                    ? "font-baloo text-[52px] leading-[70px] text-[#9AD80A]"
+                    ? "font-baloo text-[#9AD80A]"
                     : "font-baloo text-4xl text-secondary leading-none pt-2"
                 }
+                style={
+                  isPinned
+                    ? {
+                        width: "100%",
+                        fontSize: pinnedDaysFontSize,
+                        lineHeight: pinnedDaysFontSize + 12,
+                        textAlign: "center",
+                        includeFontPadding: false,
+                      }
+                    : undefined
+                }
+                numberOfLines={1}
+                adjustsFontSizeToFit={isPinned}
+                minimumFontScale={0.5}
               >
-                {daysLeft}
+                {daysLeftText}
               </Text>
               <Text
                 className={
                   isPinned
-                    ? "text-[14px] leading-4 text-[#9AD80A] font-medium -mt-5"
+                    ? "text-[14px] leading-4 text-[#9AD80A] font-medium -mt-2 text-center"
                     : "ml-1 font-balooThin text-xs text-gray-400"
                 }
               >
