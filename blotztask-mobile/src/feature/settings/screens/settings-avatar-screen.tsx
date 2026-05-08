@@ -1,31 +1,29 @@
 import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { ReturnButton } from "@/shared/components/return-button";
+import { getLocalAvatarComponent } from "@/feature/settings/constants/local-avatar-catalog";
 import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { AvatarDTO } from "@/feature/settings/modals/avatar-dto";
 import { useAvatarListQuery } from "@/feature/settings/hooks/useAvatarListQuery";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Image } from "expo-image";
 
 export default function SettingsAvatarScreen() {
   const { userProfile } = useUserProfile();
   const { avatars, isAvatarListLoading, isAvatarListError } = useAvatarListQuery();
 
-  const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string | null>(null);
+  const [selectedAvatarId, setSelectedAvatarId] = useState<string | null>(null);
 
   useEffect(() => {
     const pictureUrl = userProfile?.pictureUrl;
 
     if (!pictureUrl) {
-      setSelectedAvatarUrl(null);
+      setSelectedAvatarId(null);
       return;
     }
 
-    if (avatars.some((avatar) => avatar.url === pictureUrl)) {
-      setSelectedAvatarUrl(pictureUrl);
-    }
+    setSelectedAvatarId(avatars.some((avatar) => avatar.id === pictureUrl) ? pictureUrl : null);
   }, [avatars, userProfile?.pictureUrl]);
 
   const { updateUserProfile, isUserUpdating } = useUserProfileMutation();
@@ -37,17 +35,17 @@ export default function SettingsAvatarScreen() {
   const handleAvatarSelect = async (avatar: AvatarDTO) => {
     if (isUserUpdating) return;
 
-    const previousAvatarUrl = selectedAvatarUrl;
-    setSelectedAvatarUrl(avatar.url);
+    const previousAvatarId = selectedAvatarId;
+    setSelectedAvatarId(avatar.id);
 
     try {
       await updateUserProfile({
         displayName: userProfile?.displayName ?? "",
-        pictureUrl: avatar.url,
+        pictureUrl: avatar.id,
         isOnBoarded: userProfile?.isOnBoarded ?? false,
       });
     } catch {
-      setSelectedAvatarUrl(previousAvatarUrl);
+      setSelectedAvatarId(previousAvatarId);
       console.log("Failed to update avatar.");
     }
   };
@@ -68,11 +66,12 @@ export default function SettingsAvatarScreen() {
           </Text>
         ) : (
           avatars.map((avatar) => {
-            const isSelected = avatar.url === selectedAvatarUrl;
+            const isSelected = avatar.id === selectedAvatarId;
+            const AvatarComponent = getLocalAvatarComponent(avatar.id);
 
             return (
               <Pressable
-                key={avatar.url}
+                key={avatar.id}
                 onPress={() => handleAvatarSelect(avatar)}
                 className={`mb-6 items-center ${isUserUpdating ? "opacity-70" : ""}`}
                 disabled={isUserUpdating}
@@ -83,11 +82,7 @@ export default function SettingsAvatarScreen() {
                     borderColor: isSelected ? "#8B86B3" : "transparent",
                   }}
                 >
-                  <Image
-                    source={{ uri: avatar.url }}
-                    style={{ width: 80, height: 80, borderRadius: 48 }}
-                    contentFit="cover"
-                  />
+                  {AvatarComponent ? <AvatarComponent width={80} height={80} /> : null}
                 </View>
               </Pressable>
             );

@@ -58,7 +58,3 @@ export const monthlyReviewKeys = {
   byMonth: (year: number, month: number) =>
     [...monthlyReviewKeys.all, year, month] as const,
 } as const;
-
-export const avatarKeys = {
-  all: ["avatars"] as const,
-};
