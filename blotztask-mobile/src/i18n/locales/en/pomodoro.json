@@ -36,8 +36,7 @@
         "subtitle": "Time for a longer break."
       }
     },
-    "settingApplyNextTitle": "Settings saved",
-    "settingApplyNextMessage": "These changes will apply to your next Pomodoro. Current Pomodoro and music continue unchanged."
+    "modeLockedWhileRunning": "Pomodoro settings can’t be changed while a Pomodoro is running."
   },
   "soundscape": {
     "easyFocus": "Easy\nFocus",

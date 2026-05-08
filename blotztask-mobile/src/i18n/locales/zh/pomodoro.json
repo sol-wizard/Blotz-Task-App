@@ -34,8 +34,7 @@
         "subtitle": "该好好休息一下了。"
       }
     },
-    "settingApplyNextTitle": "设置已保存",
-    "settingApplyNextMessage": "这些设置会在下一次番茄钟生效，当前番茄钟与音乐保持不变。"
+    "modeLockedWhileRunning": "番茄钟进行中，无法修改番茄钟设置。"
   },
   "soundscape": {
     "easyFocus": "轻松\n专注",

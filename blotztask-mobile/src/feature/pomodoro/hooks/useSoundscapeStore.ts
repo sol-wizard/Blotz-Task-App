@@ -31,15 +31,16 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
   },
 
   playSoundscape: async (key) => {
+    if (key === "noSound") {
+      get().stopSoundscape();
+      soundscapeKey = null;
+      return;
+    }
+
     if (!globalPlayer) {
       await get().initPlayer();
     }
     if (!globalPlayer) return;
-
-    if (key === "noSound") {
-      get().stopSoundscape();
-      return;
-    }
 
     const source = SOUNDSCAPE_MUSIC_MAP[key];
     if (!source) return;
@@ -58,7 +59,6 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
     if (!globalPlayer) return;
     if (get().isPlaying) {
       get().pauseSoundscape();
-      set({ isPlaying: false });
       return;
     }
     get().playSoundscape(soundscapeKey!);
