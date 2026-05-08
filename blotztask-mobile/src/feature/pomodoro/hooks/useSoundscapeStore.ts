@@ -1,6 +1,7 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
 import { create } from "zustand";
 import { PomodoroSoundscapeKey, SOUNDSCAPE_MUSIC_MAP } from "../utils/pomodoro-setting";
+import { getI18n } from "react-i18next";
 
 let globalPlayer: AudioPlayer | null = null;
 let soundscapeKey: PomodoroSoundscapeKey | null = null;
@@ -11,7 +12,6 @@ interface SoundscapeState {
   playSoundscape: (key: PomodoroSoundscapeKey) => Promise<void>;
   toggleSoundscape: () => void;
   pauseSoundscape: () => void;
-  resumeSoundscape: () => void;
   stopSoundscape: () => void;
 }
 
@@ -35,10 +35,6 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
       get().stopSoundscape();
       soundscapeKey = null;
       return;
-    }
-
-    if (!globalPlayer) {
-      await get().initPlayer();
     }
     if (!globalPlayer) return;
 
@@ -71,17 +67,10 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
     set({ isPlaying: false });
   },
 
-  resumeSoundscape: () => {
-    if (!globalPlayer) return;
-    globalPlayer.play();
-    set({ isPlaying: true });
-  },
-
   stopSoundscape: () => {
     if (!globalPlayer) return;
-    globalPlayer.pause();
+    get().pauseSoundscape();
     globalPlayer.seekTo(0);
     soundscapeKey = null;
-    set({ isPlaying: false });
   },
 }));

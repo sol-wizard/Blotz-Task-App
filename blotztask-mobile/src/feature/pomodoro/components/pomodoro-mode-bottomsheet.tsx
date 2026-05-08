@@ -59,8 +59,7 @@ export const ModeBottomSheet = ({
   useEffect(() => {
     if (!isOpen) return;
     if (!isPlaying) return;
-    void playSoundscape(draftSoundscape);
-  }, [isOpen, draftSoundscape]);
+  }, [isOpen]);
 
   // Animated values and functions for soundscape list
   const scrollX = useSharedValue(0);
@@ -82,6 +81,13 @@ export const ModeBottomSheet = ({
   // Functions to handle item selection and saving settings
   const handleItemPress = (index: number, key: PomodoroSoundscapeKey) => {
     setDraftSoundscape(key);
+    if (isPlaying) {
+      if (key === "noSound") {
+        stopSoundscape();
+      } else {
+        playSoundscape(key);
+      }
+    }
     flatListRef.current?.scrollToOffset({
       offset: index * SNAP_INTERVAL,
       animated: true,

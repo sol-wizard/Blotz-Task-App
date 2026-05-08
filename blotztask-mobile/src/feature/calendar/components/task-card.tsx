@@ -115,10 +115,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     if (session) {
       Toast.show({
         type: "warning",
-        text1: t(
-          "focusMode.modeLockedWhileRunning",
-          "Pomodoro settings can’t be changed while a Pomodoro is running.",
-        ),
+        text1: t("focusMode.modeLockedWhileRunning"),
         visibilityTime: 2500,
       });
       swipeRef.current?.close();

@@ -18,7 +18,7 @@ interface PomodoroTimerState {
     soundscape: PomodoroSoundscapeKey,
     isCountdown: boolean,
     durationMinutes: number,
-  ) => void;
+  ) => Promise<void>;
   togglePause: () => void;
   stopTimer: () => void;
   _tick: () => void;
@@ -29,7 +29,12 @@ let pomodoroClock: ReturnType<typeof setInterval> | null = null;
 export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
   session: null,
 
-  startTimer: (taskId, soundscape = "noSound", isCountdown: boolean, durationMinutes: number) => {
+  startTimer: async (
+    taskId,
+    soundscape = "noSound",
+    isCountdown: boolean,
+    durationMinutes: number,
+  ) => {
     if (pomodoroClock) {
       clearInterval(pomodoroClock);
       pomodoroClock = null;
@@ -46,7 +51,7 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
     });
     pomodoroClock = setInterval(() => get()._tick(), 1000);
     const sound = useSoundscapeStore.getState();
-    void sound.initPlayer();
+    await sound.initPlayer();
     void sound.playSoundscape(soundscape);
   },
 
@@ -57,7 +62,7 @@ export const usePomodoroTimer = create<PomodoroTimerState>((set, get) => ({
 
     const sound = useSoundscapeStore.getState();
     if (session.isPaused) {
-      sound.resumeSoundscape();
+      sound.playSoundscape(session.soundscape);
     } else {
       sound.pauseSoundscape();
     }
