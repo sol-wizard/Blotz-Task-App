@@ -14,7 +14,6 @@ import {
 } from "../utils/pomodoro-setting";
 import { usePomodoroSettingMutation } from "../hooks/usePomodoroSetting";
 import { useSoundscapeStore } from "../hooks/useSoundscapeStore";
-import { usePomodoroTimer } from "../hooks/usePomodoroTimer";
 interface ModeBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
