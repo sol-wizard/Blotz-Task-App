@@ -1,7 +1,6 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
 import { create } from "zustand";
 import { PomodoroSoundscapeKey, SOUNDSCAPE_MUSIC_MAP } from "../utils/pomodoro-setting";
-import { getI18n } from "react-i18next";
 
 let globalPlayer: AudioPlayer | null = null;
 let soundscapeKey: PomodoroSoundscapeKey | null = null;
