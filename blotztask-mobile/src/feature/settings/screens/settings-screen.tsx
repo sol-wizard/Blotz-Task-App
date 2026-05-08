@@ -2,6 +2,10 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import {
+  getLocalAvatarComponent,
+  isRemoteAvatarUrl,
+} from "@/feature/settings/constants/local-avatar-catalog";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { ASSETS, PNGIMAGES } from "@/shared/constants/assets";
 import { FormDivider } from "@/shared/components/form-divider";
@@ -53,9 +57,9 @@ export default function SettingsScreen() {
     },
   ];
 
-  const avatarSource = userProfile?.pictureUrl
-    ? { uri: userProfile.pictureUrl }
-    : PNGIMAGES.blotzIcon;
+  const pictureValue = userProfile?.pictureUrl;
+  const SelectedAvatarComponent = getLocalAvatarComponent(pictureValue);
+  const avatarSource = isRemoteAvatarUrl(pictureValue) ? { uri: pictureValue } : PNGIMAGES.blotzIcon;
 
   const handleProfileEdit = () => {
     router.push("/settings/avatar" as const);
@@ -70,11 +74,15 @@ export default function SettingsScreen() {
 
         <View className="flex-1 min-h-0 px-8 mt-2 w-full items-center">
           <View>
-            <Image
-              source={avatarSource}
-              style={{ width: 96, height: 96, borderRadius: 48 }}
-              contentFit="cover"
-            />
+            {SelectedAvatarComponent ? (
+              <SelectedAvatarComponent width={96} height={96} />
+            ) : (
+              <Image
+                source={avatarSource}
+                style={{ width: 96, height: 96, borderRadius: 48 }}
+                contentFit="cover"
+              />
+            )}
             <Pressable
               onPress={handleProfileEdit}
               className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-white items-center justify-center"
