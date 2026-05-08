@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using Azure.AI.Projects;
+using BlotzTask.Extension;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.BreakDown.DTOs;
 using BlotzTask.Modules.BreakDown.Prompts;
@@ -24,14 +25,11 @@ public class BreakdownTaskCommandHandler(
     GetTaskByIdQueryHandler getTaskByIdQueryHandler,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     AIProjectClient projectClient,
-    IConfiguration configuration,
+    AgentFrameworkServiceExtensions.AzureAIOptions options,
     ICheckAiQuotaService checkAiQuotaService,
     IRecordAiUsageService recordAiUsageService)
 {
-    // TODO: If we want to support different deployment id, that should be done at the dependency injection layer.
-    private readonly string _deploymentId =
-        configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"]
-        ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:Breakdown:DeploymentId config.");
+    private readonly string _deploymentId = options.BreakdownDeploymentId;
 
     public async Task<BreakdownResult> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
     {

@@ -4,9 +4,12 @@ using BlotzTask.Modules.ChatTaskGenerator.Dtos;
 namespace BlotzTask.Modules.ChatTaskGenerator.Functions;
 //TODO: Do we really need so many CRUD to do the operation ? Please research if we really need function tools here
 
-public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> notes)
+public class TaskGenerationTools()
 {
     public int ToolCallCount { get; private set; }
+
+    public List<ExtractedTask> Tasks { get; private set; } = [];
+    public List<ExtractedNote> Notes { get; private set; } = [];
     public Func<ExtractedTask, Task>? OnTaskStreamed { get; set; }
     public Func<ExtractedNote, Task>? OnNoteStreamed { get; set; }
 
@@ -33,7 +36,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
                 EndTime = endTimes[i],
                 LabelName = labels[i]
             };
-            tasks.Add(task);
+            Tasks.Add(task);
             if (OnTaskStreamed != null) await OnTaskStreamed(task);
         }
         return $"{count} task(s) added.";
@@ -57,7 +60,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
             EndTime = endTime,
             LabelName = label
         };
-        tasks.Add(task);
+        Tasks.Add(task);
         if (OnTaskStreamed != null) await OnTaskStreamed(task);
         return "Task added.";
     }
@@ -74,7 +77,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
                 Id = Guid.NewGuid(),
                 Text = text
             };
-            notes.Add(note);
+            Notes.Add(note);
             if (OnNoteStreamed != null) await OnNoteStreamed(note);
         }
         return $"{texts.Length} note(s) added.";
@@ -90,7 +93,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
             Id = Guid.NewGuid(),
             Text = text
         };
-        notes.Add(note);
+        Notes.Add(note);
         if (OnNoteStreamed != null) await OnNoteStreamed(note);
         return "Note added.";
     }
@@ -101,9 +104,9 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
     {
         ToolCallCount++;
         //TODO: text matching is fragile
-        var task = tasks.FirstOrDefault(t => t.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
+        var task = Tasks.FirstOrDefault(t => t.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
         if (task == null) return "Task not found.";
-        tasks.Remove(task);
+        Tasks.Remove(task);
         return "Task removed.";
     }
 
@@ -118,7 +121,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
     {
         ToolCallCount++;
         //TODO: here the same as well
-        var task = tasks.FirstOrDefault(t => t.Title.Equals(existingTitle, StringComparison.OrdinalIgnoreCase));
+        var task = Tasks.FirstOrDefault(t => t.Title.Equals(existingTitle, StringComparison.OrdinalIgnoreCase));
         if (task == null) return "Task not found.";
         task.Title = title;
         task.Description = description;
@@ -134,9 +137,9 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
     {
         ToolCallCount++;
         //TODO: here
-        var note = notes.FirstOrDefault(n => n.Text.Equals(text, StringComparison.OrdinalIgnoreCase));
+        var note = Notes.FirstOrDefault(n => n.Text.Equals(text, StringComparison.OrdinalIgnoreCase));
         if (note == null) return "Note not found.";
-        notes.Remove(note);
+        Notes.Remove(note);
         return "Note removed.";
     }
 
@@ -147,7 +150,7 @@ public class TaskGenerationTools(List<ExtractedTask> tasks, List<ExtractedNote> 
     {
         ToolCallCount++;
         //TODO: here
-        var note = notes.FirstOrDefault(n => n.Text.Equals(existingText, StringComparison.OrdinalIgnoreCase));
+        var note = Notes.FirstOrDefault(n => n.Text.Equals(existingText, StringComparison.OrdinalIgnoreCase));
         if (note == null) return "Note not found.";
         note.Text = newText;
         return "Note updated.";
