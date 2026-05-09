@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using BlotzTask.Modules.ChatTaskGenerator;
+using Microsoft.AspNetCore.SignalR;
 
 namespace BlotzTask.Extension;
 
@@ -10,6 +12,10 @@ public static class CoreServiceExtensions
         services.AddSignalR(options =>
         {
             options.MaximumReceiveMessageSize = 4 * 1024 * 1024; // 4 MB, supports up to ~1 min WAV audio
+        })
+        .AddHubOptions<AiTaskGenerateChatHub>(options =>
+        {
+            options.AddFilter<AiHubFilter>();
         });
         services.AddControllers()
             .AddJsonOptions(options =>

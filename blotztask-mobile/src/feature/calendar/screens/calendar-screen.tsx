@@ -11,18 +11,24 @@ import Animated, { useSharedValue, withTiming } from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { CustomDay, CustomDayProps } from "../components/custom-day";
 import { useLocalSearchParams } from "expo-router";
+import { ModeBottomSheet } from "../../pomodoro/components/pomodoro-mode-bottomsheet";
+import { usePomodoroSettingsQuery } from "../../pomodoro/hooks/usePomodoroSetting";
+import { useTranslation } from "react-i18next";
 
 const calendarTheme = {
   calendarBackground: theme.colors.background,
 };
 
 export default function CalendarScreen() {
+  const { i18n } = useTranslation();
   const params = useLocalSearchParams<{ selectedDate?: string | string[] }>();
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [calendarKey, setCalendarKey] = useState(0);
   const [isCalendarVisible, setIsCalendarVisible] = useState(true);
   const { weeklyTaskAvailability, isLoading } = useTaskDays({ selectedDay });
   const progress = useSharedValue(isCalendarVisible ? 1 : 0);
+  const [isModeSheetOpen, setIsModeSheetOpen] = useState(false);
+  const { data: pomodoroSetting } = usePomodoroSettingsQuery();
 
   const markedDates = isLoading ? {} : getMarkedDates({ weeklyTaskAvailability });
 
@@ -59,7 +65,7 @@ export default function CalendarScreen() {
         }}
       />
       <CalendarProvider
-        key={calendarKey}
+        key={`${calendarKey}-${i18n.language}`}
         date={format(selectedDay, "yyyy-MM-dd")}
         onDateChanged={(date: string) => {
           setSelectedDay(new Date(date));
@@ -83,8 +89,18 @@ export default function CalendarScreen() {
           </Animated.View>
         )}
 
-        <FilteredTaskList selectedDay={selectedDay} />
+        <FilteredTaskList selectedDay={selectedDay} onOpenMode={() => setIsModeSheetOpen(true)} />
       </CalendarProvider>
+      {pomodoroSetting && (
+        <ModeBottomSheet
+          isOpen={isModeSheetOpen}
+          onClose={() => {
+            setIsModeSheetOpen(false);
+          }}
+          selectedSoundscape={pomodoroSetting.sound}
+          selectedDuration={pomodoroSetting.timing}
+        />
+      )}
     </SafeAreaView>
   );
 }

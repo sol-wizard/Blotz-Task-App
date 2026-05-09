@@ -46,6 +46,13 @@ export const PNGIMAGES = {
   onboardingNoteBackground: require("../../../assets/images-png/onboarding-note-background.png"),
   onboardingVoiceBackground: require("../../../assets/images-png/onboarding-voice-background.png"),
   xhsLogo: require("../../../assets/images-png/xhs.jpg"),
+  pomodoroSoundEasyFocus: require("../../../assets/images-png/pomodoro-sound-easyFocus.png"),
+  pomodoroSoundDeepWork: require("../../../assets/images-png/pomodoro-sound-deepWork.png"),
+  pomodoroSoundTaskFlow: require("../../../assets/images-png/pomodoro-sound-taskFlow.png"),
+  pomodoroSoundCalmMind: require("../../../assets/images-png/pomodoro-sound-calmMind.png"),
+  pomodoroSoundCafeVibe: require("../../../assets/images-png/pomodoro-sound-cafeVibe.png"),
+  pomodoroSoundChoose: require("../../../assets/images-png/pomodoro-sound-choose.png"),
+  pomodoroSoundNoSound: require("../../../assets/images-png/pomodoro-sound-noSound.png"),
 } as const;
 
 export const SVGIMAGES = {
@@ -59,6 +66,11 @@ export const SVGIMAGES = {
 
 export const SOUNDS = {
   buttonSpin: require("../../../assets/sounds/button-spin.mp3"),
+  pomodoroEasyFocus: require("../../../assets/sounds/pomodoro-easyFocus.mp3"),
+  pomodoroDeepWork: require("../../../assets/sounds/pomodoro-deepWork.mp3"),
+  pomodoroTaskFlow: require("../../../assets/sounds/pomodoro-taskFlow.mp3"),
+  pomodoroCalmMind: require("../../../assets/sounds/pomodoro-calmMind.mp3"),
+  pomodoroCafeVibe: require("../../../assets/sounds/pomodoro-cafeVibe.mp3"),
 };
 
 // Export all assets for convenience

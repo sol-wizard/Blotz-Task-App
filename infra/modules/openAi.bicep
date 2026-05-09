@@ -4,15 +4,13 @@ param projectName string = 'blotz-task-al'
 param keyVaultName string
 param foundryProjectName string
 
-param openAiDeploymentName string = 'gpt-5.2-chat'
-param openAiModelName string = 'gpt-5.2-chat'
-param openAiModelVersion string = '2025-12-11'
+param breakdownDeploymentName string
+param breakdownModelName string
+param breakdownModelVersion string
 
-var deploymentModel = {
-  format: 'OpenAI'
-  name: openAiModelName
-  version: openAiModelVersion
-}
+param taskGenerationDeploymentName string
+param taskGenerationModelName string
+param taskGenerationModelVersion string
 
 resource openAiService 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
   name: 'oai-${projectName}-${environment}'
@@ -44,15 +42,38 @@ resource foundryProject 'Microsoft.CognitiveServices/accounts/projects@2025-06-0
   }
 }
 
-resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
-  name: openAiDeploymentName
+resource breakdownDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
+  name: breakdownDeploymentName
   parent: openAiService
   sku: {
-    name: 'GlobalStandard'  
-    capacity: 10 
+    name: 'GlobalStandard'
+    capacity: 10
   }
   properties: {
-    model: deploymentModel
+    model: {
+      format: 'OpenAI'
+      name: breakdownModelName
+      version: breakdownModelVersion
+    }
+    raiPolicyName: 'Microsoft.Default'
+    versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
+  }
+}
+
+resource taskGenerationDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
+  name: taskGenerationDeploymentName
+  parent: openAiService
+  dependsOn: [breakdownDeployment]
+  sku: {
+    name: 'GlobalStandard'
+    capacity: 10
+  }
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: taskGenerationModelName
+      version: taskGenerationModelVersion
+    }
     raiPolicyName: 'Microsoft.Default'
     versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
   }
@@ -68,5 +89,6 @@ module storeOpenAiKey 'keyVaultSecret.bicep' = {
 }
 
 output endpoint string = openAiService.properties.endpoint
-output deploymentId string = openAiDeploymentName
+output taskGenerationDeploymentId string = taskGenerationDeploymentName
+output breakdownDeploymentId string = breakdownDeploymentName
 output foundryProjectId string = foundryProject.id

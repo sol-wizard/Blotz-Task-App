@@ -31,5 +31,10 @@
       "title": "Microphone Permission",
       "message": "We need access to your microphone for voice input."
     }
+  },
+  "update": {
+    "title": "Fresh Update Dropped!",
+    "message": "We've been busy making Blotz even better just for you. Grab the latest version to keep the good vibes going!",
+    "button": "Let's Go!"
   }
 }

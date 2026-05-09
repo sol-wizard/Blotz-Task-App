@@ -1,3 +1,5 @@
+using BlotzTask.Modules.Pomodoro.Domain;
+
 namespace BlotzTask.Modules.Users.Domain;
 
 public class AppUser
@@ -10,6 +12,7 @@ public class AppUser
     public DateTime SignUpAt { get; set; }
     public DateTime CreationAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public DateTime? LoginAt { get; set; }
     public PomodoroSetting PomodoroSetting { get; set; } = null!;
     public bool IsOnboarded { get; set; } = false;
 }

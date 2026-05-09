@@ -1,6 +1,6 @@
 import { LabelDTO } from "@/shared/models/label-dto";
 
-export type DeadlineTaskDTO = {
+export interface DeadlineTaskDTO {
   id: number;
   title: string;
   startTime: string | null;
@@ -9,4 +9,4 @@ export type DeadlineTaskDTO = {
   label?: LabelDTO;
   dueAt: string;
   isPinned: boolean;
-};
+}

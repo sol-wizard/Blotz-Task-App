@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using BlotzTask.Modules.AiUsage.Exceptions;
 using BlotzTask.Shared.Exceptions;
 using BlotzTask.Shared.Responses;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,26 @@ public class ErrorHandlingMiddleware
                 Message = ex.Message
             });
         }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Not found: {Message}", ex.Message);
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            await context.Response.WriteAsJsonAsync(new ApiResponse<object>
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Conflict: {Message}", ex.Message);
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
+            await context.Response.WriteAsJsonAsync(new ApiResponse<object>
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
         catch (ValidationException ex)
         {
             _logger.LogWarning(ex, "Validation error: {Message}", ex.Message);
@@ -63,6 +84,16 @@ public class ErrorHandlingMiddleware
         {
             _logger.LogWarning(ex, "Bad request: {Message}", ex.Message);
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            await context.Response.WriteAsJsonAsync(new ApiResponse<object>
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
+        catch (AiQuotaExceededException ex)
+        {
+            _logger.LogWarning(ex, "AI quota exceeded: {Message}", ex.Message);
+            context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
             await context.Response.WriteAsJsonAsync(new ApiResponse<object>
             {
                 Success = false,

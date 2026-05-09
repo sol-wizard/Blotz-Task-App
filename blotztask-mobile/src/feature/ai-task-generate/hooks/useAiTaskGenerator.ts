@@ -1,107 +1,135 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { File as ExpoFile } from "expo-file-system";
-import { BottomSheetType } from "@/feature/ai-task-generate/models/bottom-sheet-type";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
-import { AiResultMessageDTO } from "../models/ai-result-message-dto";
+import { AiNoteDTO, AiResultMessageDTO, ExtractedTaskDTO } from "../models/ai-result-message-dto";
+import { useTranslation } from "react-i18next";
+import Toast from "react-native-toast-message";
+
+const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
+  TranscriptionFailed: "errors.transcriptionFailed",
+  EmptyAudio: "errors.emptyAudio",
+  TokenLimited: "errors.tokenLimited",
+  BlockedByContentFilter: "errors.contentFilter",
+  Canceled: "errors.canceled",
+  NoTasksExtracted: "errors.noTasksExtracted",
+};
 
 export function useAiTaskGenerator({
   setIsAiGenerating,
-  setModalType,
 }: {
   setIsAiGenerating: (v: boolean) => void;
-  setModalType: (type: BottomSheetType) => void;
 }) {
+  const { t } = useTranslation("aiTaskGenerate");
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-  const [aiGeneratedMessage, setAiGeneratedMessage] = useState<AiResultMessageDTO>();
+  const [userInput, setUserInput] = useState<string | undefined>();
+  const [transcript, setTranscript] = useState<string | undefined>();
+  const [streamedTasks, setStreamedTasks] = useState<ExtractedTaskDTO[]>([]);
+  const [streamedNotes, setStreamedNotes] = useState<AiNoteDTO[]>([]);
+  const requestStartedAtRef = useRef<number | null>(null);
 
-  const transcribeAudio = async (uri: string): Promise<string> => {
-    if (!connection) throw new Error("Cannot transcribe: Not connected.");
+  const submitAudioForTranscription = async (uri: string): Promise<void> => {
+    if (!connection) throw new Error("Cannot submit audio: not connected.");
 
     const arrayBuffer = await new ExpoFile(uri).arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    let binary = "";
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    const base64 = btoa(binary);
+    const base64 = arrayBufferToBase64(arrayBuffer);
 
-    return new Promise((resolve, reject) => {
-      const handler = (text: string) => {
-        connection.off("ReceiveTranscription", handler);
-        resolve(text);
-      };
-      connection.on("ReceiveTranscription", handler);
-      signalRService.invoke(connection, "TranscribeAudio", base64).catch((error: unknown) => {
-        connection.off("ReceiveTranscription", handler);
-        reject(error);
-      });
-    });
+    setTranscript(undefined);
+    setIsAiGenerating(true);
+    requestStartedAtRef.current = Date.now();
+
+    try {
+      await signalRService.invoke(connection, "TranscribeAudio", base64);
+    } catch (error) {
+      console.error("TranscribeAudio invocation failed:", error);
+      setIsAiGenerating(false);
+      Toast.show({ type: "error", text1: t("errors.default") });
+    }
   };
 
-  const sendMessage = async (text: string) => {
-    if (!text.trim()) return;
+  const sendTextMessage = async (text: string) => {
+    if (!text.trim() || !connection) return;
 
+    setTranscript(undefined);
     setIsAiGenerating(true);
-    if (connection) {
-      try {
-        await signalRService.invoke(connection, "SendMessage", text);
-      } catch (error) {
-        console.error("Error invoking SendMessage:", error);
-        setIsAiGenerating(false);
-        setModalType("input");
-      }
-    } else {
-      console.warn("Cannot send message: Not connected.");
+    requestStartedAtRef.current = Date.now();
+
+    try {
+      await signalRService.invoke(connection, "SendMessage", text);
+    } catch (error) {
+      console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
-      setModalType("input");
+      Toast.show({ type: "error", text1: t("errors.default") });
     }
+  };
+
+  const generationCompleteHandler = (result: AiResultMessageDTO) => {
+    setTranscript(undefined);
+    setIsAiGenerating(false);
+    requestStartedAtRef.current = null;
+
+    if (!result.isSuccess) {
+      setStreamedTasks([]);
+      setStreamedNotes([]);
+      const i18nKey = ERROR_CODE_TO_I18N_KEY[result.errorCode ?? ""] ?? "errors.default";
+      Toast.show({ type: "error", text1: t(i18nKey) });
+      return;
+    }
+
+    // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
+    setStreamedTasks(result.extractedTasks ?? []);
+    setStreamedNotes(result.extractedNotes ?? []);
+    setUserInput(result.userInput);
   };
 
   useEffect(() => {
-    let newConnection: signalR.HubConnection | null = null;
+    let conn: signalR.HubConnection | null = null;
 
-    const receiveMessageHandler = (receivedAiMessage: AiResultMessageDTO) => {
-      setAiGeneratedMessage(receivedAiMessage);
-      if (!receivedAiMessage.isSuccess) {
-        setIsAiGenerating(false);
-        setModalType("input");
-      } else {
-        setModalType("task-preview");
-        setIsAiGenerating(false);
-      }
-    };
+    signalRService
+      .createConnection()
+      .then((newConn) => {
+        conn = newConn;
+        setConnection(conn);
+        conn.on("ReceiveGenerationResult", generationCompleteHandler);
+        conn.on("ReceiveTranscript", (text: string) => setTranscript(text));
+        conn.on("ReceiveTaskExtracted", (task: ExtractedTaskDTO) => {
+          if (requestStartedAtRef.current == null) return;
+          setStreamedTasks((prev) => [...prev, task]);
+        });
+        conn.on("ReceiveNoteExtracted", (note: AiNoteDTO) => {
+          if (requestStartedAtRef.current == null) return;
+          setStreamedNotes((prev) => [...prev, note]);
+        });
+        return conn.start();
+      })
+      .catch((error) => console.error("Error connecting to SignalR:", error));
 
-    const startConnection = async () => {
-      try {
-        newConnection = await signalRService.createConnection();
-        setConnection(newConnection);
-        await newConnection.start();
-        newConnection.on("ReceiveMessage", receiveMessageHandler);
-        console.log("Connected to SignalR hub!");
-      } catch (error) {
-        console.error("Error connecting to SignalR:", error);
-      }
-    };
-    startConnection();
     return () => {
-      if (newConnection) {
-        newConnection
-          .stop()
-          .then(() => {
-            console.log("SignalR Connection Stopped.");
-            setModalType("input");
-            setAiGeneratedMessage(undefined);
-            newConnection!.off("ReceiveMessage", receiveMessageHandler);
-          })
-          .catch((error) => console.error("Error stopping SignalR connection:", error));
+      if (conn) {
+        conn.off("ReceiveGenerationResult", generationCompleteHandler);
+        conn.off("ReceiveTranscript");
+        conn.off("ReceiveTaskExtracted");
+        conn.off("ReceiveNoteExtracted");
+        conn.stop().catch((error) => console.error("Error stopping SignalR connection:", error));
       }
     };
   }, []);
+
   return {
-    aiGeneratedMessage,
-    sendMessage,
-    setAiGeneratedMessage,
-    transcribeAudio,
+    userInput,
+    transcript,
+    streamedTasks,
+    streamedNotes,
+    submitAudioForTranscription,
+    sendTextMessage,
   };
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }

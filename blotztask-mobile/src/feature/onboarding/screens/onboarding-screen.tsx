@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { useLanguageInit } from "@/shared/hooks/useLanguageInit";
 import { Ionicons } from "@expo/vector-icons";
-import { BlotzLogo } from "@/shared/components/ui/blotz-logo";
+import { BlotzLogo } from "@/shared/components/blotz-logo";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 

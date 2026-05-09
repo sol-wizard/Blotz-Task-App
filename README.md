@@ -15,7 +15,6 @@ We aim to realign productivity tools with how ADHDs struggle with — eliminatin
 ```
 Blotz-Task-App/
 ├── blotztask-api/           # .NET 8 REST API backend
-├── blotztask-function/      # Azure Functions for scheduled tasks
 ├── blotztask-ui/            # (Legacy) Next.js web application
 ├── blotztask-mobile/        # React Native mobile app (Expo)
 └── infra/                   # Azure infrastructure (Bicep)

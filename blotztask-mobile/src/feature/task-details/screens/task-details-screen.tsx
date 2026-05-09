@@ -6,7 +6,7 @@ import SubtasksView from "@/feature/task-details/components/subtasks-view";
 import { theme } from "@/shared/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTaskById } from "@/shared/hooks/useTaskbyId";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { ASSETS } from "@/shared/constants/assets";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
@@ -15,7 +15,7 @@ import {
   TaskSingleTimeCard,
 } from "@/feature/task-details/components/task-time-card";
 import { useTranslation } from "react-i18next";
-import { ReturnButton } from "@/shared/components/ui/return-button";
+import { ReturnButton } from "@/shared/components/return-button";
 
 export default function TaskDetailsScreen() {
   const router = useRouter();
@@ -94,35 +94,40 @@ export default function TaskDetailsScreen() {
         }}
       >
         <View className="pb-6 px-8">
-          <View className="flex-row items-center mb-4 mt-6">
-            <View className="px-3 py-1 rounded-xl border border-black">
-              <Text className={`text-sm font-medium text-black`}>
-                {selectedTask.isDone ? t("common:status.done") : t("common:status.todo")}
-              </Text>
-            </View>
-            {selectedTask.label && (
-              <View className="ml-2 px-3 py-1 rounded-xl border border-black">
-                <Text className="text-sm font-medium text-black">
-                  {getTranslatedLabelName(selectedTask.label.name)}
+          <View className="flex-row items-center justify-between mb-4 mt-6">
+            <View className="flex-1 flex-row items-center gap-2">
+              <View className="px-3 py-1 rounded-xl border border-black">
+                <Text className={`text-sm font-medium text-black`}>
+                  {selectedTask.isDone ? t("common:status.done") : t("common:status.todo")}
                 </Text>
               </View>
-            )}
-          </View>
 
-          <View className="flex-row items-start justify-center mb-4">
-            <Text className="flex-1 font-balooBold text-4xl leading-normal">
-              {selectedTask.title}
-            </Text>
+              {selectedTask.label && (
+                <View className="px-3 py-1 rounded-xl border border-black flex-shrink">
+                  <Text className="text-sm font-medium text-black" numberOfLines={1}>
+                    {getTranslatedLabelName(selectedTask.label.name)}
+                  </Text>
+                </View>
+              )}
+            </View>
+
             <TouchableOpacity
-              onPress={async () => {
+              onPress={() => {
                 router.push({
                   pathname: "/(protected)/task-edit",
                   params: { taskId: selectedTask.id },
                 });
               }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <ASSETS.editIcon width={28} height={28} fill="#444964" />
             </TouchableOpacity>
+          </View>
+
+          <View className="flex-row items-start justify-center mb-4">
+            <Text className="flex-1 font-balooBold text-3xl leading-normal">
+              {selectedTask.title}
+            </Text>
           </View>
 
           {selectedTask.startTime === selectedTask.endTime ? (

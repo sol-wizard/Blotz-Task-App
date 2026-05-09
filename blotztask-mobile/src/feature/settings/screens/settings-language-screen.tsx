@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useUserPreferencesQuery } from "@/feature/settings/hooks/useUserPreferencesQuery";
 import { useUserPreferencesMutation } from "@/feature/settings/hooks/useUserPreferencesMutation";
 import { Language } from "@/shared/models/user-preferences-dto";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 
 export default function SettingsLanguageScreen() {
   const router = useRouter();

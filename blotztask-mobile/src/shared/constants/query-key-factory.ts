@@ -42,3 +42,13 @@ export const noteKeys = {
 export const ddlKeys = {
   all: ["ddl"] as const,
 };
+
+export const pomodoroKeys = {
+  all: ["pomodoroSettings"] as const,
+  settings: () => [...pomodoroKeys.all, "settings"] as const,
+};
+
+export const aiUsageKeys = {
+  all: ["aiUsage"] as const,
+  summary: () => [...aiUsageKeys.all, "summary"] as const,
+};

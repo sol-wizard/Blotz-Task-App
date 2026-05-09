@@ -3,10 +3,9 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
-import { EditTaskItemDTO } from "./models/edit-task-item-dto";
-import { FormTextInput } from "@/shared/components/ui/form-text-input";
+import { FormTextInput } from "@/shared/components/form-text-input";
 import { LabelSelect } from "./components/label-select";
-import { FormDivider } from "../../shared/components/ui/form-divider";
+import { FormDivider } from "../../shared/components/form-divider";
 import { ReminderTab } from "./components/reminder-tab";
 import { SegmentButtonValue } from "./models/segment-button-value";
 import { SegmentToggle } from "./components/segment-toggle";
@@ -22,11 +21,11 @@ import {
   calculateAlertTime,
 } from "./util/time-convertion";
 import { combineDateTime } from "./util/combine-date-time";
-import { AddTaskItemDTO } from "@/shared/models/add-task-item-dto";
+import { TaskUpsertDTO } from "@/shared/models/task-upsert-dto";
 import { cancelNotification } from "@/shared/util/cancel-notification";
 import { convertToDateTimeOffset } from "@/shared/util/convert-to-datetimeoffset";
 import { useUserPreferencesQuery } from "../settings/hooks/useUserPreferencesQuery";
-import LoadingScreen from "@/shared/components/ui/loading-screen";
+import LoadingScreen from "@/shared/components/loading-screen";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
@@ -36,12 +35,12 @@ type TaskFormProps =
   | {
       mode: "create";
       dto?: undefined;
-      onSubmit: (data: AddTaskItemDTO) => void;
+      onSubmit: (data: TaskUpsertDTO) => void;
     }
   | {
       mode: "edit";
-      dto: EditTaskItemDTO;
-      onSubmit: (data: AddTaskItemDTO) => void;
+      dto: TaskUpsertDTO;
+      onSubmit: (data: TaskUpsertDTO) => void;
     };
 
 const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
@@ -113,20 +112,21 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
       isActiveTab === "reminder" ? data.startTime : data.endTime,
     );
 
-    let notificationId = null;
+    let notificationId: string | null = null;
     let alertTime = undefined;
     if (userPreferences?.upcomingNotification) {
-      notificationId = await createNotificationFromAlert({
-        startTime,
-        alert: data.alert,
-        title: data.title,
-      });
+      notificationId =
+        (await createNotificationFromAlert({
+          startTime,
+          alert: data.alert,
+          title: data.title,
+        })) ?? null;
       alertTime = calculateAlertTime(startTime!, data.alert);
     }
 
     const deadline = data.isDeadline ? combineDateTime(data.deadlineDate, data.deadlineTime) : null;
 
-    const submitTask: AddTaskItemDTO = {
+    const submitTask: TaskUpsertDTO = {
       title: data.title.trim(),
       description: data.description?.trim() ?? undefined,
       startTime: convertToDateTimeOffset(startTime!),
@@ -184,7 +184,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           />
           {formState.errors.title && (
             <Text className="text-red-500 text-sm ml-1 font-baloo">
-              {t("details.mustHaveTitleError")}
+              {t(formState.errors.title?.message || "")}
             </Text>
           )}
         </Animated.View>

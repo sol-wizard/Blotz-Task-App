@@ -4,7 +4,8 @@ param environment string
 param appInsightConnectionString string
 param keyVaultUri string
 param openAiEndpoint string
-param openAiDeploymentId string
+param openAiTaskGenerationDeploymentId string
+param openAiBreakdownDeploymentId string
 param logAnalyticsWorkspaceId string
 
 // Auth0 Configuration
@@ -89,8 +90,12 @@ resource appService 'Microsoft.Web/sites@2022-09-01' = {
           value: openAiEndpoint
         }
         {
-          name: 'AzureOpenAI__DeploymentId'
-          value: openAiDeploymentId
+          name: 'AzureOpenAI__AiModels__TaskGeneration__DeploymentId'
+          value: openAiTaskGenerationDeploymentId
+        }
+        {
+          name: 'AzureOpenAI__AiModels__Breakdown__DeploymentId'
+          value: openAiBreakdownDeploymentId
         }
         {
           name: 'ApiKeys__UserSync'

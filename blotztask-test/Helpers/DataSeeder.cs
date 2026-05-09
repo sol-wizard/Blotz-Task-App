@@ -1,7 +1,9 @@
 using BlotzTask.Infrastructure.Data;
+using BlotzTask.Modules.AiUsage.Entities;
 using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Tasks.Enums;
 using BlotzTask.Modules.Users.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlotzTask.Tests.Helpers;
 
@@ -83,5 +85,47 @@ public class DataSeeder
         await _context.SaveChangesAsync();
         return task;
     }
-}
 
+    public async Task<UserSubscription> CreateUserSubscriptionAsync(Guid userId, int planId, DateTime? createdAt = null)
+    {
+        var subscription = new UserSubscription
+        {
+            UserId = userId,
+            PlanId = planId,
+            CreatedAt = createdAt ?? DateTime.UtcNow
+        };
+
+        _context.UserSubscriptions.Add(subscription);
+        await _context.SaveChangesAsync();
+        return subscription;
+    }
+
+    public async Task<SubscriptionPlan> CreateSubscriptionPlanAsync(string name, int monthlyTokenLimit)
+    {
+        var plan = new SubscriptionPlan
+        {
+            Name = name,
+            MonthlyTokenLimit = monthlyTokenLimit
+        };
+
+        _context.SubscriptionPlans.Add(plan);
+        await _context.SaveChangesAsync();
+        return plan;
+    }
+
+    public async Task<AiUsageRecord> CreateAiUsageRecordAsync(Guid userId, int inputTokens, int outputTokens, int totalTokens, DateTime? createdAt = null)
+    {
+        var record = new AiUsageRecord
+        {
+            UserId = userId,
+            InputTokens = inputTokens,
+            OutputTokens = outputTokens,
+            TotalTokens = totalTokens,
+            CreatedAt = createdAt ?? DateTime.UtcNow
+        };
+
+        _context.AiUsageRecords.Add(record);
+        await _context.SaveChangesAsync();
+        return record;
+    }
+}

@@ -1,0 +1,48 @@
+{
+  "taskCard": {
+    "modes": "Modes",
+    "focus": "Focus"
+  },
+  "focusMode": {
+    "title": "Focus Mode",
+    "duration": "Duration",
+    "soundscapes": "Soundscapes",
+    "flow": "∞ flow",
+    "viewTask": "View my task",
+    "resume": "Resume",
+    "pause": "Pause",
+    "end": "End",
+    "switchTaskTitle": "Switch Task?",
+    "switchTaskMessage": "You already have a task in progress. Starting a new pomodoro will discard the previous progress. Are you sure you want to continue?",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "milestoneTitle": "You have been focused for {{value}} {{unit}}!",
+    "milestoneSubtitle": "Take a tiny stretch!",
+    "milestones": {
+      "phase0": {
+        "title": "Just getting started!",
+        "subtitle": "Let's build some momentum!"
+      },
+      "phase1": {
+        "title": "25 minutes done!",
+        "subtitle": "Take a 5-minute stretch!"
+      },
+      "phase2": {
+        "title": "1 hour of deep focus!",
+        "subtitle": "Grab some water."
+      },
+      "phase3": {
+        "title": "2 hours?! You're a machine!",
+        "subtitle": "Time for a longer break."
+      }
+    }
+  },
+  "soundscape": {
+    "easyFocus": "Easy\nFocus",
+    "deepWork": "Deep\nWork",
+    "taskFlow": "Task\nFlow",
+    "calmMind": "Calm\nMind",
+    "cafeVibe": "Cafe\nVibe",
+    "noSound": "No\nSound"
+  }
+}

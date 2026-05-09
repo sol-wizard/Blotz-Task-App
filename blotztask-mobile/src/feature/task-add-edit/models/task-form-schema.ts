@@ -14,7 +14,11 @@ export const recurrenceValues = [
 
 export const taskFormSchema = z
   .object({
-    title: z.string().trim().min(1, "Title is required").max(80, "Max 80 chars"),
+    title: z
+      .string()
+      .trim()
+      .min(1, "details.mustHaveTitleError")
+      .max(80, "details.titleTooLongError"),
     description: z.union([z.string().max(1000, "Max 1000 chars"), z.literal("")]).nullable(),
     startDate: z.date(),
     startTime: z.date(),

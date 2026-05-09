@@ -22,9 +22,11 @@ import { queryClient } from "@/shared/util/queryClient";
 import * as Sentry from "@sentry/react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import Toast from "react-native-toast-message";
-import { toastConfig } from "@/shared/components/ui/toast-config";
+import { toastConfig } from "@/shared/components/toast-config";
 import { useAuth } from "@/shared/hooks/useAuth";
 import posthog from "@/shared/constants/posthog-client";
+import "@/shared/util/typography";
+
 
 Sentry.init({
   dsn: "https://776f7bb0f485962be714d1ad719ff46e@o4510303768805376.ingest.us.sentry.io/4510303770902528",
@@ -52,13 +54,13 @@ export default function RootLayout() {
 
   return (
     <Auth0Provider domain={domain} clientId={clientId}>
-      <PostHogProvider client={posthog} autocapture>
+      <PostHogProvider client={posthog} autocapture={false}>
         <GestureHandlerRootView>
           <QueryClientProvider client={queryClient}>
             <SafeAreaProvider>
               <KeyboardProvider>
                 <RootStack />
-                <Toast config={toastConfig} position="bottom" bottomOffset={110} />
+                <Toast config={toastConfig} position="bottom" bottomOffset={120} />
               </KeyboardProvider>
             </SafeAreaProvider>
           </QueryClientProvider>
@@ -73,7 +75,8 @@ function RootStack() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="index" />
+      <Stack.Screen name="update-required" />
 
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />

@@ -1,32 +1,18 @@
-using BlotzTask.Modules.ChatTaskGenerator.Dtos;
+using BlotzTask.Modules.ChatTaskGenerator.DevTools;
 using BlotzTask.Modules.ChatTaskGenerator.Services;
-using BlotzTask.Shared.Store;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddChatTaskGeneratorModule(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static IServiceCollection AddChatTaskGeneratorModule(this IServiceCollection services)
     {
-        services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
+        services.AddScoped<IAiChatService, AiChatService>();
         services.AddScoped<DateTimeResolveService>();
+        services.AddScoped<SpeechTranscriptionService>();
+        services.AddScoped<IAiQualityCheckService, AiQualityCheckService>();
 
-        services.AddSingleton(new ChatHistoryStore(
-            TimeSpan.FromMinutes(30),
-            TimeSpan.FromMinutes(5)
-        ));
-
-        services.Configure<SpeechTokenSettings>(options =>
-        {
-            configuration.GetSection("AzureSpeech").Bind(options);
-        });
-
-        services.AddHttpClient<SpeechTranscriptionService>(client =>
-        {
-            client.Timeout = TimeSpan.FromMinutes(3);
-        });
+        services.AddScoped<AiHubFilter>();
 
         return services;
     }

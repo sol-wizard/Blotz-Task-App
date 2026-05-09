@@ -18,9 +18,13 @@ param auth0Audience string
 param auth0ManagementClientId string
 param auth0ManagementAudience string
 
-param openAiDeploymentName string
-param openAiModelName string
-param openAiModelVersion string
+param breakdownDeploymentName string
+param breakdownModelName string
+param breakdownModelVersion string
+
+param taskGenerationDeploymentName string
+param taskGenerationModelName string
+param taskGenerationModelVersion string
 param githubRepo string // Format: org/repo (e.g., sol-wizard/Blotz-Task-App)
 param budgetAmount int
 param alertEmail string
@@ -93,7 +97,8 @@ module webAppForAPI 'modules/appService.bicep' = {
     appInsightConnectionString: appInsight.outputs.connectionString
     keyVaultUri: kv.outputs.vaultUri
     openAiEndpoint: openAi.outputs.endpoint
-    openAiDeploymentId: openAi.outputs.deploymentId
+    openAiTaskGenerationDeploymentId: openAi.outputs.taskGenerationDeploymentId
+    openAiBreakdownDeploymentId: openAi.outputs.breakdownDeploymentId
     logAnalyticsWorkspaceId: logAnalytics.outputs.id
     appServiceSkuName: appServiceSkuName
     appServiceSkuTier: appServiceSkuTier
@@ -154,9 +159,12 @@ module openAi 'modules/openAi.bicep' = {
     projectName: namePrefix
     keyVaultName: kv.outputs.name
     foundryProjectName: 'proj-${namePrefix}-${environment}'
-    openAiDeploymentName: openAiDeploymentName
-    openAiModelName: openAiModelName
-    openAiModelVersion: openAiModelVersion
+    breakdownDeploymentName: breakdownDeploymentName
+    breakdownModelName: breakdownModelName
+    breakdownModelVersion: breakdownModelVersion
+    taskGenerationDeploymentName: taskGenerationDeploymentName
+    taskGenerationModelName: taskGenerationModelName
+    taskGenerationModelVersion: taskGenerationModelVersion
   }
 }
 module githubActionIdentity 'modules/identity.bicep' = {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { ReturnButton } from "@/shared/components/ui/return-button";
+import { ReturnButton } from "@/shared/components/return-button";
 import avatarDataDevelopment from "../constants/avatar-development.json";
 import avatarDataProduction from "../constants/avatar-production.json";
 import { useUserProfileMutation } from "@/feature/settings/hooks/useUserProfileMutation";

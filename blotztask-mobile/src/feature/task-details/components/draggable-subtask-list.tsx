@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from "react-native-draggable-flatlist";
 import { SubtaskDTO } from "@/feature/task-details/models/subtask-dto";
-import { View } from "react-native";
+import { View, Platform } from "react-native";
 import SubtaskItem from "@/feature/task-details/components/subtask-item";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type DraggableSubtaskListProps = {
   subtasks: SubtaskDTO[];
@@ -10,15 +11,20 @@ type DraggableSubtaskListProps = {
   onDelete?: (id: number) => void;
   onToggle?: (id: number) => void;
   color?: string;
+  parentTaskId: number; 
+  ListHeaderComponent?: React.ReactElement;
 };
 export const DraggableSubtaskList = ({
   subtasks,
   isEditMode = false,
   onDelete,
   onToggle,
-  color,
+  parentTaskId,
+  ListHeaderComponent,
 }: DraggableSubtaskListProps) => {
   const [data, setData] = useState(subtasks);
+  const { bottom } = useSafeAreaInsets();
+  const listBottomPadding = Platform.OS === "android" ? bottom + 12 : 0;
 
   useEffect(() => {
     setData(subtasks);
@@ -28,17 +34,12 @@ export const DraggableSubtaskList = ({
     return (
       <ScaleDecorator>
         <SubtaskItem
-          item={{
-            id: item.subTaskId,
-            title: item.title,
-            duration: item.duration,
-            isDone: item.isDone,
-          }}
+          item={item}
           onToggle={(id) => onToggle?.(id)}
-          color={color}
           isEditMode={isEditMode}
           onDelete={onDelete}
           drag={drag}
+          parentTaskId={parentTaskId}
         />
       </ScaleDecorator>
     );
@@ -48,12 +49,15 @@ export const DraggableSubtaskList = ({
     <View className="flex-1">
       <DraggableFlatList
         data={data}
+        ListHeaderComponent={ListHeaderComponent}
         onDragEnd={({ data: newData }: { data: SubtaskDTO[] }) => setData(newData)}
         keyExtractor={(item: SubtaskDTO) => item.subTaskId.toString()}
         renderItem={renderItem}
+        contentContainerStyle={{ paddingBottom: listBottomPadding }}
         autoscrollThreshold={40}
         autoscrollSpeed={100}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       />
     </View>
   );

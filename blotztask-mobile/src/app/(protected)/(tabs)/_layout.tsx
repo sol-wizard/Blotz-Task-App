@@ -2,8 +2,8 @@ import { Tabs, router } from "expo-router";
 import { Pressable, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ASSETS } from "@/shared/constants/assets";
-import { BottomNavImage } from "@/shared/components/ui/bottom-nav-image";
-import { GradientCircle } from "@/shared/components/common/gradient-circle";
+import { BottomNavImage } from "@/shared/components/bottom-nav-image";
+import { GradientCircle } from "@/shared/components/gradient-circle";
 import { theme } from "@/shared/constants/theme";
 
 function UnfocusedTabIcon({ children }: { children: React.ReactNode }) {
@@ -100,7 +100,11 @@ export default function ProtectedTabsLayout() {
                 onPress={() => router.push("/ai-task-sheet")}
               >
                 <GradientCircle size={58}>
-                  <ASSETS.whiteBun width={28} height={28} style={{ position: "absolute" } as const} />
+                  <ASSETS.whiteBun
+                    width={28}
+                    height={28}
+                    style={{ position: "absolute" } as const}
+                  />
                 </GradientCircle>
               </Pressable>
             ),

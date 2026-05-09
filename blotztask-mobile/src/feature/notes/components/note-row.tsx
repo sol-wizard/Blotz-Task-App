@@ -12,6 +12,7 @@ import { NoteTimeEstimateModal } from "./note-time-estimate-modal";
 
 import { useEstimateTaskTime } from "../hooks/useEstimateTaskTime";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { View } from "react-native";
 
 export const NoteRow = ({
   note,
@@ -26,19 +27,16 @@ export const NoteRow = ({
   onRowOpen: (ref: RefObject<SwipeableMethods | null>) => void;
   onAddToTask: (note: NoteDTO) => void;
 }) => {
-
   const [isSwiping, setIsSwiping] = useState(false);
   const [isEstimateModalVisible, setIsEstimateModalVisible] = useState(false);
   const { isEstimating, estimationResult, estimationError } = useEstimateTaskTime();
 
   const swipeRef = useRef<SwipeableMethods | null>(null);
 
-
-
   return (
     <Animated.View
       entering={MotionAnimations.upEntering}
-      exiting={MotionAnimations.rightExiting}
+      exiting={MotionAnimations.leftExiting}
       layout={MotionAnimations.layout}
     >
       <ReanimatedSwipeable
@@ -62,16 +60,11 @@ export const NoteRow = ({
           setIsSwiping(false);
         }}
       >
-        <Animated.View
-          className={`flex-1 overflow-hidden rounded-3xl ${isSwiping ? "bg-gray-100" : "bg-white"}`}
-        >
-          <NoteCard
-            note={note}
-            onPressCard={() => onPressNote(note)}
-          />
-        </Animated.View>
+        <View className={`rounded-3xl ${isSwiping ? "bg-gray-100" : "bg-white"}`}>
+          <NoteCard note={note} onPressCard={() => onPressNote(note)} />
+        </View>
       </ReanimatedSwipeable>
-        
+
       <NoteTimeEstimateModal
         visible={isEstimateModalVisible}
         setIsModalVisible={setIsEstimateModalVisible}

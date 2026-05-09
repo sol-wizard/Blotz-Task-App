@@ -5,6 +5,8 @@
   "noTasks": "No floating tasks found",
   "createTask": "Create your first task",
   "addNote": "Add a Note",
+  "createNote": "Create Note",
+  "editNote": "Edit Note",
   "gashapon": {
     "revealTitle": "Reveal A New Task",
     "cancel": "Cancel",
