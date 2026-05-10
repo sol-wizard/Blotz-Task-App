@@ -160,8 +160,6 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
                     : undefined
                 }
                 numberOfLines={1}
-                adjustsFontSizeToFit={isPinned}
-                minimumFontScale={0.5}
               >
                 {daysLeftText}
               </Text>
