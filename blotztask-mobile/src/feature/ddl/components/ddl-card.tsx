@@ -14,7 +14,6 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 import DdlRightActions from "./ddl-right-actions";
 
-
 const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const { t } = useTranslation("deadline");
@@ -29,7 +28,14 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
 
   const daysLeft = Math.max(0, differenceInCalendarDays(new Date(task.dueAt), new Date()));
   const daysLeftText = daysLeft.toString();
-  const pinnedDaysFontSize = Math.max(18, Math.min(52, 150 / daysLeftText.length));
+  const pinnedDaysFontSize =
+    daysLeftText.length <= 2
+      ? 46
+      : daysLeftText.length === 3
+        ? 40
+        : daysLeftText.length === 4
+          ? 34
+          : 28;
   const labelColor = task.label?.color ?? "#D1D1D6";
   const endTimeDisplay = task.dueAt ? format(new Date(task.dueAt), "dd/MM/yy") : "—";
   const isPinned = task.isPinned;
@@ -87,11 +93,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
           )}
 
           <View className={isPinned ? "w-12 items-center justify-center" : undefined}>
-            <TasksCheckbox
-              type="task"
-              checked={task.isDone}
-              onChange={() => markAsDone(task.id)}
-            />
+            <TasksCheckbox type="task" checked={task.isDone} onChange={() => markAsDone(task.id)} />
           </View>
 
           <View
