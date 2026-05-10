@@ -7,14 +7,13 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace BlotzTask.Modules.ChatTaskGenerator;
 
-//TODO: Remove the deployment id from the app settings , we only want to store that in the environment variable and the local development json 
 //so we need to update the onboarding documents
 
 //TODO: Review the ADR (.ai/decisions/001-ai-task-generation.md) — verify decisions are still accurate and up to date.
 [Authorize]
 public class AiTaskGenerateChatHub(
     ILogger<AiTaskGenerateChatHub> logger,
-    IAiTaskGenerateService aiTaskGenerateService,
+    IAiChatService aiChatService,
     DateTimeResolveService dateTimeResolveService,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     SpeechTranscriptionService speechTranscriptionService) : Hub
@@ -31,7 +30,7 @@ public class AiTaskGenerateChatHub(
         var userPreferences = await getUserPreferencesQueryHandler.Handle(
             new GetUserPreferencesQuery { UserId = userId }, CancellationToken.None);
         var preferredLanguage = userPreferences.PreferredLanguage.ToDisplayName();
-        var chatContext = await aiTaskGenerateService.InitializeAsync(preferredLanguage, timeZone, Context.ConnectionAborted);
+        var chatContext = await aiChatService.InitializeAsync(preferredLanguage, timeZone, Context.ConnectionAborted);
 
         Context.Items["ChatContext"] = chatContext;
         Context.Items["UserId"] = userId;
@@ -70,7 +69,7 @@ public class AiTaskGenerateChatHub(
         WireStreamingCallbacks(chatContext, ct);
 
         // 3. Run the AI — it will call tools (CreateTask, CreateNote, etc.) which trigger the callbacks above
-        var resultMessage = await aiTaskGenerateService.GenerateAiResponse(userId, resolvedMessage, chatContext, ct);
+        var resultMessage = await aiChatService.GenerateAiResponse(userId, resolvedMessage, chatContext, ct);
 
         // 4. Clear callbacks so stale tool calls from a previous turn cannot push to the client
         ClearStreamingCallbacks(chatContext);
