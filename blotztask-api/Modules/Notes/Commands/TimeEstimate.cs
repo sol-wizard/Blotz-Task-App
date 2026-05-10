@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Azure.AI.Projects;
+using BlotzTask.Extension;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.Notes.DTOs;
 using BlotzTask.Modules.Notes.Prompts;
@@ -27,13 +28,11 @@ public class TimeEstimateCommandHandler(
     ILogger<TimeEstimateCommandHandler> logger,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     AIProjectClient projectClient,
-    IConfiguration configuration,
+    AgentFrameworkServiceExtensions.AzureAIOptions options,
     ICheckAiQuotaService checkAiQuotaService,
     IRecordAiUsageService recordAiUsageService)
 {
-    private readonly string _deploymentId =
-        configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"]
-        ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:Breakdown:DeploymentId config.");
+    private readonly string _deploymentId = options.BreakdownDeploymentId;
 
     public async Task<AITimeEstimationResult?> Handle(NoteTimeEstimationRequest request, CancellationToken ct = default)
     {
