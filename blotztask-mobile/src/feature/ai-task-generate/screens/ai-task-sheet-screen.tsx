@@ -22,6 +22,7 @@ import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import Toast from "react-native-toast-message";
 import { analytics } from "@/shared/services/analytics";
+import { toastConfig } from "@/shared/components/toast-config";
 
 export default function AiTaskSheetScreen() {
   // --- Hooks ---
@@ -31,7 +32,14 @@ export default function AiTaskSheetScreen() {
   const [textInput, setTextInput] = useState("");
   const { isVisible: isKeyboardVisible } = useKeyboardState();
   const { isHoldHintVisible, showHoldHint, hideHoldHint } = useHoldHint(1500);
-  const { userInput, transcript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
+  const {
+    userInput,
+    transcript,
+    streamedTasks,
+    streamedNotes,
+    submitAudioForTranscription,
+    sendTextMessage,
+  } = useAiTaskGenerator({
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
@@ -168,7 +176,6 @@ export default function AiTaskSheetScreen() {
               )}
 
               {/* Input bar sticks to the keyboard only */}
-
               <AiInputBar
                 // Text input
                 textInput={textInput}
@@ -190,6 +197,7 @@ export default function AiTaskSheetScreen() {
           </KeyboardStickyView>
         </LinearGradient>
       </View>
+      <Toast config={toastConfig} position="bottom" bottomOffset={120} />
     </View>
   );
 }
