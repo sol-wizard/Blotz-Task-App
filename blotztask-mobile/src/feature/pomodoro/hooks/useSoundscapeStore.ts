@@ -1,14 +1,30 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
 import { create } from "zustand";
-import { PomodoroSoundscapeKey, SOUNDSCAPE_MUSIC_MAP } from "../utils/pomodoro-setting";
+import { PomodoroSoundscapeType, SOUNDSCAPES } from "../utils/pomodoro-setting";
 
 let globalPlayer: AudioPlayer | null = null;
-let soundscapeKey: PomodoroSoundscapeKey | null = null;
+let playerInitPromise: Promise<AudioPlayer> | null = null;
+
+async function initPlayer() {
+  if (globalPlayer) return globalPlayer;
+
+  playerInitPromise = (async () => {
+    await setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      interruptionMode: "doNotMix",
+    });
+    globalPlayer = createAudioPlayer(null);
+    return globalPlayer;
+  })();
+
+  return playerInitPromise;
+}
 
 interface SoundscapeState {
   isPlaying: boolean;
-  initPlayer: () => Promise<void>;
-  playSoundscape: (key: PomodoroSoundscapeKey) => Promise<void>;
+  currentSoundscapeType: PomodoroSoundscapeType | null;
+  playSoundscape: (music: PomodoroSoundscapeType) => Promise<void>;
   toggleSoundscape: () => void;
   pauseSoundscape: () => void;
   stopSoundscape: () => void;
@@ -16,37 +32,26 @@ interface SoundscapeState {
 
 export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
   isPlaying: false,
+  currentSoundscapeType: null,
 
-  initPlayer: async () => {
-    if (globalPlayer) return;
-
-    await setAudioModeAsync({
-      playsInSilentMode: true,
-      shouldPlayInBackground: true,
-      interruptionMode: "doNotMix",
-    });
-
-    globalPlayer = createAudioPlayer(null);
-  },
-
-  playSoundscape: async (key) => {
-    if (key === "noSound") {
+  playSoundscape: async (type: PomodoroSoundscapeType) => {
+    if (type === "noSound") {
       get().stopSoundscape();
-      soundscapeKey = null;
       return;
     }
-    if (!globalPlayer) return;
+    const player = await initPlayer();
 
-    const source = SOUNDSCAPE_MUSIC_MAP[key];
+    const source = SOUNDSCAPES[type].music;
     if (!source) return;
 
-    if (soundscapeKey !== key) {
-      globalPlayer.replace(source);
-      globalPlayer.loop = true;
-      soundscapeKey = key;
+    if (get().currentSoundscapeType !== type) {
+      player.pause();
+      player.replace(source);
+      player.loop = true;
+      set({ currentSoundscapeType: type });
     }
 
-    globalPlayer.play();
+    player.play();
     set({ isPlaying: true });
   },
 
@@ -56,7 +61,7 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
       get().pauseSoundscape();
       return;
     }
-    get().playSoundscape(soundscapeKey!);
+    get().playSoundscape(get().currentSoundscapeType!);
     set({ isPlaying: true });
   },
 
@@ -70,6 +75,6 @@ export const useSoundscapeStore = create<SoundscapeState>((set, get) => ({
     if (!globalPlayer) return;
     get().pauseSoundscape();
     globalPlayer.seekTo(0);
-    soundscapeKey = null;
+    set({ currentSoundscapeType: null });
   },
 }));
