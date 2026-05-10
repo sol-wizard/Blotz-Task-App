@@ -35,8 +35,9 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
         ? 40
         : daysLeftText.length === 4
           ? 34
-          : 28;
-  daysLeftText.length === 5 ? 28 : 24;
+          : daysLeftText.length === 5
+            ? 28
+            : 24;
   const labelColor = task.label?.color ?? "#D1D1D6";
   const endTimeDisplay = task.dueAt ? format(new Date(task.dueAt), "dd/MM/yy") : "—";
   const isPinned = task.isPinned;
