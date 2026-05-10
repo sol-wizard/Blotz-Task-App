@@ -6,6 +6,7 @@ using BlotzTask.Modules.Tasks.Domain.Entities;
 using BlotzTask.Modules.Users.Domain;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Modules.AiUsage.Entities;
+using BlotzTask.Modules.MonthlyReviews.Domain;
 using BlotzTask.Modules.Notes.Domain;
 using BlotzTask.Modules.Pomodoro.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +35,7 @@ public class BlotzTaskDbContext : DbContext
     public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
     public DbSet<UserSubscription> UserSubscriptions { get; set; }
     public DbSet<AiUsageRecord> AiUsageRecords { get; set; }
+    public DbSet<MonthlyReviewReport> MonthlyReviewReports { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
