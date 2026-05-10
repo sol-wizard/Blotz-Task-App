@@ -27,7 +27,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
   } = useDdlMutation();
 
   const daysLeft = Math.max(0, differenceInCalendarDays(new Date(task.dueAt), new Date()));
-  const daysLeftText = daysLeft.toString();
+  const daysLeftText = daysLeft > 9999 ? "9999+" : daysLeft.toString();
   const pinnedDaysFontSize =
     daysLeftText.length <= 2
       ? 46
@@ -36,6 +36,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
         : daysLeftText.length === 4
           ? 34
           : 28;
+  daysLeftText.length === 5 ? 28 : 24;
   const labelColor = task.label?.color ?? "#D1D1D6";
   const endTimeDisplay = task.dueAt ? format(new Date(task.dueAt), "dd/MM/yy") : "—";
   const isPinned = task.isPinned;
