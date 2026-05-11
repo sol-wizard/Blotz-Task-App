@@ -4,6 +4,14 @@ import { EVENTS, SCREEN_NAMES, type AiTaskOutcome } from "@/shared/constants/pos
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
 
+type AiGeneratedTaskAnalytics = {
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  labelName?: string;
+};
+
 export const analytics = {
   /**
    * Links an anonymous PostHog user to a real Auth0 identity.
@@ -62,13 +70,19 @@ export const analytics = {
   trackIfUserAcceptAiTask(params: {
     userInput?: string;
     outcome: AiTaskOutcome;
-    generatedTaskTitles: string[];
+    generatedTasks: AiGeneratedTaskAnalytics[];
     generatedNoteTexts: string[];
   }) {
     posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
       ...(params.userInput !== undefined && { user_input: params.userInput }),
       outcome: params.outcome,
-      ai_generated_task_titles: params.generatedTaskTitles,
+      ai_generated_tasks: params.generatedTasks.map((task) => ({
+        title: task.title,
+        description: task.description,
+        start_time: task.startTime,
+        end_time: task.endTime,
+        ...(task.labelName && { label_name: task.labelName }),
+      })),
       ai_generated_note_texts: params.generatedNoteTexts,
     });
   },
