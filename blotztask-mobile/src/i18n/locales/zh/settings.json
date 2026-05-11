@@ -85,6 +85,7 @@
     "loading": "正在加载信件…",
     "error": "信件加载失败。",
     "retry": "重试",
+    "generate": "生成信件",
     "footnote": "由 AI 根据您本月创建的任务生成。"
   }
 }

@@ -27,6 +27,8 @@ export default function MonthlyReviewScreen() {
     isAtCurrentMonth,
     goPrev,
     goNext,
+    generate,
+    isGenerating,
   } = useMonthlyReport();
 
   const displayMonth = formatMonth(selectedMonth, i18n.language);
@@ -88,7 +90,22 @@ export default function MonthlyReviewScreen() {
                 <LetterSignature />
               </>
             ) : (
-              <LetterEmptyState />
+              <>
+                <LetterEmptyState />
+                {/* TODO: temporary test button — remove once PBI 8A scheduled trigger is in place. */}
+                <View className="items-center mb-6">
+                  <Pressable
+                    onPress={() => generate()}
+                    disabled={isGenerating}
+                    className="px-5 py-2 rounded-full bg-secondary"
+                    style={{ opacity: isGenerating ? 0.6 : 1 }}
+                  >
+                    <Text className="text-white font-balooBold">
+                      {isGenerating ? t("monthlyReview.loading") : t("monthlyReview.generate")}
+                    </Text>
+                  </Pressable>
+                </View>
+              </>
             )}
           </LetterPaper>
 

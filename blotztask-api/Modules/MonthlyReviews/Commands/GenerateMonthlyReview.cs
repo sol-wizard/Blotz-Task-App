@@ -9,10 +9,17 @@ using BlotzTask.Modules.MonthlyReviews.Dtos;
 using BlotzTask.Modules.MonthlyReviews.Prompts;
 using BlotzTask.Modules.Users.Enums;
 using BlotzTask.Shared.Exceptions;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using OpenAI.Chat;
 
 namespace BlotzTask.Modules.MonthlyReviews.Commands;
+
+public class GenerateMonthlyReviewRequest
+{
+    [BindRequired, Range(2000, 9999)] public int Year { get; set; }
+    [BindRequired, Range(1, 12)] public int Month { get; set; }
+}
 
 public class GenerateMonthlyReviewCommand
 {
