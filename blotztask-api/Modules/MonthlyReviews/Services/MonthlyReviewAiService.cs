@@ -31,7 +31,7 @@ public class MonthlyReviewAiService(
     public async Task<MonthlyReviewAiResult> GenerateLetterAsync(
         string preferredLanguage,
         string monthLabel,
-        string taskJson, 
+        string taskJson,
         CancellationToken ct = default)
     {
         var prompt = MonthlyReviewPrompts.GetMonthlyReviewPrompt(preferredLanguage, monthLabel, taskJson);

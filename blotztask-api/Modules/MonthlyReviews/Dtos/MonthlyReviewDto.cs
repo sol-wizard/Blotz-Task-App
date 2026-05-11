@@ -8,7 +8,7 @@ public class MonthlyReviewDto
     public DateTime CreatedAt { get; set; }
 }
 
-public class MonthlyReviewTaskSnapshotDto
+public class MonthlyReviewTaskDto
 {
     public string Title { get; set; } = string.Empty;
     public string Details { get; set; } = string.Empty;

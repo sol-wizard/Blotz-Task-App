@@ -15,7 +15,7 @@ public class MonthlyReviewReportConfiguration : IEntityTypeConfiguration<Monthly
         builder.Property(r => r.Year).IsRequired();
         builder.Property(r => r.Month).IsRequired();
         builder.Property(r => r.AiGeneratedLetter).IsRequired();
-        builder.Property(r => r.AiInputSnapshotJson).IsRequired();
+        builder.Property(r => r.AiInputJson).IsRequired();
         builder.Property(r => r.AiModel).IsRequired().HasMaxLength(100);
         builder.Property(r => r.CreatedAt).IsRequired();
         builder.Property(r => r.UpdatedAt).IsRequired();

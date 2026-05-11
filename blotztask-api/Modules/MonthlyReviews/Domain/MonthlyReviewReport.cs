@@ -9,7 +9,7 @@ public class MonthlyReviewReport
     public int Year { get; set; }
     public int Month { get; set; }
     public string AiGeneratedLetter { get; set; } = string.Empty;
-    public string AiInputSnapshotJson { get; set; } = string.Empty;
+    public string AiInputJson { get; set; } = string.Empty;
     public string AiModel { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
