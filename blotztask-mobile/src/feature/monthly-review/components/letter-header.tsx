@@ -3,9 +3,9 @@ import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 import { PNGIMAGES } from "@/shared/constants/assets";
 
-type Props = { monthLabel: string };
+type Props = { displayMonth: string };
 
-export function LetterHeader({ monthLabel }: Props) {
+export function LetterHeader({ displayMonth }: Props) {
   const { t } = useTranslation("settings");
 
   return (
@@ -39,7 +39,7 @@ export function LetterHeader({ monthLabel }: Props) {
           <Text className="text-[10px] font-baloo text-secondary/50 uppercase tracking-[2px]">
             {t("monthlyReview.dateLabel")}
           </Text>
-          <Text className="text-sm font-balooBold text-secondary">{monthLabel}</Text>
+          <Text className="text-sm font-balooBold text-secondary">{displayMonth}</Text>
         </View>
       </View>
       <View className="h-px bg-secondary/10 mb-6" />

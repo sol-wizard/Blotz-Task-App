@@ -146,11 +146,11 @@ public class GenerateMonthlyReviewCommandHandler(
 
     private async Task<(string Letter, string Model)> GenerateLetterAsync(
         string preferredLanguage,
-        string monthLabel,
+        string displayMonth,
         string aiInputJson,
         CancellationToken ct)
     {
-        var prompt = MonthlyReviewPrompts.GetMonthlyReviewPrompt(preferredLanguage, monthLabel, aiInputJson);
+        var prompt = MonthlyReviewPrompts.GetMonthlyReviewPrompt(preferredLanguage, displayMonth, aiInputJson);
         var chatClient = azureOpenAIClient.GetChatClient(_deploymentId);
 
 #pragma warning disable OPENAI001 // ReasoningEffortLevel is experimental in Azure.AI.OpenAI 2.8.0-beta.
@@ -164,7 +164,7 @@ public class GenerateMonthlyReviewCommandHandler(
         {
             logger.LogInformation(
                 "Generating monthly review letter (deployment={DeploymentId}, language={Language}, month={Month})",
-                _deploymentId, preferredLanguage, monthLabel);
+                _deploymentId, preferredLanguage, displayMonth);
 
             var response = await chatClient.CompleteChatAsync(
                 new ChatMessage[] { new UserChatMessage(prompt) },

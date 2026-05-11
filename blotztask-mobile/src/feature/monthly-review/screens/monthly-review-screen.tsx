@@ -1,4 +1,5 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { CustomSpinner } from "@/shared/components/custom-spinner";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -11,15 +12,24 @@ import { LetterPaper } from "../components/letter-paper";
 import { LetterSignature } from "../components/letter-signature";
 import { MonthSelector } from "../components/month-selector";
 import { useMonthlyReport } from "../hooks/useMonthlyReport";
-import { formatMonthLabel } from "../utils/month-utils";
+import { formatMonth } from "../utils/month-utils";
 
 export default function MonthlyReviewScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation("settings");
   const { userProfile } = useUserProfile();
-  const { selectedMonth, report, isAtCurrentMonth, goPrev, goNext } = useMonthlyReport();
+  const {
+    selectedMonth,
+    report,
+    isLoading,
+    isError,
+    refetch,
+    isAtCurrentMonth,
+    goPrev,
+    goNext,
+  } = useMonthlyReport();
 
-  const monthLabel = formatMonthLabel(selectedMonth, i18n.language);
+  const displayMonth = formatMonth(selectedMonth, i18n.language);
   const recipientName = userProfile?.displayName ?? "Friend";
 
   return (
@@ -35,7 +45,7 @@ export default function MonthlyReviewScreen() {
 
       <View className="px-5 mb-4">
         <MonthSelector
-          label={monthLabel}
+          label={displayMonth}
           onPrev={goPrev}
           onNext={goNext}
           disableNext={isAtCurrentMonth}
@@ -45,13 +55,35 @@ export default function MonthlyReviewScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
         <View className="px-5">
           <LetterPaper>
-            <LetterHeader monthLabel={monthLabel} />
-            {report ? (
+            <LetterHeader displayMonth={displayMonth} />
+            {isLoading ? (
+              // TODO: replace with a shared inline loading component once one exists.
+              <View className="py-12 items-center">
+                <CustomSpinner size={48} />
+                <Text className="text-base font-baloo text-secondary/60 mt-3 text-center">
+                  {t("monthlyReview.loading")}
+                </Text>
+              </View>
+            ) : isError ? (
+              <View className="py-12 items-center">
+                <MaterialCommunityIcons name="alert-circle-outline" size={40} color="#C7C9D6" />
+                <Text className="text-base font-baloo text-secondary/60 mt-3 text-center">
+                  {t("monthlyReview.error")}
+                </Text>
+                <Pressable
+                  onPress={() => refetch()}
+                  className="mt-4 px-5 py-2 rounded-full bg-secondary"
+                >
+                  <Text className="text-white font-balooBold">
+                    {t("monthlyReview.retry")}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : report ? (
               <>
                 <LetterBody
                   recipientName={recipientName}
-                  summary={report.summary}
-                  closing={report.closing}
+                  body={report.aiGeneratedLetter}
                 />
                 <LetterSignature />
               </>

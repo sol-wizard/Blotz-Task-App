@@ -4,7 +4,7 @@ public static class MonthlyReviewPrompts
 {
     public static string GetMonthlyReviewPrompt(
         string preferredLanguage,
-        string monthLabel,
+        string displayMonth,
         string taskJson)
     {
         return $"""
@@ -27,7 +27,7 @@ public static class MonthlyReviewPrompts
                 - Return only the final letter content, no markdown table.
 
                 Use the user's preferred language: {preferredLanguage}.
-                Month: {monthLabel}.
+                Month: {displayMonth}.
                 Task data:
                 {taskJson}
                 """;
