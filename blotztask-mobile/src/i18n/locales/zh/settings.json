@@ -13,7 +13,8 @@
   "betaFeatures": {
     "title": "测试功能",
     "allTasks": "所有任务",
-    "membershipPlan": "会员计划"
+    "membershipPlan": "会员计划",
+    "monthlyReview": "月度回顾"
   },
 
   "account": {
@@ -72,5 +73,18 @@
     "privacyPolicy": "隐私声明",
     "followUs": "关注我们",
     "xiaohongshu": "小红书"
+  },
+  "monthlyReview": {
+    "title": "月度回顾",
+    "greeting": "亲爱的 {{name}}，",
+    "letterLabel": "月度信件",
+    "dateLabel": "日期",
+    "signOff": "温暖地，",
+    "signature": "Blotz",
+    "empty": "本月还没有信件。",
+    "loading": "正在加载信件…",
+    "error": "信件加载失败。",
+    "retry": "重试",
+    "footnote": "由 AI 根据您本月创建的任务生成。"
   }
 }
