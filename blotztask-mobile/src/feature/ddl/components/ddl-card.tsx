@@ -28,20 +28,10 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
 
   const daysLeft = Math.max(0, differenceInCalendarDays(new Date(task.dueAt), new Date()));
   const daysLeftText = daysLeft > 9999 ? "9999+" : daysLeft.toString();
-  const pinnedDaysFontSize =
-    daysLeftText.length <= 2
-      ? 46
-      : daysLeftText.length === 3
-        ? 40
-        : daysLeftText.length === 4
-          ? 34
-          : daysLeftText.length === 5
-            ? 28
-            : 24;
+
   const labelColor = task.label?.color ?? "#D1D1D6";
   const endTimeDisplay = task.dueAt ? format(new Date(task.dueAt), "dd/MM/yy") : "—";
   const isPinned = task.isPinned;
-
   const renderRightActions = (progress: SharedValue<number>) => {
     return (
       <DdlRightActions
@@ -154,8 +144,8 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
                   isPinned
                     ? {
                         width: "100%",
-                        fontSize: pinnedDaysFontSize,
-                        lineHeight: pinnedDaysFontSize + 12,
+                        fontSize: 34,
+                        lineHeight: 46,
                         textAlign: "center",
                         includeFontPadding: false,
                       }
