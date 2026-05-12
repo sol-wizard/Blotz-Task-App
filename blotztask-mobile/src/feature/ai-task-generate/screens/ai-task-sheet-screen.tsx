@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, Pressable, Text, useWindowDimensions, Keyboard } from "react-native";
 import { KeyboardStickyView, useKeyboardState } from "react-native-keyboard-controller";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,7 +29,7 @@ export default function AiTaskSheetScreen() {
   const { height } = useWindowDimensions();
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
-  const [hasSubmittedAiRequest, setHasSubmittedAiRequest] = useState(false);
+  const hasSubmittedAiRequest = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
   const { isHoldHintVisible, showHoldHint, hideHoldHint } = useHoldHint(1500);
   const { userInput, transcript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
@@ -72,7 +72,7 @@ export default function AiTaskSheetScreen() {
   // --- Handlers ---
   const handleDismiss = () => {
     // Skip analytics only for passive open-and-close sessions with no submitted AI request.
-    if (!hasContent && !hasSubmittedAiRequest) {
+    if (!hasContent && !hasSubmittedAiRequest.current) {
       router.back();
       return;
     }
@@ -87,7 +87,7 @@ export default function AiTaskSheetScreen() {
   const handleSubmitText = async () => {
     if (!textInput.trim() || isAiGenerating) return;
     const message = textInput.trim();
-    setHasSubmittedAiRequest(true);
+    hasSubmittedAiRequest.current = true;
     setTextInput("");
     Keyboard.dismiss();
     await sendTextMessage(message);
@@ -119,7 +119,7 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressOut = async () => {
-    setHasSubmittedAiRequest(true);
+    hasSubmittedAiRequest.current = true;
     await stopAndUpload();
   };
 
