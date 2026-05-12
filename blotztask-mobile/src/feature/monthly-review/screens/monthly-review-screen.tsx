@@ -8,7 +8,6 @@ import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { LetterBody } from "../components/letter-body";
 import { LetterEmptyState } from "../components/letter-empty-state";
 import { LetterHeader } from "../components/letter-header";
-import { LetterPaper } from "../components/letter-paper";
 import { LetterSignature } from "../components/letter-signature";
 import { MonthSelector } from "../components/month-selector";
 import { useMonthlyReport } from "../hooks/useMonthlyReport";
@@ -56,7 +55,7 @@ export default function MonthlyReviewScreen() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }}>
         <View className="px-5">
-          <LetterPaper>
+          <View className="rounded-3xl px-7 pt-7 pb-8" style={{ backgroundColor: "#FFFBF3" }}>
             <LetterHeader displayMonth={displayMonth} />
             {isLoading ? (
               // TODO: replace with a shared inline loading component once one exists.
@@ -107,7 +106,7 @@ export default function MonthlyReviewScreen() {
                 </View>
               </>
             )}
-          </LetterPaper>
+          </View>
 
           <Text className="text-xs font-baloo text-secondary/50 text-center mt-8 px-4">
             {t("monthlyReview.footnote")}

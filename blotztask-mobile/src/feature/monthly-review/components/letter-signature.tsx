@@ -2,8 +2,7 @@ import { Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 import { PNGIMAGES } from "@/shared/constants/assets";
-
-const DOT_COUNT = 24;
+import { FormDivider } from "@/shared/components/form-divider";
 
 export function LetterSignature() {
   const { t } = useTranslation("settings");
@@ -11,9 +10,7 @@ export function LetterSignature() {
   return (
     <>
       <View className="flex-row justify-center mb-6">
-        {Array.from({ length: DOT_COUNT }).map((_, i) => (
-          <View key={i} className="w-1 h-1 rounded-full mx-[2px] bg-secondary/20" />
-        ))}
+        <FormDivider />
       </View>
       <View className="flex-row items-center">
         <View className="flex-1">

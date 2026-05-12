@@ -12,16 +12,7 @@ export function LetterHeader({ displayMonth }: Props) {
     <>
       <View className="flex-row items-center justify-between mb-6">
         <View className="flex-row items-center">
-          <View
-            className="w-9 h-9 rounded-full items-center justify-center bg-white"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.08,
-              shadowRadius: 3,
-              elevation: 1,
-            }}
-          >
+          <View className="w-9 h-9 rounded-full items-center justify-center bg-white shadow-sm shadow-black/[.08]">
             <Image
               source={PNGIMAGES.blotzIcon}
               style={{ width: 26, height: 26 }}
