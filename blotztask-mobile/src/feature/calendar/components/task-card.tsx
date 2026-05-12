@@ -25,6 +25,7 @@ import { getMilestoneKey } from "@/feature/pomodoro/utils/getMilestoneKey";
 import { useTranslation } from "react-i18next";
 import { usePomodoroTimer } from "@/feature/pomodoro/hooks/usePomodoroTimer";
 import { SwitchTaskModal } from "./pomodoro-switch-modal";
+import Toast from "react-native-toast-message";
 
 // Props
 interface TaskCardProps {
@@ -110,6 +111,21 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     swipeRef.current?.close();
   };
 
+  const handleOpenMode = () => {
+    if (session) {
+      Toast.show({
+        type: "warning",
+        text1: t("focusMode.modeLockedWhileRunning"),
+        visibilityTime: 2500,
+      });
+      swipeRef.current?.close();
+      return;
+    }
+
+    onOpenMode();
+    swipeRef.current?.reset();
+  };
+
   const handleConfirmSwitch = () => {
     setShowSwitchModal(false);
 
@@ -128,7 +144,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
         renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
           <TaskCardLeftActions
             progress={leftActionsProgress}
-            onMode={onOpenMode}
+            onMode={handleOpenMode}
             onFocus={handleOpenFocus}
             isPomodoroActiveTask={isThisTaskActive}
             isPaused={isPaused}
