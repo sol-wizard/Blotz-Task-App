@@ -1,7 +1,7 @@
-import { PomodoroSoundscapeKey } from "@/feature/pomodoro/utils/pomodoro-setting";
+import { PomodoroSoundscapeType } from "@/feature/pomodoro/utils/pomodoro-setting";
 
 export interface PomodoroDTO {
   timing: number;
-  sound: PomodoroSoundscapeKey;
+  sound: PomodoroSoundscapeType;
   isCountdown: boolean;
 }

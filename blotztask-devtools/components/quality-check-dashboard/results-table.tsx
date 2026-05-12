@@ -16,13 +16,19 @@ export const ResultsTable = ({
     <div className="rounded-lg border border-zinc-800 overflow-hidden">
       <table className="w-full text-sm">
         <thead>
-          <tr className={`text-left text-xs uppercase tracking-wider ${isReliabilityMode ? "bg-violet-950/40 text-violet-400" : "bg-zinc-900 text-zinc-400"}`}>
+          <tr
+            className={`text-left text-xs uppercase tracking-wider ${isReliabilityMode ? "bg-violet-950/40 text-violet-400" : "bg-zinc-900 text-zinc-400"}`}>
             <th className="px-4 py-3 w-8" />
             <th className="px-4 py-3">Case ID</th>
-            <th className="px-4 py-3">{isReliabilityMode ? "Reliability" : "Status"}</th>
+            <th className="px-4 py-3">
+              {isReliabilityMode ? "Reliability" : "Status"}
+            </th>
             <th className="px-4 py-3 text-right">AI Time</th>
             <th className="px-4 py-3 text-right">Init Time</th>
-            {!isReliabilityMode && <th className="px-4 py-3 text-right">Checks</th>}
+            <th className="px-4 py-3 text-right">Total Tokens</th>
+            {!isReliabilityMode && (
+              <th className="px-4 py-3 text-right">Checks</th>
+            )}
           </tr>
         </thead>
         <tbody>

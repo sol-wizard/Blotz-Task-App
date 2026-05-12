@@ -2,12 +2,21 @@
   "title": "设置",
   "menu": {
     "account": "账户",
+    "MembershipPlan": "会员计划",
+    "betaFeatures": "测试功能",
     "taskHandling": "任务处理",
     "notifications": "通知",
     "language": "语言",
     "allTasks": "所有任务页面 (测试版)",
     "about": "关于"
   },
+  "betaFeatures": {
+    "title": "测试功能",
+    "allTasks": "所有任务",
+    "membershipPlan": "会员计划",
+    "monthlyReview": "月度回顾"
+  },
+
   "account": {
     "title": "账户",
     "name": "名字",
@@ -20,6 +29,16 @@
     "deleteConfirmText": "我已了解此操作无法撤销。",
     "deleteLoading": "正在删除你的数据...",
     "deleteConfirm": "永久删除"
+  },
+  "MembershipPlan": {
+    "completedLabel": "本月已完成",
+    "banner": "🎉 太棒了！继续让 Blotz 帮你高效完成更多任务吧！",
+    "showProgress": "显示进度条",
+    "showProgressHint": "（点击数字可切换显示）",
+    "period": "统计周期 :",
+    "usedQuota": "已使用额度",
+    "remaining": "剩余",
+    "plan": "会员计划"
   },
   "taskHandling": {
     "title": "任务处理",
@@ -54,5 +73,19 @@
     "privacyPolicy": "隐私声明",
     "followUs": "关注我们",
     "xiaohongshu": "小红书"
+  },
+  "monthlyReview": {
+    "title": "月度回顾",
+    "greeting": "亲爱的 {{name}}，",
+    "letterLabel": "月度信件",
+    "dateLabel": "日期",
+    "signOff": "温暖地，",
+    "signature": "Blotz",
+    "empty": "本月还没有信件。",
+    "loading": "正在加载信件…",
+    "error": "信件加载失败。",
+    "retry": "重试",
+    "generate": "生成信件",
+    "footnote": "由 AI 根据您本月创建的任务生成。"
   }
 }

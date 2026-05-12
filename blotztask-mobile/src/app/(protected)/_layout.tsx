@@ -54,6 +54,12 @@ export default function ProtectedLayout() {
           },
         }}
       />
+      <Stack.Screen
+        name="note-editor"
+        options={{
+          headerShown: false,
+        }}
+      />
 
       <Stack.Screen
         name="gashapon-machine"
@@ -81,7 +87,10 @@ export default function ProtectedLayout() {
           fullScreenGestureEnabled: false,
         }}
       />
-      <Stack.Screen name="monthly-calendar" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="monthly-calendar"
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
       <Stack.Screen name="pomodoro-focus" options={{ headerShown: false }} />
     </Stack>
   );

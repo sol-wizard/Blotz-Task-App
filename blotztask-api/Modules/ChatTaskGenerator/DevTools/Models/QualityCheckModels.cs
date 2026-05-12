@@ -74,6 +74,11 @@ public class QualityCheckCaseResult
     public int? TotalRuns { get; set; }
     public int? PassCount { get; set; }
     public string? ReliabilityRate { get; set; }
+
+    // token usage
+    public int InputTokens { get; set; }
+    public int OutputTokens { get; set; }
+    public int TotalTokens { get; set; }
 }
 
 public class QualityCheckRequest
@@ -101,6 +106,11 @@ public class QualityCheckScorecard
 
     /// <summary>Slowest AI API call duration across all cases (bottleneck indicator).</summary>
     public long MaxAiTimeMs { get; set; }
+
+    // token usage
+    public int TotalInputTokens { get; set; }
+    public int TotalOutputTokens { get; set; }
+    public int TotalTokens { get; set; }
 
     public List<QualityCheckCaseResult> Results { get; set; } = [];
 }

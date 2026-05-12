@@ -7,7 +7,7 @@ export const NoteCard = ({
   onPressCard,
 }: {
   note: NoteDTO;
-  onPressCard: (task: NoteDTO) => void;
+  onPressCard: (note: NoteDTO) => void;
 }) => {
   return (
     <View>
@@ -17,10 +17,12 @@ export const NoteCard = ({
         }}
       >
         <View className={`px-5 py-4`}>
-          <Text className="text-xl font-semibold text-black font-baloo" numberOfLines={1} ellipsizeMode="tail">{note.text}</Text>
+          <Text className="font-baloo text-base text-black" numberOfLines={3} ellipsizeMode="tail">
+            {note.text}
+          </Text>
 
           <View className="mt-2 flex-row items-center justify-between">
-            <Text className="text-xs text-[#6B7280] font-balooThin">
+            <Text className="font-baloo text-base text-[#6B7280]">
               {note.createdAt && format(new Date(note.createdAt + "Z"), "dd MMM HH:mm")}
             </Text>
           </View>

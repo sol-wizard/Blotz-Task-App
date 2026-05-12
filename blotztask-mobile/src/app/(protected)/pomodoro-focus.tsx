@@ -1,5 +1,5 @@
-import PomodoroFocusScreen from "@/feature/pomodoro/screens/pomodoro-focus-screen";
+import { PomodoroFocus } from "@/feature/pomodoro/components/pomodoro-focus";
 
 export default function PomodoroFocusPage() {
-  return <PomodoroFocusScreen />;
+  return <PomodoroFocus />;
 }

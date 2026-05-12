@@ -97,21 +97,22 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
             style={{ backgroundColor: labelColor }}
           />
 
-          <View className={isPinned ? "flex-1 justify-center py-1 pr-3" : "flex-1"}>
+          <View className={isPinned ? "flex-1 justify-center py-2 pr-3" : "flex-1"}>
             <Text
               className={
                 isPinned
-                  ? "font-balooBold text-[25px] leading-[30px] text-secondary underline"
+                  ? "font-balooBold text-[25px] leading-[35px] text-secondary underline"
                   : "font-baloo text-lg text-gray-800"
               }
-              style={
+              style={[
+                { includeFontPadding: false },
                 task.isDone && !isMarkingAsDone
                   ? {
                       textDecorationLine: "line-through",
                       textDecorationColor: "#9CA3AF",
                     }
-                  : undefined
-              }
+                  : undefined,
+              ]}
               numberOfLines={isPinned ? 2 : 1}
             >
               {task.title}

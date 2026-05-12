@@ -5,6 +5,7 @@ using BlotzTask.Modules.Badges;
 using BlotzTask.Modules.BreakDown;
 using BlotzTask.Modules.ChatTaskGenerator;
 using BlotzTask.Modules.Labels;
+using BlotzTask.Modules.MonthlyReviews;
 using BlotzTask.Modules.Notes;
 using BlotzTask.Modules.Pomodoro;
 using BlotzTask.Modules.Tasks;
@@ -28,8 +29,9 @@ builder.Services.AddScoped<IEventDispatcher, EventDispatcher>();
 // Feature modules
 builder.Services.AddAiUsageModule();
 builder.Services.AddBadgeModule();
-builder.Services.AddChatTaskGeneratorModule(builder.Configuration);
+builder.Services.AddChatTaskGeneratorModule();
 builder.Services.AddLabelModule();
+builder.Services.AddMonthlyReviewModule();
 builder.Services.AddNotesModule();
 builder.Services.AddPomodoroModule();
 builder.Services.AddTaskBreakdownModule();
