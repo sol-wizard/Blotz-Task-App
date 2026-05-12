@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addMonths, isSameMonth, startOfMonth } from "date-fns";
 import { monthlyReviewKeys } from "@/shared/constants/query-key-factory";
 import {
   fetchMonthlyReview,
@@ -8,9 +6,8 @@ import {
 } from "@/feature/monthly-review/services/monthly-review-service";
 import { MonthlyReviewDTO } from "@/feature/monthly-review/models/monthly-review-dto";
 
-export function useMonthlyReport() {
+export function useMonthlyReport(selectedMonth: Date) {
   const queryClient = useQueryClient();
-  const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
 
   const year = selectedMonth.getFullYear();
   const month = selectedMonth.getMonth() + 1;
@@ -29,19 +26,9 @@ export function useMonthlyReport() {
     },
   });
 
-  const isAtCurrentMonth = isSameMonth(selectedMonth, new Date());
-
   return {
-    selectedMonth,
     report: reportQuery.data ?? null,
     isLoading: reportQuery.isLoading,
-    isError: reportQuery.isError,
-    refetch: reportQuery.refetch,
-    isAtCurrentMonth,
-    goPrev: () => setSelectedMonth((m) => addMonths(m, -1)),
-    goNext: () => {
-      if (!isAtCurrentMonth) setSelectedMonth((m) => addMonths(m, 1));
-    },
     generate: () => generateMutation.mutate(),
     isGenerating: generateMutation.isPending,
   };

@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { CustomSpinner } from "@/shared/components/custom-spinner";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import { addMonths, isSameMonth, startOfMonth } from "date-fns";
 import { useUserProfile } from "@/shared/hooks/useUserProfile";
 import { LetterBody } from "../components/letter-body";
 import { LetterEmptyState } from "../components/letter-empty-state";
@@ -17,18 +19,9 @@ export default function MonthlyReviewScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation("settings");
   const { userProfile } = useUserProfile();
-  const {
-    selectedMonth,
-    report,
-    isLoading,
-    isError,
-    refetch,
-    isAtCurrentMonth,
-    goPrev,
-    goNext,
-    generate,
-    isGenerating,
-  } = useMonthlyReport();
+  const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
+  const isAtCurrentMonth = isSameMonth(selectedMonth, new Date());
+  const { report, isLoading, generate, isGenerating } = useMonthlyReport(selectedMonth);
 
   const displayMonth = formatMonth(selectedMonth, i18n.language);
   const recipientName = userProfile?.displayName ?? "Friend";
@@ -47,8 +40,8 @@ export default function MonthlyReviewScreen() {
       <View className="px-5 mb-4">
         <MonthSelector
           label={displayMonth}
-          onPrev={goPrev}
-          onNext={goNext}
+          onPrev={() => setSelectedMonth((m) => addMonths(m, -1))}
+          onNext={() => { if (!isAtCurrentMonth) setSelectedMonth((m) => addMonths(m, 1)); }}
           disableNext={isAtCurrentMonth}
         />
       </View>
@@ -64,21 +57,6 @@ export default function MonthlyReviewScreen() {
                 <Text className="text-base font-baloo text-secondary/60 mt-3 text-center">
                   {t("monthlyReview.loading")}
                 </Text>
-              </View>
-            ) : isError ? (
-              <View className="py-12 items-center">
-                <MaterialCommunityIcons name="alert-circle-outline" size={40} color="#C7C9D6" />
-                <Text className="text-base font-baloo text-secondary/60 mt-3 text-center">
-                  {t("monthlyReview.error")}
-                </Text>
-                <Pressable
-                  onPress={() => refetch()}
-                  className="mt-4 px-5 py-2 rounded-full bg-secondary"
-                >
-                  <Text className="text-white font-balooBold">
-                    {t("monthlyReview.retry")}
-                  </Text>
-                </Pressable>
               </View>
             ) : report ? (
               <>
