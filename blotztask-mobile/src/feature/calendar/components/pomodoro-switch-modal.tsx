@@ -1,4 +1,3 @@
-// @/feature/pomodoro/components/switch-task-modal.tsx
 import React from "react";
 import { View, Text, Pressable, Modal } from "react-native";
 import { useTranslation } from "react-i18next";

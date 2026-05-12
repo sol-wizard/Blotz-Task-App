@@ -13,6 +13,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="avatar" options={{ headerShown: false }} />
       <Stack.Screen name="membership-plan" options={{ headerShown: false }} />
       <Stack.Screen name="about" options={{ headerShown: false }} />
+      <Stack.Screen name="monthly-review" options={{ headerShown: false }} />
       <Stack.Screen name="privacy-policy" options={{ headerShown: false }} />
     </Stack>
   );

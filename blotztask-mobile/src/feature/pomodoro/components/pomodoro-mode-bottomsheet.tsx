@@ -7,18 +7,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SoundscapeCard } from "../../calendar/components/sound-scape";
 import { useTranslation } from "react-i18next";
 import {
-  PomodoroSoundscapeKey,
-  SOUNDSCAPES_DATA,
+  PomodoroSoundscapeType,
+  SOUNDSCAPE_OPTIONS,
   ITEM_WIDTH,
   SNAP_INTERVAL,
 } from "../utils/pomodoro-setting";
 import { usePomodoroSettingMutation } from "../hooks/usePomodoroSetting";
-import { usePomodoroSoundscapePlayer } from "../hooks/usePomodoroSoundscapePlayer";
-
+import { useSoundscapeStore } from "../hooks/useSoundscapeStore";
 interface ModeBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedSoundscape: PomodoroSoundscapeKey;
+  selectedSoundscape: PomodoroSoundscapeType;
   selectedDuration: number;
 }
 
@@ -40,8 +39,9 @@ export const ModeBottomSheet = ({
   // Mutations
   const { updatePomodoroSetting } = usePomodoroSettingMutation();
   const [draftDuration, setDraftDuration] = useState<number>(selectedDuration);
-  const [draftSoundscape, setDraftSoundscape] = useState<PomodoroSoundscapeKey>(selectedSoundscape);
-  const { isPlaying, togglePlayback, stopPlayback } = usePomodoroSoundscapePlayer(draftSoundscape);
+  const [draftSoundscape, setDraftSoundscape] =
+    useState<PomodoroSoundscapeType>(selectedSoundscape);
+  const { isPlaying, stopSoundscape, playSoundscape } = useSoundscapeStore();
 
   const { t } = useTranslation("pomodoro");
 
@@ -49,7 +49,7 @@ export const ModeBottomSheet = ({
     if (!isOpen) return;
     setDraftDuration(selectedDuration);
     setDraftSoundscape(selectedSoundscape);
-    const index = SOUNDSCAPES_DATA.findIndex((s) => s.key === selectedSoundscape);
+    const index = SOUNDSCAPE_OPTIONS.findIndex((s) => s.type === selectedSoundscape);
     scrollX.value = index;
     flatListRef.current?.scrollToOffset({
       offset: index * SNAP_INTERVAL,
@@ -68,15 +68,22 @@ export const ModeBottomSheet = ({
   const handleMomentumScrollEnd = (event: any) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / SNAP_INTERVAL);
 
-    if (SOUNDSCAPES_DATA[index]) {
-      const selectedKey = SOUNDSCAPES_DATA[index].key;
-      setDraftSoundscape(selectedKey);
+    if (SOUNDSCAPE_OPTIONS[index]) {
+      const selectedType = SOUNDSCAPE_OPTIONS[index].type;
+      setDraftSoundscape(selectedType);
     }
   };
 
   // Functions to handle item selection and saving settings
-  const handleItemPress = (index: number, key: PomodoroSoundscapeKey) => {
-    setDraftSoundscape(key);
+  const handleItemPress = (index: number, type: PomodoroSoundscapeType) => {
+    setDraftSoundscape(type);
+    if (isPlaying) {
+      if (type === "noSound") {
+        stopSoundscape();
+      } else {
+        playSoundscape(type);
+      }
+    }
     flatListRef.current?.scrollToOffset({
       offset: index * SNAP_INTERVAL,
       animated: true,
@@ -85,12 +92,26 @@ export const ModeBottomSheet = ({
 
   const handleSave = async () => {
     const isCountDown = draftDuration !== 0;
+
     await updatePomodoroSetting({
       timing: draftDuration,
       sound: draftSoundscape,
       isCountdown: isCountDown,
     });
-    stopPlayback();
+    stopSoundscape();
+    onClose();
+  };
+
+  const handleTogglePreview = () => {
+    if (isPlaying) {
+      stopSoundscape();
+      return;
+    }
+    void playSoundscape(draftSoundscape);
+  };
+
+  const handleClose = () => {
+    stopSoundscape();
     onClose();
   };
 
@@ -101,7 +122,7 @@ export const ModeBottomSheet = ({
           {/* Header */}
           <View className="flex-row justify-between items-center mb-6 px-4">
             <Pressable
-              onPress={onClose}
+              onPress={handleClose}
               className="w-12 h-12 bg-gray-200/60 rounded-full items-center justify-center"
             >
               <MaterialIcons name="close" size={24} color="#8C8C8C" />
@@ -151,17 +172,17 @@ export const ModeBottomSheet = ({
             <View className="relative h-44 -mx-5">
               <Animated.FlatList
                 ref={flatListRef}
-                data={SOUNDSCAPES_DATA}
-                keyExtractor={(item) => item.key}
+                data={SOUNDSCAPE_OPTIONS}
+                keyExtractor={(item) => item.type}
                 renderItem={({ item, index }) => (
                   <SoundscapeCard
                     item={item}
                     index={index}
                     scrollX={scrollX}
-                    isSelected={draftSoundscape === item.key}
+                    isSelected={draftSoundscape === item.type}
                     isPlaying={isPlaying}
                     onPress={handleItemPress}
-                    onTogglePlayback={togglePlayback}
+                    onTogglePlayback={handleTogglePreview}
                   />
                 )}
                 horizontal
