@@ -7,7 +7,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddChatTaskGeneratorModule(this IServiceCollection services)
     {
-        services.AddScoped<IAiTaskGenerateService, AiTaskGenerateService>();
+        services.AddScoped<IAiChatService, AiChatService>();
         services.AddScoped<DateTimeResolveService>();
         services.AddScoped<SpeechTranscriptionService>();
         services.AddScoped<IAiQualityCheckService, AiQualityCheckService>();

@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ClientModel;
 using Azure.AI.Projects;
+using BlotzTask.Extension;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.BreakDown.DTOs;
 using BlotzTask.Modules.BreakDown.Prompts;
@@ -24,14 +26,11 @@ public class BreakdownTaskCommandHandler(
     GetTaskByIdQueryHandler getTaskByIdQueryHandler,
     GetUserPreferencesQueryHandler getUserPreferencesQueryHandler,
     AIProjectClient projectClient,
-    IConfiguration configuration,
+    AgentFrameworkServiceExtensions.AzureAIOptions options,
     ICheckAiQuotaService checkAiQuotaService,
     IRecordAiUsageService recordAiUsageService)
 {
-    // TODO: If we want to support different deployment id, that should be done at the dependency injection layer.
-    private readonly string _deploymentId =
-        configuration["AzureOpenAI:AiModels:Breakdown:DeploymentId"]
-        ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:Breakdown:DeploymentId config.");
+    private readonly string _deploymentId = options.BreakdownDeploymentId;
 
     public async Task<BreakdownResult> Handle(BreakdownTaskCommand command, CancellationToken ct = default)
     {
@@ -112,15 +111,13 @@ public class BreakdownTaskCommandHandler(
             logger.LogWarning(oce, "Task breakdown was canceled");
             throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
         }
-        catch (Exception ex) when (
-            ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase))
+        catch (ClientResultException ex) when (ex.Status == 429)
         {
-            logger.LogWarning(ex, "Token limit exceeded during task breakdown.");
+            logger.LogError(ex, "Azure AI rate limit hit during task breakdown.");
             throw new AzureAiException();
         }
-        catch (Exception ex) when (
+        catch (ClientResultException ex) when (
+            ex.Status == 400 &&
             ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase))
         {
             logger.LogWarning(ex, "Request blocked by content filter during task breakdown.");

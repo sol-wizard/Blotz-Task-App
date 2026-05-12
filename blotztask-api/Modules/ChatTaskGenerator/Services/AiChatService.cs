@@ -1,6 +1,7 @@
 using System.Diagnostics;
+using System.ClientModel;
 using Azure.AI.Projects;
-using BlotzTask.Modules.AiUsage.Exceptions;
+using BlotzTask.Extension;
 using BlotzTask.Modules.AiUsage.Services;
 using BlotzTask.Modules.ChatTaskGenerator.Constants;
 using BlotzTask.Modules.ChatTaskGenerator.Dtos;
@@ -10,31 +11,25 @@ using Microsoft.Extensions.AI;
 
 namespace BlotzTask.Modules.ChatTaskGenerator.Services;
 
-public interface IAiTaskGenerateService
+public interface IAiChatService
 {
     Task<AiChatContext> InitializeAsync(string preferredLanguage, TimeZoneInfo timeZone, CancellationToken ct);
     Task<AiGenerateMessage> GenerateAiResponse(Guid userId, string userMessage, AiChatContext context, CancellationToken ct);
 }
 
-public class AiTaskGenerateService(
-    ILogger<AiTaskGenerateService> logger,
+public class AiChatService(
+    ILogger<AiChatService> logger,
     AIProjectClient projectClient,
-    IConfiguration configuration,
+    AgentFrameworkServiceExtensions.AzureAIOptions options,
     ICheckAiQuotaService checkAiQuotaService,
     IRecordAiUsageService recordAiUsageService)
-    : IAiTaskGenerateService
+    : IAiChatService
 {
-    // TODO: Move deployment id resolution to DI/configuration.
-    private readonly string _deploymentId =
-        configuration["AzureOpenAI:AiModels:TaskGeneration:DeploymentId"]
-        ?? throw new InvalidOperationException("Missing AzureOpenAI:AiModels:TaskGeneration:DeploymentId config.");
+    private readonly string _deploymentId = options.TaskGenerationDeploymentId;
 
     public async Task<AiChatContext> InitializeAsync(string preferredLanguage, TimeZoneInfo timeZone, CancellationToken ct)
     {
-        // TODO: Consider a clearer way to manage extracted task/note lists.
-        var tasks = new List<ExtractedTask>();
-        var notes = new List<ExtractedNote>();
-        var tools = new TaskGenerationTools(tasks, notes);
+        var tools = new TaskGenerationTools();
 
         var userLocalTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
         var agentSw = Stopwatch.StartNew();
@@ -54,8 +49,7 @@ public class AiTaskGenerateService(
             ]);
         var agentCreatedMs = agentSw.ElapsedMilliseconds;
 
-        //TODO: De we need cancellation token here ?
-        var session = await agent.CreateSessionAsync();
+        var session = await agent.CreateSessionAsync(ct);
         agentSw.Stop();
 
         logger.LogInformation(
@@ -67,8 +61,6 @@ public class AiTaskGenerateService(
             Agent = agent,
             Session = session,
             Tools = tools,
-            Tasks = tasks,
-            Notes = notes,
             TimeZone = timeZone
         };
     }
@@ -105,7 +97,7 @@ public class AiTaskGenerateService(
             logger.LogInformation(
                 "TaskGeneration: RunAsync completed in {RunMs}ms | InputTokens={InputTokens} | OutputTokens={OutputTokens} | TotalTokens={TotalTokens} | ToolCalls={ToolCallCount} | Tasks={TaskCount} | Notes={NoteCount}",
                 runSw.ElapsedMilliseconds, inputTokens, outputTokens, totalTokens,
-                context.Tools.ToolCallCount, context.Tasks.Count, context.Notes.Count);
+                context.Tools.ToolCallCount, context.Tools.Tasks.Count, context.Tools.Notes.Count);
 
             var isSuccess = context.Tools.ToolCallCount > 0;
 
@@ -113,8 +105,8 @@ public class AiTaskGenerateService(
             {
                 IsSuccess = isSuccess,
                 ErrorCode = isSuccess ? "" : AiErrorCode.NoTasksExtracted.ToString(),
-                ExtractedTasks = context.Tasks,
-                ExtractedNotes = context.Notes,
+                ExtractedTasks = context.Tools.Tasks,
+                ExtractedNotes = context.Tools.Notes,
                 ErrorMessage = isSuccess ? "" : "Could not extract any tasks or notes from your input.",
                 InputTokens = inputTokens,
                 OutputTokens = outputTokens,
@@ -126,15 +118,13 @@ public class AiTaskGenerateService(
             logger.LogInformation(oce, "AI task generation cancelled.");
             throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
         }
-        catch (Exception ex) when (
-            ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase))
+        catch (ClientResultException ex) when (ex.Status == 429)
         {
-            logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
+            logger.LogError(ex, "Azure AI rate limit hit during AI task generation.");
             throw new AzureAiException();
         }
-        catch (Exception ex) when (
+        catch (ClientResultException ex) when (
+            ex.Status == 400 &&
             ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase))
         {
             logger.LogWarning(ex, "Request blocked by content filter.");
