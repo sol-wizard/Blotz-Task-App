@@ -36,12 +36,25 @@ export default function SettingsBetaFeaturesScreen() {
 
           <Pressable
             onPress={() => router.push("/settings/membership-plan")}
-            className="flex-row items-center justify-between px-6 py-4"
+            className="flex-row items-center justify-between px-6 py-4 border-b border-gray-100"
           >
             <View className="flex-row items-center">
               <MaterialCommunityIcons name="brain" size={22} color="#444964" />
               <Text className="text-lg font-baloo text-secondary ml-3">
                 {t("betaFeatures.membershipPlan")}
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push("/settings/monthly-review")}
+            className="flex-row items-center justify-between px-6 py-4"
+          >
+            <View className="flex-row items-center">
+              <MaterialCommunityIcons name="email-outline" size={22} color="#444964" />
+              <Text className="text-lg font-baloo text-secondary ml-3">
+                {t("betaFeatures.monthlyReview")}
               </Text>
             </View>
             <MaterialCommunityIcons name="chevron-right" size={22} color="#444964" />
