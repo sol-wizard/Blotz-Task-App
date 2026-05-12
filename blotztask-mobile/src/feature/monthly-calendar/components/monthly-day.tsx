@@ -15,7 +15,6 @@ export type MonthlyDayProps = {
 
 export const MonthlyDay = ({
   date,
-  state,
   selectedDate,
   tasks = [],
   onPressDay,
@@ -24,8 +23,6 @@ export const MonthlyDay = ({
 
   const dayKey = date.dateString;
   const isSelected = dayKey === selectedDate;
-  const isToday = state === "today";
-  const isInactive = state === "disabled" || state === "inactive";
   const previews = tasks.slice(0, 4);
 
   return (
