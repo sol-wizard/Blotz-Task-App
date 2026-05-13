@@ -211,9 +211,6 @@ export default function AiTaskSheetScreen() {
                       if (!longPressTriggered.current) {
                         setIsHoldHintVisible(true);
                         cancelListening();
-                        console.log(
-                          "👆 [Mic] Press out before long press threshold, showing hold hint.",
-                        );
                       } else {
                         void handleMicPressOut();
                       }

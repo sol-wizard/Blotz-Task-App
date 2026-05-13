@@ -16,17 +16,12 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   const cancelRequested = useRef(false);
 
   const startListening = async () => {
-    console.log("🥾 [Mic] Starting recording...");
     cancelRequested.current = false;
     try {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
-      if (cancelRequested.current) {
-        console.log("🚫 [Mic] Cancelled before record() — aborting.");
-        return;
-      }
+      if (cancelRequested.current) return;
       recorder.record();
-      console.log("🎙️ [Mic] Recording started.");
     } catch (error) {
       Toast.show({ type: "warning", text1: t("errors.recordingFailed") });
       console.warn("[Mic] Error starting recording.", error);
@@ -34,16 +29,13 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   };
 
   const cancelListening = async (): Promise<void> => {
-    console.log("🚫 [Mic] Cancelling recording...");
     cancelRequested.current = true;
     if (recorder.isRecording) {
       await recorder.stop();
-      console.log("🛑 [Mic] Recording stopped.");
     }
   };
 
   const stopAndUpload = async (): Promise<void> => {
-    console.log("💾 [Mic] Stopping and uploading recording...");
     if (!recorder.isRecording) {
       Toast.show({ type: "warning", text1: t("errors.emptyAudio") });
       console.warn("[Mic] stopAndUpload called but recorder is not recording.");
@@ -61,7 +53,6 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
 
       await submitAudioForTranscription(uri);
       new ExpoFile(uri).delete();
-      console.log("✅ [Mic] Recording uploaded and local file deleted.");
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
     } finally {
