@@ -32,7 +32,7 @@ export default function AiTaskSheetScreen() {
   const hasSubmittedAiRequest = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
   const { isHoldHintVisible, showHoldHint, hideHoldHint } = useHoldHint(1500);
-  const { userInput, transcript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
+  const { transcript, streamedTasks, streamedNotes, turns, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
@@ -57,18 +57,6 @@ export default function AiTaskSheetScreen() {
   const displayNotes = streamedNotes;
   const hasContent = streamedTasks.length > 0 || streamedNotes.length > 0;
 
-  const analyticsPayload = {
-    userInput,
-    generatedTasks: displayTasks.map((task) => ({
-      title: task.title,
-      description: task.description,
-      startTime: task.startTime,
-      endTime: task.endTime,
-      ...(task.label?.name && { labelName: task.label.name }),
-    })),
-    generatedNoteTexts: displayNotes.map((n) => n.text),
-  };
-
   // --- Handlers ---
   const handleDismiss = () => {
     // Skip analytics only for passive open-and-close sessions with no submitted AI request.
@@ -77,9 +65,9 @@ export default function AiTaskSheetScreen() {
       return;
     }
 
-    analytics.trackIfUserAcceptAiTask({
-      ...analyticsPayload,
+    analytics.trackAiTaskGenerationSession({
       outcome: hasContent ? "rejected" : "abandoned",
+      turns,
     });
     router.back();
   };
@@ -100,9 +88,9 @@ export default function AiTaskSheetScreen() {
         ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
         ...displayNotes.map((n) => createNoteAsync(n.text)),
       ]);
-      analytics.trackIfUserAcceptAiTask({
-        ...analyticsPayload,
+      analytics.trackAiTaskGenerationSession({
         outcome: "accepted",
+        turns,
       });
       router.back();
       Toast.show({ type: "warning", text1: t("success.taskAdded") });

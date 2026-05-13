@@ -1,16 +1,13 @@
 /* eslint-disable camelcase */
 import posthog from "@/shared/constants/posthog-client";
-import { EVENTS, SCREEN_NAMES, type AiTaskOutcome } from "@/shared/constants/posthog-events";
+import {
+  EVENTS,
+  SCREEN_NAMES,
+  type AiTaskGenerationTurn,
+  type AiTaskOutcome,
+} from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
-
-type AiGeneratedTaskAnalytics = {
-  title: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  labelName?: string;
-};
 
 export const analytics = {
   /**
@@ -62,28 +59,18 @@ export const analytics = {
   },
 
   /**
-   * Fires when the user takes action on the AI preview — either accepting
-   * the generated tasks or going back to re-enter their input.
-   * This is Step 2 of the AI funnel. "Abandoned" is derived in PostHog
-   * from previews with no corresponding outcome event.
+   * Fires once when the user leaves an AI task generation session.
+   * Each turn pairs the user's prompt with the generated task/note state
+   * returned by the AI after that prompt.
    */
-  trackIfUserAcceptAiTask(params: {
-    userInput?: string;
+  trackAiTaskGenerationSession(params: {
     outcome: AiTaskOutcome;
-    generatedTasks: AiGeneratedTaskAnalytics[];
-    generatedNoteTexts: string[];
+    turns: AiTaskGenerationTurn[];
   }) {
-    posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-      ...(params.userInput !== undefined && { user_input: params.userInput }),
+    posthog.capture(EVENTS.AI_TASK_GENERATION_SESSION, {
       outcome: params.outcome,
-      ai_generated_tasks: params.generatedTasks.map((task) => ({
-        title: task.title,
-        description: task.description,
-        start_time: task.startTime,
-        end_time: task.endTime,
-        ...(task.labelName && { label_name: task.labelName }),
-      })),
-      ai_generated_note_texts: params.generatedNoteTexts,
+      input_modes: Array.from(new Set(params.turns.map((turn) => turn.input_mode))),
+      turns: params.turns,
     });
   },
 
