@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Pressable, Text, useWindowDimensions, Keyboard } from "react-native";
+import { View, Pressable, Text, useWindowDimensions, Keyboard, Platform } from "react-native";
 import { KeyboardStickyView, useKeyboardState } from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -27,6 +28,8 @@ export default function AiTaskSheetScreen() {
   // --- Hooks ---
   const { t } = useTranslation("aiTaskGenerate");
   const { height } = useWindowDimensions();
+  const { bottom } = useSafeAreaInsets();
+  const bottomPadding = Platform.OS === "android" ? bottom + 16 : 32;
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
   const hasSubmittedAiRequest = useRef(false);
@@ -184,23 +187,32 @@ export default function AiTaskSheetScreen() {
 
               {/* Input bar sticks to the keyboard only */}
 
-              <AiInputBar
-                // Text input
-                textInput={textInput}
-                onChangeText={setTextInput}
-                onSubmitText={() => void handleSubmitText()}
-                // Mic input
-                isListening={isListening}
-                onShortPress={showHoldHint}
-                onMicPressIn={handleMicPressIn}
-                onMicPressOut={() => void handleMicPressOut()}
-                cancelListening={cancelListening}
-                // Results
-                hasResults={hasContent}
-                onConfirm={() => void handleAddAll()}
-                // State
-                isAiGenerating={isAiGenerating}
-              />
+              <View
+                className="w-full flex-row items-center px-6 gap-4"
+                style={{ paddingBottom: bottomPadding }}
+              >
+                <AiInputBar
+                  textInput={textInput}
+                  onChangeText={setTextInput}
+                  onSubmitText={() => void handleSubmitText()}
+                  isListening={isListening}
+                  onShortPress={showHoldHint}
+                  onMicPressIn={handleMicPressIn}
+                  onMicPressOut={() => void handleMicPressOut()}
+                  cancelListening={cancelListening}
+                  isAiGenerating={isAiGenerating}
+                />
+                {hasContent && (
+                  <Pressable
+                    onPress={isAiGenerating ? undefined : () => void handleAddAll()}
+                    accessibilityLabel="Confirm"
+                    className="w-14 h-14 rounded-full items-center justify-center"
+                    style={{ backgroundColor: "rgba(255,255,255,0.25)", opacity: isAiGenerating ? 0.4 : 1 }}
+                  >
+                    <MaterialCommunityIcons name="check" size={28} color="white" />
+                  </Pressable>
+                )}
+              </View>
             </View>
           </KeyboardStickyView>
         </LinearGradient>

@@ -1,9 +1,8 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import LottieView from "lottie-react-native";
-import { View, Pressable, TextInput, Platform } from "react-native";
+import { View, Pressable, TextInput } from "react-native";
 import { useTranslation } from "react-i18next";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRef } from "react";
 
 type Props = {
@@ -19,36 +18,25 @@ type Props = {
   onMicPressOut: () => void;
   cancelListening: () => void;
 
-  // Results
-  hasResults: boolean;
-  onConfirm: () => void;
-
   isAiGenerating: boolean;
 };
 
 export function AiInputBar({
   textInput,
   isListening,
-  hasResults,
   onChangeText,
   onSubmitText,
   onMicPressIn,
   onMicPressOut,
-  onConfirm,
   onShortPress,
   isAiGenerating,
   cancelListening,
 }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
-  const { bottom } = useSafeAreaInsets();
-  const bottomPadding = Platform.OS === "android" ? bottom + 16 : 32;
   const longPressTriggered = useRef(false);
 
   return (
-    <View
-      className="w-full flex-row items-center px-6 gap-4"
-      style={{ paddingBottom: bottomPadding }}
-    >
+    <View className="flex-1 flex-row items-center gap-4">
       {/* Microphone hold-to-record */}
       <Pressable
         onPressIn={() => {
@@ -111,17 +99,6 @@ export function AiInputBar({
         )}
       </View>
 
-      {/* Confirm button — only shown when there are AI results to accept */}
-      {hasResults && (
-        <Pressable
-          onPress={isAiGenerating ? undefined : onConfirm}
-          accessibilityLabel="Confirm"
-          className="w-14 h-14 rounded-full items-center justify-center"
-          style={{ backgroundColor: "rgba(255,255,255,0.25)", opacity: isAiGenerating ? 0.4 : 1 }}
-        >
-          <MaterialCommunityIcons name="check" size={28} color="white" />
-        </Pressable>
-      )}
     </View>
   );
 }
