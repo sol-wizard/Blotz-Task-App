@@ -4,6 +4,7 @@ import LottieView from "lottie-react-native";
 import { View, Pressable, TextInput } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useRef } from "react";
+import * as Haptics from "expo-haptics";
 
 type Props = {
   // Text input
@@ -40,12 +41,11 @@ export function AiInputBar({
       {/* Microphone hold-to-record */}
       <Pressable
         onPressIn={() => {
-          if (isAiGenerating) return;
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           longPressTriggered.current = false;
           onMicPressIn();
         }}
         onPressOut={() => {
-          if (isAiGenerating) return;
           if (!longPressTriggered.current) {
             onShortPress();
             cancelListening();
@@ -54,7 +54,6 @@ export function AiInputBar({
           }
         }}
         onLongPress={() => {
-          if (isAiGenerating) return;
           longPressTriggered.current = true;
         }}
         delayLongPress={1000}
@@ -64,6 +63,7 @@ export function AiInputBar({
           backgroundColor: isListening ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.25)",
           opacity: isAiGenerating ? 0.4 : 1,
         }}
+        disabled={isAiGenerating}
       >
         <MaterialCommunityIcons name="microphone" size={28} color="white" />
       </Pressable>
@@ -98,7 +98,6 @@ export function AiInputBar({
           />
         )}
       </View>
-
     </View>
   );
 }

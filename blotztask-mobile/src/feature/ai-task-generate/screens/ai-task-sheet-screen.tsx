@@ -7,7 +7,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import { requestRecordingPermissionsAsync } from "expo-audio";
-import * as Haptics from "expo-haptics";
+
 import { useTranslation } from "react-i18next";
 import { AiInputBar } from "../component/ai-input-bar";
 import { AiResultList } from "../component/ai-result-list";
@@ -35,7 +35,14 @@ export default function AiTaskSheetScreen() {
   const hasSubmittedAiRequest = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
   const { isHoldHintVisible, showHoldHint, hideHoldHint } = useHoldHint(1500);
-  const { userInput, transcript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
+  const {
+    userInput,
+    transcript,
+    streamedTasks,
+    streamedNotes,
+    submitAudioForTranscription,
+    sendTextMessage,
+  } = useAiTaskGenerator({
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
@@ -56,7 +63,9 @@ export default function AiTaskSheetScreen() {
   }, []);
 
   // --- Derived data ---
-  const displayTasks = streamedTasks.map((task) => mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []));
+  const displayTasks = streamedTasks.map((task) =>
+    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
+  );
   const displayNotes = streamedNotes;
   const hasContent = streamedTasks.length > 0 || streamedNotes.length > 0;
 
@@ -116,8 +125,6 @@ export default function AiTaskSheetScreen() {
 
   const handleMicPressIn = () => {
     hideHoldHint();
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Keyboard.dismiss();
     void startListening();
   };
 
@@ -204,10 +211,14 @@ export default function AiTaskSheetScreen() {
                 />
                 {hasContent && (
                   <Pressable
-                    onPress={isAiGenerating ? undefined : () => void handleAddAll()}
+                    onPress={() => void handleAddAll()}
                     accessibilityLabel="Confirm"
                     className="w-14 h-14 rounded-full items-center justify-center"
-                    style={{ backgroundColor: "rgba(255,255,255,0.25)", opacity: isAiGenerating ? 0.4 : 1 }}
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.25)",
+                      opacity: isAiGenerating ? 0.4 : 1,
+                    }}
+                    disabled={isAiGenerating}
                   >
                     <MaterialCommunityIcons name="check" size={28} color="white" />
                   </Pressable>
