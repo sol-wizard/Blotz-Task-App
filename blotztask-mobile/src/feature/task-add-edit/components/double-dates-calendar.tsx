@@ -1,9 +1,17 @@
 import { View } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
+import { DayProps } from "react-native-calendars/src/calendar/day";
 import { eachDayOfInterval, format, isBefore, isSameDay, parseISO } from "date-fns";
 import { theme } from "@/shared/constants/theme";
 import { renderCalendarHeader } from "@/feature/calendar/util/date-formatter";
 import { CustomCalendarDay } from "./custom-calendar-day";
+
+type CustomDateMarking = {
+  isInRange?: boolean;
+  isRangeStart?: boolean;
+  isRangeEnd?: boolean;
+  isInvalid?: boolean;
+};
 
 const DoubleDatesCalendar = ({
   startDate,
@@ -22,7 +30,7 @@ const DoubleDatesCalendar = ({
 }) => {
   const getDatesInRange = (start: Date, end: Date) => {
     const days = eachDayOfInterval({ start, end });
-    const dates: Record<string, any> = {};
+    const dates: Record<string, CustomDateMarking> = {};
 
     for (const d of days) {
       dates[format(d, "yyyy-MM-dd")] = { isInRange: true };
@@ -37,7 +45,7 @@ const DoubleDatesCalendar = ({
     return dates;
   };
 
-  const markedDates: Record<string, any> = (() => {
+  const markedDates: Record<string, CustomDateMarking> = (() => {
     if (!endDate) {
       return { [format(startDate, "yyyy-MM-dd")]: { isRangeStart: true, isRangeEnd: true, isInRange: true } };
     }
@@ -69,7 +77,7 @@ const DoubleDatesCalendar = ({
         }}
         renderHeader={renderCalendarHeader}
         enableSwipeMonths
-        dayComponent={({ date, state }: any) => {
+        dayComponent={({ date, state }: DayProps & { date?: DateData }) => {
           const props = markedDates[date.dateString] || {};
           const isDeadline = deadlineDate === date.dateString;
           const isDisabled = disabledDates.includes(date.dateString);

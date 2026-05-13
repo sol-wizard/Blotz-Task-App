@@ -3,6 +3,7 @@ import { Pressable, Text, View, Platform } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Calendar, DateData } from "react-native-calendars";
 import { format } from "date-fns";
+import XDate from "xdate";
 import { theme } from "@/shared/constants/theme";
 import { useMonthlyTasks } from "../hooks/useMonthlyTasks";
 import { useLocalSearchParams } from "expo-router";
@@ -79,7 +80,7 @@ export default function MonthlyCalendarScreen() {
             hideExtraDays
             firstDay={1}
             enableSwipeMonths
-            renderHeader={(date: any) => {
+            renderHeader={(date?: XDate) => {
               const isChinese = i18n.language.startsWith("zh");
               const monthName = isChinese ? `${date.getMonth() + 1}月` : format(date, "MMMM");
               return (

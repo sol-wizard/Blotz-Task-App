@@ -2,7 +2,7 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { View, Text, Pressable } from "react-native";
 import Toast from "react-native-toast-message";
-import { Control, useController } from "react-hook-form";
+import { Control, UseFormGetValues, useController } from "react-hook-form";
 import { format } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
@@ -14,10 +14,11 @@ import { SingleDateCalendar } from "./single-date-calendar";
 import TimePicker from "./time-picker";
 
 import { SegmentButtonValue } from "../models/segment-button-value";
+import { TaskFormField } from "../models/task-form-schema";
 
 interface DeadlineSectionProps {
-  control: Control<any>;
-  getValues: (name?: any) => any;
+  control: Control<TaskFormField>;
+  getValues: UseFormGetValues<TaskFormField>;
   isActiveTab: SegmentButtonValue;
 }
 

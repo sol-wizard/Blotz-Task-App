@@ -33,10 +33,10 @@ const useTaskMutations = () => {
       toggleTaskCompletion(taskId),
     onMutate: async (data) => {
       if (!data?.selectedDay) return;
-      const prevSelectedDayData = queryClient.getQueryData<any>(
+      const prevSelectedDayData = queryClient.getQueryData<TaskDetailDTO[]>(
         taskKeys.selectedDay(convertToDateTimeOffset(startOfDay(data.selectedDay))),
       );
-      const toggleInList = (list: any[] | undefined) =>
+      const toggleInList = (list: TaskDetailDTO[] | undefined) =>
         list?.map((t) => (t.id === data.taskId ? { ...t, isCompleted: !t.isCompleted } : t));
       queryClient.setQueryData(taskKeys.all, toggleInList(prevSelectedDayData));
       return { prevSelectedDayData };

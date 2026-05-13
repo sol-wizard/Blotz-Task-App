@@ -1,6 +1,7 @@
 import { Image } from "react-native";
+import { GameEntityRendererProps } from "../models/game-entity";
 
-export const CapsuleToyRenderer = (props: any) => {
+export const CapsuleToyRenderer = (props: GameEntityRendererProps) => {
   const BALL_RADIUS = 20;
   const { body, texture } = props;
   const { position, angle } = body;

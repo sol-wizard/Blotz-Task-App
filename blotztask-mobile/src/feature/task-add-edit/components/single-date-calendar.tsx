@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { theme } from "@/shared/constants/theme";
 import { parseISO } from "date-fns";
-import { Calendar } from "react-native-calendars";
+import { Calendar, DateData } from "react-native-calendars";
+import { DayProps } from "react-native-calendars/src/calendar/day";
 import { renderCalendarHeader } from "@/feature/calendar/util/date-formatter";
 import { CustomCalendarDay } from "./custom-calendar-day";
 
@@ -32,7 +33,7 @@ export const SingleDateCalendar = ({
 
   return (
     <Calendar
-      onDayPress={(day: any) => {
+      onDayPress={(day: DateData) => {
         const asDate = parseISO(day.dateString);
         setSelectedDate(day.dateString);
         onStartDateChange(asDate);
@@ -49,7 +50,7 @@ export const SingleDateCalendar = ({
       }}
       renderHeader={renderCalendarHeader}
       enableSwipeMonths
-      dayComponent={({ date, state }: any) => {
+      dayComponent={({ date, state }: DayProps & { date?: DateData }) => {
         const isSelected = !isDeadlinePicker && (selectedDate === date.dateString);
         const isDeadline = deadlineDate === date.dateString;
         const isDisabled = disabledDates.includes(date.dateString);

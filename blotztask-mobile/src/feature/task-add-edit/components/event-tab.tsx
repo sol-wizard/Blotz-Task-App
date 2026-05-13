@@ -29,7 +29,7 @@ export const EventTab = ({
   control: Control<TaskFormField>;
   trigger?: UseFormTrigger<TaskFormField>;
   clearErrors?: UseFormClearErrors<TaskFormField>;
-  setValue: (name: keyof TaskFormField, value: any) => void;
+  setValue: (name: keyof TaskFormField, value: TaskFormField[keyof TaskFormField]) => void;
 }) => {
   const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
     const start = combineDateTime(sd, st);
