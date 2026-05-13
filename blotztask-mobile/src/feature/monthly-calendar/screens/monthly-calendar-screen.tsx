@@ -81,6 +81,7 @@ export default function MonthlyCalendarScreen() {
             firstDay={1}
             enableSwipeMonths
             renderHeader={(date?: XDate) => {
+              if (!date) return null;
               const isChinese = i18n.language.startsWith("zh");
               const monthName = isChinese ? `${date.getMonth() + 1}月` : format(date, "MMMM");
               return (

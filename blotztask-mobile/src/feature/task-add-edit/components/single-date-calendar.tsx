@@ -51,6 +51,7 @@ export const SingleDateCalendar = ({
       renderHeader={renderCalendarHeader}
       enableSwipeMonths
       dayComponent={({ date, state }: DayProps & { date?: DateData }) => {
+        if (!date) return null;
         const isSelected = !isDeadlinePicker && (selectedDate === date.dateString);
         const isDeadline = deadlineDate === date.dateString;
         const isDisabled = disabledDates.includes(date.dateString);
@@ -74,7 +75,7 @@ export const SingleDateCalendar = ({
         return (
           <CustomCalendarDay
             date={date}
-            state={state}
+            state={state ?? ""}
             isSelected={isSelected}
             isDeadline={isDeadline}
             isInRange={isInHighlight || isInEventRange}

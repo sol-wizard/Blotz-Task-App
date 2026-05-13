@@ -78,6 +78,7 @@ const DoubleDatesCalendar = ({
         renderHeader={renderCalendarHeader}
         enableSwipeMonths
         dayComponent={({ date, state }: DayProps & { date?: DateData }) => {
+          if (!date) return null;
           const props = markedDates[date.dateString] || {};
           const isDeadline = deadlineDate === date.dateString;
           const isDisabled = disabledDates.includes(date.dateString);
@@ -85,7 +86,7 @@ const DoubleDatesCalendar = ({
           return (
             <CustomCalendarDay
               date={date}
-              state={state}
+              state={state ?? ""}
               isSelected={false}
               isDeadline={isDeadline}
               isInRange={props.isInRange}
@@ -93,7 +94,7 @@ const DoubleDatesCalendar = ({
               isRangeEnd={props.isRangeEnd}
               isInvalid={props.isInvalid}
               disabled={isDisabled}
-              onPress={() => onDayPress(date)}
+              onPress={() => onDayPress(date as DateData)}
             />
           );
         }}

@@ -37,7 +37,7 @@ const useTaskMutations = () => {
         taskKeys.selectedDay(convertToDateTimeOffset(startOfDay(data.selectedDay))),
       );
       const toggleInList = (list: TaskDetailDTO[] | undefined) =>
-        list?.map((t) => (t.id === data.taskId ? { ...t, isCompleted: !t.isCompleted } : t));
+        list?.map((t) => (t.id === data.taskId ? { ...t, isDone: !t.isDone } : t));
       queryClient.setQueryData(taskKeys.all, toggleInList(prevSelectedDayData));
       return { prevSelectedDayData };
     },

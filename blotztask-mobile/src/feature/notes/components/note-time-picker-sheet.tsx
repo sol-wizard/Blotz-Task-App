@@ -9,20 +9,12 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SegmentToggle } from "@/feature/task-add-edit/components/segment-toggle";
 import { ReminderTab } from "@/feature/task-add-edit/components/reminder-tab";
 import { EventTab } from "@/feature/task-add-edit/components/event-tab";
+import { TaskFormField } from "@/feature/task-add-edit/models/task-form-schema";
 import { buildTaskTimePayload } from "@/feature/task-add-edit/util/time-convertion";
 import { useAddNoteToTask } from "@/shared/hooks/useAddNoteToTask";
 import { theme } from "@/shared/constants/theme";
 import { addMinutes } from "date-fns/addMinutes";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
-type FormValues = {
-  startDate: Date;
-  startTime: Date;
-  endDate: Date;
-  endTime: Date;
-};
-
-type TaskFormField = FormValues;
 
 export const NoteTimePickerSheet = ({
   visible,
@@ -40,22 +32,28 @@ export const NoteTimePickerSheet = ({
   const { t } = useTranslation("notes");
   const { addNoteToTask, isConverting } = useAddNoteToTask();
 
-  // Initialize form like TaskForm does
   const getDefaultValues = (): TaskFormField => {
     const now = new Date();
     return {
+      title: "",
+      description: null,
       startDate: now,
       startTime: now,
       endDate: now,
       endTime: addMinutes(now, 60),
+      labelId: null,
+      alert: null,
+      isDeadline: false,
+      deadlineDate: now,
+      deadlineTime: now,
     };
   };
 
-  const form = useForm<FormValues>({
+  const form = useForm<TaskFormField>({
     defaultValues: getDefaultValues(),
   });
 
-  const { handleSubmit, reset, control, setValue } = form;
+  const { handleSubmit, reset, control, setValue, clearErrors, trigger } = form;
   const [mode, setMode] = useState<"reminder" | "event">("reminder");
 
   useEffect(() => {
@@ -155,11 +153,11 @@ export const NoteTimePickerSheet = ({
             <View className="mb-4">
               {mode === "reminder" ? (
                 <View className="mb-6">
-                  <ReminderTab control={control} />
+                  <ReminderTab control={control} setValue={setValue} clearErrors={clearErrors} />
                 </View>
               ) : (
                 <View className="mb-6">
-                  <EventTab control={control} />
+                  <EventTab control={control} setValue={setValue} clearErrors={clearErrors} trigger={trigger} />
                 </View>
               )}
             </View>
