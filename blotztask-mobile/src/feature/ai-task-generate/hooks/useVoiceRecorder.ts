@@ -4,6 +4,7 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
+import { useRef } from "react";
 import { File as ExpoFile } from "expo-file-system";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
@@ -12,12 +13,18 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const state = useAudioRecorderState(recorder);
+  const cancelRequested = useRef(false);
 
   const startListening = async () => {
     console.log("🥾 [Mic] Starting recording...");
+    cancelRequested.current = false;
     try {
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
+      if (cancelRequested.current) {
+        console.log("🚫 [Mic] Cancelled before record() — aborting.");
+        return;
+      }
       recorder.record();
       console.log("🎙️ [Mic] Recording started.");
     } catch (error) {
@@ -28,6 +35,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
 
   const cancelListening = async (): Promise<void> => {
     console.log("🚫 [Mic] Cancelling recording...");
+    cancelRequested.current = true;
     if (recorder.isRecording) {
       await recorder.stop();
       console.log("🛑 [Mic] Recording stopped.");

@@ -126,7 +126,7 @@ export default function AiTaskSheetScreen() {
         outcome: "accepted",
       });
       router.back();
-      Toast.show({ type: "warning", text1: t("success.taskAdded") });
+      setTimeout(() => Toast.show({ type: "warning", text1: t("success.taskAdded") }), 0);
     } catch (error) {
       console.error("Add tasks/notes failed", error);
     }
