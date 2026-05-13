@@ -43,6 +43,7 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("TranscribeAudio invocation failed:", error);
       setIsAiGenerating(false);
+      Toast.show({ type: "error", text1: t("errors.default") });
     }
   };
 
@@ -58,6 +59,7 @@ export function useAiTaskGenerator({
     } catch (error) {
       console.error("SendMessage invocation failed:", error);
       setIsAiGenerating(false);
+      Toast.show({ type: "error", text1: t("errors.default") });
     }
   };
 
