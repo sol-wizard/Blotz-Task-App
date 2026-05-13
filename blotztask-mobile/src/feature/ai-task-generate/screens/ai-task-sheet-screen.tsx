@@ -24,13 +24,13 @@ import { ListeningIndicator } from "../component/listening-indicator";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
-import { useHoldHint } from "../hooks/useHoldHint";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { convertAiTaskToTaskUpsertDTO } from "../utils/map-aitask-to-addtaskitem-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import Toast from "react-native-toast-message";
 import { analytics } from "@/shared/services/analytics";
+import { toastConfig } from "@/shared/components/toast-config";
 
 export default function AiTaskSheetScreen() {
   // --- Hooks ---
@@ -43,7 +43,7 @@ export default function AiTaskSheetScreen() {
   const hasSubmittedAiRequest = useRef(false);
   const longPressTriggered = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
-  const { isHoldHintVisible, showHoldHint, hideHoldHint } = useHoldHint(1500);
+  const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
   const {
     userInput,
     transcript,
@@ -55,7 +55,7 @@ export default function AiTaskSheetScreen() {
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
+  const { isRecording, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
     submitAudioForTranscription,
   );
   const { addTaskAsync, isAdding } = useTaskMutations();
@@ -133,7 +133,7 @@ export default function AiTaskSheetScreen() {
   };
 
   const handleMicPressIn = () => {
-    hideHoldHint();
+    setIsHoldHintVisible(false);
     void startListening();
   };
 
@@ -174,17 +174,14 @@ export default function AiTaskSheetScreen() {
               {hasContent && <AiResultList aiTasks={displayTasks} aiNotes={displayNotes} />}
 
               {isAiGenerating && !!transcript && !hasContent && (
-                <Text
-                  className="mx-6 mb-2 text-center italic text-white/70"
-                  numberOfLines={3}
-                >
+                <Text className="mx-6 mb-2 text-center italic text-white/70" numberOfLines={3}>
                   &ldquo;{transcript}&rdquo;
                 </Text>
               )}
 
               {!hasContent && (
                 <ListeningIndicator
-                  isListening={isListening}
+                  isRecording={isRecording}
                   isAiGenerating={isAiGenerating}
                   isHoldHintVisible={isHoldHintVisible}
                 />
@@ -212,8 +209,11 @@ export default function AiTaskSheetScreen() {
                     }}
                     onPressOut={() => {
                       if (!longPressTriggered.current) {
-                        showHoldHint();
+                        setIsHoldHintVisible(true);
                         cancelListening();
+                        console.log(
+                          "👆 [Mic] Press out before long press threshold, showing hold hint.",
+                        );
                       } else {
                         void handleMicPressOut();
                       }
@@ -224,7 +224,7 @@ export default function AiTaskSheetScreen() {
                     delayLongPress={1000}
                     className="w-14 h-14 rounded-full items-center justify-center"
                     style={{
-                      backgroundColor: isListening
+                      backgroundColor: isRecording
                         ? "rgba(255,255,255,0.5)"
                         : "rgba(255,255,255,0.25)",
                       opacity: isAiGenerating ? 0.4 : 1,
@@ -236,7 +236,7 @@ export default function AiTaskSheetScreen() {
 
                   {/* Text input / waveform */}
                   <View className="flex-1 items-center justify-center">
-                    {isListening ? (
+                    {isRecording ? (
                       <LottieView
                         source={LOTTIE_ANIMATIONS.voiceWave}
                         loop
@@ -278,6 +278,7 @@ export default function AiTaskSheetScreen() {
           </KeyboardStickyView>
         </LinearGradient>
       </View>
+      <Toast config={toastConfig} position="bottom" bottomOffset={120} />
     </View>
   );
 }

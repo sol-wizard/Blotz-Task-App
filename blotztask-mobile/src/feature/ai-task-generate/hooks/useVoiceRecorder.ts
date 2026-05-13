@@ -5,8 +5,11 @@ import {
   useAudioRecorderState,
 } from "expo-audio";
 import { File as ExpoFile } from "expo-file-system";
+import { useTranslation } from "react-i18next";
+import Toast from "react-native-toast-message";
 
 export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
+  const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const state = useAudioRecorderState(recorder);
 
@@ -18,6 +21,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       recorder.record();
       console.log("🎙️ [Mic] Recording started.");
     } catch (error) {
+      Toast.show({ type: "warning", text1: t("errors.recordingFailed") });
       console.warn("[Mic] Error starting recording.", error);
     }
   };
@@ -26,12 +30,14 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     console.log("🚫 [Mic] Cancelling recording...");
     if (recorder.isRecording) {
       await recorder.stop();
+      console.log("🛑 [Mic] Recording stopped.");
     }
   };
 
   const stopAndUpload = async (): Promise<void> => {
     console.log("💾 [Mic] Stopping and uploading recording...");
     if (!recorder.isRecording) {
+      Toast.show({ type: "warning", text1: t("errors.emptyAudio") });
       console.warn("[Mic] stopAndUpload called but recorder is not recording.");
       return;
     }
@@ -40,7 +46,10 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       await recorder.stop();
 
       const uri = recorder.uri;
-      if (!uri) return;
+      if (!uri) {
+        Toast.show({ type: "warning", text1: t("errors.emptyAudio") });
+        return;
+      }
 
       await submitAudioForTranscription(uri);
       new ExpoFile(uri).delete();
@@ -54,5 +63,5 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
   };
 
-  return { isListening: state.isRecording, startListening, stopAndUpload, cancelListening };
+  return { isRecording: state.isRecording, startListening, stopAndUpload, cancelListening };
 }
