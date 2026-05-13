@@ -13,12 +13,7 @@ export type MonthlyDayProps = {
   onPressDay?: (dateString: string) => void;
 };
 
-export const MonthlyDay = ({
-  date,
-  selectedDate,
-  tasks = [],
-  onPressDay,
-}: MonthlyDayProps) => {
+export const MonthlyDay = ({ date, selectedDate, tasks = [], onPressDay }: MonthlyDayProps) => {
   if (!date) return null;
 
   const dayKey = date.dateString;
@@ -29,7 +24,7 @@ export const MonthlyDay = ({
     <View className="w-full">
       <Pressable
         onPress={() => onPressDay?.(dayKey)}
-        className={`flex-col h-24 w-full items-center rounded-lg ${isSelected ? "border border-secondary" : ""}`}
+        className={`flex-col h-24 w-full items-center rounded-lg ${isSelected ? "border border-secondary bg-secondary/5" : ""}`}
       >
         <View className="w-7 h-7 rounded-full items-center justify-center mb-1.5">
           <Text className="text-base font-interBold mt-0.5 text-secondary">{date.day}</Text>
