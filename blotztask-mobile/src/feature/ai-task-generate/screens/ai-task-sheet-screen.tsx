@@ -163,7 +163,9 @@ export default function AiTaskSheetScreen() {
 
               {/* Hint text (no results) */}
               {!hasContent && (
-                <View style={{ flex: 1, width: "100%", opacity: isKeyboardVisible ? 0 : 1 }}>
+                <View
+                  className={`flex-1 w-full ${isKeyboardVisible ? "opacity-0" : "opacity-100"}`}
+                >
                   <VoiceHintText />
                 </View>
               )}
@@ -173,14 +175,7 @@ export default function AiTaskSheetScreen() {
 
               {isAiGenerating && !!transcript && !hasContent && (
                 <Text
-                  style={{
-                    opacity: 0.7,
-                    fontStyle: "italic",
-                    color: "white",
-                    textAlign: "center",
-                    marginHorizontal: 24,
-                    marginBottom: 8,
-                  }}
+                  className="mx-6 mb-2 text-center italic text-white/70"
                   numberOfLines={3}
                 >
                   &ldquo;{transcript}&rdquo;
@@ -196,7 +191,7 @@ export default function AiTaskSheetScreen() {
               )}
 
               {isAiGenerating && hasContent && (
-                <Text style={{ color: "white", opacity: 0.6, fontSize: 13, marginBottom: 8 }}>
+                <Text className="mb-2 text-[13px] text-white/60">
                   {t("voiceListening.aiThinking")}…
                 </Text>
               )}
