@@ -1,15 +1,23 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Pressable, Text, useWindowDimensions, Keyboard, Platform } from "react-native";
+import {
+  View,
+  Pressable,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  Keyboard,
+  Platform,
+} from "react-native";
 import { KeyboardStickyView, useKeyboardState } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import LottieView from "lottie-react-native";
 import { router } from "expo-router";
-
+import * as Haptics from "expo-haptics";
 import { requestRecordingPermissionsAsync } from "expo-audio";
-
 import { useTranslation } from "react-i18next";
-import { AiInputBar } from "../component/ai-input-bar";
+import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { ListeningIndicator } from "../component/listening-indicator";
@@ -33,6 +41,7 @@ export default function AiTaskSheetScreen() {
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
   const hasSubmittedAiRequest = useRef(false);
+  const longPressTriggered = useRef(false);
   const { isVisible: isKeyboardVisible } = useKeyboardState();
   const { isHoldHintVisible, showHoldHint, hideHoldHint } = useHoldHint(1500);
   const {
@@ -198,17 +207,63 @@ export default function AiTaskSheetScreen() {
                 className="w-full flex-row items-center px-6 gap-4"
                 style={{ paddingBottom: bottomPadding }}
               >
-                <AiInputBar
-                  textInput={textInput}
-                  onChangeText={setTextInput}
-                  onSubmitText={() => void handleSubmitText()}
-                  isListening={isListening}
-                  onShortPress={showHoldHint}
-                  onMicPressIn={handleMicPressIn}
-                  onMicPressOut={() => void handleMicPressOut()}
-                  cancelListening={cancelListening}
-                  isAiGenerating={isAiGenerating}
-                />
+                <View className="flex-1 flex-row items-center gap-4">
+                  {/* Microphone hold-to-record */}
+                  <Pressable
+                    onPressIn={() => {
+                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      longPressTriggered.current = false;
+                      handleMicPressIn();
+                    }}
+                    onPressOut={() => {
+                      if (!longPressTriggered.current) {
+                        showHoldHint();
+                        cancelListening();
+                      } else {
+                        void handleMicPressOut();
+                      }
+                    }}
+                    onLongPress={() => {
+                      longPressTriggered.current = true;
+                    }}
+                    delayLongPress={1000}
+                    className="w-14 h-14 rounded-full items-center justify-center"
+                    style={{
+                      backgroundColor: isListening
+                        ? "rgba(255,255,255,0.5)"
+                        : "rgba(255,255,255,0.25)",
+                      opacity: isAiGenerating ? 0.4 : 1,
+                    }}
+                    disabled={isAiGenerating}
+                  >
+                    <MaterialCommunityIcons name="microphone" size={28} color="white" />
+                  </Pressable>
+
+                  {/* Text input / waveform */}
+                  <View className="flex-1 items-center justify-center">
+                    {isListening ? (
+                      <LottieView
+                        source={LOTTIE_ANIMATIONS.voiceWave}
+                        loop
+                        autoPlay
+                        style={{ width: "100%", height: 40 }}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <TextInput
+                        value={textInput}
+                        onChangeText={setTextInput}
+                        onSubmitEditing={() => void handleSubmitText()}
+                        placeholder={t("input.placeholder")}
+                        placeholderTextColor="rgba(255,255,255,0.6)"
+                        returnKeyType="send"
+                        multiline={false}
+                        editable={!isAiGenerating}
+                        className={`w-full text-white font-baloo text-base px-4 bg-white/25 rounded-full h-14 ${isAiGenerating ? "opacity-40" : "opacity-100"}`}
+                      />
+                    )}
+                  </View>
+                </View>
                 {hasContent && (
                   <Pressable
                     onPress={() => void handleAddAll()}
