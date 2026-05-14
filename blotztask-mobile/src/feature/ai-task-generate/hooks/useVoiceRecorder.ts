@@ -12,7 +12,7 @@ import Toast from "react-native-toast-message";
 export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => Promise<void>) {
   const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const state = useAudioRecorderState(recorder);
+  const { isRecording } = useAudioRecorderState(recorder);
   const cancelRequested = useRef(false);
 
   const startListening = async () => {
@@ -62,5 +62,5 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
     }
   };
 
-  return { isRecording: state.isRecording, startListening, stopAndUpload, cancelListening };
+  return { isRecording, startListening, stopAndUpload, cancelListening };
 }
