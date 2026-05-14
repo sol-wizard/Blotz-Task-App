@@ -55,10 +55,6 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
       new ExpoFile(uri).delete();
     } catch (error) {
       console.warn("[Mic] Error stopping recording.", error);
-    } finally {
-      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true }).catch(
-        () => undefined,
-      );
     }
   };
 
