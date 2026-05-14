@@ -13,33 +13,21 @@ export type MonthlyDayProps = {
   onPressDay?: (dateString: string) => void;
 };
 
-export const MonthlyDay = ({
-  date,
-  state,
-  selectedDate,
-  tasks = [],
-  onPressDay,
-}: MonthlyDayProps) => {
+export const MonthlyDay = ({ date, selectedDate, tasks = [], onPressDay }: MonthlyDayProps) => {
   if (!date) return null;
 
   const dayKey = date.dateString;
   const isSelected = dayKey === selectedDate;
-  const isToday = state === "today";
-  const isInactive = state === "disabled" || state === "inactive";
   const previews = tasks.slice(0, 4);
 
   return (
     <View className="w-full">
       <Pressable
         onPress={() => onPressDay?.(dayKey)}
-        className={`flex-col h-24 w-full items-center rounded-lg ${isSelected ? "bg-secondary" : ""}`}
+        className={`flex-col h-24 w-full items-center rounded-lg ${isSelected ? "border border-secondary bg-secondary/5" : ""}`}
       >
         <View className="w-7 h-7 rounded-full items-center justify-center mb-1.5">
-          <Text
-            className={`text-base font-interBold mt-0.5 ${isSelected ? "text-white" : isToday ? "text-highlight" : isInactive ? "text-gray-300" : "text-secondary"}`}
-          >
-            {date.day}
-          </Text>
+          <Text className="text-base font-interBold mt-0.5 text-secondary">{date.day}</Text>
         </View>
         <View className="w-full px-0.5 gap-y-0.5">
           {previews.map((task, index) => {
@@ -57,10 +45,7 @@ export const MonthlyDay = ({
                   style={{ backgroundColor: labelColor }}
                 />
                 <View className="flex-1">
-                  <Text
-                    numberOfLines={1}
-                    className={`text-xxs font-inter leading-3 ${isSelected ? "text-white" : "text-secondary"}`}
-                  >
+                  <Text numberOfLines={1} className="text-xxs font-inter leading-3 text-secondary">
                     {task.taskTitle}
                   </Text>
                 </View>
