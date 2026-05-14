@@ -126,6 +126,7 @@ export default function AiTaskSheetScreen() {
         outcome: "accepted",
       });
       router.back();
+      // Delay the toast slightly to ensure it appears after the sheet has fully closed
       requestIdleCallback(() => Toast.show({ type: "warning", text1: t("success.taskAdded") }));
     } catch (error) {
       console.error("Add tasks/notes failed", error);
@@ -275,6 +276,7 @@ export default function AiTaskSheetScreen() {
           </KeyboardStickyView>
         </LinearGradient>
       </View>
+      {/* register extra toast here because this screen is a modal */}
       <Toast config={toastConfig} position="bottom" bottomOffset={120} />
     </View>
   );

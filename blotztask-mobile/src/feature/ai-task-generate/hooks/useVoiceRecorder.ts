@@ -13,6 +13,7 @@ export function useVoiceRecorder(submitAudioForTranscription: (uri: string) => P
   const { t } = useTranslation("aiTaskGenerate");
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const { isRecording } = useAudioRecorderState(recorder);
+  // Prevents race condition between startListening and cancelListening.
   const cancelRequested = useRef(false);
 
   const startListening = async () => {
