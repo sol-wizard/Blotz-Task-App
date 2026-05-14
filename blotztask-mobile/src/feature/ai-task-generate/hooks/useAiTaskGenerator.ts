@@ -75,24 +75,7 @@ export function useAiTaskGenerator({
     const inputText = result.userInput;
 
     if (inputMode && inputText) {
-      setTurns((prev) => [
-        ...prev,
-        {
-          turn_index: prev.length + 1,
-          input_mode: inputMode,
-          user_input: inputText,
-          generated_tasks: (result.extractedTasks ?? []).map((task) => ({
-            title: task.title,
-            description: task.description ?? "",
-            start_time: task.start_time,
-            end_time: task.end_time,
-            task_label: task.task_label,
-          })),
-          generated_notes: (result.extractedNotes ?? []).map((note) => ({
-            text: note.text,
-          })),
-        },
-      ]);
+      setTurns((prev) => [...prev, buildTurn(prev.length + 1, inputMode, result)]);
     }
 
     pendingInputModeRef.current = null;
@@ -152,6 +135,28 @@ export function useAiTaskGenerator({
     turns,
     submitAudioForTranscription,
     sendTextMessage,
+  };
+}
+
+function buildTurn(
+  index: number,
+  inputMode: AiTaskInputMode,
+  result: AiResultMessageDTO,
+): AiTaskGenerationTurn {
+  return {
+    turn_index: index,
+    input_mode: inputMode,
+    user_input: result.userInput ?? "",
+    generated_tasks: (result.extractedTasks ?? []).map((task) => ({
+      title: task.title,
+      description: task.description ?? "",
+      start_time: task.start_time,
+      end_time: task.end_time,
+      task_label: task.task_label,
+    })),
+    generated_notes: (result.extractedNotes ?? []).map((note) => ({
+      text: note.text,
+    })),
   };
 }
 
