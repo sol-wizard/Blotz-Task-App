@@ -29,7 +29,6 @@ export function useAiTaskGenerator({
   const [turns, setTurns] = useState<AiTaskGenerationTurn[]>([]);
   const requestStartedAtRef = useRef<number | null>(null);
   const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
-  const pendingUserInputRef = useRef<string | undefined>(undefined);
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
     if (!connection) throw new Error("Cannot submit audio: not connected.");
@@ -41,7 +40,6 @@ export function useAiTaskGenerator({
     setIsAiGenerating(true);
     requestStartedAtRef.current = Date.now();
     pendingInputModeRef.current = "voice";
-    pendingUserInputRef.current = undefined;
 
     try {
       await signalRService.invoke(connection, "TranscribeAudio", base64);
@@ -59,7 +57,6 @@ export function useAiTaskGenerator({
     setIsAiGenerating(true);
     requestStartedAtRef.current = Date.now();
     pendingInputModeRef.current = "text";
-    pendingUserInputRef.current = text;
 
     try {
       await signalRService.invoke(connection, "SendMessage", text);
@@ -75,7 +72,7 @@ export function useAiTaskGenerator({
     setIsAiGenerating(false);
     requestStartedAtRef.current = null;
     const inputMode = pendingInputModeRef.current;
-    const inputText = result.userInput ?? pendingUserInputRef.current;
+    const inputText = result.userInput;
 
     if (inputMode && inputText) {
       setTurns((prev) => [
@@ -99,7 +96,6 @@ export function useAiTaskGenerator({
     }
 
     pendingInputModeRef.current = null;
-    pendingUserInputRef.current = undefined;
 
     if (!result.isSuccess) {
       setStreamedTasks([]);
@@ -124,7 +120,6 @@ export function useAiTaskGenerator({
         setConnection(conn);
         conn.on("ReceiveGenerationResult", generationCompleteHandler);
         conn.on("ReceiveTranscript", (text: string) => {
-          pendingUserInputRef.current = text;
           setTranscript(text);
         });
         conn.on("ReceiveTaskExtracted", (task: ExtractedTaskDTO) => {
