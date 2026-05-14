@@ -29,6 +29,6 @@ export function useUpdateCheck(): UpdateCheckState {
         setState({ status: UpdateCheckStatus.UpToDate });
       });
   }, []);
-  console.log("Update check state:", state);
+
   return state;
 }

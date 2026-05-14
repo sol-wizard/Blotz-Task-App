@@ -81,17 +81,17 @@ export function useAiTaskGenerator({
       setTurns((prev) => [
         ...prev,
         {
-          "turn_index": prev.length + 1,
-          "input_mode": inputMode,
-          "user_input": inputText,
-          "generated_tasks": (result.extractedTasks ?? []).map((task) => ({
+          turn_index: prev.length + 1,
+          input_mode: inputMode,
+          user_input: inputText,
+          generated_tasks: (result.extractedTasks ?? []).map((task) => ({
             title: task.title,
             description: task.description ?? "",
-            "start_time": task.start_time,
-            "end_time": task.end_time,
-            "task_label": task.task_label,
+            start_time: task.start_time,
+            end_time: task.end_time,
+            task_label: task.task_label,
           })),
-          "generated_notes": (result.extractedNotes ?? []).map((note) => ({
+          generated_notes: (result.extractedNotes ?? []).map((note) => ({
             text: note.text,
           })),
         },
