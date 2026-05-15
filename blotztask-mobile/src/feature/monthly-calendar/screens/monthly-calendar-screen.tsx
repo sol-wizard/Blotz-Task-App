@@ -83,7 +83,9 @@ export default function MonthlyCalendarScreen() {
             renderHeader={(date?: XDate) => {
               if (!date) return null;
               const isChinese = i18n.language.startsWith("zh");
-              const monthName = isChinese ? `${date.getMonth() + 1}月` : format(date, "MMMM");
+              const monthName = isChinese
+                ? `${date.getMonth() + 1}月`
+                : format(date.toDate(), "MMMM");
               return (
                 <Text className="text-4xl font-balooBold text-secondary pt-2">{monthName}</Text>
               );

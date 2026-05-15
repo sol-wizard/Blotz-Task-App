@@ -9,7 +9,7 @@ import { AnimatedDropdown } from "@/shared/components/animated-dropdown";
 
 type AlertSelectProps = {
   control: Control<TaskFormField>;
-  name?: string;
+  name?: keyof TaskFormField;
 };
 
 export const AlertSelect: React.FC<AlertSelectProps> = ({ control, name = "alert" }) => {
