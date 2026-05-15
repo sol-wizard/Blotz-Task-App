@@ -2,14 +2,14 @@ import { View, Text } from "react-native";
 import { useTranslation } from "react-i18next";
 
 type Props = {
-  isListening: boolean;
+  isRecording: boolean;
   isAiGenerating: boolean;
   isHoldHintVisible: boolean;
 };
 
-export function ListeningIndicator({ isListening, isAiGenerating, isHoldHintVisible }: Props) {
+export function ListeningIndicator({ isRecording, isAiGenerating, isHoldHintVisible }: Props) {
   const { t } = useTranslation("aiTaskGenerate");
-  const isActive = isListening || isAiGenerating;
+  const isActive = isRecording || isAiGenerating;
 
   return (
     <View className="items-center px-8 pb-4">
