@@ -27,7 +27,8 @@
     "contentFilter": "Your message was flagged. Please rephrase and try again.",
     "canceled": "The request was canceled.",
     "noTasksExtracted": "I couldn't find any tasks in that. Please try again.",
-    "holdLonger": "Hold the mic a little longer to record."
+    "holdLonger": "Hold the mic a little longer to record.",
+    "recordingFailed": "Failed to start recording. Please try again."
   },
   "taskCard": {
     "titlePlaceholder": "Task title",
