@@ -72,6 +72,8 @@
         }
       },
       "android": {
+        "buildType": "app-bundle",
+        "credentialsSource": "local",
         "env": {
           "APP_VERSION": "1.0.0"
         }
