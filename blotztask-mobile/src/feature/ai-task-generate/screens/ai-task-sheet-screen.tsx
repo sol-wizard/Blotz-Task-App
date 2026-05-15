@@ -1,40 +1,61 @@
-import React, { useState, useEffect } from "react";
-import { View, Pressable, Text, useWindowDimensions, Keyboard } from "react-native";
-import { KeyboardStickyView } from "react-native-keyboard-controller";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Pressable,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  Keyboard,
+  Platform,
+} from "react-native";
+import { KeyboardStickyView, useKeyboardState } from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import LottieView from "lottie-react-native";
 import { router } from "expo-router";
-
-import { requestRecordingPermissionsAsync } from "expo-audio";
 import * as Haptics from "expo-haptics";
+import { requestRecordingPermissionsAsync } from "expo-audio";
 import { useTranslation } from "react-i18next";
-import { AiInputBar } from "../component/ai-input-bar";
+import { LOTTIE_ANIMATIONS } from "@/shared/constants/assets";
 import { AiResultList } from "../component/ai-result-list";
 import { VoiceHintText } from "../component/voice-hint-text";
 import { ListeningIndicator } from "../component/listening-indicator";
 import { useAiTaskGenerator } from "../hooks/useAiTaskGenerator";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { useAllLabels } from "@/shared/hooks/useAllLabels";
-import { useHoldHint } from "../hooks/useHoldHint";
 import { mapExtractedTaskDTOToAiTaskDTO } from "../utils/map-extracted-to-task-dto";
 import { convertAiTaskToTaskUpsertDTO } from "../utils/map-aitask-to-addtaskitem-dto";
 import useTaskMutations from "@/shared/hooks/useTaskMutations";
 import { useNotesMutation } from "@/feature/notes/hooks/useNotesMutation";
 import Toast from "react-native-toast-message";
 import { analytics } from "@/shared/services/analytics";
+import { toastConfig } from "@/shared/components/toast-config";
 
 export default function AiTaskSheetScreen() {
   // --- Hooks ---
   const { t } = useTranslation("aiTaskGenerate");
   const { height } = useWindowDimensions();
+  const { bottom } = useSafeAreaInsets();
+  const bottomPadding = Platform.OS === "android" ? bottom + 16 : 32;
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [textInput, setTextInput] = useState("");
-  const { isHoldHintVisible, showHoldHint, hideHoldHint } = useHoldHint(1500);
-  const { userInput, transcript, streamedTasks, streamedNotes, submitAudioForTranscription, sendTextMessage } = useAiTaskGenerator({
+  const hasSubmittedAiRequest = useRef(false);
+  const longPressTriggered = useRef(false);
+  const { isVisible: isKeyboardVisible } = useKeyboardState();
+  const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
+  const {
+    transcript,
+    turns,
+    streamedTasks,
+    streamedNotes,
+    submitAudioForTranscription,
+    sendTextMessage,
+  } = useAiTaskGenerator({
     setIsAiGenerating,
   });
   const { labels } = useAllLabels();
-  const { isListening, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
+  const { isRecording, startListening, stopAndUpload, cancelListening } = useVoiceRecorder(
     submitAudioForTranscription,
   );
   const { addTaskAsync, isAdding } = useTaskMutations();
@@ -51,21 +72,23 @@ export default function AiTaskSheetScreen() {
   }, []);
 
   // --- Derived data ---
-  const displayTasks = streamedTasks.map((task) => mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []));
+  const displayTasks = streamedTasks.map((task) =>
+    mapExtractedTaskDTOToAiTaskDTO(task, labels ?? []),
+  );
   const displayNotes = streamedNotes;
   const hasContent = streamedTasks.length > 0 || streamedNotes.length > 0;
 
-  const analyticsPayload = {
-    userInput,
-    generatedTaskTitles: displayTasks.map((t) => t.title),
-    generatedNoteTexts: displayNotes.map((n) => n.text),
-  };
-
   // --- Handlers ---
   const handleDismiss = () => {
-    analytics.trackIfUserAcceptAiTask({
-      ...analyticsPayload,
+    // Skip analytics only for passive open-and-close sessions with no submitted AI request.
+    if (!hasContent && !hasSubmittedAiRequest.current) {
+      router.back();
+      return;
+    }
+
+    analytics.trackAiTaskGenerationSession({
       outcome: hasContent ? "rejected" : "abandoned",
+      turns,
     });
     router.back();
   };
@@ -73,6 +96,7 @@ export default function AiTaskSheetScreen() {
   const handleSubmitText = async () => {
     if (!textInput.trim() || isAiGenerating) return;
     const message = textInput.trim();
+    hasSubmittedAiRequest.current = true;
     setTextInput("");
     Keyboard.dismiss();
     await sendTextMessage(message);
@@ -85,25 +109,25 @@ export default function AiTaskSheetScreen() {
         ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
         ...displayNotes.map((n) => createNoteAsync(n.text)),
       ]);
-      analytics.trackIfUserAcceptAiTask({
-        ...analyticsPayload,
+      analytics.trackAiTaskGenerationSession({
         outcome: "accepted",
+        turns,
       });
       router.back();
-      Toast.show({ type: "warning", text1: t("success.taskAdded") });
+      // Delay the toast slightly to ensure it appears after the sheet has fully closed
+      requestIdleCallback(() => Toast.show({ type: "warning", text1: t("success.taskAdded") }));
     } catch (error) {
       console.error("Add tasks/notes failed", error);
     }
   };
 
   const handleMicPressIn = () => {
-    hideHoldHint();
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Keyboard.dismiss();
+    setIsHoldHintVisible(false);
     void startListening();
   };
 
   const handleMicPressOut = async () => {
+    hasSubmittedAiRequest.current = true;
     await stopAndUpload();
   };
 
@@ -127,64 +151,121 @@ export default function AiTaskSheetScreen() {
               </View>
 
               {/* Hint text (no results) */}
-              {!hasContent && <VoiceHintText />}
+              {!hasContent && (
+                <View
+                  className={`flex-1 w-full ${isKeyboardVisible ? "opacity-0" : "opacity-100"}`}
+                >
+                  <VoiceHintText />
+                </View>
+              )}
 
               {/* Task / note cards (streamed or final) */}
               {hasContent && <AiResultList aiTasks={displayTasks} aiNotes={displayNotes} />}
 
               {isAiGenerating && !!transcript && !hasContent && (
-                <Text
-                  style={{
-                    opacity: 0.7,
-                    fontStyle: "italic",
-                    color: "white",
-                    textAlign: "center",
-                    marginHorizontal: 24,
-                    marginBottom: 8,
-                  }}
-                  numberOfLines={3}
-                >
+                <Text className="mx-6 mb-2 text-center italic text-white/70" numberOfLines={3}>
                   &ldquo;{transcript}&rdquo;
                 </Text>
               )}
 
               {!hasContent && (
                 <ListeningIndicator
-                  isListening={isListening}
+                  isRecording={isRecording}
                   isAiGenerating={isAiGenerating}
                   isHoldHintVisible={isHoldHintVisible}
                 />
               )}
 
               {isAiGenerating && hasContent && (
-                <Text style={{ color: "white", opacity: 0.6, fontSize: 13, marginBottom: 8 }}>
+                <Text className="mb-2 text-[13px] text-white/60">
                   {t("voiceListening.aiThinking")}…
                 </Text>
               )}
 
               {/* Input bar sticks to the keyboard only */}
 
-              <AiInputBar
-                // Text input
-                textInput={textInput}
-                onChangeText={setTextInput}
-                onSubmitText={() => void handleSubmitText()}
-                // Mic input
-                isListening={isListening}
-                onShortPress={showHoldHint}
-                onMicPressIn={handleMicPressIn}
-                onMicPressOut={() => void handleMicPressOut()}
-                cancelListening={cancelListening}
-                // Results
-                hasResults={hasContent}
-                onConfirm={() => void handleAddAll()}
-                // State
-                isAiGenerating={isAiGenerating}
-              />
+              <View
+                className="w-full flex-row items-center px-6 gap-4"
+                style={{ paddingBottom: bottomPadding }}
+              >
+                <View className="flex-1 flex-row items-center gap-4">
+                  {/* Microphone hold-to-record */}
+                  <Pressable
+                    onPressIn={() => {
+                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      longPressTriggered.current = false;
+                      handleMicPressIn();
+                    }}
+                    onPressOut={() => {
+                      if (!longPressTriggered.current) {
+                        setIsHoldHintVisible(true);
+                        cancelListening();
+                      } else {
+                        void handleMicPressOut();
+                      }
+                    }}
+                    onLongPress={() => {
+                      longPressTriggered.current = true;
+                    }}
+                    delayLongPress={1000}
+                    className="w-14 h-14 rounded-full items-center justify-center"
+                    style={{
+                      backgroundColor: isRecording
+                        ? "rgba(255,255,255,0.5)"
+                        : "rgba(255,255,255,0.25)",
+                      opacity: isAiGenerating ? 0.4 : 1,
+                    }}
+                    disabled={isAiGenerating}
+                  >
+                    <MaterialCommunityIcons name="microphone" size={28} color="white" />
+                  </Pressable>
+
+                  {/* Text input / waveform */}
+                  <View className="flex-1 items-center justify-center">
+                    {isRecording ? (
+                      <LottieView
+                        source={LOTTIE_ANIMATIONS.voiceWave}
+                        loop
+                        autoPlay
+                        style={{ width: "100%", height: 40 }}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <TextInput
+                        value={textInput}
+                        onChangeText={setTextInput}
+                        onSubmitEditing={() => void handleSubmitText()}
+                        placeholder={t("input.placeholder")}
+                        placeholderTextColor="rgba(255,255,255,0.6)"
+                        returnKeyType="send"
+                        multiline={false}
+                        editable={!isAiGenerating}
+                        className={`w-full text-white font-baloo text-base px-4 bg-white/25 rounded-full h-14 ${isAiGenerating ? "opacity-40" : "opacity-100"}`}
+                      />
+                    )}
+                  </View>
+                </View>
+                {hasContent && (
+                  <Pressable
+                    onPress={() => void handleAddAll()}
+                    accessibilityLabel="Confirm"
+                    className="w-14 h-14 rounded-full items-center justify-center"
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.25)",
+                      opacity: isAiGenerating ? 0.4 : 1,
+                    }}
+                    disabled={isAiGenerating}
+                  >
+                    <MaterialCommunityIcons name="check" size={28} color="white" />
+                  </Pressable>
+                )}
+              </View>
             </View>
           </KeyboardStickyView>
         </LinearGradient>
       </View>
+      {/* register extra toast here because this screen is a modal */}
+      <Toast config={toastConfig} position="bottom" bottomOffset={120} />
     </View>
   );
 }

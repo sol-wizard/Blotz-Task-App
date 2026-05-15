@@ -22,6 +22,12 @@ export default function SettingsScreen() {
       route: "/settings/account",
     },
     {
+      key: "beta-features",
+      label: t("menu.betaFeatures"),
+      icon: "flask-outline",
+      route: "/settings/beta-features",
+    },
+    {
       key: "task-handling",
       label: t("menu.taskHandling"),
       icon: "file-check-outline",
@@ -38,12 +44,6 @@ export default function SettingsScreen() {
       label: t("menu.language"),
       icon: "translate",
       route: "/settings/language",
-    },
-    {
-      key: "under-development",
-      label: t("menu.allTasks"),
-      icon: "cog-outline",
-      route: "/settings/all-tasks",
     },
     {
       key: "about",

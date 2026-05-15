@@ -3,7 +3,6 @@
 .git-autoconfig.json
 .vs/
 # TODO: temporary hide power shell script
-*.ps1
 .DS_Store
 .idea/
 package-lock.json
@@ -18,3 +17,4 @@ package-lock.json
 20260130-Blotz-onboarding.md
 # bicep build outputs (generated)
 infra/main.json
+infra/*.ps1

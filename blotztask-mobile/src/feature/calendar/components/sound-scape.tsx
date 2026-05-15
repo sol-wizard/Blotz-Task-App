@@ -1,13 +1,18 @@
 import { ImageBackground, Pressable, Text, View } from "react-native";
-import { ITEM_WIDTH, ITEM_GAP, PomodoroSoundscapeKey } from "../../pomodoro/utils/pomodoro-setting";
+import {
+  ITEM_WIDTH,
+  ITEM_GAP,
+  PomodoroSoundscapeType,
+} from "../../pomodoro/utils/pomodoro-setting";
 import { useTranslation } from "react-i18next";
 import Animated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 import { MaterialIcons } from "@expo/vector-icons";
+import type { ImageSourcePropType } from "react-native";
 
 type SoundscapeItem = {
-  key: PomodoroSoundscapeKey;
-  imageUrl: string;
+  type: PomodoroSoundscapeType;
+  imageUrl: ImageSourcePropType;
 };
 
 interface SoundscapeCardProps {
@@ -16,7 +21,7 @@ interface SoundscapeCardProps {
   scrollX: SharedValue<number>;
   isSelected: boolean;
   isPlaying: boolean;
-  onPress: (index: number, key: PomodoroSoundscapeKey) => void;
+  onPress: (index: number, type: PomodoroSoundscapeType) => void;
   onTogglePlayback: () => void;
 }
 
@@ -40,7 +45,7 @@ export const SoundscapeCard = ({
   });
 
   return (
-    <Pressable onPress={() => onPress(index, item.key)}>
+    <Pressable onPress={() => onPress(index, item.type)}>
       <Animated.View
         style={[
           animatedStyle,
@@ -53,16 +58,16 @@ export const SoundscapeCard = ({
         className="shadow-md shadow-black/15"
       >
         <ImageBackground
-          source={{ uri: item.imageUrl }}
+          source={item.imageUrl}
           className="w-full h-[100px] border-[3px] border-white justify-end p-2 bg-white"
           imageStyle={{ borderRadius: 20, resizeMode: "cover" }}
           style={{ borderRadius: 20, overflow: "hidden" }}
         >
           <Text className="text-white font-baloo text-[11px] text-center leading-tight shadow-sm shadow-black">
-            {t(`soundscape.${item.key}`)}
+            {t(`soundscape.${item.type}`)}
           </Text>
         </ImageBackground>
-        {isSelected && item.key !== "noSound" ? (
+        {isSelected && item.type !== "noSound" ? (
           <Pressable
             onPress={onTogglePlayback}
             className="absolute inset-0 items-center justify-center"

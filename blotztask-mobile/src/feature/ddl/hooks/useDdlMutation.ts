@@ -15,19 +15,6 @@ const useDdlMutation = () => {
   const updatePinMutation = useMutation({
     mutationFn: ({ taskId, isPinned }: { taskId: number; isPinned: boolean }) =>
       updatePin(taskId, isPinned),
-    onMutate: async ({ taskId, isPinned }) => {
-      await queryClient.cancelQueries({ queryKey: ddlKeys.all });
-      const previousDdlTasks = queryClient.getQueryData<DeadlineTaskDTO[]>(ddlKeys.all);
-
-      if (previousDdlTasks) {
-        queryClient.setQueryData<DeadlineTaskDTO[]>(ddlKeys.all, (old) =>
-          old?.map((t) => (t.id === taskId ? { ...t, isPinned } : t)),
-        );
-      }
-
-      return { previousDdlTasks };
-    },
-
     onSettled: () => {
       invalidateAll();
     },

@@ -5,6 +5,7 @@ import { signalRService } from "@/feature/ai-task-generate/services/ai-task-gene
 import { AiNoteDTO, AiResultMessageDTO, ExtractedTaskDTO } from "../models/ai-result-message-dto";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
+import type { AiTaskGenerationTurn, AiTaskInputMode } from "@/shared/constants/posthog-events";
 
 const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   TranscriptionFailed: "errors.transcriptionFailed",
@@ -22,11 +23,12 @@ export function useAiTaskGenerator({
 }) {
   const { t } = useTranslation("aiTaskGenerate");
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-  const [userInput, setUserInput] = useState<string | undefined>();
   const [transcript, setTranscript] = useState<string | undefined>();
   const [streamedTasks, setStreamedTasks] = useState<ExtractedTaskDTO[]>([]);
   const [streamedNotes, setStreamedNotes] = useState<AiNoteDTO[]>([]);
+  const [turns, setTurns] = useState<AiTaskGenerationTurn[]>([]);
   const requestStartedAtRef = useRef<number | null>(null);
+  const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
     if (!connection) throw new Error("Cannot submit audio: not connected.");
@@ -37,6 +39,7 @@ export function useAiTaskGenerator({
     setTranscript(undefined);
     setIsAiGenerating(true);
     requestStartedAtRef.current = Date.now();
+    pendingInputModeRef.current = "voice";
 
     try {
       await signalRService.invoke(connection, "TranscribeAudio", base64);
@@ -53,6 +56,7 @@ export function useAiTaskGenerator({
     setTranscript(undefined);
     setIsAiGenerating(true);
     requestStartedAtRef.current = Date.now();
+    pendingInputModeRef.current = "text";
 
     try {
       await signalRService.invoke(connection, "SendMessage", text);
@@ -67,6 +71,14 @@ export function useAiTaskGenerator({
     setTranscript(undefined);
     setIsAiGenerating(false);
     requestStartedAtRef.current = null;
+    const inputMode = pendingInputModeRef.current;
+    const inputText = result.userInput;
+
+    if (inputMode && inputText) {
+      setTurns((prev) => [...prev, buildTurn(prev.length + 1, inputMode, result)]);
+    }
+
+    pendingInputModeRef.current = null;
 
     if (!result.isSuccess) {
       setStreamedTasks([]);
@@ -79,7 +91,6 @@ export function useAiTaskGenerator({
     // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
     setStreamedTasks(result.extractedTasks ?? []);
     setStreamedNotes(result.extractedNotes ?? []);
-    setUserInput(result.userInput);
   };
 
   useEffect(() => {
@@ -91,7 +102,9 @@ export function useAiTaskGenerator({
         conn = newConn;
         setConnection(conn);
         conn.on("ReceiveGenerationResult", generationCompleteHandler);
-        conn.on("ReceiveTranscript", (text: string) => setTranscript(text));
+        conn.on("ReceiveTranscript", (text: string) => {
+          setTranscript(text);
+        });
         conn.on("ReceiveTaskExtracted", (task: ExtractedTaskDTO) => {
           if (requestStartedAtRef.current == null) return;
           setStreamedTasks((prev) => [...prev, task]);
@@ -116,12 +129,34 @@ export function useAiTaskGenerator({
   }, []);
 
   return {
-    userInput,
     transcript,
     streamedTasks,
     streamedNotes,
+    turns,
     submitAudioForTranscription,
     sendTextMessage,
+  };
+}
+
+function buildTurn(
+  index: number,
+  inputMode: AiTaskInputMode,
+  result: AiResultMessageDTO,
+): AiTaskGenerationTurn {
+  return {
+    turn_index: index,
+    input_mode: inputMode,
+    user_input: result.userInput ?? "",
+    generated_tasks: (result.extractedTasks ?? []).map((task) => ({
+      title: task.title,
+      description: task.description ?? "",
+      start_time: task.start_time,
+      end_time: task.end_time,
+      task_label: task.task_label,
+    })),
+    generated_notes: (result.extractedNotes ?? []).map((note) => ({
+      text: note.text,
+    })),
   };
 }
 

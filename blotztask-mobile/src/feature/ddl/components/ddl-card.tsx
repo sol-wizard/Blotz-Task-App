@@ -14,7 +14,6 @@ import { MotionAnimations } from "@/shared/constants/animations/motion";
 
 import DdlRightActions from "./ddl-right-actions";
 
-
 const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
   const swipeRef = useRef<SwipeableMethods | null>(null);
   const { t } = useTranslation("deadline");
@@ -28,10 +27,11 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
   } = useDdlMutation();
 
   const daysLeft = Math.max(0, differenceInCalendarDays(new Date(task.dueAt), new Date()));
+  const daysLeftText = daysLeft > 9999 ? "9999+" : daysLeft.toString();
+
   const labelColor = task.label?.color ?? "#D1D1D6";
   const endTimeDisplay = task.dueAt ? format(new Date(task.dueAt), "dd/MM/yy") : "—";
   const isPinned = task.isPinned;
-
   const renderRightActions = (progress: SharedValue<number>) => {
     return (
       <DdlRightActions
@@ -85,11 +85,7 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
           )}
 
           <View className={isPinned ? "w-12 items-center justify-center" : undefined}>
-            <TasksCheckbox
-              type="task"
-              checked={task.isDone}
-              onChange={() => markAsDone(task.id)}
-            />
+            <TasksCheckbox type="task" checked={task.isDone} onChange={() => markAsDone(task.id)} />
           </View>
 
           <View
@@ -97,21 +93,22 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
             style={{ backgroundColor: labelColor }}
           />
 
-          <View className={isPinned ? "flex-1 justify-center py-1 pr-3" : "flex-1"}>
+          <View className={isPinned ? "flex-1 justify-center py-2 pr-3" : "flex-1"}>
             <Text
               className={
                 isPinned
-                  ? "font-balooBold text-[25px] leading-[30px] text-secondary underline"
+                  ? "font-balooBold text-[25px] leading-[35px] text-secondary underline"
                   : "font-baloo text-lg text-gray-800"
               }
-              style={
+              style={[
+                { includeFontPadding: false },
                 task.isDone && !isMarkingAsDone
                   ? {
                       textDecorationLine: "line-through",
                       textDecorationColor: "#9CA3AF",
                     }
-                  : undefined
-              }
+                  : undefined,
+              ]}
               numberOfLines={isPinned ? 2 : 1}
             >
               {task.title}
@@ -131,24 +128,37 @@ const DdlCard = ({ task }: { task: DeadlineTaskDTO }) => {
           <View
             className={
               isPinned
-                ? "w-20 self-stretch justify-center items-start -ml-2"
+                ? "self-stretch justify-center items-center -ml-2"
                 : "flex-row items-center justify-center pt-3"
             }
+            style={isPinned ? { width: 104 } : undefined}
           >
-            <View className="items-center">
+            <View className={isPinned ? "w-full items-center" : "items-center"}>
               <Text
                 className={
                   isPinned
-                    ? "font-baloo text-[52px] leading-[70px] text-[#9AD80A]"
+                    ? "font-baloo text-[#9AD80A]"
                     : "font-baloo text-4xl text-secondary leading-none pt-2"
                 }
+                style={
+                  isPinned
+                    ? {
+                        width: "100%",
+                        fontSize: 34,
+                        lineHeight: 46,
+                        textAlign: "center",
+                        includeFontPadding: false,
+                      }
+                    : undefined
+                }
+                numberOfLines={1}
               >
-                {daysLeft}
+                {daysLeftText}
               </Text>
               <Text
                 className={
                   isPinned
-                    ? "text-[14px] leading-4 text-[#9AD80A] font-medium -mt-5"
+                    ? "text-[14px] leading-4 text-[#9AD80A] font-medium -mt-2 text-center"
                     : "ml-1 font-balooThin text-xs text-gray-400"
                 }
               >

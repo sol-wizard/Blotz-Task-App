@@ -47,3 +47,14 @@ export const pomodoroKeys = {
   all: ["pomodoroSettings"] as const,
   settings: () => [...pomodoroKeys.all, "settings"] as const,
 };
+
+export const aiUsageKeys = {
+  all: ["aiUsage"] as const,
+  summary: () => [...aiUsageKeys.all, "summary"] as const,
+};
+
+export const monthlyReviewKeys = {
+  all: ["monthlyReview"] as const,
+  byMonth: (year: number, month: number) =>
+    [...monthlyReviewKeys.all, year, month] as const,
+} as const;

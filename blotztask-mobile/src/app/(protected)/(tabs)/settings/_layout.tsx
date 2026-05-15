@@ -5,12 +5,15 @@ export default function SettingsLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="account" options={{ headerShown: false }} />
+      <Stack.Screen name="beta-features" options={{ headerShown: false }} />
       <Stack.Screen name="task-handling" options={{ headerShown: false }} />
       <Stack.Screen name="notifications" options={{ headerShown: false }} />
       <Stack.Screen name="all-tasks" options={{ headerShown: false }} />
       <Stack.Screen name="update-user-name" options={{ headerShown: false }} />
       <Stack.Screen name="avatar" options={{ headerShown: false }} />
+      <Stack.Screen name="membership-plan" options={{ headerShown: false }} />
       <Stack.Screen name="about" options={{ headerShown: false }} />
+      <Stack.Screen name="monthly-review" options={{ headerShown: false }} />
       <Stack.Screen name="privacy-policy" options={{ headerShown: false }} />
     </Stack>
   );
