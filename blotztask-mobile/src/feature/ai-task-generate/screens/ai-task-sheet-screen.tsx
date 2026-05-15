@@ -45,8 +45,8 @@ export default function AiTaskSheetScreen() {
   const { isVisible: isKeyboardVisible } = useKeyboardState();
   const [isHoldHintVisible, setIsHoldHintVisible] = useState(false);
   const {
-    userInput,
     transcript,
+    turns,
     streamedTasks,
     streamedNotes,
     submitAudioForTranscription,
@@ -78,18 +78,6 @@ export default function AiTaskSheetScreen() {
   const displayNotes = streamedNotes;
   const hasContent = streamedTasks.length > 0 || streamedNotes.length > 0;
 
-  const analyticsPayload = {
-    userInput,
-    generatedTasks: displayTasks.map((task) => ({
-      title: task.title,
-      description: task.description,
-      startTime: task.startTime,
-      endTime: task.endTime,
-      ...(task.label?.name && { labelName: task.label.name }),
-    })),
-    generatedNoteTexts: displayNotes.map((n) => n.text),
-  };
-
   // --- Handlers ---
   const handleDismiss = () => {
     // Skip analytics only for passive open-and-close sessions with no submitted AI request.
@@ -98,9 +86,9 @@ export default function AiTaskSheetScreen() {
       return;
     }
 
-    analytics.trackIfUserAcceptAiTask({
-      ...analyticsPayload,
+    analytics.trackAiTaskGenerationSession({
       outcome: hasContent ? "rejected" : "abandoned",
+      turns,
     });
     router.back();
   };
@@ -121,9 +109,9 @@ export default function AiTaskSheetScreen() {
         ...displayTasks.map((task) => addTaskAsync(convertAiTaskToTaskUpsertDTO(task))),
         ...displayNotes.map((n) => createNoteAsync(n.text)),
       ]);
-      analytics.trackIfUserAcceptAiTask({
-        ...analyticsPayload,
+      analytics.trackAiTaskGenerationSession({
         outcome: "accepted",
+        turns,
       });
       router.back();
       // Delay the toast slightly to ensure it appears after the sheet has fully closed
