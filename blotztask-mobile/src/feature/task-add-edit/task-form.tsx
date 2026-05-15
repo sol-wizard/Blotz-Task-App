@@ -213,12 +213,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
           <ReminderTab control={control} setValue={setValue} clearErrors={clearErrors} />
         )}
         {isActiveTab === "event" && (
-          <EventTab
-            control={control}
-            trigger={trigger}
-            clearErrors={clearErrors}
-            setValue={setValue}
-          />
+          <EventTab control={control} trigger={trigger} clearErrors={clearErrors} />
         )}
         <FormDivider />
         <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />

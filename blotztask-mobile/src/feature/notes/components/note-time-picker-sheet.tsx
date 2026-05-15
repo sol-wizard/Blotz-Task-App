@@ -157,7 +157,7 @@ export const NoteTimePickerSheet = ({
                 </View>
               ) : (
                 <View className="mb-6">
-                  <EventTab control={control} setValue={setValue} clearErrors={clearErrors} trigger={trigger} />
+                  <EventTab control={control} clearErrors={clearErrors} trigger={trigger} />
                 </View>
               )}
             </View>
