@@ -1,4 +1,5 @@
 {
   "title": "Deadline",
-  "days": "days"
+  "days": "days",
+  "emptyEncouragement": "All deadlines are done. Nice work!"
 }

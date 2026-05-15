@@ -91,7 +91,9 @@ export function useAiTaskGenerator({
         conn = newConn;
         setConnection(conn);
         conn.on("ReceiveGenerationResult", generationCompleteHandler);
-        conn.on("ReceiveTranscript", (text: string) => setTranscript(text));
+        conn.on("ReceiveTranscript", (text: string) => {
+          setTranscript(text);
+        });
         conn.on("ReceiveTaskExtracted", (task: ExtractedTaskDTO) => {
           if (requestStartedAtRef.current == null) return;
           setStreamedTasks((prev) => [...prev, task]);
