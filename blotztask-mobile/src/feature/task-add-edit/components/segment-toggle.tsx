@@ -14,12 +14,12 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function SegmentToggle({ value, setValue }: Props) {
   const { t } = useTranslation("tasks");
-  const tabPositionX = useSharedValue(value === "reminder" ? 0 : 224 / 2);
+  const tabPositionX = useSharedValue(value === SegmentButtonValue.Reminder ? 0 : 224 / 2);
   const [containerWidth, setContainerWidth] = React.useState(224);
   const isInitialMount = React.useRef(true);
   React.useEffect(() => {
     if (containerWidth > 0) {
-      onTabMovingAnimation(value === "reminder" ? 0 : 1, !isInitialMount.current);
+      onTabMovingAnimation(value === SegmentButtonValue.Reminder ? 0 : 1, !isInitialMount.current);
       isInitialMount.current = false;
     }
   }, [value, containerWidth]);
@@ -47,13 +47,13 @@ export function SegmentToggle({ value, setValue }: Props) {
       <AnimatedPressable
         className={`flex-1 justify-center items-center py-2 px-3 rounded-xl `}
         onPress={() => {
-          setValue("reminder");
+          setValue(SegmentButtonValue.Reminder);
           onTabMovingAnimation(0);
         }}
       >
         <Text
           className={`text-[15px] font-semibold ${
-            value === "reminder" ? "text-[#1A2433]" : "text-[#6B768A]"
+            value === SegmentButtonValue.Reminder ? "text-[#1A2433]" : "text-[#6B768A]"
           }`}
         >
           {t("form.reminder")}
@@ -64,13 +64,13 @@ export function SegmentToggle({ value, setValue }: Props) {
       <AnimatedPressable
         className={`flex-1 justify-center items-center py-2 px-3 rounded-xl`}
         onPress={() => {
-          setValue("event");
+          setValue(SegmentButtonValue.Event);
           onTabMovingAnimation(1);
         }}
       >
         <Text
           className={`text-[15px] font-semibold ${
-            value === "event" ? "text-[#1A2433]" : "text-[#6B768A]"
+            value === SegmentButtonValue.Event ? "text-[#1A2433]" : "text-[#6B768A]"
           }`}
         >
           {t("form.event")}
