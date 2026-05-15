@@ -33,7 +33,8 @@
         "title": "2小时？！你太棒了！",
         "subtitle": "该好好休息一下了。"
       }
-    }
+    },
+    "modeLockedWhileRunning": "番茄钟进行中，无法修改番茄钟设置。"
   },
   "soundscape": {
     "easyFocus": "轻松\n专注",
