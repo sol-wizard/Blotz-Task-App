@@ -24,7 +24,7 @@ export const toastConfig = {
     <Animated.View
       entering={MotionAnimations.rightEntering}
       exiting={MotionAnimations.rightExiting}
-      style={{ elevation: 0, backgroundColor: "#FFF2E1", alignSelf: "flex-end", marginRight: 16 }}
+      style={{ elevation: 0, backgroundColor: "#FFF2E1", alignSelf: "center" }}
       className="flex-row items-center rounded-xl px-3 py-2 shadow-none"
     >
       <Text style={{ color: "#FFAA4A" }} className="font-baloo text-sm">
