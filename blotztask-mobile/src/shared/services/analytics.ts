@@ -1,6 +1,11 @@
 /* eslint-disable camelcase */
 import posthog from "@/shared/constants/posthog-client";
-import { EVENTS, SCREEN_NAMES, type AiTaskOutcome } from "@/shared/constants/posthog-events";
+import {
+  EVENTS,
+  SCREEN_NAMES,
+  type AiTaskGenerationTurn,
+  type AiTaskOutcome,
+} from "@/shared/constants/posthog-events";
 
 type ScreenName = (typeof SCREEN_NAMES)[keyof typeof SCREEN_NAMES];
 
@@ -54,22 +59,18 @@ export const analytics = {
   },
 
   /**
-   * Fires when the user takes action on the AI preview — either accepting
-   * the generated tasks or going back to re-enter their input.
-   * This is Step 2 of the AI funnel. "Abandoned" is derived in PostHog
-   * from previews with no corresponding outcome event.
+   * Fires once when the user leaves an AI task generation session.
+   * Each turn pairs the user's prompt with the generated task/note state
+   * returned by the AI after that prompt.
    */
-  trackIfUserAcceptAiTask(params: {
-    userInput?: string;
+  trackAiTaskGenerationSession(params: {
     outcome: AiTaskOutcome;
-    generatedTaskTitles: string[];
-    generatedNoteTexts: string[];
+    turns: AiTaskGenerationTurn[];
   }) {
-    posthog.capture(EVENTS.CREATE_TASK_BY_AI, {
-      ...(params.userInput !== undefined && { user_input: params.userInput }),
+    posthog.capture(EVENTS.AI_TASK_GENERATION_SESSION, {
       outcome: params.outcome,
-      ai_generated_task_titles: params.generatedTaskTitles,
-      ai_generated_note_texts: params.generatedNoteTexts,
+      input_modes: Array.from(new Set(params.turns.map((turn) => turn.input_mode))),
+      turns: params.turns,
     });
   },
 

@@ -29,7 +29,19 @@ export default function DdlScreen() {
         <FlatList
           data={sortedTasks}
           keyExtractor={(item: DeadlineTaskDTO) => item.id.toString()}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, gap: 12 }}
+          contentContainerStyle={{
+            paddingHorizontal: 24,
+            paddingTop: 8,
+            gap: 12,
+            flexGrow: sortedTasks.length === 0 ? 1 : undefined,
+          }}
+          ListEmptyComponent={
+            <View className="flex-1 items-center justify-center px-6">
+              <Text className="text-center font-baloo text-xl text-secondary">
+                {t("emptyEncouragement")}
+              </Text>
+            </View>
+          }
           renderItem={({ item }) => <DdlCard task={item} />}
         />
       </SafeAreaView>

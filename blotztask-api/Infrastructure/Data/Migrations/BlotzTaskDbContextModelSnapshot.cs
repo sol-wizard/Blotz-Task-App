@@ -266,6 +266,48 @@ namespace BlotzTask.Migrations
                         });
                 });
 
+            modelBuilder.Entity("BlotzTask.Modules.MonthlyReviews.Domain.MonthlyReviewReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AiGeneratedLetter")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AiInputJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AiModel")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Year", "Month")
+                        .IsUnique();
+
+                    b.ToTable("MonthlyReviewReports", (string)null);
+                });
+
             modelBuilder.Entity("BlotzTask.Modules.Notes.Domain.Note", b =>
                 {
                     b.Property<Guid>("Id")
@@ -756,6 +798,17 @@ namespace BlotzTask.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BlotzTask.Modules.MonthlyReviews.Domain.MonthlyReviewReport", b =>
+                {
+                    b.HasOne("BlotzTask.Modules.Users.Domain.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });

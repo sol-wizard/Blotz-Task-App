@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.ClientModel;
 using Azure.AI.Projects;
 using BlotzTask.Extension;
 using BlotzTask.Modules.AiUsage.Services;
@@ -105,15 +106,13 @@ public class AiChatService(
             logger.LogInformation(oce, "AI task generation cancelled.");
             throw new AiTaskGenerationException(AiErrorCode.Canceled, "The request was canceled.", oce);
         }
-        catch (Exception ex) when (
-            ex.Message.Contains("429", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("token", StringComparison.OrdinalIgnoreCase))
+        catch (ClientResultException ex) when (ex.Status == 429)
         {
-            logger.LogWarning(ex, "Token limit exceeded during AI task generation.");
+            logger.LogError(ex, "Azure AI rate limit hit during AI task generation.");
             throw new AzureAiException();
         }
-        catch (Exception ex) when (
+        catch (ClientResultException ex) when (
+            ex.Status == 400 &&
             ex.Message.Contains("content_filter", StringComparison.OrdinalIgnoreCase))
         {
             logger.LogWarning(ex, "Request blocked by content filter.");

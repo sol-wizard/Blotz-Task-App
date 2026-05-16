@@ -8,38 +8,17 @@ import {
   isAfter,
   isSameDay,
   isBefore,
-  isEqual,
 } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
-import { Control, UseFormClearErrors, UseFormTrigger, useController } from "react-hook-form";
+import { Control, FieldPath, useController } from "react-hook-form";
 import { TaskFormField } from "../models/task-form-schema";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
-import { combineDateTime } from "../util/combine-date-time";
 
-export const EventTab = ({
-  control,
-  trigger,
-  clearErrors,
-  setValue,
-}: {
-  control: Control<TaskFormField>;
-  trigger?: UseFormTrigger<TaskFormField>;
-  clearErrors?: UseFormClearErrors<TaskFormField>;
-  setValue: (name: keyof TaskFormField, value: any) => void;
-}) => {
-  const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
-    const start = combineDateTime(sd, st);
-    const end = combineDateTime(ed, et);
-    if (start && end && (isBefore(start, end) || isEqual(start, end))) {
-      clearErrors?.("endTime");
-    } else {
-      trigger?.("endTime");
-    }
-  };
+export const EventTab = ({ control }: { control: Control<TaskFormField> }) => {
   const { t, i18n } = useTranslation("tasks");
   const isChinese = i18n.language === "zh";
   const locale = isChinese ? zhCN : enUS;
@@ -48,67 +27,27 @@ export const EventTab = ({
     "startDate" | "startTime" | "endDate" | "endTime" | null
   >(null);
 
-  const {
-    field: { value: startDateValue, onChange: startDateOnChange },
-  } = useController({
-    control,
-    name: "startDate",
-  });
+  const useField = <T extends FieldPath<TaskFormField>>(name: T) =>
+    useController<TaskFormField, T>({ control, name }).field;
 
-  const {
-    field: { value: startTimeValue, onChange: startTimeOnChange },
-  } = useController({
-    control,
-    name: "startTime",
-  });
-
-  const {
-    field: { value: endDateValue, onChange: endDateOnChange },
-  } = useController({
-    control,
-    name: "endDate",
-  });
-
-  const {
-    field: { value: endTimeValue, onChange: endTimeOnChange },
-  } = useController({
-    control,
-    name: "endTime",
-  });
-
-  const {
-    field: { value: deadlineDate },
-  } = useController({
-    control,
-    name: "deadlineDate",
-  });
-
-  const {
-    field: { value: isDdl },
-  } = useController({
-    control,
-    name: "isDeadline",
-  });
+  const { value: startDateValue, onChange: startDateOnChange } = useField("startDate");
+  const { value: startTimeValue, onChange: startTimeOnChange } = useField("startTime");
+  const { value: endDateValue, onChange: endDateOnChange } = useField("endDate");
+  const { value: endTimeValue, onChange: endTimeOnChange } = useField("endTime");
+  const { value: deadlineDate } = useField("deadlineDate");
+  const { value: isDdl } = useField("isDeadline");
 
   const ddlStr = isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined;
 
   const handleStartDateChange = (nextDate: Date) => {
-    const previousSpan =
-      startDateValue && endDateValue
-        ? Math.max(differenceInCalendarDays(endDateValue, startDateValue), 0)
-        : 0;
-
     startDateOnChange(nextDate);
 
-    const nextEndDate =
-      endDateValue && isAfter(nextDate, endDateValue)
-        ? addDays(nextDate, previousSpan)
-        : endDateValue;
     if (endDateValue && isAfter(nextDate, endDateValue)) {
+      const previousSpan =
+        startDateValue ? Math.max(differenceInCalendarDays(endDateValue, startDateValue), 0) : 0;
+      const nextEndDate = addDays(nextDate, previousSpan);
       endDateOnChange(nextEndDate);
     }
-
-    validateRange(nextDate, startTimeValue, nextEndDate, endTimeValue);
   };
 
   const isDateInvalid =
@@ -235,10 +174,7 @@ export const EventTab = ({
               startDate={startDateValue}
               endDate={endDateValue}
               deadlineDate={ddlStr}
-              setEndDate={(v: Date) => {
-                endDateOnChange(v);
-                validateRange(startDateValue, startTimeValue, v, endTimeValue);
-              }}
+              setEndDate={(v: Date) => endDateOnChange(v)}
               current={format(
                 activeSelector === "endDate"
                   ? (endDateValue ?? startDateValue ?? new Date())
@@ -255,10 +191,7 @@ export const EventTab = ({
           >
             <TimePicker
               value={endTimeValue}
-              onChange={(v: Date) => {
-                endTimeOnChange(v);
-                validateRange(startDateValue, startTimeValue, endDateValue, v);
-              }}
+              onChange={(v: Date) => endTimeOnChange(v)}
             />
           </Animated.View>
         )}

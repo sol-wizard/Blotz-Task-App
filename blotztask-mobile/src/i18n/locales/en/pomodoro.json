@@ -35,7 +35,8 @@
         "title": "2 hours?! You're a machine!",
         "subtitle": "Time for a longer break."
       }
-    }
+    },
+    "modeLockedWhileRunning": "Pomodoro settings can’t be changed while a Pomodoro is running."
   },
   "soundscape": {
     "easyFocus": "Easy\nFocus",

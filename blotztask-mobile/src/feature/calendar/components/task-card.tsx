@@ -21,10 +21,12 @@ import { SubtaskProgressBar } from "./subtask-progress-bar";
 import SubtaskList from "./subtask-list";
 import { TaskCardRightActions } from "./task-card-right-actions";
 import { TaskCardLeftActions } from "./task-card-left-actions";
+import { theme } from "@/shared/constants/theme";
 import { getMilestoneKey } from "@/feature/pomodoro/utils/getMilestoneKey";
 import { useTranslation } from "react-i18next";
 import { usePomodoroTimer } from "@/feature/pomodoro/hooks/usePomodoroTimer";
 import { SwitchTaskModal } from "./pomodoro-switch-modal";
+import Toast from "react-native-toast-message";
 
 // Props
 interface TaskCardProps {
@@ -54,7 +56,6 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
   const { breakDownAndReplaceSubtasks, isBreakingDownAndReplacingSubtasks } = useSubtaskMutations();
 
   // Derived values
-  const labelColor = task.label?.color ?? "#D1D1D6";
   const hasSubtasks = !!task.subtasks?.length;
   const timePeriod = formatDateRange({
     startTime: task.startTime,
@@ -110,6 +111,21 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
     swipeRef.current?.close();
   };
 
+  const handleOpenMode = () => {
+    if (session) {
+      Toast.show({
+        type: "warning",
+        text1: t("focusMode.modeLockedWhileRunning"),
+        visibilityTime: 2500,
+      });
+      swipeRef.current?.close();
+      return;
+    }
+
+    onOpenMode();
+    swipeRef.current?.reset();
+  };
+
   const handleConfirmSwitch = () => {
     setShowSwitchModal(false);
 
@@ -128,7 +144,7 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
         renderLeftActions={(leftActionsProgress: SharedValue<number>) => (
           <TaskCardLeftActions
             progress={leftActionsProgress}
-            onMode={onOpenMode}
+            onMode={handleOpenMode}
             onFocus={handleOpenFocus}
             isPomodoroActiveTask={isThisTaskActive}
             isPaused={isPaused}
@@ -176,7 +192,10 @@ const TaskCard = ({ task, deleteTask, isDeleting, selectedDay, onOpenMode }: Tas
               />
 
               {/* Vertical label colour bar */}
-              <View className="h-10 w-1.5 rounded-full" style={{ backgroundColor: labelColor }} />
+              <View
+                className="h-10 w-1.5 rounded-full"
+                style={{ backgroundColor: task.label?.color ?? theme.colors.disabled }}
+              />
 
               {/* DDL Tag */}
               {task.isDeadline && (
