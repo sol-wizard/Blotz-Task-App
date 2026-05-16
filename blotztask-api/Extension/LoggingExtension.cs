@@ -25,22 +25,5 @@ public static class LoggingExtensions
         return builder;
     }
 
-    public static WebApplicationBuilder AddApplicationInsights(this WebApplicationBuilder builder)
-    {
-        var connectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
-        if (!string.IsNullOrEmpty(connectionString))
-        {
-            builder.Services.AddApplicationInsightsTelemetry(options =>
-            {
-                options.ConnectionString = connectionString;
-                if (builder.Environment.IsDevelopment())
-                {
-                    options.DeveloperMode = true;
-                    options.EnableDebugLogger = true;
-                }
-            });
-
-        }
-        return builder;
-    }
+    
 }
