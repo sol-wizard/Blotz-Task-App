@@ -11,7 +11,7 @@ public static class LoggingExtensions
             .ReadFrom.Configuration(builder.Configuration);
 
         var connectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
-        if (!string.IsNullOrEmpty(connectionString))
+        if (!string.IsNullOrEmpty(connectionString) && !builder.Environment.IsDevelopment())
         {
             loggerConfiguration.WriteTo.ApplicationInsights(
                 connectionString,
