@@ -59,7 +59,7 @@ export const SelectedDayDetailPanel = ({ selectedDay }: { selectedDay: Date }) =
 
                   {/* Column 3: Title */}
                   <View className="flex-1">
-                    <Text className="text-base font-baloo text-secondary leading-tight">
+                    <Text className="text-lg text-secondary leading-tight py-1 font-semibold">
                       {task.title}
                     </Text>
                   </View>

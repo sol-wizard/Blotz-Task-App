@@ -8,7 +8,6 @@ import {
   isAfter,
   isSameDay,
   isBefore,
-  isEqual,
 } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
 import { Control, UseFormClearErrors, UseFormTrigger, useController, FieldValues, Path } from "react-hook-form";
@@ -18,7 +17,6 @@ import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
-import { combineDateTime } from "../util/combine-date-time";
 
 export const EventTab = <T extends TabFormValues>({
   control,
@@ -91,22 +89,14 @@ export const EventTab = <T extends TabFormValues>({
   const ddlStr = isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined;
 
   const handleStartDateChange = (nextDate: Date) => {
-    const previousSpan =
-      startDateValue && endDateValue
-        ? Math.max(differenceInCalendarDays(endDateValue, startDateValue), 0)
-        : 0;
-
     startDateOnChange(nextDate);
 
-    const nextEndDate =
-      endDateValue && isAfter(nextDate, endDateValue)
-        ? addDays(nextDate, previousSpan)
-        : endDateValue;
     if (endDateValue && isAfter(nextDate, endDateValue)) {
+      const previousSpan =
+        startDateValue ? Math.max(differenceInCalendarDays(endDateValue, startDateValue), 0) : 0;
+      const nextEndDate = addDays(nextDate, previousSpan);
       endDateOnChange(nextEndDate);
     }
-
-    validateRange(nextDate, startTimeValue, nextEndDate, endTimeValue);
   };
 
   const isDateInvalid =
@@ -233,10 +223,7 @@ export const EventTab = <T extends TabFormValues>({
               startDate={startDateValue}
               endDate={endDateValue}
               deadlineDate={ddlStr}
-              setEndDate={(v: Date) => {
-                endDateOnChange(v);
-                validateRange(startDateValue, startTimeValue, v, endTimeValue);
-              }}
+              setEndDate={(v: Date) => endDateOnChange(v)}
               current={format(
                 activeSelector === "endDate"
                   ? (endDateValue ?? startDateValue ?? new Date())
@@ -253,10 +240,7 @@ export const EventTab = <T extends TabFormValues>({
           >
             <TimePicker
               value={endTimeValue}
-              onChange={(v: Date) => {
-                endTimeOnChange(v);
-                validateRange(startDateValue, startTimeValue, endDateValue, v);
-              }}
+              onChange={(v: Date) => endTimeOnChange(v)}
             />
           </Animated.View>
         )}
