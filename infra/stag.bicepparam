@@ -12,6 +12,11 @@ param breakdownModelVersion = '2025-12-11'
 param taskGenerationDeploymentName = 'gpt-5.4-mini'
 param taskGenerationModelName = 'gpt-5.4-mini'
 param taskGenerationModelVersion = '2025-12-11'
+
+param speechDeploymentName = 'whisper'
+param speechModelName = 'whisper'
+param speechModelVersion = '001'
+
 param githubRepo = 'sol-wizard/Blotz-Task-App'
 param budgetAmount = 30
 param alertEmail = 'benjaminneoh2928@gmail.com'

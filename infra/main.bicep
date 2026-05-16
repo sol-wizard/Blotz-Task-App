@@ -25,6 +25,11 @@ param breakdownModelVersion string
 param taskGenerationDeploymentName string
 param taskGenerationModelName string
 param taskGenerationModelVersion string
+
+param speechDeploymentName string
+param speechModelName string
+param speechModelVersion string
+
 param githubRepo string // Format: org/repo (e.g., sol-wizard/Blotz-Task-App)
 param budgetAmount int
 param alertEmail string
@@ -99,6 +104,7 @@ module webAppForAPI 'modules/appService.bicep' = {
     openAiEndpoint: openAi.outputs.endpoint
     openAiTaskGenerationDeploymentId: openAi.outputs.taskGenerationDeploymentId
     openAiBreakdownDeploymentId: openAi.outputs.breakdownDeploymentId
+    openAiSpeechDeploymentId: openAi.outputs.speechDeploymentId
     logAnalyticsWorkspaceId: logAnalytics.outputs.id
     appServiceSkuName: appServiceSkuName
     appServiceSkuTier: appServiceSkuTier
@@ -165,6 +171,9 @@ module openAi 'modules/openAi.bicep' = {
     taskGenerationDeploymentName: taskGenerationDeploymentName
     taskGenerationModelName: taskGenerationModelName
     taskGenerationModelVersion: taskGenerationModelVersion
+    speechDeploymentName: speechDeploymentName
+    speechModelName: speechModelName
+    speechModelVersion: speechModelVersion
   }
 }
 module githubActionIdentity 'modules/identity.bicep' = {
@@ -187,16 +196,6 @@ module storage 'modules/storage.bicep' = {
     environment: environment
     location: location
     devGroupId: devGroupId
-  }
-}
-
-module speech 'modules/speech.bicep' = {
-  name: '${namePrefix}-${environment}-speech'
-  params: {
-    projectName: namePrefix
-    location: location
-    environment: environment
-    keyVaultName: kv.outputs.name
   }
 }
 

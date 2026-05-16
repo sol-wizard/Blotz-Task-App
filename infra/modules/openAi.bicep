@@ -12,6 +12,10 @@ param taskGenerationDeploymentName string
 param taskGenerationModelName string
 param taskGenerationModelVersion string
 
+param speechDeploymentName string
+param speechModelName string
+param speechModelVersion string
+
 resource openAiService 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
   name: 'oai-${projectName}-${environment}'
   location: location
@@ -79,6 +83,25 @@ resource taskGenerationDeployment 'Microsoft.CognitiveServices/accounts/deployme
   }
 }
 
+resource speechDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
+  name: speechDeploymentName
+  parent: openAiService
+  dependsOn: [taskGenerationDeployment]
+  sku: {
+    name: 'GlobalStandard'
+    capacity: 10
+  }
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: speechModelName
+      version: speechModelVersion
+    }
+    raiPolicyName: 'Microsoft.Default'
+    versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
+  }
+}
+
 module storeOpenAiKey 'keyVaultSecret.bicep' = {
   name: '${deployment().name}-store-openai-key'
   params: {
@@ -91,4 +114,5 @@ module storeOpenAiKey 'keyVaultSecret.bicep' = {
 output endpoint string = openAiService.properties.endpoint
 output taskGenerationDeploymentId string = taskGenerationDeploymentName
 output breakdownDeploymentId string = breakdownDeploymentName
+output speechDeploymentId string = speechDeploymentName
 output foundryProjectId string = foundryProject.id
