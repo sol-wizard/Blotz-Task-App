@@ -1,4 +1,5 @@
 using Serilog;
+using Serilog.Events;
 
 namespace BlotzTask.Extension;
 
@@ -8,6 +9,15 @@ public static class LoggingExtensions
     {
         var loggerConfiguration = new LoggerConfiguration()
             .ReadFrom.Configuration(builder.Configuration);
+
+        var connectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            loggerConfiguration.WriteTo.ApplicationInsights(
+                connectionString,
+                TelemetryConverter.Traces,
+                LogEventLevel.Warning);
+        }
 
         Log.Logger = loggerConfiguration.CreateLogger();
         builder.Host.UseSerilog();
