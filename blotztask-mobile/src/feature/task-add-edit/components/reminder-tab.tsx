@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 
-export interface TabFormValues extends FieldValues {
+export interface FormValues extends FieldValues {
   startDate: Date;
   startTime: Date;
   endDate: Date;
@@ -18,7 +18,7 @@ export interface TabFormValues extends FieldValues {
   isDeadline?: boolean;
 }
 
-export const ReminderTab = <T extends TabFormValues>({
+export const ReminderTab = <T extends FormValues>({
   control,
   setValue,
   clearErrors,

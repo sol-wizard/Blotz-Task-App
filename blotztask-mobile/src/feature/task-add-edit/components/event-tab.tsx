@@ -8,17 +8,19 @@ import {
   isAfter,
   isSameDay,
   isBefore,
+  isEqual,
 } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
-import { Control, UseFormClearErrors, UseFormTrigger, useController, FieldValues, Path } from "react-hook-form";
-import { TabFormValues } from "./reminder-tab";
+import { Control, FieldPath, useController, UseFormClearErrors, UseFormTrigger, Path } from "react-hook-form";
+import { FormValues } from "./reminder-tab";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { combineDateTime } from "../util/combine-date-time";
 
-export const EventTab = <T extends TabFormValues>({
+export const EventTab = <T extends FormValues>({
   control,
   trigger,
   clearErrors,
@@ -44,47 +46,15 @@ export const EventTab = <T extends TabFormValues>({
     "startDate" | "startTime" | "endDate" | "endTime" | null
   >(null);
 
-  const {
-    field: { value: startDateValue, onChange: startDateOnChange },
-  } = useController({
-    control,
-    name: "startDate" as Path<T>,
-  });
+  const useField = <K extends FieldPath<T>>(name: K) =>
+    useController<T, K>({ control, name }).field;
 
-  const {
-    field: { value: startTimeValue, onChange: startTimeOnChange },
-  } = useController({
-    control,
-    name: "startTime" as Path<T>,
-  });
-
-  const {
-    field: { value: endDateValue, onChange: endDateOnChange },
-  } = useController({
-    control,
-    name: "endDate" as Path<T>,
-  });
-
-  const {
-    field: { value: endTimeValue, onChange: endTimeOnChange },
-  } = useController({
-    control,
-    name: "endTime" as Path<T>,
-  });
-
-  const {
-    field: { value: deadlineDate },
-  } = useController({
-    control,
-    name: "deadlineDate" as Path<T>,
-  });
-
-  const {
-    field: { value: isDdl },
-  } = useController({
-    control,
-    name: "isDeadline" as Path<T>,
-  });
+  const { value: startDateValue, onChange: startDateOnChange } = useField("startDate" as any);
+  const { value: startTimeValue, onChange: startTimeOnChange } = useField("startTime" as any);
+  const { value: endDateValue, onChange: endDateOnChange } = useField("endDate" as any);
+  const { value: endTimeValue, onChange: endTimeOnChange } = useField("endTime" as any);
+  const { value: deadlineDate } = useField("deadlineDate" as any);
+  const { value: isDdl } = useField("isDeadline" as any);
 
   const ddlStr = isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined;
 
@@ -96,6 +66,9 @@ export const EventTab = <T extends TabFormValues>({
         startDateValue ? Math.max(differenceInCalendarDays(endDateValue, startDateValue), 0) : 0;
       const nextEndDate = addDays(nextDate, previousSpan);
       endDateOnChange(nextEndDate);
+      validateRange(nextDate, startTimeValue, nextEndDate, endTimeValue);
+    } else {
+      validateRange(nextDate, startTimeValue, endDateValue, endTimeValue);
     }
   };
 
@@ -168,6 +141,7 @@ export const EventTab = <T extends TabFormValues>({
               value={startTimeValue}
               onChange={(v: Date) => {
                 startTimeOnChange(v);
+                validateRange(startDateValue, v, endDateValue, endTimeValue);
               }}
             />
           </Animated.View>
@@ -223,7 +197,10 @@ export const EventTab = <T extends TabFormValues>({
               startDate={startDateValue}
               endDate={endDateValue}
               deadlineDate={ddlStr}
-              setEndDate={(v: Date) => endDateOnChange(v)}
+              setEndDate={(v: Date) => {
+                endDateOnChange(v);
+                validateRange(startDateValue, startTimeValue, v, endTimeValue);
+              }}
               current={format(
                 activeSelector === "endDate"
                   ? (endDateValue ?? startDateValue ?? new Date())
@@ -240,7 +217,10 @@ export const EventTab = <T extends TabFormValues>({
           >
             <TimePicker
               value={endTimeValue}
-              onChange={(v: Date) => endTimeOnChange(v)}
+              onChange={(v: Date) => {
+                endTimeOnChange(v);
+                validateRange(startDateValue, startTimeValue, endDateValue, v);
+              }}
             />
           </Animated.View>
         )}
