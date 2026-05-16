@@ -62,7 +62,7 @@ export const NoteTimePickerSheet = ({
       reset(getDefaultValues());
       setMode("reminder");
     }
-  }, [visible]);
+  }, [visible, reset]);
 
   const handleTabChange = (next: "reminder" | "event") => {
     setMode(next);

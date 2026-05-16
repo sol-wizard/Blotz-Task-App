@@ -1,4 +1,4 @@
-import { Control, useController, UseFormClearErrors, UseFormSetValue, FieldValues, Path } from "react-hook-form";
+import { Control, useController, UseFormClearErrors, UseFormSetValue, FieldValues, Path, FieldPath } from "react-hook-form";
 import { View, Text, Pressable } from "react-native";
 import { format } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
@@ -95,7 +95,7 @@ export const ReminderTab = <T extends FormValues>({
               onStartDateChange={(nextDate: Date) => {
                 setValue("startDate" as Path<T>, nextDate as any, { shouldValidate: false });
                 setValue("endDate" as Path<T>, nextDate as any, { shouldValidate: false });
-                clearErrors(["endDate", "endTime"] as any);
+                clearErrors(["endDate", "endTime"] as FieldPath<T>[]);
               }}
             />
           </Animated.View>
@@ -126,7 +126,7 @@ export const ReminderTab = <T extends FormValues>({
                 onChange={(nextTime: Date) => {
                   setValue("startTime" as Path<T>, nextTime as any, { shouldValidate: false });
                   setValue("endTime" as Path<T>, nextTime as any, { shouldValidate: false });
-                  clearErrors(["endDate", "endTime"] as any);
+                  clearErrors(["endDate", "endTime"] as FieldPath<T>[]);
                 }}
               />
             </Animated.View>

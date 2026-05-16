@@ -11,7 +11,7 @@ import {
   isEqual,
 } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
-import { Control, FieldPath, useController, UseFormClearErrors, UseFormTrigger, Path } from "react-hook-form";
+import { Control, FieldPath, useController, UseFormClearErrors, UseFormTrigger } from "react-hook-form";
 import { FormValues } from "./reminder-tab";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
@@ -33,9 +33,9 @@ export const EventTab = <T extends FormValues>({
     const start = combineDateTime(sd, st);
     const end = combineDateTime(ed, et);
     if (start && end && (isBefore(start, end) || isEqual(start, end))) {
-      clearErrors?.("endTime" as any);
+      clearErrors?.("endTime" as FieldPath<T>);
     } else {
-      trigger?.("endTime" as any);
+      trigger?.("endTime" as FieldPath<T>);
     }
   };
   const { t, i18n } = useTranslation("tasks");
@@ -49,12 +49,12 @@ export const EventTab = <T extends FormValues>({
   const useField = <K extends FieldPath<T>>(name: K) =>
     useController<T, K>({ control, name }).field;
 
-  const { value: startDateValue, onChange: startDateOnChange } = useField("startDate" as any);
-  const { value: startTimeValue, onChange: startTimeOnChange } = useField("startTime" as any);
-  const { value: endDateValue, onChange: endDateOnChange } = useField("endDate" as any);
-  const { value: endTimeValue, onChange: endTimeOnChange } = useField("endTime" as any);
-  const { value: deadlineDate } = useField("deadlineDate" as any);
-  const { value: isDdl } = useField("isDeadline" as any);
+  const { value: startDateValue, onChange: startDateOnChange } = useField("startDate");
+  const { value: startTimeValue, onChange: startTimeOnChange } = useField("startTime");
+  const { value: endDateValue, onChange: endDateOnChange } = useField("endDate");
+  const { value: endTimeValue, onChange: endTimeOnChange } = useField("endTime");
+  const { value: deadlineDate } = useField("deadlineDate");
+  const { value: isDdl } = useField("isDeadline");
 
   const ddlStr = isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined;
 
