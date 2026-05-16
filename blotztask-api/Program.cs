@@ -17,7 +17,11 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSerilogLogging();
-builder.Services.AddOpenTelemetry().UseAzureMonitor();
+
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Services.AddOpenTelemetry().UseAzureMonitor();
+}
 
 // Core framework services
 builder.Services.AddCoreServices();
