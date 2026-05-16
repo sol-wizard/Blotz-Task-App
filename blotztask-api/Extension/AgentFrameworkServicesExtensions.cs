@@ -1,8 +1,7 @@
-extern alias AzureIdentity;
-
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
+using Azure.Identity;
 
 namespace BlotzTask.Extension;
 
@@ -42,7 +41,7 @@ public static class AgentFrameworkServiceExtensions
         services.AddSingleton<AzureOpenAIClient>(_ =>
             new AzureOpenAIClient(new Uri(options.Endpoint), new AzureKeyCredential(options.ApiKey)));
         services.AddSingleton<AIProjectClient>(_ =>
-            new AIProjectClient(new Uri(options.Endpoint), new AzureIdentity::Azure.Identity.DefaultAzureCredential()));
+            new AIProjectClient(new Uri(options.Endpoint), new DefaultAzureCredential()));
         services.AddSingleton(sp =>
             sp.GetRequiredService<AzureOpenAIClient>().GetAudioClient(options.SpeechDeploymentId));
 
