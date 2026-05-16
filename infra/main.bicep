@@ -25,10 +25,12 @@ param breakdownModelVersion string
 param taskGenerationDeploymentName string
 param taskGenerationModelName string
 param taskGenerationModelVersion string
+param taskGenerationDeploymentCapacity int
 
 param speechDeploymentName string
 param speechModelName string
 param speechModelVersion string
+param speechDeploymentCapacity int
 
 param githubRepo string // Format: org/repo (e.g., sol-wizard/Blotz-Task-App)
 param budgetAmount int
@@ -171,9 +173,11 @@ module openAi 'modules/openAi.bicep' = {
     taskGenerationDeploymentName: taskGenerationDeploymentName
     taskGenerationModelName: taskGenerationModelName
     taskGenerationModelVersion: taskGenerationModelVersion
+    taskGenerationDeploymentCapacity: taskGenerationDeploymentCapacity
     speechDeploymentName: speechDeploymentName
     speechModelName: speechModelName
     speechModelVersion: speechModelVersion
+    speechDeploymentCapacity: speechDeploymentCapacity
   }
 }
 module githubActionIdentity 'modules/identity.bicep' = {

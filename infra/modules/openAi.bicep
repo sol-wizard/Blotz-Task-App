@@ -11,10 +11,12 @@ param breakdownModelVersion string
 param taskGenerationDeploymentName string
 param taskGenerationModelName string
 param taskGenerationModelVersion string
+param taskGenerationDeploymentCapacity int
 
 param speechDeploymentName string
 param speechModelName string
 param speechModelVersion string
+param speechDeploymentCapacity int
 
 resource openAiService 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
   name: 'oai-${projectName}-${environment}'
@@ -51,7 +53,7 @@ resource breakdownDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
   parent: openAiService
   sku: {
     name: 'GlobalStandard'
-    capacity: 10
+    capacity: taskGenerationDeploymentCapacity
   }
   properties: {
     model: {
@@ -59,7 +61,7 @@ resource breakdownDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
       name: breakdownModelName
       version: breakdownModelVersion
     }
-    raiPolicyName: 'Microsoft.Default'
+    raiPolicyName: 'Microsoft.DefaultV2'
     versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
   }
 }
@@ -88,8 +90,8 @@ resource speechDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025
   parent: openAiService
   dependsOn: [taskGenerationDeployment]
   sku: {
-    name: 'GlobalStandard'
-    capacity: 10
+    name: 'Standard'
+    capacity: speechDeploymentCapacity
   }
   properties: {
     model: {
@@ -97,7 +99,7 @@ resource speechDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025
       name: speechModelName
       version: speechModelVersion
     }
-    raiPolicyName: 'Microsoft.Default'
+    raiPolicyName: 'Microsoft.DefaultV2'
     versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
   }
 }
