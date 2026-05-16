@@ -1,4 +1,3 @@
-using Azure.Monitor.OpenTelemetry.AspNetCore;
 using BlotzTask.Extension;
 using BlotzTask.Middleware;
 using BlotzTask.Modules.AiUsage;
@@ -17,11 +16,7 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddSerilogLogging();
-
-if (!builder.Environment.IsDevelopment())
-{
-    builder.Services.AddOpenTelemetry().UseAzureMonitor();
-}
+builder.AddAzureMonitorTelemetry();
 
 // Core framework services
 builder.Services.AddCoreServices();

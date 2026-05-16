@@ -1,3 +1,4 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Serilog;
 using Serilog.Events;
 
@@ -25,5 +26,13 @@ public static class LoggingExtensions
         return builder;
     }
 
-    
+    public static WebApplicationBuilder AddAzureMonitorTelemetry(this WebApplicationBuilder builder)
+    {
+        
+        if (!builder.Environment.IsDevelopment())
+        {
+            builder.Services.AddOpenTelemetry().UseAzureMonitor();
+        }
+        return builder;
+    }
 }
