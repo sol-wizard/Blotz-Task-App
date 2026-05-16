@@ -11,8 +11,8 @@ import {
   isEqual,
 } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
-import { Control, UseFormClearErrors, UseFormTrigger, useController } from "react-hook-form";
-import { TaskFormField } from "../models/task-form-schema";
+import { Control, UseFormClearErrors, UseFormTrigger, useController, FieldValues, Path } from "react-hook-form";
+import { TabFormValues } from "./reminder-tab";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
@@ -20,22 +20,22 @@ import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { combineDateTime } from "../util/combine-date-time";
 
-export const EventTab = ({
+export const EventTab = <T extends TabFormValues>({
   control,
   trigger,
   clearErrors,
 }: {
-  control: Control<TaskFormField>;
-  trigger?: UseFormTrigger<TaskFormField>;
-  clearErrors?: UseFormClearErrors<TaskFormField>;
+  control: Control<T>;
+  trigger?: UseFormTrigger<T>;
+  clearErrors?: UseFormClearErrors<T>;
 }) => {
   const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
     const start = combineDateTime(sd, st);
     const end = combineDateTime(ed, et);
     if (start && end && (isBefore(start, end) || isEqual(start, end))) {
-      clearErrors?.("endTime");
+      clearErrors?.("endTime" as any);
     } else {
-      trigger?.("endTime");
+      trigger?.("endTime" as any);
     }
   };
   const { t, i18n } = useTranslation("tasks");
@@ -50,42 +50,42 @@ export const EventTab = ({
     field: { value: startDateValue, onChange: startDateOnChange },
   } = useController({
     control,
-    name: "startDate",
+    name: "startDate" as Path<T>,
   });
 
   const {
     field: { value: startTimeValue, onChange: startTimeOnChange },
   } = useController({
     control,
-    name: "startTime",
+    name: "startTime" as Path<T>,
   });
 
   const {
     field: { value: endDateValue, onChange: endDateOnChange },
   } = useController({
     control,
-    name: "endDate",
+    name: "endDate" as Path<T>,
   });
 
   const {
     field: { value: endTimeValue, onChange: endTimeOnChange },
   } = useController({
     control,
-    name: "endTime",
+    name: "endTime" as Path<T>,
   });
 
   const {
     field: { value: deadlineDate },
   } = useController({
     control,
-    name: "deadlineDate",
+    name: "deadlineDate" as Path<T>,
   });
 
   const {
     field: { value: isDdl },
   } = useController({
     control,
-    name: "isDeadline",
+    name: "isDeadline" as Path<T>,
   });
 
   const ddlStr = isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined;

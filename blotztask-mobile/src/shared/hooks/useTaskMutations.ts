@@ -51,7 +51,7 @@ const useTaskMutations = () => {
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: (task: TaskDetailDTO) => deleteTask(task.id),
+    mutationFn: (task: TaskDetailDTO) => deleteTask(task.id!),
     onSuccess: (_data, task) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.all });
       invalidateSelectedDayTask(queryClient, task.startTime, task.endTime);

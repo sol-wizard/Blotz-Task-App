@@ -1,5 +1,4 @@
-import { Control, useController, UseFormClearErrors, UseFormSetValue } from "react-hook-form";
-import { TaskFormField } from "../models/task-form-schema";
+import { Control, useController, UseFormClearErrors, UseFormSetValue, FieldValues, Path } from "react-hook-form";
 import { View, Text, Pressable } from "react-native";
 import { format } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
@@ -10,14 +9,23 @@ import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 
-export const ReminderTab = ({
+export interface TabFormValues extends FieldValues {
+  startDate: Date;
+  startTime: Date;
+  endDate: Date;
+  endTime: Date;
+  deadlineDate?: Date | null;
+  isDeadline?: boolean;
+}
+
+export const ReminderTab = <T extends TabFormValues>({
   control,
   setValue,
   clearErrors,
 }: {
-  control: Control<TaskFormField>;
-  setValue: UseFormSetValue<TaskFormField>;
-  clearErrors: UseFormClearErrors<TaskFormField>;
+  control: Control<T>;
+  setValue: UseFormSetValue<T>;
+  clearErrors: UseFormClearErrors<T>;
 }) => {
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
@@ -25,28 +33,28 @@ export const ReminderTab = ({
     field: { value: startDate },
   } = useController({
     control,
-    name: "startDate",
+    name: "startDate" as Path<T>,
   });
 
   const {
     field: { value: startTime },
   } = useController({
     control,
-    name: "startTime",
+    name: "startTime" as Path<T>,
   });
 
   const {
     field: { value: deadlineDate },
   } = useController({
     control,
-    name: "deadlineDate",
+    name: "deadlineDate" as Path<T>,
   });
 
   const {
     field: { value: isDdl },
   } = useController({
     control,
-    name: "isDeadline",
+    name: "isDeadline" as Path<T>,
   });
 
   const { t, i18n } = useTranslation("tasks");
@@ -85,9 +93,9 @@ export const ReminderTab = ({
               defaultStartDate={format(startDate, "yyyy-MM-dd")}
               deadlineDate={isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
               onStartDateChange={(nextDate: Date) => {
-                setValue("startDate", nextDate, { shouldValidate: false });
-                setValue("endDate", nextDate, { shouldValidate: false });
-                clearErrors(["endDate", "endTime"]);
+                setValue("startDate" as Path<T>, nextDate as any, { shouldValidate: false });
+                setValue("endDate" as Path<T>, nextDate as any, { shouldValidate: false });
+                clearErrors(["endDate", "endTime"] as any);
               }}
             />
           </Animated.View>
@@ -116,9 +124,9 @@ export const ReminderTab = ({
               <TimePicker
                 value={startTime}
                 onChange={(nextTime: Date) => {
-                  setValue("startTime", nextTime, { shouldValidate: false });
-                  setValue("endTime", nextTime, { shouldValidate: false });
-                  clearErrors(["endDate", "endTime"]);
+                  setValue("startTime" as Path<T>, nextTime as any, { shouldValidate: false });
+                  setValue("endTime" as Path<T>, nextTime as any, { shouldValidate: false });
+                  clearErrors(["endDate", "endTime"] as any);
                 }}
               />
             </Animated.View>
