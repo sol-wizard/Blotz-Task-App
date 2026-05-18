@@ -20,7 +20,7 @@ export const PomodoroFocus = () => {
   const { session, stopTimer, togglePause } = usePomodoroTimer();
   const elapsedSeconds = session?.taskId === taskId ? session.elapsedSeconds : 0;
 
-  const { toggleSoundscape, stopSoundscape } = useSoundscapeStore();
+  const { isPlaying, toggleSoundscape, stopSoundscape } = useSoundscapeStore();
 
   useEffect(() => {
     if (!taskId || !settings) return;
@@ -58,7 +58,21 @@ export const PomodoroFocus = () => {
             className="w-20 h-20 border-0 bg-[#00000014]"
             onPress={() => router.back()}
           />
-          <Ionicons name="musical-notes" size={24} color="#444964" onPress={toggleSoundscape} />
+          <Pressable
+            onPress={toggleSoundscape}
+            className="w-10 h-10 items-center justify-center relative"
+          >
+            <Ionicons name="musical-notes" size={24} color="#444964" />
+
+            {!isPlaying && (
+              <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
+                <View
+                  className="w-7 h-[2px] bg-[#444964] rounded-full"
+                  style={{ transform: [{ rotate: "35deg" }] }} // "\" 方向
+                />
+              </View>
+            )}
+          </Pressable>
         </View>
 
         <View className="flex-1 items-center">
