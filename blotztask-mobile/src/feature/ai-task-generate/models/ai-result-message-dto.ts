@@ -1,10 +1,12 @@
 export interface AiResultMessageDTO {
-  isSuccess: boolean;
   userInput?: string;
   extractedTasks?: ExtractedTaskDTO[];
   extractedNotes?: AiNoteDTO[];
-  errorCode?: string;
-  errorMessage?: string;
+}
+
+export interface AiGenerationErrorDTO {
+  errorCode: string;
+  errorMessage: string;
 }
 
 export interface AiNoteDTO {
