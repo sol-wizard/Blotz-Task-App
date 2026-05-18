@@ -37,11 +37,11 @@
     "modeLockedWhileRunning": "番茄钟进行中，无法修改番茄钟设置。"
   },
   "soundscape": {
-    "easyFocus": "轻松\n专注",
-    "deepWork": "深度\n工作",
-    "taskFlow": "任务\n心流",
-    "calmMind": "平静\n氛围",
-    "cafeVibe": "咖啡馆\n白噪音",
+    "streamWhisper": "浅溪\n轻语",
+    "pineFocus": "松间\n沉心",
+    "nightGlow": "星夜\n低语",
+    "silentMind": "行云\n逐流",
+    "cafeNook": "咖啡馆\n暖阳",
     "noSound": "无\n声音"
   }
 }
