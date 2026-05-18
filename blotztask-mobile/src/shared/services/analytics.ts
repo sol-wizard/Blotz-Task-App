@@ -67,6 +67,9 @@ export const analytics = {
     outcome: AiTaskOutcome;
     turns: AiTaskGenerationTurn[];
   }) {
+    // Avoid logging empty input to PostHog — empty input is usually caused by a backend failure or similar.
+    if (params.turns.length === 0) return;
+
     posthog.capture(EVENTS.AI_TASK_GENERATION_SESSION, {
       outcome: params.outcome,
       input_modes: Array.from(new Set(params.turns.map((turn) => turn.input_mode))),
