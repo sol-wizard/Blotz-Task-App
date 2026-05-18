@@ -63,7 +63,7 @@ export const SoundscapeCard = ({
         >
           <Text
             className={`font-baloo text-[11px] text-center leading-tight ${
-              isSelected ? "text-highlight" : "text-white shadow-sm shadow-black"
+              isSelected ? "text-highlight shadow-transparent" : "text-white shadow-black"
             }`}
           >
             {t(`soundscape.${item.type}`)}
