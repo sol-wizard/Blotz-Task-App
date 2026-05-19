@@ -35,11 +35,12 @@
     "preview": {
       "autoIncrement": true,
       "channel": "preview",
+      "environment": "preview",
       "android": {
         "buildType": "app-bundle",
         "credentialsSource": "local",
         "env": {
-          "APP_VERSION": "1.0.2"
+          "APP_VERSION": "1.0.3"
         }
       },
       "ios": {
@@ -75,7 +76,7 @@
         "buildType": "app-bundle",
         "credentialsSource": "local",
         "env": {
-          "APP_VERSION": "1.0.0"
+          "APP_VERSION": "1.0.1"
         }
       },
       "env": {
@@ -94,10 +95,16 @@
   "submit": {
     "preview": {
       "ios": {
-        "ascAppId": "6752492404"
+        "ascAppId": "6761295231"
+      },
+      "android": {
+        "track": "alpha" // Closed testing
       }
     },
     "production": {
+      "ios": {
+        "ascAppId": "6752492404"
+      },
       "android": {
         "track": "production"
       }
