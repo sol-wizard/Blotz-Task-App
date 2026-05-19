@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Image, Modal, Pressable, ScrollView, Text } from "react-native";
+import { View, Image, Pressable, Text } from "react-native";
 import { GameEngine } from "react-native-game-engine";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -9,11 +9,12 @@ import { MachineButton } from "@/feature/gashapon-machine/components/machine-but
 import { cleanupSystem, physicsSystem } from "@/feature/gashapon-machine/utils/game-systems";
 import { LinearGradient } from "expo-linear-gradient";
 import { NoteRevealModal } from "@/feature/gashapon-machine/components/note-reveal-modal";
+import { GashaponHelpModal } from "@/feature/gashapon-machine/components/gashapon-help-modal";
 import LoadingScreen from "@/shared/components/loading-screen";
 import { DroppedStar } from "@/feature/gashapon-machine/components/dropped-star";
 import { useNotesSearch } from "@/feature/notes/hooks/useNotesSearch";
 import { pickRandomNote } from "@/feature/gashapon-machine/utils/pick-random-note";
-import { router, Stack } from "expo-router";
+import { router } from "expo-router";
 import { analytics } from "@/shared/services/analytics";
 import { SCREEN_NAMES } from "@/shared/constants/posthog-events";
 import { NoteDTO } from "@/feature/notes/models/note-dto";
@@ -22,10 +23,6 @@ import { getStarIconAsBefore } from "@/shared/util/get-star-icon";
 
 export default function GashaponMachineScreen() {
   const { t } = useTranslation("notes");
-  const translatedHelpSteps = t("gashapon.helpSteps", { returnObjects: true });
-  const helpSteps = Array.isArray(translatedHelpSteps)
-    ? translatedHelpSteps.filter((step): step is string => typeof step === "string")
-    : [];
   const [basePicLoaded, setBasePicLoaded] = useState(false);
   const [eyesPicLoaded, setEyesPicLoaded] = useState(false);
   const [buttonPicLoaded, setButtonPicLoaded] = useState(false);
@@ -89,30 +86,16 @@ export default function GashaponMachineScreen() {
       style={{ flex: 1 }}
     >
       <SafeAreaView className="flex-1 items-center justify-center">
-        <Stack.Screen
-          options={{
-            headerRight: () => (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t("gashapon.helpButtonA11yLabel")}
-                hitSlop={12}
-                onPress={() => setHelpModalVisible(true)}
-                style={{
-                  width: 36,
-                  height: 36,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 18,
-                  backgroundColor: "rgba(255,255,255,0.9)",
-                  borderWidth: 1,
-                  borderColor: "#D6E8C7",
-                }}
-              >
-                <Text style={{ fontSize: 18, fontWeight: "bold", color: "#444964" }}>?</Text>
-              </Pressable>
-            ),
-          }}
-        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("gashapon.helpButtonA11yLabel")}
+          hitSlop={12}
+          onPress={() => setHelpModalVisible(true)}
+          className="absolute right-6 z-50 w-9 h-9 items-center justify-center rounded-full bg-white/90 border border-[#D6E8C7]"
+          style={{ top: 110 }}
+        >
+          <Text className="text-lg font-bold text-secondary">?</Text>
+        </Pressable>
         <NoteRevealModal
           visible={isModalVisible}
           task={randomNote}
@@ -120,42 +103,7 @@ export default function GashaponMachineScreen() {
           onCancel={handleCancel}
           isDoNowLoading={isConverting}
         />
-        <Modal visible={isHelpModalVisible} transparent animationType="fade" statusBarTranslucent>
-          <View className="flex-1 bg-black/40 items-center justify-center px-6">
-            <View
-              className="w-full max-w-[320px] rounded-3xl bg-background px-6 py-7"
-              style={{
-                shadowColor: "#000",
-                shadowOpacity: 0.1,
-                shadowOffset: { width: 0, height: 10 },
-                shadowRadius: 20,
-                elevation: 10,
-              }}
-            >
-              <Text className="text-slate-800 text-2xl font-bold text-center font-baloo">
-                {t("gashapon.helpTitle")}
-              </Text>
-              <ScrollView className="mt-4 max-h-72" showsVerticalScrollIndicator={false}>
-                {helpSteps.map((step, index) => (
-                  <View key={step} className="mb-3 flex-row">
-                    <Text className="w-7 text-base leading-6 text-secondary font-balooBold">
-                      {index + 1}.
-                    </Text>
-                    <Text className="flex-1 text-base leading-6 text-gray-600 font-balooThin">
-                      {step}
-                    </Text>
-                  </View>
-                ))}
-              </ScrollView>
-              <Pressable
-                onPress={() => setHelpModalVisible(false)}
-                className="mt-6 h-11 items-center justify-center rounded-full bg-[#99D612]"
-              >
-                <Text className="text-slate-900 font-semibold font-baloo">{t("close")}</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Modal>
+        <GashaponHelpModal visible={isHelpModalVisible} onClose={() => setHelpModalVisible(false)} />
         {!isAllLoaded && <LoadingScreen />}
         <View
           style={{
