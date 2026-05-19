@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormField, taskFormSchema } from "./models/task-form-schema";
 import { FormTextInput } from "@/shared/components/form-text-input";
@@ -119,6 +119,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
   };
 
   return (
+    <FormProvider {...form}>
     <View className="flex-1 bg-white">
       <ScrollView className="flex-col my-2 px-8" contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Title */}
@@ -164,12 +165,8 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
             {t(formState.errors.endTime.message || "")}
           </Text>
         )}
-        {isActiveTab === SegmentButtonValue.Reminder && (
-          <ReminderTab control={control} setValue={setValue} clearErrors={clearErrors} />
-        )}
-        {isActiveTab === "event" && (
-          <EventTab control={control} trigger={trigger} clearErrors={clearErrors} />
-        )}
+        {isActiveTab === SegmentButtonValue.Reminder && <ReminderTab />}
+        {isActiveTab === SegmentButtonValue.Event && <EventTab />}
         <FormDivider />
         <DeadlineSection control={control} getValues={form.getValues} isActiveTab={isActiveTab} />
         <FormDivider />
@@ -204,6 +201,7 @@ const TaskForm = ({ mode, dto, onSubmit }: TaskFormProps) => {
         </Pressable>
       </View>
     </View>
+    </FormProvider>
   );
 };
 

@@ -11,8 +11,8 @@ import {
   isEqual,
 } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
-import { Control, FieldPath, useController, UseFormClearErrors, UseFormTrigger } from "react-hook-form";
-import { FormValues } from "./reminder-tab";
+import { useController, useFormContext } from "react-hook-form";
+import { TaskFormField } from "../models/task-form-schema";
 import TimePicker from "./time-picker";
 import DoubleDatesCalendar from "./double-dates-calendar";
 import { useTranslation } from "react-i18next";
@@ -20,22 +20,16 @@ import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
 import { combineDateTime } from "../util/combine-date-time";
 
-export const EventTab = <T extends FormValues>({
-  control,
-  trigger,
-  clearErrors,
-}: {
-  control: Control<T>;
-  trigger?: UseFormTrigger<T>;
-  clearErrors?: UseFormClearErrors<T>;
-}) => {
+export const EventTab = () => {
+  const { control, trigger, clearErrors } = useFormContext<TaskFormField>();
+
   const validateRange = (sd: Date, st: Date, ed: Date, et: Date) => {
     const start = combineDateTime(sd, st);
     const end = combineDateTime(ed, et);
     if (start && end && (isBefore(start, end) || isEqual(start, end))) {
-      clearErrors?.("endTime" as FieldPath<T>);
+      clearErrors("endTime");
     } else {
-      trigger?.("endTime" as FieldPath<T>);
+      trigger("endTime");
     }
   };
   const { t, i18n } = useTranslation("tasks");
@@ -46,8 +40,8 @@ export const EventTab = <T extends FormValues>({
     "startDate" | "startTime" | "endDate" | "endTime" | null
   >(null);
 
-  const useField = <K extends FieldPath<T>>(name: K) =>
-    useController<T, K>({ control, name }).field;
+  const useField = (name: keyof TaskFormField) =>
+    useController({ control, name }).field;
 
   const { value: startDateValue, onChange: startDateOnChange } = useField("startDate");
   const { value: startTimeValue, onChange: startTimeOnChange } = useField("startTime");

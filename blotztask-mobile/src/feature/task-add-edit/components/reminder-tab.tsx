@@ -1,4 +1,4 @@
-import { Control, useController, UseFormClearErrors, UseFormSetValue, FieldValues, Path, FieldPath } from "react-hook-form";
+import { useController, useFormContext } from "react-hook-form";
 import { View, Text, Pressable } from "react-native";
 import { format } from "date-fns";
 import { zhCN, enUS } from "date-fns/locale";
@@ -8,53 +8,38 @@ import { SingleDateCalendar } from "./single-date-calendar";
 import { useTranslation } from "react-i18next";
 import Animated from "react-native-reanimated";
 import { MotionAnimations } from "@/shared/constants/animations/motion";
+import { TaskFormField } from "../models/task-form-schema";
 
-export interface FormValues extends FieldValues {
-  startDate: Date;
-  startTime: Date;
-  endDate: Date;
-  endTime: Date;
-  deadlineDate?: Date | null;
-  isDeadline?: boolean;
-}
-
-export const ReminderTab = <T extends FormValues>({
-  control,
-  setValue,
-  clearErrors,
-}: {
-  control: Control<T>;
-  setValue: UseFormSetValue<T>;
-  clearErrors: UseFormClearErrors<T>;
-}) => {
+export const ReminderTab = () => {
+  const { control, setValue, clearErrors } = useFormContext<TaskFormField>();
   const [activeSelector, setActiveSelector] = useState<"date" | "time" | null>(null);
 
   const {
     field: { value: startDate },
   } = useController({
     control,
-    name: "startDate" as Path<T>,
+    name: "startDate",
   });
 
   const {
     field: { value: startTime },
   } = useController({
     control,
-    name: "startTime" as Path<T>,
+    name: "startTime",
   });
 
   const {
     field: { value: deadlineDate },
   } = useController({
     control,
-    name: "deadlineDate" as Path<T>,
+    name: "deadlineDate",
   });
 
   const {
     field: { value: isDdl },
   } = useController({
     control,
-    name: "isDeadline" as Path<T>,
+    name: "isDeadline",
   });
 
   const { t, i18n } = useTranslation("tasks");
@@ -93,9 +78,9 @@ export const ReminderTab = <T extends FormValues>({
               defaultStartDate={format(startDate, "yyyy-MM-dd")}
               deadlineDate={isDdl && deadlineDate ? format(deadlineDate, "yyyy-MM-dd") : undefined}
               onStartDateChange={(nextDate: Date) => {
-                setValue("startDate" as Path<T>, nextDate as any, { shouldValidate: false });
-                setValue("endDate" as Path<T>, nextDate as any, { shouldValidate: false });
-                clearErrors(["endDate", "endTime"] as FieldPath<T>[]);
+                setValue("startDate", nextDate, { shouldValidate: false });
+                setValue("endDate", nextDate, { shouldValidate: false });
+                clearErrors(["endDate", "endTime"]);
               }}
             />
           </Animated.View>
@@ -124,9 +109,9 @@ export const ReminderTab = <T extends FormValues>({
               <TimePicker
                 value={startTime}
                 onChange={(nextTime: Date) => {
-                  setValue("startTime" as Path<T>, nextTime as any, { shouldValidate: false });
-                  setValue("endTime" as Path<T>, nextTime as any, { shouldValidate: false });
-                  clearErrors(["endDate", "endTime"] as FieldPath<T>[]);
+                  setValue("startTime", nextTime, { shouldValidate: false });
+                  setValue("endTime", nextTime, { shouldValidate: false });
+                  clearErrors(["endDate", "endTime"]);
                 }}
               />
             </Animated.View>
