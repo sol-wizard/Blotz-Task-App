@@ -11,7 +11,14 @@ param breakdownModelVersion = '2025-12-11'
 
 param taskGenerationDeploymentName = 'gpt-5.4-mini'
 param taskGenerationModelName = 'gpt-5.4-mini'
-param taskGenerationModelVersion = '2025-12-11'
+param taskGenerationModelVersion = '2026-03-17'
+param taskGenerationDeploymentCapacity = 130
+
+param speechDeploymentName = 'whisper'
+param speechModelName = 'whisper'
+param speechModelVersion = '001'
+param speechDeploymentCapacity = 2
+
 param githubRepo = 'sol-wizard/Blotz-Task-App'
 param budgetAmount = 40 // AUD per month for production
 param alertEmail = 'benjaminneoh2928@gmail.com'
@@ -33,7 +40,7 @@ param dbAdminPassword = ''
 
 // Auth0 Configuration (production)
 param auth0Domain = 'dev-k72xachs0fr6nebp.us.auth0.com'
-param auth0Audience = 'https://blotz-task-dev/api'
+param auth0Audience = 'https://blotz-task-prod/api'
 param auth0ManagementClientId = 'xWylVePDs5giZLBopYT1qHecBv2WijQh'
 param auth0ManagementAudience = 'https://dev-k72xachs0fr6nebp.us.auth0.com/api/v2/'
 // Auth0 Management Client Secret - overridden at deploy time
