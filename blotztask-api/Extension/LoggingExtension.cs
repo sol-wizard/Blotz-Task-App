@@ -1,4 +1,6 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Serilog;
+using Serilog.Events;
 
 namespace BlotzTask.Extension;
 
@@ -9,27 +11,31 @@ public static class LoggingExtensions
         var loggerConfiguration = new LoggerConfiguration()
             .ReadFrom.Configuration(builder.Configuration);
 
+        var connectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
+        if (!string.IsNullOrEmpty(connectionString) && !builder.Environment.IsDevelopment())
+        {
+            loggerConfiguration.WriteTo.ApplicationInsights(
+                connectionString,
+                TelemetryConverter.Traces,
+                LogEventLevel.Warning);
+        }
+
         Log.Logger = loggerConfiguration.CreateLogger();
         builder.Host.UseSerilog();
 
         return builder;
     }
 
-    public static WebApplicationBuilder AddApplicationInsights(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder AddAzureMonitorTelemetry(this WebApplicationBuilder builder)
     {
         var connectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
-        if (!string.IsNullOrEmpty(connectionString))
+
+        if (!string.IsNullOrEmpty(connectionString) && !builder.Environment.IsDevelopment())
         {
-            builder.Services.AddApplicationInsightsTelemetry(options =>
+            builder.Services.AddOpenTelemetry().UseAzureMonitor(options =>
             {
                 options.ConnectionString = connectionString;
-                if (builder.Environment.IsDevelopment())
-                {
-                    options.DeveloperMode = true;
-                    options.EnableDebugLogger = true;
-                }
             });
-
         }
         return builder;
     }

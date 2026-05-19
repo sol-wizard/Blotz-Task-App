@@ -2,9 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 import { File as ExpoFile } from "expo-file-system";
 import { signalRService } from "@/feature/ai-task-generate/services/ai-task-generator-signalr-service";
-import { AiNoteDTO, AiResultMessageDTO, ExtractedTaskDTO } from "../models/ai-result-message-dto";
+import {
+  AiGenerationErrorDTO,
+  AiNoteDTO,
+  AiResultMessageDTO,
+  ExtractedTaskDTO,
+} from "../models/ai-result-message-dto";
 import { useTranslation } from "react-i18next";
 import Toast from "react-native-toast-message";
+import type { AiTaskGenerationTurn, AiTaskInputMode } from "@/shared/constants/posthog-events";
 
 const ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   TranscriptionFailed: "errors.transcriptionFailed",
@@ -22,11 +28,12 @@ export function useAiTaskGenerator({
 }) {
   const { t } = useTranslation("aiTaskGenerate");
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-  const [userInput, setUserInput] = useState<string | undefined>();
   const [transcript, setTranscript] = useState<string | undefined>();
   const [streamedTasks, setStreamedTasks] = useState<ExtractedTaskDTO[]>([]);
   const [streamedNotes, setStreamedNotes] = useState<AiNoteDTO[]>([]);
+  const [turns, setTurns] = useState<AiTaskGenerationTurn[]>([]);
   const requestStartedAtRef = useRef<number | null>(null);
+  const pendingInputModeRef = useRef<AiTaskInputMode | null>(null);
 
   const submitAudioForTranscription = async (uri: string): Promise<void> => {
     if (!connection) throw new Error("Cannot submit audio: not connected.");
@@ -37,6 +44,7 @@ export function useAiTaskGenerator({
     setTranscript(undefined);
     setIsAiGenerating(true);
     requestStartedAtRef.current = Date.now();
+    pendingInputModeRef.current = "voice";
 
     try {
       await signalRService.invoke(connection, "TranscribeAudio", base64);
@@ -53,6 +61,7 @@ export function useAiTaskGenerator({
     setTranscript(undefined);
     setIsAiGenerating(true);
     requestStartedAtRef.current = Date.now();
+    pendingInputModeRef.current = "text";
 
     try {
       await signalRService.invoke(connection, "SendMessage", text);
@@ -67,19 +76,29 @@ export function useAiTaskGenerator({
     setTranscript(undefined);
     setIsAiGenerating(false);
     requestStartedAtRef.current = null;
+    const inputMode = pendingInputModeRef.current;
+    const inputText = result.userInput;
 
-    if (!result.isSuccess) {
-      setStreamedTasks([]);
-      setStreamedNotes([]);
-      const i18nKey = ERROR_CODE_TO_I18N_KEY[result.errorCode ?? ""] ?? "errors.default";
-      Toast.show({ type: "error", text1: t(i18nKey) });
-      return;
+    if (inputMode && inputText) {
+      setTurns((prev) => [...prev, buildTurn(prev.length + 1, inputMode, result)]);
     }
+
+    pendingInputModeRef.current = null;
 
     // Sync to authoritative final list — streaming only covers CreateTask, not RemoveTask/UpdateTask
     setStreamedTasks(result.extractedTasks ?? []);
     setStreamedNotes(result.extractedNotes ?? []);
-    setUserInput(result.userInput);
+  };
+
+  const generationErrorHandler = (error: AiGenerationErrorDTO) => {
+    setTranscript(undefined);
+    setIsAiGenerating(false);
+    requestStartedAtRef.current = null;
+    setStreamedTasks([]);
+    setStreamedNotes([]);
+
+    const i18nKey = ERROR_CODE_TO_I18N_KEY[error.errorCode] ?? "errors.default";
+    Toast.show({ type: "error", text1: t(i18nKey) });
   };
 
   useEffect(() => {
@@ -91,6 +110,7 @@ export function useAiTaskGenerator({
         conn = newConn;
         setConnection(conn);
         conn.on("ReceiveGenerationResult", generationCompleteHandler);
+        conn.on("ReceiveGenerationError", generationErrorHandler);
         conn.on("ReceiveTranscript", (text: string) => {
           setTranscript(text);
         });
@@ -109,6 +129,7 @@ export function useAiTaskGenerator({
     return () => {
       if (conn) {
         conn.off("ReceiveGenerationResult", generationCompleteHandler);
+        conn.off("ReceiveGenerationError", generationErrorHandler);
         conn.off("ReceiveTranscript");
         conn.off("ReceiveTaskExtracted");
         conn.off("ReceiveNoteExtracted");
@@ -118,12 +139,34 @@ export function useAiTaskGenerator({
   }, []);
 
   return {
-    userInput,
     transcript,
     streamedTasks,
     streamedNotes,
+    turns,
     submitAudioForTranscription,
     sendTextMessage,
+  };
+}
+
+function buildTurn(
+  index: number,
+  inputMode: AiTaskInputMode,
+  result: AiResultMessageDTO,
+): AiTaskGenerationTurn {
+  return {
+    turn_index: index,
+    input_mode: inputMode,
+    user_input: result.userInput ?? "",
+    generated_tasks: (result.extractedTasks ?? []).map((task) => ({
+      title: task.title,
+      description: task.description ?? "",
+      start_time: task.start_time,
+      end_time: task.end_time,
+      task_label: task.task_label,
+    })),
+    generated_notes: (result.extractedNotes ?? []).map((note) => ({
+      text: note.text,
+    })),
   };
 }
 

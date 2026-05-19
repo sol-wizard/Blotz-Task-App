@@ -11,6 +11,12 @@ param breakdownModelVersion string
 param taskGenerationDeploymentName string
 param taskGenerationModelName string
 param taskGenerationModelVersion string
+param taskGenerationDeploymentCapacity int
+
+param speechDeploymentName string
+param speechModelName string
+param speechModelVersion string
+param speechDeploymentCapacity int
 
 resource openAiService 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
   name: 'oai-${projectName}-${environment}'
@@ -47,7 +53,7 @@ resource breakdownDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
   parent: openAiService
   sku: {
     name: 'GlobalStandard'
-    capacity: 10
+    capacity: taskGenerationDeploymentCapacity
   }
   properties: {
     model: {
@@ -55,7 +61,7 @@ resource breakdownDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
       name: breakdownModelName
       version: breakdownModelVersion
     }
-    raiPolicyName: 'Microsoft.Default'
+    raiPolicyName: 'Microsoft.DefaultV2'
     versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
   }
 }
@@ -79,6 +85,25 @@ resource taskGenerationDeployment 'Microsoft.CognitiveServices/accounts/deployme
   }
 }
 
+resource speechDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
+  name: speechDeploymentName
+  parent: openAiService
+  dependsOn: [taskGenerationDeployment]
+  sku: {
+    name: 'Standard'
+    capacity: speechDeploymentCapacity
+  }
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: speechModelName
+      version: speechModelVersion
+    }
+    raiPolicyName: 'Microsoft.DefaultV2'
+    versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
+  }
+}
+
 module storeOpenAiKey 'keyVaultSecret.bicep' = {
   name: '${deployment().name}-store-openai-key'
   params: {
@@ -91,4 +116,5 @@ module storeOpenAiKey 'keyVaultSecret.bicep' = {
 output endpoint string = openAiService.properties.endpoint
 output taskGenerationDeploymentId string = taskGenerationDeploymentName
 output breakdownDeploymentId string = breakdownDeploymentName
+output speechDeploymentId string = speechDeploymentName
 output foundryProjectId string = foundryProject.id
